@@ -16,7 +16,8 @@ logger = logging.getLogger(__name__)
 @lru_cache()
 def get_llm_service() -> LLMService:
     """Get LLM service singleton."""
-    from .core.config import settings
+    from .core.config import get_settings
+    settings = get_settings()
     return LLMService(settings)
 
 @lru_cache() 
