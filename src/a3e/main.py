@@ -52,12 +52,16 @@ async def lifespan(app: FastAPI):
         await db_service.initialize()
         logger.info("✅ Database service initialized")
         
-        vector_service = VectorService(
-            host=settings.milvus_host,
-            port=settings.milvus_port
-        )
-        await vector_service.initialize()
-        logger.info("✅ Vector service initialized")
+        try:
+            vector_service = VectorService(
+                host=settings.milvus_host,
+                port=settings.milvus_port
+            )
+            await vector_service.initialize()
+            logger.info("✅ Vector service initialized")
+        except Exception as e:
+            logger.warning(f"⚠️ Vector service unavailable (development mode): {e}")
+            vector_service = None
         
         llm_service = LLMService(settings)
         await llm_service.initialize()
@@ -66,8 +70,12 @@ async def lifespan(app: FastAPI):
         document_service = DocumentService(settings)
         logger.info("✅ Document service initialized")
         
-        agent_orchestrator = A3EAgentOrchestrator(llm_service, vector_service)
-        logger.info("✅ Agent orchestrator initialized")
+        try:
+            agent_orchestrator = A3EAgentOrchestrator(llm_service, vector_service)
+            logger.info("✅ Agent orchestrator initialized")
+        except Exception as e:
+            logger.warning(f"⚠️ Agent orchestrator unavailable (development mode): {e}")
+            agent_orchestrator = None
         
         # Load accreditation standards into vector database
         await _load_accreditation_standards()
@@ -439,6 +447,10 @@ async def upload_evidence(
 async def _load_accreditation_standards():
     """Load all accreditation standards into the vector database"""
     try:
+        if vector_service is None:
+            logger.info("⚠️ Skipping standards indexing - Vector service unavailable in development mode")
+            return
+            
         for accreditor in ALL_ACCREDITORS.values():
             await vector_service.index_standards(accreditor.standards)
         logger.info(f"Loaded {sum(len(acc.standards) for acc in ALL_ACCREDITORS.values())} standards into vector database")

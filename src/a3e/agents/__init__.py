@@ -34,7 +34,7 @@ class AgentResult:
 class MapperAgent:
     """Agent responsible for mapping evidence to standards"""
     
-    def __init__(self, llm_service: LLMService, vector_service: VectorService):
+    def __init__(self, llm_service: LLMService, vector_service: Optional[VectorService] = None):
         self.llm_service = llm_service
         self.vector_service = vector_service
         self.agent = AssistantAgent(
@@ -580,7 +580,7 @@ class NarratorAgent:
 class VerifierAgent:
     """Agent responsible for verifying citations and narrative accuracy"""
     
-    def __init__(self, llm_service: LLMService, vector_service: VectorService):
+    def __init__(self, llm_service: LLMService, vector_service: Optional[VectorService] = None):
         self.llm_service = llm_service
         self.vector_service = vector_service
         self.agent = AssistantAgent(
@@ -769,15 +769,15 @@ class VerifierAgent:
 class A3EAgentOrchestrator:
     """Main orchestrator for the four-agent workflow"""
     
-    def __init__(self, llm_service: LLMService, vector_service: VectorService):
+    def __init__(self, llm_service: LLMService, vector_service: Optional[VectorService] = None):
         self.llm_service = llm_service
         self.vector_service = vector_service
         
-        # Initialize agents
-        self.mapper = MapperAgent(llm_service, vector_service)
+        # Initialize agents (some may work without vector service)
+        self.mapper = MapperAgent(llm_service, vector_service) if vector_service else None
         self.gap_finder = GapFinderAgent(llm_service)
         self.narrator = NarratorAgent(llm_service)
-        self.verifier = VerifierAgent(llm_service, vector_service)
+        self.verifier = VerifierAgent(llm_service, vector_service) if vector_service else None
     
     async def execute_workflow(
         self,
