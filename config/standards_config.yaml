@@ -1,0 +1,371 @@
+# Accreditor Standards Configuration for A³E
+# This file defines specific accreditors, their standards, and mapping rules
+
+accreditors:
+  # Regional Accreditors - Southern Association of Colleges and Schools Commission on Colleges
+  - name: SACSCOC
+    id: sacscoc
+    full_name: "Southern Association of Colleges and Schools Commission on Colleges"
+    type: regional
+    region: "US South"
+    geographic_scope:
+      - "AL"
+      - "FL" 
+      - "GA"
+      - "KY"
+      - "LA"
+      - "MS"
+      - "NC"
+      - "SC"
+      - "TN"
+      - "TX"
+      - "VA"
+    standards_uri: "https://sacscoc.org/app/uploads/2023/01/PrinciplesOfAccreditation.pdf"
+    standards_version: "2023"
+    mapping_rules: "strict"
+    recognition_authority: "US Department of Education"
+    website: "https://sacscoc.org"
+    applicable_institution_types:
+      - university
+      - college
+      - community_college
+      - graduate_school
+    standards:
+      - id: "sacscoc_1_1"
+        title: "Mission"
+        category: "governance"
+        subcategory: "institutional_purpose"
+        description: "The institution has a clearly defined, comprehensive, and published mission statement"
+        evidence_requirements:
+          - mission_statement
+          - board_approved_documents
+          - published_materials
+      - id: "sacscoc_2_1"
+        title: "Degree Standards"
+        category: "academic_programs"
+        subcategory: "degree_requirements"
+        description: "The institution awards degrees based upon student achievement of clearly identified learning outcomes"
+        evidence_requirements:
+          - degree_requirements
+          - learning_outcomes
+          - assessment_data
+      - id: "sacscoc_3_1"
+        title: "Institutional Effectiveness"
+        category: "planning"
+        subcategory: "assessment"
+        description: "The institution identifies expected outcomes and uses systematic assessment"
+        evidence_requirements:
+          - effectiveness_plan
+          - assessment_reports
+          - improvement_documentation
+
+  # Regional Accreditors - New England Commission of Higher Education
+  - name: NECHE
+    id: neche
+    full_name: "New England Commission of Higher Education"
+    type: regional
+    region: "US Northeast"
+    geographic_scope:
+      - "CT"
+      - "ME"
+      - "MA"
+      - "NH"
+      - "RI"
+      - "VT"
+    standards_uri: "https://www.neche.org/resources/"
+    standards_version: "2022"
+    mapping_rules: "moderate"
+    recognition_authority: "US Department of Education"
+    website: "https://www.neche.org"
+    applicable_institution_types:
+      - university
+      - college
+      - community_college
+      - specialized_school
+    standards:
+      - id: "neche_1"
+        title: "Mission and Purposes"
+        category: "governance"
+        subcategory: "mission"
+        description: "Institution's mission and purposes are appropriate to higher education"
+        evidence_requirements:
+          - mission_statement
+          - strategic_plan
+          - governance_documents
+      - id: "neche_2"
+        title: "Planning and Evaluation"
+        category: "planning"
+        subcategory: "evaluation"
+        description: "Institution undertakes planning and evaluation to accomplish and improve the achievement of its mission"
+        evidence_requirements:
+          - planning_documents
+          - evaluation_reports
+          - improvement_plans
+      - id: "neche_3"
+        title: "Organization and Governance"
+        category: "governance"
+        subcategory: "structure"
+        description: "Institution has a system of governance that facilitates the accomplishment of its mission"
+        evidence_requirements:
+          - organizational_charts
+          - governance_policies
+          - board_minutes
+
+  # Regional Accreditors - WASC Senior College and University Commission
+  - name: WSCUC
+    id: wscuc
+    full_name: "WASC Senior College and University Commission"
+    type: regional
+    region: "US West"
+    geographic_scope:
+      - "CA"
+      - "HI"
+      - "NV"
+      - "UT"
+    standards_uri: "https://www.wscuc.org/resources/handbook-accreditation-2013/"
+    standards_version: "2013"
+    mapping_rules: "comprehensive"
+    recognition_authority: "US Department of Education"
+    website: "https://www.wscuc.org"
+    applicable_institution_types:
+      - university
+      - college
+      - graduate_school
+    standards:
+      - id: "wscuc_1"
+        title: "Defining Institutional Purposes and Ensuring Educational Objectives"
+        category: "mission"
+        subcategory: "purposes"
+        description: "Institution's mission is clear and appropriate for an institution of higher education"
+        evidence_requirements:
+          - mission_statement
+          - educational_objectives
+          - strategic_documents
+      - id: "wscuc_2"
+        title: "Achieving Educational Objectives Through Core Functions"
+        category: "academic_programs"
+        subcategory: "core_functions"
+        description: "Institution achieves its educational objectives through teaching, scholarship, and service"
+        evidence_requirements:
+          - curriculum_documents
+          - faculty_qualifications
+          - student_learning_outcomes
+      - id: "wscuc_3"
+        title: "Developing and Applying Resources and Organizational Structures"
+        category: "resources"
+        subcategory: "organization"
+        description: "Institution has sufficient resources and organizational structures to support its mission"
+        evidence_requirements:
+          - financial_statements
+          - organizational_charts
+          - resource_allocation_plans
+      - id: "wscuc_4"
+        title: "Creating an Organization Committed to Quality Assurance"
+        category: "quality_assurance"
+        subcategory: "improvement"
+        description: "Institution engages in sustained, evidence-based institutional improvement"
+        evidence_requirements:
+          - assessment_reports
+          - improvement_plans
+          - quality_assurance_policies
+
+  # Programmatic Accreditor - AACSB International
+  - name: AACSB
+    id: aacsb
+    full_name: "Association to Advance Collegiate Schools of Business"
+    type: programmatic
+    region: "US National"
+    geographic_scope: ["NATIONAL"]
+    standards_uri: "https://www.aacsb.edu/accreditation/standards"
+    standards_version: "2020"
+    mapping_rules: "specialized"
+    recognition_authority: "Council for Higher Education Accreditation"
+    website: "https://www.aacsb.edu"
+    applicable_institution_types:
+      - university
+      - college
+      - business_school
+    applicable_programs:
+      - business
+      - accounting
+      - management
+    standards:
+      - id: "aacsb_1_1"
+        title: "Mission Statement"
+        category: "strategic_management"
+        subcategory: "mission"
+        description: "Business school has a published mission statement"
+        evidence_requirements:
+          - mission_statement
+          - strategic_plan
+          - stakeholder_input
+      - id: "aacsb_2_1"
+        title: "Financial Strategies and Allocation of Resources"
+        category: "strategic_management"
+        subcategory: "finances"
+        description: "School demonstrates financial strategies support mission achievement"
+        evidence_requirements:
+          - financial_reports
+          - budget_documents
+          - resource_allocation_plans
+
+# Institution Types supported by the system
+institution_types:
+  - id: university
+    name: "University"
+    description: "Four-year institutions offering undergraduate and graduate degrees"
+    typical_accreditors: [sacscoc, neche, wscuc, msche, hlc, nwccu]
+    
+  - id: college
+    name: "College"
+    description: "Four-year institutions primarily offering undergraduate degrees"
+    typical_accreditors: [sacscoc, neche, wscuc, msche, hlc, nwccu]
+    
+  - id: community_college
+    name: "Community College"
+    description: "Two-year institutions offering associate degrees and certificates"
+    typical_accreditors: [sacscoc, neche, accjc, nwccu, hlc, msche]
+    
+  - id: technical_college
+    name: "Technical College"
+    description: "Institutions focused on technical and vocational education"
+    typical_accreditors: [accsc, naccas, accet]
+    
+  - id: graduate_school
+    name: "Graduate School"
+    description: "Institutions primarily offering graduate and professional degrees"
+    typical_accreditors: [sacscoc, neche, wscuc, msche, hlc]
+    
+  - id: business_school
+    name: "Business School"
+    description: "Schools focused on business education"
+    typical_accreditors: [aacsb, acbsp, iacbe]
+    
+  - id: specialized_school
+    name: "Specialized School"
+    description: "Institutions with specialized focus (art, music, theology, etc.)"
+    typical_accreditors: [varies_by_specialty]
+
+# Evidence Tags for automated classification
+evidence_tags:
+  # Academic Program Evidence
+  - id: student_learning_outcomes
+    category: "academic_programs"
+    description: "Documentation of learning outcomes and assessment"
+    keywords: ["learning outcome", "slo", "assessment", "competency", "objective"]
+    
+  - id: curriculum_documents
+    category: "academic_programs"
+    description: "Course catalogs, syllabi, and curriculum maps"
+    keywords: ["syllabus", "curriculum", "course", "catalog", "program"]
+    
+  - id: faculty_credentials
+    category: "faculty"
+    description: "Faculty qualifications, CVs, and credentials"
+    keywords: ["faculty", "cv", "credential", "qualification", "degree", "experience"]
+    
+  - id: student_achievement_data
+    category: "student_success"
+    description: "Graduation rates, retention, employment outcomes"
+    keywords: ["graduation", "retention", "employment", "success", "completion"]
+    
+  # Governance Evidence
+  - id: governance_policies
+    category: "governance"
+    description: "Board policies, organizational structure, decision-making processes"
+    keywords: ["policy", "board", "governance", "procedure", "structure"]
+    
+  - id: mission_statement
+    category: "governance"
+    description: "Institution mission, vision, and strategic documents"
+    keywords: ["mission", "vision", "purpose", "strategic", "goals"]
+    
+  - id: planning_documents
+    category: "governance"
+    description: "Strategic plans, institutional effectiveness plans"
+    keywords: ["plan", "planning", "strategy", "effectiveness", "improvement"]
+    
+  # Financial Evidence
+  - id: financial_statements
+    category: "finances"
+    description: "Audited financial statements, budgets, financial reports"
+    keywords: ["financial", "budget", "audit", "revenue", "expenditure"]
+    
+  - id: resource_allocation
+    category: "finances"
+    description: "Budget allocation, resource distribution documentation"
+    keywords: ["allocation", "budget", "resource", "funding", "investment"]
+    
+  # Student Services Evidence
+  - id: student_services_documentation
+    category: "student_services"
+    description: "Student support services, advising, counseling documentation"
+    keywords: ["student service", "advising", "counseling", "support", "wellness"]
+    
+  - id: admissions_policies
+    category: "student_services"
+    description: "Admissions criteria, enrollment management policies"
+    keywords: ["admission", "enrollment", "criteria", "recruitment", "selection"]
+    
+  # Assessment Evidence
+  - id: assessment_reports
+    category: "assessment"
+    description: "Assessment plans, reports, and improvement documentation"
+    keywords: ["assessment", "evaluation", "measurement", "improvement", "data"]
+    
+  - id: institutional_research_data
+    category: "assessment"
+    description: "Institutional research reports and data analysis"
+    keywords: ["research", "data", "analysis", "metrics", "statistics"]
+
+# Mapping Rules Configuration
+mapping_rules:
+  strict:
+    description: "Requires exact match or high confidence (>0.9) for evidence mapping"
+    confidence_threshold: 0.9
+    requires_manual_review: true
+    evidence_multiplier: 1.0
+    
+  moderate:
+    description: "Allows moderate confidence (>0.8) with some flexibility"
+    confidence_threshold: 0.8
+    requires_manual_review: false
+    evidence_multiplier: 1.2
+    
+  comprehensive:
+    description: "Comprehensive mapping with contextual analysis"
+    confidence_threshold: 0.85
+    requires_manual_review: true
+    evidence_multiplier: 1.5
+    
+  specialized:
+    description: "Specialized for programmatic accreditation"
+    confidence_threshold: 0.85
+    requires_manual_review: true
+    evidence_multiplier: 1.3
+
+# AI Agent Configuration
+agent_config:
+  mapper:
+    model_preference: ["claude-3-sonnet", "gpt-4", "gpt-3.5-turbo"]
+    temperature: 0.1
+    max_tokens: 4000
+    system_prompt: "You are an expert accreditation specialist who maps institutional evidence to specific accreditation standards."
+    
+  gap_finder:
+    model_preference: ["claude-3-sonnet", "gpt-4"]
+    temperature: 0.2
+    max_tokens: 3000
+    system_prompt: "You are an accreditation expert who identifies gaps in evidence coverage for compliance."
+    
+  narrator:
+    model_preference: ["claude-3-sonnet", "gpt-4"]
+    temperature: 0.3
+    max_tokens: 6000
+    system_prompt: "You are a skilled writer who creates compelling compliance narratives for accreditation reports."
+    
+  verifier:
+    model_preference: ["claude-3-sonnet", "gpt-4"]
+    temperature: 0.1
+    max_tokens: 2000
+    system_prompt: "You are a meticulous reviewer who verifies citations and evidence claims for accuracy."
