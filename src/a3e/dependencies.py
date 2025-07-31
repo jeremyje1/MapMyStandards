@@ -16,7 +16,8 @@ logger = logging.getLogger(__name__)
 @lru_cache()
 def get_llm_service() -> LLMService:
     """Get LLM service singleton."""
-    return LLMService()
+    from .core.config import settings
+    return LLMService(settings)
 
 @lru_cache() 
 def get_proprietary_a3e_service() -> ProprietaryA3EService:

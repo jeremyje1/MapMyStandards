@@ -17,6 +17,39 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+@router.get("/", response_model=Dict[str, Any])
+async def list_standards_overview():
+    """Get overview of all standards in the system"""
+    try:
+        accreditors = list_all_accreditors()
+        
+        overview = {
+            "total_accreditors": len(accreditors),
+            "accreditors": [
+                {
+                    "id": acc.id,  # Use 'id' instead of 'accreditor_id'
+                    "name": acc.name,
+                    "type": acc.type.value,
+                    "institution_types": [it.value for it in acc.institution_types],
+                    "standards_count": len(acc.standards) if hasattr(acc, 'standards') else 0
+                }
+                for acc in accreditors
+            ],
+            "total_standards": sum(len(getattr(acc, 'standards', [])) for acc in accreditors),
+            "api_version": "1.0.0",
+            "last_updated": "2025-07-31"
+        }
+        
+        return {
+            "success": True,
+            "message": "Standards overview retrieved successfully",
+            "data": overview
+        }
+        
+    except Exception as e:
+        logger.error(f"Error retrieving standards overview: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve standards overview")
+
 # Pydantic models for request/response
 class StandardCreate(BaseModel):
     standard_id: str = Field(..., description="Unique identifier for the standard")

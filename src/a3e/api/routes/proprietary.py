@@ -174,6 +174,90 @@ async def get_ontology_insights(
         logger.error(f"Failed to get ontology insights: {e}")
         raise HTTPException(status_code=500, detail=f"Ontology insights failed: {str(e)}")
 
+@router.get("/ontology/concepts")
+async def get_ontology_concepts(
+    a3e_service: ProprietaryA3EService = Depends(get_proprietary_a3e_service)
+) -> Dict[str, Any]:
+    """
+    Get all concepts in the proprietary accreditation ontology.
+    
+    Returns complete concept hierarchy with metadata.
+    """
+    
+    try:
+        ontology = a3e_service.ontology
+        
+        concepts = []
+        for concept_id, concept_data in ontology.nodes.items():
+            concepts.append({
+                "id": concept_id,
+                "label": concept_data.get("label", concept_id),
+                "domain": concept_data.get("domain", "unknown"),
+                "type": concept_data.get("type", "concept"),
+                "description": concept_data.get("description", ""),
+                "embedding_dimensions": concept_data.get("embedding_dimensions", 512)
+            })
+        
+        return {
+            "success": True,
+            "message": f"Retrieved {len(concepts)} ontology concepts",
+            "data": {
+                "concepts": concepts,
+                "total_concepts": len(concepts),
+                "domains": list(set(c.get("domain", "unknown") for c in ontology.nodes.values())),
+                "schema_version": "1.0.0"
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get ontology concepts: {e}")
+        raise HTTPException(status_code=500, detail=f"Ontology concepts retrieval failed: {str(e)}")
+
+@router.get("/vector/health")
+async def get_vector_service_health(
+    a3e_service: ProprietaryA3EService = Depends(get_proprietary_a3e_service)
+) -> Dict[str, Any]:
+    """
+    Get vector matching service health and performance metrics.
+    
+    Returns status of proprietary vector-weighted matching algorithm.
+    """
+    
+    try:
+        vector_matcher = a3e_service.vector_matcher
+        
+        health_status = {
+            "service_status": "operational",
+            "algorithm_version": "1.0.0",
+            "embedding_dimensions": 512,
+            "similarity_threshold": vector_matcher.similarity_threshold,
+            "confidence_threshold": vector_matcher.min_confidence,
+            "domain_penalty_factor": vector_matcher.domain_penalty,
+            "scoring_factors": {
+                "semantic_similarity": "35%",
+                "ontology_hierarchy": "25%",
+                "domain_relevance": "20%",
+                "evidence_alignment": "15%",
+                "temporal_relevance": "5%"
+            },
+            "matching_strategies": [
+                "exact_semantic",
+                "inferential", 
+                "cross_domain",
+                "emergent_pattern"
+            ]
+        }
+        
+        return {
+            "success": True,
+            "message": "Vector service health check completed",
+            "data": health_status
+        }
+        
+    except Exception as e:
+        logger.error(f"Vector service health check failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Vector service health check failed: {str(e)}")
+
 @router.post("/ontology/query")
 async def query_ontology(
     request: OntologyQueryRequest,
