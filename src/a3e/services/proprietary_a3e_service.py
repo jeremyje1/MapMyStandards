@@ -16,7 +16,7 @@ from ..core import (
     AuditTrailSystem, AuditEvent, initialize_audit_system, get_audit_system
 )
 from ..services.llm_service import LLMService
-from ..models.database import Institution, Standard, Evidence, AccreditationReport
+from ..models import Institution, Standard, Evidence, GapAnalysis, Narrative
 
 logger = logging.getLogger(__name__)
 

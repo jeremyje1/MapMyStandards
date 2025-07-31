@@ -8,9 +8,9 @@ from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
 from pydantic import BaseModel, Field
 import logging
 
-from ..services.proprietary_a3e_service import ProprietaryA3EService
-from ..core import AccreditationDomain, EvidenceType, MatchingStrategy, TraceabilityLevel
-from ..dependencies import get_proprietary_a3e_service
+from ...services.proprietary_a3e_service import ProprietaryA3EService
+from ...core import AccreditationDomain, EvidenceType, MatchingStrategy, TraceabilityLevel
+from ...dependencies import get_proprietary_a3e_service
 
 logger = logging.getLogger(__name__)
 

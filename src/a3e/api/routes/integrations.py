@@ -6,14 +6,14 @@ from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
 from typing import Dict, List, Any, Optional
 import logging
 
-from ..services.integration_service import integration_manager
-from ..services.mock_canvas_service import mock_integration_manager
-from ..core.standards_config import standards_config
-from ..core.config import get_settings
+from ...services.integration_service import integration_manager
+from ...services.mock_canvas_service import mock_integration_manager
+from ...core.standards_config import standards_config
+from ...core.config import settings
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/integrations", tags=["integrations"])
-settings = get_settings()
+# settings imported from config module
 
 def get_integration_manager():
     """Get integration manager - use mock if no real Canvas credentials."""

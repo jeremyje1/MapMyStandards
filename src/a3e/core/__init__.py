@@ -7,7 +7,7 @@ from .standards_config import StandardsConfigLoader
 from .accreditation_ontology import AccreditationOntology, AccreditationDomain, EvidenceType, accreditation_ontology
 from .vector_matching import VectorWeightedMatcher, MatchingStrategy, StandardMatch, EvidenceDocument
 from .multi_agent_pipeline import MultiAgentPipeline, AgentRole, PipelineContext, ProcessingPhase
-from .audit_trail import AuditTrailSystem, AuditEvent, TraceabilityLink, initialize_audit_system, get_audit_system
+from .audit_trail import AuditTrailSystem, AuditEvent, TraceabilityLink, TraceabilityLevel, initialize_audit_system, get_audit_system
 
 __all__ = [
     "StandardsConfigLoader",
@@ -26,6 +26,7 @@ __all__ = [
     "AuditTrailSystem",
     "AuditEvent",
     "TraceabilityLink",
+    "TraceabilityLevel",
     "initialize_audit_system",
     "get_audit_system"
 ]

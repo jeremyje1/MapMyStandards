@@ -5,9 +5,12 @@ Environment-aware configuration management for the A3E system.
 Supports development, staging, and production environments.
 """
 
-from typing import Optional, List, Dict, Any
-from pydantic import BaseSettings, Field, validator
+from typing import List, Optional, Dict, Any, Annotated
 from enum import Enum
+from pathlib import Path
+
+from pydantic import BaseModel, Field, field_validator, ConfigDict
+from pydantic_settings import BaseSettings, SettingsConfigDict
 import os
 
 
@@ -72,8 +75,8 @@ class Settings(BaseSettings):
     
     # Document Processing
     max_file_size_mb: int = Field(default=100, env="MAX_FILE_SIZE_MB")
-    supported_file_types: List[str] = Field(
-        default=["pdf", "docx", "xlsx", "csv", "txt", "md"],
+    supported_file_types: str = Field(
+        default="pdf,docx,xlsx,csv,txt,md",
         env="SUPPORTED_FILE_TYPES"
     )
     
@@ -90,8 +93,8 @@ class Settings(BaseSettings):
     )
     
     # CORS
-    cors_origins: List[str] = Field(
-        default=["http://localhost:3000", "http://localhost:8080"],
+    cors_origins: str = Field(
+        default="http://localhost:3000,http://localhost:8080",
         env="CORS_ORIGINS"
     )
     
@@ -109,22 +112,11 @@ class Settings(BaseSettings):
     enable_batch_processing: bool = Field(default=True, env="ENABLE_BATCH_PROCESSING")
     enable_auto_evidence_mapping: bool = Field(default=True, env="ENABLE_AUTO_EVIDENCE_MAPPING")
     
-    @validator("environment", pre=True)
+    @field_validator("environment", mode="before")
+    @classmethod
     def validate_environment(cls, v):
         if isinstance(v, str):
             return Environment(v.lower())
-        return v
-    
-    @validator("cors_origins", pre=True)
-    def validate_cors_origins(cls, v):
-        if isinstance(v, str):
-            return [origin.strip() for origin in v.split(",")]
-        return v
-    
-    @validator("supported_file_types", pre=True)
-    def validate_supported_file_types(cls, v):
-        if isinstance(v, str):
-            return [file_type.strip() for file_type in v.split(",")]
         return v
     
     @property
@@ -134,6 +126,18 @@ class Settings(BaseSettings):
     @property
     def is_production(self) -> bool:
         return self.environment == Environment.PRODUCTION
+    
+    @property
+    def cors_origins_list(self) -> List[str]:
+        if isinstance(self.cors_origins, str):
+            return [origin.strip() for origin in self.cors_origins.split(",")]
+        return self.cors_origins
+    
+    @property
+    def supported_file_types_list(self) -> List[str]:
+        if isinstance(self.supported_file_types, str):
+            return [file_type.strip() for file_type in self.supported_file_types.split(",")]
+        return self.supported_file_types
     
     @property
     def milvus_uri(self) -> str:
@@ -148,9 +152,11 @@ class Settings(BaseSettings):
             "echo": self.is_development,
         }
     
-    class Config:
-        env_file = ".env"
-        case_sensitive = False
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore"
+    )
 
 
 # Global settings instance

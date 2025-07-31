@@ -154,28 +154,18 @@ app.include_router(api_router, prefix=settings.api_prefix)
 # Root endpoints
 @app.get("/")
 async def root():
-    """API root endpoint"""
-    return {
-        "message": "Welcome to A3E - Autonomous Accreditation & Audit Engine",
-        "version": settings.version,
-        "environment": settings.environment,
-        "docs_url": "/docs" if settings.is_development else "Documentation available upon request",
-        "supported_accreditors": len(ALL_ACCREDITORS),
-        "status": "operational"
-    }
-
-@app.get("/")
-async def root():
     """Root endpoint with system overview."""
     return {
         "message": "A³E - Autonomous Accreditation & Audit Engine",
         "version": settings.version,
+        "environment": settings.environment,
         "proprietary_features": [
             "Accreditation ontology + embeddings schema",
             "Vector-weighted standards-matching algorithm", 
             "Multi-agent LLM pipeline (Mapper → GapFinder → Narrator → Verifier)",
             "Audit-ready traceability system from LLM output to evidentiary source"
         ],
+        "supported_accreditors": len(ALL_ACCREDITORS),
         "endpoints": {
             "proprietary_analysis": "/api/v1/proprietary/analyze/complete",
             "evidence_analysis": "/api/v1/proprietary/analyze/evidence",
@@ -184,7 +174,8 @@ async def root():
             "capabilities": "/api/v1/proprietary/capabilities",
             "integrations": "/api/v1/integrations/"
         },
-        "documentation": "/docs"
+        "docs_url": "/docs" if settings.is_development else "Documentation available upon request",
+        "status": "operational"
     }
 
 @app.get("/health")
@@ -226,6 +217,7 @@ async def health_check():
                 "error": str(e),
                 "timestamp": datetime.utcnow().isoformat()
             }
+        )
 
 @app.get(f"{settings.api_prefix}/accreditors")
 async def list_accreditors(

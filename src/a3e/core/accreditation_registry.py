@@ -465,3 +465,13 @@ def get_standards_by_accreditor_and_institution_type(
         standard for standard in accreditor.standards
         if institution_type in standard.applicable_institution_types
     ]
+
+
+def get_accreditor_by_id(accreditor_id: str) -> Optional[AccreditingBody]:
+    """Get an accreditor by its ID"""
+    return ALL_ACCREDITORS.get(accreditor_id)
+
+
+def list_all_accreditors() -> List[AccreditingBody]:
+    """Get a list of all accreditors"""
+    return list(ALL_ACCREDITORS.values())

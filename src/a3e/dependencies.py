@@ -7,9 +7,9 @@ from typing import Optional
 import os
 import logging
 
-from ..services.proprietary_a3e_service import ProprietaryA3EService
-from ..services.llm_service import LLMService
-from ..core import TraceabilityLevel
+from .services.proprietary_a3e_service import ProprietaryA3EService
+from .services.llm_service import LLMService
+from .core import TraceabilityLevel
 
 logger = logging.getLogger(__name__)
 

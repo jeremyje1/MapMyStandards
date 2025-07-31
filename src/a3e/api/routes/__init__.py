@@ -10,7 +10,7 @@ from .standards import router as standards_router
 from .evidence import router as evidence_router
 from .workflows import router as workflows_router
 from .integrations import router as integrations_router
-from .proprietary import router as proprietary_router, config_router
+from .proprietary import router as proprietary_router
 
 # Create main API router
 api_router = APIRouter()
@@ -45,9 +45,6 @@ api_router.include_router(
     tags=["integrations"]
 )
 
-api_router.include_router(
-    config_router,
-    tags=["configuration"]
-)
+# Configuration router not yet implemented
 
 __all__ = ["api_router"]

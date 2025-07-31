@@ -12,10 +12,10 @@ from urllib.parse import urlencode, parse_qs, urlparse
 import logging
 from abc import ABC, abstractmethod
 
-from ..core.config import get_settings
+from ..core.config import settings
 
 logger = logging.getLogger(__name__)
-settings = get_settings()
+# settings imported from config module
 
 class BaseIntegrationService(ABC):
     """Base class for all integration services."""

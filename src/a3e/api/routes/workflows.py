@@ -12,7 +12,7 @@ from datetime import datetime
 
 from ...core.config import settings
 from ...services.database_service import DatabaseService
-from ...agents import AgentOrchestrator
+from ...agents import A3EAgentOrchestrator
 
 logger = logging.getLogger(__name__)
 
@@ -87,7 +87,7 @@ async def get_db_service():
 
 # Dependency for agent orchestrator
 async def get_agent_orchestrator():
-    return AgentOrchestrator()
+    return A3EAgentOrchestrator()
 
 @router.get("/workflows", response_model=List[WorkflowResponse])
 async def list_workflows(
@@ -245,7 +245,7 @@ async def execute_workflow(
     execution_data: WorkflowExecution,
     background_tasks: BackgroundTasks,
     db: DatabaseService = Depends(get_db_service),
-    orchestrator: AgentOrchestrator = Depends(get_agent_orchestrator)
+    orchestrator: A3EAgentOrchestrator = Depends(get_agent_orchestrator)
 ):
     """Execute a workflow using the agent orchestrator"""
     try:
@@ -292,7 +292,7 @@ async def execute_workflow(
 
 async def _execute_workflow_background(
     workflow_id: str,
-    orchestrator: AgentOrchestrator,
+    orchestrator: A3EAgentOrchestrator,
     db: DatabaseService
 ):
     """Background task for workflow execution"""

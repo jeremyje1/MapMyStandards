@@ -8,10 +8,10 @@ import json
 from typing import Dict, List, Optional, Any
 from datetime import datetime, timedelta
 import logging
-from ..core.config import get_settings
+from ..core.config import settings
 
 logger = logging.getLogger(__name__)
-settings = get_settings()
+# settings imported from config module
 
 class MockCanvasLMSService:
     """Mock Canvas LMS service with realistic data for testing."""
