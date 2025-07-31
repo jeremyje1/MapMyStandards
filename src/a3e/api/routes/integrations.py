@@ -29,6 +29,47 @@ def get_integration_manager():
         logger.info("Using mock Canvas data for development")
         return mock_integration_manager
 
+@router.get("/")
+async def get_integrations_overview() -> Dict[str, Any]:
+    """Get overview of all available integrations and their endpoints."""
+    return {
+        "success": True,
+        "message": "A³E Integration Services",
+        "data": {
+            "available_integrations": {
+                "canvas": {
+                    "description": "Canvas LMS integration for course data and learning outcomes",
+                    "status": "configured" if bool(getattr(settings, 'CANVAS_ACCESS_TOKEN', None)) else "not_configured",
+                    "endpoints": [
+                        "GET /api/v1/integrations/canvas/test",
+                        "GET /api/v1/integrations/canvas/courses",
+                        "GET /api/v1/integrations/canvas/courses/{course_id}/outcomes"
+                    ]
+                },
+                "banner": {
+                    "description": "Banner SIS integration for student and course data",
+                    "status": "configured" if bool(getattr(settings, 'BANNER_DB_URL', None)) else "not_configured",
+                    "endpoints": [
+                        "GET /api/v1/integrations/banner/students"
+                    ]
+                },
+                "sharepoint": {
+                    "description": "Microsoft SharePoint integration for document management",
+                    "status": "configured" if bool(getattr(settings, 'AZURE_CLIENT_ID', None)) else "not_configured",
+                    "endpoints": [
+                        "GET /api/v1/integrations/sharepoint/sites",
+                        "GET /api/v1/integrations/sharepoint/sites/{site_id}/documents"
+                    ]
+                }
+            },
+            "management_endpoints": [
+                "GET /api/v1/integrations/status",
+                "POST /api/v1/integrations/sync",
+                "POST /api/v1/integrations/canvas/oauth/callback"
+            ]
+        }
+    }
+
 @router.get("/status")
 async def get_integration_status() -> Dict[str, Any]:
     """Get status of all configured integrations."""
