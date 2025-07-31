@@ -5,14 +5,17 @@ Provides REST and GraphQL APIs for the Autonomous Accreditation & Audit Engine.
 Features proprietary ontology, vector-weighted matching, multi-agent pipeline, and audit traceability.
 """
 
-from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, BackgroundTasks
+from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, BackgroundTasks, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 from typing import List, Optional, Dict, Any
 import uvicorn
 import logging
+import os
 from datetime import datetime
 
 from .core.config import settings
@@ -132,7 +135,7 @@ app = FastAPI(
     - Complete evidence-to-output traceability system
     """,
     lifespan=lifespan,
-    docs_url="/docs" if settings.is_development else None,
+    docs_url=None,  # Disable default docs - using custom
     redoc_url="/redoc" if settings.is_development else None,
 )
 
@@ -148,6 +151,10 @@ app.add_middleware(
 # Security
 security = HTTPBearer()
 
+# Templates configuration
+project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+templates = Jinja2Templates(directory=os.path.join(project_root, "templates"))
+
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """Authentication dependency"""
     # TODO: Implement JWT token validation
@@ -160,9 +167,14 @@ app.include_router(proprietary_router)
 app.include_router(api_router, prefix=settings.api_prefix)
 
 # Root endpoints
-@app.get("/")
-async def root():
-    """Root endpoint with system overview."""
+@app.get("/", response_class=HTMLResponse, include_in_schema=False)
+async def root_page(request: Request):
+    """Enhanced landing page with system overview."""
+    return templates.TemplateResponse("index.html", {"request": request})
+
+@app.get("/api", include_in_schema=False)
+async def root_api():
+    """API root endpoint with JSON system overview."""
     return {
         "message": "A³E - Autonomous Accreditation & Audit Engine",
         "version": settings.version,
@@ -185,6 +197,11 @@ async def root():
         "docs_url": "/docs" if settings.is_development else "Documentation available upon request",
         "status": "operational"
     }
+
+@app.get("/docs", response_class=HTMLResponse, include_in_schema=False)
+async def custom_swagger_ui_html(request: Request):
+    """Custom Swagger UI with enhanced styling."""
+    return templates.TemplateResponse("docs.html", {"request": request})
 
 @app.get("/health")
 async def health_check():

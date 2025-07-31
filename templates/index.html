@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A³E - Autonomous Accreditation & Audit Engine</title>
+    <link rel="icon" type="image/png" href="https://fastapi.tiangolo.com/img/favicon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary-color: #10b981;
+            --accent-color: #f59e0b;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --background: #f8fafc;
+            --card-bg: #ffffff;
+            --border-color: #e5e7eb;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: var(--text-primary);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 4rem 0;
+            color: white;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 2rem;
+            font-size: 2rem;
+            font-weight: 700;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            color: #10b981;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 4rem 0;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: var(--shadow-lg);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        .card-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card:nth-child(1) .card-icon {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+        .card:nth-child(2) .card-icon {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+        }
+        .card:nth-child(3) .card-icon {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+        }
+        .card:nth-child(4) .card-icon {
+            background: linear-gradient(135deg, #43e97b, #38f9d7);
+        }
+
+        .card h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .card p {
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: var(--background);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border-color);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 4rem 0;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 2rem 0;
+            color: rgba(255, 255, 255, 0.8);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+            
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                padding: 1rem;
+            }
+        }
+
+        .system-info {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .system-info h4 {
+            color: white;
+            margin-bottom: 1rem;
+            font-size: 1.125rem;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .info-label {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .info-value {
+            color: white;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="hero">
+            <div class="logo">A³E</div>
+            <h1>Autonomous Accreditation & Audit Engine</h1>
+            <p>Proprietary AI-Powered Accreditation Intelligence Platform</p>
+            <div class="status-badge">
+                <div class="status-indicator"></div>
+                System Operational
+            </div>
+
+            <div class="system-info">
+                <h4>Live System Status</h4>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">Version</span>
+                        <span class="info-value">0.1.0</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Environment</span>
+                        <span class="info-value">Development</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Accreditors</span>
+                        <span class="info-value">11 Supported</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Canvas LMS</span>
+                        <span class="info-value">Connected</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">500+</div>
+                <div class="stat-label">Ontology Concepts</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">512</div>
+                <div class="stat-label">Embedding Dimensions</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">4</div>
+                <div class="stat-label">AI Agents</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">85%+</div>
+                <div class="stat-label">Citation Accuracy</div>
+            </div>
+        </div>
+
+        <div class="cards-grid">
+            <div class="card">
+                <div class="card-icon">🧠</div>
+                <h3>Proprietary Ontology</h3>
+                <p>Hierarchical concept framework with 500+ accreditation concepts across 8 domains, optimized for higher education compliance analysis.</p>
+                <div class="card-actions">
+                    <a href="/api/v1/proprietary/capabilities" class="btn btn-primary">Explore Capabilities</a>
+                    <a href="/docs" class="btn btn-secondary">API Docs</a>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">🔍</div>
+                <h3>Vector Matching</h3>
+                <p>Multi-dimensional similarity algorithm with 512-dimensional embeddings for precise standards-to-evidence alignment.</p>
+                <div class="card-actions">
+                    <a href="/api/v1/proprietary/analyze/evidence" class="btn btn-primary">Analyze Evidence</a>
+                    <a href="/health" class="btn btn-secondary">System Health</a>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">🤖</div>
+                <h3>Multi-Agent Pipeline</h3>
+                <p>Four specialized AI agents working in sequence: Mapper → GapFinder → Narrator → Verifier for comprehensive analysis.</p>
+                <div class="card-actions">
+                    <a href="/api/v1/proprietary/analyze/complete" class="btn btn-primary">Run Analysis</a>
+                    <a href="/redoc" class="btn btn-secondary">Documentation</a>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">📋</div>
+                <h3>Canvas Integration</h3>
+                <p>Live integration with Canvas LMS for real-time course data, learning outcomes, and student performance analysis.</p>
+                <div class="card-actions">
+                    <a href="/api/v1/integrations/canvas/courses" class="btn btn-primary">View Courses</a>
+                    <a href="/api/v1/integrations/" class="btn btn-secondary">All Integrations</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© 2025 A³E - Autonomous Accreditation & Audit Engine</p>
+            <p>Powered by FastAPI • Multi-Accreditor Support • Proprietary AI Intelligence</p>
+        </div>
+    </div>
+
+    <script>
+        // Add some interactivity
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate cards on scroll
+            const cards = document.querySelectorAll('.card');
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            });
+
+            cards.forEach((card) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(30px)';
+                card.style.transition = 'opacity 0.6s, transform 0.6s';
+                observer.observe(card);
+            });
+
+            // Add live status checking
+            async function checkSystemStatus() {
+                try {
+                    const response = await fetch('/health');
+                    const data = await response.json();
+                    
+                    const statusBadge = document.querySelector('.status-badge');
+                    if (data.status === 'healthy') {
+                        statusBadge.style.background = 'rgba(16, 185, 129, 0.2)';
+                        statusBadge.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+                        statusBadge.style.color = '#10b981';
+                    } else {
+                        statusBadge.style.background = 'rgba(245, 158, 11, 0.2)';
+                        statusBadge.style.borderColor = 'rgba(245, 158, 11, 0.3)';
+                        statusBadge.style.color = '#f59e0b';
+                    }
+                } catch (error) {
+                    console.log('Status check failed:', error);
+                }
+            }
+
+            // Check status every 30 seconds
+            checkSystemStatus();
+            setInterval(checkSystemStatus, 30000);
+        });
+    </script>
+</body>
+</html>

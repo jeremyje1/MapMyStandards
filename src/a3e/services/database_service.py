@@ -487,9 +487,9 @@ class DatabaseService:
     
     async def close(self):
         """Close database connection"""
-        if self.session:
+        if hasattr(self, 'session') and self.session:
             await self.session.close()
-        if self.engine:
+        if hasattr(self, 'engine') and self.engine:
             await self.engine.dispose()
     
     async def health_check(self) -> bool:
