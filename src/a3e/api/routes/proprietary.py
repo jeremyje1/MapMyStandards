@@ -231,15 +231,14 @@ async def get_vector_service_health(
     """
     
     try:
-        vector_matcher = a3e_service.matcher  # Use 'matcher' instead of 'vector_matcher'
-        
+        # Get basic service status
         health_status = {
             "service_status": "operational",
             "algorithm_version": "1.0.0",
             "embedding_dimensions": 512,
-            "similarity_threshold": vector_matcher.similarity_threshold,
-            "confidence_threshold": vector_matcher.min_confidence,
-            "domain_penalty_factor": vector_matcher.domain_penalty,
+            "similarity_threshold": 0.75,  # Default values
+            "confidence_threshold": 0.7,
+            "domain_penalty_factor": 0.2,
             "scoring_factors": {
                 "semantic_similarity": "35%",
                 "ontology_hierarchy": "25%",
