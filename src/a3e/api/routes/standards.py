@@ -30,7 +30,7 @@ async def list_standards_overview():
                     "id": acc.id,  # Use 'id' instead of 'accreditor_id'
                     "name": acc.name,
                     "type": acc.type.value,
-                    "institution_types": [it.value for it in acc.institution_types],
+                    "institution_types": [it.value for it in acc.applicable_institution_types],  # Fixed attribute name
                     "standards_count": len(acc.standards) if hasattr(acc, 'standards') else 0
                 }
                 for acc in accreditors

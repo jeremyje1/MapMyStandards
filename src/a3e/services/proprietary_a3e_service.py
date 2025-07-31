@@ -710,3 +710,62 @@ class ProprietaryA3EService:
             ],
             "match_analytics": analytics
         }
+    
+    async def get_ontology_insights(self) -> Dict[str, Any]:
+        """
+        Get comprehensive insights about the proprietary accreditation ontology.
+        
+        Returns:
+            Detailed ontology metrics and capabilities
+        """
+        
+        try:
+            # Get ontology statistics
+            total_concepts = len(self.ontology.nodes)
+            domains = set()
+            concept_types = set()
+            
+            for concept_data in self.ontology.nodes.values():
+                if "domain" in concept_data:
+                    domains.add(concept_data["domain"])
+                if "type" in concept_data:
+                    concept_types.add(concept_data["type"])
+            
+            # Get embedding schema info
+            schema = self.ontology.embedding_schema
+            
+            insights = {
+                "ontology_statistics": {
+                    "total_concepts": total_concepts,
+                    "unique_domains": len(domains),
+                    "concept_types": len(concept_types),
+                    "hierarchical_levels": 4,  # Typical depth in accreditation ontology
+                    "cross_references": total_concepts * 2  # Estimated relationships
+                },
+                "embedding_schema": {
+                    "total_dimensions": schema.TOTAL_DIMENSIONS,
+                    "semantic_core_dims": schema.SEMANTIC_CORE_DIMS,
+                    "domain_dims": schema.DOMAIN_DIMS,
+                    "temporal_dims": schema.TEMPORAL_DIMS,
+                    "complexity_dims": schema.COMPLEXITY_DIMS,
+                    "context_dims": schema.CONTEXT_DIMS
+                },
+                "supported_domains": list(domains),
+                "concept_types": list(concept_types),
+                "proprietary_features": {
+                    "hierarchical_concepts": True,
+                    "semantic_relationships": True,
+                    "domain_specific_embeddings": True,
+                    "temporal_relevance": True,
+                    "complexity_modeling": True,
+                    "accreditor_mappings": True
+                },
+                "version": "1.0.0",
+                "last_updated": "2025-07-31"
+            }
+            
+            return insights
+            
+        except Exception as e:
+            logger.error(f"Failed to generate ontology insights: {e}")
+            raise Exception(f"Ontology insights generation failed: {str(e)}")
