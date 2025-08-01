@@ -386,6 +386,6 @@ if __name__ == "__main__":
         "simple_trial_api_v2:app",
         host="0.0.0.0",
         port=port,
-        reload=True,
+        reload=False,  # Disable reload in production
         log_level="info"
     )
