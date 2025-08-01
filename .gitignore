@@ -57,6 +57,9 @@ env/
 ENV/
 env.bak/
 venv.bak/
+stripe_venv/
+.venv/
+myenv/
 
 # IDEs
 .vscode/
@@ -137,3 +140,4 @@ config/secrets.yaml
 tmp/
 temp/
 .tmp/
+.vercel
