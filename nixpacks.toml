@@ -8,4 +8,5 @@ cmds = ['python -m pip install -r requirements.txt']
 cmds = ['echo "No build step needed"']
 
 [start]
+cmd = 'python -m uvicorn saas_api_safe:app --host 0.0.0.0 --port $PORT'
 cmd = 'python -m uvicorn railway_test_api:app --host 0.0.0.0 --port $PORT'
