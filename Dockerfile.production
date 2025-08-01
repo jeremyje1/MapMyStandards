@@ -37,7 +37,7 @@ COPY --from=builder /root/.local /home/a3e/.local
 RUN groupadd -r a3e && useradd -r -g a3e -m a3e
 
 # Copy application code
-COPY simple_trial_api_v2_fixed.py .
+COPY ultra_minimal_api.py .
 COPY src/ ./src/
 COPY web/ ./web/
 COPY templates/ ./templates/
@@ -61,4 +61,4 @@ ENV PYTHONPATH=/app
 ENV PORT=8000
 
 # Run the application
-CMD ["python", "-m", "uvicorn", "simple_trial_api_v2_fixed:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python", "ultra_minimal_api.py"]
