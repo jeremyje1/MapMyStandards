@@ -14,7 +14,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir fastapi uvicorn python-dotenv aiosqlite stripe
 
 # Copy application code
-COPY working_saas_api.py .
+COPY debug_api.py .
 COPY src/ ./src/
 COPY web/ ./web/
 COPY templates/ ./templates/
@@ -30,5 +30,5 @@ EXPOSE 8080
 ENV PORT=8080
 ENV PYTHONPATH=/app
 
-# Run the working SaaS API
-CMD ["python", "working_saas_api.py"]
+# Run the debug API
+CMD ["python", "debug_api.py"]
