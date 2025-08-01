@@ -1,0 +1,22 @@
+# Minimal Dockerfile for testing Railway deployment
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install minimal dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir fastapi uvicorn python-dotenv aiosqlite stripe
+
+# Copy test API and diagnostics
+COPY minimal_test_api.py .
+COPY diagnostic_startup.py .
+
+# Expose port
+EXPOSE 8000
+
+# Set environment
+ENV PORT=8000
+ENV PYTHONPATH=/app
+
+# Run the diagnostic startup
+CMD ["python", "diagnostic_startup.py"]
