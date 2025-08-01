@@ -22,10 +22,5 @@
   ],
   "env": {
     "PYTHONPATH": "."
-  },
-  "functions": {
-    "platform_demo.py": {
-      "runtime": "python3.9"
-    }
   }
 }
