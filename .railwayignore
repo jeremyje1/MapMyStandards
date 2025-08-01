@@ -1,0 +1,5 @@
+dockerfiles_backup/
+*.dockerfile
+Dockerfile*
+docker-compose*
+.dockerignore
