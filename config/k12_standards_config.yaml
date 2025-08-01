@@ -1,0 +1,338 @@
+# K-12 Accreditation Standards Configuration for A³E Engine
+# Supports major K-12 accreditors and state accountability frameworks
+
+k12_accreditors:
+  # Cognia (formerly AdvancED) - Major K-12 Accreditor
+  - name: Cognia
+    id: cognia
+    full_name: "Cognia (formerly AdvancED)"
+    type: k12_regional
+    region: "US National"
+    geographic_scope: ["NATIONAL"]
+    standards_uri: "https://www.cognia.org/accreditation/standards/"
+    standards_version: "2024"
+    mapping_rules: "comprehensive"
+    recognition_authority: "Council for Higher Education Accreditation"
+    website: "https://www.cognia.org"
+    applicable_institution_types:
+      - elementary_school
+      - middle_school
+      - high_school
+      - school_district
+      - charter_school
+      - private_school
+    standards:
+      - id: "cognia_1_1"
+        title: "Purpose and Direction"
+        category: "leadership_governance"
+        subcategory: "vision_mission"
+        description: "The school maintains and communicates a purpose and direction that commits to high expectations for learning"
+        evidence_requirements:
+          - mission_statement
+          - vision_statement
+          - strategic_plan
+          - stakeholder_communication
+      - id: "cognia_1_2"
+        title: "Governance and Leadership"
+        category: "leadership_governance"
+        subcategory: "organizational_structure"
+        description: "The school operates under governance and leadership that promotes student performance"
+        evidence_requirements:
+          - organizational_chart
+          - leadership_policies
+          - board_minutes
+          - administrative_procedures
+      - id: "cognia_2_1"
+        title: "Teaching and Assessing for Learning"
+        category: "teaching_learning"
+        subcategory: "curriculum_instruction"
+        description: "The school's curriculum, instructional design, and assessment practices guide teaching and learning"
+        evidence_requirements:
+          - curriculum_guides
+          - lesson_plans
+          - assessment_data
+          - instructional_strategies
+      - id: "cognia_2_2"
+        title: "Student Learning Environment"
+        category: "teaching_learning"
+        subcategory: "learning_environment"
+        description: "The school maintains a learning environment that enables students to reach their full potential"
+        evidence_requirements:
+          - classroom_observations
+          - student_support_services
+          - behavior_management
+          - learning_accommodations
+      - id: "cognia_3_1"
+        title: "Resource and Support Systems"
+        category: "resources"
+        subcategory: "human_resources"
+        description: "The school has resources and provides services that support its purpose and direction"
+        evidence_requirements:
+          - staffing_reports
+          - professional_development
+          - facilities_assessment
+          - technology_resources
+
+  # WASC K-12 
+  - name: WASC_K12
+    id: wasc_k12
+    full_name: "Western Association of Schools and Colleges K-12"
+    type: k12_regional
+    region: "US West"
+    geographic_scope: ["CA", "HI", "NV", "UT", "International"]
+    standards_uri: "https://www.acswasc.org/accreditation-criteria/"
+    standards_version: "2022"
+    mapping_rules: "comprehensive"
+    applicable_institution_types:
+      - elementary_school
+      - middle_school
+      - high_school
+      - charter_school
+      - private_school
+    standards:
+      - id: "wasc_a1"
+        title: "Vision and Purpose"
+        category: "leadership_governance"
+        description: "The school demonstrates a clear understanding of its purpose and schoolwide learner outcomes"
+        evidence_requirements:
+          - mission_statement
+          - schoolwide_learner_outcomes
+          - stakeholder_input
+      - id: "wasc_a2"
+        title: "Governance"
+        category: "leadership_governance"
+        description: "The governing authority and school leadership demonstrate effective governance"
+        evidence_requirements:
+          - governance_structure
+          - leadership_effectiveness
+          - decision_making_processes
+
+# K-12 Institution Types
+k12_institution_types:
+  - id: elementary_school
+    name: "Elementary School"
+    description: "Grades K-5 or K-6 educational institutions"
+    typical_accreditors: [cognia, wasc_k12, msa_cess]
+    grade_levels: ["K", "1", "2", "3", "4", "5"]
+    
+  - id: middle_school
+    name: "Middle School"
+    description: "Grades 6-8 or 7-9 educational institutions"
+    typical_accreditors: [cognia, wasc_k12, msa_cess]
+    grade_levels: ["6", "7", "8"]
+    
+  - id: high_school
+    name: "High School"
+    description: "Grades 9-12 educational institutions"
+    typical_accreditors: [cognia, wasc_k12, msa_cess]
+    grade_levels: ["9", "10", "11", "12"]
+    
+  - id: k12_school
+    name: "K-12 School"
+    description: "Complete K-12 educational institutions"
+    typical_accreditors: [cognia, wasc_k12, msa_cess]
+    grade_levels: ["K", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"]
+    
+  - id: charter_school
+    name: "Charter School"
+    description: "Publicly funded independently operated schools"
+    typical_accreditors: [cognia, state_specific]
+    
+  - id: private_school
+    name: "Private School"
+    description: "Privately funded educational institutions"
+    typical_accreditors: [cognia, wasc_k12, religious_accreditors]
+    
+  - id: school_district
+    name: "School District"
+    description: "Administrative unit governing multiple schools"
+    typical_accreditors: [cognia, state_education_agency]
+
+# K-12 Evidence Categories and Tags
+k12_evidence_tags:
+  # Academic Program Evidence
+  - id: lesson_plans
+    category: "curriculum_instruction"
+    description: "Individual lesson plans and instructional materials"
+    keywords: ["lesson", "plan", "activity", "objective", "standard", "assessment"]
+    privacy_level: "medium"
+    
+  - id: curriculum_maps
+    category: "curriculum_instruction"
+    description: "Scope and sequence documents, curriculum guides"
+    keywords: ["curriculum", "scope", "sequence", "pacing", "guide", "standards"]
+    privacy_level: "low"
+    
+  - id: student_assessment_data
+    category: "student_achievement"
+    description: "Student performance data and assessment results"
+    keywords: ["assessment", "test", "score", "performance", "data", "achievement"]
+    privacy_level: "high"
+    pii_fields: ["student_name", "student_id", "grade", "score"]
+    
+  - id: iep_documents
+    category: "special_services"
+    description: "Individualized Education Program documentation"
+    keywords: ["iep", "special", "accommodation", "modification", "disability"]
+    privacy_level: "high"
+    pii_fields: ["student_name", "student_id", "disability", "parent_name"]
+    
+  # School Operations Evidence
+  - id: classroom_observations
+    category: "teaching_effectiveness"
+    description: "Teacher observation forms and evaluations"
+    keywords: ["observation", "walkthrough", "evaluation", "teaching", "instruction"]
+    privacy_level: "medium"
+    pii_fields: ["teacher_name", "student_name"]
+    
+  - id: plc_minutes
+    category: "professional_development"
+    description: "Professional Learning Community meeting minutes"
+    keywords: ["plc", "meeting", "collaboration", "professional", "learning"]
+    privacy_level: "low"
+    
+  - id: parent_engagement_logs
+    category: "community_engagement"
+    description: "Family and community engagement documentation"
+    keywords: ["parent", "family", "community", "engagement", "communication"]
+    privacy_level: "medium"
+    pii_fields: ["parent_name", "student_name", "contact_info"]
+    
+  - id: disciplinary_records
+    category: "student_support"
+    description: "Student behavior and disciplinary documentation"
+    keywords: ["discipline", "behavior", "incident", "suspension", "referral"]
+    privacy_level: "high"
+    pii_fields: ["student_name", "student_id", "incident_details"]
+    
+  # Administrative Evidence
+  - id: school_improvement_plan
+    category: "strategic_planning"
+    description: "School improvement and strategic planning documents"
+    keywords: ["improvement", "plan", "goal", "strategy", "objective", "action"]
+    privacy_level: "low"
+    
+  - id: budget_documents
+    category: "financial_management"
+    description: "School and district budget documentation"
+    keywords: ["budget", "financial", "expenditure", "revenue", "allocation"]
+    privacy_level: "low"
+    
+  - id: staff_evaluations
+    category: "human_resources"
+    description: "Teacher and staff evaluation documentation"
+    keywords: ["evaluation", "performance", "teacher", "staff", "review"]
+    privacy_level: "medium"
+    pii_fields: ["teacher_name", "employee_id"]
+
+# K-12 Specific Roles
+k12_roles:
+  - id: principal
+    name: "Principal"
+    description: "School building administrator"
+    permissions: ["view_all", "upload_evidence", "generate_reports"]
+    
+  - id: assistant_principal
+    name: "Assistant Principal"
+    description: "Assistant school administrator"
+    permissions: ["view_school", "upload_evidence", "manage_discipline"]
+    
+  - id: curriculum_coordinator
+    name: "Curriculum Coordinator"
+    description: "Academic program oversight"
+    permissions: ["view_academic", "upload_curriculum", "manage_assessments"]
+    
+  - id: instructional_coach
+    name: "Instructional Coach"
+    description: "Teacher support and development"
+    permissions: ["view_instruction", "upload_observations", "manage_pd"]
+    
+  - id: data_coordinator
+    name: "Data Coordinator"
+    description: "Assessment and data analysis"
+    permissions: ["view_data", "upload_assessments", "generate_analytics"]
+    
+  - id: superintendent
+    name: "Superintendent"
+    description: "District chief executive"
+    permissions: ["view_district", "upload_any", "full_reports"]
+    
+  - id: teacher
+    name: "Teacher"
+    description: "Classroom instructor"
+    permissions: ["view_classroom", "upload_lessons", "view_own_data"]
+
+# Privacy and Compliance Rules for K-12
+k12_privacy_rules:
+  ferpa_compliance:
+    enabled: true
+    auto_redact: true
+    protected_fields:
+      - student_name
+      - student_id
+      - parent_name
+      - parent_contact
+      - grade_specific_data
+      - disciplinary_details
+      
+  coppa_compliance:
+    enabled: true
+    age_threshold: 13
+    additional_protections:
+      - no_photo_processing
+      - enhanced_consent_tracking
+      - minimal_data_retention
+      
+  redaction_patterns:
+    - pattern: "student:\\s*[A-Za-z\\s]+"
+      replacement: "[STUDENT REDACTED]"
+    - pattern: "parent:\\s*[A-Za-z\\s]+"
+      replacement: "[PARENT REDACTED]"
+    - pattern: "\\b\\d{6,9}\\b"  # Student IDs
+      replacement: "[ID REDACTED]"
+    - pattern: "\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b"
+      replacement: "[EMAIL REDACTED]"
+
+# K-12 AI Agent Configuration
+k12_agent_config:
+  mapper:
+    model_preference: ["claude-3-sonnet", "gpt-4"]
+    temperature: 0.1
+    max_tokens: 3500
+    system_prompt: "You are an expert K-12 education consultant who maps school evidence to accreditation standards. Use clear, parent-friendly language and focus on student outcomes and school effectiveness."
+    
+  gap_finder:
+    model_preference: ["claude-3-sonnet", "gpt-4"]
+    temperature: 0.2
+    max_tokens: 3000
+    system_prompt: "You are a K-12 accreditation specialist who identifies missing evidence for school compliance. Focus on practical, actionable recommendations for school leaders."
+    
+  narrator:
+    model_preference: ["claude-3-sonnet", "gpt-4"]
+    temperature: 0.3
+    max_tokens: 4000
+    system_prompt: "You are a skilled educational writer who creates compelling school narratives for accreditation. Use accessible language that principals, teachers, and parents can understand. Avoid jargon and focus on student success stories."
+    
+  verifier:
+    model_preference: ["claude-3-sonnet", "gpt-4"]
+    temperature: 0.1
+    max_tokens: 2000
+    system_prompt: "You are a meticulous K-12 reviewer who verifies evidence citations for accuracy. Ensure all claims are supported by appropriate school documentation."
+
+# K-12 Narrative Templates
+k12_narrative_templates:
+  leadership_governance: |
+    Our school demonstrates strong leadership and governance through [EVIDENCE]. 
+    The principal and administrative team work collaboratively to ensure student success by [ACTIONS].
+    Families and community members are engaged through [ENGAGEMENT_METHODS].
+    
+  teaching_learning: |
+    Our teachers deliver high-quality instruction that meets the needs of all students.
+    Evidence of effective teaching includes [CLASSROOM_EVIDENCE].
+    Student learning is supported through [SUPPORT_SYSTEMS].
+    Assessment data shows [STUDENT_OUTCOMES].
+    
+  resources_support: |
+    Our school provides comprehensive resources and support systems for student success.
+    Professional development ensures teachers have the skills needed for effective instruction.
+    Facilities and technology support learning through [RESOURCE_EXAMPLES].

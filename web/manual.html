@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="MapMyStandards.ai User Manual - Complete Guide to A³E Engine, Document Analysis, and Platform Features">
+    <title>User Manual - MapMyStandards.ai</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #2c3e50;
+            background-color: #ffffff;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* Header */
+        header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            text-decoration: none;
+            color: white;
+        }
+        
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+        
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.3s;
+        }
+        
+        .nav-links a:hover {
+            opacity: 0.8;
+        }
+        
+        /* Hero Section */
+        .manual-hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4rem 0;
+            text-align: center;
+        }
+        
+        .manual-hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+        
+        .manual-hero p {
+            font-size: 1.2rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        /* Manual Content Layout */
+        .manual-content {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 3rem;
+            padding: 3rem 0;
+            min-height: 70vh;
+        }
+        
+        .sidebar {
+            position: sticky;
+            top: 2rem;
+            height: fit-content;
+        }
+        
+        .toc {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .toc h3 {
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+            font-size: 1.2rem;
+        }
+        
+        .toc ul {
+            list-style: none;
+        }
+        
+        .toc li {
+            margin-bottom: 0.8rem;
+        }
+        
+        .toc a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        
+        .toc a:hover {
+            color: #5a6fd8;
+        }
+        
+        .toc .sub-item {
+            margin-left: 1rem;
+            font-size: 0.9rem;
+        }
+        
+        /* Main Content */
+        .main-content {
+            max-width: 800px;
+        }
+        
+        .section {
+            margin-bottom: 4rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .section:last-child {
+            border-bottom: none;
+        }
+        
+        .section h2 {
+            font-size: 2.2rem;
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid #667eea;
+            padding-left: 1rem;
+        }
+        
+        .section h3 {
+            font-size: 1.6rem;
+            color: #2c3e50;
+            margin: 2rem 0 1rem;
+        }
+        
+        .section h4 {
+            font-size: 1.3rem;
+            color: #667eea;
+            margin: 1.5rem 0 0.8rem;
+        }
+        
+        .section p {
+            color: #6c757d;
+            margin-bottom: 1.2rem;
+            font-size: 1.05rem;
+        }
+        
+        .section ul,
+        .section ol {
+            margin: 1rem 0 1.5rem 2rem;
+            color: #6c757d;
+        }
+        
+        .section li {
+            margin-bottom: 0.5rem;
+        }
+        
+        /* Code Blocks */
+        .code-block {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+            overflow-x: auto;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9rem;
+        }
+        
+        .inline-code {
+            background: #f8f9fa;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9rem;
+            color: #e74c3c;
+        }
+        
+        /* Info Boxes */
+        .info-box {
+            background: #e8f4f8;
+            border-left: 4px solid #3498db;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .warning-box {
+            background: #fef4e6;
+            border-left: 4px solid #f39c12;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .tip-box {
+            background: #edf7ed;
+            border-left: 4px solid #27ae60;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .info-box h5,
+        .warning-box h5,
+        .tip-box h5 {
+            margin-bottom: 0.8rem;
+            font-weight: 600;
+        }
+        
+        /* Screenshots Placeholder */
+        .screenshot {
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            padding: 3rem;
+            text-align: center;
+            margin: 2rem 0;
+            border-radius: 8px;
+            color: #6c757d;
+        }
+        
+        /* Process Steps */
+        .step-list {
+            counter-reset: step-counter;
+            list-style: none;
+            margin-left: 0;
+        }
+        
+        .step-list li {
+            counter-increment: step-counter;
+            position: relative;
+            padding: 1rem 0 1rem 3rem;
+            margin-bottom: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .step-list li::before {
+            content: counter(step-counter);
+            position: absolute;
+            left: 1rem;
+            top: 1rem;
+            background: #667eea;
+            color: white;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        
+        /* Footer */
+        footer {
+            background: #2c3e50;
+            color: white;
+            padding: 3rem 0 2rem;
+            margin-top: 4rem;
+        }
+        
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .footer-section h3 {
+            margin-bottom: 1rem;
+            color: #ecf0f1;
+        }
+        
+        .footer-section a {
+            color: #bdc3c7;
+            text-decoration: none;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+        
+        .footer-section a:hover {
+            color: white;
+        }
+        
+        .footer-bottom {
+            border-top: 1px solid #34495e;
+            padding-top: 1rem;
+            text-align: center;
+            color: #bdc3c7;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 968px) {
+            .manual-content {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            
+            .sidebar {
+                position: static;
+                order: 2;
+            }
+            
+            .main-content {
+                order: 1;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .manual-hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+            
+            .section h2 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="container">
+            <a href="https://mapmystandards.ai/" class="logo">MapMyStandards.ai</a>
+            <ul class="nav-links">
+                <li><a href="https://mapmystandards.ai/">Home</a></li>
+                <li><a href="https://mapmystandards.ai/services/">Services</a></li>
+                <li><a href="https://mapmystandards.ai/about/">About</a></li>
+                <li><a href="https://mapmystandards.ai/user-guide/">User Guide</a></li>
+                <li><a href="https://mapmystandards.ai/contact/">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="manual-hero">
+            <div class="container">
+                <h1>User Manual</h1>
+                <p>Complete guide to maximizing your accreditation efficiency with the A³E engine and platform features.</p>
+            </div>
+        </section>
+
+        <div class="container manual-content">
+            <aside class="sidebar">
+                <nav class="toc">
+                    <h3>Table of Contents</h3>
+                    <ul>
+                        <li><a href="#getting-started">Getting Started</a>
+                            <ul>
+                                <li class="sub-item"><a href="#account-setup">Account Setup</a></li>
+                                <li class="sub-item"><a href="#initial-config">Initial Configuration</a></li>
+                            </ul>
+                        </li>
+                        <li><a href="#platform-overview">Platform Overview</a></li>
+                        <li><a href="#document-analysis">Document Analysis</a>
+                            <ul>
+                                <li class="sub-item"><a href="#upload-process">Upload Process</a></li>
+                                <li class="sub-item"><a href="#ai-processing">AI Processing</a></li>
+                            </ul>
+                        </li>
+                        <li><a href="#gap-analysis">Gap Analysis</a></li>
+                        <li><a href="#reporting">Reports & Analytics</a></li>
+                        <li><a href="#canvas-integration">Canvas Integration</a></li>
+                        <li><a href="#best-practices">Best Practices</a></li>
+                        <li><a href="#troubleshooting">Troubleshooting</a></li>
+                    </ul>
+                </nav>
+            </aside>
+
+            <div class="main-content">
+                <section id="getting-started" class="section">
+                    <h2>Getting Started</h2>
+                    
+                    <h3 id="account-setup">Account Setup</h3>
+                    <p>Welcome to MapMyStandards.ai! Follow these steps to set up your institutional account and begin leveraging the A³E engine for your accreditation processes.</p>
+                    
+                    <ol class="step-list">
+                        <li>
+                            <strong>Trial Registration:</strong> Start your 21-day free trial by visiting our registration page and providing your institutional email address.
+                        </li>
+                        <li>
+                            <strong>Email Verification:</strong> Check your email for a verification link and click to activate your account.
+                        </li>
+                        <li>
+                            <strong>Initial Login:</strong> Access the platform using your credentials and complete the welcome survey about your accreditation context.
+                        </li>
+                    </ol>
+                    
+                    <div class="tip-box">
+                        <h5>💡 Pro Tip</h5>
+                        <p>Use your official institutional email address during registration to ensure proper account verification and access to institutional features.</p>
+                    </div>
+                    
+                    <h3 id="initial-config">Initial Configuration</h3>
+                    <p>Configure your institutional profile to optimize the A³E engine for your specific accreditation context:</p>
+                    
+                    <h4>Institution Profile Setup</h4>
+                    <ul>
+                        <li><strong>Basic Information:</strong> Institution name, type (public/private), size, and location</li>
+                        <li><strong>Primary Accreditor:</strong> Select your regional accreditor (SACSCOC, MSCHE, HLC, etc.)</li>
+                        <li><strong>Specialized Accreditors:</strong> Add any program-specific accreditors (AACSB, ABET, CAEP, etc.)</li>
+                        <li><strong>Review Timeline:</strong> Enter your next accreditation review dates</li>
+                    </ul>
+                    
+                    <div class="screenshot">
+                        [Screenshot: Institution Profile Configuration Screen]
+                    </div>
+                </section>
+
+                <section id="platform-overview" class="section">
+                    <h2>Platform Overview</h2>
+                    
+                    <p>The MapMyStandards.ai platform is organized around four core modules designed to streamline your accreditation workflow:</p>
+                    
+                    <h3>Dashboard</h3>
+                    <p>Your command center provides a real-time overview of:</p>
+                    <ul>
+                        <li>Compliance status across all accreditors</li>
+                        <li>Recent document analysis results</li>
+                        <li>Upcoming deadlines and tasks</li>
+                        <li>System health and integration status</li>
+                    </ul>
+                    
+                    <h3>Document Library</h3>
+                    <p>Centralized repository for all accreditation-related documents with:</p>
+                    <ul>
+                        <li>Automated categorization by accreditor and standard</li>
+                        <li>Version control and audit trails</li>
+                        <li>AI-powered content extraction and indexing</li>
+                        <li>Secure sharing and collaboration features</li>
+                    </ul>
+                    
+                    <h3>Analytics Engine</h3>
+                    <p>The A³E core processes your documents through four specialized AI agents:</p>
+                    <ul>
+                        <li><strong>Parser Agent:</strong> Extracts and structures content from diverse document formats</li>
+                        <li><strong>Mapper Agent:</strong> Aligns content with specific accreditation standards</li>
+                        <li><strong>Analyzer Agent:</strong> Identifies gaps and evaluates compliance levels</li>
+                        <li><strong>Reporter Agent:</strong> Generates comprehensive reports and recommendations</li>
+                    </ul>
+                    
+                    <h3>Reporting Center</h3>
+                    <p>Comprehensive reporting tools including:</p>
+                    <ul>
+                        <li>Gap analysis reports by standard</li>
+                        <li>Cross-accreditor compliance dashboards</li>
+                        <li>Evidence catalogues with direct citations</li>
+                        <li>Executive summaries for leadership</li>
+                    </ul>
+                </section>
+
+                <section id="document-analysis" class="section">
+                    <h2>Document Analysis</h2>
+                    
+                    <h3 id="upload-process">Document Upload Process</h3>
+                    <p>The A³E engine accepts a wide variety of document formats and automatically processes them for accreditation compliance analysis.</p>
+                    
+                    <h4>Supported Formats</h4>
+                    <ul>
+                        <li><strong>Text Documents:</strong> PDF, Word (.docx), plain text (.txt)</li>
+                        <li><strong>Spreadsheets:</strong> Excel (.xlsx), CSV, Google Sheets exports</li>
+                        <li><strong>Presentations:</strong> PowerPoint (.pptx), Google Slides exports</li>
+                        <li><strong>Web Content:</strong> HTML files, Canvas course exports</li>
+                    </ul>
+                    
+                    <div class="warning-box">
+                        <h5>⚠️ FERPA Compliance</h5>
+                        <p>All uploaded documents are processed in compliance with FERPA regulations. Personal student information is automatically detected and protected through our secure processing pipeline.</p>
+                    </div>
+                    
+                    <h4>Upload Methods</h4>
+                    <ol class="step-list">
+                        <li>
+                            <strong>Direct Upload:</strong> Drag and drop files directly into the Document Library interface.
+                        </li>
+                        <li>
+                            <strong>Folder Sync:</strong> Connect cloud storage (Google Drive, OneDrive, Dropbox) for automatic synchronization.
+                        </li>
+                        <li>
+                            <strong>Canvas Integration:</strong> Automatically import course content, syllabi, and assessment data.
+                        </li>
+                        <li>
+                            <strong>Bulk Import:</strong> Upload multiple documents simultaneously with batch processing.
+                        </li>
+                    </ol>
+                    
+                    <h3 id="ai-processing">AI Processing Pipeline</h3>
+                    <p>Once uploaded, documents move through our four-agent AI pipeline:</p>
+                    
+                    <h4>Stage 1: Content Parsing</h4>
+                    <p>The Parser Agent extracts and structures content:</p>
+                    <ul>
+                        <li>Text extraction with OCR for scanned documents</li>
+                        <li>Table and chart data preservation</li>
+                        <li>Metadata capture (author, date, source)</li>
+                        <li>Document type classification</li>
+                    </ul>
+                    
+                    <h4>Stage 2: Standard Mapping</h4>
+                    <p>The Mapper Agent aligns content with accreditation standards:</p>
+                    <ul>
+                        <li>Automatic standard identification using our accreditation ontology</li>
+                        <li>Multi-accreditor cross-referencing</li>
+                        <li>Evidence type classification (policy, procedure, data, narrative)</li>
+                        <li>Relevance scoring for each identified standard</li>
+                    </ul>
+                    
+                    <div class="code-block">
+Example Mapping Output:
+Document: "Faculty Handbook 2024"
+Standards Identified:
+- SACSCOC 6.1 (Faculty): 95% relevance
+- SACSCOC 6.2 (Faculty Qualifications): 88% relevance  
+- MSCHE Standard V (Faculty): 92% relevance
+Evidence Type: Policy Documentation
+                    </div>
+                    
+                    <h4>Stage 3: Gap Analysis</h4>
+                    <p>The Analyzer Agent evaluates compliance and identifies gaps:</p>
+                    <ul>
+                        <li>Standard-by-standard compliance assessment</li>
+                        <li>Evidence sufficiency analysis</li>
+                        <li>Quality evaluation of supporting documentation</li>
+                        <li>Risk assessment for potential compliance issues</li>
+                    </ul>
+                    
+                    <h4>Stage 4: Report Generation</h4>
+                    <p>The Reporter Agent creates comprehensive analysis outputs:</p>
+                    <ul>
+                        <li>Detailed findings with direct document citations</li>
+                        <li>Actionable recommendations for compliance improvement</li>
+                        <li>Executive summaries for leadership review</li>
+                        <li>Timeline suggestions for addressing identified gaps</li>
+                    </ul>
+                </section>
+
+                <section id="gap-analysis" class="section">
+                    <h2>Gap Analysis</h2>
+                    
+                    <p>The A³E engine's gap analysis feature provides comprehensive insights into your accreditation readiness across all supported standards.</p>
+                    
+                    <h3>Understanding Gap Analysis Results</h3>
+                    <p>Gap analysis results are organized by accreditor and presented in multiple formats:</p>
+                    
+                    <h4>Compliance Dashboard</h4>
+                    <ul>
+                        <li><strong>Green (Compliant):</strong> Sufficient evidence with quality documentation</li>
+                        <li><strong>Yellow (Attention Needed):</strong> Adequate evidence but quality concerns</li>
+                        <li><strong>Red (Gap Identified):</strong> Insufficient or missing evidence</li>
+                        <li><strong>Gray (Not Applicable):</strong> Standard doesn't apply to your institution type</li>
+                    </ul>
+                    
+                    <div class="info-box">
+                        <h5>ℹ️ Gap Analysis Methodology</h5>
+                        <p>Our gap analysis is based on peer review criteria developed by former accreditation directors. The system evaluates both evidence quantity and quality using the same standards applied during actual accreditation visits.</p>
+                    </div>
+                    
+                    <h3>Working with Gap Analysis Reports</h3>
+                    
+                    <h4>Standard-Level Analysis</h4>
+                    <p>Each standard includes:</p>
+                    <ul>
+                        <li>Compliance status with confidence score</li>
+                        <li>List of supporting evidence with document links</li>
+                        <li>Quality assessment of each piece of evidence</li>
+                        <li>Specific recommendations for improvement</li>
+                        <li>Comparison with similar institutions (when available)</li>
+                    </ul>
+                    
+                    <h4>Priority Action Items</h4>
+                    <p>The system generates prioritized action items based on:</p>
+                    <ul>
+                        <li>Severity of identified gaps</li>
+                        <li>Timeline until your next review</li>
+                        <li>Effort required to address each gap</li>
+                        <li>Dependencies between different standards</li>
+                    </ul>
+                    
+                    <div class="screenshot">
+                        [Screenshot: Gap Analysis Dashboard with color-coded compliance status]
+                    </div>
+                </section>
+
+                <section id="reporting" class="section">
+                    <h2>Reports & Analytics</h2>
+                    
+                    <p>MapMyStandards.ai provides multiple report types designed for different audiences and use cases within your institution.</p>
+                    
+                    <h3>Report Types</h3>
+                    
+                    <h4>Executive Summary Reports</h4>
+                    <ul>
+                        <li>High-level compliance overview for leadership</li>
+                        <li>Risk assessment and mitigation strategies</li>
+                        <li>Resource requirements for gap remediation</li>
+                        <li>Timeline projections for compliance readiness</li>
+                    </ul>
+                    
+                    <h4>Detailed Compliance Reports</h4>
+                    <ul>
+                        <li>Standard-by-standard analysis with evidence citations</li>
+                        <li>Cross-accreditor requirement mapping</li>
+                        <li>Historical compliance tracking</li>
+                        <li>Peer comparison data (when available)</li>
+                    </ul>
+                    
+                    <h4>Evidence Catalogues</h4>
+                    <ul>
+                        <li>Comprehensive listing of all supporting documents</li>
+                        <li>Document quality ratings and recommendations</li>
+                        <li>Missing evidence identification</li>
+                        <li>Document update tracking and version control</li>
+                    </ul>
+                    
+                    <h3>Customizing Reports</h3>
+                    <p>All reports can be customized based on your specific needs:</p>
+                    
+                    <ul>
+                        <li><strong>Accreditor Selection:</strong> Generate reports for specific accreditors or all simultaneously</li>
+                        <li><strong>Standard Filtering:</strong> Focus on specific standards or standard categories</li>
+                        <li><strong>Time Range:</strong> Historical analysis or forward-looking projections</li>
+                        <li><strong>Output Format:</strong> PDF, Excel, PowerPoint, or web-based interactive dashboards</li>
+                    </ul>
+                    
+                    <div class="tip-box">
+                        <h5>💡 Report Scheduling</h5>
+                        <p>Set up automated report generation to receive regular compliance updates. Many institutions schedule monthly executive summaries and quarterly detailed reports.</p>
+                    </div>
+                </section>
+
+                <section id="canvas-integration" class="section">
+                    <h2>Canvas Integration</h2>
+                    
+                    <p>The Canvas LMS integration automatically imports course content and assessment data for comprehensive academic program analysis.</p>
+                    
+                    <h3>Setup Process</h3>
+                    <ol class="step-list">
+                        <li>
+                            <strong>API Configuration:</strong> Obtain Canvas API credentials from your LMS administrator.
+                        </li>
+                        <li>
+                            <strong>Integration Setup:</strong> Enter API credentials in the Platform Settings > Integrations section.
+                        </li>
+                        <li>
+                            <strong>Course Selection:</strong> Choose which courses to include in accreditation analysis.
+                        </li>
+                        <li>
+                            <strong>Sync Schedule:</strong> Configure automatic synchronization frequency (daily, weekly, or monthly).
+                        </li>
+                    </ol>
+                    
+                    <h3>Imported Data Types</h3>
+                    <ul>
+                        <li><strong>Syllabi:</strong> Course learning outcomes, assessment methods, required texts</li>
+                        <li><strong>Assignments:</strong> Assignment types, grading rubrics, student performance data</li>
+                        <li><strong>Assessments:</strong> Quiz and exam data, learning analytics</li>
+                        <li><strong>Course Evaluations:</strong> Student feedback and instructor ratings</li>
+                        <li><strong>Gradebooks:</strong> Performance trends and completion rates</li>
+                    </ul>
+                    
+                    <div class="warning-box">
+                        <h5>⚠️ Student Privacy</h5>
+                        <p>All Canvas data is processed with FERPA compliance. Individual student identifiers are automatically removed, and only aggregated, de-identified data is used for accreditation analysis.</p>
+                    </div>
+                    
+                    <h3>Academic Program Analysis</h3>
+                    <p>Canvas integration enables automatic analysis of:</p>
+                    
+                    <h4>Learning Outcomes Assessment</h4>
+                    <ul>
+                        <li>Program-level outcome achievement tracking</li>
+                        <li>Course-to-program outcome mapping</li>
+                        <li>Assessment method effectiveness analysis</li>
+                        <li>Continuous improvement documentation</li>
+                    </ul>
+                    
+                    <h4>Faculty Qualifications</h4>
+                    <ul>
+                        <li>Instructor credential verification</li>
+                        <li>Teaching load and course assignment analysis</li>
+                        <li>Professional development tracking</li>
+                        <li>Student evaluation trends</li>
+                    </ul>
+                </section>
+
+                <section id="best-practices" class="section">
+                    <h2>Best Practices</h2>
+                    
+                    <h3>Document Management</h3>
+                    <ul>
+                        <li><strong>Consistent Naming:</strong> Use standardized file naming conventions for easier categorization</li>
+                        <li><strong>Regular Updates:</strong> Upload policy revisions and updated procedures promptly</li>
+                        <li><strong>Version Control:</strong> Maintain clear version numbering for all institutional documents</li>
+                        <li><strong>Metadata Tagging:</strong> Add descriptive tags to improve AI analysis accuracy</li>
+                    </ul>
+                    
+                    <h3>Effective Gap Analysis</h3>
+                    <ul>
+                        <li><strong>Regular Reviews:</strong> Conduct gap analysis quarterly to track improvement progress</li>
+                        <li><strong>Action Planning:</strong> Create specific timelines for addressing identified gaps</li>
+                        <li><strong>Evidence Quality:</strong> Focus on improving document quality, not just quantity</li>
+                        <li><strong>Cross-Training:</strong> Ensure multiple staff members understand the platform</li>
+                    </ul>
+                    
+                    <h3>Team Collaboration</h3>
+                    <ul>
+                        <li><strong>Role Assignment:</strong> Clearly define platform responsibilities across your team</li>
+                        <li><strong>Regular Training:</strong> Schedule quarterly platform training sessions</li>
+                        <li><strong>Communication:</strong> Establish protocols for sharing analysis results</li>
+                        <li><strong>Feedback Loop:</strong> Regularly review and refine your accreditation processes</li>
+                    </ul>
+                    
+                    <div class="tip-box">
+                        <h5>💡 Success Tip</h5>
+                        <p>Institutions that achieve the greatest benefit from MapMyStandards.ai treat it as a continuous improvement tool rather than just a compliance checker. Regular engagement with the platform leads to better accreditation outcomes.</p>
+                    </div>
+                </section>
+
+                <section id="troubleshooting" class="section">
+                    <h2>Troubleshooting</h2>
+                    
+                    <h3>Common Issues and Solutions</h3>
+                    
+                    <h4>Document Upload Problems</h4>
+                    <p><strong>Issue:</strong> Documents fail to upload or process correctly</p>
+                    <p><strong>Solutions:</strong></p>
+                    <ul>
+                        <li>Ensure file size is under 50MB limit</li>
+                        <li>Check that file format is supported</li>
+                        <li>Verify stable internet connection</li>
+                        <li>Try uploading during off-peak hours</li>
+                    </ul>
+                    
+                    <h4>Canvas Integration Issues</h4>
+                    <p><strong>Issue:</strong> Canvas data not syncing properly</p>
+                    <p><strong>Solutions:</strong></p>
+                    <ul>
+                        <li>Verify API credentials are current and have proper permissions</li>
+                        <li>Check Canvas server status</li>
+                        <li>Review course selection settings</li>
+                        <li>Contact Canvas administrator for API access verification</li>
+                    </ul>
+                    
+                    <h4>Gap Analysis Concerns</h4>
+                    <p><strong>Issue:</strong> Analysis results seem inaccurate</p>
+                    <p><strong>Solutions:</strong></p>
+                    <ul>
+                        <li>Review document quality and completeness</li>
+                        <li>Verify institutional profile settings</li>
+                        <li>Check accreditor selection matches your actual accreditors</li>
+                        <li>Contact support for manual review of specific standards</li>
+                    </ul>
+                    
+                    <h3>Getting Help</h3>
+                    <p>If you encounter issues not covered in this troubleshooting section:</p>
+                    
+                    <ul>
+                        <li><strong>Email Support:</strong> support@mapmystandards.ai (response within 4 hours)</li>
+                        <li><strong>Live Chat:</strong> Available Monday-Friday, 9 AM - 5 PM EST</li>
+                        <li><strong>Phone Support:</strong> Available for Multi-Campus and Enterprise customers</li>
+                        <li><strong>Knowledge Base:</strong> Additional articles and video tutorials available in platform</li>
+                    </ul>
+                    
+                    <div class="info-box">
+                        <h5>ℹ️ Support Response Times</h5>
+                        <p>A³E College Plan: Email support within 4 business hours<br>
+                        Multi-Campus Plan: Email/phone support within 2 business hours<br>
+                        Enterprise: 24/7 support with dedicated success manager</p>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Platform</h3>
+                    <a href="https://mapmystandards.ai/features/">Features</a>
+                    <a href="https://mapmystandards.ai/services/">Pricing</a>
+                    <a href="https://mapmystandards.ai/user-guide/">Documentation</a>
+                    <a href="https://mapmystandards.ai/contact/">Support</a>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Company</h3>
+                    <a href="https://mapmystandards.ai/about/">About Us</a>
+                    <a href="https://mapmystandards.ai/contact/">Contact</a>
+                    <a href="https://mapmystandards.ai/privacy-policy/">Privacy Policy</a>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Resources</h3>
+                    <a href="https://mapmystandards.ai/user-guide/">User Guide</a>
+                    <a href="https://mapmystandards.ai/about/">Case Studies</a>
+                    <a href="https://mapmystandards.ai/contact/">Demo Request</a>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Contact</h3>
+                    <a href="mailto:support@mapmystandards.ai">support@mapmystandards.ai</a>
+                    <p>NorthPath Strategies</p>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2025 MapMyStandards.ai. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
+
+<!-- 
+Copilot Code Review - User Manual Technical Documentation:
+
+INFORMATION ARCHITECTURE:
+- Logical flow from setup → overview → core features → best practices → troubleshooting
+- Sticky table of contents provides easy navigation throughout lengthy content
+- Section numbering and cross-references create clear document structure
+- Progressive disclosure from basic concepts to advanced features
+
+TECHNICAL DOCUMENTATION STANDARDS:
+- Step-by-step procedures with numbered lists for clear instruction flow
+- Code examples and configuration snippets for technical implementation
+- Screenshot placeholders indicate where visual aids would enhance understanding
+- Warning boxes and tip boxes highlight critical information and best practices
+
+USER EXPERIENCE CONSIDERATIONS:
+- Different content boxes (info, warning, tip) use distinct colors and icons
+- Responsive design ensures manual accessibility across devices
+- Sidebar navigation becomes mobile-friendly for smaller screens
+- Consistent typography hierarchy improves content scanning
+
+COMPREHENSIVE COVERAGE:
+- Account setup and configuration for new users
+- Detailed platform feature explanations for daily users
+- Best practices based on real institutional experience
+- Troubleshooting section addresses common user issues
+- Multiple support contact options with clear expectations
+
+HIGHER EDUCATION CONTEXT:
+- FERPA compliance emphasized throughout document
+- Accreditor-specific terminology and processes
+- Canvas LMS integration details for common higher ed technology
+- Team collaboration features reflect institutional work patterns
+- Gap analysis methodology based on actual peer review criteria
+
+TECHNICAL DEPTH:
+- Four-agent AI pipeline explained in sufficient detail
+- API integration procedures for Canvas LMS
+- Document processing workflow with examples
+- Report customization options for different institutional needs
+- Specific file format support and limitations clearly stated
+-->

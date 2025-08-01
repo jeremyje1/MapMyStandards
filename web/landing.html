@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A³E - Accreditation Analytics & Automation Engine | MapMyStandards.ai</title>
+    <meta name="description" content="Transform your accreditation process with AI-powered document analysis, standards mapping, and automated compliance tracking.">
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Custom CSS -->
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .card-hover { transition: all 0.3s ease; }
+        .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+        .pricing-card { transition: all 0.3s ease; }
+        .pricing-card:hover { transform: scale(1.05); }
+        .feature-icon { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center">
+                    <img src="/assets/logo.png" alt="MapMyStandards.ai" class="h-8 w-auto mr-3">
+                    <span class="text-xl font-bold text-gray-900">MapMyStandards.ai</span>
+                </div>
+                <nav class="hidden md:flex space-x-8">
+                    <a href="#features" class="text-gray-600 hover:text-gray-900">Features</a>
+                    <a href="#pricing" class="text-gray-600 hover:text-gray-900">Pricing</a>
+                    <a href="#demo" class="text-gray-600 hover:text-gray-900">Demo</a>
+                    <a href="#contact" class="text-gray-600 hover:text-gray-900">Contact</a>
+                </nav>
+                <div class="flex items-center space-x-4">
+                    <a href="#login" class="text-gray-600 hover:text-gray-900">Login</a>
+                    <a href="#pricing" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Start Free Trial</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="gradient-bg text-white py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h1 class="text-5xl font-bold mb-6">
+                Your Institution's AI Accreditation Team<br>
+                <span class="text-yellow-300">Works 24/7, Never Burns Out</span>
+            </h1>
+            <p class="text-xl mb-8 max-w-3xl mx-auto">
+                Stop drowning in spreadsheets and manual mappings. A³E automatically handles 
+                document analysis, standards mapping, gap identification, and report generation 
+                - freeing your accreditation teams to focus on strategic leadership and student success.
+            </p>
+            <div class="flex justify-center space-x-4 mb-8">
+                <span class="bg-blue-600 text-white px-4 py-2 rounded-full font-semibold">Higher Education</span>
+                <span class="bg-purple-600 text-white px-4 py-2 rounded-full font-semibold">K-12 Schools</span>
+                <span class="bg-green-600 text-white px-4 py-2 rounded-full font-semibold">FERPA/COPPA Compliant</span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 max-w-4xl mx-auto text-left">
+                <div class="bg-white bg-opacity-10 p-4 rounded-lg">
+                    <div class="text-yellow-300 font-bold">300+ Hours Saved</div>
+                    <div class="text-sm">Per accreditation cycle</div>
+                </div>
+                <div class="bg-white bg-opacity-10 p-4 rounded-lg">
+                    <div class="text-yellow-300 font-bold">Zero Manual Mapping</div>
+                    <div class="text-sm">AI handles all standards alignment</div>
+                </div>
+                <div class="bg-white bg-opacity-10 p-4 rounded-lg">
+                    <div class="text-yellow-300 font-bold">Dual-Mode Support</div>
+                    <div class="text-sm">Higher Ed + K-12 compliance</div>
+                </div>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <a href="/checkout.html" class="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+                    Start Free Trial
+                </a>
+                <a href="/engine" class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors">
+                    Try Demo Now
+                </a>
+            </div>
+            <div class="mt-8 text-sm opacity-90">
+                ✅ 21-day free trial • ✅ Full feature access • ✅ Setup assistance included
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="bg-white py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
+                <div>
+                    <div class="text-3xl font-bold text-blue-600">18</div>
+                    <div class="text-gray-600">Accreditors Supported</div>
+                    <div class="text-sm text-gray-500">Higher Ed + K-12</div>
+                </div>
+                <div>
+                    <div class="text-3xl font-bold text-blue-600">95%</div>
+                    <div class="text-gray-600">Processing Accuracy</div>
+                    <div class="text-sm text-gray-500">AI-Verified Results</div>
+                </div>
+                <div>
+                    <div class="text-3xl font-bold text-blue-600">500ms</div>
+                    <div class="text-gray-600">Average Response Time</div>
+                    <div class="text-sm text-gray-500">Real-time Analysis</div>
+                </div>
+                <div>
+                    <div class="text-3xl font-bold text-blue-600">24/7</div>
+                    <div class="text-gray-600">System Availability</div>
+                    <div class="text-sm text-gray-500">Cloud Infrastructure</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pain Points Section -->
+    <section class="py-20 bg-red-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-gray-900 mb-4">Tired of Accreditation Consuming Your Institution?</h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    We know exactly what keeps colleges, universities, and K-12 schools up at night before accreditation visits
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                <div class="space-y-6">
+                    <div class="flex items-start space-x-4">
+                        <div class="flex-shrink-0 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center mt-1">
+                            <span class="text-white text-sm font-bold">✗</span>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900">Endless Manual Standards Mapping</h3>
+                            <p class="text-gray-600">Directors and staff spending weeks cross-referencing documents to standards across multiple accreditors</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start space-x-4">
+                        <div class="flex-shrink-0 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center mt-1">
+                            <span class="text-white text-sm font-bold">✗</span>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900">Last-Minute Compliance Scrambles</h3>
+                            <p class="text-gray-600">Discovering gaps days before the visit with no time or budget to address them properly</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start space-x-4">
+                        <div class="flex-shrink-0 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center mt-1">
+                            <span class="text-white text-sm font-bold">✗</span>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900">Privacy Compliance Complexity</h3>
+                            <p class="text-gray-600">Navigating FERPA, COPPA, and other privacy requirements while maintaining audit trails</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start space-x-4">
+                        <div class="flex-shrink-0 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center mt-1">
+                            <span class="text-white text-sm font-bold">✗</span>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900">Overwhelming Your Accreditation Team</h3>
+                            <p class="text-gray-600">Staff burnout, weekend work, and accreditation taking over institutional life</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-8 rounded-xl shadow-lg">
+                    <h3 class="text-2xl font-bold text-blue-600 mb-6">What If Your College Could...</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                                <span class="text-white text-sm font-bold">✓</span>
+                            </div>
+                            <span class="text-gray-700">Upload documents and get instant standards mapping?</span>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                                <span class="text-white text-sm font-bold">✓</span>
+                            </div>
+                            <span class="text-gray-700">Know exactly where compliance gaps are in real-time?</span>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                                <span class="text-white text-sm font-bold">✓</span>
+                            </div>
+                            <span class="text-gray-700">Have consistent, AI-verified compliance across all departments?</span>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                                <span class="text-white text-sm font-bold">✓</span>
+                            </div>
+                            <span class="text-gray-700">Let your accreditation team focus on strategic improvements?</span>
+                        </div>
+                    </div>
+                    <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+                        <p class="text-blue-800 font-medium text-center">"A³E handles the tedious work so your college can focus on what matters: educational excellence and continuous improvement."</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-20 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-gray-900 mb-4">Stop Doing Work Your AI Can Handle</h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Eliminate the tedious, time-consuming tasks that keep you from strategic accreditation leadership
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div class="bg-white p-6 rounded-xl shadow-sm card-hover">
+                    <div class="feature-icon w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-2">Instant Standards Mapping</h3>
+                    <p class="text-gray-600">No more spreadsheet marathons. AI maps every document to relevant accreditation standards in seconds.</p>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-sm card-hover">
+                    <div class="feature-icon w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-2">Automated Gap Analysis</h3>
+                    <p class="text-gray-600">Proprietary semantic similarity engine with confidence scoring and domain-aware penalty factors.</p>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-sm card-hover">
+                    <div class="feature-icon w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-2">Multi-Agent LLM Pipeline</h3>
+                    <p class="text-gray-600">Four-agent workflow: Mapper → GapFinder → Narrator → Verifier for comprehensive analysis.</p>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-sm card-hover">
+                    <div class="feature-icon w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-2">Audit Trail System</h3>
+                    <p class="text-gray-600">Complete traceability from AI output to source documents with multiple verification levels.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Integrations Section -->
+    <section class="py-16 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">Seamless Integrations</h2>
+                <p class="text-lg text-gray-600">Connect with your existing systems</p>
+            </div>
+            <div class="flex flex-wrap justify-center items-center gap-8 opacity-60">
+                <img src="/assets/canvas-logo.png" alt="Canvas LMS" class="h-12">
+                <img src="/assets/blackboard-logo.png" alt="Blackboard" class="h-12">
+                <img src="/assets/moodle-logo.png" alt="Moodle" class="h-12">
+                <img src="/assets/banner-logo.png" alt="Banner ERP" class="h-12">
+                <img src="/assets/peoplesoft-logo.png" alt="PeopleSoft" class="h-12">
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" class="py-20 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-gray-900 mb-4">Investment That Pays for Itself</h2>
+                <p class="text-xl text-gray-600">Stop paying overtime hours - start paying for results</p>
+                <div class="mt-4">
+                    <span class="bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-medium mr-4">💡 Average ROI: 847% in first year</span>
+                    <span class="bg-purple-100 text-purple-800 px-4 py-2 rounded-full text-sm font-medium">🎓 K-12 & Higher Ed</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                <!-- Starter Plan -->
+                <div class="bg-white rounded-2xl shadow-sm pricing-card p-8">
+                    <div class="text-center">
+                        <h3 class="text-xl font-semibold mb-2">Starter</h3>
+                        <div class="text-3xl font-bold mb-1">$197<span class="text-lg text-gray-600">/month</span></div>
+                        <p class="text-gray-600 mb-2">Perfect for small schools</p>
+                        <div class="text-sm text-green-600 mb-6">21-Day Free Trial</div>
+                    </div>
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> 50 document analyses/month</li>
+                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Single campus/district</li>
+                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> K-12 & Higher Ed modes</li>
+                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> FERPA/COPPA compliant</li>
+                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Basic gap analysis</li>
+                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Email support</li>
+                        <li class="flex items-center"><span class="text-gray-400 mr-2">⚬</span> <span class="text-gray-400">5 user seats</span></li>
+                    </ul>
+                    <a href="/checkout.html?plan=starter" class="block w-full bg-gray-600 text-white py-3 rounded-lg hover:bg-gray-700 transition-colors text-center font-semibold">
+                        Start Free Trial
+                    </a>
+                </div>
+
+                <!-- Professional Plan -->
+                <div class="bg-white rounded-2xl shadow-lg pricing-card p-8 border-2 border-blue-500 relative">
+                    <div class="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                        <span class="bg-blue-500 text-white px-4 py-1 rounded-full text-sm font-medium">Most Popular</span>
+                    </div>
+                    <div class="text-center">
+                        <h3 class="text-xl font-semibold mb-2">Professional</h3>
+                        <div class="text-3xl font-bold mb-1">$497<span class="text-lg text-gray-600">/month</span></div>
+                        <div class="text-sm text-green-600 mb-2">Saves $8,500+ in staff time monthly</div>
+                        <div class="text-sm text-green-600 mb-6">21-Day Free Trial</div>
+                    </div>
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Unlimited document analysis</li>
+                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Up to 5 campuses/departments</li>
+                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Full AI pipeline (4-agent system)</li>
+                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> LMS integrations (Canvas, etc.)</li>
+                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Complete audit traceability</li>
+                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Monthly compliance reports</li>
+                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Priority support + dashboard</li>
+                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> 20 user seats</li>
+                    </ul>
+                    <a href="/checkout.html?plan=professional" class="block w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors text-center font-semibold">
+                        Start Free Trial
+                    </a>
+                </div>
+
+                <!-- Enterprise Plan -->
+                <div class="bg-white rounded-2xl shadow-sm pricing-card p-8">
+                    <div class="text-center">
+                        <h3 class="text-xl font-semibold mb-2">Enterprise</h3>
+                        <div class="text-3xl font-bold mb-1">$1,297<span class="text-lg text-gray-600">/month</span></div>
+                        <div class="text-sm text-green-600 mb-2">Saves $25,000+ in staff costs monthly</div>
+                        <div class="text-sm text-green-600 mb-6">Custom Implementation</div>
+                    </div>
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Everything in Professional</li>
+                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Unlimited campuses/districts</li>
+                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> White-label solution</li>
+                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> API access (100K calls/month)</li>
+                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Dedicated success manager</li>
+                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Custom integrations</li>
+                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Phone support + SLA</li>
+                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Unlimited user seats</li>
+                    </ul>
+                    <a href="/checkout.html?plan=enterprise" class="block w-full bg-gray-600 text-white py-3 rounded-lg hover:bg-gray-700 transition-colors text-center font-semibold">
+                        Contact Sales
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Demo Section -->
+    <section id="demo" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">See A³E in Action</h2>
+                <p class="text-lg text-gray-600">Watch how A³E transforms your accreditation workflow</p>
+            </div>
+            <div class="bg-gray-100 rounded-2xl p-8 text-center">
+                <div class="aspect-video bg-gray-300 rounded-lg mb-6 flex items-center justify-center">
+                    <button class="bg-blue-600 text-white px-8 py-4 rounded-lg hover:bg-blue-700 transition-colors" onclick="playDemo()">
+                        ▶ Play Demo Video
+                    </button>
+                </div>
+                <p class="text-gray-600 mb-4">See how A³E processes a real accreditation document in under 2 minutes</p>
+                <a href="#contact" class="text-blue-600 hover:text-blue-700">Schedule a live demo →</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="gradient-bg text-white py-16">
+        <div class="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-bold mb-4">Ready to Transform Your Accreditation Process?</h2>
+            <p class="text-xl mb-8">Join hundreds of institutions already using A³E to streamline their compliance workflows.</p>
+            <button class="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors mr-4" onclick="startTrial('professional')">
+                Start Free Trial
+            </button>
+            <a href="#contact" class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors">
+                Contact Sales
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <div class="flex items-center mb-4">
+                        <img src="/assets/logo-white.png" alt="MapMyStandards.ai" class="h-8 w-auto mr-3">
+                        <span class="text-xl font-bold">MapMyStandards.ai</span>
+                    </div>
+                    <p class="text-gray-400">Transforming accreditation with AI-powered analytics and automation.</p>
+                </div>
+                <div>
+                    <h3 class="font-semibold mb-4">Product</h3>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#features" class="hover:text-white">Features</a></li>
+                        <li><a href="#pricing" class="hover:text-white">Pricing</a></li>
+                        <li><a href="#demo" class="hover:text-white">Demo</a></li>
+                        <li><a href="/api/docs" class="hover:text-white">API Docs</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-semibold mb-4">Support</h3>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="/help" class="hover:text-white">Help Center</a></li>
+                        <li><a href="#contact" class="hover:text-white">Contact</a></li>
+                        <li><a href="/status" class="hover:text-white">System Status</a></li>
+                        <li><a href="/security" class="hover:text-white">Security</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-semibold mb-4">Company</h3>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="/about" class="hover:text-white">About</a></li>
+                        <li><a href="/privacy" class="hover:text-white">Privacy</a></li>
+                        <li><a href="/terms" class="hover:text-white">Terms</a></li>
+                        <li><a href="/careers" class="hover:text-white">Careers</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+                <p>&copy; 2025 MapMyStandards.ai. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Payment Modal -->
+    <div id="paymentModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-2xl max-w-md w-full p-6">
+                <div class="text-center mb-6">
+                    <h3 class="text-2xl font-bold mb-2">Start Your Free Trial</h3>
+                    <p class="text-gray-600">No credit card required • Cancel anytime</p>
+                </div>
+                <form id="trialForm">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Institution Name</label>
+                            <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Work Email</label>
+                            <input type="email" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                            <select class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                                <option value="">Select your role</option>
+                                <option value="admin">Administrator</option>
+                                <option value="faculty">Faculty</option>
+                                <option value="compliance">Compliance Officer</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mt-6 flex space-x-3">
+                        <button type="button" class="flex-1 bg-gray-200 text-gray-800 py-2 rounded-lg hover:bg-gray-300" onclick="closeModal()">
+                            Cancel
+                        </button>
+                        <button type="submit" class="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">
+                            Start Trial
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        function startTrial(plan) {
+            document.getElementById('paymentModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('paymentModal').classList.add('hidden');
+        }
+
+        function contactSales() {
+            window.location.href = '#contact';
+        }
+
+        function playDemo() {
+            // Implement demo video player
+            alert('Demo video would play here');
+        }
+
+        // Handle trial form submission
+        document.getElementById('trialForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            // Process trial signup
+            alert('Trial signup would be processed here');
+            closeModal();
+        });
+
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+</html>

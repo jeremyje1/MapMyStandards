@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="MapMyStandards.ai Services - A³E Engine, Multi-Accreditor Support, and Professional Consulting">
+    <title>Services - MapMyStandards.ai</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #2c3e50;
+            background-color: #ffffff;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* Header */
+        header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            text-decoration: none;
+            color: white;
+        }
+        
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+        
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.3s;
+        }
+        
+        .nav-links a:hover {
+            opacity: 0.8;
+        }
+        
+        /* Hero Section */
+        .services-hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4rem 0;
+            text-align: center;
+        }
+        
+        .services-hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+        
+        .services-hero p {
+            font-size: 1.2rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        /* Platform Overview */
+        .platform-overview {
+            padding: 6rem 0;
+            background: white;
+        }
+        
+        .platform-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+        
+        .platform-text h2 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            color: #2c3e50;
+        }
+        
+        .platform-text p {
+            font-size: 1.1rem;
+            color: #6c757d;
+            margin-bottom: 1.5rem;
+        }
+        
+        .engine-features {
+            list-style: none;
+            margin-top: 2rem;
+        }
+        
+        .engine-features li {
+            padding: 0.8rem 0;
+            padding-left: 2.5rem;
+            position: relative;
+            font-size: 1.1rem;
+        }
+        
+        .engine-features li::before {
+            content: "⚡";
+            position: absolute;
+            left: 0;
+            font-size: 1.3rem;
+        }
+        
+        .platform-visual {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            height: 350px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            text-align: center;
+        }
+        
+        /* Accreditor Support */
+        .accreditor-support {
+            padding: 6rem 0;
+            background: #f8f9fa;
+        }
+        
+        .accreditor-support h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            color: #2c3e50;
+        }
+        
+        .accreditor-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+        
+        .accreditor-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.05);
+        }
+        
+        .accreditor-card h3 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+        
+        .accreditor-card p {
+            color: #6c757d;
+            font-size: 0.95rem;
+        }
+        
+        /* Pricing Section */
+        .pricing {
+            padding: 6rem 0;
+            background: white;
+        }
+        
+        .pricing h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            color: #2c3e50;
+        }
+        
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+        
+        .pricing-card {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.1);
+            position: relative;
+            border: 2px solid #e9ecef;
+            transition: transform 0.3s;
+        }
+        
+        .pricing-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .pricing-card.featured {
+            border-color: #667eea;
+            transform: scale(1.05);
+        }
+        
+        .pricing-card.featured::before {
+            content: "Most Popular";
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #667eea;
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .plan-name {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+        
+        .plan-price {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+        
+        .plan-period {
+            color: #6c757d;
+            margin-bottom: 2rem;
+            font-size: 1rem;
+        }
+        
+        .plan-features {
+            list-style: none;
+            margin-bottom: 2rem;
+            text-align: left;
+        }
+        
+        .plan-features li {
+            padding: 0.5rem 0;
+            padding-left: 2rem;
+            position: relative;
+        }
+        
+        .plan-features li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .plan-button {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 1rem 2rem;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: background 0.3s;
+            width: 100%;
+        }
+        
+        .plan-button:hover {
+            background: #5a6fd8;
+        }
+        
+        /* Add-ons Section */
+        .addons {
+            padding: 6rem 0;
+            background: #f8f9fa;
+        }
+        
+        .addons h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            color: #2c3e50;
+        }
+        
+        .addons-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        
+        .addon-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.05);
+        }
+        
+        .addon-card h3 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            font-size: 1.4rem;
+        }
+        
+        .addon-price {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #e74c3c;
+            margin-bottom: 1rem;
+        }
+        
+        /* Footer */
+        footer {
+            background: #2c3e50;
+            color: white;
+            padding: 3rem 0 2rem;
+        }
+        
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .footer-section h3 {
+            margin-bottom: 1rem;
+            color: #ecf0f1;
+        }
+        
+        .footer-section a {
+            color: #bdc3c7;
+            text-decoration: none;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+        
+        .footer-section a:hover {
+            color: white;
+        }
+        
+        .footer-bottom {
+            border-top: 1px solid #34495e;
+            padding-top: 1rem;
+            text-align: center;
+            color: #bdc3c7;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .services-hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+            
+            .platform-content {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            
+            .pricing-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .pricing-card.featured {
+                transform: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="container">
+            <a href="https://mapmystandards.ai/" class="logo">MapMyStandards.ai</a>
+            <ul class="nav-links">
+                <li><a href="https://mapmystandards.ai/">Home</a></li>
+                <li><a href="https://mapmystandards.ai/services/">Services</a></li>
+                <li><a href="https://mapmystandards.ai/about/">About</a></li>
+                <li><a href="https://mapmystandards.ai/user-guide/">User Guide</a></li>
+                <li><a href="https://mapmystandards.ai/contact/">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="services-hero">
+            <div class="container">
+                <h1>Our Services</h1>
+                <p>Comprehensive accreditation management solutions powered by AI and built for higher education professionals.</p>
+            </div>
+        </section>
+
+        <section class="platform-overview">
+            <div class="container">
+                <div class="platform-content">
+                    <div class="platform-text">
+                        <h2>A³E Engine Overview</h2>
+                        <p>Our proprietary Automated Accreditation Analytics Engine (A³E) combines artificial intelligence with deep accreditation expertise to streamline your compliance process.</p>
+                        <p>Built on AWS Bedrock with Claude AI integration, A³E uses a comprehensive accreditation ontology developed through years of peer review experience.</p>
+                        <ul class="engine-features">
+                            <li>Intelligent document parsing and evidence extraction</li>
+                            <li>Multi-accreditor standard mapping and cross-referencing</li>
+                            <li>Automated gap analysis with actionable recommendations</li>
+                            <li>Citation verification and audit trail generation</li>
+                            <li>FERPA-compliant data processing and storage</li>
+                        </ul>
+                    </div>
+                    <div class="platform-visual">
+                        [A³E Engine Architecture Diagram]<br>
+                        AI → Ontology → Analysis → Reports
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="accreditor-support">
+            <div class="container">
+                <h2>Multi-Accreditor Support</h2>
+                <p style="text-align: center; font-size: 1.1rem; color: #6c757d; margin-bottom: 2rem;">
+                    Our platform supports standards from all major accrediting bodies with specialized ontologies for each.
+                </p>
+                
+                <div class="accreditor-grid">
+                    <article class="accreditor-card">
+                        <h3>Regional Accreditors</h3>
+                        <p>SACSCOC, MSCHE, NECHE, HLC, NWCCU, WSCUC - Full standard mapping with citation verification</p>
+                    </article>
+                    
+                    <article class="accreditor-card">
+                        <h3>Specialized Accreditors</h3>
+                        <p>AACSB, ABET, CAEP, APA, LCME - Program-specific standards with professional requirements</p>
+                    </article>
+                    
+                    <article class="accreditor-card">
+                        <h3>State Agencies</h3>
+                        <p>SCHEV, HECC, CPE - State authorization and compliance requirements integrated</p>
+                    </article>
+                    
+                    <article class="accreditor-card">
+                        <h3>Federal Requirements</h3>
+                        <p>Title IV, FERPA, ADA - Federal compliance tracking with automated monitoring</p>
+                    </article>
+                    
+                    <article class="accreditor-card">
+                        <h3>Custom Standards</h3>
+                        <p>Institutional accreditors, international bodies - Custom ontology development available</p>
+                    </article>
+                    
+                    <article class="accreditor-card">
+                        <h3>Cross-Mapping</h3>
+                        <p>Automated identification of overlapping requirements across multiple accrediting bodies</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="pricing">
+            <div class="container">
+                <h2>Choose Your Plan</h2>
+                
+                <div class="pricing-grid">
+                    <article class="pricing-card">
+                        <div class="plan-name">A³E College Plan</div>
+                        <div class="plan-price"><!-- $297 --></div>
+                        <div class="plan-period">per month</div>
+                        <ul class="plan-features">
+                            <li>Up to 3 campus/department profiles</li>
+                            <li>Unlimited document analysis</li>
+                            <li>Full AI pipeline (4-agent system)</li>
+                            <li>Canvas LMS integration</li>
+                            <li>Comprehensive audit trails</li>
+                            <li>Monthly compliance reports</li>
+                            <li>Priority email support</li>
+                            <li>21-day free trial</li>
+                        </ul>
+                        <a href="#platform-link" class="plan-button">Start Free Trial</a>
+                    </article>
+                    
+                    <article class="pricing-card featured">
+                        <div class="plan-name">A³E Multi-Campus Plan</div>
+                        <div class="plan-price"><!-- $897 --></div>
+                        <div class="plan-period">per month</div>
+                        <ul class="plan-features">
+                            <li>Unlimited campus/department profiles</li>
+                            <li>Everything in College Plan</li>
+                            <li>White-label option available</li>
+                            <li>API access (10K calls/month)</li>
+                            <li>Dedicated success manager</li>
+                            <li>Custom integrations</li>
+                            <li>Phone support</li>
+                            <li>Priority implementation</li>
+                        </ul>
+                        <a href="#payment-link" class="plan-button">Get Started</a>
+                    </article>
+                    
+                    <article class="pricing-card">
+                        <div class="plan-name">Enterprise Solution</div>
+                        <div class="plan-price">Custom</div>
+                        <div class="plan-period">tailored pricing</div>
+                        <ul class="plan-features">
+                            <li>Custom deployment options</li>
+                            <li>Unlimited API access</li>
+                            <li>24/7 dedicated support</li>
+                            <li>Custom development</li>
+                            <li>On-premise deployment</li>
+                            <li>Advanced security features</li>
+                            <li>Custom accreditor support</li>
+                            <li>Training and consulting</li>
+                        </ul>
+                        <a href="https://mapmystandards.ai/contact/" class="plan-button">Contact Sales</a>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="addons">
+            <div class="container">
+                <h2>Professional Add-ons</h2>
+                
+                <div class="addons-grid">
+                    <article class="addon-card">
+                        <h3>Accreditation Consulting</h3>
+                        <div class="addon-price"><!-- Custom Rate --></div>
+                        <p>Expert consulting services from former accreditation directors and peer reviewers. Strategic planning, self-study guidance, and site visit preparation.</p>
+                    </article>
+                    
+                    <article class="addon-card">
+                        <h3>Custom Ontology Development</h3>
+                        <div class="addon-price"><!-- $4,970 --></div>
+                        <p>Specialized accreditor support for unique or emerging standards. Custom evidence mapping and narrative templates developed by experts.</p>
+                    </article>
+                    
+                    <article class="addon-card">
+                        <h3>FERPA-Safe Deployment</h3>
+                        <div class="addon-price"><!-- $1,997 --></div>
+                        <p>Enhanced security configuration for institutions handling sensitive student data. Includes compliance audit and ongoing monitoring.</p>
+                    </article>
+                    
+                    <article class="addon-card">
+                        <h3>Training & Onboarding</h3>
+                        <div class="addon-price"><!-- $497 --></div>
+                        <p>Comprehensive team training on platform usage, best practices, and accreditation strategy. Live sessions and recorded materials included.</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Platform</h3>
+                    <a href="https://mapmystandards.ai/features/">Features</a>
+                    <a href="https://mapmystandards.ai/services/">Pricing</a>
+                    <a href="https://mapmystandards.ai/user-guide/">Documentation</a>
+                    <a href="https://mapmystandards.ai/contact/">Support</a>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Company</h3>
+                    <a href="https://mapmystandards.ai/about/">About Us</a>
+                    <a href="https://mapmystandards.ai/contact/">Contact</a>
+                    <a href="https://mapmystandards.ai/privacy-policy/">Privacy Policy</a>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Resources</h3>
+                    <a href="https://mapmystandards.ai/user-guide/">User Guide</a>
+                    <a href="https://mapmystandards.ai/about/">Case Studies</a>
+                    <a href="https://mapmystandards.ai/contact/">Demo Request</a>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Contact</h3>
+                    <a href="mailto:support@mapmystandards.ai">support@mapmystandards.ai</a>
+                    <p>NorthPath Strategies</p>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2025 MapMyStandards.ai. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
+
+<!-- 
+Copilot Code Review - Services Page Layout Decisions:
+
+INFORMATION ARCHITECTURE:
+- Logical flow from platform overview → accreditor support → pricing → add-ons
+- Clear separation between core platform features and additional services
+- Technical details balanced with business benefits for mixed audiences
+
+PRICING PRESENTATION:
+- Three-tier structure following SaaS best practices
+- Featured plan (Multi-Campus) highlighted with visual emphasis
+- Price fields left blank with HTML comments for easy updating
+- Clear feature differentiation between tiers
+
+TECHNICAL CONTENT HANDLING:
+- A³E engine description balances technical accuracy with accessibility
+- Accreditor support presented as comprehensive grid for easy scanning
+- Platform capabilities explained in higher education terminology
+
+CONVERSION OPTIMIZATION:
+- Multiple CTA buttons with different commitment levels (trial vs. contact)
+- Social proof through comprehensive accreditor coverage
+- Add-ons presented as premium services rather than required features
+- Clear value proposition for each tier and add-on
+
+VISUAL HIERARCHY:
+- Consistent typography scale maintains readability
+- Color coding distinguishes different service categories
+- Card layouts create scannable content blocks
+- Featured pricing plan uses scale and color for emphasis
+
+RESPONSIVE CONSIDERATIONS:
+- Pricing cards stack vertically on mobile
+- Grid layouts adapt to single column for smaller screens
+- Navigation simplified for mobile experience
+- Content remains accessible across all device sizes
+-->

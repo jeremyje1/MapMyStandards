@@ -1,3 +1,4 @@
+
 # 01 – High‑level architecture
 
 ```mermaid

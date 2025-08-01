@@ -162,8 +162,10 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
 
 # Include API routes
 from .api import api_router
+from .api.routes.billing import router as billing_router
 app.include_router(integrations_router)
 app.include_router(proprietary_router)
+app.include_router(billing_router)
 app.include_router(api_router, prefix=settings.api_prefix)
 
 # Root endpoints
@@ -501,6 +503,30 @@ async def _execute_workflow_background(
     except Exception as e:
         logger.error(f"Workflow execution failed: {e}")
         # TODO: Update workflow status to failed in database
+
+# Web routes for mapmystandards.ai integration
+@app.get("/landing", response_class=HTMLResponse, include_in_schema=False)
+async def landing_page(request: Request):
+    """Landing page for mapmystandards.ai integration."""
+    try:
+        with open("web/landing.html", "r") as f:
+            content = f.read()
+        return HTMLResponse(content=content)
+    except FileNotFoundError:
+        return HTMLResponse(content="<h1>Landing page not found</h1>", status_code=404)
+
+@app.get("/checkout", response_class=HTMLResponse, include_in_schema=False)
+async def checkout_page(request: Request):
+    """Checkout page for subscription signup."""
+    try:
+        with open("web/checkout.html", "r") as f:
+            content = f.read()
+        return HTMLResponse(content=content)
+    except FileNotFoundError:
+        return HTMLResponse(content="<h1>Checkout page not found</h1>", status_code=404)
+
+# Mount static files for web assets
+app.mount("/web", StaticFiles(directory="web"), name="web")
 
 if __name__ == "__main__":
     uvicorn.run(
