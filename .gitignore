@@ -3,6 +3,31 @@
 .env.local
 .env.*.local
 
+# Security - Never commit these files
+*password*
+*secret*
+*credential*
+*key*.txt
+*key*.json
+
+# Email test files that might contain credentials
+test_*email*
+test_*smtp*
+test_*auth*
+*email_test*
+*smtp_test*
+
+# Configuration files that might contain secrets
+config/*.env
+config/*secret*
+config/*password*
+
+# API keys and sensitive configuration
+.env*
+secrets/
+credentials/
+keys/
+
 # Python cache
 __pycache__/
 *.py[cod]
