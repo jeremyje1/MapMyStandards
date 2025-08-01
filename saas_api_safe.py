@@ -436,6 +436,7 @@ async def contact_form(contact: ContactForm):
         logger.info(f"Contact form submission from {contact.email}")
         
         # Try to send notification email
+        formatted_message = contact.message.replace('\n', '<br>')
         email_sent = await send_email(
             SMTP_USERNAME,
             f"Contact Form: {contact.subject}",
@@ -446,7 +447,7 @@ async def contact_form(contact: ContactForm):
             <p><strong>Subject:</strong> {contact.subject}</p>
             <h3>Message:</h3>
             <div style="background: #f8f9fa; padding: 15px; border-left: 4px solid #667eea;">
-                {contact.message.replace('\n', '<br>')}
+                {formatted_message}
             </div>
             """
         )
