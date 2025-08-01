@@ -14,7 +14,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir fastapi uvicorn python-dotenv aiosqlite stripe
 
 # Copy application code
-COPY ultra_minimal_api.py .
+COPY simple_trial_api_v2_fixed.py .
 COPY src/ ./src/
 COPY web/ ./web/
 COPY templates/ ./templates/
@@ -24,11 +24,11 @@ COPY config/ ./config/
 COPY production.env.example .env.example
 
 # Expose port
-EXPOSE 8000
+EXPOSE 8080
 
 # Set environment variables
-ENV PORT=8000
+ENV PORT=8080
 ENV PYTHONPATH=/app
 
-# Run the application directly
-CMD ["python", "ultra_minimal_api.py"]
+# Run the full SaaS API
+CMD ["python", "simple_trial_api_v2_fixed.py"]

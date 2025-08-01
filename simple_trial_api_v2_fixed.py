@@ -290,7 +290,7 @@ async def internal_error_handler(request: Request, exc: HTTPException):
     )
 
 if __name__ == "__main__":
-    port = int(os.getenv("PORT", 8000))
+    port = int(os.getenv("PORT", 8080))  # Railway uses 8080 by default
     logger.info(f"Starting MapMyStandards A³E API on port {port}")
     uvicorn.run(
         "simple_trial_api_v2_fixed:app",
