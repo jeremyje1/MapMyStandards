@@ -35,6 +35,9 @@ SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
 SMTP_USERNAME = os.getenv("SMTP_USERNAME", "support@mapmystandards.ai")
 SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "Ipo4Eva45*")
 
+# Stripe configuration
+STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PUBLISHABLE_KEY", "")
+
 # Pydantic models
 class TrialSignup(BaseModel):
     email: EmailStr
@@ -115,6 +118,19 @@ def health_check():
         "timestamp": datetime.now().isoformat(),
         "api_version": "1.0.0",
         "active_trials": len(trial_users)
+    }
+
+# Stripe configuration endpoint
+@app.get("/config/stripe-key")
+def get_stripe_key():
+    """Return the Stripe publishable key for frontend use"""
+    if not STRIPE_PUBLISHABLE_KEY:
+        raise HTTPException(status_code=500, detail="Stripe not configured")
+    
+    # Only return publishable key (safe for frontend)
+    return {
+        "publishable_key": STRIPE_PUBLISHABLE_KEY,
+        "environment": "live" if STRIPE_PUBLISHABLE_KEY.startswith("pk_live_") else "test"
     }
 
 # Landing page
