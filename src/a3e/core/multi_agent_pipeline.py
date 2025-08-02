@@ -12,7 +12,18 @@ import json
 import logging
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
-import numpy as np
+
+# Optional numpy import
+try:
+    import numpy as np
+    NUMPY_AVAILABLE = True
+except ImportError:
+    NUMPY_AVAILABLE = False
+    # Mock numpy for basic functionality
+    class np:
+        @staticmethod
+        def array(data):
+            return data
 
 from .accreditation_ontology import AccreditationOntology, AccreditationDomain, EvidenceType
 from .vector_matching import VectorWeightedMatcher, StandardMatch, EvidenceDocument, MatchingStrategy

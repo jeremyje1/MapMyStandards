@@ -6,10 +6,24 @@ Advanced semantic framework for accreditation standards and evidence mapping
 from typing import Dict, List, Optional, Any, Tuple
 from dataclasses import dataclass, field
 from enum import Enum
-import numpy as np
 from datetime import datetime
 import uuid
 import json
+
+# Optional numpy import for advanced features
+try:
+    import numpy as np
+    NUMPY_AVAILABLE = True
+except ImportError:
+    NUMPY_AVAILABLE = False
+    # Mock numpy array for basic functionality
+    class np:
+        @staticmethod
+        def array(data):
+            return data
+        @staticmethod
+        def zeros(shape):
+            return [0.0] * (shape if isinstance(shape, int) else shape[0])
 
 class AccreditationDomain(Enum):
     """Core accreditation domains in higher education."""
