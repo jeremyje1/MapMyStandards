@@ -35,7 +35,7 @@ class Settings(BaseSettings):
     api_prefix: str = "/api/v1"
     
     # Database Configuration
-    database_url: str = Field(..., env="DATABASE_URL")
+    database_url: str = Field(default="sqlite:///./a3e.db", env="DATABASE_URL")
     database_pool_size: int = Field(default=20, env="DATABASE_POOL_SIZE")
     database_max_overflow: int = Field(default=30, env="DATABASE_MAX_OVERFLOW")
     
@@ -81,7 +81,7 @@ class Settings(BaseSettings):
     )
     
     # Security
-    secret_key: str = Field(..., env="SECRET_KEY")
+    secret_key: str = Field(default="dev-secret-key-change-in-production-min-32-chars", env="SECRET_KEY")
     jwt_algorithm: str = Field(default="HS256", env="JWT_ALGORITHM")
     jwt_expiration_hours: int = Field(default=24, env="JWT_EXPIRATION_HOURS")
     
