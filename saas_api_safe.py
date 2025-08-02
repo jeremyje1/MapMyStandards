@@ -107,7 +107,7 @@ def read_root():
         "status": "live", 
         "version": "1.0.0",
         "features": ["trial_signup", "dashboard", "email_integration"],
-        "endpoints": ["/health", "/landing", "/trial/signup", "/dashboard/{trial_id}", "/contact", "/pricing"]
+        "endpoints": ["/health", "/config/stripe-key", "/landing", "/trial/signup", "/dashboard/{trial_id}", "/contact", "/pricing"]
     }
 
 # Health check
