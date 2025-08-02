@@ -99,6 +99,7 @@ async def send_email(to_email: str, subject: str, html_content: str, text_conten
 async def startup_event():
     logger.info("🚀 MapMyStandards SaaS API starting up...")
     logger.info(f"📧 Email configured: {SMTP_USERNAME}@{SMTP_SERVER}:{SMTP_PORT}")
+    logger.info(f"💳 Stripe configured: {'✅' if STRIPE_PUBLISHABLE_KEY else '❌'}")
 
 # Root endpoint
 @app.get("/")
