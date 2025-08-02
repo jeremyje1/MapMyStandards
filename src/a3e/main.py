@@ -170,10 +170,66 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
 # Include API routes
 from .api import api_router
 from .api.routes.billing import router as billing_router
+
+# Add basic auth endpoints directly (temporary fix for Railway deployment)
+from pydantic import BaseModel, EmailStr
+from typing import Optional
+
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str
+    remember: bool = False
+
+class UserRegistrationRequest(BaseModel):
+    name: str
+    institution_name: str
+    email: EmailStr
+    password: str
+    role: str
+    plan: str
+    phone: Optional[str] = ""
+    newsletter_opt_in: bool = False
+
+class PasswordResetRequest(BaseModel):
+    email: EmailStr
+
+class AuthResponse(BaseModel):
+    success: bool
+    message: str
+    data: Optional[dict] = None
+
+# Simple in-memory user storage for Railway deployment
+temp_users = {}
+
+@app.post("/auth/login", response_model=AuthResponse)
+async def login_user(request: LoginRequest):
+    """Temporary login endpoint for Railway deployment"""
+    return AuthResponse(
+        success=False,
+        message="Authentication system is being deployed. Please try again in a few minutes."
+    )
+
+@app.post("/auth/register-trial", response_model=AuthResponse)
+async def register_trial_user(request: UserRegistrationRequest):
+    """Temporary registration endpoint for Railway deployment"""
+    return AuthResponse(
+        success=False,
+        message="Registration system is being deployed. Please try again in a few minutes."
+    )
+
+@app.post("/auth/password-reset", response_model=AuthResponse)
+async def request_password_reset(request: PasswordResetRequest):
+    """Temporary password reset endpoint for Railway deployment"""
+    return AuthResponse(
+        success=False,
+        message="Password reset system is being deployed. Please try again in a few minutes."
+    )
+
+# Include other routers
 if auth_router_available:
     app.include_router(auth_router)
 else:
-    logger.warning("Auth router not available - authentication endpoints disabled")
+    logger.warning("Auth router not available - using temporary auth endpoints")
 app.include_router(integrations_router)
 app.include_router(proprietary_router)
 app.include_router(billing_router)
@@ -536,12 +592,33 @@ async def checkout_page(request: Request):
     except FileNotFoundError:
         return HTMLResponse(content="<h1>Checkout page not found</h1>", status_code=404)
 
-# Mount static files for web assets
+# Mount static files for web assets and add direct routes for key pages
 import os
+from fastapi.responses import FileResponse
+
+# Try to mount web directory
 web_directory = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "web")
 if os.path.exists(web_directory):
     app.mount("/web", StaticFiles(directory=web_directory), name="web")
     logger.info(f"Web directory mounted from: {web_directory}")
+    
+    # Add direct routes for key pages
+    @app.get("/login", response_class=FileResponse)
+    async def login_page():
+        return FileResponse(os.path.join(web_directory, "login.html"))
+    
+    @app.get("/checkout", response_class=FileResponse)
+    async def checkout_page():
+        return FileResponse(os.path.join(web_directory, "checkout.html"))
+    
+    @app.get("/dashboard", response_class=FileResponse)
+    async def dashboard_page():
+        return FileResponse(os.path.join(web_directory, "dashboard.html"))
+        
+    @app.get("/homepage", response_class=FileResponse)
+    async def homepage():
+        return FileResponse(os.path.join(web_directory, "homepage.html"))
+        
 else:
     logger.warning(f"Web directory not found at: {web_directory}")
     # Try alternative path for Railway deployment
@@ -549,6 +626,23 @@ else:
     if os.path.exists(alt_web_directory):
         app.mount("/web", StaticFiles(directory=alt_web_directory), name="web")
         logger.info(f"Web directory mounted from alternative path: {alt_web_directory}")
+        
+        # Add direct routes for key pages
+        @app.get("/login", response_class=FileResponse)
+        async def login_page():
+            return FileResponse(os.path.join(alt_web_directory, "login.html"))
+        
+        @app.get("/checkout", response_class=FileResponse)
+        async def checkout_page():
+            return FileResponse(os.path.join(alt_web_directory, "checkout.html"))
+        
+        @app.get("/dashboard", response_class=FileResponse)
+        async def dashboard_page():
+            return FileResponse(os.path.join(alt_web_directory, "dashboard.html"))
+            
+        @app.get("/homepage", response_class=FileResponse)
+        async def homepage():
+            return FileResponse(os.path.join(alt_web_directory, "homepage.html"))
     else:
         logger.error("Web directory not found - static files will not be served")
 
