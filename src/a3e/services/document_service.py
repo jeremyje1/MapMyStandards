@@ -15,10 +15,26 @@ import mimetypes
 from datetime import datetime
 import uuid
 
-# Document processing libraries
-import pypdf
-import docx
-import pandas as pd
+# Optional document processing libraries
+try:
+    import pypdf
+    import docx
+    import pandas as pd
+    DOCUMENT_PROCESSING_AVAILABLE = True
+except ImportError:
+    DOCUMENT_PROCESSING_AVAILABLE = False
+    logger.warning("Document processing libraries not available - limited file support")
+    
+    # Mock pandas for basic functionality
+    class pd:
+        @staticmethod
+        def DataFrame(data):
+            return {"data": data}
+        
+        @staticmethod 
+        def read_excel(file):
+            return {"data": "mock"}
+
 from fastapi import UploadFile
 
 from ..core.config import Settings

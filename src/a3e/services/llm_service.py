@@ -10,10 +10,28 @@ import json
 import logging
 from typing import Dict, Any, Optional, List
 from dataclasses import dataclass
-import boto3
-from botocore.exceptions import ClientError
-import openai
-import anthropic
+
+# Optional AWS imports
+try:
+    import boto3
+    from botocore.exceptions import ClientError
+    AWS_AVAILABLE = True
+except ImportError:
+    AWS_AVAILABLE = False
+    logger.warning("AWS SDK not available - Bedrock features disabled")
+    
+    # Mock classes for AWS
+    class ClientError(Exception):
+        pass
+
+# Optional AI service imports (should be available in minimal requirements)
+try:
+    import openai
+    import anthropic
+    AI_SERVICES_AVAILABLE = True
+except ImportError:
+    AI_SERVICES_AVAILABLE = False
+    logger.warning("AI services not available - LLM features limited")
 
 from ..core.config import Settings
 
