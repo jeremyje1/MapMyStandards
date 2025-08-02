@@ -20,10 +20,16 @@ try:
 except ImportError:
     NUMPY_AVAILABLE = False
     # Mock numpy for basic functionality
+    class MockNdarray:
+        def __init__(self, data):
+            self.data = data
+    
     class np:
+        ndarray = MockNdarray  # For type hints
+        
         @staticmethod
         def array(data):
-            return data
+            return MockNdarray(data)
 
 from .accreditation_ontology import AccreditationOntology, AccreditationDomain, EvidenceType
 from .vector_matching import VectorWeightedMatcher, StandardMatch, EvidenceDocument, MatchingStrategy

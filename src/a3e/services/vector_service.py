@@ -24,6 +24,17 @@ except ImportError as e:
     logger.warning(f"Vector features not available: {e}")
     VECTOR_FEATURES_AVAILABLE = False
     # Create mock classes
+    class MockNdarray:
+        def __init__(self, data):
+            self.data = data
+    
+    class np:
+        ndarray = MockNdarray  # For type hints
+        
+        @staticmethod
+        def array(data):
+            return MockNdarray(data)
+    
     class SentenceTransformer:
         def __init__(self, *args, **kwargs):
             pass

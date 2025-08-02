@@ -19,10 +19,17 @@ try:
 except ImportError:
     SCIENTIFIC_FEATURES_AVAILABLE = False
     # Mock implementations for basic functionality
+    class MockNdarray:
+        def __init__(self, data):
+            self.data = data
+    
     class np:
+        ndarray = MockNdarray  # For type hints
+        
         @staticmethod
         def array(data):
-            return data
+            return MockNdarray(data)
+        
         @staticmethod
         def dot(a, b):
             return sum(x * y for x, y in zip(a, b))

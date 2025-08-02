@@ -16,14 +16,21 @@ try:
     NUMPY_AVAILABLE = True
 except ImportError:
     NUMPY_AVAILABLE = False
-    # Mock numpy array for basic functionality
+    # Mock numpy for basic functionality
+    class MockNdarray:
+        def __init__(self, data):
+            self.data = data
+    
     class np:
+        ndarray = MockNdarray  # For type hints
+        
         @staticmethod
         def array(data):
-            return data
+            return MockNdarray(data)
+        
         @staticmethod
         def zeros(shape):
-            return [0.0] * (shape if isinstance(shape, int) else shape[0])
+            return MockNdarray([0.0] * (shape if isinstance(shape, int) else shape[0]))
 
 class AccreditationDomain(Enum):
     """Core accreditation domains in higher education."""
