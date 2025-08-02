@@ -11,6 +11,7 @@ from .evidence import router as evidence_router
 from .workflows import router as workflows_router
 from .integrations import router as integrations_router
 from .proprietary import router as proprietary_router
+from .auth import router as auth_router
 
 # Create main API router
 api_router = APIRouter()

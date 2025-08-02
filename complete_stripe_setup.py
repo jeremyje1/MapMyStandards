@@ -241,9 +241,9 @@ def verify_trial_configuration():
     print(f"\n⏱️  Trial Configuration Verification:")
     print("-" * 40)
     
-    print("✅ Trial Period: 21 days")
-    print("   → Configured in subscription creation")
-    print("   → Set with: trial_period_days=21")
+    print("✅ Trial Period: 7 days")
+    print("   → Customer gets full access for 7 days")
+    print("   → Set with: trial_period_days=7")
     
     print("✅ Credit Card Required: YES")
     print("   → payment_method required at signup")
@@ -302,7 +302,7 @@ def main():
     print(f"✅ Pricing: $297/$897 monthly, $2,970/$8,073 yearly")
     print(f"✅ Coupons: {len(coupons)} promotional codes created")
     print(f"✅ Webhooks: {'Configured' if webhook_secret else 'Failed'}")
-    print(f"✅ Trials: 21-day with credit card required")
+    print(f"✅ Trials: 7-day with credit card required")
     
     print(f"\n🚀 Ready for Production!")
     print("Your A³E Stripe integration is complete and ready to generate revenue!")

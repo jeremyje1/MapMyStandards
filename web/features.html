@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="MapMyStandards.ai Features - A³E Engine, AI-Powered Gap Analysis, Canvas Integration, and Comprehensive Accreditation Tools">
+    <title>Features - MapMyStandards.ai</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #2c3e50;
+            background-color: #ffffff;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* Header */
+        header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            text-decoration: none;
+            color: white;
+        }
+        
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+        
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.3s;
+        }
+        
+        .nav-links a:hover {
+            opacity: 0.8;
+        }
+        
+        /* Hero Section */
+        .features-hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 6rem 0;
+            text-align: center;
+        }
+        
+        .features-hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            font-weight: 700;
+        }
+        
+        .features-hero p {
+            font-size: 1.3rem;
+            max-width: 700px;
+            margin: 0 auto 2rem;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: #ff6b6b;
+            color: white;
+            padding: 1.2rem 2.5rem;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        }
+        
+        .cta-button:hover {
+            background: #ff5252;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+        }
+        
+        /* Core Features Section */
+        .core-features {
+            padding: 6rem 0;
+            background: white;
+        }
+        
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+        
+        .section-header h2 {
+            font-size: 2.8rem;
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+        
+        .section-header p {
+            font-size: 1.2rem;
+            color: #6c757d;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 3rem;
+            margin-top: 4rem;
+        }
+        
+        .feature-card {
+            background: #f8f9fa;
+            padding: 3rem 2rem;
+            border-radius: 15px;
+            text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: 1px solid #e9ecef;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .feature-icon {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            color: #667eea;
+        }
+        
+        .feature-card h3 {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            color: #2c3e50;
+        }
+        
+        .feature-card p {
+            color: #6c757d;
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .feature-list {
+            list-style: none;
+            text-align: left;
+        }
+        
+        .feature-list li {
+            padding: 0.5rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+            color: #6c757d;
+        }
+        
+        .feature-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        /* A3E Engine Section */
+        .a3e-section {
+            padding: 6rem 0;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        }
+        
+        .a3e-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+        
+        .a3e-info h2 {
+            font-size: 2.5rem;
+            color: #2c3e50;
+            margin-bottom: 2rem;
+        }
+        
+        .a3e-info p {
+            font-size: 1.1rem;
+            color: #6c757d;
+            margin-bottom: 1.5rem;
+        }
+        
+        .agent-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        
+        .agent-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .agent-card h4 {
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+        
+        .agent-card p {
+            font-size: 0.95rem;
+            color: #6c757d;
+            margin: 0;
+        }
+        
+        /* Integration Section */
+        .integration-section {
+            padding: 6rem 0;
+            background: white;
+        }
+        
+        .integration-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+        
+        .integration-card {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px solid #e9ecef;
+            transition: border-color 0.3s;
+        }
+        
+        .integration-card:hover {
+            border-color: #667eea;
+        }
+        
+        .integration-card h4 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+        
+        .integration-card p {
+            color: #6c757d;
+            font-size: 0.95rem;
+        }
+        
+        /* Analytics Section */
+        .analytics-section {
+            padding: 6rem 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .analytics-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+        
+        .analytics-features {
+            list-style: none;
+        }
+        
+        .analytics-features li {
+            padding: 1rem 0;
+            padding-left: 2rem;
+            position: relative;
+            font-size: 1.1rem;
+        }
+        
+        .analytics-features li::before {
+            content: "📊";
+            position: absolute;
+            left: 0;
+            font-size: 1.2rem;
+        }
+        
+        .analytics-info h2 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .analytics-info p {
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+            opacity: 0.9;
+        }
+        
+        /* CTA Section */
+        .cta-section {
+            padding: 6rem 0;
+            background: #2c3e50;
+            color: white;
+            text-align: center;
+        }
+        
+        .cta-section h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .cta-section p {
+            font-size: 1.2rem;
+            margin-bottom: 2.5rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .cta-buttons {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .cta-primary {
+            background: #667eea;
+            color: white;
+            padding: 1.2rem 2.5rem;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: background 0.3s;
+        }
+        
+        .cta-primary:hover {
+            background: #5a6fd8;
+        }
+        
+        .cta-secondary {
+            background: transparent;
+            color: white;
+            padding: 1.2rem 2.5rem;
+            text-decoration: none;
+            border: 2px solid white;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+        }
+        
+        .cta-secondary:hover {
+            background: white;
+            color: #2c3e50;
+        }
+        
+        /* Footer */
+        footer {
+            background: #1a252f;
+            color: white;
+            padding: 3rem 0 2rem;
+        }
+        
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .footer-section h3 {
+            margin-bottom: 1rem;
+            color: #ecf0f1;
+        }
+        
+        .footer-section a {
+            color: #bdc3c7;
+            text-decoration: none;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+        
+        .footer-section a:hover {
+            color: white;
+        }
+        
+        .footer-bottom {
+            border-top: 1px solid #34495e;
+            padding-top: 1rem;
+            text-align: center;
+            color: #bdc3c7;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .features-hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+            
+            .a3e-content,
+            .analytics-content {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            
+            .agent-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="container">
+            <a href="https://mapmystandards.ai/" class="logo">
+                <img src="https://mapmystandards.ai/wp-content/uploads/2025/07/Original-Logo.png" alt="MapMyStandards.ai Logo" style="height: 60px;">
+            </a>
+            <ul class="nav-links">
+                <li><a href="https://mapmystandards.ai/">Home</a></li>
+                <li><a href="https://mapmystandards.ai/services/">Services</a></li>
+                <li><a href="https://mapmystandards.ai/about/">About</a></li>
+                <li><a href="https://mapmystandards.ai/user-guide/">User Guide</a></li>
+                <li><a href="https://mapmystandards.ai/contact/">Contact</a></li>
+                <li><a href="dashboard.html">Dashboard</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="features-hero">
+            <div class="container">
+                <h1>Powerful Features for Accreditation Excellence</h1>
+                <p>Discover how the A³E engine and comprehensive platform features transform your accreditation process from overwhelming to streamlined.</p>
+                <a href="/checkout.html?plan=college" class="cta-button">Start 7-Day Free Trial</a>
+            </div>
+        </section>
+
+        <section class="core-features">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Core Platform Capabilities</h2>
+                    <p>Everything you need to achieve and maintain accreditation compliance with confidence</p>
+                </div>
+                
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">🤖</div>
+                        <h3>AI-Powered Document Analysis</h3>
+                        <p>Upload any document format and watch our AI extract, categorize, and map content to accreditation standards automatically.</p>
+                        <ul class="feature-list">
+                            <li>PDF, Word, Excel, PowerPoint support</li>
+                            <li>OCR for scanned documents</li>
+                            <li>Automatic content extraction</li>
+                            <li>FERPA-compliant processing</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">🎯</div>
+                        <h3>Smart Gap Analysis</h3>
+                        <p>Get comprehensive gap analysis across all your accreditors with actionable recommendations and priority rankings.</p>
+                        <ul class="feature-list">
+                            <li>Multi-accreditor support</li>
+                            <li>Real-time compliance scoring</li>
+                            <li>Priority-ranked action items</li>
+                            <li>Evidence quality assessment</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">📊</div>
+                        <h3>Executive Dashboards</h3>
+                        <p>Role-based dashboards provide the right information to the right people at the right time.</p>
+                        <ul class="feature-list">
+                            <li>Customizable role-based views</li>
+                            <li>Real-time compliance metrics</li>
+                            <li>Executive summary reports</li>
+                            <li>Trend analysis and forecasting</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">🔗</div>
+                        <h3>Canvas LMS Integration</h3>
+                        <p>Automatically import course content, syllabi, and assessment data for comprehensive academic program analysis.</p>
+                        <ul class="feature-list">
+                            <li>One-click Canvas connection</li>
+                            <li>Automatic syllabus analysis</li>
+                            <li>Learning outcomes mapping</li>
+                            <li>Assessment data integration</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">📈</div>
+                        <h3>Advanced Reporting</h3>
+                        <p>Generate professional reports for different audiences, from detailed compliance analysis to executive summaries.</p>
+                        <ul class="feature-list">
+                            <li>Multi-format export options</li>
+                            <li>Customizable report templates</li>
+                            <li>Automated report scheduling</li>
+                            <li>Direct citation tracking</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">🛡️</div>
+                        <h3>Enterprise Security</h3>
+                        <p>Bank-level security with FERPA compliance, SOC 2 Type II certification, and comprehensive audit trails.</p>
+                        <ul class="feature-list">
+                            <li>SOC 2 Type II compliant</li>
+                            <li>End-to-end encryption</li>
+                            <li>Complete audit trails</li>
+                            <li>Role-based access control</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="a3e-section">
+            <div class="container">
+                <div class="a3e-content">
+                    <div class="a3e-info">
+                        <h2>The A³E Engine: Four AI Agents Working for You</h2>
+                        <p>Our proprietary A³E (Autonomous Accreditation Analysis Engine) uses four specialized AI agents to process your documents and provide comprehensive accreditation insights.</p>
+                        <p>Each agent is trained specifically for higher education accreditation, ensuring accurate analysis and zero hallucinated citations.</p>
+                    </div>
+                    
+                    <div class="agent-grid">
+                        <div class="agent-card">
+                            <h4>Parser Agent</h4>
+                            <p>Extracts and structures content from any document format with OCR support for scanned materials.</p>
+                        </div>
+                        
+                        <div class="agent-card">
+                            <h4>Mapper Agent</h4>
+                            <p>Aligns extracted content with specific accreditation standards using our proprietary accreditation ontology.</p>
+                        </div>
+                        
+                        <div class="agent-card">
+                            <h4>Analyzer Agent</h4>
+                            <p>Evaluates compliance levels, identifies gaps, and assesses evidence quality using peer review criteria.</p>
+                        </div>
+                        
+                        <div class="agent-card">
+                            <h4>Reporter Agent</h4>
+                            <p>Generates comprehensive reports with actionable recommendations and direct document citations.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="integration-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Seamless Integrations</h2>
+                    <p>Connect with your existing systems and workflows for maximum efficiency</p>
+                </div>
+                
+                <div class="integration-grid">
+                    <div class="integration-card">
+                        <h4>Learning Management Systems</h4>
+                        <p>Canvas, Blackboard, D2L Brightspace, Moodle, and more</p>
+                    </div>
+                    
+                    <div class="integration-card">
+                        <h4>Student Information Systems</h4>
+                        <p>Banner, PeopleSoft, Colleague, PowerSchool, and others</p>
+                    </div>
+                    
+                    <div class="integration-card">
+                        <h4>Cloud Storage</h4>
+                        <p>Google Drive, OneDrive, Dropbox, SharePoint integration</p>
+                    </div>
+                    
+                    <div class="integration-card">
+                        <h4>Document Management</h4>
+                        <p>SharePoint, Box, institutional repositories, and file systems</p>
+                    </div>
+                    
+                    <div class="integration-card">
+                        <h4>API Access</h4>
+                        <p>REST and GraphQL APIs for custom integrations</p>
+                    </div>
+                    
+                    <div class="integration-card">
+                        <h4>Data Import</h4>
+                        <p>CSV, Excel, JSON, and bulk document upload support</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="analytics-section">
+            <div class="container">
+                <div class="analytics-content">
+                    <div class="analytics-info">
+                        <h2>Comprehensive Analytics & Insights</h2>
+                        <p>Transform your accreditation data into actionable insights with our advanced analytics capabilities.</p>
+                        <p>Track progress over time, identify trends, and make data-driven decisions to improve your accreditation outcomes.</p>
+                    </div>
+                    
+                    <ul class="analytics-features">
+                        <li>Real-time compliance tracking across all accreditors</li>
+                        <li>Historical trend analysis and progress monitoring</li>
+                        <li>Predictive analytics for upcoming review cycles</li>
+                        <li>Comparative analysis with peer institutions</li>
+                        <li>Evidence gap identification and prioritization</li>
+                        <li>Resource allocation recommendations</li>
+                        <li>Custom KPI dashboards for leadership</li>
+                        <li>Automated alert system for compliance risks</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section class="cta-section">
+            <div class="container">
+                <h2>Ready to Transform Your Accreditation Process?</h2>
+                <p>Join leading institutions who have streamlined their accreditation with MapMyStandards.ai. Start your free trial today and experience the power of AI-driven accreditation management.</p>
+                
+                <div class="cta-buttons">
+                    <a href="/checkout.html?plan=college" class="cta-primary">Start Free Trial</a>
+                    <a href="/contact.html" class="cta-secondary">Schedule Demo</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Platform</h3>
+                    <a href="/features.html">Features</a>
+                    <a href="https://mapmystandards.ai/services/">Pricing</a>
+                    <a href="/manual.html">Documentation</a>
+                    <a href="/contact.html">Support</a>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Company</h3>
+                    <a href="https://mapmystandards.ai/about/">About Us</a>
+                    <a href="/contact.html">Contact</a>
+                    <a href="https://mapmystandards.ai/privacy-policy/">Privacy Policy</a>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Resources</h3>
+                    <a href="/manual.html">User Guide</a>
+                    <a href="https://mapmystandards.ai/about/">Case Studies</a>
+                    <a href="/contact.html">Demo Request</a>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Contact</h3>
+                    <a href="mailto:support@mapmystandards.ai">support@mapmystandards.ai</a>
+                    <p>NorthPath Strategies</p>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2025 MapMyStandards.ai. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

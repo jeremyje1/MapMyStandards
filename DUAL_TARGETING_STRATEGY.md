@@ -10,7 +10,7 @@
 
 ### **1. A³E Explorer Plan** 
 - **Target:** Colleges and accreditation directors evaluating solutions
-- **Price:** $0/month (21-day trial)
+- **Price:** $0/month (7-day trial)
 - **Description:** "Free trial for colleges and accreditation directors to test A³E capabilities"
 
 ### **2. A³E College Plan**

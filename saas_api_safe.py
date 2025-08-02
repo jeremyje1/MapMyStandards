@@ -135,6 +135,16 @@ def get_stripe_key():
         "environment": "live" if STRIPE_PUBLISHABLE_KEY.startswith("pk_live_") else "test"
     }
 
+# Debug endpoint to check environment variables
+@app.get("/debug/env")
+def debug_env():
+    """Debug endpoint to check if environment variables are loaded"""
+    return {
+        "stripe_key_set": bool(STRIPE_PUBLISHABLE_KEY),
+        "stripe_key_length": len(STRIPE_PUBLISHABLE_KEY) if STRIPE_PUBLISHABLE_KEY else 0,
+        "stripe_key_prefix": STRIPE_PUBLISHABLE_KEY[:10] if STRIPE_PUBLISHABLE_KEY else "none"
+    }
+
 # Landing page
 @app.get("/landing", response_class=HTMLResponse)
 def landing_page():

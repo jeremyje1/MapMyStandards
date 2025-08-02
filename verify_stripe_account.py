@@ -171,7 +171,7 @@ def setup_trial_configuration():
     
     print(f"\n⏱️  Trial Configuration:")
     print("-" * 30)
-    print("✅ 21-day trial period: Configured in subscription creation")
+    print("✅ 7-day trial period: Configured in subscription creation")
     print("✅ Credit card required: Built into checkout flow")
     print("✅ Automatic billing: Starts after trial period")
     print("✅ Easy cancellation: Available through customer portal")

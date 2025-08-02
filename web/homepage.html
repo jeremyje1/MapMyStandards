@@ -28,9 +28,14 @@
         
         /* Header */
         header {
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            background: 
+                linear-gradient(135deg, rgba(30, 60, 114, 0.95) 0%, rgba(42, 82, 152, 0.95) 100%),
+                url('https://mapmystandards.ai/wp-content/uploads/2025/07/Original-Logo.png');
+            background-size: 120px auto, auto;
+            background-repeat: repeat, no-repeat;
+            background-position: center, right 20px center;
             color: white;
-            padding: 1rem 0;
+            padding: 1.5rem 0;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         
@@ -38,19 +43,33 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            position: relative;
+            z-index: 10;
         }
         
         .logo {
-            font-size: 1.8rem;
-            font-weight: bold;
+            display: flex;
+            align-items: center;
             text-decoration: none;
             color: white;
+            z-index: 10;
+            position: relative;
+        }
+        
+        .logo img {
+            height: 80px;
+            margin-right: 0;
+            filter: brightness(1.1) contrast(1.1);
+        }
+        
+        .logo-text {
+            display: none;
         }
         
         .nav-links {
             display: flex;
             list-style: none;
-            gap: 2rem;
+            gap: 2.5rem;
         }
         
         .nav-links a {
@@ -66,9 +85,14 @@
         
         /* Hero Section */
         .hero {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: 
+                linear-gradient(135deg, rgba(30, 60, 114, 0.6) 0%, rgba(42, 82, 152, 0.6) 100%),
+                url('https://mapmystandards.ai/wp-content/uploads/2025/08/ChatGPT-Image-Aug-1-2025-09_45_55-AM.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
             color: white;
-            padding: 6rem 0;
+            padding: 8rem 0;
             text-align: center;
         }
         
@@ -104,12 +128,35 @@
             font-weight: 600;
             transition: all 0.3s;
             box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+            margin: 0.5rem;
         }
         
         .cta-button:hover {
             background: #c0392b;
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+            color: white;
+        }
+        
+        .cta-button.secondary {
+            background: transparent;
+            border: 2px solid white;
+            color: white;
+        }
+        
+        .cta-button.secondary:hover {
+            background: white;
+            color: #667eea;
+        }
+        
+        .cta-button.trial {
+            background: #28a745;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+        }
+        
+        .cta-button.trial:hover {
+            background: #218838;
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
         }
         
         /* Features Section */
@@ -215,7 +262,11 @@
         }
         
         .value-image {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            background: 
+                linear-gradient(135deg, rgba(30, 60, 114, 0.6) 0%, rgba(42, 82, 152, 0.6) 100%),
+                url('https://mapmystandards.ai/wp-content/uploads/2025/08/ChatGPT-Image-Aug-1-2025-09_45_55-AM.png');
+            background-size: cover;
+            background-position: center;
             height: 400px;
             border-radius: 15px;
             display: flex;
@@ -223,43 +274,8 @@
             justify-content: center;
             color: white;
             font-size: 1.2rem;
-        }
-        
-        /* Testimonials */
-        .testimonials {
-            padding: 6rem 0;
-            background: #f8f9fa;
-        }
-        
-        .testimonials h2 {
-            text-align: center;
-            font-size: 2.5rem;
-            margin-bottom: 3rem;
-            color: #2c3e50;
-        }
-        
-        .testimonial-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-        }
-        
-        .testimonial {
-            background: white;
-            padding: 2rem;
-            border-radius: 10px;
-            box-shadow: 0 3px 15px rgba(0,0,0,0.05);
-        }
-        
-        .testimonial-text {
-            font-style: italic;
-            margin-bottom: 1rem;
-            color: #2c3e50;
-        }
-        
-        .testimonial-author {
             font-weight: 600;
-            color: #667eea;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
         
         /* Footer */
@@ -313,6 +329,14 @@
                 display: none;
             }
             
+            .logo img {
+                height: 80px;
+            }
+            
+            .logo-text {
+                display: none;
+            }
+            
             .value-content {
                 grid-template-columns: 1fr;
                 gap: 2rem;
@@ -321,19 +345,74 @@
             .features-grid {
                 grid-template-columns: 1fr;
             }
+            
+            /* Pricing responsive styles */
+            #pricing .container > div[style*="grid-template-columns"] {
+                grid-template-columns: 1fr !important;
+                max-width: 400px !important;
+            }
+            
+            #pricing div[style*="transform: scale(1.05)"] {
+                transform: scale(1) !important;
+            }
+        }
+        
+        /* Live System Indicator */
+        .system-status {
+            background: #28a745;
+            color: white;
+            text-align: center;
+            padding: 0.5rem 0;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .system-status a {
+            color: white;
+            text-decoration: underline;
+        }
+        
+        /* Trial Banner */
+        .trial-banner {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 3rem 0;
+            text-align: center;
+            margin: 4rem 0;
+        }
+        
+        .trial-banner h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .trial-banner p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.95;
         }
     </style>
 </head>
 <body>
+    <!-- Live System Status Bar -->
+    <div class="system-status">
+        🟢 A³E System Online | <a href="./dashboard.html">Live Dashboard</a> | <a href="./checkout.html">Start 7-Day Trial</a>
+    </div>
+    
     <header>
         <nav class="container">
-            <a href="https://mapmystandards.ai/" class="logo">MapMyStandards.ai</a>
+            <a href="https://mapmystandards.ai/" class="logo">
+                <img src="https://mapmystandards.ai/wp-content/uploads/2025/07/Original-Logo.png" alt="MapMyStandards.ai Logo">
+            </a>
             <ul class="nav-links">
                 <li><a href="https://mapmystandards.ai/">Home</a></li>
                 <li><a href="https://mapmystandards.ai/services/">Services</a></li>
                 <li><a href="https://mapmystandards.ai/about/">About</a></li>
                 <li><a href="https://mapmystandards.ai/user-guide/">User Guide</a></li>
                 <li><a href="https://mapmystandards.ai/contact/">Contact</a></li>
+                <li><a href="./dashboard.html">Dashboard</a></li>
+                <li><a href="./login.html" style="color: #007bff; margin-right: 1rem;">Login</a></li>
+                <li><a href="./checkout.html" style="background: #28a745; padding: 0.5rem 1rem; border-radius: 20px; color: white;">🚀 Free Trial</a></li>
             </ul>
         </nav>
     </header>
@@ -344,8 +423,15 @@
                 <h1>MapMyStandards.ai</h1>
                 <p class="tagline">Evidence Aligned. Gaps Closed. Accreditation Delivered.</p>
                 <p>AI-powered accreditation management platform designed by higher education professionals for colleges and universities seeking streamlined, audit-ready compliance.</p>
-                                    <a href="https://mapmystandards.ai/contact/" class="cta-button">Request Demo</a>
-                    <a href="https://mapmystandards.ai/services/" class="cta-button secondary">View Pricing</a>
+                <div style="margin-top: 3rem;">
+                    <a href="./checkout.html" class="cta-button trial">🚀 Start 7-Day Trial</a>
+                    <a href="https://mapmystandards.ai/contact/" class="cta-button">Request Demo</a>
+                    <a href="#pricing" class="cta-button secondary">View Pricing</a>
+                </div>
+                <div style="margin-top: 2rem; font-size: 0.9rem; opacity: 0.9;">
+                    <a href="https://exemplary-solace-production-7f19.up.railway.app/status" target="_blank" style="color: white; text-decoration: none;">📊 Live System Status</a> | 
+                    <a href="https://exemplary-solace-production-7f19.up.railway.app/docs" target="_blank" style="color: white; text-decoration: none;">📖 API Documentation</a>
+                </div>
             </div>
         </section>
 
@@ -380,6 +466,132 @@
             </div>
         </section>
 
+        <!-- Live Trial Banner -->
+        <section class="trial-banner">
+            <div class="container">
+                <h2>🚀 Experience A³E Live</h2>
+                <p>Join institutions already using our AI-powered accreditation platform</p>
+                <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+                    <a href="./checkout.html" 
+                       class="cta-button" 
+                       style="background: white; color: #28a745;">
+                        🎯 Start 7-Day Trial
+                    </a>
+                    <a href="./dashboard.html" 
+                       class="cta-button" 
+                       style="background: transparent; border: 2px solid white;">
+                        📊 View Live Dashboard
+                    </a>
+                </div>
+                <div style="margin-top: 2rem; font-size: 0.9rem; opacity: 0.9;">
+                    7-day free trial • Credit card required • <a href="https://exemplary-solace-production-7f19.up.railway.app/docs" target="_blank" style="color: white;">API Documentation</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pricing Section -->
+        <section id="pricing" class="features" style="background: white;">
+            <div class="container">
+                <h2>Choose Your Plan</h2>
+                <p style="text-align: center; color: #6c757d; margin-bottom: 3rem; font-size: 1.1rem;">
+                    All plans include a 7-day free trial with full feature access
+                </p>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 2rem; max-width: 800px; margin: 0 auto;">
+                    
+                    <!-- College Plan -->
+                    <div style="background: white; border: 2px solid #e9ecef; border-radius: 15px; padding: 2.5rem; text-align: center; position: relative;">
+                        <h3 style="font-size: 1.8rem; margin-bottom: 1rem; color: #2c3e50;">A³E College Plan</h3>
+                        <div style="margin-bottom: 2rem;">
+                            <span style="font-size: 3rem; font-weight: 700; color: #2c3e50;">$297</span>
+                            <span style="color: #6c757d;">/month</span>
+                        </div>
+                        <p style="color: #6c757d; margin-bottom: 2rem;">Perfect for single colleges and accreditation teams</p>
+                        
+                        <ul style="text-align: left; list-style: none; margin: 2rem 0;">
+                            <li style="padding: 0.5rem 0; padding-left: 1.5rem; position: relative;">
+                                <span style="position: absolute; left: 0; color: #27ae60; font-weight: bold;">✓</span>
+                                Unlimited document analysis
+                            </li>
+                            <li style="padding: 0.5rem 0; padding-left: 1.5rem; position: relative;">
+                                <span style="position: absolute; left: 0; color: #27ae60; font-weight: bold;">✓</span>
+                                Up to 3 campus/department profiles
+                            </li>
+                            <li style="padding: 0.5rem 0; padding-left: 1.5rem; position: relative;">
+                                <span style="position: absolute; left: 0; color: #27ae60; font-weight: bold;">✓</span>
+                                Full AI pipeline (4-agent system)
+                            </li>
+                            <li style="padding: 0.5rem 0; padding-left: 1.5rem; position: relative;">
+                                <span style="position: absolute; left: 0; color: #27ae60; font-weight: bold;">✓</span>
+                                Canvas LMS integration
+                            </li>
+                            <li style="padding: 0.5rem 0; padding-left: 1.5rem; position: relative;">
+                                <span style="position: absolute; left: 0; color: #27ae60; font-weight: bold;">✓</span>
+                                Priority email support
+                            </li>
+                        </ul>
+                        
+                        <a href="./checkout.html?plan=college" 
+                           style="display: inline-block; background: #667eea; color: white; padding: 1rem 2rem; text-decoration: none; border-radius: 8px; font-weight: 600; width: 80%; margin-top: 1rem;">
+                            Start 7-Day Trial
+                        </a>
+                    </div>
+                    
+                    <!-- Multi-Campus Plan -->
+                    <div style="background: white; border: 2px solid #667eea; border-radius: 15px; padding: 2.5rem; text-align: center; position: relative; transform: scale(1.05);">
+                        <div style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #667eea; color: white; padding: 0.5rem 1.5rem; border-radius: 20px; font-size: 0.9rem; font-weight: 600;">
+                            Most Popular
+                        </div>
+                        <h3 style="font-size: 1.8rem; margin-bottom: 1rem; color: #2c3e50;">A³E Multi-Campus Plan</h3>
+                        <div style="margin-bottom: 2rem;">
+                            <span style="font-size: 3rem; font-weight: 700; color: #2c3e50;">$897</span>
+                            <span style="color: #6c757d;">/month</span>
+                        </div>
+                        <p style="color: #6c757d; margin-bottom: 2rem;">Ideal for university systems and enterprise</p>
+                        
+                        <ul style="text-align: left; list-style: none; margin: 2rem 0;">
+                            <li style="padding: 0.5rem 0; padding-left: 1.5rem; position: relative;">
+                                <span style="position: absolute; left: 0; color: #27ae60; font-weight: bold;">✓</span>
+                                Everything in College Plan
+                            </li>
+                            <li style="padding: 0.5rem 0; padding-left: 1.5rem; position: relative;">
+                                <span style="position: absolute; left: 0; color: #27ae60; font-weight: bold;">✓</span>
+                                Unlimited campus/department profiles
+                            </li>
+                            <li style="padding: 0.5rem 0; padding-left: 1.5rem; position: relative;">
+                                <span style="position: absolute; left: 0; color: #27ae60; font-weight: bold;">✓</span>
+                                API access (10K calls/month)
+                            </li>
+                            <li style="padding: 0.5rem 0; padding-left: 1.5rem; position: relative;">
+                                <span style="position: absolute; left: 0; color: #27ae60; font-weight: bold;">✓</span>
+                                Dedicated success manager
+                            </li>
+                            <li style="padding: 0.5rem 0; padding-left: 1.5rem; position: relative;">
+                                <span style="position: absolute; left: 0; color: #27ae60; font-weight: bold;">✓</span>
+                                Phone support
+                            </li>
+                        </ul>
+                        
+                        <a href="./checkout.html?plan=multicampus" 
+                           style="display: inline-block; background: #667eea; color: white; padding: 1rem 2rem; text-decoration: none; border-radius: 8px; font-weight: 600; width: 80%; margin-top: 1rem;">
+                            Start 7-Day Trial
+                        </a>
+                    </div>
+                    
+                </div>
+                
+                <div style="text-align: center; margin-top: 3rem; padding: 2rem; background: #f8f9fa; border-radius: 10px;">
+                    <h4 style="color: #2c3e50; margin-bottom: 1rem;">💳 Trial Details</h4>
+                    <p style="color: #6c757d; margin-bottom: 1rem;">
+                        <strong>7-day free trial</strong> with full feature access • Credit card required for seamless conversion
+                    </p>
+                    <p style="color: #6c757d; font-size: 0.95rem;">
+                        Cancel anytime during trial with no charges • Automatic billing begins after trial period
+                    </p>
+                </div>
+            </div>
+        </section>
+
         <section class="value-prop">
             <div class="container">
                 <div class="value-content">
@@ -396,30 +608,15 @@
                         </ul>
                     </div>
                     <div class="value-image">
-                        [Dashboard Preview Placeholder]
+                        <div style="text-align: center;">
+                            <h3 style="margin-bottom: 1rem;">Live A³E Dashboard</h3>
+                            <p style="margin-bottom: 2rem;">Experience real-time accreditation analytics</p>
+                            <a href="./dashboard.html" 
+                               style="background: white; color: #667eea; padding: 1rem 2rem; text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block;">
+                                🎯 View Live Demo
+                            </a>
+                        </div>
                     </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="testimonials">
-            <div class="container">
-                <h2>Trusted by Higher Education Professionals</h2>
-                <div class="testimonial-grid">
-                    <article class="testimonial">
-                        <p class="testimonial-text">"MapMyStandards.ai transformed our accreditation preparation. What used to take months now takes weeks, with better documentation and clearer evidence mapping."</p>
-                        <p class="testimonial-author">— Dr. Sarah Johnson, IR Director</p>
-                    </article>
-                    
-                    <article class="testimonial">
-                        <p class="testimonial-text">"The AI-powered gap analysis identified compliance issues we hadn't noticed. The audit trail feature alone saved us countless hours during our site visit."</p>
-                        <p class="testimonial-author">— Michael Chen, Accreditation Liaison</p>
-                    </article>
-                    
-                    <article class="testimonial">
-                        <p class="testimonial-text">"Finally, a platform built by someone who understands accreditation. The narrative drafts are professional and well-cited out of the box."</p>
-                        <p class="testimonial-author">— Dr. Maria Rodriguez, Dean of Academic Affairs</p>
-                    </article>
                 </div>
             </div>
         </section>
@@ -433,6 +630,8 @@
                     <a href="https://mapmystandards.ai/features/">Features</a>
                     <a href="https://mapmystandards.ai/services/">Pricing</a>
                     <a href="https://mapmystandards.ai/user-guide/">Documentation</a>
+                    <a href="./checkout.html">🚀 Free Trial</a>
+                    <a href="https://exemplary-solace-production-7f19.up.railway.app/docs" target="_blank">API Docs</a>
                     <a href="https://mapmystandards.ai/contact/">Support</a>
                 </div>
                 

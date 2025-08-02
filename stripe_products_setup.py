@@ -118,7 +118,7 @@ def create_products_and_prices():
             interval = price_data['recurring']['interval']
             print(f"     ✅ Price ID: {price.id}")
             print(f"     💵 Amount: ${amount:,.2f} per {interval}")
-            print(f"     🆓 Trial: 21 days (set on subscription)")
+            print(f"     🆓 Trial: 7 days (set on subscription)")
         
         # Success Summary
         print("\n" + "=" * 60)

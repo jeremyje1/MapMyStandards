@@ -5,7 +5,12 @@ Handles trial signup, subscription management, and billing
 
 from fastapi import APIRouter, HTTPException, Depends, status
 from pydantic import BaseModel, EmailStr
-from typing import Optional, Dict, Any
+from typing impo        "multicampus_yearly": {
+            "name": "A³E Multi-Campus Plan (Annual)",
+            "price": 8073.00,
+            "currency": "USD",
+            "interval": "year",
+            "trial_days": 7,ional, Dict, Any
 from ..services.payment_service import PaymentService
 from ..core.auth import verify_api_key
 import logging
@@ -44,7 +49,7 @@ def get_payment_service() -> PaymentService:
 @router.post("/trial/signup")
 async def trial_signup(request: TrialSignupRequest, payment_service: PaymentService = Depends(get_payment_service)):
     """
-    Create a 21-day free trial subscription with automatic billing.
+    Create a 7-day free trial subscription with automatic billing.
     Requires credit card for seamless conversion.
     """
     try:
@@ -59,7 +64,7 @@ async def trial_signup(request: TrialSignupRequest, payment_service: PaymentServ
         if result['success']:
             return {
                 "success": True,
-                "message": "21-day free trial started successfully",
+                "message": "7-day free trial started successfully",
                 "data": {
                     "api_key": result['api_key'],
                     "trial_end": result['trial_end'], 
@@ -169,7 +174,7 @@ async def get_pricing_plans():
             "price": 297.00,
             "currency": "USD",
             "interval": "month",
-            "trial_days": 21,
+            "trial_days": 7,
             "description": "Complete accreditation automation for colleges and their accreditation teams",
             "features": [
                 "Unlimited document analysis",
@@ -186,7 +191,7 @@ async def get_pricing_plans():
             "price": 2970.00,
             "currency": "USD", 
             "interval": "year",
-            "trial_days": 21,
+            "trial_days": 7,
             "description": "Complete accreditation automation for colleges and their accreditation teams - Annual billing",
             "savings": "2 months free",
             "features": [
@@ -200,7 +205,7 @@ async def get_pricing_plans():
             "price": 897.00,
             "currency": "USD",
             "interval": "month", 
-            "trial_days": 21,
+            "trial_days": 7,
             "description": "Enterprise accreditation management for multi-campus colleges",
             "features": [
                 "Everything in College Plan",

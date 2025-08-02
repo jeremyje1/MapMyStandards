@@ -141,7 +141,7 @@ chmod +x deploy.sh
 College Plan: $297/month, $2,970/year (save $594)
 Multi-Campus: $897/month, $8,073/year (save $1,791)
 
-Free Trial: 21 days with payment method required
+Free Trial: 7 days with payment method required
 Discounts: 20% for first year, 50% for non-profits
 ```
 

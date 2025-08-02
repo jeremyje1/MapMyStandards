@@ -24,7 +24,7 @@ class PaymentService:
         self.db_service = DatabaseService()
         
     async def create_trial_subscription(self, email: str, plan: str, payment_method_id: str, coupon_code: Optional[str] = None) -> Dict[str, Any]:
-        """Create a subscription with 21-day free trial."""
+        """Create a subscription with 7-day free trial."""
         try:
             # Create customer
             customer = stripe.Customer.create(
@@ -58,19 +58,14 @@ class PaymentService:
                 except stripe.error.InvalidRequestError:
                     logger.warning(f"Coupon not found: {coupon_code}")
             
-            # Create subscription with 21-day trial
+            # Create subscription with 7-day trial
             subscription_data = {
-                'customer': customer.id,
-                'items': [{'price': price_mapping.get(plan, self.settings.STRIPE_PRICE_COLLEGE_MONTHLY)}],
-                'trial_period_days': 21,
-                'payment_behavior': 'default_incomplete',
-                'expand': ['latest_invoice.payment_intent'],
+                'customer': customer_id,
+                'items': [{'price': price_id}],
+                'trial_period_days': 7,
                 'metadata': {
-                    'plan_type': plan,
-                    'trial_start': datetime.utcnow().isoformat(),
-                    'trial_end': (datetime.utcnow() + timedelta(days=21)).isoformat()
-                }
-            }
+                    'institution_name': institution_name,
+                    'trial_end': (datetime.utcnow() + timedelta(days=7)).isoformat()
             
             # Add coupon if valid
             if coupon_info:
@@ -89,7 +84,7 @@ class PaymentService:
                 email=email,
                 plan=plan,
                 api_key=api_key,
-                trial_end=datetime.utcnow() + timedelta(days=21)
+                trial_end=datetime.utcnow() + timedelta(days=7)
             )
             
             return {
@@ -97,7 +92,7 @@ class PaymentService:
                 'customer_id': customer.id,
                 'subscription_id': subscription.id,
                 'api_key': api_key,
-                'trial_end': (datetime.utcnow() + timedelta(days=21)).isoformat(),
+                'trial_end': (datetime.utcnow() + timedelta(days=7)).isoformat(),
                 'status': 'trialing',
                 'coupon_applied': coupon_info['id'] if coupon_info else None,
                 'discount_info': coupon_info if coupon_info else None

@@ -1,4 +1,4 @@
-# Complete 21-Day Free Trial Setup Guide
+# Complete 7-Day Free Trial Setup Guide
 
 ## 🎯 **How It Works**
 
@@ -19,7 +19,7 @@
 ### Step 1: Create Products
 ```
 Product: A³E College Plan
-├── Price 1: $297/month (21-day trial)
+├── Price 1: $297/month (7-day trial)
 ├── Price 2: $2,970/year (21-day trial)
 
 Product: A³E Multi-Campus Plan  

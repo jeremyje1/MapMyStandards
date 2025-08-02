@@ -26,7 +26,7 @@ from .services.vector_service import VectorService
 from .services.llm_service import LLMService
 from .services.document_service import DocumentService
 from .agents import A3EAgentOrchestrator
-from .api.routes import integrations_router, proprietary_router
+from .api.routes import integrations_router, proprietary_router, auth_router
 
 # Configure logging
 logging.basicConfig(
@@ -163,6 +163,8 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
 # Include API routes
 from .api import api_router
 from .api.routes.billing import router as billing_router
+from .api.routes.auth import router as auth_router
+app.include_router(auth_router)
 app.include_router(integrations_router)
 app.include_router(proprietary_router)
 app.include_router(billing_router)

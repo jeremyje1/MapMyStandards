@@ -1,0 +1,298 @@
+<!-- MapMyStandards.ai - Services/Pricing Page Integration for Elementor -->
+<!-- Add this to your services/pricing page using Elementor's HTML widget -->
+
+<style>
+.pricing-integration {
+    margin: 2rem 0;
+}
+
+.trial-banner {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 15px;
+    text-align: center;
+    margin: 2rem 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.trial-banner::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+    animation: shine 3s infinite;
+}
+
+@keyframes shine {
+    0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+    100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+}
+
+.pricing-card {
+    background: white;
+    border-radius: 15px;
+    padding: 2rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    margin: 1rem;
+    text-align: center;
+    transition: transform 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.pricing-card:hover {
+    transform: translateY(-10px);
+    border-color: #667eea;
+}
+
+.pricing-card.featured {
+    border-color: #667eea;
+    transform: scale(1.05);
+}
+
+.price-amount {
+    font-size: 3rem;
+    font-weight: 700;
+    color: #667eea;
+    margin: 1rem 0;
+}
+
+.trial-cta {
+    display: inline-block;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1rem 2rem;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    margin: 1rem 0;
+    transition: all 0.3s ease;
+}
+
+.trial-cta:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    color: white;
+}
+
+.feature-list {
+    list-style: none;
+    padding: 0;
+    margin: 2rem 0;
+}
+
+.feature-list li {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #eee;
+}
+
+.feature-list li:before {
+    content: "✅";
+    margin-right: 0.5rem;
+}
+
+.api-integration-note {
+    background: #f8f9fa;
+    border-left: 4px solid #667eea;
+    padding: 1rem;
+    margin: 2rem 0;
+    border-radius: 0 8px 8px 0;
+}
+
+@media (max-width: 768px) {
+    .pricing-card {
+        margin: 1rem 0;
+    }
+    
+    .price-amount {
+        font-size: 2rem;
+    }
+}
+</style>
+
+<div class="pricing-integration">
+    <!-- Trial Banner -->
+    <div class="trial-banner">
+        <h2 style="margin-bottom: 1rem;">🚀 Start Your Free Trial Today</h2>
+        <p style="font-size: 1.2rem; margin-bottom: 2rem;">
+            Experience the full power of A³E with instant access
+        </p>
+        <a href="https://exemplary-solace-production-7f19.up.railway.app/landing" 
+           class="trial-cta" 
+           target="_blank"
+           style="background: white; color: #28a745; font-size: 1.2rem;">
+            🎯 Launch Free Trial Now
+        </a>
+    </div>
+
+    <!-- Pricing Cards -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin: 3rem 0;">
+        
+        <!-- Trial Plan -->
+        <div class="pricing-card">
+            <h3 style="color: #28a745;">Free Trial</h3>
+            <div class="price-amount">$0</div>
+            <p style="color: #6c757d;">30 days full access</p>
+            
+            <ul class="feature-list">
+                <li>Full A³E Analytics Engine</li>
+                <li>Document Analysis (up to 100)</li>
+                <li>Gap Analysis Reports</li>
+                <li>Email Support</li>
+                <li>Real-time Dashboard</li>
+            </ul>
+            
+            <a href="https://exemplary-solace-production-7f19.up.railway.app/landing" 
+               class="trial-cta" 
+               target="_blank">
+                Start Free Trial
+            </a>
+        </div>
+
+        <!-- Professional Plan -->
+        <div class="pricing-card featured">
+            <h3 style="color: #667eea;">Professional</h3>
+            <div class="price-amount">$299</div>
+            <p style="color: #6c757d;">per month</p>
+            
+            <ul class="feature-list">
+                <li>Everything in Trial</li>
+                <li>Unlimited Document Analysis</li>
+                <li>Multi-Accreditor Support</li>
+                <li>API Integration</li>
+                <li>Priority Support</li>
+                <li>Custom Reports</li>
+            </ul>
+            
+            <a href="https://mapmystandards.ai/contact/" 
+               class="trial-cta">
+                Schedule Demo
+            </a>
+        </div>
+
+        <!-- Enterprise Plan -->
+        <div class="pricing-card">
+            <h3 style="color: #6f42c1;">Enterprise</h3>
+            <div class="price-amount">Custom</div>
+            <p style="color: #6c757d;">tailored solution</p>
+            
+            <ul class="feature-list">
+                <li>Everything in Professional</li>
+                <li>Multi-Campus Support</li>
+                <li>Custom Integrations</li>
+                <li>Dedicated Support</li>
+                <li>Training & Onboarding</li>
+                <li>SLA Guarantee</li>
+            </ul>
+            
+            <a href="https://mapmystandards.ai/contact/" 
+               class="trial-cta" 
+               style="background: #6f42c1;">
+                Contact Sales
+            </a>
+        </div>
+    </div>
+
+    <!-- API Integration Note -->
+    <div class="api-integration-note">
+        <h4>🔗 Seamless Integration</h4>
+        <p>Our live API enables easy integration with your existing systems. All plans include access to our comprehensive API documentation and developer support.</p>
+        <a href="https://exemplary-solace-production-7f19.up.railway.app/docs" 
+           target="_blank" 
+           style="color: #667eea; text-decoration: none; font-weight: 600;">
+            📖 Explore API Documentation →
+        </a>
+    </div>
+
+    <!-- Live Demo Section -->
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 3rem; border-radius: 15px; text-align: center; margin: 3rem 0;">
+        <h3>See A³E in Action</h3>
+        <p style="font-size: 1.1rem; margin-bottom: 2rem;">
+            Experience real-time accreditation analytics
+        </p>
+        
+        <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+            <a href="https://exemplary-solace-production-7f19.up.railway.app/status" 
+               class="trial-cta" 
+               style="background: white; color: #667eea;"
+               target="_blank">
+                📊 Live Dashboard
+            </a>
+            
+            <a href="https://exemplary-solace-production-7f19.up.railway.app/docs" 
+               class="trial-cta" 
+               style="background: transparent; border: 2px solid white;"
+               target="_blank">
+                📖 API Documentation
+            </a>
+        </div>
+    </div>
+
+    <!-- ROI Calculator -->
+    <div style="background: #f8f9fa; padding: 2rem; border-radius: 15px; margin: 3rem 0;">
+        <h3 style="text-align: center; margin-bottom: 2rem;">💰 Calculate Your ROI</h3>
+        <div style="text-align: center;">
+            <p style="font-size: 1.1rem; color: #6c757d; margin-bottom: 2rem;">
+                See how much time and money A³E can save your institution
+            </p>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; margin: 2rem 0;">
+                <div style="text-align: center;">
+                    <div style="font-size: 2rem; font-weight: 700; color: #28a745;">500+</div>
+                    <div style="color: #6c757d;">Hours Saved</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 2rem; font-weight: 700; color: #28a745;">$75K</div>
+                    <div style="color: #6c757d;">Consultant Savings</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 2rem; font-weight: 700; color: #28a745;">98%</div>
+                    <div style="color: #6c757d;">Accuracy Rate</div>
+                </div>
+            </div>
+            
+            <a href="https://exemplary-solace-production-7f19.up.railway.app/landing" 
+               class="trial-cta" 
+               target="_blank">
+                🚀 Start Saving Today
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for Enhanced Functionality -->
+<script>
+// Track pricing interactions
+function trackPricingEvent(plan, action) {
+    gtag && gtag('event', 'pricing_interaction', {
+        'event_category': 'engagement',
+        'event_label': `${plan}_${action}`,
+        'value': plan === 'trial' ? 0 : plan === 'professional' ? 299 : 999
+    });
+}
+
+// Add event tracking
+document.addEventListener('DOMContentLoaded', function() {
+    // Track trial button clicks
+    const trialButtons = document.querySelectorAll('a[href*="exemplary-solace-production-7f19.up.railway.app/landing"]');
+    trialButtons.forEach(button => {
+        button.addEventListener('click', () => trackPricingEvent('trial', 'click'));
+    });
+    
+    // Track demo button clicks
+    const demoButtons = document.querySelectorAll('a[href*="contact"]');
+    demoButtons.forEach(button => {
+        button.addEventListener('click', () => trackPricingEvent('demo', 'click'));
+    });
+    
+    // Track API documentation clicks
+    const apiButtons = document.querySelectorAll('a[href*="docs"]');
+    apiButtons.forEach(button => {
+        button.addEventListener('click', () => trackPricingEvent('api', 'documentation_view'));
+    });
+});
+</script>

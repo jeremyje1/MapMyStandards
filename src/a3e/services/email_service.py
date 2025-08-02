@@ -199,7 +199,7 @@ NorthPath Strategies
         body = f"""
 Dear {user_name},
 
-Your 21-day free trial of MapMyStandards.ai expires in {days_remaining} days.
+Your 7-day free trial of MapMyStandards.ai expires in {days_remaining} days.
 
 To continue using our platform without interruption, please upgrade to a paid plan:
 - A³E College Plan: Ideal for single institutions
@@ -215,6 +215,65 @@ The MapMyStandards.ai Team
             to_emails=[user_email],
             subject=subject,
             body=body
+        )
+    
+    async def send_password_reset_email(self, email: str, reset_link: str, user_name: str) -> bool:
+        """Send password reset email"""
+        subject = "Reset Your MapMyStandards.ai Password"
+        
+        body = f"""
+Dear {user_name},
+
+You requested a password reset for your MapMyStandards.ai account.
+
+Click the link below to reset your password:
+{reset_link}
+
+This link will expire in 1 hour for security reasons.
+
+If you didn't request this password reset, please ignore this email.
+
+Best regards,
+The MapMyStandards.ai Team
+        """
+        
+        html_body = f"""
+        <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <img src="https://mapmystandards.ai/wp-content/uploads/2025/07/Original-Logo.png" alt="MapMyStandards.ai" style="height: 50px;">
+                </div>
+                
+                <h2 style="color: #1e3c72;">Password Reset Request</h2>
+                
+                <p>Dear {user_name},</p>
+                
+                <p>You requested a password reset for your MapMyStandards.ai account.</p>
+                
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="{reset_link}" style="display: inline-block; background: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">Reset Password</a>
+                </div>
+                
+                <p style="color: #666; font-size: 14px;">This link will expire in 1 hour for security reasons.</p>
+                
+                <p style="color: #666; font-size: 14px;">If you didn't request this password reset, please ignore this email.</p>
+                
+                <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+                <p style="color: #666; font-size: 12px; text-align: center;">
+                    Best regards,<br>
+                    The MapMyStandards.ai Team
+                </p>
+            </div>
+        </body>
+        </html>
+        """
+        
+        return self.send_email(
+            to_emails=[email],
+            subject=subject,
+            body=body,
+            html_body=html_body
         )
 
 # Create global email service instance

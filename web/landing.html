@@ -15,32 +15,58 @@
     <!-- Custom CSS -->
     <style>
         body { font-family: 'Inter', sans-serif; }
-        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .gradient-bg { 
+            background: 
+                linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%),
+                url('https://mapmystandards.ai/wp-content/uploads/2025/08/ChatGPT-Image-Aug-1-2025-09_45_55-AM.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
         .card-hover { transition: all 0.3s ease; }
         .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
         .pricing-card { transition: all 0.3s ease; }
         .pricing-card:hover { transform: scale(1.05); }
         .feature-icon { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        
+        /* Live System Status */
+        .system-status {
+            background: #28a745;
+            color: white;
+            text-align: center;
+            padding: 0.5rem 0;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .system-status a {
+            color: white;
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body class="bg-gray-50">
+    <!-- Live System Status Bar -->
+    <div class="system-status">
+        🟢 A³E System Online | <a href="dashboard.html">Live Dashboard</a> | <a href="checkout.html">Start 7-Day Trial</a>
+    </div>
+    
     <!-- Header -->
     <header class="bg-white shadow-sm border-b">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center py-4">
+            <div class="flex justify-between items-center py-6">
                 <div class="flex items-center">
-                    <img src="/assets/logo.png" alt="MapMyStandards.ai" class="h-8 w-auto mr-3">
-                    <span class="text-xl font-bold text-gray-900">MapMyStandards.ai</span>
+                    <img src="https://mapmystandards.ai/wp-content/uploads/2025/07/Original-Logo.png" alt="MapMyStandards.ai" class="h-12 w-auto">
                 </div>
-                <nav class="hidden md:flex space-x-8">
+                <nav class="hidden md:flex space-x-8">&hellip;
                     <a href="#features" class="text-gray-600 hover:text-gray-900">Features</a>
                     <a href="#pricing" class="text-gray-600 hover:text-gray-900">Pricing</a>
                     <a href="#demo" class="text-gray-600 hover:text-gray-900">Demo</a>
-                    <a href="#contact" class="text-gray-600 hover:text-gray-900">Contact</a>
+                    <a href="https://mapmystandards.ai/contact/" class="text-gray-600 hover:text-gray-900">Contact</a>
                 </nav>
                 <div class="flex items-center space-x-4">
-                    <a href="#login" class="text-gray-600 hover:text-gray-900">Login</a>
-                    <a href="#pricing" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Start Free Trial</a>
+                    <a href="dashboard.html" class="text-gray-600 hover:text-gray-900">Dashboard</a>
+                    <a href="checkout.html" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Start 7-Day Trial</a>
                 </div>
             </div>
         </div>
@@ -78,15 +104,15 @@
                 </div>
             </div>
             <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                <a href="/checkout.html" class="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
-                    Start Free Trial
+                <a href="checkout.html" class="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+                    Start 7-Day Trial
                 </a>
-                <a href="/engine" class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors">
-                    Try Demo Now
+                                <a href="dashboard.html" class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors">
+                    📊 View Dashboard
                 </a>
             </div>
             <div class="mt-8 text-sm opacity-90">
-                ✅ 21-day free trial • ✅ Full feature access • ✅ Setup assistance included
+                ✅ 7-day free trial • ✅ Credit card required • ✅ Setup assistance included
             </div>
         </div>
     </section>
@@ -289,51 +315,50 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-                <!-- Starter Plan -->
+                <!-- College Plan -->
                 <div class="bg-white rounded-2xl shadow-sm pricing-card p-8">
                     <div class="text-center">
-                        <h3 class="text-xl font-semibold mb-2">Starter</h3>
-                        <div class="text-3xl font-bold mb-1">$197<span class="text-lg text-gray-600">/month</span></div>
-                        <p class="text-gray-600 mb-2">Perfect for small schools</p>
-                        <div class="text-sm text-green-600 mb-6">21-Day Free Trial</div>
+                        <h3 class="text-xl font-semibold mb-2">A³E College Plan</h3>
+                        <div class="text-3xl font-bold mb-1">$297<span class="text-lg text-gray-600">/month</span></div>
+                        <p class="text-gray-600 mb-2">Perfect for colleges & universities</p>
+                        <div class="text-sm text-green-600 mb-6">7-Day Free Trial</div>
                     </div>
                     <ul class="space-y-3 mb-8">
-                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> 50 document analyses/month</li>
-                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Single campus/district</li>
-                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> K-12 & Higher Ed modes</li>
-                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> FERPA/COPPA compliant</li>
-                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Basic gap analysis</li>
-                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Email support</li>
-                        <li class="flex items-center"><span class="text-gray-400 mr-2">⚬</span> <span class="text-gray-400">5 user seats</span></li>
+                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Unlimited document analysis</li>
+                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Up to 3 campus/department profiles</li>
+                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Full AI pipeline (4-agent system)</li>
+                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Canvas LMS integration</li>
+                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Comprehensive audit trails</li>
+                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Monthly compliance reports</li>
+                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Priority email support</li>
                     </ul>
-                    <a href="/checkout.html?plan=starter" class="block w-full bg-gray-600 text-white py-3 rounded-lg hover:bg-gray-700 transition-colors text-center font-semibold">
-                        Start Free Trial
+                    <a href="checkout.html?plan=college_monthly" class="block w-full bg-gray-600 text-white py-3 rounded-lg hover:bg-gray-700 transition-colors text-center font-semibold">
+                        Start 7-Day Trial
                     </a>
                 </div>
 
-                <!-- Professional Plan -->
+                <!-- Multi-Campus Plan -->
                 <div class="bg-white rounded-2xl shadow-lg pricing-card p-8 border-2 border-blue-500 relative">
                     <div class="absolute -top-4 left-1/2 transform -translate-x-1/2">
                         <span class="bg-blue-500 text-white px-4 py-1 rounded-full text-sm font-medium">Most Popular</span>
                     </div>
                     <div class="text-center">
-                        <h3 class="text-xl font-semibold mb-2">Professional</h3>
-                        <div class="text-3xl font-bold mb-1">$497<span class="text-lg text-gray-600">/month</span></div>
-                        <div class="text-sm text-green-600 mb-2">Saves $8,500+ in staff time monthly</div>
-                        <div class="text-sm text-green-600 mb-6">21-Day Free Trial</div>
+                        <h3 class="text-xl font-semibold mb-2">A³E Multi-Campus Plan</h3>
+                        <div class="text-3xl font-bold mb-1">$897<span class="text-lg text-gray-600">/month</span></div>
+                        <div class="text-sm text-green-600 mb-2">Saves $15,000+ in staff time monthly</div>
+                        <div class="text-sm text-green-600 mb-6">7-Day Free Trial</div>
                     </div>
                     <ul class="space-y-3 mb-8">
-                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Unlimited document analysis</li>
-                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Up to 5 campuses/departments</li>
-                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Full AI pipeline (4-agent system)</li>
-                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> LMS integrations (Canvas, etc.)</li>
-                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Complete audit traceability</li>
-                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Monthly compliance reports</li>
-                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Priority support + dashboard</li>
-                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> 20 user seats</li>
+                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Everything in College Plan</li>
+                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Unlimited campus/department profiles</li>
+                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> White-label option available</li>
+                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> API access (10K calls/month)</li>
+                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Dedicated success manager</li>
+                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Custom integrations</li>
+                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Phone support</li>
                     </ul>
-                    <a href="/checkout.html?plan=professional" class="block w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors text-center font-semibold">
-                        Start Free Trial
+                    <a href="checkout.html?plan=multicampus_monthly" class="block w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors text-center font-semibold">
+                        Start 7-Day Trial
                     </a>
                 </div>
 
@@ -341,13 +366,13 @@
                 <div class="bg-white rounded-2xl shadow-sm pricing-card p-8">
                     <div class="text-center">
                         <h3 class="text-xl font-semibold mb-2">Enterprise</h3>
-                        <div class="text-3xl font-bold mb-1">$1,297<span class="text-lg text-gray-600">/month</span></div>
-                        <div class="text-sm text-green-600 mb-2">Saves $25,000+ in staff costs monthly</div>
+                        <div class="text-3xl font-bold mb-1">Custom<span class="text-lg text-gray-600"> pricing</span></div>
+                        <div class="text-sm text-green-600 mb-2">University systems & enterprise</div>
                         <div class="text-sm text-green-600 mb-6">Custom Implementation</div>
                     </div>
                     <ul class="space-y-3 mb-8">
-                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Everything in Professional</li>
-                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Unlimited campuses/districts</li>
+                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Everything in Multi-Campus</li>
+                        <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Unlimited everything</li>
                         <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> White-label solution</li>
                         <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> API access (100K calls/month)</li>
                         <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Dedicated success manager</li>
@@ -355,7 +380,7 @@
                         <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Phone support + SLA</li>
                         <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Unlimited user seats</li>
                     </ul>
-                    <a href="/checkout.html?plan=enterprise" class="block w-full bg-gray-600 text-white py-3 rounded-lg hover:bg-gray-700 transition-colors text-center font-semibold">
+                    <a href="https://mapmystandards.ai/contact/" class="block w-full bg-gray-600 text-white py-3 rounded-lg hover:bg-gray-700 transition-colors text-center font-semibold">
                         Contact Sales
                     </a>
                 </div>
@@ -371,13 +396,19 @@
                 <p class="text-lg text-gray-600">Watch how A³E transforms your accreditation workflow</p>
             </div>
             <div class="bg-gray-100 rounded-2xl p-8 text-center">
-                <div class="aspect-video bg-gray-300 rounded-lg mb-6 flex items-center justify-center">
-                    <button class="bg-blue-600 text-white px-8 py-4 rounded-lg hover:bg-blue-700 transition-colors" onclick="playDemo()">
-                        ▶ Play Demo Video
-                    </button>
+                <div class="aspect-video bg-gray-300 rounded-lg mb-6 flex items-center justify-center"
+                     style="background-image: url('https://mapmystandards.ai/wp-content/uploads/2025/08/ChatGPT-Image-Aug-1-2025-09_45_55-AM.png'); background-size: cover; background-position: center;">
+                    <div class="bg-black bg-opacity-50 rounded-lg p-6">
+                        <a href="dashboard.html" class="bg-blue-600 text-white px-8 py-4 rounded-lg hover:bg-blue-700 transition-colors inline-block font-semibold">
+                            🎯 View Live A³E Dashboard
+                        </a>
+                    </div>
                 </div>
-                <p class="text-gray-600 mb-4">See how A³E processes a real accreditation document in under 2 minutes</p>
-                <a href="#contact" class="text-blue-600 hover:text-blue-700">Schedule a live demo →</a>
+                <p class="text-gray-600 mb-4">Experience A³E processing real accreditation documents in real-time</p>
+                <div class="flex justify-center gap-4">
+                    <a href="https://exemplary-solace-production-7f19.up.railway.app/docs" target="_blank" class="text-blue-600 hover:text-blue-700">📖 API Documentation →</a>
+                    <a href="checkout.html" class="text-blue-600 hover:text-blue-700">🚀 Start Trial →</a>
+                </div>
             </div>
         </div>
     </section>
@@ -387,10 +418,10 @@
         <div class="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
             <h2 class="text-3xl font-bold mb-4">Ready to Transform Your Accreditation Process?</h2>
             <p class="text-xl mb-8">Join hundreds of institutions already using A³E to streamline their compliance workflows.</p>
-            <button class="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors mr-4" onclick="startTrial('professional')">
-                Start Free Trial
-            </button>
-            <a href="#contact" class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors">
+            <a href="checkout.html" class="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors mr-4">
+                Start 7-Day Trial
+            </a>
+            <a href="https://mapmystandards.ai/contact/" class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors">
                 Contact Sales
             </a>
         </div>
@@ -402,7 +433,7 @@
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
                 <div>
                     <div class="flex items-center mb-4">
-                        <img src="/assets/logo-white.png" alt="MapMyStandards.ai" class="h-8 w-auto mr-3">
+                        <img src="https://mapmystandards.ai/wp-content/uploads/2025/07/cropped-Original-Logo-Symbol.png" alt="MapMyStandards.ai" class="h-8 w-auto mr-3">
                         <span class="text-xl font-bold">MapMyStandards.ai</span>
                     </div>
                     <p class="text-gray-400">Transforming accreditation with AI-powered analytics and automation.</p>
@@ -413,25 +444,26 @@
                         <li><a href="#features" class="hover:text-white">Features</a></li>
                         <li><a href="#pricing" class="hover:text-white">Pricing</a></li>
                         <li><a href="#demo" class="hover:text-white">Demo</a></li>
-                        <li><a href="/api/docs" class="hover:text-white">API Docs</a></li>
+                        <li><a href="https://exemplary-solace-production-7f19.up.railway.app/docs" target="_blank" class="hover:text-white">API Docs</a></li>
+                        <li><a href="checkout.html" class="hover:text-white">🚀 Start Trial</a></li>
                     </ul>
                 </div>
                 <div>
                     <h3 class="font-semibold mb-4">Support</h3>
                     <ul class="space-y-2 text-gray-400">
-                        <li><a href="/help" class="hover:text-white">Help Center</a></li>
-                        <li><a href="#contact" class="hover:text-white">Contact</a></li>
-                        <li><a href="/status" class="hover:text-white">System Status</a></li>
-                        <li><a href="/security" class="hover:text-white">Security</a></li>
+                        <li><a href="https://mapmystandards.ai/user-guide/" class="hover:text-white">Help Center</a></li>
+                        <li><a href="https://mapmystandards.ai/contact/" class="hover:text-white">Contact</a></li>
+                        <li><a href="https://exemplary-solace-production-7f19.up.railway.app/status" target="_blank" class="hover:text-white">System Status</a></li>
+                        <li><a href="https://mapmystandards.ai/privacy-policy/" class="hover:text-white">Security</a></li>
                     </ul>
                 </div>
                 <div>
                     <h3 class="font-semibold mb-4">Company</h3>
                     <ul class="space-y-2 text-gray-400">
-                        <li><a href="/about" class="hover:text-white">About</a></li>
-                        <li><a href="/privacy" class="hover:text-white">Privacy</a></li>
-                        <li><a href="/terms" class="hover:text-white">Terms</a></li>
-                        <li><a href="/careers" class="hover:text-white">Careers</a></li>
+                        <li><a href="https://mapmystandards.ai/about/" class="hover:text-white">About</a></li>
+                        <li><a href="https://mapmystandards.ai/privacy-policy/" class="hover:text-white">Privacy</a></li>
+                        <li><a href="https://mapmystandards.ai/privacy-policy/" class="hover:text-white">Terms</a></li>
+                        <li><a href="https://mapmystandards.ai/contact/" class="hover:text-white">Careers</a></li>
                     </ul>
                 </div>
             </div>
@@ -447,7 +479,7 @@
             <div class="bg-white rounded-2xl max-w-md w-full p-6">
                 <div class="text-center mb-6">
                     <h3 class="text-2xl font-bold mb-2">Start Your Free Trial</h3>
-                    <p class="text-gray-600">No credit card required • Cancel anytime</p>
+                    <p class="text-gray-600">7-day free trial • Credit card required • Cancel anytime</p>
                 </div>
                 <form id="trialForm">
                     <div class="space-y-4">
@@ -479,6 +511,15 @@
                         </button>
                     </div>
                 </form>
+                
+                <div class="mt-6 p-4 bg-gray-50 rounded-lg text-center">
+                    <p class="text-sm text-gray-600 mb-2">
+                        <strong>A³E Plans:</strong> College Plan ($297/month) • Multi-Campus Plan ($897/month)
+                    </p>
+                    <p class="text-xs text-gray-500">
+                        Choose your plan during checkout • Full feature access during trial
+                    </p>
+                </div>
             </div>
         </div>
     </div>
@@ -486,7 +527,8 @@
     <!-- JavaScript -->
     <script>
         function startTrial(plan) {
-            document.getElementById('paymentModal').classList.remove('hidden');
+            // Redirect to checkout page with plan parameter
+            window.location.href = `checkout.html?plan=${plan}`;
         }
 
         function closeModal() {
@@ -494,19 +536,18 @@
         }
 
         function contactSales() {
-            window.location.href = '#contact';
+            window.location.href = 'https://mapmystandards.ai/contact/';
         }
 
         function playDemo() {
-            // Implement demo video player
-            alert('Demo video would play here');
+            // Redirect to live dashboard
+            window.open('dashboard.html', '_blank');
         }
 
-        // Handle trial form submission
+        // Handle trial form submission - redirect to checkout
         document.getElementById('trialForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            // Process trial signup
-            alert('Trial signup would be processed here');
+            window.location.href = 'checkout.html';
             closeModal();
         });
 
@@ -514,9 +555,12 @@
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
                 e.preventDefault();
-                document.querySelector(this.getAttribute('href')).scrollIntoView({
-                    behavior: 'smooth'
-                });
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                }
             });
         });
     </script>

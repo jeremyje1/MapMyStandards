@@ -14,21 +14,41 @@
     <style>
         body { font-family: 'Inter', sans-serif; }
         .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        
+        /* Custom header styling to match homepage */
+        .dashboard-header {
+            background: 
+                linear-gradient(135deg, rgba(30, 60, 114, 0.95) 0%, rgba(42, 82, 152, 0.95) 100%),
+                url('https://mapmystandards.ai/wp-content/uploads/2025/07/Original-Logo.png');
+            background-size: 120px auto, auto;
+            background-repeat: repeat, no-repeat;
+            background-position: center, right 20px center;
+        }
     </style>
 </head>
 <body class="bg-gray-50">
     <!-- Header -->
-    <header class="bg-white shadow-sm border-b">
+    <header class="dashboard-header text-white shadow-sm border-b border-blue-600">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center py-4">
-                <div class="flex items-center">
-                    <img src="/assets/logo.png" alt="MapMyStandards.ai" class="h-8 w-auto mr-3">
-                    <span class="text-xl font-bold text-gray-900">A³E Dashboard</span>
+            <div class="flex justify-between items-center py-6 relative z-10">
+                <div class="flex items-center space-x-4">
+                    <a href="./homepage.html" class="flex items-center">
+                        <img src="https://mapmystandards.ai/wp-content/uploads/2025/07/Original-Logo.png" alt="MapMyStandards.ai" class="h-14 w-auto filter brightness-110 contrast-110">
+                    </a>
+                    <div class="border-l border-white border-opacity-30 pl-4 ml-4">
+                        <h1 class="text-lg font-semibold">A³E Dashboard</h1>
+                        <p class="text-sm text-blue-100">Accreditation Analytics & Automation</p>
+                    </div>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <span class="text-sm text-gray-600" id="userEmail">Loading...</span>
-                    <a href="/engine" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Launch Engine</a>
-                    <button onclick="logout()" class="text-gray-600 hover:text-gray-900">Logout</button>
+                    <span class="text-sm text-blue-100" id="userEmail">Loading...</span>
+                    <a href="./checkout.html" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                        🚀 Upgrade Plan
+                    </a>
+                    <a href="https://mapmystandards.ai/user-guide/" target="_blank" class="text-blue-100 hover:text-white transition-colors">
+                        📖 Help
+                    </a>
+                    <button onclick="logout()" class="text-blue-100 hover:text-white transition-colors">Logout</button>
                 </div>
             </div>
         </div>
@@ -37,8 +57,24 @@
     <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <!-- Welcome Section -->
         <div class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-900 mb-2">Welcome to your A³E Dashboard</h1>
-            <p class="text-gray-600">Manage your accreditation analysis sessions and track compliance progress</p>
+            <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 text-white mb-6">
+                <h1 class="text-3xl font-bold mb-2">Welcome to your A³E Dashboard</h1>
+                <p class="text-blue-100 mb-4">Transform your accreditation process with AI-powered analytics and automation</p>
+                <div class="flex flex-wrap gap-4">
+                    <a href="https://exemplary-solace-production-7f19.up.railway.app/docs" target="_blank" 
+                       class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-6 py-2 rounded-lg transition-colors backdrop-blur-sm">
+                        📖 API Documentation
+                    </a>
+                    <a href="https://mapmystandards.ai/user-guide/" target="_blank" 
+                       class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-6 py-2 rounded-lg transition-colors backdrop-blur-sm">
+                        🎯 Getting Started Guide
+                    </a>
+                    <a href="https://mapmystandards.ai/contact/" target="_blank" 
+                       class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-6 py-2 rounded-lg transition-colors backdrop-blur-sm">
+                        💬 Contact Support
+                    </a>
+                </div>
+            </div>
         </div>
 
         <!-- Quick Stats -->
@@ -95,7 +131,7 @@
                     <div class="ml-4">
                         <p class="text-sm font-medium text-gray-600">Subscription</p>
                         <p class="text-sm font-semibold text-gray-900" id="subscriptionStatus">Active</p>
-                        <p class="text-xs text-gray-500" id="subscriptionPlan">Professional</p>
+                        <p class="text-xs text-gray-500" id="subscriptionPlan">A³E College Plan</p>
                     </div>
                 </div>
             </div>
@@ -106,7 +142,8 @@
             <div class="px-6 py-4 border-b border-gray-200">
                 <div class="flex items-center justify-between">
                     <h2 class="text-lg font-semibold text-gray-900">Recent Analysis Sessions</h2>
-                    <a href="/engine" class="text-blue-600 hover:text-blue-700 text-sm font-medium">New Analysis →</a>
+                    <a href="https://exemplary-solace-production-7f19.up.railway.app/docs" target="_blank" 
+                       class="text-blue-600 hover:text-blue-700 text-sm font-medium">Start Analysis →</a>
                 </div>
             </div>
             <div class="p-6">
@@ -115,8 +152,19 @@
                         <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                         </svg>
-                        <p>No analysis sessions yet</p>
-                        <p class="text-sm">Start your first analysis to see results here</p>
+                        <p class="text-lg font-medium mb-2">Ready to start your first analysis?</p>
+                        <p class="text-sm mb-4">Upload documents and map evidence to accreditation standards</p>
+                        <div class="space-y-2">
+                            <a href="https://exemplary-solace-production-7f19.up.railway.app/docs" target="_blank" 
+                               class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
+                                🚀 Start Analysis
+                            </a>
+                            <br>
+                            <a href="https://mapmystandards.ai/user-guide/" target="_blank" 
+                               class="text-blue-600 hover:text-blue-700 text-sm">
+                                📖 View Documentation
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -173,7 +221,8 @@
                 // Check authentication
                 const apiKey = localStorage.getItem('a3e_api_key');
                 if (!apiKey) {
-                    window.location.href = '/login.html';
+                    // Redirect to login page if no API key
+                    window.location.href = './login.html';
                     return;
                 }
 
@@ -184,20 +233,47 @@
             } catch (error) {
                 console.error('Error loading dashboard:', error);
                 // Handle authentication error
-                if (error.status === 401) {
-                    localStorage.removeItem('a3e_api_key');
-                    window.location.href = '/login.html';
+                if (error.status === 401 || error.status === 403) {
+                    localStorage.clear(); // Clear all stored data
+                    alert('Your session has expired. Please log in again.');
+                    window.location.href = './login.html';
                 }
             }
         }
 
         async function loadUserInfo() {
             const apiKey = localStorage.getItem('a3e_api_key');
+            const trialId = localStorage.getItem('a3e_trial_id');
+            const planType = localStorage.getItem('a3e_plan_type') || 'college';
+            
+            // Map plan types to display names
+            const planNames = {
+                'college': 'A³E College Plan',
+                'multicampus': 'A³E Multi-Campus Plan'
+            };
+            
+            let userEmail = localStorage.getItem('a3e_user_email');
+            
+            // If we have a trial ID but no stored email, try to fetch trial info
+            if (trialId && !userEmail) {
+                try {
+                    const response = await fetch(`https://exemplary-solace-production-7f19.up.railway.app/trial/${trialId}`);
+                    if (response.ok) {
+                        const trialData = await response.json();
+                        userEmail = trialData.email || 'Trial User';
+                        // Store email for future use
+                        localStorage.setItem('a3e_user_email', userEmail);
+                    }
+                } catch (error) {
+                    console.log('Could not fetch trial details:', error);
+                }
+            }
+            
             // In a real implementation, this would call the API
             currentUser = {
-                email: localStorage.getItem('a3e_user_email') || 'user@example.com',
-                subscription: 'Professional',
-                status: 'Active'
+                email: userEmail || 'Welcome',
+                subscription: planNames[planType] || 'A³E College Plan',
+                status: trialId ? 'Trial Active' : 'Active'
             };
             
             document.getElementById('userEmail').textContent = currentUser.email;
@@ -222,8 +298,19 @@
                         <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                         </svg>
-                        <p>No analysis sessions yet</p>
-                        <p class="text-sm">Start your first analysis to see results here</p>
+                        <p class="text-lg font-medium mb-2">Ready to start your first analysis?</p>
+                        <p class="text-sm mb-4">Upload documents and map evidence to accreditation standards</p>
+                        <div class="space-y-2">
+                            <a href="https://exemplary-solace-production-7f19.up.railway.app/docs" target="_blank" 
+                               class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
+                                🚀 Start Analysis
+                            </a>
+                            <br>
+                            <a href="https://mapmystandards.ai/user-guide/" target="_blank" 
+                               class="text-blue-600 hover:text-blue-700 text-sm">
+                                📖 View Documentation
+                            </a>
+                        </div>
                     </div>
                 `;
                 return;
@@ -327,9 +414,11 @@
         }
 
         function logout() {
-            localStorage.removeItem('a3e_api_key');
-            localStorage.removeItem('a3e_user_email');
-            window.location.href = '/';
+            // Clear all authentication data
+            localStorage.clear();
+            
+            // Redirect to login page
+            window.location.href = './login.html';
         }
 
         // Load dashboard on page load
