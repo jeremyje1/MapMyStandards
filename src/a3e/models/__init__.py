@@ -14,7 +14,7 @@ from enum import Enum
 import uuid
 from typing import Optional, List, Dict, Any
 
-from a3e.core.accreditation_registry import InstitutionType, AccreditorType
+from ..core.accreditation_registry import InstitutionType, AccreditorType
 
 Base = declarative_base()
 
