@@ -11,6 +11,9 @@ import logging
 from typing import Dict, Any, Optional, List
 from dataclasses import dataclass
 
+# Initialize logger early
+logger = logging.getLogger(__name__)
+
 # Optional AWS imports
 try:
     import boto3
@@ -34,8 +37,6 @@ except ImportError:
     logger.warning("AI services not available - LLM features limited")
 
 from ..core.config import Settings
-
-logger = logging.getLogger(__name__)
 
 
 @dataclass
