@@ -26,7 +26,14 @@ from .services.vector_service import VectorService
 from .services.llm_service import LLMService
 from .services.document_service import DocumentService
 from .agents import A3EAgentOrchestrator
-from .api.routes import integrations_router, proprietary_router, auth_router
+from .api.routes import integrations_router, proprietary_router
+# Import auth router separately to handle any import issues
+try:
+    from .api.routes.auth import router as auth_router
+    auth_router_available = True
+except ImportError as e:
+    logger.warning(f"Auth router import failed: {e}")
+    auth_router_available = False
 
 # Configure logging
 logging.basicConfig(
@@ -163,8 +170,10 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
 # Include API routes
 from .api import api_router
 from .api.routes.billing import router as billing_router
-from .api.routes.auth import router as auth_router
-app.include_router(auth_router)
+if auth_router_available:
+    app.include_router(auth_router)
+else:
+    logger.warning("Auth router not available - authentication endpoints disabled")
 app.include_router(integrations_router)
 app.include_router(proprietary_router)
 app.include_router(billing_router)
@@ -528,7 +537,20 @@ async def checkout_page(request: Request):
         return HTMLResponse(content="<h1>Checkout page not found</h1>", status_code=404)
 
 # Mount static files for web assets
-app.mount("/web", StaticFiles(directory="web"), name="web")
+import os
+web_directory = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "web")
+if os.path.exists(web_directory):
+    app.mount("/web", StaticFiles(directory=web_directory), name="web")
+    logger.info(f"Web directory mounted from: {web_directory}")
+else:
+    logger.warning(f"Web directory not found at: {web_directory}")
+    # Try alternative path for Railway deployment
+    alt_web_directory = "web"
+    if os.path.exists(alt_web_directory):
+        app.mount("/web", StaticFiles(directory=alt_web_directory), name="web")
+        logger.info(f"Web directory mounted from alternative path: {alt_web_directory}")
+    else:
+        logger.error("Web directory not found - static files will not be served")
 
 if __name__ == "__main__":
     uvicorn.run(
