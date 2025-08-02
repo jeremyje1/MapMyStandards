@@ -37,6 +37,7 @@ SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "Ipo4Eva45*")
 
 # Stripe configuration
 STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PUBLISHABLE_KEY", "")
+STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "")
 
 # Pydantic models
 class TrialSignup(BaseModel):
