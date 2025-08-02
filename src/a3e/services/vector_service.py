@@ -8,14 +8,27 @@ Supports evidence-to-standard mapping and citation verification.
 import asyncio
 import logging
 from typing import List, Tuple, Dict, Any, Optional
-import numpy as np
-from pymilvus import connections, Collection, CollectionSchema, DataType, FieldSchema, utility
-from sentence_transformers import SentenceTransformer
 import json
 
 from ..models import Standard, Evidence
 
 logger = logging.getLogger(__name__)
+
+# Optional imports for AI features
+try:
+    import numpy as np
+    from pymilvus import connections, Collection, CollectionSchema, DataType, FieldSchema, utility
+    from sentence_transformers import SentenceTransformer
+    VECTOR_FEATURES_AVAILABLE = True
+except ImportError as e:
+    logger.warning(f"Vector features not available: {e}")
+    VECTOR_FEATURES_AVAILABLE = False
+    # Create mock classes
+    class SentenceTransformer:
+        def __init__(self, *args, **kwargs):
+            pass
+        def encode(self, *args, **kwargs):
+            return []
 
 
 class VectorService:

@@ -22,7 +22,14 @@ from .core.config import settings
 from .core.accreditation_registry import ALL_ACCREDITORS, get_accreditors_by_institution_type, get_accreditors_by_state
 from .models import Institution, Evidence, Standard, AgentWorkflow, GapAnalysis
 from .services.database_service import DatabaseService
-from .services.vector_service import VectorService
+# Optional services - will gracefully degrade if dependencies missing
+try:
+    from .services.vector_service import VectorService
+    VECTOR_SERVICE_AVAILABLE = True
+except ImportError:
+    VECTOR_SERVICE_AVAILABLE = False
+    logger.warning("Vector service not available - AI features disabled")
+
 from .services.llm_service import LLMService
 from .services.document_service import DocumentService
 from .agents import A3EAgentOrchestrator
