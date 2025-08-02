@@ -187,24 +187,13 @@
                 if (data.publishable_key) {
                     stripe = Stripe(data.publishable_key);
                     elements = stripe.elements();
-                    console.log('✅ Stripe initialized successfully');
+                    console.log('✅ Stripe initialized successfully with', data.environment, 'key');
                 } else {
                     throw new Error('No publishable key received');
                 }
             } catch (error) {
                 console.error('❌ Failed to load Stripe key from API:', error);
-                
-                // Fallback: Use the direct key since Railway env vars aren't working yet
-                const fallbackKey = 'pk_live_51Rr4dNK8PKpLCKDZH9u9mOEqmPVSR946uGYKSdk73mmNjBR4i9Ibon3wvDLNpYPRzsXmaAXTrwSPKKxNolArj8G200tZyrr6qE';
-                
-                try {
-                    stripe = Stripe(fallbackKey);
-                    elements = stripe.elements();
-                    console.log('✅ Stripe initialized with fallback key');
-                } catch (fallbackError) {
-                    console.error('❌ Fallback Stripe initialization failed:', fallbackError);
-                    showError('Payment system configuration error. Please contact support.');
-                }
+                showError('Payment system unavailable. Please contact support or try again later.');
             }
         }
 
