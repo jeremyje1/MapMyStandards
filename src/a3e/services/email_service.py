@@ -1,30 +1,56 @@
 """
 Email service for MapMyStandards.ai
-Handles email sending via Titan Email SMTP
+Handles email sending via SendGrid API
 """
 
-import smtplib
 import os
-from email.mime.text import MimeText
-from email.mime.multipart import MimeMultipart
-from email.mime.base import MimeBase
-from email import encoders
 from typing import List, Optional
 import logging
 
 logger = logging.getLogger(__name__)
 
+# Try SendGrid first, fallback to SMTP
+try:
+    from sendgrid import SendGridAPIClient
+    from sendgrid.helpers.mail import Mail, From, To, Subject, Content, Attachment, FileContent, FileName, FileType, Disposition
+    import base64
+    SENDGRID_AVAILABLE = True
+except ImportError:
+    SENDGRID_AVAILABLE = False
+    logger.warning("SendGrid not available - email functionality limited")
+
+# Fallback SMTP imports
+import smtplib
+from email.mime.text import MimeText
+from email.mime.multipart import MimeMultipart
+from email.mime.base import MimeBase
+from email import encoders
+
 class EmailService:
     def __init__(self):
+        # SendGrid configuration (preferred)
+        self.sendgrid_api_key = os.getenv('SENDGRID_API_KEY')
+        self.use_sendgrid = SENDGRID_AVAILABLE and self.sendgrid_api_key
+        
+        # Common settings
+        self.default_from = os.getenv('EMAIL_FROM', 'support@mapmystandards.ai')
+        self.default_from_name = os.getenv('EMAIL_FROM_NAME', 'MapMyStandards Support')
+        
+        # SMTP fallback configuration
         self.smtp_server = os.getenv('SMTP_SERVER', 'mx1.titan.email')
         self.smtp_port = int(os.getenv('SMTP_PORT', '587'))
         self.use_tls = os.getenv('SMTP_USE_TLS', 'True').lower() == 'true'
-        self.username = os.getenv('SMTP_USERNAME', 'support@mapmystandards.ai')
-        self.password = os.getenv('SMTP_PASSWORD')
-        self.default_from = os.getenv('DEFAULT_FROM_EMAIL', 'support@mapmystandards.ai')
+        self.smtp_username = os.getenv('SMTP_USERNAME', 'support@mapmystandards.ai')
+        self.smtp_password = os.getenv('SMTP_PASSWORD')
         
-        if not self.password:
-            logger.warning("SMTP_PASSWORD not set in environment variables")
+        # Initialize SendGrid client if available
+        if self.use_sendgrid:
+            self.sg = SendGridAPIClient(api_key=self.sendgrid_api_key)
+            logger.info("Email service initialized with SendGrid")
+        elif self.smtp_password:
+            logger.info("Email service initialized with SMTP fallback")
+        else:
+            logger.warning("No email configuration found - emails will not be sent")
     
     def send_email(
         self,
@@ -36,7 +62,7 @@ class EmailService:
         attachments: Optional[List[str]] = None
     ) -> bool:
         """
-        Send an email via Titan Email SMTP
+        Send an email via SendGrid or SMTP fallback
         
         Args:
             to_emails: List of recipient email addresses
@@ -49,6 +75,124 @@ class EmailService:
         Returns:
             bool: True if email sent successfully, False otherwise
         """
+        if self.use_sendgrid:
+            return self._send_via_sendgrid(to_emails, subject, body, from_email, html_body, attachments)
+        else:
+            return self._send_via_smtp(to_emails, subject, body, from_email, html_body, attachments)
+    
+    def _send_via_sendgrid(
+        self, 
+        to_emails: List[str], 
+        subject: str, 
+        body: str, 
+        from_email: Optional[str] = None,
+        html_body: Optional[str] = None,
+        attachments: Optional[List[str]] = None
+    ) -> bool:
+        """Send email via SendGrid API"""
+        try:
+            # Create the email
+            mail = Mail(
+                from_email=From(from_email or self.default_from, self.default_from_name),
+                to_emails=[To(email) for email in to_emails],
+                subject=Subject(subject)
+            )
+            
+            # Add content
+            if html_body:
+                mail.content = [
+                    Content("text/plain", body),
+                    Content("text/html", html_body)
+                ]
+            else:
+                mail.content = Content("text/plain", body)
+            
+            # Add attachments if provided
+            if attachments:
+                for file_path in attachments:
+                    if os.path.isfile(file_path):
+                        with open(file_path, 'rb') as f:
+                            data = f.read()
+                            encoded = base64.b64encode(data).decode()
+                            
+                        attachment = Attachment(
+                            FileContent(encoded),
+                            FileName(os.path.basename(file_path)),
+                            FileType("application/octet-stream"),
+                            Disposition("attachment")
+                        )
+                        mail.attachment = [attachment]
+            
+            # Send the email
+            response = self.sg.send(mail)
+            
+            if response.status_code in [200, 201, 202]:
+                logger.info(f"Email sent successfully via SendGrid to {', '.join(to_emails)}")
+                return True
+            else:
+                logger.error(f"SendGrid API returned status {response.status_code}")
+                return False
+                
+        except Exception as e:
+            logger.error(f"Failed to send email via SendGrid: {e}")
+            return False
+    
+    def _send_via_smtp(
+        self, 
+        to_emails: List[str], 
+        subject: str, 
+        body: str, 
+        from_email: Optional[str] = None,
+        html_body: Optional[str] = None,
+        attachments: Optional[List[str]] = None
+    ) -> bool:
+        """Send email via SMTP (fallback method)"""
+        try:
+            # Create message
+            msg = MimeMultipart('alternative')
+            msg['From'] = from_email or self.default_from
+            msg['To'] = ', '.join(to_emails)
+            msg['Subject'] = subject
+            
+            # Add text body
+            text_part = MimeText(body, 'plain')
+            msg.attach(text_part)
+            
+            # Add HTML body if provided
+            if html_body:
+                html_part = MimeText(html_body, 'html')
+                msg.attach(html_part)
+            
+            # Add attachments if provided
+            if attachments:
+                for file_path in attachments:
+                    if os.path.isfile(file_path):
+                        with open(file_path, 'rb') as attachment:
+                            part = MimeBase('application', 'octet-stream')
+                            part.set_payload(attachment.read())
+                            encoders.encode_base64(part)
+                            part.add_header(
+                                'Content-Disposition',
+                                f'attachment; filename= {os.path.basename(file_path)}'
+                            )
+                            msg.attach(part)
+            
+            # Connect to server and send
+            server = smtplib.SMTP(self.smtp_server, self.smtp_port)
+            
+            if self.use_tls:
+                server.starttls()
+            
+            server.login(self.smtp_username, self.smtp_password)
+            server.send_message(msg, to_addrs=to_emails)
+            server.quit()
+            
+            logger.info(f"Email sent successfully via SMTP to {', '.join(to_emails)}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to send email via SMTP: {e}")
+            return False
         try:
             # Create message
             msg = MimeMultipart('alternative')
