@@ -429,15 +429,13 @@
                 
                 if (response.ok && result.success) {
                     // Store the authentication data
-                    localStorage.setItem('a3e_api_key', result.data.api_key);
-                    localStorage.setItem('a3e_user_email', formData.email);
-                    localStorage.setItem('a3e_plan_type', result.data.plan);
-                    localStorage.setItem('a3e_customer_id', result.data.customer_id);
-                    localStorage.setItem('a3e_subscription_id', result.data.subscription_id);
-                    localStorage.setItem('a3e_user_id', result.data.user_id);
-                    
+                    // Store basic trial information
+                    localStorage.setItem("a3e_trial_id", result.trial_id);
+                    localStorage.setItem("a3e_user_email", formData.email);
+                    localStorage.setItem("a3e_plan_type", selectedPlan);
+                    localStorage.setItem("a3e_expires_at", result.expires_at);                    
                     // Redirect to trial success page
-                    window.location.href = `trial-success.html?trial_id=${result.data.trial_id}&plan=${selectedPlan}`;
+                    window.location.href = `trial-success.html?trial_id=${result.trial_id}&plan=${selectedPlan}`;
                 } else {
                     throw new Error(result.detail || result.message || 'Account creation failed');
                 }
