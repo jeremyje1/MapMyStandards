@@ -121,7 +121,7 @@
         <p style="font-size: 1.2rem; margin-bottom: 2rem;">
             Experience the full power of A³E with instant access
         </p>
-        <a href="https://map-my-standards.vercel.app/checkout.html" 
+        <a href="https://api.mapmystandards.ai/landing" 
            class="trial-cta" 
            target="_blank"
            style="background: white; color: #28a745; font-size: 1.2rem;">
@@ -146,7 +146,7 @@
                 <li>Real-time Dashboard</li>
             </ul>
             
-            <a href="https://map-my-standards.vercel.app/checkout.html" 
+            <a href="https://api.mapmystandards.ai/landing" 
                class="trial-cta" 
                target="_blank">
                 Start Free Trial
@@ -216,7 +216,7 @@
         </p>
         
         <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
-            <a href="https://map-my-standards.vercel.app/trial-login.html" 
+            <a href="./trial-login.html" 
                class="trial-cta" 
                style="background: white; color: #667eea;"
                target="_blank">
@@ -255,7 +255,7 @@
                 </div>
             </div>
             
-            <a href="https://map-my-standards.vercel.app/checkout.html" 
+            <a href="https://api.mapmystandards.ai/landing" 
                class="trial-cta" 
                target="_blank">
                 🚀 Start Saving Today
@@ -278,7 +278,7 @@ function trackPricingEvent(plan, action) {
 // Add event tracking
 document.addEventListener('DOMContentLoaded', function() {
     // Track trial button clicks
-    const trialButtons = document.querySelectorAll('a[href*="map-my-standards.vercel.app/checkout.html"]');
+    const trialButtons = document.querySelectorAll('a[href*="api.mapmystandards.ai/landing"]');
     trialButtons.forEach(button => {
         button.addEventListener('click', () => trackPricingEvent('trial', 'click'));
     });
