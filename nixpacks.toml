@@ -1,8 +1,12 @@
 [phases.setup]
-nixPkgs = ['python3', 'python3Packages.pip']
+nixPkgs = ['python3', 'python3Packages.pip', 'python3Packages.virtualenv']
 
 [phases.install]
-cmds = ['pip3 install -r requirements.txt']
+cmds = [
+    'python3 -m venv /opt/venv',
+    '. /opt/venv/bin/activate && pip install --upgrade pip',
+    '. /opt/venv/bin/activate && pip install -r requirements.txt'
+]
 
 [start]
-cmd = 'python3 main.py'
+cmd = '. /opt/venv/bin/activate && python main.py'
