@@ -15,6 +15,9 @@ import mimetypes
 from datetime import datetime
 import uuid
 
+# Initialize logger early
+logger = logging.getLogger(__name__)
+
 # Optional document processing libraries
 try:
     import pypdf
@@ -40,8 +43,6 @@ from fastapi import UploadFile
 from ..core.config import Settings
 from ..models import Evidence, EvidenceType, ProcessingStatus
 from ..services.database_service import DatabaseService
-
-logger = logging.getLogger(__name__)
 
 
 class DocumentService:
