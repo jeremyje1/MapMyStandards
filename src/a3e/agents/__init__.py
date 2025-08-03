@@ -7,10 +7,37 @@ Supports all US accrediting bodies with institution-type contextualization.
 
 from typing import Dict, List, Optional, Any, Tuple
 from dataclasses import dataclass
-from autogen import AssistantAgent, UserProxyAgent, GroupChat, GroupChatManager
 import json
 import asyncio
 from datetime import datetime
+import logging
+
+logger = logging.getLogger(__name__)
+
+# Optional AutoGen imports
+try:
+    from autogen import AssistantAgent, UserProxyAgent, GroupChat, GroupChatManager
+    AUTOGEN_AVAILABLE = True
+except ImportError:
+    AUTOGEN_AVAILABLE = False
+    logger.warning("AutoGen not available - agent workflows disabled")
+    
+    # Mock classes for type hints
+    class AssistantAgent:
+        def __init__(self, *args, **kwargs):
+            pass
+    
+    class UserProxyAgent:
+        def __init__(self, *args, **kwargs):
+            pass
+    
+    class GroupChat:
+        def __init__(self, *args, **kwargs):
+            pass
+    
+    class GroupChatManager:
+        def __init__(self, *args, **kwargs):
+            pass
 
 from ..core.config import settings
 from ..core.accreditation_registry import ALL_ACCREDITORS, get_standards_by_accreditor_and_institution_type
@@ -773,6 +800,15 @@ class A3EAgentOrchestrator:
         self.llm_service = llm_service
         self.vector_service = vector_service
         
+        if not AUTOGEN_AVAILABLE:
+            logger.warning("AutoGen not available - agent workflows will use simplified fallback")
+            # Initialize simplified agents without AutoGen
+            self.mapper = None
+            self.gap_finder = None  
+            self.narrator = None
+            self.verifier = None
+            return
+        
         # Initialize agents (some may work without vector service)
         self.mapper = MapperAgent(llm_service, vector_service) if vector_service else None
         self.gap_finder = GapFinderAgent(llm_service)
@@ -787,6 +823,19 @@ class A3EAgentOrchestrator:
         max_rounds: int = 3
     ) -> Dict[str, Any]:
         """Execute the complete four-agent workflow"""
+        
+        if not AUTOGEN_AVAILABLE:
+            logger.warning("AutoGen not available - returning simplified workflow result")
+            return {
+                "workflow_id": f"simplified_{institution.id}_{accreditor_id}",
+                "status": "limited",
+                "message": "Agent workflows require AutoGen library",
+                "institution_id": str(institution.id),
+                "accreditor_id": accreditor_id,
+                "start_time": datetime.now().isoformat(),
+                "end_time": datetime.now().isoformat(),
+                "rounds": []
+            }
         
         workflow_id = f"workflow_{institution.id}_{accreditor_id}_{datetime.now().isoformat()}"
         
