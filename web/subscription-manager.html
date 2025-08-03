@@ -57,7 +57,7 @@
 
         async function initializeStripe() {
             try {
-                const response = await fetch('https://exemplary-solace-production-7f19.up.railway.app/config/stripe-key');
+                const response = await fetch('https://api.mapmystandards.ai/config/stripe-key');
                 const data = await response.json();
                 if (data.publishable_key) {
                     stripe = Stripe(data.publishable_key);
@@ -85,33 +85,33 @@
             let statusHtml = '';
             
             if (daysRemaining > 0) {
-                statusHtml = \`
+                statusHtml = `
                     <div class="border-l-4 border-blue-500 bg-blue-50 p-4 rounded-r-lg">
                         <h3 class="text-sm font-medium text-blue-800">Trial Active</h3>
                         <div class="mt-2 text-sm text-blue-700">
-                            <p><strong>\${daysRemaining} days remaining</strong> in your free trial</p>
-                            <p>Trial expires: \${expiryDate.toLocaleDateString()}</p>
-                            <p>Email: \${userEmail}</p>
+                            <p><strong>${daysRemaining} days remaining</strong> in your free trial</p>
+                            <p>Trial expires: ${expiryDate.toLocaleDateString()}</p>
+                            <p>Email: ${userEmail}</p>
                         </div>
                     </div>
                     <div class="mt-6 flex space-x-4">
                         <button onclick="continueToPayment()" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700">Set Up Payment Now</button>
                         <button onclick="goToDashboard()" class="bg-gray-200 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-300">Continue Trial</button>
                     </div>
-                \`;
+                `;
             } else {
-                statusHtml = \`
+                statusHtml = `
                     <div class="border-l-4 border-red-500 bg-red-50 p-4 rounded-r-lg">
                         <h3 class="text-sm font-medium text-red-800">Trial Expired</h3>
                         <div class="mt-2 text-sm text-red-700">
-                            <p>Your trial expired on \${expiryDate.toLocaleDateString()}</p>
+                            <p>Your trial expired on ${expiryDate.toLocaleDateString()}</p>
                             <p>Upgrade to continue using A³E</p>
                         </div>
                     </div>
                     <div class="mt-6">
                         <button onclick="continueToPayment()" class="bg-red-600 text-white px-8 py-3 rounded-lg hover:bg-red-700 text-lg">Upgrade Now to Continue</button>
                     </div>
-                \`;
+                `;
             }
 
             document.getElementById('trialInfo').innerHTML = statusHtml;
@@ -132,10 +132,10 @@
             document.getElementById('trialStatusCard').style.display = 'none';
             document.getElementById('paymentCard').style.display = 'block';
 
-            document.getElementById('paymentContent').innerHTML = \`
+            document.getElementById('paymentContent').innerHTML = `
                 <div class="mb-6">
-                    <h3 class="text-lg font-semibold mb-2">\${selectedPlan.name}</h3>
-                    <p class="text-2xl font-bold text-blue-600">\${priceDisplay} <span class="text-sm text-gray-600">per \${selectedPlan.interval}</span></p>
+                    <h3 class="text-lg font-semibold mb-2">${selectedPlan.name}</h3>
+                    <p class="text-2xl font-bold text-blue-600">${priceDisplay} <span class="text-sm text-gray-600">per ${selectedPlan.interval}</span></p>
                 </div>
                 
                 <form id="payment-form" class="space-y-6">
@@ -144,13 +144,13 @@
                         <div id="card-element" class="p-3 border border-gray-300 rounded-lg"></div>
                         <div id="card-errors" role="alert" class="text-red-600 text-sm mt-2"></div>
                     </div>
-                    <button type="submit" id="submit-payment" class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700">Subscribe for \${priceDisplay}/\${selectedPlan.interval}</button>
+                    <button type="submit" id="submit-payment" class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700">Subscribe for ${priceDisplay}/${selectedPlan.interval}</button>
                 </form>
                 
                 <div class="mt-4 text-center">
                     <button onclick="goBack()" class="text-gray-600 hover:text-gray-800 text-sm">← Back to trial status</button>
                 </div>
-            \`;
+            `;
 
             if (stripe) {
                 const cardElement = elements.create('card', {
@@ -200,16 +200,16 @@
         function goToDashboard() {
             const trialId = localStorage.getItem('a3e_trial_id');
             if (trialId) {
-                window.location.href = \`https://exemplary-solace-production-7f19.up.railway.app/dashboard/\${trialId}\`;
+                window.location.href = `https://api.mapmystandards.ai/dashboard/${trialId}`;
             } else {
-                window.location.href = 'https://mapmystandards.ai/dashboard/';
+                window.location.href = 'dashboard.html';
             }
         }
 
         function showError(message) {
             const errorDiv = document.createElement('div');
             errorDiv.className = 'bg-red-50 border border-red-200 rounded-lg p-4 mb-4';
-            errorDiv.innerHTML = \`<div class="text-red-600"><strong>Error:</strong> \${message}</div>\`;
+            errorDiv.innerHTML = `<div class="text-red-600"><strong>Error:</strong> ${message}</div>`;
             document.body.insertBefore(errorDiv, document.body.firstChild);
             setTimeout(() => errorDiv.remove(), 5000);
         }
