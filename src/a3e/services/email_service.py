@@ -21,10 +21,10 @@ except ImportError:
 
 # Fallback SMTP imports
 import smtplib
-from email.mime.text import MimeText
-from email.mime.multipart import MimeMultipart
-from email.mime.base import MimeBase
-from email import encoders
+import email.mime.text
+import email.mime.multipart
+import email.mime.base
+import email
 
 class EmailService:
     def __init__(self):
@@ -149,18 +149,18 @@ class EmailService:
         """Send email via SMTP (fallback method)"""
         try:
             # Create message
-            msg = MimeMultipart('alternative')
+            msg = email.mime.multipart.MIMEMultipart('alternative')
             msg['From'] = from_email or self.default_from
             msg['To'] = ', '.join(to_emails)
             msg['Subject'] = subject
             
             # Add text body
-            text_part = MimeText(body, 'plain')
+            text_part = email.mime.text.MIMEText(body, 'plain')
             msg.attach(text_part)
             
             # Add HTML body if provided
             if html_body:
-                html_part = MimeText(html_body, 'html')
+                html_part = email.mime.text.MIMEText(html_body, 'html')
                 msg.attach(html_part)
             
             # Add attachments if provided
@@ -168,9 +168,9 @@ class EmailService:
                 for file_path in attachments:
                     if os.path.isfile(file_path):
                         with open(file_path, 'rb') as attachment:
-                            part = MimeBase('application', 'octet-stream')
+                            part = email.mime.base.MIMEBase('application', 'octet-stream')
                             part.set_payload(attachment.read())
-                            encoders.encode_base64(part)
+                            email.encoders.encode_base64(part)
                             part.add_header(
                                 'Content-Disposition',
                                 f'attachment; filename= {os.path.basename(file_path)}'
