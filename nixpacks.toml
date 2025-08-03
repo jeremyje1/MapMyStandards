@@ -1,15 +1,8 @@
 [phases.setup]
-nixPkgs = ['python310', 'python310Packages.pip', 'python310Packages.virtualenv']
+nixPkgs = ['python3', 'python3Packages.pip']
 
 [phases.install]
-cmds = [
-    'python -m venv /opt/venv',
-    '. /opt/venv/bin/activate && pip install --upgrade pip',
-    '. /opt/venv/bin/activate && pip install -r requirements.txt'
-]
-
-[phases.build]
-cmds = ['echo "Build phase complete - with auth system"']
+cmds = ['pip3 install -r requirements.txt']
 
 [start]
-cmd = '. /opt/venv/bin/activate && export PYTHONPATH=/app:$PYTHONPATH && python -m uvicorn src.a3e.main:app --host 0.0.0.0 --port $PORT'
+cmd = 'python3 main.py'

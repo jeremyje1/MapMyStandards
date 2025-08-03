@@ -6,8 +6,41 @@ from typing import Dict, List, Optional, Any, Union
 from datetime import datetime
 import logging
 import uuid
-import numpy as np
-from sentence_transformers import SentenceTransformer
+
+# Optional AI/ML dependencies with graceful fallback
+try:
+    import numpy as np
+    NUMPY_AVAILABLE = True
+except ImportError:
+    NUMPY_AVAILABLE = False
+    np = None
+
+try:
+    from sentence_transformers import SentenceTransformer
+    SENTENCE_TRANSFORMERS_AVAILABLE = True
+except ImportError:
+    SENTENCE_TRANSFORMERS_AVAILABLE = False
+    SentenceTransformer = None
+
+# Fallback functions for numpy operations
+def _safe_mean(values):
+    """Calculate mean with fallback if numpy not available."""
+    if not values:
+        return 0.0
+    if NUMPY_AVAILABLE and np is not None:
+        return float(np.mean(values))
+    return sum(values) / len(values)
+
+def _safe_std(values):
+    """Calculate standard deviation with fallback if numpy not available."""
+    if not values:
+        return 0.0
+    if NUMPY_AVAILABLE and np is not None:
+        return float(np.std(values))
+    # Simple standard deviation calculation
+    mean = sum(values) / len(values)
+    variance = sum((x - mean) ** 2 for x in values) / len(values)
+    return variance ** 0.5
 
 from ..core import (
     AccreditationOntology, AccreditationDomain, EvidenceType, accreditation_ontology,
@@ -38,7 +71,18 @@ class ProprietaryA3EService:
         
         # Initialize proprietary components
         self.ontology = accreditation_ontology
-        self.embedding_model = SentenceTransformer(embedding_model_name)
+        
+        # Initialize embedding model with fallback
+        if SENTENCE_TRANSFORMERS_AVAILABLE and SentenceTransformer is not None:
+            try:
+                self.embedding_model = SentenceTransformer(embedding_model_name)
+            except Exception as e:
+                logger.warning(f"Failed to load embedding model {embedding_model_name}: {e}")
+                self.embedding_model = None
+        else:
+            logger.warning("SentenceTransformers not available, embedding features will be limited")
+            self.embedding_model = None
+            
         self.matcher = VectorWeightedMatcher(self.ontology)
         
         # Initialize audit system
@@ -204,8 +248,21 @@ class ProprietaryA3EService:
         
         return processed_documents
     
-    def _generate_proprietary_embedding(self, text: str) -> np.ndarray:
+    def _generate_proprietary_embedding(self, text: str) -> Union[List[float], Any]:
         """Generate embeddings using proprietary schema."""
+        
+        if not SENTENCE_TRANSFORMERS_AVAILABLE or self.embedding_model is None:
+            # Fallback to simple hash-based representation
+            import hashlib
+            hash_obj = hashlib.md5(text.encode())
+            hash_int = int(hash_obj.hexdigest(), 16)
+            # Create a simple float representation
+            return [(hash_int % 1000) / 1000.0 for _ in range(384)]  # Standard embedding size
+        
+        if not NUMPY_AVAILABLE:
+            # Generate base semantic embedding without numpy
+            base_embedding = self.embedding_model.encode(text)
+            return base_embedding.tolist() if hasattr(base_embedding, 'tolist') else list(base_embedding)
         
         # Generate base semantic embedding
         base_embedding = self.embedding_model.encode(text)
@@ -485,10 +542,10 @@ class ProprietaryA3EService:
         
         return {
             "total_matches": len(all_matches),
-            "avg_confidence": np.mean(confidence_scores),
-            "confidence_std": np.std(confidence_scores),
+            "avg_confidence": _safe_mean(confidence_scores),
+            "confidence_std": _safe_std(confidence_scores),
             "high_confidence_matches": len([m for m in all_matches if m.confidence_score >= 0.8]),
-            "avg_semantic_similarity": np.mean(semantic_scores),
+            "avg_semantic_similarity": _safe_mean(semantic_scores),
             "complexity_distribution": {
                 complexity.name: len([m for m in all_matches if m.complexity_level == complexity])
                 for complexity in set(m.complexity_level for m in all_matches)
@@ -515,7 +572,7 @@ class ProprietaryA3EService:
             "total_processing_time": total_processing_time,
             "agent_performance": agent_metrics,
             "pipeline_efficiency": len(context.agent_outputs) / max(1, total_processing_time),
-            "overall_pipeline_confidence": np.mean([
+            "overall_pipeline_confidence": _safe_mean([
                 output.confidence_score for output in context.agent_outputs
             ]) if context.agent_outputs else 0.0
         }
@@ -632,7 +689,7 @@ class ProprietaryA3EService:
             
             matrix[standard_id] = {
                 "evidence_count": len(mapped_evidence),
-                "avg_confidence": np.mean([e["confidence"] for e in mapped_evidence]) if mapped_evidence else 0.0,
+                "avg_confidence": _safe_mean([e["confidence"] for e in mapped_evidence]) if mapped_evidence else 0.0,
                 "gaps_identified": len(gaps),
                 "coverage_status": "complete" if mapped_evidence and not gaps else "incomplete",
                 "mapped_evidence": mapped_evidence
