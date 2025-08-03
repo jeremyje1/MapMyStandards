@@ -3,6 +3,18 @@
 .env.local
 .env.*.local
 
+# Performance optimization - Exclude large directories
+stripe_venv/
+venv/
+env/
+node_modules/
+__pycache__/
+.pytest_cache/
+*.pyc
+*.pyo
+*.pyd
+.DS_Store
+
 # Security - Never commit these files
 *password*
 *secret*
