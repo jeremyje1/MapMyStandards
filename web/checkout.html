@@ -435,7 +435,7 @@
                     localStorage.setItem("a3e_plan_type", selectedPlan);
                     localStorage.setItem("a3e_expires_at", result.expires_at);                    
                     // Redirect to trial success page
-                    window.location.href = `trial-success.html?trial_id=${result.trial_id}&plan=${selectedPlan}`;
+                    window.location.href = `https://map-my-standards.vercel.app/trial-success.html?trial_id=${result.trial_id}&plan=${selectedPlan}`;
                 } else {
                     throw new Error(result.detail || result.message || 'Account creation failed');
                 }
