@@ -194,7 +194,7 @@
         async function initializeStripe() {
             try {
                 // Use production API endpoint
-                const response = await fetch('https://exemplary-solace-production-7f19.up.railway.app/config/stripe-key');
+                const response = await fetch('https://api.mapmystandards.ai/config/stripe-key');
                 const data = await response.json();
                 
                 if (data.publishable_key) {
@@ -417,7 +417,7 @@
 
             try {
                 // Create trial account with user registration via API
-                const response = await fetch('https://exemplary-solace-production-7f19.up.railway.app/trial/signup', {
+                const response = await fetch('https://api.mapmystandards.ai/trial/signup', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -435,7 +435,7 @@
                     localStorage.setItem("a3e_plan_type", selectedPlan);
                     localStorage.setItem("a3e_expires_at", result.expires_at);                    
                     // Redirect to trial success page
-                    window.location.href = `https://map-my-standards.vercel.app/trial-success.html?trial_id=${result.trial_id}&plan=${selectedPlan}`;
+                    window.location.href = `./trial-success.html?trial_id=${result.trial_id}&plan=${selectedPlan}`;
                 } else {
                     throw new Error(result.detail || result.message || 'Account creation failed');
                 }
