@@ -545,6 +545,9 @@ async def create_checkout_session(request: CheckoutSessionRequest):
         import stripe
         stripe.api_key = STRIPE_SECRET_KEY
         
+        logger.info(f"Creating checkout session - Secret key set: {bool(STRIPE_SECRET_KEY)}")
+        logger.info(f"Request: plan={request.plan}, price_id={request.price_id}, trial_days={request.trial_days}")
+        
         if not stripe.api_key:
             raise HTTPException(status_code=500, detail="Stripe not configured")
         
@@ -584,6 +587,9 @@ async def trial_success_page(session_id: str = None):
         if session_id:
             import stripe
             stripe.api_key = STRIPE_SECRET_KEY
+        
+        logger.info(f"Creating checkout session - Secret key set: {bool(STRIPE_SECRET_KEY)}")
+        logger.info(f"Request: plan={request.plan}, price_id={request.price_id}, trial_days={request.trial_days}")
             
             try:
                 # Retrieve the checkout session
@@ -657,6 +663,9 @@ async def stripe_webhook(request: Request):
         # Import stripe only when needed
         import stripe
         stripe.api_key = STRIPE_SECRET_KEY
+        
+        logger.info(f"Creating checkout session - Secret key set: {bool(STRIPE_SECRET_KEY)}")
+        logger.info(f"Request: plan={request.plan}, price_id={request.price_id}, trial_days={request.trial_days}")
         
         # Get webhook secret from environment
         webhook_secret = os.getenv('STRIPE_WEBHOOK_SECRET', '')
