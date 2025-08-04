@@ -771,3 +771,14 @@ async def _handle_payment_failed(invoice):
     logger.warning(f"Payment failed: ${amount} for customer {customer_id}")
     
     # Send notification, retry payment, or suspend account
+
+@app.get("/debug/stripe")
+async def debug_stripe():
+    """Debug endpoint to check Stripe configuration"""
+    return {
+        "publishable_key_set": bool(STRIPE_PUBLISHABLE_KEY),
+        "secret_key_set": bool(STRIPE_SECRET_KEY),
+        "publishable_key_prefix": STRIPE_PUBLISHABLE_KEY[:7] if STRIPE_PUBLISHABLE_KEY else "None",
+        "secret_key_prefix": STRIPE_SECRET_KEY[:7] if STRIPE_SECRET_KEY else "None"
+    }
+
