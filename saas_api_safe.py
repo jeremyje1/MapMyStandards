@@ -521,3 +521,6 @@ if __name__ == "__main__":
     port = int(os.getenv("PORT", 8080))
     logger.info(f"Starting server on port {port}")
     uvicorn.run(app, host="0.0.0.0", port=port)
+@app.get("/stripe-test")
+def stripe_test():
+    return {"stripe": "checkout test"}
