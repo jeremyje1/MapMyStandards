@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  a3e-staging:
+    build: .
+    ports:
+      - "8001:8001"
+    environment:
+      - ENVIRONMENT=staging
+    env_file:
+      - .env.staging
+    volumes:
+      - ./data/staging:/app/data
+      - ./logs/staging:/app/logs
+    depends_on:
+      - redis-staging
+      - postgres-staging
+    networks:
+      - a3e-staging-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.a3e-staging.rule=Host(`staging.mapmystandards.ai`)"
+      - "traefik.http.routers.a3e-staging.tls=true"
+      - "traefik.http.middlewares.staging-auth.basicauth.users=admin:$$2y$$10$$..."
+
+  redis-staging:
+    image: redis:7-alpine
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis-staging-data:/data
+    networks:
+      - a3e-staging-net
+
+  postgres-staging:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: a3e_staging
+      POSTGRES_USER: a3e_staging
+      POSTGRES_PASSWORD: staging_password_change_me
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-staging-data:/var/lib/postgresql/data
+    networks:
+      - a3e-staging-net
+
+  nginx-staging:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+      - "8443:443"
+    volumes:
+      - ./nginx/staging.conf:/etc/nginx/conf.d/default.conf
+      - ./ssl:/etc/nginx/ssl
+    depends_on:
+      - a3e-staging
+    networks:
+      - a3e-staging-net
+
+volumes:
+  redis-staging-data:
+  postgres-staging-data:
+
+networks:
+  a3e-staging-net:
+    driver: bridge
