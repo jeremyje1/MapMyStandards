@@ -148,133 +148,140 @@ def debug_env():
 # Landing page
 @app.get("/landing", response_class=HTMLResponse)
 def landing_page():
-    return """
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>MapMyStandards.ai - Autonomous Accreditation Engine</title>
-        <style>
-            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-            .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-            .header { text-align: center; color: white; padding: 50px 0; }
-            .header h1 { font-size: 3em; margin-bottom: 10px; }
-            .header p { font-size: 1.2em; opacity: 0.9; }
-            .content { background: white; border-radius: 15px; padding: 40px; margin-top: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
-            .trial-form { background: #f8f9fa; padding: 30px; border-radius: 10px; margin: 30px 0; }
-            .form-group { margin-bottom: 20px; }
-            .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
-            .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px; box-sizing: border-box; }
-            .btn { background: #667eea; color: white; padding: 15px 30px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
-            .btn:hover { background: #5a6fd8; }
-            .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; margin: 40px 0; }
-            .feature { text-align: center; padding: 20px; }
-            .feature h3 { color: #333; margin-bottom: 15px; }
-            .status { padding: 10px; border-radius: 5px; margin: 10px 0; }
-            .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-            .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <div class="header">
-                <h1>MapMyStandards.ai</h1>
-                <p>Autonomous Accreditation & Audit Engine</p>
-                <p>Transform your compliance workflows with AI-powered automation</p>
+    return """<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Start Your Free Trial - MapMyStandards.ai</title>
+    <script src="https://js.stripe.com/v3/"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; padding: 2rem; text-align: center; }
+        .header h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
+        .header p { font-size: 1.1rem; opacity: 0.9; }
+        .content { padding: 2rem; }
+        .trial-info { background: #e8f5e8; border-left: 4px solid #28a745; padding: 1.5rem; margin-bottom: 2rem; border-radius: 5px; }
+        .trial-info h3 { color: #155724; margin-bottom: 0.5rem; }
+        .trial-info p { color: #155724; margin-bottom: 0.5rem; }
+        .pricing-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin: 2rem 0; }
+        .pricing-card { border: 2px solid #e9ecef; border-radius: 10px; padding: 2rem; text-align: center; transition: all 0.3s; cursor: pointer; }
+        .pricing-card:hover { border-color: #667eea; transform: translateY(-5px); }
+        .pricing-card.selected { border-color: #667eea; background: #f8f9ff; }
+        .plan-name { font-size: 1.5rem; font-weight: 700; color: #2c3e50; margin-bottom: 1rem; }
+        .plan-price { font-size: 2.5rem; font-weight: 700; color: #667eea; margin-bottom: 0.5rem; }
+        .plan-period { color: #6c757d; margin-bottom: 1.5rem; }
+        .plan-features { list-style: none; margin-bottom: 1.5rem; }
+        .plan-features li { padding: 0.3rem 0; padding-left: 1.5rem; position: relative; text-align: left; }
+        .plan-features li::before { content: "✓"; position: absolute; left: 0; color: #27ae60; font-weight: bold; }
+        .checkout-section { background: #f8f9fa; padding: 2rem; border-radius: 10px; margin-top: 2rem; text-align: center; }
+        .checkout-button { background: #28a745; color: white; border: none; padding: 1rem 3rem; font-size: 1.2rem; border-radius: 50px; cursor: pointer; font-weight: 600; transition: all 0.3s; width: 100%; max-width: 400px; }
+        .checkout-button:hover { background: #218838; transform: translateY(-2px); }
+        .checkout-button:disabled { background: #6c757d; cursor: not-allowed; transform: none; }
+        .security-info { margin-top: 1rem; font-size: 0.9rem; color: #6c757d; }
+        .error-message { background: #f8d7da; color: #721c24; padding: 1rem; border-radius: 5px; margin: 1rem 0; display: none; }
+        @media (max-width: 768px) { .pricing-options { grid-template-columns: 1fr; } .header h1 { font-size: 2rem; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Start Your Free Trial</h1>
+            <p>Get instant access to the A³E platform with full features</p>
+        </div>
+        <div class="content">
+            <div class="trial-info">
+                <h3>📅 7-Day Free Trial</h3>
+                <p><strong>Free access for 7 days</strong> • Full features included • Credit card required</p>
+                <p>Cancel anytime during trial with no charges • Billing starts automatically after trial period</p>
             </div>
-            
-            <div class="content">
-                <h2>Start Your Free Trial</h2>
-                <p>Experience the power of automated accreditation mapping and audit preparation.</p>
-                
-                <div class="trial-form">
-                    <form id="trialForm">
-                        <div class="form-group">
-                            <label for="name">Full Name</label>
-                            <input type="text" id="name" name="name" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="email">Email Address</label>
-                            <input type="email" id="email" name="email" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="organization">Organization (Optional)</label>
-                            <input type="text" id="organization" name="organization">
-                        </div>
-                        <div class="form-group">
-                            <label for="use_case">Primary Use Case</label>
-                            <select id="use_case" name="use_case">
-                                <option value="">Select your primary interest...</option>
-                                <option value="accreditation">Accreditation Preparation</option>
-                                <option value="compliance">Compliance Monitoring</option>
-                                <option value="audit">Audit Automation</option>
-                                <option value="mapping">Standards Mapping</option>
-                                <option value="other">Other</option>
-                            </select>
-                        </div>
-                        <button type="submit" class="btn">Start Free Trial</button>
-                    </form>
-                    <div id="status"></div>
+            <h3 style="text-align: center; margin-bottom: 1.5rem;">Choose Your Plan</h3>
+            <div class="pricing-options">
+                <div class="pricing-card" onclick="selectPlan('college', 29700, 'monthly')" id="college-monthly">
+                    <div class="plan-name">A³E College Plan</div>
+                    <div class="plan-price">$297</div>
+                    <div class="plan-period">per month</div>
+                    <ul class="plan-features">
+                        <li>Up to 3 campus profiles</li>
+                        <li>Unlimited document analysis</li>
+                        <li>Full AI pipeline</li>
+                        <li>Canvas LMS integration</li>
+                        <li>Email support</li>
+                    </ul>
                 </div>
-
-                <div class="features">
-                    <div class="feature">
-                        <h3>🤖 AI-Powered Analysis</h3>
-                        <p>Automatically map your processes to accreditation standards using advanced AI</p>
-                    </div>
-                    <div class="feature">
-                        <h3>📊 Real-time Dashboard</h3>
-                        <p>Monitor compliance status and track progress with intuitive visualizations</p>
-                    </div>
-                    <div class="feature">
-                        <h3>⚡ Rapid Deployment</h3>
-                        <p>Get started in minutes with our streamlined onboarding process</p>
-                    </div>
+                <div class="pricing-card" onclick="selectPlan('multicampus', 89700, 'monthly')" id="multicampus-monthly">
+                    <div class="plan-name">A³E Multi-Campus</div>
+                    <div class="plan-price">$897</div>
+                    <div class="plan-period">per month</div>
+                    <ul class="plan-features">
+                        <li>Unlimited campus profiles</li>
+                        <li>Everything in College Plan</li>
+                        <li>API access (10K calls/month)</li>
+                        <li>Dedicated success manager</li>
+                        <li>Phone support</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="error-message" id="error-message"></div>
+            <div class="checkout-section">
+                <button class="checkout-button" id="checkout-button" onclick="startCheckout()" disabled>
+                    Select a plan to continue
+                </button>
+                <div class="security-info">
+                    🔒 Secure checkout powered by Stripe • Your payment information is encrypted and secure
                 </div>
             </div>
         </div>
+    </div>
+    <script>
+        const stripe = Stripe('pk_live_51Rr4dNK8PKpLCKDZH9u9mOEqmPVSR946uGYKSdk73mmNjBR4i9Ibon3wvDLNpYPRzsXmaAXTrwSPKKxNolArj8G200tZyrr6qE');
+        let selectedPlan = null; let selectedPrice = null; let selectedInterval = null;
+        function selectPlan(plan, price, interval) {
+            document.querySelectorAll('.pricing-card').forEach(card => card.classList.remove('selected'));
+            document.getElementById(plan + '-' + interval).classList.add('selected');
+            selectedPlan = plan; selectedPrice = price; selectedInterval = interval;
+            const button = document.getElementById('checkout-button');
+            button.disabled = false;
+            button.textContent = "Start 7-Day Free Trial - $" + (price/100).toFixed(0) + "/" + interval;
+        }
+        async function startCheckout() {
+            if (!selectedPlan) { showError('Please select a plan first'); return; }
+            const button = document.getElementById('checkout-button');
+            button.disabled = true; button.textContent = 'Creating checkout session...';
+            try {
+                const response = await fetch('/create-checkout-session', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ plan: selectedPlan, price_id: getPriceId(selectedPlan, selectedInterval), trial_days: 7 })
+                });
+                if (!response.ok) throw new Error('Failed to create checkout session');
+                const session = await response.json();
+                const result = await stripe.redirectToCheckout({ sessionId: session.id });
+                if (result.error) throw new Error(result.error.message);
+            } catch (error) {
+                showError('Failed to start checkout: ' + error.message);
+                button.disabled = false;
+                button.textContent = "Start 7-Day Free Trial - $" + (selectedPrice/100).toFixed(0) + "/" + selectedInterval;
+            }
+        }
+        function getPriceId(plan, interval) {
+            const priceIds = { 'college_monthly': 'price_college_monthly', 'college_yearly': 'price_college_yearly', 'multicampus_monthly': 'price_multicampus_monthly', 'multicampus_yearly': 'price_multicampus_yearly' };
+            return priceIds[plan + '_' + interval] || 'price_college_monthly';
+        }
+        function showError(message) {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.textContent = message; errorDiv.style.display = 'block';
+            setTimeout(() => errorDiv.style.display = 'none', 5000);
+        }
+        const urlParams = new URLSearchParams(window.location.search);
+        const planParam = urlParams.get('plan');
+        if (planParam === 'college') selectPlan('college', 29700, 'monthly');
+        else if (planParam === 'multicampus') selectPlan('multicampus', 89700, 'monthly');
+    </script>
+</body>
+</html>"""
 
-        <script>
-            document.getElementById('trialForm').addEventListener('submit', async function(e) {
-                e.preventDefault();
-                
-                const statusDiv = document.getElementById('status');
-                statusDiv.innerHTML = '<div class="status">Processing your request...</div>';
-                
-                const formData = new FormData(e.target);
-                const data = Object.fromEntries(formData);
-                
-                try {
-                    const response = await fetch('/trial/signup', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(data)
-                    });
-                    
-                    const result = await response.json();
-                    
-                    if (response.ok) {
-                        statusDiv.innerHTML = `
-                            <div class="status success">
-                                <strong>Success!</strong> Welcome to MapMyStandards! 
-                                ${result.email_sent ? 'Check your email for access instructions.' : 'Your trial is ready!'}
-                                <br><br>
-                                <a href="/dashboard/${result.trial_id}" class="btn">Go to Dashboard</a>
-                            </div>
-                        `;
-                        e.target.reset();
-                    } else {
-                        statusDiv.innerHTML = `<div class="status error"><strong>Error:</strong> ${result.detail}</div>`;
-                    }
-                } catch (error) {
-                    statusDiv.innerHTML = '<div class="status error"><strong>Error:</strong> Something went wrong. Please try again.</div>';
-                }
-            });
-        </script>
-    </body>
-    </html>
-    """
 
 # Trial signup endpoint
 @app.post("/trial/signup")
