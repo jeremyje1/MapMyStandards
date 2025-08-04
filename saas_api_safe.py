@@ -791,3 +791,28 @@ async def debug_stripe():
         "secret_key_prefix": STRIPE_SECRET_KEY[:7] if STRIPE_SECRET_KEY else "None"
     }
 
+
+@app.get("/test/stripe-simple")
+async def test_stripe_simple():
+    """Simple Stripe test to verify library and credentials"""
+    try:
+        import stripe
+        stripe.api_key = STRIPE_SECRET_KEY
+        
+        # Try to list a few products to test the connection
+        products = stripe.Product.list(limit=1)
+        
+        return {
+            "stripe_library_imported": True,
+            "api_key_set": bool(STRIPE_SECRET_KEY),
+            "api_connection_test": "success",
+            "product_count": len(products.data)
+        }
+    except Exception as e:
+        return {
+            "stripe_library_imported": True,
+            "api_key_set": bool(STRIPE_SECRET_KEY),
+            "api_connection_test": "failed",
+            "error": str(e),
+            "error_type": type(e).__name__
+        }
