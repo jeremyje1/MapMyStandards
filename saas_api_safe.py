@@ -638,3 +638,129 @@ async def trial_success_page(session_id: str = None):
     except Exception as e:
         logger.error(f"Trial success page error: {e}")
         return HTMLResponse(content="<h1>Error loading success page</h1>", status_code=500)
+
+# Stripe webhook endpoint for billing events
+@app.post("/api/v1/billing/webhook/stripe")
+async def stripe_webhook(request: Request):
+    """Handle Stripe webhooks for payment events"""
+    try:
+        payload = await request.body()
+        sig_header = request.headers.get('stripe-signature')
+        
+        # Import stripe only when needed
+        import stripe
+        stripe.api_key = STRIPE_SECRET_KEY
+        
+        # Get webhook secret from environment
+        webhook_secret = os.getenv('STRIPE_WEBHOOK_SECRET', '')
+        
+        if not webhook_secret:
+            logger.warning("STRIPE_WEBHOOK_SECRET not configured")
+            # Process without signature verification in development
+            event = json.loads(payload.decode('utf-8'))
+        else:
+            # Verify webhook signature
+            try:
+                event = stripe.Webhook.construct_event(
+                    payload, sig_header, webhook_secret
+                )
+            except ValueError as e:
+                logger.error(f"Invalid payload: {e}")
+                raise HTTPException(status_code=400, detail="Invalid payload")
+            except stripe.error.SignatureVerificationError as e:
+                logger.error(f"Invalid signature: {e}")
+                raise HTTPException(status_code=400, detail="Invalid signature")
+        
+        # Handle the event
+        event_type = event['type']
+        logger.info(f"Processing webhook event: {event_type}")
+        
+        if event_type == 'checkout.session.completed':
+            # Handle successful checkout
+            session = event['data']['object']
+            await _handle_checkout_completed(session)
+            
+        elif event_type == 'customer.subscription.created':
+            # Handle new subscription
+            subscription = event['data']['object']
+            await _handle_subscription_created(subscription)
+            
+        elif event_type == 'customer.subscription.updated':
+            # Handle subscription changes
+            subscription = event['data']['object']
+            await _handle_subscription_updated(subscription)
+            
+        elif event_type == 'customer.subscription.deleted':
+            # Handle subscription cancellation
+            subscription = event['data']['object']
+            await _handle_subscription_deleted(subscription)
+            
+        elif event_type == 'invoice.payment_succeeded':
+            # Handle successful payment
+            invoice = event['data']['object']
+            await _handle_payment_succeeded(invoice)
+            
+        elif event_type == 'invoice.payment_failed':
+            # Handle failed payment
+            invoice = event['data']['object']
+            await _handle_payment_failed(invoice)
+            
+        else:
+            logger.info(f"Unhandled event type: {event_type}")
+        
+        return {"received": True, "event_type": event_type}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Webhook processing error: {e}")
+        raise HTTPException(status_code=400, detail="Webhook processing failed")
+
+# Webhook event handlers
+async def _handle_checkout_completed(session):
+    """Handle successful checkout session completion"""
+    customer_id = session.get('customer')
+    subscription_id = session.get('subscription')
+    logger.info(f"Checkout completed: customer {customer_id}, subscription {subscription_id}")
+    
+    # Create or update trial user record
+    # This would typically involve:
+    # 1. Creating user account
+    # 2. Setting up trial period
+    # 3. Sending welcome email
+    # 4. Activating services
+
+async def _handle_subscription_created(subscription):
+    """Handle new subscription creation"""
+    customer_id = subscription.get('customer')
+    status = subscription.get('status')
+    logger.info(f"Subscription created: {subscription.get('id')} for customer {customer_id}, status: {status}")
+
+async def _handle_subscription_updated(subscription):
+    """Handle subscription updates (trial ending, plan changes, etc.)"""
+    customer_id = subscription.get('customer')
+    status = subscription.get('status')
+    logger.info(f"Subscription updated: {subscription.get('id')} for customer {customer_id}, status: {status}")
+
+async def _handle_subscription_deleted(subscription):
+    """Handle subscription cancellation"""
+    customer_id = subscription.get('customer')
+    logger.info(f"Subscription cancelled: {subscription.get('id')} for customer {customer_id}")
+    
+    # Deactivate user account, clean up resources, etc.
+
+async def _handle_payment_succeeded(invoice):
+    """Handle successful payment"""
+    customer_id = invoice.get('customer')
+    subscription_id = invoice.get('subscription')
+    amount = invoice.get('amount_paid', 0) / 100  # Convert from cents
+    logger.info(f"Payment succeeded: ${amount} for customer {customer_id}")
+
+async def _handle_payment_failed(invoice):
+    """Handle failed payment"""
+    customer_id = invoice.get('customer')
+    subscription_id = invoice.get('subscription')
+    amount = invoice.get('amount_due', 0) / 100  # Convert from cents
+    logger.warning(f"Payment failed: ${amount} for customer {customer_id}")
+    
+    # Send notification, retry payment, or suspend account
