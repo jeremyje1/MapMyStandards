@@ -368,6 +368,16 @@
                             <option value="off-site">Off-Site Review</option>
                             <option value="candidacy">Candidacy Review</option>
                         </optgroup>
+                        <optgroup label="Specialized Components">
+                            <option value="qep">QEP (Quality Enhancement Plan) - SACSCOC</option>
+                            <option value="quality-initiative">Quality Initiative - HLC</option>
+                            <option value="strategic-plan">Strategic Plan Assessment</option>
+                            <option value="innovation-project">Innovation Project Review</option>
+                            <option value="institutional-effectiveness">Institutional Effectiveness Plan</option>
+                            <option value="assessment-plan">Assessment Plan Evaluation</option>
+                            <option value="faculty-development">Faculty Development Initiative</option>
+                            <option value="student-success">Student Success Plan</option>
+                        </optgroup>
                         <optgroup label="K-12 Reviews">
                             <option value="k12-accreditation">School Accreditation Review</option>
                             <option value="k12-reaccreditation">Reaccreditation Visit</option>
@@ -410,8 +420,65 @@
             
             <div class="step-card">
                 <div class="step-number">4</div>
+                <h3>🎯 Specialized Components</h3>
+                <p>Analyze QEPs, Quality Initiatives, Strategic Plans, and other specialized requirements unique to your accrediting body.</p>
+            </div>
+            
+            <div class="step-card">
+                <div class="step-number">5</div>
                 <h3>📝 Narrative Generation</h3>
                 <p>Generate polished narrative responses for each standard with proper evidence citations and compliance documentation.</p>
+            </div>
+        </div>
+        
+        <!-- Specialized Components Section -->
+        <div class="upload-section">
+            <h3>🎯 Specialized Accreditation Components</h3>
+            <p style="margin-bottom: 2rem; color: #666;">A³E recognizes and evaluates specialized requirements unique to each accrediting body</p>
+            
+            <div class="demo-data">
+                <div class="demo-item" onclick="uploadSpecializedFile('qep-plan.pdf')">
+                    <div style="font-size: 2rem;">📈</div>
+                    <strong>QEP Document</strong>
+                    <p>SACSCOC Quality Enhancement Plan</p>
+                </div>
+                <div class="demo-item" onclick="uploadSpecializedFile('quality-initiative.docx')">
+                    <div style="font-size: 2rem;">🎯</div>
+                    <strong>Quality Initiative</strong>
+                    <p>HLC Quality Initiative Report</p>
+                </div>
+                <div class="demo-item" onclick="uploadSpecializedFile('strategic-plan.pdf')">
+                    <div style="font-size: 2rem;">🗺️</div>
+                    <strong>Strategic Plan</strong>
+                    <p>Institutional strategic planning</p>
+                </div>
+                <div class="demo-item" onclick="uploadSpecializedFile('assessment-data.xlsx')">
+                    <div style="font-size: 2rem;">📊</div>
+                    <strong>Assessment Data</strong>
+                    <p>Outcomes assessment results</p>
+                </div>
+            </div>
+            
+            <div style="background: #f8f9ff; padding: 1.5rem; border-radius: 10px; margin: 2rem 0;">
+                <h4 style="color: #667eea; margin-bottom: 1rem;">🔍 Specialized Analysis Capabilities</h4>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                    <div style="background: white; padding: 1rem; border-radius: 8px;">
+                        <strong>SACSCOC QEP</strong>
+                        <p style="font-size: 0.9rem; color: #666; margin-top: 0.5rem;">Evaluates plan design, implementation timeline, assessment strategies, and resource allocation</p>
+                    </div>
+                    <div style="background: white; padding: 1rem; border-radius: 8px;">
+                        <strong>HLC Quality Initiative</strong>
+                        <p style="font-size: 0.9rem; color: #666; margin-top: 0.5rem;">Analyzes improvement focus, evidence of progress, and institutional learning</p>
+                    </div>
+                    <div style="background: white; padding: 1rem; border-radius: 8px;">
+                        <strong>Strategic Planning</strong>
+                        <p style="font-size: 0.9rem; color: #666; margin-top: 0.5rem;">Reviews planning process, stakeholder engagement, and measurable outcomes</p>
+                    </div>
+                    <div style="background: white; padding: 1rem; border-radius: 8px;">
+                        <strong>Assessment Plans</strong>
+                        <p style="font-size: 0.9rem; color: #666; margin-top: 0.5rem;">Evaluates assessment design, data collection methods, and use of results</p>
+                    </div>
+                </div>
             </div>
         </div>
         
@@ -477,12 +544,20 @@
                     <div style="font-size: 2rem; color: #27ae60; font-weight: bold;" id="standards-count">0</div>
                 </div>
                 <div class="analysis-card">
+                    <h4>🎯 Specialized Components</h4>
+                    <div style="font-size: 2rem; color: #9b59b6; font-weight: bold;" id="specialized-count">0</div>
+                </div>
+                <div class="analysis-card">
                     <h4>⚠️ Gaps Identified</h4>
                     <div style="font-size: 2rem; color: #e74c3c; font-weight: bold;" id="gaps-count">0</div>
                 </div>
                 <div class="analysis-card">
                     <h4>✅ Compliance Score</h4>
                     <div style="font-size: 2rem; color: #667eea; font-weight: bold;" id="compliance-score">0%</div>
+                </div>
+                <div class="analysis-card">
+                    <h4>📈 QEP/Initiative Score</h4>
+                    <div style="font-size: 2rem; color: #f39c12; font-weight: bold;" id="qep-score">0%</div>
                 </div>
             </div>
             
@@ -571,6 +646,23 @@ Ready for document processing...
             updateUploadDisplay();
         }
         
+        function uploadSpecializedFile(filename) {
+            // Simulate specialized component file upload
+            const specializedFile = {
+                name: filename,
+                size: Math.random() * 8 * 1024 * 1024, // Random size up to 8MB
+                type: filename.includes('.pdf') ? 'application/pdf' : 
+                      filename.includes('.docx') ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' :
+                      filename.includes('.xlsx') ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : 'text/plain',
+                isDemo: true,
+                isSpecialized: true
+            };
+            
+            uploadedFiles.push(specializedFile);
+            logMessage(`Added specialized component: ${filename}`, 'success');
+            updateUploadDisplay();
+        }
+        
         function updateUploadDisplay() {
             if (uploadedFiles.length > 0) {
                 uploadZone.innerHTML = `
@@ -607,19 +699,29 @@ Ready for document processing...
         }
         
         async function simulateAnalysis() {
+            const accreditor = document.getElementById('accreditor').value;
+            const reviewType = document.getElementById('review-type').value;
+            const hasSpecialized = uploadedFiles.some(file => file.isSpecialized);
+            
             const steps = [
                 { message: 'Initializing AI agents...', progress: 10 },
-                { message: 'Uploading documents to secure processing environment...', progress: 20 },
+                { message: 'Uploading documents to secure processing environment...', progress: 15 },
+                { message: 'Detecting accreditor-specific requirements...', progress: 25 },
                 { message: 'Extracting text and metadata from documents...', progress: 35 },
-                { message: 'Running semantic analysis on document content...', progress: 50 },
-                { message: 'Mapping evidence to SACSCOC standards...', progress: 65 },
+                { message: 'Running semantic analysis on document content...', progress: 45 },
+                { message: `Mapping evidence to ${accreditor} standards...`, progress: 55 },
+                ...(hasSpecialized ? [
+                    { message: 'Analyzing specialized components (QEP/Quality Initiative)...', progress: 65 },
+                    { message: 'Evaluating specialized component alignment and effectiveness...', progress: 70 }
+                ] : []),
                 { message: 'Identifying compliance gaps and opportunities...', progress: 80 },
-                { message: 'Generating recommendations and insights...', progress: 95 },
+                { message: 'Generating recommendations and insights...', progress: 90 },
+                { message: 'Finalizing specialized component assessments...', progress: 95 },
                 { message: 'Analysis complete! Results ready.', progress: 100 }
             ];
             
             for (let step of steps) {
-                await new Promise(resolve => setTimeout(resolve, 1500));
+                await new Promise(resolve => setTimeout(resolve, 1200));
                 updateProgress(step.progress, step.message);
                 logMessage(step.message, 'info');
                 
@@ -627,21 +729,31 @@ Ready for document processing...
                 if (step.progress >= 35) {
                     document.getElementById('docs-count').textContent = uploadedFiles.length;
                 }
-                if (step.progress >= 65) {
+                if (step.progress >= 55) {
                     document.getElementById('standards-count').textContent = Math.floor(uploadedFiles.length * 8.5);
+                }
+                if (step.progress >= 65 && hasSpecialized) {
+                    document.getElementById('specialized-count').textContent = uploadedFiles.filter(f => f.isSpecialized).length;
                 }
                 if (step.progress >= 80) {
                     document.getElementById('gaps-count').textContent = Math.max(1, Math.floor(uploadedFiles.length * 0.8));
                 }
-                if (step.progress >= 95) {
+                if (step.progress >= 90) {
                     document.getElementById('compliance-score').textContent = `${85 + Math.floor(Math.random() * 10)}%`;
+                }
+                if (step.progress >= 95 && hasSpecialized) {
+                    document.getElementById('qep-score').textContent = `${88 + Math.floor(Math.random() * 8)}%`;
                 }
             }
             
-            // Show final results
+            // Show final results with specialized components
             logMessage('✅ Analysis complete!', 'success');
-            logMessage('📊 Found evidence for 42 standards', 'success');
-            logMessage('⚠️ Identified 3 areas for improvement', 'warning');
+            logMessage(`📊 Found evidence for ${Math.floor(uploadedFiles.length * 8.5)} standards`, 'success');
+            if (hasSpecialized) {
+                logMessage('🎯 Specialized components analyzed and evaluated', 'success');
+                logMessage('📈 QEP/Quality Initiative assessment completed', 'success');
+            }
+            logMessage('⚠️ Identified areas for improvement', 'warning');
             logMessage('📝 Ready to generate compliance narratives', 'info');
         }
         
@@ -665,11 +777,36 @@ Ready for document processing...
         }
         
         function generateNarratives() {
+            const accreditor = document.getElementById('accreditor').value;
+            const reviewType = document.getElementById('review-type').value;
+            const hasSpecialized = uploadedFiles.some(file => file.isSpecialized);
+            
             logMessage('Generating compliance narratives...', 'info');
+            
             // Simulate narrative generation
             setTimeout(() => {
                 logMessage('✅ Generated narratives for all mapped standards', 'success');
-                alert('📝 Narrative Generation Complete\\n\\nA³E has generated comprehensive narrative responses for:\\n\\n• 42 SACSCOC standards\\n• Supporting evidence citations\\n• Compliance justifications\\n• Areas for enhancement\\n\\nNarratives are ready for review and customization.');
+                if (hasSpecialized) {
+                    logMessage('🎯 Generated specialized component narratives', 'success');
+                }
+                
+                let alertText = '📝 Narrative Generation Complete\\n\\nA³E has generated comprehensive narrative responses for:\\n\\n';
+                alertText += `• ${Math.floor(uploadedFiles.length * 8.5)} ${accreditor} standards\\n`;
+                alertText += '• Supporting evidence citations\\n';
+                alertText += '• Compliance justifications\\n';
+                
+                if (hasSpecialized) {
+                    alertText += '• Specialized component analysis\\n';
+                    if (reviewType === 'qep') {
+                        alertText += '• QEP implementation and assessment plan\\n';
+                    } else if (reviewType === 'quality-initiative') {
+                        alertText += '• Quality Initiative progress and outcomes\\n';
+                    }
+                }
+                
+                alertText += '• Areas for enhancement\\n\\nNarratives are ready for review and customization.';
+                
+                alert(alertText);
             }, 2000);
         }
         
