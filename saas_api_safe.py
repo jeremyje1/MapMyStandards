@@ -266,8 +266,8 @@ def landing_page():
             }
         }
         function getPriceId(plan, interval) {
-            const priceIds = { 'college_monthly': 'price_college_monthly', 'college_yearly': 'price_college_yearly', 'multicampus_monthly': 'price_multicampus_monthly', 'multicampus_yearly': 'price_multicampus_yearly' };
-            return priceIds[plan + '_' + interval] || 'price_college_monthly';
+            const priceIds = { 'college_monthly': 'price_1Rr4y3K8PKpLCKDZqBXxFoG1', 'college_yearly': 'price_1Rr4y3K8PKpLCKDZOufRvjyV', 'multicampus_monthly': 'price_1Rr4y3K8PKpLCKDZXU67GOp2', 'multicampus_yearly': 'price_1Rr4y3K8PKpLCKDZEBQcMAh1' };
+            return priceIds[plan + '_' + interval] || 'price_1Rr4y3K8PKpLCKDZqBXxFoG1';
         }
         function showError(message) {
             const errorDiv = document.getElementById('error-message');
