@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A³E Customer Experience Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            color: #666;
+        }
+        
+        .workflow-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .step-card {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: transform 0.3s ease;
+        }
+        
+        .step-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+        
+        .step-card h3 {
+            color: #667eea;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+        
+        .upload-section {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            padding: 3rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        
+        .upload-zone {
+            border: 3px dashed #667eea;
+            border-radius: 10px;
+            padding: 3rem;
+            text-align: center;
+            background: #f8f9ff;
+            margin-bottom: 2rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .upload-zone:hover {
+            border-color: #764ba2;
+            background: #f0f2ff;
+        }
+        
+        .upload-zone.dragover {
+            border-color: #27ae60;
+            background: #e8f5e8;
+        }
+        
+        .upload-icon {
+            font-size: 3rem;
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            margin: 0.5rem;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+        
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        .results-section {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            display: none;
+        }
+        
+        .results-section.show {
+            display: block;
+            animation: slideIn 0.5s ease;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .analysis-card {
+            background: #f8f9ff;
+            padding: 1.5rem;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            transition: width 2s ease;
+            width: 0%;
+        }
+        
+        .log-area {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 1.5rem;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            margin: 2rem 0;
+        }
+        
+        .demo-data {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        
+        .demo-item {
+            background: #f8f9ff;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .demo-item:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+        
+        .customer-info {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #667eea;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎓 A³E Customer Experience</h1>
+            <p>Experience the complete accreditation evidence analysis workflow</p>
+        </div>
+        
+        <div class="customer-info">
+            <h3>📋 Institution Setup</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="institution-name">Institution Name</label>
+                    <input type="text" id="institution-name" placeholder="e.g., University of Excellence" value="Demo University">
+                </div>
+                <div class="form-group">
+                    <label for="accreditor">Accrediting Body</label>
+                    <select id="accreditor">
+                        <optgroup label="Higher Education - Regional">
+                            <option value="SACSCOC">SACSCOC (Southern Association)</option>
+                            <option value="HLC">Higher Learning Commission (North Central)</option>
+                            <option value="MSCHE">Middle States Commission on Higher Education</option>
+                            <option value="NEASC">New England Commission of Higher Education</option>
+                            <option value="NWCCU">Northwest Commission on Colleges and Universities</option>
+                            <option value="WSCUC">WASC Senior College and University Commission</option>
+                            <option value="WASC-ACCJC">WASC Accrediting Commission for Community and Junior Colleges</option>
+                        </optgroup>
+                        <optgroup label="Higher Education - National/Specialized">
+                            <option value="ACICS">Accrediting Council for Independent Colleges and Schools</option>
+                            <option value="DEAC">Distance Education Accrediting Commission</option>
+                            <option value="TRACS">Transnational Association of Christian Colleges and Schools</option>
+                            <option value="ACCET">Accrediting Council for Continuing Education & Training</option>
+                            <option value="ABHES">Accrediting Bureau of Health Education Schools</option>
+                            <option value="ACCSC">Accrediting Commission of Career Schools and Colleges</option>
+                        </optgroup>
+                        <optgroup label="K-12 Education - Regional">
+                            <option value="SACS-CASI">SACS Council on Accreditation and School Improvement</option>
+                            <option value="NCA-CASI">North Central Association Commission on Accreditation and School Improvement</option>
+                            <option value="MSA-CESS">Middle States Association Commission on Elementary and Secondary Schools</option>
+                            <option value="NEASC-CIS">New England Association of Schools and Colleges Commission on Independent Schools</option>
+                            <option value="NWAC">Northwest Accreditation Commission</option>
+                            <option value="WASC-ACS">Western Association of Schools and Colleges Accrediting Commission for Schools</option>
+                        </optgroup>
+                        <optgroup label="K-12 Education - Specialized">
+                            <option value="COGNIA">Cognia (AdvancED)</option>
+                            <option value="ACSI">Association of Christian Schools International</option>
+                            <option value="ISACS">Independent Schools Association of the Central States</option>
+                            <option value="NAIS">National Association of Independent Schools</option>
+                            <option value="CAIS">California Association of Independent Schools</option>
+                            <option value="FCIS">Florida Council of Independent Schools</option>
+                            <option value="GISA">Georgia Independent School Association</option>
+                            <option value="ISAS">Independent Schools Association of the Southwest</option>
+                            <option value="NYSAIS">New York State Association of Independent Schools</option>
+                            <option value="PAIS">Pennsylvania Association of Independent Schools</option>
+                            <option value="VAIS">Virginia Association of Independent Schools</option>
+                        </optgroup>
+                        <optgroup label="International/Other">
+                            <option value="CIS">Council of International Schools</option>
+                            <option value="IB">International Baccalaureate Organization</option>
+                            <option value="ECIS">European Council of International Schools</option>
+                            <option value="NEASC-CIE">NEASC Commission on International Education</option>
+                            <option value="MSA-CESS-INT">MSA Commission on Elementary and Secondary Schools (International)</option>
+                        </optgroup>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="review-type">Review Type</label>
+                    <select id="review-type">
+                        <optgroup label="Higher Education Reviews">
+                            <option value="reaffirmation">Reaffirmation of Accreditation</option>
+                            <option value="initial">Initial Accreditation</option>
+                            <option value="substantive-change">Substantive Change</option>
+                            <option value="compliance">Compliance Review</option>
+                            <option value="focused-visit">Focused Visit</option>
+                            <option value="monitoring">Monitoring Report</option>
+                            <option value="off-site">Off-Site Review</option>
+                            <option value="candidacy">Candidacy Review</option>
+                        </optgroup>
+                        <optgroup label="K-12 Reviews">
+                            <option value="k12-accreditation">School Accreditation Review</option>
+                            <option value="k12-reaccreditation">Reaccreditation Visit</option>
+                            <option value="k12-initial">Initial Accreditation</option>
+                            <option value="k12-interim">Interim Review</option>
+                            <option value="k12-progress">Progress Review</option>
+                            <option value="k12-special">Special Review</option>
+                            <option value="k12-distance">Distance Learning Review</option>
+                            <option value="k12-branch">Branch Campus Review</option>
+                        </optgroup>
+                        <optgroup label="Specialized Reviews">
+                            <option value="program-review">Program-Specific Review</option>
+                            <option value="institutional-audit">Institutional Audit</option>
+                            <option value="quality-assurance">Quality Assurance Review</option>
+                            <option value="standards-compliance">Standards Compliance Check</option>
+                        </optgroup>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <div class="workflow-steps">
+            <div class="step-card">
+                <div class="step-number">1</div>
+                <h3>📄 Upload Documents</h3>
+                <p>Upload your accreditation documents, reports, policies, and evidence files. A³E supports PDF, Word, Excel, and text formats.</p>
+            </div>
+            
+            <div class="step-card">
+                <div class="step-number">2</div>
+                <h3>🤖 AI Analysis</h3>
+                <p>Our AI agents automatically analyze your documents, extract key information, and map evidence to accreditation standards.</p>
+            </div>
+            
+            <div class="step-card">
+                <div class="step-number">3</div>
+                <h3>📊 Gap Analysis</h3>
+                <p>Identify gaps in your documentation and receive specific recommendations for strengthening your accreditation case.</p>
+            </div>
+            
+            <div class="step-card">
+                <div class="step-number">4</div>
+                <h3>📝 Narrative Generation</h3>
+                <p>Generate polished narrative responses for each standard with proper evidence citations and compliance documentation.</p>
+            </div>
+        </div>
+        
+        <div class="upload-section">
+            <h3>📁 Document Upload Center</h3>
+            <p style="margin-bottom: 2rem; color: #666;">Drag and drop files or click to browse. Supported formats: PDF, DOC, DOCX, XLS, XLSX, TXT</p>
+            
+            <div class="upload-zone" id="upload-zone">
+                <div class="upload-icon">📁</div>
+                <h4>Drop files here or click to browse</h4>
+                <p>Maximum file size: 10MB per file</p>
+                <input type="file" id="file-input" class="file-input" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.txt">
+            </div>
+            
+            <div class="demo-data">
+                <div class="demo-item" onclick="uploadDemoFile('accreditation-report.pdf')">
+                    <div style="font-size: 2rem;">📋</div>
+                    <strong>Accreditation Report</strong>
+                    <p>Sample institutional report</p>
+                </div>
+                <div class="demo-item" onclick="uploadDemoFile('faculty-policies.docx')">
+                    <div style="font-size: 2rem;">👥</div>
+                    <strong>Faculty Policies</strong>
+                    <p>HR and academic policies</p>
+                </div>
+                <div class="demo-item" onclick="uploadDemoFile('student-outcomes.xlsx')">
+                    <div style="font-size: 2rem;">📊</div>
+                    <strong>Student Outcomes</strong>
+                    <p>Assessment data</p>
+                </div>
+                <div class="demo-item" onclick="uploadDemoFile('budget-financial.pdf')">
+                    <div style="font-size: 2rem;">💰</div>
+                    <strong>Financial Data</strong>
+                    <p>Budget and financial reports</p>
+                </div>
+            </div>
+            
+            <div style="text-align: center;">
+                <button class="btn btn-primary" onclick="startAnalysis()">
+                    🚀 Start A³E Analysis
+                </button>
+                <button class="btn btn-secondary" onclick="clearFiles()">
+                    🗑️ Clear Files
+                </button>
+            </div>
+        </div>
+        
+        <div class="results-section" id="results-section">
+            <h3>⚡ A³E Analysis Results</h3>
+            
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <p id="progress-text" style="text-align: center; margin-bottom: 2rem;">Processing...</p>
+            
+            <div class="analysis-grid">
+                <div class="analysis-card">
+                    <h4>📄 Documents Processed</h4>
+                    <div style="font-size: 2rem; color: #667eea; font-weight: bold;" id="docs-count">0</div>
+                </div>
+                <div class="analysis-card">
+                    <h4>🎯 Standards Mapped</h4>
+                    <div style="font-size: 2rem; color: #27ae60; font-weight: bold;" id="standards-count">0</div>
+                </div>
+                <div class="analysis-card">
+                    <h4>⚠️ Gaps Identified</h4>
+                    <div style="font-size: 2rem; color: #e74c3c; font-weight: bold;" id="gaps-count">0</div>
+                </div>
+                <div class="analysis-card">
+                    <h4>✅ Compliance Score</h4>
+                    <div style="font-size: 2rem; color: #667eea; font-weight: bold;" id="compliance-score">0%</div>
+                </div>
+            </div>
+            
+            <div class="log-area" id="analysis-log">
+Starting A³E Analysis...
+Initializing AI agents...
+Ready for document processing...
+            </div>
+            
+            <div style="text-align: center; margin-top: 2rem;">
+                <button class="btn btn-primary" onclick="viewDetailedResults()">
+                    📊 View Detailed Results
+                </button>
+                <button class="btn btn-primary" onclick="generateNarratives()">
+                    📝 Generate Narratives
+                </button>
+                <button class="btn btn-secondary" onclick="exportResults()">
+                    💾 Export Results
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let uploadedFiles = [];
+        let analysisData = {};
+        
+        // File upload handling
+        const uploadZone = document.getElementById('upload-zone');
+        const fileInput = document.getElementById('file-input');
+        
+        uploadZone.addEventListener('click', () => fileInput.click());
+        uploadZone.addEventListener('dragover', handleDragOver);
+        uploadZone.addEventListener('drop', handleDrop);
+        uploadZone.addEventListener('dragleave', handleDragLeave);
+        
+        fileInput.addEventListener('change', handleFileSelect);
+        
+        function handleDragOver(e) {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        }
+        
+        function handleDragLeave(e) {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+        }
+        
+        function handleDrop(e) {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            const files = Array.from(e.dataTransfer.files);
+            addFiles(files);
+        }
+        
+        function handleFileSelect(e) {
+            const files = Array.from(e.target.files);
+            addFiles(files);
+        }
+        
+        function addFiles(files) {
+            files.forEach(file => {
+                if (file.size <= 10 * 1024 * 1024) { // 10MB limit
+                    uploadedFiles.push(file);
+                    logMessage(`Added: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)`, 'success');
+                } else {
+                    logMessage(`File too large: ${file.name}`, 'error');
+                }
+            });
+            updateUploadDisplay();
+        }
+        
+        function uploadDemoFile(filename) {
+            // Simulate demo file upload
+            const demoFile = {
+                name: filename,
+                size: Math.random() * 5 * 1024 * 1024, // Random size up to 5MB
+                type: filename.includes('.pdf') ? 'application/pdf' : 
+                      filename.includes('.docx') ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' :
+                      filename.includes('.xlsx') ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : 'text/plain',
+                isDemo: true
+            };
+            
+            uploadedFiles.push(demoFile);
+            logMessage(`Added demo file: ${filename}`, 'success');
+            updateUploadDisplay();
+        }
+        
+        function updateUploadDisplay() {
+            if (uploadedFiles.length > 0) {
+                uploadZone.innerHTML = `
+                    <div class="upload-icon">✅</div>
+                    <h4>${uploadedFiles.length} file(s) ready for analysis</h4>
+                    <p>Click "Start A³E Analysis" to begin processing</p>
+                `;
+            }
+        }
+        
+        function clearFiles() {
+            uploadedFiles = [];
+            uploadZone.innerHTML = `
+                <div class="upload-icon">📁</div>
+                <h4>Drop files here or click to browse</h4>
+                <p>Maximum file size: 10MB per file</p>
+            `;
+            logMessage('Files cleared', 'info');
+        }
+        
+        async function startAnalysis() {
+            if (uploadedFiles.length === 0) {
+                alert('Please upload some files first or try the demo files!');
+                return;
+            }
+            
+            document.getElementById('results-section').classList.add('show');
+            document.getElementById('results-section').scrollIntoView({ behavior: 'smooth' });
+            
+            logMessage('Starting A³E analysis...', 'info');
+            
+            // Simulate the analysis process
+            await simulateAnalysis();
+        }
+        
+        async function simulateAnalysis() {
+            const steps = [
+                { message: 'Initializing AI agents...', progress: 10 },
+                { message: 'Uploading documents to secure processing environment...', progress: 20 },
+                { message: 'Extracting text and metadata from documents...', progress: 35 },
+                { message: 'Running semantic analysis on document content...', progress: 50 },
+                { message: 'Mapping evidence to SACSCOC standards...', progress: 65 },
+                { message: 'Identifying compliance gaps and opportunities...', progress: 80 },
+                { message: 'Generating recommendations and insights...', progress: 95 },
+                { message: 'Analysis complete! Results ready.', progress: 100 }
+            ];
+            
+            for (let step of steps) {
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                updateProgress(step.progress, step.message);
+                logMessage(step.message, 'info');
+                
+                // Update counters progressively
+                if (step.progress >= 35) {
+                    document.getElementById('docs-count').textContent = uploadedFiles.length;
+                }
+                if (step.progress >= 65) {
+                    document.getElementById('standards-count').textContent = Math.floor(uploadedFiles.length * 8.5);
+                }
+                if (step.progress >= 80) {
+                    document.getElementById('gaps-count').textContent = Math.max(1, Math.floor(uploadedFiles.length * 0.8));
+                }
+                if (step.progress >= 95) {
+                    document.getElementById('compliance-score').textContent = `${85 + Math.floor(Math.random() * 10)}%`;
+                }
+            }
+            
+            // Show final results
+            logMessage('✅ Analysis complete!', 'success');
+            logMessage('📊 Found evidence for 42 standards', 'success');
+            logMessage('⚠️ Identified 3 areas for improvement', 'warning');
+            logMessage('📝 Ready to generate compliance narratives', 'info');
+        }
+        
+        function updateProgress(percent, message) {
+            document.getElementById('progress-fill').style.width = percent + '%';
+            document.getElementById('progress-text').textContent = message;
+        }
+        
+        function logMessage(message, type = 'info') {
+            const log = document.getElementById('analysis-log');
+            const timestamp = new Date().toLocaleTimeString();
+            const prefix = type === 'error' ? '❌' : type === 'success' ? '✅' : type === 'warning' ? '⚠️' : 'ℹ️';
+            log.textContent += `\\n[${timestamp}] ${prefix} ${message}`;
+            log.scrollTop = log.scrollHeight;
+        }
+        
+        function viewDetailedResults() {
+            logMessage('Opening detailed results dashboard...', 'info');
+            // In a real implementation, this would open a detailed results view
+            alert('📊 Detailed Results\\n\\nThis would open a comprehensive dashboard showing:\\n\\n• Evidence mapping by standard\\n• Gap analysis with recommendations\\n• Document cross-references\\n• Compliance timeline\\n• Action items for improvement');
+        }
+        
+        function generateNarratives() {
+            logMessage('Generating compliance narratives...', 'info');
+            // Simulate narrative generation
+            setTimeout(() => {
+                logMessage('✅ Generated narratives for all mapped standards', 'success');
+                alert('📝 Narrative Generation Complete\\n\\nA³E has generated comprehensive narrative responses for:\\n\\n• 42 SACSCOC standards\\n• Supporting evidence citations\\n• Compliance justifications\\n• Areas for enhancement\\n\\nNarratives are ready for review and customization.');
+            }, 2000);
+        }
+        
+        function exportResults() {
+            logMessage('Exporting analysis results...', 'info');
+            setTimeout(() => {
+                logMessage('✅ Results exported successfully', 'success');
+                alert('💾 Export Complete\\n\\nYour A³E analysis has been exported as:\\n\\n• Comprehensive PDF report\\n• Excel spreadsheet with evidence mapping\\n• Word document with narratives\\n• JSON data for integration\\n\\nFiles are ready for download.');
+            }, 1500);
+        }
+        
+        // Initialize the customer experience
+        document.addEventListener('DOMContentLoaded', () => {
+            logMessage('Welcome to A³E Customer Experience Dashboard!', 'success');
+            logMessage('Upload documents or try demo files to begin analysis.', 'info');
+        });
+    </script>
+</body>
+</html>
