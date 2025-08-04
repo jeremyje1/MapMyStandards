@@ -524,3 +524,117 @@ if __name__ == "__main__":
 @app.get("/stripe-test")
 def stripe_test():
     return {"stripe": "checkout test"}
+
+# Stripe checkout endpoints
+class CheckoutSessionRequest(BaseModel):
+    plan: str
+    price_id: str
+    trial_days: int = 7
+
+@app.post("/create-checkout-session")
+async def create_checkout_session(request: CheckoutSessionRequest):
+    """Create a Stripe checkout session for trial signup with credit card capture"""
+    try:
+        import stripe
+        stripe.api_key = STRIPE_SECRET_KEY
+        
+        if not stripe.api_key:
+            raise HTTPException(status_code=500, detail="Stripe not configured")
+        
+        # Create checkout session
+        session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            mode='subscription',
+            line_items=[{
+                'price': request.price_id,
+                'quantity': 1,
+            }],
+            subscription_data={
+                'trial_period_days': request.trial_days,
+                'metadata': {
+                    'plan': request.plan,
+                    'trial_days': request.trial_days
+                }
+            },
+            success_url='https://api.mapmystandards.ai/trial/success?session_id={CHECKOUT_SESSION_ID}',
+            cancel_url='https://api.mapmystandards.ai/landing?cancelled=true',
+            allow_promotion_codes=True,
+            billing_address_collection='required',
+            customer_creation='always'
+        )
+        
+        return {"id": session.id, "url": session.url}
+        
+    except Exception as e:
+        logger.error(f"Checkout session creation error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to create checkout session")
+
+@app.get("/trial/success", response_class=HTMLResponse)
+async def trial_success_page(session_id: str = None):
+    """Trial success page after Stripe checkout completion."""
+    try:
+        # Process the Stripe session and create user account
+        if session_id:
+            import stripe
+            stripe.api_key = STRIPE_SECRET_KEY
+            
+            try:
+                # Retrieve the checkout session
+                session = stripe.checkout.Session.retrieve(session_id)
+                customer_id = session.customer
+                subscription_id = session.subscription
+                
+                # Get customer details
+                customer = stripe.Customer.retrieve(customer_id)
+                email = customer.email
+                
+                # Generate trial ID and store user
+                import secrets
+                trial_id = secrets.token_urlsafe(16)
+                trial_users[trial_id] = {
+                    'name': customer.name or email.split('@')[0],
+                    'email': email,
+                    'organization': f"Customer {customer_id}",
+                    'use_case': 'stripe_trial',
+                    'created_at': datetime.now().isoformat(),
+                    'stripe_customer_id': customer_id,
+                    'stripe_subscription_id': subscription_id,
+                    'trial_ends': (datetime.now() + timedelta(days=7)).isoformat()
+                }
+                
+                # Return success page
+                return HTMLResponse(content=f"""
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Welcome to A³E - Trial Started!</title>
+                    <style>
+                        body {{ font-family: Arial, sans-serif; text-align: center; padding: 2rem; background: #f8f9fa; }}
+                        .container {{ max-width: 600px; margin: 0 auto; background: white; padding: 2rem; border-radius: 10px; }}
+                        .success {{ color: #28a745; font-size: 2rem; margin-bottom: 1rem; }}
+                        .btn {{ background: #007bff; color: white; padding: 1rem 2rem; text-decoration: none; border-radius: 5px; display: inline-block; margin: 0.5rem; }}
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="success">🎉 Welcome to A³E!</div>
+                        <h1>Your 7-day free trial has started!</h1>
+                        <p><strong>Email:</strong> {email}</p>
+                        <p><strong>Trial ID:</strong> {trial_id}</p>
+                        <p>Billing starts automatically on {(datetime.now() + timedelta(days=7)).strftime('%B %d, %Y')}</p>
+                        <a href="https://api.mapmystandards.ai/dashboard/{trial_id}" class="btn">🚀 Access Dashboard</a>
+                        <a href="https://api.mapmystandards.ai/docs" class="btn">📖 API Docs</a>
+                    </div>
+                </body>
+                </html>
+                """)
+                
+            except Exception as e:
+                logger.error(f"Error processing checkout session: {e}")
+                return HTMLResponse(content=f"<h1>Error processing trial signup</h1><p>Session: {session_id}</p>", status_code=500)
+        
+        return HTMLResponse(content="<h1>Trial signup completed!</h1>")
+        
+    except Exception as e:
+        logger.error(f"Trial success page error: {e}")
+        return HTMLResponse(content="<h1>Error loading success page</h1>", status_code=500)
