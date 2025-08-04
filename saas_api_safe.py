@@ -568,7 +568,6 @@ async def create_checkout_session(request: CheckoutSessionRequest):
             cancel_url='https://api.mapmystandards.ai/landing?cancelled=true',
             allow_promotion_codes=True,
             billing_address_collection='required',
-            customer_creation='always'
         )
         
         return {"id": session.id, "url": session.url}
