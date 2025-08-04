@@ -17,22 +17,6 @@
     overflow: hidden;
 }
 
-.trial-banner::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
-    animation: shine 3s infinite;
-}
-
-@keyframes shine {
-    0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
-    100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
-}
-
 .pricing-card {
     background: white;
     border-radius: 15px;
@@ -73,12 +57,6 @@
     transition: all 0.3s ease;
 }
 
-.trial-cta:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
-    color: white;
-}
-
 .feature-list {
     list-style: none;
     padding: 0;
@@ -94,37 +72,14 @@
     content: "✅";
     margin-right: 0.5rem;
 }
-
-.api-integration-note {
-    background: #f8f9fa;
-    border-left: 4px solid #667eea;
-    padding: 1rem;
-    margin: 2rem 0;
-    border-radius: 0 8px 8px 0;
-}
-
-@media (max-width: 768px) {
-    .pricing-card {
-        margin: 1rem 0;
-    }
-    
-    .price-amount {
-        font-size: 2rem;
-    }
-}
 </style>
 
 <div class="pricing-integration">
     <!-- Trial Banner -->
     <div class="trial-banner">
-        <h2 style="margin-bottom: 1rem;">🚀 Start Your Free Trial Today</h2>
-        <p style="font-size: 1.2rem; margin-bottom: 2rem;">
-            Experience the full power of A³E with instant access
-        </p>
-        <a href="https://api.mapmystandards.ai/landing" 
-           class="trial-cta" 
-           target="_blank"
-           style="background: white; color: #28a745; font-size: 1.2rem;">
+        <h2>🚀 Start Your 7-Day Free Trial</h2>
+        <p>Experience the full power of A³E with instant access - no limitations</p>
+        <a href="https://api.mapmystandards.ai/landing" class="trial-cta" target="_blank">
             🎯 Launch Free Trial Now
         </a>
     </div>
@@ -132,167 +87,55 @@
     <!-- Pricing Cards -->
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin: 3rem 0;">
         
-        <!-- Trial Plan -->
+        <!-- College Plan -->
         <div class="pricing-card">
-            <h3 style="color: #28a745;">Free Trial</h3>
-            <div class="price-amount">$0</div>
-            <p style="color: #6c757d;">30 days full access</p>
+            <h3>A³E College Plan</h3>
+            <div class="price-amount">$297</div>
+            <p>per month</p>
             
             <ul class="feature-list">
-                <li>Full A³E Analytics Engine</li>
-                <li>Document Analysis (up to 100)</li>
-                <li>Gap Analysis Reports</li>
-                <li>Email Support</li>
-                <li>Real-time Dashboard</li>
+                <li>Up to 3 campus/department profiles</li>
+                <li>Unlimited document analysis</li>
+                <li>Full AI pipeline (4-agent system)</li>
+                <li>Canvas LMS integration</li>
+                <li>7-day free trial</li>
             </ul>
             
-            <a href="https://api.mapmystandards.ai/landing" 
-               class="trial-cta" 
-               target="_blank">
-                Start Free Trial
-            </a>
+            <a href="https://api.mapmystandards.ai/landing" class="trial-cta">🚀 Start Free Trial</a>
         </div>
 
-        <!-- Professional Plan -->
+        <!-- Multi-Campus Plan (Featured) -->
         <div class="pricing-card featured">
-            <h3 style="color: #667eea;">Professional</h3>
-            <div class="price-amount">$299</div>
-            <p style="color: #6c757d;">per month</p>
+            <h3>A³E Multi-Campus</h3>
+            <div class="price-amount">$897</div>
+            <p>per month</p>
             
             <ul class="feature-list">
-                <li>Everything in Trial</li>
-                <li>Unlimited Document Analysis</li>
-                <li>Multi-Accreditor Support</li>
-                <li>API Integration</li>
-                <li>Priority Support</li>
-                <li>Custom Reports</li>
+                <li>Unlimited campus/department profiles</li>
+                <li>Everything in College Plan</li>
+                <li>White-label option available</li>
+                <li>API access (10K calls/month)</li>
+                <li>Dedicated success manager</li>
             </ul>
             
-            <a href="https://mapmystandards.ai/contact/" 
-               class="trial-cta">
-                Schedule Demo
-            </a>
+            <a href="https://api.mapmystandards.ai/landing" class="trial-cta">🎯 Get Started</a>
         </div>
 
         <!-- Enterprise Plan -->
         <div class="pricing-card">
-            <h3 style="color: #6f42c1;">Enterprise</h3>
+            <h3>Enterprise Solution</h3>
             <div class="price-amount">Custom</div>
-            <p style="color: #6c757d;">tailored solution</p>
+            <p>tailored pricing</p>
             
             <ul class="feature-list">
-                <li>Everything in Professional</li>
-                <li>Multi-Campus Support</li>
-                <li>Custom Integrations</li>
-                <li>Dedicated Support</li>
-                <li>Training & Onboarding</li>
-                <li>SLA Guarantee</li>
+                <li>Custom deployment options</li>
+                <li>Unlimited API access</li>
+                <li>24/7 dedicated support</li>
+                <li>Custom development</li>
+                <li>Training and consulting</li>
             </ul>
             
-            <a href="https://mapmystandards.ai/contact/" 
-               class="trial-cta" 
-               style="background: #6f42c1;">
-                Contact Sales
-            </a>
-        </div>
-    </div>
-
-    <!-- API Integration Note -->
-    <div class="api-integration-note">
-        <h4>🔗 Seamless Integration</h4>
-        <p>Our live API enables easy integration with your existing systems. All plans include access to our comprehensive API documentation and developer support.</p>
-        <a href="https://mapmystandards.ai/user-guide/" 
-           target="_blank" 
-           style="color: #667eea; text-decoration: none; font-weight: 600;">
-            📖 Explore API Documentation →
-        </a>
-    </div>
-
-    <!-- Live Demo Section -->
-    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 3rem; border-radius: 15px; text-align: center; margin: 3rem 0;">
-        <h3>See A³E in Action</h3>
-        <p style="font-size: 1.1rem; margin-bottom: 2rem;">
-            Experience real-time accreditation analytics
-        </p>
-        
-        <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
-            <a href="./trial-login.html" 
-               class="trial-cta" 
-               style="background: white; color: #667eea;"
-               target="_blank">
-                📊 Live Dashboard
-            </a>
-            
-            <a href="https://mapmystandards.ai/user-guide/" 
-               class="trial-cta" 
-               style="background: transparent; border: 2px solid white;"
-               target="_blank">
-                📖 API Documentation
-            </a>
-        </div>
-    </div>
-
-    <!-- ROI Calculator -->
-    <div style="background: #f8f9fa; padding: 2rem; border-radius: 15px; margin: 3rem 0;">
-        <h3 style="text-align: center; margin-bottom: 2rem;">💰 Calculate Your ROI</h3>
-        <div style="text-align: center;">
-            <p style="font-size: 1.1rem; color: #6c757d; margin-bottom: 2rem;">
-                See how much time and money A³E can save your institution
-            </p>
-            
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; margin: 2rem 0;">
-                <div style="text-align: center;">
-                    <div style="font-size: 2rem; font-weight: 700; color: #28a745;">500+</div>
-                    <div style="color: #6c757d;">Hours Saved</div>
-                </div>
-                <div style="text-align: center;">
-                    <div style="font-size: 2rem; font-weight: 700; color: #28a745;">$75K</div>
-                    <div style="color: #6c757d;">Consultant Savings</div>
-                </div>
-                <div style="text-align: center;">
-                    <div style="font-size: 2rem; font-weight: 700; color: #28a745;">98%</div>
-                    <div style="color: #6c757d;">Accuracy Rate</div>
-                </div>
-            </div>
-            
-            <a href="https://api.mapmystandards.ai/landing" 
-               class="trial-cta" 
-               target="_blank">
-                🚀 Start Saving Today
-            </a>
+            <a href="https://mapmystandards.ai/contact/" class="trial-cta">💬 Contact Sales</a>
         </div>
     </div>
 </div>
-
-<!-- JavaScript for Enhanced Functionality -->
-<script>
-// Track pricing interactions
-function trackPricingEvent(plan, action) {
-    gtag && gtag('event', 'pricing_interaction', {
-        'event_category': 'engagement',
-        'event_label': `${plan}_${action}`,
-        'value': plan === 'trial' ? 0 : plan === 'professional' ? 299 : 999
-    });
-}
-
-// Add event tracking
-document.addEventListener('DOMContentLoaded', function() {
-    // Track trial button clicks
-    const trialButtons = document.querySelectorAll('a[href*="api.mapmystandards.ai/landing"]');
-    trialButtons.forEach(button => {
-        button.addEventListener('click', () => trackPricingEvent('trial', 'click'));
-    });
-    
-    // Track demo button clicks
-    const demoButtons = document.querySelectorAll('a[href*="contact"]');
-    demoButtons.forEach(button => {
-        button.addEventListener('click', () => trackPricingEvent('demo', 'click'));
-    });
-    
-    // Track API documentation clicks
-    const apiButtons = document.querySelectorAll('a[href*="docs"]');
-    apiButtons.forEach(button => {
-        button.addEventListener('click', () => trackPricingEvent('api', 'documentation_view'));
-    });
-});
-</script>

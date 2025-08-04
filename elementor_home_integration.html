@@ -135,7 +135,7 @@
     <div class="live-demo-section">
         <h3>🎯 Live Demo Available</h3>
         <p>See the A³E (Automated Accreditation Analytics Engine) in action</p>
-        <a href="./trial-login.html" 
+        <a href="https://api.mapmystandards.ai/landing" 
            class="cta-button-enhanced" 
            target="_blank">
             📊 View Live System Status
@@ -160,7 +160,7 @@
             <div>
                 <h4>Real-time Dashboard</h4>
                 <p>Monitor your accreditation progress with live analytics</p>
-                <a href="./trial-login.html" target="_blank">View Dashboard →</a>
+                <a href="https://api.mapmystandards.ai/landing" target="_blank">View Dashboard →</a>
             </div>
         </div>
 
@@ -201,7 +201,7 @@
 // Check API status and update indicator
 async function checkAPIStatus() {
     try {
-        const response = await fetch('https://exemplary-solace-production-7f19.up.railway.app/health');
+        const response = await fetch('https://api.mapmystandards.ai/health');
         const data = await response.json();
         
         if (data.status === 'healthy') {
