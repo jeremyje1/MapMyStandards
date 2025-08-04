@@ -809,3 +809,466 @@ async def test_stripe_simple():
             "error": str(e),
             "error_type": type(e).__name__
         }
+
+# Document Upload Interface
+@app.get("/upload", response_class=HTMLResponse)
+async def upload_interface():
+    return HTMLResponse(content="""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Upload Documents - A³E</title>
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f8fafc; }
+            .container { max-width: 800px; margin: 0 auto; padding: 2rem; }
+            .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem; text-align: center; border-radius: 12px; margin-bottom: 2rem; }
+            .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 2rem; }
+            .upload-zone { border: 2px dashed #cbd5e0; border-radius: 8px; padding: 3rem; text-align: center; transition: all 0.3s; }
+            .upload-zone:hover { border-color: #667eea; background: #f7fafc; }
+            .btn { background: #667eea; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 6px; text-decoration: none; display: inline-block; font-weight: 500; cursor: pointer; transition: all 0.3s; }
+            .btn:hover { background: #5a67d8; transform: translateY(-1px); }
+            .feature-list { list-style: none; }
+            .feature-list li { padding: 0.5rem 0; padding-left: 2rem; position: relative; }
+            .feature-list li::before { content: "✓"; position: absolute; left: 0; color: #48bb78; font-weight: bold; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>📁 Document Upload Center</h1>
+                <p>Upload your institutional documents for AI-powered standards analysis</p>
+            </div>
+            
+            <div class="card">
+                <h2>Upload Documents</h2>
+                <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
+                    <input type="file" id="fileInput" multiple accept=".pdf,.doc,.docx,.txt" style="display: none;" onchange="handleFileSelect(event)">
+                    <div style="font-size: 2rem; margin-bottom: 1rem;">📎</div>
+                    <p style="font-size: 1.1rem; margin-bottom: 0.5rem;">Click to upload or drag files here</p>
+                    <p style="color: #718096; font-size: 0.9rem;">Supports PDF, Word documents, and text files</p>
+                </div>
+                <div id="fileList" style="margin-top: 1rem;"></div>
+                <button class="btn" onclick="processFiles()" id="processBtn" style="margin-top: 1rem;" disabled>
+                    🚀 Process Documents
+                </button>
+            </div>
+            
+            <div class="card">
+                <h2>What We Analyze</h2>
+                <ul class="feature-list">
+                    <li>Policy and procedure documents</li>
+                    <li>Curriculum guides and syllabi</li>
+                    <li>Assessment reports and outcomes</li>
+                    <li>Faculty handbooks and guidelines</li>
+                    <li>Strategic plans and institutional reports</li>
+                    <li>Compliance documentation</li>
+                </ul>
+            </div>
+            
+            <div class="card">
+                <h2>AI Analysis Features</h2>
+                <ul class="feature-list">
+                    <li>Automatic standards mapping to accreditation requirements</li>
+                    <li>Evidence extraction and cataloging</li>
+                    <li>Gap analysis and compliance scoring</li>
+                    <li>Citation generation for audit trails</li>
+                    <li>Actionable recommendations for improvement</li>
+                </ul>
+            </div>
+        </div>
+        
+        <script>
+            let selectedFiles = [];
+            
+            function handleFileSelect(event) {
+                selectedFiles = Array.from(event.target.files);
+                updateFileList();
+                document.getElementById('processBtn').disabled = selectedFiles.length === 0;
+            }
+            
+            function updateFileList() {
+                const fileList = document.getElementById('fileList');
+                if (selectedFiles.length === 0) {
+                    fileList.innerHTML = '';
+                    return;
+                }
+                
+                fileList.innerHTML = '<h3>Selected Files:</h3>' + 
+                    selectedFiles.map(file => 
+                        `<div style="padding: 0.5rem; background: #f7fafc; margin: 0.5rem 0; border-radius: 4px;">
+                            📄 ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)
+                        </div>`
+                    ).join('');
+            }
+            
+            function processFiles() {
+                if (selectedFiles.length === 0) return;
+                
+                // In a real implementation, this would upload files to the server
+                alert(`Processing ${selectedFiles.length} files for AI analysis...\\n\\nThis is a demo interface. In the full platform, your documents would be uploaded securely and analyzed by our A³E engine.`);
+                
+                // Simulate processing
+                document.getElementById('processBtn').innerHTML = '⏳ Processing...';
+                document.getElementById('processBtn').disabled = true;
+                
+                setTimeout(() => {
+                    alert('✅ Analysis complete! Your documents have been processed and mapped to relevant accreditation standards.');
+                    window.location.href = '/evidence';
+                }, 2000);
+            }
+        </script>
+    </body>
+    </html>
+    """)
+
+# Evidence Management Interface
+@app.get("/evidence", response_class=HTMLResponse)
+async def evidence_interface():
+    return HTMLResponse(content="""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Evidence Management - A³E</title>
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f8fafc; }
+            .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+            .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem; text-align: center; border-radius: 12px; margin-bottom: 2rem; }
+            .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 2rem; }
+            .evidence-item { background: #f7fafc; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; border-left: 4px solid #667eea; }
+            .standard-tag { background: #667eea; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; display: inline-block; margin: 0.25rem; }
+            .confidence-bar { background: #e2e8f0; height: 6px; border-radius: 3px; overflow: hidden; margin-top: 0.5rem; }
+            .confidence-fill { background: #48bb78; height: 100%; transition: width 0.3s; }
+            .btn { background: #667eea; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 6px; text-decoration: none; display: inline-block; font-weight: 500; cursor: pointer; margin: 0.5rem; }
+            .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>📊 Evidence Management</h1>
+                <p>AI-cataloged evidence mapped to accreditation standards</p>
+            </div>
+            
+            <div class="card">
+                <h2>Evidence Summary</h2>
+                <div class="grid">
+                    <div style="text-align: center; padding: 1rem; background: #e6fffa; border-radius: 8px;">
+                        <div style="font-size: 2rem; font-weight: bold; color: #319795;">127</div>
+                        <div>Evidence Items</div>
+                    </div>
+                    <div style="text-align: center; padding: 1rem; background: #fef5e7; border-radius: 8px;">
+                        <div style="font-size: 2rem; font-weight: bold; color: #d69e2e;">43</div>
+                        <div>Standards Mapped</div>
+                    </div>
+                    <div style="text-align: center; padding: 1rem; background: #f0fff4; border-radius: 8px;">
+                        <div style="font-size: 2rem; font-weight: bold; color: #38a169;">92%</div>
+                        <div>Compliance Score</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>Recent Evidence Items</h2>
+                
+                <div class="evidence-item">
+                    <h3>Faculty Handbook - Section 3.2: Academic Policies</h3>
+                    <p style="color: #718096; margin: 0.5rem 0;">Extracted from: Faculty_Handbook_2024.pdf</p>
+                    <div style="margin: 0.5rem 0;">
+                        <span class="standard-tag">SACSCOC 8.2.a</span>
+                        <span class="standard-tag">SACSCOC 9.1</span>
+                        <span class="standard-tag">AACSB A7</span>
+                    </div>
+                    <div>Confidence Score: 94%</div>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" style="width: 94%;"></div>
+                    </div>
+                </div>
+                
+                <div class="evidence-item">
+                    <h3>Assessment Report - Learning Outcomes Analysis</h3>
+                    <p style="color: #718096; margin: 0.5rem 0;">Extracted from: Annual_Assessment_Report_2024.pdf</p>
+                    <div style="margin: 0.5rem 0;">
+                        <span class="standard-tag">SACSCOC 8.2.a</span>
+                        <span class="standard-tag">AACSB A4</span>
+                    </div>
+                    <div>Confidence Score: 87%</div>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" style="width: 87%;"></div>
+                    </div>
+                </div>
+                
+                <div class="evidence-item">
+                    <h3>Strategic Plan - Institutional Effectiveness</h3>
+                    <p style="color: #718096; margin: 0.5rem 0;">Extracted from: Strategic_Plan_2024-2029.pdf</p>
+                    <div style="margin: 0.5rem 0;">
+                        <span class="standard-tag">SACSCOC 5.1</span>
+                        <span class="standard-tag">SACSCOC 7.3</span>
+                    </div>
+                    <div>Confidence Score: 91%</div>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" style="width: 91%;"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>Actions</h2>
+                <a href="/upload" class="btn">📁 Upload More Documents</a>
+                <a href="/recommendations" class="btn">🤖 View AI Recommendations</a>
+                <a href="/export" class="btn">�� Export Evidence Report</a>
+                <button class="btn" onclick="alert('Full search functionality coming soon!')">🔍 Search Evidence</button>
+            </div>
+        </div>
+    </body>
+    </html>
+    """)
+
+# AI Recommendations Interface
+@app.get("/recommendations", response_class=HTMLResponse)
+async def recommendations_interface():
+    return HTMLResponse(content="""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>AI Recommendations - A³E</title>
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f8fafc; }
+            .container { max-width: 1000px; margin: 0 auto; padding: 2rem; }
+            .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem; text-align: center; border-radius: 12px; margin-bottom: 2rem; }
+            .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 2rem; }
+            .recommendation { background: #f7fafc; padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem; border-left: 4px solid #f6ad55; }
+            .priority-high { border-left-color: #f56565; }
+            .priority-medium { border-left-color: #f6ad55; }
+            .priority-low { border-left-color: #48bb78; }
+            .priority-tag { padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight: bold; color: white; }
+            .priority-high .priority-tag { background: #f56565; }
+            .priority-medium .priority-tag { background: #f6ad55; }
+            .priority-low .priority-tag { background: #48bb78; }
+            .btn { background: #667eea; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 6px; text-decoration: none; display: inline-block; font-weight: 500; cursor: pointer; margin: 0.5rem; }
+            .action-list { list-style: none; margin-top: 1rem; }
+            .action-list li { padding: 0.5rem 0; padding-left: 2rem; position: relative; }
+            .action-list li::before { content: "→"; position: absolute; left: 0; color: #667eea; font-weight: bold; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>🤖 AI Recommendations</h1>
+                <p>Personalized suggestions to improve your accreditation compliance</p>
+            </div>
+            
+            <div class="card">
+                <h2>Priority Recommendations</h2>
+                
+                <div class="recommendation priority-high">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3>Missing Learning Outcomes Documentation</h3>
+                        <span class="priority-tag">HIGH PRIORITY</span>
+                    </div>
+                    <p><strong>Standard:</strong> SACSCOC 8.2.a - Student Learning Outcomes</p>
+                    <p style="margin: 1rem 0;">Our analysis indicates gaps in documented learning outcomes for 12 programs. This is critical for upcoming accreditation review.</p>
+                    <ul class="action-list">
+                        <li>Document specific learning outcomes for Business Administration program</li>
+                        <li>Add assessment methods for Engineering Technology outcomes</li>
+                        <li>Create outcome mapping for General Education requirements</li>
+                    </ul>
+                    <button class="btn" onclick="alert('Detailed action plan and templates would be provided here.')">📋 Get Action Plan</button>
+                </div>
+                
+                <div class="recommendation priority-medium">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3>Faculty Qualifications Review Needed</h3>
+                        <span class="priority-tag">MEDIUM PRIORITY</span>
+                    </div>
+                    <p><strong>Standard:</strong> SACSCOC 6.1 - Faculty</p>
+                    <p style="margin: 1rem 0;">Faculty credential documentation could be strengthened to ensure compliance requirements are clearly met.</p>
+                    <ul class="action-list">
+                        <li>Update CV templates to highlight relevant qualifications</li>
+                        <li>Document professional experience justifications</li>
+                        <li>Create faculty qualification matrix by program</li>
+                    </ul>
+                    <button class="btn" onclick="alert('Faculty audit checklist and templates would be provided here.')">👥 Review Faculty Matrix</button>
+                </div>
+                
+                <div class="recommendation priority-low">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3>Enhance Financial Resource Documentation</h3>
+                        <span class="priority-tag">LOW PRIORITY</span>
+                    </div>
+                    <p><strong>Standard:</strong> SACSCOC 13.1 - Financial Resources</p>
+                    <p style="margin: 1rem 0;">While compliant, financial planning documentation could provide stronger evidence of institutional stability.</p>
+                    <ul class="action-list">
+                        <li>Expand budget narrative documentation</li>
+                        <li>Add multi-year financial projections</li>
+                        <li>Document contingency planning processes</li>
+                    </ul>
+                    <button class="btn" onclick="alert('Financial documentation templates would be provided here.')">💰 View Templates</button>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>AI Insights</h2>
+                <p>Based on analysis of your institutional documents and comparison with peer institutions:</p>
+                <ul style="list-style: none; margin-top: 1rem;">
+                    <li style="padding: 0.5rem 0; border-bottom: 1px solid #e2e8f0;">
+                        <strong>📊 Compliance Strength:</strong> Your institution excels in governance and administrative processes
+                    </li>
+                    <li style="padding: 0.5rem 0; border-bottom: 1px solid #e2e8f0;">
+                        <strong>🎯 Focus Area:</strong> Student success and outcomes assessment need attention
+                    </li>
+                    <li style="padding: 0.5rem 0; border-bottom: 1px solid #e2e8f0;">
+                        <strong>⏰ Timeline:</strong> Address high-priority items within 60 days for optimal compliance
+                    </li>
+                    <li style="padding: 0.5rem 0;">
+                        <strong>🚀 Next Steps:</strong> Schedule implementation call to discuss customized action plans
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="card">
+                <h2>Actions</h2>
+                <a href="/evidence" class="btn">📊 Review Supporting Evidence</a>
+                <a href="/upload" class="btn">📁 Upload Additional Documents</a>
+                <a href="https://mapmystandards.ai/contact/" class="btn">📞 Schedule Consultation</a>
+                <button class="btn" onclick="alert('Priority action plan would be generated and emailed.')">📧 Email Action Plan</button>
+            </div>
+        </div>
+    </body>
+    </html>
+    """)
+
+# Onboarding Interface
+@app.get("/onboarding", response_class=HTMLResponse)
+async def onboarding_interface():
+    return HTMLResponse(content="""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Getting Started - A³E</title>
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f8fafc; }
+            .container { max-width: 900px; margin: 0 auto; padding: 2rem; }
+            .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem; text-align: center; border-radius: 12px; margin-bottom: 2rem; }
+            .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 2rem; }
+            .step { background: #f7fafc; padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem; border-left: 4px solid #667eea; }
+            .step-number { background: #667eea; color: white; width: 30px; height: 30px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 1rem; }
+            .btn { background: #667eea; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 6px; text-decoration: none; display: inline-block; font-weight: 500; cursor: pointer; margin: 0.5rem; }
+            .checklist { list-style: none; }
+            .checklist li { padding: 0.5rem 0; padding-left: 2rem; position: relative; }
+            .checklist li::before { content: "☐"; position: absolute; left: 0; color: #667eea; font-size: 1.2rem; }
+            .progress-bar { background: #e2e8f0; height: 8px; border-radius: 4px; overflow: hidden; margin: 1rem 0; }
+            .progress-fill { background: #48bb78; height: 100%; width: 25%; transition: width 0.3s; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>🚀 Getting Started with A³E</h1>
+                <p>Your step-by-step guide to accreditation automation success</p>
+                <div style="margin-top: 1rem;">
+                    <strong>Progress: 25% Complete</strong>
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>Setup Steps</h2>
+                
+                <div class="step">
+                    <div style="display: flex; align-items: center; margin-bottom: 1rem;">
+                        <span class="step-number">1</span>
+                        <h3>Institution Profile Setup</h3>
+                        <span style="margin-left: auto; color: #48bb78; font-weight: bold;">✓ COMPLETE</span>
+                    </div>
+                    <p>Configure your institution details, accreditation requirements, and compliance timeline.</p>
+                    <a href="#" class="btn" onclick="alert('Institution profile is already configured!')">✓ Completed</a>
+                </div>
+                
+                <div class="step">
+                    <div style="display: flex; align-items: center; margin-bottom: 1rem;">
+                        <span class="step-number">2</span>
+                        <h3>Upload Core Documents</h3>
+                        <span style="margin-left: auto; color: #f6ad55; font-weight: bold;">IN PROGRESS</span>
+                    </div>
+                    <p>Upload your key institutional documents for AI analysis and standards mapping.</p>
+                    <ul class="checklist">
+                        <li>Faculty handbook and policies</li>
+                        <li>Student handbook and catalog</li>
+                        <li>Assessment and outcomes reports</li>
+                        <li>Strategic plans and governance documents</li>
+                    </ul>
+                    <a href="/upload" class="btn">📁 Upload Documents</a>
+                </div>
+                
+                <div class="step">
+                    <div style="display: flex; align-items: center; margin-bottom: 1rem;">
+                        <span class="step-number">3</span>
+                        <h3>Review AI Analysis</h3>
+                        <span style="margin-left: auto; color: #cbd5e0; font-weight: bold;">PENDING</span>
+                    </div>
+                    <p>Review AI-generated evidence mapping and compliance analysis results.</p>
+                    <a href="/evidence" class="btn" disabled style="opacity: 0.5;">📊 Review Evidence</a>
+                </div>
+                
+                <div class="step">
+                    <div style="display: flex; align-items: center; margin-bottom: 1rem;">
+                        <span class="step-number">4</span>
+                        <h3>Implement Recommendations</h3>
+                        <span style="margin-left: auto; color: #cbd5e0; font-weight: bold;">PENDING</span>
+                    </div>
+                    <p>Act on AI recommendations to strengthen your compliance posture.</p>
+                    <a href="/recommendations" class="btn" disabled style="opacity: 0.5;">🤖 View Recommendations</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>Quick Actions</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                    <div style="text-align: center; padding: 1rem; background: #e6fffa; border-radius: 8px;">
+                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">📖</div>
+                        <h3>User Guide</h3>
+                        <a href="https://mapmystandards.ai/user-guide/" target="_blank" class="btn">Read Docs</a>
+                    </div>
+                    <div style="text-align: center; padding: 1rem; background: #fef5e7; border-radius: 8px;">
+                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">💬</div>
+                        <h3>Get Support</h3>
+                        <a href="https://mapmystandards.ai/contact/" target="_blank" class="btn">Contact Us</a>
+                    </div>
+                    <div style="text-align: center; padding: 1rem; background: #f0fff4; border-radius: 8px;">
+                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">📞</div>
+                        <h3>Schedule Call</h3>
+                        <a href="https://mapmystandards.ai/contact/" target="_blank" class="btn">Book Demo</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>What's Next?</h2>
+                <p style="margin-bottom: 1rem;">Once you complete the initial setup:</p>
+                <ul style="list-style-type: disc; padding-left: 2rem;">
+                    <li>Receive automated compliance reports</li>
+                    <li>Get ongoing AI recommendations</li>
+                    <li>Access audit-ready evidence reports</li>
+                    <li>Monitor compliance progress over time</li>
+                </ul>
+                <a href="/upload" class="btn">🚀 Continue Setup</a>
+            </div>
+        </div>
+    </body>
+    </html>
+    """)
+
