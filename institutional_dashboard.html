@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A³E Institutional Dashboard - Complete Accreditation Management</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .main-container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .sidebar {
+            width: 280px;
+            background: rgba(255,255,255,0.98);
+            backdrop-filter: blur(10px);
+            padding: 2rem 1.5rem;
+            box-shadow: 2px 0 20px rgba(0,0,0,0.1);
+            overflow-y: auto;
+        }
+        
+        .sidebar-header {
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .sidebar-header h2 {
+            color: #1e3c72;
+            font-size: 1.4rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .institution-info {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .nav-section {
+            margin-bottom: 2rem;
+        }
+        
+        .nav-section h3 {
+            color: #1e3c72;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+        
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 0.8rem 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+        
+        .nav-item:hover, .nav-item.active {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            transform: translateX(5px);
+        }
+        
+        .nav-item i {
+            margin-right: 0.8rem;
+            font-size: 1.1rem;
+        }
+        
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+        
+        .dashboard-header {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        
+        .dashboard-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .dashboard-title h1 {
+            font-size: 2.2rem;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .health-indicator {
+            display: flex;
+            align-items: center;
+            background: #e8f5e8;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            border: 2px solid #27ae60;
+        }
+        
+        .health-indicator.excellent {
+            background: #e8f5e8;
+            border-color: #27ae60;
+            color: #27ae60;
+        }
+        
+        .health-indicator.good {
+            background: #fff3cd;
+            border-color: #ffc107;
+            color: #856404;
+        }
+        
+        .health-indicator.warning {
+            background: #f8d7da;
+            border-color: #dc3545;
+            color: #721c24;
+        }
+        
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 1rem;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1e3c72;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 0.5rem;
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .dashboard-card {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: transform 0.3s ease;
+        }
+        
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .card-icon {
+            font-size: 2rem;
+            margin-right: 1rem;
+            color: #1e3c72;
+        }
+        
+        .card-title {
+            font-size: 1.3rem;
+            color: #1e3c72;
+            font-weight: 600;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 0.5rem 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 1s ease;
+        }
+        
+        .progress-fill.excellent {
+            background: linear-gradient(90deg, #27ae60, #2ecc71);
+        }
+        
+        .progress-fill.good {
+            background: linear-gradient(90deg, #f39c12, #f1c40f);
+        }
+        
+        .progress-fill.warning {
+            background: linear-gradient(90deg, #e74c3c, #c0392b);
+        }
+        
+        .deadline-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: #f8f9ff;
+            border-radius: 8px;
+            border-left: 4px solid #1e3c72;
+        }
+        
+        .deadline-item.critical {
+            border-left-color: #e74c3c;
+            background: #fdf2f2;
+        }
+        
+        .deadline-item.warning {
+            border-left-color: #f39c12;
+            background: #fefcf3;
+        }
+        
+        .deadline-info h4 {
+            color: #1e3c72;
+            margin-bottom: 0.5rem;
+        }
+        
+        .deadline-meta {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .deadline-status {
+            text-align: right;
+        }
+        
+        .days-remaining {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #1e3c72;
+        }
+        
+        .days-remaining.critical {
+            color: #e74c3c;
+        }
+        
+        .days-remaining.warning {
+            color: #f39c12;
+        }
+        
+        .team-member {
+            display: flex;
+            align-items: center;
+            padding: 0.8rem;
+            margin-bottom: 0.8rem;
+            background: #f8f9ff;
+            border-radius: 8px;
+        }
+        
+        .member-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin-right: 1rem;
+        }
+        
+        .member-info h5 {
+            color: #1e3c72;
+            margin-bottom: 0.2rem;
+        }
+        
+        .member-role {
+            font-size: 0.8rem;
+            color: #666;
+        }
+        
+        .action-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: #f8f9ff;
+            border-radius: 8px;
+            border-left: 4px solid #1e3c72;
+        }
+        
+        .action-item.high-priority {
+            border-left-color: #e74c3c;
+            background: #fdf2f2;
+        }
+        
+        .action-item.medium-priority {
+            border-left-color: #f39c12;
+            background: #fefcf3;
+        }
+        
+        .action-checkbox {
+            margin-right: 1rem;
+            transform: scale(1.2);
+        }
+        
+        .action-content h5 {
+            color: #1e3c72;
+            margin-bottom: 0.5rem;
+        }
+        
+        .action-meta {
+            font-size: 0.8rem;
+            color: #666;
+        }
+        
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            margin: 0.3rem;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(30, 60, 114, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #1e3c72;
+            border: 2px solid #1e3c72;
+        }
+        
+        .btn-secondary:hover {
+            background: #1e3c72;
+            color: white;
+        }
+        
+        .notification-badge {
+            background: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            padding: 0.2rem 0.5rem;
+            font-size: 0.7rem;
+            margin-left: 0.5rem;
+        }
+        
+        .trend-indicator {
+            display: inline-flex;
+            align-items: center;
+            font-size: 0.9rem;
+            margin-left: 1rem;
+        }
+        
+        .trend-up {
+            color: #27ae60;
+        }
+        
+        .trend-down {
+            color: #e74c3c;
+        }
+        
+        .quick-actions {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .quick-action-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 20px rgba(30, 60, 114, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .quick-action-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 25px rgba(30, 60, 114, 0.4);
+        }
+        
+        .insights-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin: 2rem 0;
+        }
+        
+        .insights-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+        
+        .insight-card {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .insight-card h4 {
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>🎓 Demo University</h2>
+                <div class="institution-info">
+                    <div>SACSCOC Accredited</div>
+                    <div>12,500 Students • 650 Faculty</div>
+                </div>
+            </div>
+            
+            <nav>
+                <div class="nav-section">
+                    <h3>📊 Dashboard</h3>
+                    <div class="nav-item active">
+                        <i>🏠</i>
+                        <span>Overview</span>
+                    </div>
+                    <div class="nav-item">
+                        <i>📈</i>
+                        <span>Analytics</span>
+                    </div>
+                    <div class="nav-item">
+                        <i>🎯</i>
+                        <span>Compliance Status</span>
+                    </div>
+                </div>
+                
+                <div class="nav-section">
+                    <h3>📁 Document Management</h3>
+                    <div class="nav-item">
+                        <i>📚</i>
+                        <span>Document Library</span>
+                        <span class="notification-badge">2,847</span>
+                    </div>
+                    <div class="nav-item">
+                        <i>🔍</i>
+                        <span>Evidence Mapping</span>
+                    </div>
+                    <div class="nav-item">
+                        <i>📝</i>
+                        <span>Report Generator</span>
+                    </div>
+                    <div class="nav-item">
+                        <i>🔄</i>
+                        <span>Version Control</span>
+                    </div>
+                </div>
+                
+                <div class="nav-section">
+                    <h3>⏰ Deadlines & Tasks</h3>
+                    <div class="nav-item">
+                        <i>📅</i>
+                        <span>Deadline Tracker</span>
+                        <span class="notification-badge">5</span>
+                    </div>
+                    <div class="nav-item">
+                        <i>✅</i>
+                        <span>Action Items</span>
+                        <span class="notification-badge">12</span>
+                    </div>
+                    <div class="nav-item">
+                        <i>🔄</i>
+                        <span>Workflows</span>
+                    </div>
+                    <div class="nav-item">
+                        <i>📋</i>
+                        <span>Templates</span>
+                    </div>
+                </div>
+                
+                <div class="nav-section">
+                    <h3>👥 Collaboration</h3>
+                    <div class="nav-item">
+                        <i>👤</i>
+                        <span>Team Management</span>
+                    </div>
+                    <div class="nav-item">
+                        <i>💬</i>
+                        <span>Communications</span>
+                        <span class="notification-badge">8</span>
+                    </div>
+                    <div class="nav-item">
+                        <i>📤</i>
+                        <span>Shared Workspaces</span>
+                    </div>
+                </div>
+                
+                <div class="nav-section">
+                    <h3>📚 Resources & Training</h3>
+                    <div class="nav-item">
+                        <i>🎓</i>
+                        <span>Training Modules</span>
+                    </div>
+                    <div class="nav-item">
+                        <i>📖</i>
+                        <span>Knowledge Base</span>
+                    </div>
+                    <div class="nav-item">
+                        <i>🏆</i>
+                        <span>Best Practices</span>
+                    </div>
+                    <div class="nav-item">
+                        <i>📊</i>
+                        <span>Benchmarking</span>
+                    </div>
+                </div>
+                
+                <div class="nav-section">
+                    <h3>🤖 AI & Automation</h3>
+                    <div class="nav-item">
+                        <i>🧠</i>
+                        <span>AI Insights</span>
+                    </div>
+                    <div class="nav-item">
+                        <i>⚡</i>
+                        <span>Automation Hub</span>
+                    </div>
+                    <div class="nav-item">
+                        <i>🔮</i>
+                        <span>Predictive Analytics</span>
+                    </div>
+                </div>
+            </nav>
+        </div>
+        
+        <div class="main-content">
+            <div class="dashboard-header">
+                <div class="dashboard-title">
+                    <h1>Institutional Accreditation Dashboard</h1>
+                    <div class="health-indicator excellent">
+                        <span>🟢 Excellent Health (94% Compliance)</span>
+                        <span class="trend-indicator trend-up">📈 +3.2% this quarter</span>
+                    </div>
+                </div>
+                
+                <div class="stats-overview">
+                    <div class="stat-item">
+                        <div class="stat-value">7</div>
+                        <div class="stat-label">Active Accreditors</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">2,847</div>
+                        <div class="stat-label">Documents Managed</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">15</div>
+                        <div class="stat-label">Active Workflows</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">45</div>
+                        <div class="stat-label">Team Members</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">94%</div>
+                        <div class="stat-label">Compliance Score</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="dashboard-grid">
+                <!-- Accreditation Status Overview -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <div class="card-icon">🎯</div>
+                        <div class="card-title">Accreditation Status Overview</div>
+                    </div>
+                    <div class="accreditor-status">
+                        <div class="status-item">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                <strong>SACSCOC (Regional)</strong>
+                                <span style="color: #27ae60; font-weight: bold;">Good Standing</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill excellent" style="width: 96%;"></div>
+                            </div>
+                            <div style="font-size: 0.9rem; color: #666; margin-top: 0.5rem;">
+                                Next: QEP Submission (Dec 2025)
+                            </div>
+                        </div>
+                        
+                        <div class="status-item" style="margin-top: 1.5rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                <strong>AACSB (Business)</strong>
+                                <span style="color: #27ae60; font-weight: bold;">Accredited</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill excellent" style="width: 92%;"></div>
+                            </div>
+                            <div style="font-size: 0.9rem; color: #666; margin-top: 0.5rem;">
+                                Next: Annual Report (Mar 2026)
+                            </div>
+                        </div>
+                        
+                        <div class="status-item" style="margin-top: 1.5rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                <strong>CAEP (Education)</strong>
+                                <span style="color: #f39c12; font-weight: bold;">Accredited w/ Conditions</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill good" style="width: 88%;"></div>
+                            </div>
+                            <div style="font-size: 0.9rem; color: #666; margin-top: 0.5rem;">
+                                Next: Progress Report (Oct 2027)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Critical Deadlines -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <div class="card-icon">⏰</div>
+                        <div class="card-title">Critical Deadlines</div>
+                    </div>
+                    <div class="deadlines-list">
+                        <div class="deadline-item critical">
+                            <div class="deadline-info">
+                                <h4>QEP 5-Year Impact Report</h4>
+                                <div class="deadline-meta">SACSCOC • Due Dec 1, 2025 • 65% Complete</div>
+                            </div>
+                            <div class="deadline-status">
+                                <div class="days-remaining critical">118 days</div>
+                                <div style="font-size: 0.8rem; color: #666;">Dr. Johnson, M. Wilson</div>
+                            </div>
+                        </div>
+                        
+                        <div class="deadline-item warning">
+                            <div class="deadline-info">
+                                <h4>AACSB Continuous Review</h4>
+                                <div class="deadline-meta">Business School • Due Mar 15, 2026 • 25% Complete</div>
+                            </div>
+                            <div class="deadline-status">
+                                <div class="days-remaining warning">222 days</div>
+                                <div style="font-size: 0.8rem; color: #666;">Dr. Chen, L. Rodriguez</div>
+                            </div>
+                        </div>
+                        
+                        <div class="deadline-item">
+                            <div class="deadline-info">
+                                <h4>Annual Assessment Reports</h4>
+                                <div class="deadline-meta">All Departments • Due Jun 30, 2025 • Auto-Generated</div>
+                            </div>
+                            <div class="deadline-status">
+                                <div class="days-remaining">147 days</div>
+                                <div style="font-size: 0.8rem; color: #666;">Assessment Team</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Document Library Stats -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <div class="card-icon">📚</div>
+                        <div class="card-title">Document Library Overview</div>
+                    </div>
+                    <div class="library-stats">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                            <div style="text-align: center; padding: 1rem; background: #f8f9ff; border-radius: 8px;">
+                                <div style="font-size: 1.8rem; font-weight: bold; color: #1e3c72;">2,847</div>
+                                <div style="font-size: 0.9rem; color: #666;">Total Documents</div>
+                            </div>
+                            <div style="text-align: center; padding: 1rem; background: #f8f9ff; border-radius: 8px;">
+                                <div style="font-size: 1.8rem; font-weight: bold; color: #1e3c72;">45.7 GB</div>
+                                <div style="font-size: 0.9rem; color: #666;">Storage Used</div>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 1rem;">
+                            <strong>Recent Activity:</strong>
+                        </div>
+                        <div style="font-size: 0.9rem; color: #666; margin-bottom: 0.5rem;">
+                            📄 23 documents uploaded this week
+                        </div>
+                        <div style="font-size: 0.9rem; color: #666; margin-bottom: 0.5rem;">
+                            🔍 156 searches performed
+                        </div>
+                        <div style="font-size: 0.9rem; color: #666; margin-bottom: 1rem;">
+                            📝 89 collaborative edits made
+                        </div>
+                        
+                        <div class="btn-group" style="display: flex; gap: 0.5rem;">
+                            <button class="btn btn-primary" onclick="openDocumentLibrary()">View Library</button>
+                            <button class="btn btn-secondary" onclick="uploadDocuments()">Upload Files</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Team Collaboration -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <div class="card-icon">👥</div>
+                        <div class="card-title">Active Team Collaboration</div>
+                    </div>
+                    <div class="team-overview">
+                        <div class="team-member">
+                            <div class="member-avatar">SJ</div>
+                            <div class="member-info">
+                                <h5>Dr. Sarah Johnson</h5>
+                                <div class="member-role">Accreditation Director • 5 active tasks</div>
+                            </div>
+                        </div>
+                        
+                        <div class="team-member">
+                            <div class="member-avatar">MW</div>
+                            <div class="member-info">
+                                <h5>Mark Wilson</h5>
+                                <div class="member-role">Assessment Coordinator • 3 active tasks</div>
+                            </div>
+                        </div>
+                        
+                        <div class="team-member">
+                            <div class="member-avatar">MC</div>
+                            <div class="member-info">
+                                <h5>Dr. Michael Chen</h5>
+                                <div class="member-role">Business School Dean • 2 active tasks</div>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e9ecef;">
+                            <div style="display: flex; justify-content: between; margin-bottom: 1rem;">
+                                <span><strong>Active Teams:</strong> 3</span>
+                                <span><strong>Workflows:</strong> 15</span>
+                            </div>
+                            <button class="btn btn-primary" onclick="openTeamDashboard()">Manage Teams</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Priority Action Items -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <div class="card-icon">✅</div>
+                        <div class="card-title">Priority Action Items</div>
+                    </div>
+                    <div class="action-items">
+                        <div class="action-item high-priority">
+                            <input type="checkbox" class="action-checkbox">
+                            <div class="action-content">
+                                <h5>Complete QEP impact assessment data</h5>
+                                <div class="action-meta">Due Sep 15 • Assessment Team • High Priority</div>
+                            </div>
+                        </div>
+                        
+                        <div class="action-item high-priority">
+                            <input type="checkbox" class="action-checkbox">
+                            <div class="action-content">
+                                <h5>Update faculty qualification documentation</h5>
+                                <div class="action-meta">Due Oct 1 • HR Department • High Priority</div>
+                            </div>
+                        </div>
+                        
+                        <div class="action-item medium-priority">
+                            <input type="checkbox" class="action-checkbox">
+                            <div class="action-content">
+                                <h5>Review and update assessment rubrics</h5>
+                                <div class="action-meta">Due Nov 30 • Faculty Committee • Medium Priority</div>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e9ecef;">
+                            <div style="display: flex; justify-content: between; margin-bottom: 1rem;">
+                                <span>Completed this week: <strong>8</strong></span>
+                                <span>Completion rate: <strong>94%</strong></span>
+                            </div>
+                            <button class="btn btn-primary" onclick="viewAllActions()">View All Actions</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Training & Development -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <div class="card-icon">🎓</div>
+                        <div class="card-title">Training & Development</div>
+                    </div>
+                    <div class="training-overview">
+                        <div style="margin-bottom: 1.5rem;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span>Accreditation Training Progress</span>
+                                <span><strong>75%</strong></span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill excellent" style="width: 75%;"></div>
+                            </div>
+                            <div style="font-size: 0.9rem; color: #666; margin-top: 0.5rem;">
+                                45 of 60 modules completed
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 1.5rem;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span>Staff Development</span>
+                                <span><strong>82%</strong></span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill excellent" style="width: 82%;"></div>
+                            </div>
+                            <div style="font-size: 0.9rem; color: #666; margin-top: 0.5rem;">
+                                8 enrolled courses • 3 upcoming deadlines
+                            </div>
+                        </div>
+                        
+                        <div style="background: #f8f9ff; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <strong>Available Resources:</strong>
+                            <div style="font-size: 0.9rem; color: #666; margin-top: 0.5rem;">
+                                📚 245 Knowledge Base Articles<br>
+                                🎥 67 Video Tutorials<br>
+                                📋 156 Templates<br>
+                                🏆 89 Best Practice Guides
+                            </div>
+                        </div>
+                        
+                        <button class="btn btn-primary" onclick="accessTraining()">Access Training Hub</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- AI Insights Section -->
+            <div class="insights-section">
+                <h2>🤖 AI-Powered Insights & Recommendations</h2>
+                <div class="insights-grid">
+                    <div class="insight-card">
+                        <h4>🔮 Predictive Analytics</h4>
+                        <p>Strong compliance trajectory maintained. 94% probability of successful QEP submission based on current progress patterns.</p>
+                    </div>
+                    <div class="insight-card">
+                        <h4>⚡ Process Optimization</h4>
+                        <p>Automate student outcomes data collection to save 15+ hours monthly. Implementation recommended before next assessment cycle.</p>
+                    </div>
+                    <div class="insight-card">
+                        <h4>📊 Benchmark Analysis</h4>
+                        <p>Institution ranks in top 15% for compliance efficiency. Consider sharing best practices with peer institutions.</p>
+                    </div>
+                    <div class="insight-card">
+                        <h4>🎯 Risk Mitigation</h4>
+                        <p>Minor timeline risk identified for QEP report. Recommend adding team resources or accelerating data collection.</p>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 2rem;">
+                    <button class="btn btn-primary" onclick="viewDetailedInsights()">View Detailed AI Analysis</button>
+                    <button class="btn btn-secondary" onclick="configureAutomation()">Configure Automation</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions Floating Menu -->
+    <div class="quick-actions">
+        <button class="quick-action-btn" onclick="quickUpload()" title="Quick Upload">📁</button>
+        <button class="quick-action-btn" onclick="generateReport()" title="Generate Report">📊</button>
+        <button class="quick-action-btn" onclick="openChat()" title="AI Assistant">💬</button>
+        <button class="quick-action-btn" onclick="addReminder()" title="Add Reminder">⏰</button>
+    </div>
+    
+    <script>
+        // Dashboard functionality
+        function openDocumentLibrary() {
+            alert('📚 Document Library\n\nOpening comprehensive document management system with:\n\n• 2,847 organized documents\n• Advanced search and filtering\n• Version control and collaboration\n• Evidence mapping and citations\n• Automated compliance checking');
+        }
+        
+        function uploadDocuments() {
+            alert('📁 Document Upload\n\nDrag and drop or browse for files:\n\n• Automatic content extraction\n• AI-powered categorization\n• Standards mapping\n• Metadata enrichment\n• Collaboration setup');
+        }
+        
+        function openTeamDashboard() {
+            alert('👥 Team Management\n\nComprehensive collaboration platform:\n\n• 45 active team members\n• 15 automated workflows\n• Real-time communication\n• Task assignment and tracking\n• Progress monitoring');
+        }
+        
+        function viewAllActions() {
+            alert('✅ Action Items\n\nIntelligent task management:\n\n• AI-prioritized action items\n• Automated deadline tracking\n• Team assignment optimization\n• Progress analytics\n• Integration with workflows');
+        }
+        
+        function accessTraining() {
+            alert('🎓 Training Hub\n\nComprehensive learning platform:\n\n• Accreditation-specific training\n• Role-based learning paths\n• Interactive modules\n• Certification tracking\n• Best practice sharing');
+        }
+        
+        function viewDetailedInsights() {
+            alert('🤖 AI Insights\n\nAdvanced analytics dashboard:\n\n• Predictive compliance modeling\n• Risk assessment algorithms\n• Optimization recommendations\n• Trend analysis\n• Benchmark comparisons');
+        }
+        
+        function configureAutomation() {
+            alert('⚡ Automation Configuration\n\nWorkflow automation setup:\n\n• Automated data collection\n• Smart deadline reminders\n• Evidence mapping\n• Report generation\n• Compliance monitoring');
+        }
+        
+        function quickUpload() {
+            alert('📁 Quick Upload\n\nFast document processing:\n\n• Instant upload and analysis\n• Automatic categorization\n• Smart tagging\n• Immediate insights\n• Team notifications');
+        }
+        
+        function generateReport() {
+            alert('📊 Report Generator\n\nProfessional report creation:\n\n• Compliance reports\n• Evidence summaries\n• Gap analyses\n• Executive dashboards\n• Custom formats');
+        }
+        
+        function openChat() {
+            alert('💬 AI Assistant\n\nIntelligent accreditation support:\n\n• Real-time guidance\n• Standards interpretation\n• Process recommendations\n• Document assistance\n• 24/7 availability');
+        }
+        
+        function addReminder() {
+            alert('⏰ Smart Reminders\n\nIntelligent deadline management:\n\n• Automated scheduling\n• Team notifications\n• Escalation protocols\n• Calendar integration\n• Progress tracking');
+        }
+        
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('A³E Institutional Dashboard loaded successfully');
+            
+            // Simulate real-time updates
+            setInterval(function() {
+                // Update any real-time elements here
+                const now = new Date();
+                console.log('Dashboard refresh:', now.toLocaleTimeString());
+            }, 30000); // Update every 30 seconds
+        });
+        
+        // Navigation handling
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>
