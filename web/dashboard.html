@@ -58,21 +58,47 @@
         <!-- Welcome Section -->
         <div class="mb-8">
             <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 text-white mb-6">
-                <h1 class="text-3xl font-bold mb-2">Welcome to your A³E Dashboard</h1>
-                <p class="text-blue-100 mb-4">Transform your accreditation process with AI-powered analytics and automation</p>
+                <h1 class="text-3xl font-bold mb-2">🎯 Welcome to Your A³E Command Center</h1>
+                <p class="text-blue-100 mb-4">Transform your institution into an accreditation powerhouse with AI-powered analytics that become more valuable every day. Your journey to operational excellence starts here.</p>
                 <div class="flex flex-wrap gap-4">
+                    <a href="https://api.mapmystandards.ai/upload" target="_blank" 
+                       class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-6 py-2 rounded-lg transition-colors backdrop-blur-sm">
+                        � Start Analysis - Build Your Advantage
+                    </a>
                     <a href="https://api.mapmystandards.ai/docs" target="_blank" 
                        class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-6 py-2 rounded-lg transition-colors backdrop-blur-sm">
                         📖 API Documentation
                     </a>
-                    <a href="https://mapmystandards.ai/user-guide/" target="_blank" 
+                    <a href="./manual.html" target="_blank" 
                        class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-6 py-2 rounded-lg transition-colors backdrop-blur-sm">
-                        🎯 Getting Started Guide
+                        🎯 Maximize Platform Value
                     </a>
                     <a href="https://mapmystandards.ai/contact/" target="_blank" 
                        class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-6 py-2 rounded-lg transition-colors backdrop-blur-sm">
-                        💬 Contact Support
+                        💬 Success Support
                     </a>
+                </div>
+                
+                <!-- Value Highlighting Banner -->
+                <div class="mt-6 bg-white bg-opacity-10 rounded-lg p-4 border border-white border-opacity-20">
+                    <div class="flex items-center justify-between flex-wrap gap-4">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold">$50K-$150K</div>
+                            <div class="text-sm text-blue-100">Annual Savings</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold">20-30 Hours</div>
+                            <div class="text-sm text-blue-100">Saved Weekly</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold">60-90 Days</div>
+                            <div class="text-sm text-blue-100">To Full ROI</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold">∞</div>
+                            <div class="text-sm text-blue-100">Growing Value</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -89,6 +115,7 @@
                     <div class="ml-4">
                         <p class="text-sm font-medium text-gray-600">Total Analyses</p>
                         <p class="text-2xl font-semibold text-gray-900" id="totalAnalyses">0</p>
+                        <p class="text-xs text-blue-600">Building institutional memory</p>
                     </div>
                 </div>
             </div>
@@ -103,6 +130,7 @@
                     <div class="ml-4">
                         <p class="text-sm font-medium text-gray-600">Compliance Score</p>
                         <p class="text-2xl font-semibold text-gray-900" id="complianceScore">--</p>
+                        <p class="text-xs text-green-600">Institutional credibility</p>
                     </div>
                 </div>
             </div>
@@ -111,12 +139,13 @@
                 <div class="flex items-center">
                     <div class="p-2 bg-yellow-100 rounded-lg">
                         <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 18.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                         </svg>
                     </div>
                     <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-600">Action Items</p>
-                        <p class="text-2xl font-semibold text-gray-900" id="actionItems">0</p>
+                        <p class="text-sm font-medium text-gray-600">Value Generated</p>
+                        <p class="text-xl font-semibold text-gray-900" id="valueGenerated">$0</p>
+                        <p class="text-xs text-yellow-600">Operational savings</p>
                     </div>
                 </div>
             </div>
@@ -132,6 +161,7 @@
                         <p class="text-sm font-medium text-gray-600">Subscription</p>
                         <p class="text-sm font-semibold text-gray-900" id="subscriptionStatus">Active</p>
                         <p class="text-xs text-gray-500" id="subscriptionPlan">A³E College Plan</p>
+                        <p class="text-xs text-purple-600">Growing ROI</p>
                     </div>
                 </div>
             </div>
@@ -141,9 +171,14 @@
         <div class="bg-white rounded-lg shadow mb-8">
             <div class="px-6 py-4 border-b border-gray-200">
                 <div class="flex items-center justify-between">
-                    <h2 class="text-lg font-semibold text-gray-900">Recent Analysis Sessions</h2>
+                    <div>
+                        <h2 class="text-lg font-semibold text-gray-900">Analysis Sessions - Building Your Advantage</h2>
+                        <p class="text-sm text-gray-600">Each analysis strengthens your institutional knowledge and competitive position</p>
+                    </div>
                     <a href="https://api.mapmystandards.ai/upload" target="_blank" 
-                       class="text-blue-600 hover:text-blue-700 text-sm font-medium">Start Analysis →</a>
+                       class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                        🚀 Start Analysis →
+                    </a>
                 </div>
             </div>
             <div class="p-6">
@@ -152,18 +187,33 @@
                         <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                         </svg>
-                        <p class="text-lg font-medium mb-2">Ready to start your first analysis?</p>
-                        <p class="text-sm mb-4">Upload documents and map evidence to accreditation standards</p>
+                        <p class="text-lg font-medium mb-2">🎯 Ready to Build Your Institutional Advantage?</p>
+                        <p class="text-sm mb-4">Upload documents and start creating irreplaceable institutional knowledge that grows more valuable every day</p>
                         <div class="space-y-2">
                             <a href="https://api.mapmystandards.ai/upload" target="_blank" 
                                class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
-                                🚀 Start Analysis
+                                🚀 Start Your First Analysis
                             </a>
                             <br>
-                            <a href="https://mapmystandards.ai/user-guide/" target="_blank" 
+                            <a href="./manual.html" target="_blank" 
                                class="text-blue-600 hover:text-blue-700 text-sm">
-                                📖 View Documentation
+                                📖 Maximize Platform Value Guide
                             </a>
+                        </div>
+                        
+                        <!-- Value Proposition -->
+                        <div class="mt-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4">
+                            <h4 class="font-semibold text-gray-900 mb-2">🎓 Why Every Analysis Matters</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                <div class="text-left">
+                                    <p class="font-medium text-blue-900">• Builds irreplaceable institutional memory</p>
+                                    <p class="font-medium text-blue-900">• Saves 20-30 hours per analysis cycle</p>
+                                </div>
+                                <div class="text-left">
+                                    <p class="font-medium text-purple-900">• Creates competitive intelligence advantages</p>
+                                    <p class="font-medium text-purple-900">• Generates $50K-$150K annual value</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -173,7 +223,16 @@
         <!-- Compliance Timeline -->
         <div class="bg-white rounded-lg shadow">
             <div class="px-6 py-4 border-b border-gray-200">
-                <h2 class="text-lg font-semibold text-gray-900">Compliance Timeline</h2>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-lg font-semibold text-gray-900">Strategic Compliance Intelligence</h2>
+                        <p class="text-sm text-gray-600">Track your competitive position and institutional credibility growth</p>
+                    </div>
+                    <a href="./features.html" target="_blank" 
+                       class="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                        🎯 See All Features →
+                    </a>
+                </div>
             </div>
             <div class="p-6">
                 <div id="complianceTimeline">
@@ -181,8 +240,36 @@
                         <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
-                        <p>Compliance tracking will appear here</p>
-                        <p class="text-sm">Complete analyses to track your compliance progress</p>
+                        <p class="text-lg font-medium mb-2">🏆 Your Institutional Excellence Journey</p>
+                        <p class="text-sm mb-4">Complete analyses to build strategic intelligence that creates competitive advantages</p>
+                        
+                        <!-- Value Creation Guide -->
+                        <div class="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-6 mt-6">
+                            <h4 class="font-semibold text-gray-900 mb-4">📈 How A³E Creates Exponential Value</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                                <div class="bg-white rounded-lg p-4 border border-green-200">
+                                    <div class="text-green-600 font-bold text-lg mb-1">Month 1-2</div>
+                                    <p class="font-medium text-gray-800">Immediate Efficiency</p>
+                                    <p class="text-gray-600">Save 20-30 hours weekly on compliance tasks</p>
+                                </div>
+                                <div class="bg-white rounded-lg p-4 border border-blue-200">
+                                    <div class="text-blue-600 font-bold text-lg mb-1">Month 3-6</div>
+                                    <p class="font-medium text-gray-800">Strategic Intelligence</p>
+                                    <p class="text-gray-600">Build irreplaceable institutional knowledge</p>
+                                </div>
+                                <div class="bg-white rounded-lg p-4 border border-purple-200">
+                                    <div class="text-purple-600 font-bold text-lg mb-1">Year 1+</div>
+                                    <p class="font-medium text-gray-800">Competitive Advantage</p>
+                                    <p class="text-gray-600">Create operational dependencies and market leadership</p>
+                                </div>
+                            </div>
+                            <div class="mt-4 text-center">
+                                <a href="./services.html" target="_blank" 
+                                   class="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium">
+                                    📊 See ROI Calculator
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -351,8 +438,17 @@
                 const avgCompliance = sessions.reduce((sum, s) => sum + s.compliance_score, 0) / sessions.length;
                 document.getElementById('complianceScore').textContent = Math.round(avgCompliance) + '%';
                 
-                const actionItems = sessions.reduce((sum, s) => sum + (s.action_items?.length || 0), 0);
-                document.getElementById('actionItems').textContent = actionItems;
+                // Calculate estimated value generated based on analyses
+                const baseValuePerAnalysis = 2500; // Estimated value per analysis in dollars
+                const timeMultiplier = Math.min(sessions.length * 0.1 + 1, 3); // Value grows over time
+                const estimatedValue = Math.round(sessions.length * baseValuePerAnalysis * timeMultiplier);
+                
+                document.getElementById('valueGenerated').textContent = 
+                    estimatedValue >= 1000 ? `$${Math.round(estimatedValue/1000)}K` : `$${estimatedValue}`;
+            } else {
+                // Show potential value for new users
+                document.getElementById('valueGenerated').textContent = '$2.5K';
+                document.getElementById('valueGenerated').parentElement.querySelector('.text-xs').textContent = 'Potential per analysis';
             }
         }
 
