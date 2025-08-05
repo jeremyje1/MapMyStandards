@@ -28,15 +28,11 @@
         
         /* Header */
         header {
-            background: 
-                linear-gradient(135deg, rgba(30, 60, 114, 0.95) 0%, rgba(42, 82, 152, 0.95) 100%),
-                url('https://mapmystandards.ai/wp-content/uploads/2025/07/Original-Logo.png');
-            background-size: 120px auto, auto;
-            background-repeat: repeat, no-repeat;
-            background-position: center, right 20px center;
+            background: linear-gradient(135deg, rgba(30, 60, 114, 0.95) 0%, rgba(42, 82, 152, 0.95) 100%);
             color: white;
-            padding: 1.5rem 0;
+            padding: 1rem 0;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: relative;
         }
         
         nav {
@@ -52,35 +48,93 @@
             align-items: center;
             text-decoration: none;
             color: white;
-            z-index: 10;
-            position: relative;
+            font-size: 1.8rem;
+            font-weight: 700;
         }
         
         .logo img {
-            height: 80px;
-            margin-right: 0;
+            height: 50px;
+            width: auto;
+            margin-right: 1rem;
             filter: brightness(1.1) contrast(1.1);
         }
         
         .logo-text {
-            display: none;
+            display: inline-block;
+            font-size: 1.5rem;
+            font-weight: 700;
         }
         
         .nav-links {
             display: flex;
             list-style: none;
-            gap: 2.5rem;
+            gap: 2rem;
+            align-items: center;
+            margin: 0;
+            padding: 0;
         }
         
         .nav-links a {
             color: white;
             text-decoration: none;
             font-weight: 500;
-            transition: opacity 0.3s;
+            transition: all 0.3s;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
         }
         
         .nav-links a:hover {
-            opacity: 0.8;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-1px);
+        }
+        
+        /* Mobile Menu Toggle */
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+        
+        .mobile-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(30, 60, 114, 0.98);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+        }
+        
+        .mobile-menu.active {
+            display: block;
+        }
+        
+        .mobile-menu ul {
+            list-style: none;
+            padding: 1rem 0;
+            margin: 0;
+        }
+        
+        .mobile-menu li {
+            padding: 0;
+        }
+        
+        .mobile-menu a {
+            display: block;
+            padding: 1rem 2rem;
+            color: white;
+            text-decoration: none;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            transition: background 0.3s;
+        }
+        
+        .mobile-menu a:hover {
+            background: rgba(255, 255, 255, 0.1);
         }
         
         /* Hero Section */
@@ -329,12 +383,20 @@
                 display: none;
             }
             
+            .mobile-menu-toggle {
+                display: block;
+            }
+            
             .logo img {
-                height: 80px;
+                height: 40px;
             }
             
             .logo-text {
-                display: none;
+                font-size: 1.2rem;
+            }
+            
+            header {
+                padding: 0.8rem 0;
             }
             
             .value-content {
@@ -354,6 +416,16 @@
             
             #pricing div[style*="transform: scale(1.05)"] {
                 transform: scale(1) !important;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .logo-text {
+                display: none;
+            }
+            
+            .logo img {
+                height: 45px;
             }
         }
         
@@ -396,24 +468,43 @@
 <body>
     <!-- Live System Status Bar -->
     <div class="system-status">
-        🟢 A³E System Online | <a href="./dashboard.html">Live Dashboard</a> | <a href="https://api.mapmystandards.ai/landing">Start 7-Day Trial</a>
+        🟢 A³E System Online | <a href="https://mapmystandards.ai/dashboard">Live Dashboard</a> | <a href="https://api.mapmystandards.ai/landing">Start 7-Day Trial</a>
     </div>
     
     <header>
         <nav class="container">
             <a href="https://mapmystandards.ai/" class="logo">
                 <img src="https://mapmystandards.ai/wp-content/uploads/2025/07/Original-Logo.png" alt="MapMyStandards.ai Logo">
+                <span class="logo-text">MapMyStandards.ai</span>
             </a>
+            
+            <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">
+                ☰
+            </button>
+            
             <ul class="nav-links">
                 <li><a href="https://mapmystandards.ai/">Home</a></li>
                 <li><a href="https://mapmystandards.ai/services/">Services</a></li>
                 <li><a href="https://mapmystandards.ai/about/">About</a></li>
                 <li><a href="https://mapmystandards.ai/user-guide/">User Guide</a></li>
                 <li><a href="https://mapmystandards.ai/contact/">Contact</a></li>
-                <li><a href="./dashboard.html">Dashboard</a></li>
-                <li><a href="./login.html" style="color: #007bff; margin-right: 1rem;">Login</a></li>
-                <li><a href="https://api.mapmystandards.ai/landing" style="background: #28a745; padding: 0.5rem 1rem; border-radius: 20px; color: white;">🚀 Free Trial</a></li>
+                <li><a href="https://mapmystandards.ai/dashboard">Dashboard</a></li>
+                <li><a href="./login.html" style="color: #87ceeb; border: 1px solid #87ceeb;">Login</a></li>
+                <li><a href="https://api.mapmystandards.ai/landing" style="background: #28a745; color: white; font-weight: 600;">🚀 Free Trial</a></li>
             </ul>
+            
+            <div class="mobile-menu" id="mobileMenu">
+                <ul>
+                    <li><a href="https://mapmystandards.ai/">Home</a></li>
+                    <li><a href="https://mapmystandards.ai/services/">Services</a></li>
+                    <li><a href="https://mapmystandards.ai/about/">About</a></li>
+                    <li><a href="https://mapmystandards.ai/user-guide/">User Guide</a></li>
+                    <li><a href="https://mapmystandards.ai/contact/">Contact</a></li>
+                    <li><a href="https://mapmystandards.ai/dashboard">Dashboard</a></li>
+                    <li><a href="./login.html">Login</a></li>
+                    <li><a href="https://api.mapmystandards.ai/landing">🚀 Start Free Trial</a></li>
+                </ul>
+            </div>
         </nav>
     </header>
 
@@ -477,7 +568,7 @@
                        style="background: white; color: #28a745;">
                         🎯 Start 7-Day Trial
                     </a>
-                    <a href="./dashboard.html" 
+                    <a href="https://mapmystandards.ai/dashboard" 
                        class="cta-button" 
                        style="background: transparent; border: 2px solid white;">
                         📊 View Live Dashboard
@@ -611,7 +702,7 @@
                         <div style="text-align: center;">
                             <h3 style="margin-bottom: 1rem;">Live A³E Dashboard</h3>
                             <p style="margin-bottom: 2rem;">Experience real-time accreditation analytics</p>
-                            <a href="./dashboard.html" 
+                            <a href="https://mapmystandards.ai/dashboard" 
                                style="background: white; color: #667eea; padding: 1rem 2rem; text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block;">
                                 🎯 View Live Demo
                             </a>
@@ -661,6 +752,23 @@
             </div>
         </div>
     </footer>
+    
+    <script>
+        function toggleMobileMenu() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            mobileMenu.classList.toggle('active');
+        }
+        
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const mobileMenu = document.getElementById('mobileMenu');
+            const menuToggle = document.querySelector('.mobile-menu-toggle');
+            
+            if (!mobileMenu.contains(event.target) && !menuToggle.contains(event.target)) {
+                mobileMenu.classList.remove('active');
+            }
+        });
+    </script>
 </body>
 </html>
 
