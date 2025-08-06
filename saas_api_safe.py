@@ -26,8 +26,32 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# In-memory storage for trial users
-trial_users: Dict[str, dict] = {}
+# Persistent storage for trial users
+TRIAL_DATA_FILE = "data/trial_users.json"
+
+def load_trial_users() -> Dict[str, dict]:
+    """Load trial users from persistent storage"""
+    try:
+        if os.path.exists(TRIAL_DATA_FILE):
+            with open(TRIAL_DATA_FILE, 'r') as f:
+                return json.load(f)
+    except Exception as e:
+        logger.error(f"Error loading trial users: {e}")
+    return {}
+
+def save_trial_users(trial_data: Dict[str, dict]) -> bool:
+    """Save trial users to persistent storage"""
+    try:
+        os.makedirs(os.path.dirname(TRIAL_DATA_FILE), exist_ok=True)
+        with open(TRIAL_DATA_FILE, 'w') as f:
+            json.dump(trial_data, f, indent=2, default=str)
+        return True
+    except Exception as e:
+        logger.error(f"Error saving trial users: {e}")
+        return False
+
+# Load existing trial users on startup
+trial_users: Dict[str, dict] = load_trial_users()
 
 # Email configuration (with fallbacks)
 SMTP_SERVER = os.getenv("SMTP_SERVER", "mx1.titan.email")
@@ -309,6 +333,7 @@ async def trial_signup(signup: TrialSignup):
         }
         
         trial_users[trial_id] = trial_data
+        save_trial_users(trial_users)  # Persist to storage
         logger.info(f"Trial created successfully: {trial_id}")
         
         # Try to send welcome email (non-blocking)
@@ -372,8 +397,16 @@ async def trial_signup(signup: TrialSignup):
 @app.get("/dashboard/{trial_id}", response_class=HTMLResponse)
 def trial_dashboard(trial_id: str):
     """Display the trial user dashboard"""
+    # Reload trial users from storage in case of server restart
+    global trial_users
+    trial_users = load_trial_users()
+    
     if trial_id not in trial_users:
-        raise HTTPException(status_code=404, detail="Trial not found")
+        logger.warning(f"Trial not found: {trial_id}")
+        raise HTTPException(
+            status_code=404, 
+            detail=f"Trial {trial_id} not found. This may be due to server restart. Please contact support."
+        )
     
     user = trial_users[trial_id]
     
@@ -609,6 +642,7 @@ async def trial_success_page(session_id: str = None):
                     'stripe_subscription_id': subscription_id,
                     'trial_ends': (datetime.now() + timedelta(days=7)).isoformat()
                 }
+                save_trial_users(trial_users)  # Persist to storage
                 
                 # Return success page
                 return HTMLResponse(content=f"""
