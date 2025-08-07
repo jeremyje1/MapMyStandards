@@ -1,36 +1,10 @@
 {
-  "version": 2,
-  "cleanUrls": true,
-  "trailingSlash": false,
-  "rewrites": [
-    {
-      "source": "/",
-      "destination": "/platform_homepage.html"
-    },
-    {
-      "source": "/trial",
-      "destination": "/trial.html"
-    },
-    {
-      "source": "/pricing",
-      "destination": "/pricing.html"
-    },
-    {
-      "source": "/contact",
-      "destination": "/contact.html"
-    },
-    {
-      "source": "/login",
-      "destination": "/login.html"
-    },
-    {
-      "source": "/dashboard",
-      "destination": "/dashboard.html"
-    }
-  ],
-  "env": {
-    "STRIPE_PUBLISHABLE_KEY": "@stripe_publishable_key",
-    "STRIPE_MONTHLY_CHECKOUT_URL": "@stripe_monthly_checkout_url",
-    "STRIPE_YEARLY_CHECKOUT_URL": "@stripe_yearly_checkout_url"
-  }
+  "routes": [
+    { "src": "/pricing", "dest": "/pricing.html" },
+    { "src": "/trial", "dest": "/trial.html" },
+    { "src": "/contact", "dest": "/contact.html" },
+    { "src": "/login", "dest": "/login.html" },
+    { "src": "/dashboard", "dest": "/dashboard.html" },
+    { "src": "/", "dest": "/index.html" }
+  ]
 }
