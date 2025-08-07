@@ -52,7 +52,7 @@
             <div class="text-center mb-12">
                 <h1 class="text-4xl font-bold text-gray-900 mb-4">🚀 Start Your Free Trial</h1>
                 <p class="text-xl text-gray-600 mb-6">
-                    Experience the full power of A³E for 7 days - completely free, no credit card required.
+                    Experience the full power of A³E for 7 days free. Credit card required - billing starts only after your trial ends.
                 </p>
                 
                 <!-- Trial Benefits -->
@@ -62,16 +62,68 @@
                         <h3 class="font-semibold text-blue-900">7 Days Free</h3>
                         <p class="text-sm text-blue-700">Full platform access</p>
                     </div>
-                    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <div class="bg-orange-50 border border-orange-200 rounded-lg p-4">
                         <div class="text-2xl mb-2">💳</div>
-                        <h3 class="font-semibold text-green-900">No Credit Card</h3>
-                        <p class="text-sm text-green-700">Required to start</p>
+                        <h3 class="font-semibold text-orange-900">Credit Card Required</h3>
+                        <p class="text-sm text-orange-700">Billing starts after trial</p>
                     </div>
                     <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
                         <div class="text-2xl mb-2">🎯</div>
                         <h3 class="font-semibold text-purple-900">Full Features</h3>
                         <p class="text-sm text-purple-700">All premium tools included</p>
                     </div>
+                </div>
+            </div>
+
+            <!-- Choose Plan for Trial -->
+            <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">Choose Your Plan</h2>
+                <p class="text-gray-600 text-center mb-8">Select the plan you'd like to continue with after your free trial</p>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    <!-- Monthly Plan -->
+                    <div class="border-2 border-gray-200 rounded-xl p-6 hover:border-blue-500 transition-colors cursor-pointer trial-plan" onclick="selectPlan('monthly')">
+                        <div class="text-center">
+                            <input type="radio" name="plan" value="monthly" id="monthly-plan" class="mb-4">
+                            <h3 class="text-xl font-bold text-gray-900 mb-2">Monthly Plan</h3>
+                            <div class="mb-4">
+                                <span class="text-3xl font-bold text-gray-900">$49.99</span>
+                                <span class="text-gray-500">/month</span>
+                            </div>
+                            <p class="text-gray-600 text-sm">Best for getting started</p>
+                            <div class="mt-4 text-xs text-gray-500">
+                                7-day free trial, then $49.99/month
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Annual Plan -->
+                    <div class="border-2 border-blue-500 rounded-xl p-6 bg-blue-50 cursor-pointer trial-plan" onclick="selectPlan('annual')">
+                        <div class="text-center">
+                            <input type="radio" name="plan" value="annual" id="annual-plan" class="mb-4" checked>
+                            <div class="bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-semibold mb-2 inline-block">RECOMMENDED</div>
+                            <h3 class="text-xl font-bold text-gray-900 mb-2">Annual Plan</h3>
+                            <div class="mb-4">
+                                <span class="text-3xl font-bold text-gray-900">$499</span>
+                                <span class="text-gray-500">/year</span>
+                                <div class="text-sm text-green-600 font-medium">Save $100/year</div>
+                            </div>
+                            <p class="text-gray-600 text-sm">Best value for institutions</p>
+                            <div class="mt-4 text-xs text-gray-500">
+                                7-day free trial, then $499/year
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Start Trial Button -->
+                <div class="text-center">
+                    <button onclick="startTrial()" class="bg-blue-600 text-white px-12 py-4 rounded-xl text-lg font-semibold hover:bg-blue-700 transition-colors shadow-lg">
+                        Start 7-Day Free Trial
+                    </button>
+                    <p class="text-xs text-gray-500 mt-3">
+                        You'll be redirected to Stripe to securely enter your payment information
+                    </p>
                 </div>
             </div>
 
@@ -272,38 +324,51 @@
     </footer>
 
     <script>
-        document.getElementById('trial-request-form').addEventListener('submit', function(e) {
-            e.preventDefault();
+        let selectedPlan = 'annual'; // Default to annual
+        
+        function selectPlan(planType) {
+            selectedPlan = planType;
             
-            const submitBtn = document.getElementById('submit-btn');
-            const originalText = submitBtn.innerHTML;
+            // Update radio buttons
+            document.getElementById('monthly-plan').checked = (planType === 'monthly');
+            document.getElementById('annual-plan').checked = (planType === 'annual');
             
-            // Show loading state
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '⏳ Submitting Request...';
+            // Update visual selection
+            document.querySelectorAll('.trial-plan').forEach(plan => {
+                plan.classList.remove('border-blue-500', 'bg-blue-50');
+                plan.classList.add('border-gray-200');
+            });
             
-            // Simulate form submission (replace with actual API call)
-            setTimeout(() => {
-                // Hide form and show success message
-                document.getElementById('trial-request-form').style.display = 'none';
-                document.getElementById('success-message').classList.remove('hidden');
-                
-                // Log the submission (replace with actual form handling)
-                console.log('Trial request submitted:', {
-                    firstName: document.getElementById('firstName').value,
-                    lastName: document.getElementById('lastName').value,
-                    email: document.getElementById('email').value,
-                    institution: document.getElementById('institution').value,
-                    role: document.getElementById('role').value,
-                    accreditationType: document.getElementById('accreditationType').value,
-                    timeline: document.getElementById('timeline').value,
-                    specificNeeds: document.getElementById('specificNeeds').value
-                });
-                
-                // Track conversion
-                console.log('Trial conversion tracked');
-                
-            }, 2000);
+            const selectedElement = document.querySelector(`[onclick="selectPlan('${planType}')"]`);
+            selectedElement.classList.remove('border-gray-200');
+            selectedElement.classList.add('border-blue-500');
+            if (planType === 'monthly') {
+                selectedElement.classList.add('bg-blue-50');
+            }
+        }
+        
+        function startTrial() {
+            // Stripe checkout URLs with trial information
+            const MONTHLY_TRIAL_URL = 'https://buy.stripe.com/cNi8wQgjR6qqfQCaPV0sU03?trial_period_days=7';
+            const ANNUAL_TRIAL_URL = 'https://buy.stripe.com/5kQfZi4B9g1033Qe270sU04?trial_period_days=7';
+            
+            let checkoutUrl;
+            if (selectedPlan === 'monthly') {
+                checkoutUrl = MONTHLY_TRIAL_URL;
+            } else {
+                checkoutUrl = ANNUAL_TRIAL_URL;
+            }
+            
+            // Track trial start
+            console.log('Starting trial for plan:', selectedPlan);
+            
+            // Redirect to Stripe checkout
+            window.location.href = checkoutUrl;
+        }
+        
+        // Initialize with annual plan selected
+        document.addEventListener('DOMContentLoaded', function() {
+            selectPlan('annual');
         });
     </script>
 </body>
