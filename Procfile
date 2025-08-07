@@ -1,1 +1,1 @@
-web: python3 main.py
+web: gunicorn subscription_backend:app

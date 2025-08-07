@@ -8,24 +8,36 @@
   ],
   "rewrites": [
     {
+      "source": "/",
+      "destination": "/pricing_clean.html"
+    },
+    {
       "source": "/pricing",
-      "destination": "/pricing.html"
+      "destination": "/pricing_clean.html"
+    },
+    {
+      "source": "/signup",
+      "destination": "/signup.html"
     },
     {
       "source": "/trial",
-      "destination": "/trial.html"
+      "destination": "/signup.html"
     },
     {
       "source": "/contact",
       "destination": "/contact.html"
-    },
+    }
+  ],
+  "redirects": [
     {
       "source": "/login",
-      "destination": "/login.html"
+      "destination": "https://api.mapmystandards.ai/login",
+      "permanent": false
     },
     {
       "source": "/dashboard",
-      "destination": "/dashboard.html"
+      "destination": "https://api.mapmystandards.ai/dashboard", 
+      "permanent": false
     }
   ]
 }
