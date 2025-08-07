@@ -1,8 +1,9 @@
 {
   "build": {
-    "builder": "DOCKERFILE"
+    "builder": "NIXPACKS"
   },
   "deploy": {
+    "startCommand": "gunicorn subscription_backend:app --bind 0.0.0.0:$PORT --workers 2",
     "healthcheckPath": "/health",
     "healthcheckTimeout": 300
   }
