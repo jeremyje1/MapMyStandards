@@ -52,7 +52,8 @@
             <div class="text-center mb-12">
                 <h1 class="text-4xl font-bold text-gray-900 mb-4">🚀 Start Your Free Trial</h1>
                 <p class="text-xl text-gray-600 mb-6">
-                    Experience the full power of A³E for 7 days free. Credit card required - billing starts only after your trial ends.
+                    TEMPORARILY UNAVAILABLE: We're fixing our trial system. For now, this will charge you immediately.
+                    Please contact support@mapmystandards.ai for a trial instead.
                 </p>
                 
                 <!-- Trial Benefits -->
@@ -63,9 +64,9 @@
                         <p class="text-sm text-blue-700">Full platform access</p>
                     </div>
                     <div class="bg-orange-50 border border-orange-200 rounded-lg p-4">
-                        <div class="text-2xl mb-2">💳</div>
-                        <h3 class="font-semibold text-orange-900">Credit Card Required</h3>
-                        <p class="text-sm text-orange-700">Billing starts after trial</p>
+                        <div class="text-2xl mb-2">⚠️</div>
+                        <h3 class="font-semibold text-orange-900">System Temporarily Down</h3>
+                        <p class="text-sm text-orange-700">Contact support for trial access</p>
                     </div>
                     <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
                         <div class="text-2xl mb-2">🎯</div>
@@ -118,11 +119,11 @@
                 
                 <!-- Start Trial Button -->
                 <div class="text-center">
-                    <button onclick="startTrial()" class="bg-blue-600 text-white px-12 py-4 rounded-xl text-lg font-semibold hover:bg-blue-700 transition-colors shadow-lg">
-                        Start 7-Day Free Trial
+                    <button onclick="contactSupport()" class="bg-orange-600 text-white px-12 py-4 rounded-xl text-lg font-semibold hover:bg-orange-700 transition-colors shadow-lg">
+                        Contact Support for Trial
                     </button>
                     <p class="text-xs text-gray-500 mt-3">
-                        You'll be redirected to Stripe to securely enter your payment information
+                        Trial system temporarily unavailable - contact support instead
                     </p>
                 </div>
             </div>
@@ -227,23 +228,9 @@
             }
         }
         
-        function startTrial() {
-            // Stripe checkout URLs with trial information
-            const MONTHLY_TRIAL_URL = 'https://buy.stripe.com/cNi8wQgjR6qqfQCaPV0sU03?trial_period_days=7';
-            const ANNUAL_TRIAL_URL = 'https://buy.stripe.com/5kQfZi4B9g1033Qe270sU04?trial_period_days=7';
-            
-            let checkoutUrl;
-            if (selectedPlan === 'monthly') {
-                checkoutUrl = MONTHLY_TRIAL_URL;
-            } else {
-                checkoutUrl = ANNUAL_TRIAL_URL;
-            }
-            
-            // Track trial start
-            console.log('Starting trial for plan:', selectedPlan);
-            
-            // Redirect to Stripe checkout
-            window.location.href = checkoutUrl;
+        function contactSupport() {
+            // Redirect to contact page instead of broken Stripe checkout
+            window.location.href = '/contact.html?reason=trial&plan=' + selectedPlan;
         }
         
         // Initialize with annual plan selected
