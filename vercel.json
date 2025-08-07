@@ -26,6 +26,10 @@
     {
       "source": "/contact",
       "destination": "/contact.html"
+    },
+    {
+      "source": "/trial-success",
+      "destination": "/trial-success.html"
     }
   ],
   "redirects": [
