@@ -1,37 +1,31 @@
 {
   "version": 2,
-  "routes": [
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "rewrites": [
     {
-      "src": "^/$",
-      "dest": "/platform_homepage.html"
+      "source": "/",
+      "destination": "/platform_homepage.html"
     },
     {
-      "src": "^/index.html$",
-      "dest": "/platform_homepage.html"
+      "source": "/trial",
+      "destination": "/trial.html"
     },
     {
-      "src": "^/trial/?$",
-      "dest": "/trial.html"
+      "source": "/pricing",
+      "destination": "/pricing.html"
     },
     {
-      "src": "^/pricing/?$",
-      "dest": "/pricing.html"
+      "source": "/contact",
+      "destination": "/contact.html"
     },
     {
-      "src": "^/contact/?$",
-      "dest": "/contact.html"
+      "source": "/login",
+      "destination": "/login.html"
     },
     {
-      "src": "^/login/?$",
-      "dest": "/login.html"
-    },
-    {
-      "src": "^/dashboard/?$",
-      "dest": "/dashboard.html"
-    },
-    {
-      "src": "^/(.*)$",
-      "dest": "/$1"
+      "source": "/dashboard",
+      "destination": "/dashboard.html"
     }
   ],
   "env": {
