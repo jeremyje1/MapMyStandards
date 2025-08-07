@@ -91,6 +91,15 @@ def init_db():
     conn.commit()
     conn.close()
 
+
+# Initialize database on app startup
+try:
+    init_db()
+    logger.info("Database initialized successfully")
+except Exception as e:
+    logger.error(f"Failed to initialize database: {e}")
+
+
 def hash_password(password):
     """Hash a password using SHA-256"""
     return hashlib.sha256(password.encode()).hexdigest()
