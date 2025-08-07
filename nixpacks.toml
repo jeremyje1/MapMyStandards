@@ -1,13 +1,11 @@
 [phases.setup]
-nixPkgs = ['python3', 'python3Packages.pip', 'python3Packages.virtualenv']
+nixPkgs = ['python3', 'python3Packages.pip']
 
 [phases.install]
 cmds = [
-    'python3 -m venv /opt/venv',
-    '. /opt/venv/bin/activate && pip install --upgrade pip',
-    '. /opt/venv/bin/activate && pip install -r requirements.txt',
-    '. /opt/venv/bin/activate && pip install gunicorn'
+    'pip install --upgrade pip',
+    'pip install -r requirements.txt'
 ]
 
 [start]
-cmd = '. /opt/venv/bin/activate && gunicorn subscription_backend:app --bind 0.0.0.0:$PORT --workers 2'
+cmd = 'gunicorn subscription_backend:app --bind 0.0.0.0:$PORT --workers 2 --timeout 120'
