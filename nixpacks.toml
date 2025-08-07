@@ -4,8 +4,9 @@ nixPkgs = ['python3', 'python3Packages.pip']
 [phases.install]
 cmds = [
     'pip install --upgrade pip',
-    'pip install -r requirements.txt'
+    'pip install -r requirements.txt',
+    'pip install gunicorn'
 ]
 
 [start]
-cmd = 'gunicorn subscription_backend:app --bind 0.0.0.0:$PORT --workers 2 --timeout 120'
+cmd = 'gunicorn subscription_backend:app --bind 0.0.0.0:$PORT --workers 2 --timeout 120 --max-requests 1000'
