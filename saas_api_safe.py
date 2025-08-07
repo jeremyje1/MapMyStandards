@@ -260,7 +260,7 @@ def landing_page():
         </div>
     </div>
     <script>
-        const stripe = Stripe('pk_live_51Rr4dNK8PKpLCKDZH9u9mOEqmPVSR946uGYKSdk73mmNjBR4i9Ibon3wvDLNpYPRzsXmaAXTrwSPKKxNolArj8G200tZyrr6qE');
+        const stripe = Stripe('YOUR_STRIPE_PUBLISHABLE_KEY_HERE');
         let selectedPlan = null; let selectedPrice = null; let selectedInterval = null;
         function selectPlan(plan, price, interval) {
             document.querySelectorAll('.pricing-card').forEach(card => card.classList.remove('selected'));
