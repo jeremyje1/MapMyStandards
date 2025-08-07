@@ -5,5 +5,27 @@
       "src": "*.html",
       "use": "@vercel/static"
     }
+  ],
+  "rewrites": [
+    {
+      "source": "/pricing",
+      "destination": "/pricing.html"
+    },
+    {
+      "source": "/trial",
+      "destination": "/trial.html"
+    },
+    {
+      "source": "/contact",
+      "destination": "/contact.html"
+    },
+    {
+      "source": "/login",
+      "destination": "/login.html"
+    },
+    {
+      "source": "/dashboard",
+      "destination": "/dashboard.html"
+    }
   ]
 }
