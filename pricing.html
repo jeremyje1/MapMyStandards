@@ -349,27 +349,19 @@
     </footer>
 
     <script>
-        // Checkout URLs - These will be replaced with your actual Stripe checkout URLs
-        const MONTHLY_CHECKOUT_URL = process.env.STRIPE_MONTHLY_CHECKOUT_URL || '#monthly-checkout-placeholder';
-        const ANNUAL_CHECKOUT_URL = process.env.STRIPE_YEARLY_CHECKOUT_URL || '#annual-checkout-placeholder';
+        // Live Stripe Checkout URLs
+        const MONTHLY_CHECKOUT_URL = 'https://buy.stripe.com/cNi8wQgjR6qqfQCaPV0sU03';
+        const ANNUAL_CHECKOUT_URL = 'https://buy.stripe.com/5kQfZi4B9g1033Qe270sU04';
         
         // Handle checkout button clicks
         document.getElementById('monthly-checkout-btn').addEventListener('click', function() {
             console.log('Monthly checkout clicked');
-            if (MONTHLY_CHECKOUT_URL !== '#monthly-checkout-placeholder') {
-                window.location.href = MONTHLY_CHECKOUT_URL;
-            } else {
-                alert('Monthly checkout coming soon! Contact sales for immediate access.');
-            }
+            window.location.href = MONTHLY_CHECKOUT_URL;
         });
         
         document.getElementById('annual-checkout-btn').addEventListener('click', function() {
             console.log('Annual checkout clicked');
-            if (ANNUAL_CHECKOUT_URL !== '#annual-checkout-placeholder') {
-                window.location.href = ANNUAL_CHECKOUT_URL;
-            } else {
-                alert('Annual checkout coming soon! Contact sales for immediate access.');
-            }
+            window.location.href = ANNUAL_CHECKOUT_URL;
         });
         
         // Billing toggle functionality (for future monthly/annual view switching)
