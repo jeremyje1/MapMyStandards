@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pricing - A³E Platform | MapMyStandards</title>
+    <meta name="description" content="Choose the perfect A³E plan for your institution. Start with a free trial or subscribe to our monthly or annual plans for complete accreditation management.">
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-bg {
+            background: linear-gradient(135deg, rgba(30, 60, 114, 0.95) 0%, rgba(42, 82, 152, 0.95) 100%);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center">
+                    <a href="./index.html" class="flex items-center">
+                        <div class="w-10 h-10 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-lg flex items-center justify-center mr-3">
+                            <span class="text-black font-bold text-lg">M</span>
+                        </div>
+                        <div>
+                            <div class="text-xl font-bold text-gray-900">A³E Platform</div>
+                            <div class="text-xs text-gray-500 uppercase tracking-wide">Pricing</div>
+                        </div>
+                    </a>
+                </div>
+                <nav class="flex items-center space-x-6">
+                    <a href="./index.html" class="text-gray-600 hover:text-gray-900">Platform</a>
+                    <a href="./trial.html" class="text-gray-600 hover:text-gray-900">Free Trial</a>
+                    <a href="./contact.html" class="text-gray-600 hover:text-gray-900">Contact</a>
+                    <a href="./login.html" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700">
+                        Sign In
+                    </a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="bg-white py-16">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h1 class="text-5xl font-bold text-gray-900 mb-6">Simple, Transparent Pricing</h1>
+            <p class="text-xl text-gray-600 mb-8">
+                Choose the plan that works for your institution. Start with our free trial to experience the full power of A³E.
+            </p>
+            
+            <!-- Billing Toggle -->
+            <div class="flex justify-center items-center mb-12">
+                <span class="text-gray-700 mr-3">Monthly</span>
+                <button id="billing-toggle" class="relative inline-flex h-6 w-11 items-center rounded-full bg-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    <span id="toggle-indicator" class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"></span>
+                </button>
+                <span class="text-gray-700 ml-3">Annual</span>
+                <span class="ml-2 text-sm bg-green-100 text-green-800 px-2 py-1 rounded-full">Save 17%</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Cards -->
+    <section class="py-16">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                
+                <!-- Free Trial -->
+                <div class="bg-white rounded-3xl shadow-sm border-2 border-blue-200 p-8 relative">
+                    <div class="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                        <span class="bg-blue-600 text-white px-4 py-1 rounded-full text-sm font-medium">Most Popular</span>
+                    </div>
+                    
+                    <div class="text-center">
+                        <div class="text-4xl mb-4">🚀</div>
+                        <h3 class="text-2xl font-bold text-gray-900 mb-2">Free Trial</h3>
+                        <p class="text-gray-600 mb-6">Perfect for evaluation</p>
+                        
+                        <div class="mb-8">
+                            <span class="text-5xl font-bold text-gray-900">$0</span>
+                            <span class="text-gray-600">/7 days</span>
+                        </div>
+                        
+                        <a href="./trial.html" 
+                           class="block w-full bg-blue-600 text-white py-4 rounded-xl text-lg font-semibold hover:bg-blue-700 transition-colors mb-8">
+                            Start Free Trial
+                        </a>
+                        
+                        <ul class="text-left space-y-4">
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-blue-600 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <span class="text-gray-700">Full platform access</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-blue-600 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <span class="text-gray-700">All premium features</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-blue-600 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <span class="text-gray-700">Expert onboarding</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-blue-600 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <span class="text-gray-700">No credit card required</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-blue-600 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <span class="text-gray-700">Email support</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Monthly Plan -->
+                <div class="bg-white rounded-3xl shadow-sm border border-gray-200 p-8">
+                    <div class="text-center">
+                        <div class="text-4xl mb-4">💼</div>
+                        <h3 class="text-2xl font-bold text-gray-900 mb-2">Monthly Plan</h3>
+                        <p class="text-gray-600 mb-6">Pay month by month</p>
+                        
+                        <div class="mb-8">
+                            <span id="monthly-price" class="text-5xl font-bold text-gray-900">$49.99</span>
+                            <span class="text-gray-600">/month</span>
+                        </div>
+                        
+                        <button id="monthly-checkout-btn" 
+                                class="block w-full bg-gray-900 text-white py-4 rounded-xl text-lg font-semibold hover:bg-gray-800 transition-colors mb-8">
+                            Choose Monthly
+                        </button>
+                        
+                        <ul class="text-left space-y-4">
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-green-600 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <span class="text-gray-700">Everything in trial</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-green-600 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <span class="text-gray-700">Unlimited users</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-green-600 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <span class="text-gray-700">Priority support</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-green-600 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <span class="text-gray-700">Data export tools</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-green-600 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <span class="text-gray-700">Cancel anytime</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Annual Plan -->
+                <div class="bg-white rounded-3xl shadow-sm border-2 border-green-200 p-8 relative">
+                    <div class="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                        <span class="bg-green-600 text-white px-4 py-1 rounded-full text-sm font-medium">Best Value</span>
+                    </div>
+                    
+                    <div class="text-center">
+                        <div class="text-4xl mb-4">🏆</div>
+                        <h3 class="text-2xl font-bold text-gray-900 mb-2">Annual Plan</h3>
+                        <p class="text-gray-600 mb-6">Save with annual billing</p>
+                        
+                        <div class="mb-8">
+                            <span id="annual-price" class="text-5xl font-bold text-gray-900">$499</span>
+                            <span class="text-gray-600">/year</span>
+                            <div class="text-sm text-green-600 font-medium mt-1">Save $100/year</div>
+                        </div>
+                        
+                        <button id="annual-checkout-btn" 
+                                class="block w-full bg-green-600 text-white py-4 rounded-xl text-lg font-semibold hover:bg-green-700 transition-colors mb-8">
+                            Choose Annual
+                        </button>
+                        
+                        <ul class="text-left space-y-4">
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-green-600 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <span class="text-gray-700">Everything in monthly</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-green-600 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <span class="text-gray-700"><strong>17% discount</strong></span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-green-600 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <span class="text-gray-700">Priority phone support</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-green-600 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <span class="text-gray-700">Dedicated account manager</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-green-600 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <span class="text-gray-700">Early access to new features</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Enterprise Section -->
+    <section class="py-16 bg-gray-50">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="text-3xl font-bold text-gray-900 mb-6">Need Something More?</h2>
+            <p class="text-xl text-gray-600 mb-8">
+                For large institutions or multi-campus organizations, we offer custom enterprise solutions.
+            </p>
+            
+            <div class="bg-white rounded-2xl p-8 shadow-sm border border-gray-200">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                    <div class="text-left">
+                        <h3 class="text-2xl font-bold text-gray-900 mb-4">🏢 Enterprise Solutions</h3>
+                        <ul class="space-y-3 text-gray-700">
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-blue-600 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                Custom integrations
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-blue-600 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                Multi-campus deployment
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-blue-600 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                Advanced security features
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-blue-600 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                Dedicated training & support
+                            </li>
+                        </ul>
+                    </div>
+                    <div>
+                        <a href="./contact.html" 
+                           class="block bg-blue-600 text-white py-4 px-8 rounded-xl text-lg font-semibold hover:bg-blue-700 transition-colors">
+                            Contact Sales
+                        </a>
+                        <p class="text-sm text-gray-600 mt-3">Custom pricing based on your needs</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="py-16 bg-white">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-bold text-gray-900 mb-12 text-center">Frequently Asked Questions</h2>
+            
+            <div class="space-y-8">
+                <div class="border-b border-gray-200 pb-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">What's included in the free trial?</h3>
+                    <p class="text-gray-600">The 7-day free trial includes full access to all A³E features with no limitations. You can upload evidence, run analytics, generate reports, and access all premium tools.</p>
+                </div>
+                
+                <div class="border-b border-gray-200 pb-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">Do I need a credit card for the trial?</h3>
+                    <p class="text-gray-600">No credit card is required to start your free trial. You can explore the platform risk-free and decide if it's right for your institution.</p>
+                </div>
+                
+                <div class="border-b border-gray-200 pb-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">Can I cancel anytime?</h3>
+                    <p class="text-gray-600">Yes, you can cancel your subscription at any time. For monthly plans, cancellation takes effect at the end of your current billing period.</p>
+                </div>
+                
+                <div class="border-b border-gray-200 pb-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">Is my data secure?</h3>
+                    <p class="text-gray-600">Absolutely. A³E is FERPA compliant and uses enterprise-grade security measures to protect your institutional data. All data is encrypted in transit and at rest.</p>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">Do you offer training and support?</h3>
+                    <p class="text-gray-600">Yes! All plans include comprehensive onboarding, training materials, and ongoing support. Annual plans include dedicated account management and priority support.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div class="flex justify-center items-center mb-6">
+                <div class="w-10 h-10 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-lg flex items-center justify-center mr-3">
+                    <span class="text-black font-bold text-lg">M</span>
+                </div>
+                <span class="text-2xl font-bold">A³E Platform</span>
+            </div>
+            
+            <div class="flex justify-center space-x-8 mb-6">
+                <a href="./index.html" class="text-gray-300 hover:text-yellow-400 transition-colors">Platform</a>
+                <a href="./trial.html" class="text-gray-300 hover:text-yellow-400 transition-colors">Free Trial</a>
+                <a href="./contact.html" class="text-gray-300 hover:text-yellow-400 transition-colors">Contact</a>
+                <a href="./support.html" class="text-gray-300 hover:text-yellow-400 transition-colors">Support</a>
+            </div>
+            
+            <p class="text-gray-400 text-sm">
+                © 2025 MapMyStandards. All rights reserved. Evidence Aligned. Accreditation Ready.
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // Checkout URLs - These will be replaced with your actual Stripe checkout URLs
+        const MONTHLY_CHECKOUT_URL = process.env.STRIPE_MONTHLY_CHECKOUT_URL || '#monthly-checkout-placeholder';
+        const ANNUAL_CHECKOUT_URL = process.env.STRIPE_YEARLY_CHECKOUT_URL || '#annual-checkout-placeholder';
+        
+        // Handle checkout button clicks
+        document.getElementById('monthly-checkout-btn').addEventListener('click', function() {
+            console.log('Monthly checkout clicked');
+            if (MONTHLY_CHECKOUT_URL !== '#monthly-checkout-placeholder') {
+                window.location.href = MONTHLY_CHECKOUT_URL;
+            } else {
+                alert('Monthly checkout coming soon! Contact sales for immediate access.');
+            }
+        });
+        
+        document.getElementById('annual-checkout-btn').addEventListener('click', function() {
+            console.log('Annual checkout clicked');
+            if (ANNUAL_CHECKOUT_URL !== '#annual-checkout-placeholder') {
+                window.location.href = ANNUAL_CHECKOUT_URL;
+            } else {
+                alert('Annual checkout coming soon! Contact sales for immediate access.');
+            }
+        });
+        
+        // Billing toggle functionality (for future monthly/annual view switching)
+        document.getElementById('billing-toggle').addEventListener('click', function() {
+            const indicator = document.getElementById('toggle-indicator');
+            const isAnnual = indicator.classList.contains('translate-x-5');
+            
+            if (isAnnual) {
+                // Switch to monthly
+                indicator.classList.remove('translate-x-5');
+                this.classList.remove('bg-blue-600');
+                this.classList.add('bg-gray-200');
+            } else {
+                // Switch to annual
+                indicator.classList.add('translate-x-5');
+                this.classList.remove('bg-gray-200');
+                this.classList.add('bg-blue-600');
+            }
+        });
+        
+        // Track pricing page views
+        console.log('Pricing page loaded');
+    </script>
+</body>
+</html>

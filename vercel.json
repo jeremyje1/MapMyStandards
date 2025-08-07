@@ -2,14 +2,31 @@
   "version": 2,
   "builds": [
     {
+      "src": "*.html",
+      "use": "@vercel/static"
+    },
+    {
       "src": "web/**",
       "use": "@vercel/static"
     }
   ],
   "routes": [
     {
+      "src": "/",
+      "dest": "/platform_homepage.html"
+    },
+    {
+      "src": "/index.html",
+      "dest": "/platform_homepage.html"
+    },
+    {
       "src": "/(.*)",
-      "dest": "/web/$1"
+      "dest": "/$1"
     }
-  ]
+  ],
+  "functions": {
+    "*.py": {
+      "runtime": "python3.9"
+    }
+  }
 }
