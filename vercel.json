@@ -1,42 +1,36 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "*.html",
-      "use": "@vercel/static"
-    }
-  ],
   "routes": [
     {
-      "src": "/",
+      "src": "^/$",
       "dest": "/platform_homepage.html"
     },
     {
-      "src": "/index.html",
+      "src": "^/index.html$",
       "dest": "/platform_homepage.html"
     },
     {
-      "src": "/trial",
+      "src": "^/trial/?$",
       "dest": "/trial.html"
     },
     {
-      "src": "/pricing",
+      "src": "^/pricing/?$",
       "dest": "/pricing.html"
     },
     {
-      "src": "/contact",
+      "src": "^/contact/?$",
       "dest": "/contact.html"
     },
     {
-      "src": "/login",
+      "src": "^/login/?$",
       "dest": "/login.html"
     },
     {
-      "src": "/dashboard",
+      "src": "^/dashboard/?$",
       "dest": "/dashboard.html"
     },
     {
-      "src": "/(.*)",
+      "src": "^/(.*)$",
       "dest": "/$1"
     }
   ],
