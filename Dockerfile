@@ -28,13 +28,8 @@ RUN mkdir -p data/audit logs
 ENV PYTHONPATH=/app/src
 ENV PYTHONUNBUFFERED=1
 
-# Expose port
+# Expose port (Railway will set PORT env var)
 EXPOSE 8000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD python -c "import requests; requests.get('http://localhost:8000/health')" || exit 1
-
-# Start command
-CMD ["/opt/venv/bin/python", "main.py"]
-# Deployment timestamp: Mon Aug  4 11:23:57 CDT 2025
+# Start command - Use Railway's PORT environment variable
+CMD /opt/venv/bin/gunicorn --bind 0.0.0.0:$PORT --workers 2 subscription_backend:app

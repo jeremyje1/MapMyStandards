@@ -5,8 +5,9 @@ nixPkgs = ['python3', 'python3Packages.pip', 'python3Packages.virtualenv']
 cmds = [
     'python3 -m venv /opt/venv',
     '. /opt/venv/bin/activate && pip install --upgrade pip',
-    '. /opt/venv/bin/activate && pip install -r requirements.txt'
+    '. /opt/venv/bin/activate && pip install -r requirements.txt',
+    '. /opt/venv/bin/activate && pip install gunicorn'
 ]
 
 [start]
-cmd = '. /opt/venv/bin/activate && python main.py'
+cmd = '. /opt/venv/bin/activate && gunicorn subscription_backend:app --bind 0.0.0.0:$PORT --workers 2'
