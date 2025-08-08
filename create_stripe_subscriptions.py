@@ -10,25 +10,28 @@ import os
 # Set your Stripe secret key from environment variable
 stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
 
+
 def create_subscription_products():
     """Create Stripe products and prices with 7-day trials"""
-    
+
     print("🚀 Creating MapMyStandards subscription products...")
-    
+
     try:
         # Create the main product
         product = stripe.Product.create(
             name="A³E Platform - MapMyStandards",
-            description="Accreditation Analytics Engine for educational institutions",
-            images=["https://mapmystandards.ai/wp-content/uploads/2025/07/Original-Logo.png"],
+            description=("Accreditation Analytics Engine for educational "
+                         "institutions"),
+            images=["https://mapmystandards.ai/wp-content/uploads/2025/07/"
+                    "Original-Logo.png"],
             metadata={
                 "platform": "mapmystandards",
                 "version": "v1.0"
             }
         )
-        
+
         print(f"✅ Product created: {product.id}")
-        
+
         # Create monthly price with 7-day trial
         monthly_price = stripe.Price.create(
             product=product.id,
@@ -43,9 +46,9 @@ def create_subscription_products():
                 "trial_days": "7"
             }
         )
-        
+
         print(f"✅ Monthly price created: {monthly_price.id}")
-        
+
         # Create annual price with 7-day trial (and discount)
         annual_price = stripe.Price.create(
             product=product.id,
@@ -60,9 +63,9 @@ def create_subscription_products():
                 "trial_days": "7"
             }
         )
-        
+
         print(f"✅ Annual price created: {annual_price.id}")
-        
+
         # Create configuration file for the application
         config = f"""# MapMyStandards Stripe Configuration
 # Generated on {stripe.util.get_timestamp()}
@@ -86,12 +89,12 @@ TRIAL_PERIOD_DAYS=7
 SUPPORT_EMAIL=support@mapmystandards.ai
 PLATFORM_URL=https://platform.mapmystandards.ai
 """
-        
+
         with open('stripe_config.env', 'w') as f:
             f.write(config)
-        
-        print(f"✅ Configuration saved to stripe_config.env")
-        
+
+        print("✅ Configuration saved to stripe_config.env")
+
         # Create summary report
         summary = f"""
 🎉 SUCCESS! Stripe subscription products created:
@@ -128,18 +131,18 @@ PLATFORM_URL=https://platform.mapmystandards.ai
 3. After 7 days → automatic billing begins
 4. Customer can cancel anytime during trial (no charge)
 """
-        
+
         print(summary)
-        
+
         with open('stripe_setup_summary.txt', 'w') as f:
             f.write(summary)
-        
+
         return {
             'product_id': product.id,
             'monthly_price_id': monthly_price.id,
             'annual_price_id': annual_price.id
         }
-        
+
     except stripe.error.StripeError as e:
         print(f"❌ Stripe error: {e}")
         return None
@@ -147,9 +150,11 @@ PLATFORM_URL=https://platform.mapmystandards.ai
         print(f"❌ Error: {e}")
         return None
 
+
 if __name__ == "__main__":
     result = create_subscription_products()
     if result:
         print("\n🎉 All done! Check stripe_config.env for your configuration.")
     else:
-        print("\n❌ Failed to create products. Check your Stripe keys and try again.")
+        print("\n❌ Failed to create products. Check your Stripe keys "
+              "and try again.")

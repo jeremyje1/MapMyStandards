@@ -9,13 +9,9 @@ import sqlite3
 import hashlib
 import secrets
 import stripe
-import smtplib
-from datetime import datetime, timedelta
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from flask import Flask, request, jsonify, render_template_string, redirect, url_for, session
+from datetime import datetime
+from flask import Flask, request, jsonify, redirect, session
 from flask_cors import CORS
-import json
 import logging
 
 # Configure logging
@@ -28,21 +24,23 @@ app.secret_key = secrets.token_hex(32)
 CORS(app)
 
 # Load environment variables
-STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY')
-STRIPE_PUBLISHABLE_KEY = os.getenv('STRIPE_PUBLISHABLE_KEY')
-MONTHLY_PRICE_ID = os.getenv('MONTHLY_PRICE_ID', 'price_1RtXF3K8PKpLCKDZJNfi3Rvi')
-ANNUAL_PRICE_ID = os.getenv('ANNUAL_PRICE_ID', 'price_1RtXF3K8PKpLCKDZAMb4rM8U')
+STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
+STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PUBLISHABLE_KEY")
+MONTHLY_PRICE_ID = os.getenv("MONTHLY_PRICE_ID", "price_1RtXF3K8PKpLCKDZJNfi3Rvi")
+ANNUAL_PRICE_ID = os.getenv("ANNUAL_PRICE_ID", "price_1RtXF3K8PKpLCKDZAMb4rM8U")
 
 stripe.api_key = STRIPE_SECRET_KEY
+
 
 # Database setup
 def init_db():
     """Initialize the SQLite database"""
-    conn = sqlite3.connect('mapmystandards.db')
+    conn = sqlite3.connect("mapmystandards.db")
     cursor = conn.cursor()
-    
+
     # Users table
-    cursor.execute('''
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             email TEXT UNIQUE NOT NULL,
@@ -57,10 +55,12 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             last_login TIMESTAMP
         )
-    ''')
-    
+    """
+    )
+
     # Subscriptions table
-    cursor.execute('''
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS subscriptions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER,
@@ -74,10 +74,12 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users (id)
         )
-    ''')
-    
+    """
+    )
+
     # API keys table (for platform access)
-    cursor.execute('''
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS api_keys (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER,
@@ -86,8 +88,9 @@ def init_db():
             is_active BOOLEAN DEFAULT TRUE,
             FOREIGN KEY (user_id) REFERENCES users (id)
         )
-    ''')
-    
+    """
+    )
+
     conn.commit()
     conn.close()
 
@@ -104,249 +107,369 @@ def hash_password(password):
     """Hash a password using SHA-256"""
     return hashlib.sha256(password.encode()).hexdigest()
 
+
 def generate_trial_id():
     """Generate a unique trial ID"""
     return f"trial_{secrets.token_urlsafe(12)}"
+
 
 def generate_api_key():
     """Generate a unique API key"""
     return f"a3e_{secrets.token_urlsafe(32)}"
 
-@app.route('/')
+
+@app.route("/")
 def home():
     """Home page"""
-    return redirect('https://platform.mapmystandards.ai')
+    return redirect("https://platform.mapmystandards.ai")
 
-@app.route('/create-trial-account', methods=['POST'])
+
+@app.route("/create-trial-account", methods=["POST"])
 def create_trial_account():
     """Create user account and Stripe checkout session for trial"""
     try:
         data = request.get_json()
-        
+
         # Validate required fields
-        required_fields = ['firstName', 'lastName', 'email', 'institution', 'username', 'password', 'plan']
+        required_fields = ["firstName", "lastName", "email", "institution", "username", "password", "plan"]
         for field in required_fields:
             if field not in data or not data[field]:
-                return jsonify({'error': f'Missing required field: {field}'}), 400
-        
+                return jsonify({"error": f"Missing required field: {field}"}), 400
+
         # Validate email format
-        if '@' not in data['email']:
-            return jsonify({'error': 'Invalid email format'}), 400
-        
+        if "@" not in data["email"]:
+            return jsonify({"error": "Invalid email format"}), 400
+
         # Validate password length
-        if len(data['password']) < 8:
-            return jsonify({'error': 'Password must be at least 8 characters'}), 400
-        
+        if len(data["password"]) < 8:
+            return jsonify({"error": "Password must be at least 8 characters"}), 400
+
         # Get price ID based on plan
-        price_id = MONTHLY_PRICE_ID if data['plan'] == 'monthly' else ANNUAL_PRICE_ID
-        
-        conn = sqlite3.connect('mapmystandards.db')
+        price_id = MONTHLY_PRICE_ID if data["plan"] == "monthly" else ANNUAL_PRICE_ID
+
+        conn = sqlite3.connect("mapmystandards.db")
         cursor = conn.cursor()
-        
+
         # Check if email or username already exists
-        cursor.execute('SELECT id FROM users WHERE email = ? OR username = ?', 
-                      (data['email'], data['username']))
+        cursor.execute("SELECT id FROM users WHERE email = ? OR username = ?", (data["email"], data["username"]))
         if cursor.fetchone():
             conn.close()
-            return jsonify({'error': 'Email or username already exists'}), 400
-        
+            return jsonify({"error": "Email or username already exists"}), 400
+
         # Create user account (initially inactive until trial starts)
-        password_hash = hash_password(data['password'])
-        
-        cursor.execute('''
+        password_hash = hash_password(data["password"])
+
+        cursor.execute(
+            """
             INSERT INTO users (email, password_hash, first_name, last_name, 
                              institution, username, is_active, trial_status)
             VALUES (?, ?, ?, ?, ?, ?, FALSE, 'pending')
-        ''', (data['email'], password_hash, data['firstName'], data['lastName'], 
-              data['institution'], data['username']))
-        
+        """,
+            (data["email"], password_hash, data["firstName"], data["lastName"], data["institution"], data["username"]),
+        )
+
         user_id = cursor.lastrowid
         conn.commit()
         conn.close()
-        
+
         # Create Stripe checkout session
         checkout_session = stripe.checkout.Session.create(
-            payment_method_types=['card'],
-            customer_email=data['email'],
-            line_items=[{
-                'price': price_id,
-                'quantity': 1,
-            }],
-            mode='subscription',
-            success_url=f"https://platform.mapmystandards.ai/trial-success?session_id={{CHECKOUT_SESSION_ID}}",
-            cancel_url=f"https://platform.mapmystandards.ai/signup?cancelled=true",
+            payment_method_types=["card"],
+            customer_email=data["email"],
+            line_items=[
+                {
+                    "price": price_id,
+                    "quantity": 1,
+                }
+            ],
+            mode="subscription",
+            # Send users back to API domain so our success page + next steps show consistently
+            success_url=(
+                "https://api.mapmystandards.ai/trial-success?session_id={CHECKOUT_SESSION_ID}"
+            ),
+            cancel_url=(
+                "https://platform.mapmystandards.ai/signup?cancelled=true"
+            ),
             metadata={
-                'user_id': str(user_id),
-                'plan_type': data['plan'],
-                'username': data['username']
+                "user_id": str(user_id),
+                "plan_type": data["plan"],
+                "username": data["username"],
             },
             subscription_data={
-                'trial_period_days': 7,
-                'metadata': {
-                    'user_id': str(user_id),
-                    'username': data['username']
-                }
-            }
+                "trial_period_days": 7,
+                "metadata": {"user_id": str(user_id), "username": data["username"]},
+            },
         )
-        
-        return jsonify({
-            'success': True,
-            'checkout_url': checkout_session.url,
-            'user_id': user_id
-        })
-        
+
+        return jsonify({"success": True, "checkout_url": checkout_session.url, "user_id": user_id})
+
     except stripe.error.StripeError as e:
         logger.error(f"Stripe error in create_trial_account: {e}")
-        return jsonify({'error': 'Payment system error. Please try again.'}), 500
+        return jsonify({"error": "Payment system error. Please try again."}), 500
     except Exception as e:
         logger.error(f"Error in create_trial_account: {e}")
-        return jsonify({'error': 'Internal server error'}), 500
+        return jsonify({"error": "Internal server error"}), 500
 
-@app.route('/webhook', methods=['POST'])
+
+# Email notifications
+try:
+    from email_notifications import email_service
+except Exception:  # pragma: no cover - fallback if module missing
+    email_service = None
+
+# Admin notification email (optional)
+ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "")
+
+
+@app.route("/webhook", methods=["POST"])
 def stripe_webhook():
     """Handle Stripe webhook events"""
     payload = request.get_data()
-    sig_header = request.headers.get('Stripe-Signature')
-    
+    sig_header = request.headers.get("Stripe-Signature")
+
     try:
         # Verify webhook signature
         event = stripe.Webhook.construct_event(
-            payload, sig_header, os.getenv('STRIPE_WEBHOOK_SECRET', 'whsec_test_secret')
+            payload, sig_header, os.getenv("STRIPE_WEBHOOK_SECRET", "whsec_test_secret")
         )
     except ValueError:
         logger.error("Invalid payload in webhook")
-        return jsonify({'error': 'Invalid payload'}), 400
+        return jsonify({"error": "Invalid payload"}), 400
     except stripe.error.SignatureVerificationError:
         logger.error("Invalid signature in webhook")
-        return jsonify({'error': 'Invalid signature'}), 400
-    
+        return jsonify({"error": "Invalid signature"}), 400
+
     try:
         # Handle the event
-        if event['type'] == 'customer.subscription.created':
-            subscription = event['data']['object']
+        if event["type"] == "customer.subscription.created":
+            subscription = event["data"]["object"]
             handle_subscription_created(subscription)
-            
-        elif event['type'] == 'invoice.payment_succeeded':
-            invoice = event['data']['object']
+
+        elif event["type"] == "invoice.payment_succeeded":
+            invoice = event["data"]["object"]
             handle_payment_succeeded(invoice)
-            
-        elif event['type'] == 'customer.subscription.trial_will_end':
-            subscription = event['data']['object']
+
+        elif event["type"] == "customer.subscription.trial_will_end":
+            subscription = event["data"]["object"]
             handle_trial_ending(subscription)
-            
-        elif event['type'] == 'customer.subscription.deleted':
-            subscription = event['data']['object']
+
+        elif event["type"] == "customer.subscription.deleted":
+            subscription = event["data"]["object"]
             handle_subscription_cancelled(subscription)
-        
-        return jsonify({'status': 'success'})
-        
+
+        elif event["type"] == "checkout.session.completed":
+            session_obj = event["data"]["object"]
+            logger.info(
+                f"Checkout completed for customer {session_obj.get('customer')} subscription {session_obj.get('subscription')}"
+            )
+            # No-op: subscription.created will create records; keep for observability
+
+        return jsonify({"status": "success"})
+
     except Exception as e:
         logger.error(f"Error handling webhook: {e}")
-        return jsonify({'error': 'Webhook handling failed'}), 500
+        return jsonify({"error": "Webhook handling failed"}), 500
+
 
 def handle_subscription_created(subscription):
     """Handle new subscription creation (trial started)"""
-    user_id = subscription['metadata'].get('user_id')
+    user_id = subscription["metadata"].get("user_id")
     if not user_id:
         logger.error("No user_id in subscription metadata")
         return
-    
-    conn = sqlite3.connect('mapmystandards.db')
+
+    conn = sqlite3.connect("mapmystandards.db")
     cursor = conn.cursor()
-    
+
     try:
         # Update user status to active trial
-        cursor.execute('''
+        cursor.execute(
+            """
             UPDATE users 
             SET is_active = TRUE, trial_status = 'active', stripe_customer_id = ?
             WHERE id = ?
-        ''', (subscription['customer'], user_id))
-        
+        """,
+            (subscription["customer"], user_id),
+        )
+
         # Create subscription record
-        trial_end = datetime.fromtimestamp(subscription['trial_end']) if subscription['trial_end'] else None
-        
-        cursor.execute('''
-            INSERT INTO subscriptions 
+        trial_end = datetime.fromtimestamp(subscription["trial_end"]) if subscription.get("trial_end") else None
+
+        cursor.execute(
+            """
+            INSERT OR IGNORE INTO subscriptions 
             (user_id, stripe_subscription_id, status, trial_end, plan_type)
             VALUES (?, ?, ?, ?, ?)
-        ''', (user_id, subscription['id'], subscription['status'], trial_end, 
-              subscription['metadata'].get('plan_type', 'monthly')))
-        
+        """,
+            (
+                user_id,
+                subscription["id"],
+                subscription.get("status", "trialing"),
+                trial_end,
+                subscription["metadata"].get("plan_type", "monthly"),
+            ),
+        )
+
         # Generate API key for platform access
         api_key = generate_api_key()
-        cursor.execute('''
-            INSERT INTO api_keys (user_id, api_key)
+        cursor.execute(
+            """
+            INSERT OR IGNORE INTO api_keys (user_id, api_key)
             VALUES (?, ?)
-        ''', (user_id, api_key))
-        
+        """,
+            (user_id, api_key),
+        )
+
         conn.commit()
-        
-        # Get user details for welcome email
-        cursor.execute('SELECT email, first_name, username FROM users WHERE id = ?', (user_id,))
+
+        # Get user details for welcome/admin email
+        cursor.execute("SELECT email, first_name, username FROM users WHERE id = ?", (user_id,))
         user = cursor.fetchone()
-        
+
         if user:
-            logger.info(f"Trial started for user {user[0]} (ID: {user_id})")
-        
+            user_email = user[0]
+            first_name_db = user[1]
+            username_db = user[2]
+            display_name = first_name_db or username_db
+            logger.info(f"Trial started for user {user_email} (ID: {user_id})")
+
+            # Send welcome email if configured
+            if email_service:
+                try:
+                    email_service.send_welcome_email(
+                        user_email=user_email,
+                        user_name=display_name,
+                        plan=subscription["metadata"].get("plan_type", "monthly"),
+                        api_key=api_key,
+                    )
+                except Exception as e:
+                    logger.warning(f"Welcome email failed for {user_email}: {e}")
+
+            # Notify admin (optional)
+            if ADMIN_EMAIL and email_service:
+                try:
+                    subject = "New A³E trial started"
+                    body = (
+                        f"User: {user_email}<br>Username: {username_db}<br>"
+                        f"Plan: {subscription['metadata'].get('plan_type', 'monthly')}<br>"
+                        f"Stripe Customer: {subscription['customer']}<br>"
+                        f"Subscription: {subscription['id']}<br>"
+                        f"Trial ends: {trial_end}"
+                    )
+                    email_service._send_email(ADMIN_EMAIL, subject, body)
+                except Exception as e:
+                    logger.warning(f"Admin notification failed: {e}")
+
     finally:
         conn.close()
+
 
 def handle_payment_succeeded(invoice):
     """Handle successful payment (trial converted or renewal)"""
-    subscription_id = invoice['subscription']
-    
-    conn = sqlite3.connect('mapmystandards.db')
+    subscription_id = invoice["subscription"]
+
+    conn = sqlite3.connect("mapmystandards.db")
     cursor = conn.cursor()
-    
+
     try:
-        cursor.execute('''
+        cursor.execute(
+            """
             UPDATE subscriptions 
             SET status = 'active'
             WHERE stripe_subscription_id = ?
-        ''', (subscription_id,))
-        
+        """,
+            (subscription_id,),
+        )
+
+        # Fetch user for notifications
+        cursor.execute(
+            """
+            SELECT u.email, COALESCE(u.first_name, u.username), s.plan_type
+            FROM subscriptions s JOIN users u ON s.user_id = u.id
+            WHERE s.stripe_subscription_id = ?
+            LIMIT 1
+            """,
+            (subscription_id,),
+        )
+        row = cursor.fetchone()
+
         conn.commit()
         logger.info(f"Payment succeeded for subscription {subscription_id}")
-        
+
+        amount_cents = invoice.get("amount_paid") or invoice.get("total") or 0
+        amount = (amount_cents or 0) / 100.0
+
+        if row and email_service:
+            user_email, user_name, plan_type = row
+            try:
+                email_service.send_subscription_confirmation(
+                    user_email=user_email, user_name=user_name, plan=plan_type, amount=amount
+                )
+            except Exception as e:
+                logger.warning(f"Subscription confirmation email failed for {user_email}: {e}")
+
+        if ADMIN_EMAIL and email_service:
+            try:
+                subject = "A³E payment succeeded"
+                body = (
+                    f"Subscription: {subscription_id}\n"
+                    f"Amount: ${amount:.2f}\n"
+                    f"Invoice: {invoice.get('id')}\n"
+                    f"Customer: {invoice.get('customer')}"
+                )
+                email_service._send_email(ADMIN_EMAIL, subject, body)
+            except Exception as e:
+                logger.warning(f"Admin payment notification failed: {e}")
+
     finally:
         conn.close()
+
 
 def handle_trial_ending(subscription):
     """Handle trial ending reminder"""
-    user_id = subscription['metadata'].get('user_id')
+    user_id = subscription["metadata"].get("user_id")
     if user_id:
         logger.info(f"Trial ending soon for user ID {user_id}")
 
+
 def handle_subscription_cancelled(subscription):
     """Handle subscription cancellation"""
-    conn = sqlite3.connect('mapmystandards.db')
+    conn = sqlite3.connect("mapmystandards.db")
     cursor = conn.cursor()
-    
+
     try:
-        cursor.execute('''
+        cursor.execute(
+            """
             UPDATE subscriptions 
             SET status = 'cancelled'
             WHERE stripe_subscription_id = ?
-        ''', (subscription['id'],))
-        
+        """,
+            (subscription["id"],),
+        )
+
         # Deactivate user
-        cursor.execute('''
+        cursor.execute(
+            """
             UPDATE users 
             SET is_active = FALSE, trial_status = 'cancelled'
             WHERE stripe_customer_id = ?
-        ''', (subscription['customer'],))
-        
+        """,
+            (subscription["customer"],),
+        )
+
         conn.commit()
         logger.info(f"Subscription cancelled: {subscription['id']}")
-        
+
     finally:
         conn.close()
 
-@app.route('/trial-success')
+
+@app.route("/trial-success")
 def trial_success():
     """Success page after trial signup"""
-    session_id = request.args.get('session_id')
-    
+    # Get session ID from request args for potential future use
+    _ = request.args.get("session_id")
+
     return """
     <!DOCTYPE html>
     <html lang="en">
@@ -372,7 +495,7 @@ def trial_success():
                 <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
                     <h3 class="text-lg font-semibold text-blue-900 mb-2">✅ What happens next:</h3>
                     <ul class="text-sm text-blue-800 space-y-1">
-                        <li>📧 Check your email for login credentials</li>
+                        <li>📧 We've emailed your trial details</li>
                         <li>🔑 Use your username/password to login</li>
                         <li>🚀 Start exploring the A³E Platform</li>
                         <li>💳 No charge for 7 days</li>
@@ -396,10 +519,11 @@ def trial_success():
     </html>
     """
 
-@app.route('/login', methods=['GET', 'POST'])
+
+@app.route("/login", methods=["GET", "POST"])
 def login():
     """User login endpoint"""
-    if request.method == 'GET':
+    if request.method == "GET":
         return """
         <!DOCTYPE html>
         <html lang="en">
@@ -455,53 +579,57 @@ def login():
         </body>
         </html>
         """
-    
+
     # Handle POST request (login form submission)
     try:
-        username = request.form.get('username')
-        password = request.form.get('password')
-        
+        username = request.form.get("username")
+        password = request.form.get("password")
+
         if not username or not password:
-            return redirect('/login?error=missing_credentials')
-        
+            return redirect("/login?error=missing_credentials")
+
         # Hash the provided password
         password_hash = hash_password(password)
-        
-        conn = sqlite3.connect('mapmystandards.db')
+
+        conn = sqlite3.connect("mapmystandards.db")
         cursor = conn.cursor()
-        
+
         # Check credentials and user status
-        cursor.execute('''
+        cursor.execute(
+            """
             SELECT id, email, first_name, is_active, trial_status 
             FROM users 
             WHERE username = ? AND password_hash = ?
-        ''', (username, password_hash))
-        
+        """,
+            (username, password_hash),
+        )
+
         user = cursor.fetchone()
         conn.close()
-        
+
         if user and user[3]:  # User exists and is active
             # Create session
-            session['user_id'] = user[0]
-            session['username'] = username
-            session['email'] = user[1]
-            session['first_name'] = user[2]
-            
+            session["user_id"] = user[0]
+            session["username"] = username
+            session["email"] = user[1]
+            session["first_name"] = user[2]
+
             # Redirect to dashboard
-            return redirect('/dashboard')
+            return redirect("/dashboard")
         else:
-            return redirect('/login?error=invalid_credentials')
-            
+            return redirect("/login?error=invalid_credentials")
+
     except Exception as e:
         logger.error(f"Login error: {e}")
-        return redirect('/login?error=system_error')
+        return redirect("/login?error=system_error")
 
-@app.route('/dashboard')
+
+@app.route("/dashboard")
 def dashboard():
     """User dashboard - requires login"""
-    if 'user_id' not in session:
-        return redirect('/login')
-    
+    if "user_id" not in session:
+        return redirect("/login")
+
     return f"""
     <!DOCTYPE html>
     <html lang="en">
@@ -551,21 +679,20 @@ def dashboard():
     </html>
     """
 
-@app.route('/health')
+
+@app.route("/health")
 def health_check():
     """Health check endpoint for deployment"""
-    return jsonify({
-        'status': 'healthy',
-        'timestamp': datetime.now().isoformat(),
-        'service': 'mapmystandards-backend'
-    })
+    return jsonify({"status": "healthy", "timestamp": datetime.now().isoformat(), "service": "mapmystandards-backend"})
 
-@app.route('/logout')
+
+@app.route("/logout")
 def logout():
     """User logout"""
     session.clear()
-    return redirect('/login')
+    return redirect("/login")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     init_db()
-    app.run(debug=True, host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
+    app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))

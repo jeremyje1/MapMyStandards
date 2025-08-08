@@ -1,10 +1,9 @@
-from fastapi import FastAPI, HTTPException, Form, Request
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr
 import uvicorn
 import os
-import asyncio
 import uuid
 from datetime import datetime, timedelta
 from typing import Dict, Optional
@@ -29,26 +28,29 @@ app.add_middleware(
 # Persistent storage for trial users
 TRIAL_DATA_FILE = "data/trial_users.json"
 
+
 def load_trial_users() -> Dict[str, dict]:
     """Load trial users from persistent storage"""
     try:
         if os.path.exists(TRIAL_DATA_FILE):
-            with open(TRIAL_DATA_FILE, 'r') as f:
+            with open(TRIAL_DATA_FILE, "r") as f:
                 return json.load(f)
     except Exception as e:
         logger.error(f"Error loading trial users: {e}")
     return {}
 
+
 def save_trial_users(trial_data: Dict[str, dict]) -> bool:
     """Save trial users to persistent storage"""
     try:
         os.makedirs(os.path.dirname(TRIAL_DATA_FILE), exist_ok=True)
-        with open(TRIAL_DATA_FILE, 'w') as f:
+        with open(TRIAL_DATA_FILE, "w") as f:
             json.dump(trial_data, f, indent=2, default=str)
         return True
     except Exception as e:
         logger.error(f"Error saving trial users: {e}")
         return False
+
 
 # Load existing trial users on startup
 trial_users: Dict[str, dict] = load_trial_users()
@@ -64,11 +66,14 @@ STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PUBLISHABLE_KEY", "")
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "")
 
 # Pydantic models
+
+
 class TrialSignup(BaseModel):
     email: EmailStr
     name: str
     organization: Optional[str] = None
     use_case: Optional[str] = None
+
 
 class ContactForm(BaseModel):
     name: str
@@ -76,15 +81,20 @@ class ContactForm(BaseModel):
     message: str
     subject: Optional[str] = "Contact from MapMyStandards"
 
+
 # Email sending function with error handling
-async def send_email(to_email: str, subject: str, html_content: str, text_content: str = None):
+
+
+async def send_email(
+    to_email: str, subject: str, html_content: str, text_content: str = None
+):
     """Send an email using the configured SMTP settings"""
     try:
         # Try to import aiosmtplib only when needed
         import aiosmtplib
         from email.mime.text import MIMEText
         from email.mime.multipart import MIMEMultipart
-        
+
         message = MIMEMultipart("alternative")
         message["Subject"] = subject
         message["From"] = SMTP_USERNAME
@@ -118,58 +128,94 @@ async def send_email(to_email: str, subject: str, html_content: str, text_conten
         logger.error(f"Email sending failed: {e}")
         return False
 
+
 # Startup event
+
+
 @app.on_event("startup")
 async def startup_event():
     logger.info("🚀 MapMyStandards SaaS API starting up...")
-    logger.info(f"📧 Email configured: {SMTP_USERNAME}@{SMTP_SERVER}:{SMTP_PORT}")
-    logger.info(f"💳 Stripe configured: {'✅' if STRIPE_PUBLISHABLE_KEY else '❌'}")
+    logger.info(
+        f"📧 Email configured: {SMTP_USERNAME}@{SMTP_SERVER}:{SMTP_PORT}"
+    )
+    logger.info(
+        f"💳 Stripe configured: {'✅' if STRIPE_PUBLISHABLE_KEY else '❌'}"
+    )
+
 
 # Root endpoint
+
+
 @app.get("/")
 def read_root():
     return {
-        "message": "MapMyStandards SaaS API", 
-        "status": "live", 
+        "message": "MapMyStandards SaaS API",
+        "status": "live",
         "version": "1.0.0",
         "features": ["trial_signup", "dashboard", "email_integration"],
-        "endpoints": ["/health", "/config/stripe-key", "/landing", "/trial/signup", "/dashboard/{trial_id}", "/contact", "/pricing"]
+        "endpoints": [
+            "/health",
+            "/config/stripe-key",
+            "/landing",
+            "/trial/signup",
+            "/dashboard/{trial_id}",
+            "/contact",
+            "/pricing",
+        ],
     }
 
+
 # Health check
+
+
 @app.get("/health")
 def health_check():
     return {
-        "status": "healthy", 
+        "status": "healthy",
         "timestamp": datetime.now().isoformat(),
         "api_version": "1.0.0",
-        "active_trials": len(trial_users)
+        "active_trials": len(trial_users),
     }
 
+
 # Stripe configuration endpoint
+
+
 @app.get("/config/stripe-key")
 def get_stripe_key():
     """Return the Stripe publishable key for frontend use"""
     if not STRIPE_PUBLISHABLE_KEY:
         raise HTTPException(status_code=500, detail="Stripe not configured")
-    
+
     # Only return publishable key (safe for frontend)
     return {
         "publishable_key": STRIPE_PUBLISHABLE_KEY,
-        "environment": "live" if STRIPE_PUBLISHABLE_KEY.startswith("pk_live_") else "test"
+        "environment": (
+            "live" if STRIPE_PUBLISHABLE_KEY.startswith("pk_live_") else "test"
+        ),
     }
 
+
 # Debug endpoint to check environment variables
+
+
 @app.get("/debug/env")
 def debug_env():
     """Debug endpoint to check if environment variables are loaded"""
     return {
         "stripe_key_set": bool(STRIPE_PUBLISHABLE_KEY),
-        "stripe_key_length": len(STRIPE_PUBLISHABLE_KEY) if STRIPE_PUBLISHABLE_KEY else 0,
-        "stripe_key_prefix": STRIPE_PUBLISHABLE_KEY[:10] if STRIPE_PUBLISHABLE_KEY else "none"
+        "stripe_key_length": (
+            len(STRIPE_PUBLISHABLE_KEY) if STRIPE_PUBLISHABLE_KEY else 0
+        ),
+        "stripe_key_prefix": (
+            STRIPE_PUBLISHABLE_KEY[:10] if STRIPE_PUBLISHABLE_KEY else "none"
+        ),
     }
 
+
 # Landing page
+
+
 @app.get("/landing", response_class=HTMLResponse)
 def landing_page():
     return """<!DOCTYPE html>
@@ -313,12 +359,21 @@ async def trial_signup(signup: TrialSignup):
     """Create a new trial account"""
     try:
         logger.info(f"Trial signup attempt for {signup.email}")
-        
+
         # Check if email already exists
-        existing_user = next((user for user in trial_users.values() if user["email"] == signup.email), None)
+        existing_user = next(
+            (
+                user
+                for user in trial_users.values()
+                if user["email"] == signup.email
+            ),
+            None,
+        )
         if existing_user:
-            raise HTTPException(status_code=400, detail="Email already registered for trial")
-        
+            raise HTTPException(
+                status_code=400, detail="Email already registered for trial"
+            )
+
         # Create trial user
         trial_id = str(uuid.uuid4())
         trial_data = {
@@ -329,13 +384,13 @@ async def trial_signup(signup: TrialSignup):
             "use_case": signup.use_case,
             "created_at": datetime.now().isoformat(),
             "expires_at": (datetime.now() + timedelta(days=14)).isoformat(),
-            "status": "active"
+            "status": "active",
         }
-        
+
         trial_users[trial_id] = trial_data
         save_trial_users(trial_users)  # Persist to storage
         logger.info(f"Trial created successfully: {trial_id}")
-        
+
         # Try to send welcome email (non-blocking)
         email_sent = False
         try:
@@ -346,70 +401,76 @@ async def trial_signup(signup: TrialSignup):
                     <h1>Welcome to MapMyStandards.ai!</h1>
                     <p>Your 14-day free trial has started</p>
                 </div>
-                
+
                 <div style="padding: 30px;">
                     <h2>Hello {signup.name}!</h2>
-                    
+
                     <p>Thank you for starting your free trial with MapMyStandards.ai. You now have access to our autonomous accreditation and audit engine.</p>
-                    
+
                     <h3>Your Trial Details:</h3>
                     <ul>
                         <li><strong>Trial ID:</strong> {trial_id}</li>
                         <li><strong>Started:</strong> {datetime.now().strftime('%B %d, %Y')}</li>
                         <li><strong>Expires:</strong> {(datetime.now() + timedelta(days=14)).strftime('%B %d, %Y')}</li>
                     </ul>
-                    
+
                     <div style="text-align: center; margin: 30px 0;">
                         <a href="#" style="background: #667eea; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
                             Access Your Dashboard
                         </a>
                     </div>
-                    
+
                     <p>Need help? Reply to this email or contact us at support@mapmystandards.ai</p>
                 </div>
             </body>
             </html>
             """
-            
+
             email_sent = await send_email(
                 signup.email,
                 "Welcome to MapMyStandards.ai - Your Trial Has Started!",
-                welcome_html
+                welcome_html,
             )
         except Exception as e:
             logger.warning(f"Email sending failed, but trial created: {e}")
-        
+
         return {
             "success": True,
             "trial_id": trial_id,
             "message": "Trial account created successfully",
             "email_sent": email_sent,
-            "expires_at": trial_data["expires_at"]
+            "expires_at": trial_data["expires_at"],
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Trial signup failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to create trial account: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to create trial account: {str(e)}",
+        )
+
 
 # Trial dashboard
+
+
 @app.get("/dashboard/{trial_id}", response_class=HTMLResponse)
 def trial_dashboard(trial_id: str):
     """Display the trial user dashboard"""
     # Reload trial users from storage in case of server restart
     global trial_users
     trial_users = load_trial_users()
-    
+
     if trial_id not in trial_users:
         logger.warning(f"Trial not found: {trial_id}")
         raise HTTPException(
-            status_code=404, 
-            detail=f"Trial {trial_id} not found. This may be due to server restart. Please contact support."
+            status_code=404,
+            detail=f"Trial {trial_id} not found. This may be due to server restart. Please contact support.",
         )
-    
+
     user = trial_users[trial_id]
-    
+
     return f"""
     <!DOCTYPE html>
     <html lang="en">
@@ -441,14 +502,14 @@ def trial_dashboard(trial_id: str):
                 <p>Autonomous Accreditation & Audit Engine</p>
             </div>
         </div>
-        
+
         <div class="container">
             <div class="welcome">
                 <h2>Welcome back, {user['name']}!</h2>
                 <p>Trial Status: <span class="status-badge active">Active</span></p>
                 <p>Expires: {user['expires_at'][:10]}</p>
             </div>
-            
+
             <div class="dashboard-grid">
                 <div class="card">
                     <h3>🎯 Compliance Overview</h3>
@@ -459,7 +520,7 @@ def trial_dashboard(trial_id: str):
                     <p>Start by uploading your organizational documents to begin automated compliance analysis.</p>
                     <a href="#" class="btn">Upload Documents</a>
                 </div>
-                
+
                 <div class="card">
                     <h3>📊 Audit Readiness</h3>
                     <div class="metric">
@@ -469,7 +530,7 @@ def trial_dashboard(trial_id: str):
                     <p>Our AI will automatically identify and catalog evidence for your compliance requirements.</p>
                     <a href="#" class="btn">View Evidence</a>
                 </div>
-                
+
                 <div class="card">
                     <h3>🤖 AI Recommendations</h3>
                     <div class="metric">
@@ -479,7 +540,7 @@ def trial_dashboard(trial_id: str):
                     <p>Get personalized recommendations to improve your compliance posture.</p>
                     <a href="#" class="btn">View Recommendations</a>
                 </div>
-                
+
                 <div class="card">
                     <h3>📅 Next Steps</h3>
                     <ul>
@@ -496,15 +557,18 @@ def trial_dashboard(trial_id: str):
     </html>
     """
 
+
 # Contact form endpoint
+
+
 @app.post("/contact")
 async def contact_form(contact: ContactForm):
     """Handle contact form submissions"""
     try:
         logger.info(f"Contact form submission from {contact.email}")
-        
+
         # Try to send notification email
-        formatted_message = contact.message.replace('\n', '<br>')
+        formatted_message = contact.message.replace("\n", "<br>")
         email_sent = await send_email(
             SMTP_USERNAME,
             f"Contact Form: {contact.subject}",
@@ -517,26 +581,35 @@ async def contact_form(contact: ContactForm):
             <div style="background: #f8f9fa; padding: 15px; border-left: 4px solid #667eea;">
                 {formatted_message}
             </div>
-            """
+            """,
         )
-        
+
         return {
             "success": True,
             "message": "Contact form submitted successfully",
-            "email_sent": email_sent
+            "email_sent": email_sent,
         }
-        
+
     except Exception as e:
         logger.error(f"Contact form failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to send contact form: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to send contact form: {str(e)}",
+        )
+
 
 # List trials (for admin/testing)
+
+
 @app.get("/admin/trials")
 def list_trials():
     """List all trial users (for testing)"""
     return {"total_trials": len(trial_users), "trials": trial_users}
 
+
 # API status endpoint
+
+
 @app.get("/status")
 def api_status():
     """Detailed API status"""
@@ -548,66 +621,82 @@ def api_status():
             "trial_signup": True,
             "email_integration": True,
             "dashboard": True,
-            "contact_forms": True
+            "contact_forms": True,
         },
         "metrics": {
             "total_trials": len(trial_users),
-            "active_trials": len([t for t in trial_users.values() if t["status"] == "active"])
+            "active_trials": len(
+                [t for t in trial_users.values() if t["status"] == "active"]
+            ),
         },
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.now().isoformat(),
     }
+
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8080))
     logger.info(f"Starting server on port {port}")
     uvicorn.run(app, host="0.0.0.0", port=port)
+
+
 @app.get("/stripe-test")
 def stripe_test():
     return {"stripe": "checkout test"}
 
+
 # Stripe checkout endpoints
+
+
 class CheckoutSessionRequest(BaseModel):
     plan: str
     price_id: str
     trial_days: int = 7
+
 
 @app.post("/create-checkout-session")
 async def create_checkout_session(request: CheckoutSessionRequest):
     """Create a Stripe checkout session for trial signup with credit card capture"""
     try:
         import stripe
+
         stripe.api_key = STRIPE_SECRET_KEY
-        
-        
+
         if not stripe.api_key:
-            raise HTTPException(status_code=500, detail="Stripe not configured")
-        
+            raise HTTPException(
+                status_code=500, detail="Stripe not configured"
+            )
+
         # Create checkout session
         session = stripe.checkout.Session.create(
-            payment_method_types=['card'],
-            mode='subscription',
-            line_items=[{
-                'price': request.price_id,
-                'quantity': 1,
-            }],
-            subscription_data={
-                'trial_period_days': request.trial_days,
-                'metadata': {
-                    'plan': request.plan,
-                    'trial_days': request.trial_days
+            payment_method_types=["card"],
+            mode="subscription",
+            line_items=[
+                {
+                    "price": request.price_id,
+                    "quantity": 1,
                 }
+            ],
+            subscription_data={
+                "trial_period_days": request.trial_days,
+                "metadata": {
+                    "plan": request.plan,
+                    "trial_days": request.trial_days,
+                },
             },
-            success_url='https://api.mapmystandards.ai/trial/success?session_id={CHECKOUT_SESSION_ID}',
-            cancel_url='https://api.mapmystandards.ai/landing?cancelled=true',
+            success_url="https://api.mapmystandards.ai/trial/success?session_id={CHECKOUT_SESSION_ID}",
+            cancel_url="https://api.mapmystandards.ai/landing?cancelled=true",
             allow_promotion_codes=True,
-            billing_address_collection='required',
+            billing_address_collection="required",
         )
-        
+
         return {"id": session.id, "url": session.url}
-        
+
     except Exception as e:
         logger.error(f"Checkout session creation error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to create checkout session")
+        raise HTTPException(
+            status_code=500, detail="Failed to create checkout session"
+        )
+
 
 @app.get("/trial/success", response_class=HTMLResponse)
 async def trial_success_page(session_id: str = None):
@@ -616,36 +705,40 @@ async def trial_success_page(session_id: str = None):
         # Process the Stripe session and create user account
         if session_id:
             import stripe
+
             stripe.api_key = STRIPE_SECRET_KEY
-        
-            
+
             try:
                 # Retrieve the checkout session
                 session = stripe.checkout.Session.retrieve(session_id)
                 customer_id = session.customer
                 subscription_id = session.subscription
-                
+
                 # Get customer details
                 customer = stripe.Customer.retrieve(customer_id)
                 email = customer.email
-                
+
                 # Generate trial ID and store user
                 import secrets
+
                 trial_id = secrets.token_urlsafe(16)
                 trial_users[trial_id] = {
-                    'name': customer.name or email.split('@')[0],
-                    'email': email,
-                    'organization': f"Customer {customer_id}",
-                    'use_case': 'stripe_trial',
-                    'created_at': datetime.now().isoformat(),
-                    'stripe_customer_id': customer_id,
-                    'stripe_subscription_id': subscription_id,
-                    'trial_ends': (datetime.now() + timedelta(days=7)).isoformat()
+                    "name": customer.name or email.split("@")[0],
+                    "email": email,
+                    "organization": f"Customer {customer_id}",
+                    "use_case": "stripe_trial",
+                    "created_at": datetime.now().isoformat(),
+                    "stripe_customer_id": customer_id,
+                    "stripe_subscription_id": subscription_id,
+                    "trial_ends": (
+                        datetime.now() + timedelta(days=7)
+                    ).isoformat(),
                 }
                 save_trial_users(trial_users)  # Persist to storage
-                
+
                 # Return success page
-                return HTMLResponse(content=f"""
+                return HTMLResponse(
+                    content=f"""
                 <!DOCTYPE html>
                 <html>
                 <head>
@@ -669,38 +762,47 @@ async def trial_success_page(session_id: str = None):
                     </div>
                 </body>
                 </html>
-                """)
-                
+                """
+                )
+
             except Exception as e:
                 logger.error(f"Error processing checkout session: {e}")
-                return HTMLResponse(content=f"<h1>Error processing trial signup</h1><p>Session: {session_id}</p>", status_code=500)
-        
+                return HTMLResponse(
+                    content=f"<h1>Error processing trial signup</h1><p>Session: {session_id}</p>",
+                    status_code=500,
+                )
+
         return HTMLResponse(content="<h1>Trial signup completed!</h1>")
-        
+
     except Exception as e:
         logger.error(f"Trial success page error: {e}")
-        return HTMLResponse(content="<h1>Error loading success page</h1>", status_code=500)
+        return HTMLResponse(
+            content="<h1>Error loading success page</h1>", status_code=500
+        )
+
 
 # Stripe webhook endpoint for billing events
+
+
 @app.post("/api/v1/billing/webhook/stripe")
 async def stripe_webhook(request: Request):
     """Handle Stripe webhooks for payment events"""
     try:
         payload = await request.body()
-        sig_header = request.headers.get('stripe-signature')
-        
+        sig_header = request.headers.get("stripe-signature")
+
         # Import stripe only when needed
         import stripe
+
         stripe.api_key = STRIPE_SECRET_KEY
-        
-        
+
         # Get webhook secret from environment
-        webhook_secret = os.getenv('STRIPE_WEBHOOK_SECRET', '')
-        
+        webhook_secret = os.getenv("STRIPE_WEBHOOK_SECRET", "")
+
         if not webhook_secret:
             logger.warning("STRIPE_WEBHOOK_SECRET not configured")
             # Process without signature verification in development
-            event = json.loads(payload.decode('utf-8'))
+            event = json.loads(payload.decode("utf-8"))
         else:
             # Verify webhook signature
             try:
@@ -712,60 +814,68 @@ async def stripe_webhook(request: Request):
                 raise HTTPException(status_code=400, detail="Invalid payload")
             except stripe.error.SignatureVerificationError as e:
                 logger.error(f"Invalid signature: {e}")
-                raise HTTPException(status_code=400, detail="Invalid signature")
-        
+                raise HTTPException(
+                    status_code=400, detail="Invalid signature"
+                )
+
         # Handle the event
-        event_type = event['type']
+        event_type = event["type"]
         logger.info(f"Processing webhook event: {event_type}")
-        
-        if event_type == 'checkout.session.completed':
+
+        if event_type == "checkout.session.completed":
             # Handle successful checkout
-            session = event['data']['object']
+            session = event["data"]["object"]
             await _handle_checkout_completed(session)
-            
-        elif event_type == 'customer.subscription.created':
+
+        elif event_type == "customer.subscription.created":
             # Handle new subscription
-            subscription = event['data']['object']
+            subscription = event["data"]["object"]
             await _handle_subscription_created(subscription)
-            
-        elif event_type == 'customer.subscription.updated':
+
+        elif event_type == "customer.subscription.updated":
             # Handle subscription changes
-            subscription = event['data']['object']
+            subscription = event["data"]["object"]
             await _handle_subscription_updated(subscription)
-            
-        elif event_type == 'customer.subscription.deleted':
+
+        elif event_type == "customer.subscription.deleted":
             # Handle subscription cancellation
-            subscription = event['data']['object']
+            subscription = event["data"]["object"]
             await _handle_subscription_deleted(subscription)
-            
-        elif event_type == 'invoice.payment_succeeded':
+
+        elif event_type == "invoice.payment_succeeded":
             # Handle successful payment
-            invoice = event['data']['object']
+            invoice = event["data"]["object"]
             await _handle_payment_succeeded(invoice)
-            
-        elif event_type == 'invoice.payment_failed':
+
+        elif event_type == "invoice.payment_failed":
             # Handle failed payment
-            invoice = event['data']['object']
+            invoice = event["data"]["object"]
             await _handle_payment_failed(invoice)
-            
+
         else:
             logger.info(f"Unhandled event type: {event_type}")
-        
+
         return {"received": True, "event_type": event_type}
-        
+
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Webhook processing error: {e}")
-        raise HTTPException(status_code=400, detail="Webhook processing failed")
+        raise HTTPException(
+            status_code=400, detail="Webhook processing failed"
+        )
+
 
 # Webhook event handlers
+
+
 async def _handle_checkout_completed(session):
     """Handle successful checkout session completion"""
-    customer_id = session.get('customer')
-    subscription_id = session.get('subscription')
-    logger.info(f"Checkout completed: customer {customer_id}, subscription {subscription_id}")
-    
+    customer_id = session.get("customer")
+    subscription_id = session.get("subscription")
+    logger.info(
+        f"Checkout completed: customer {customer_id}, subscription {subscription_id}")
+
     # Create or update trial user record
     # This would typically involve:
     # 1. Creating user account
@@ -773,40 +883,53 @@ async def _handle_checkout_completed(session):
     # 3. Sending welcome email
     # 4. Activating services
 
+
 async def _handle_subscription_created(subscription):
     """Handle new subscription creation"""
-    customer_id = subscription.get('customer')
-    status = subscription.get('status')
-    logger.info(f"Subscription created: {subscription.get('id')} for customer {customer_id}, status: {status}")
+    customer_id = subscription.get("customer")
+    status = subscription.get("status")
+    logger.info(
+        f"Subscription created: {subscription.get('id')} for customer "
+        f"{customer_id}, status: {status}"
+    )
+
 
 async def _handle_subscription_updated(subscription):
     """Handle subscription updates (trial ending, plan changes, etc.)"""
-    customer_id = subscription.get('customer')
-    status = subscription.get('status')
-    logger.info(f"Subscription updated: {subscription.get('id')} for customer {customer_id}, status: {status}")
+    customer_id = subscription.get("customer")
+    status = subscription.get("status")
+    logger.info(
+        f"Subscription updated: {subscription.get('id')} for customer "
+        f"{customer_id}, status: {status}"
+    )
+
 
 async def _handle_subscription_deleted(subscription):
     """Handle subscription cancellation"""
-    customer_id = subscription.get('customer')
-    logger.info(f"Subscription cancelled: {subscription.get('id')} for customer {customer_id}")
-    
+    customer_id = subscription.get("customer")
+    logger.info(
+        f"Subscription cancelled: {subscription.get('id')} for customer "
+        f"{customer_id}"
+    )
+
     # Deactivate user account, clean up resources, etc.
+
 
 async def _handle_payment_succeeded(invoice):
     """Handle successful payment"""
-    customer_id = invoice.get('customer')
-    subscription_id = invoice.get('subscription')
-    amount = invoice.get('amount_paid', 0) / 100  # Convert from cents
+    customer_id = invoice.get("customer")
+    amount = invoice.get("amount_paid", 0) / 100  # Convert from cents
     logger.info(f"Payment succeeded: ${amount} for customer {customer_id}")
+
 
 async def _handle_payment_failed(invoice):
     """Handle failed payment"""
-    customer_id = invoice.get('customer')
-    subscription_id = invoice.get('subscription')
-    amount = invoice.get('amount_due', 0) / 100  # Convert from cents
+    customer_id = invoice.get("customer")
+    amount = invoice.get("amount_due", 0) / 100  # Convert from cents
     logger.warning(f"Payment failed: ${amount} for customer {customer_id}")
-    
+
     # Send notification, retry payment, or suspend account
+
 
 @app.get("/debug/stripe")
 async def debug_stripe():
@@ -814,8 +937,12 @@ async def debug_stripe():
     return {
         "publishable_key_set": bool(STRIPE_PUBLISHABLE_KEY),
         "secret_key_set": bool(STRIPE_SECRET_KEY),
-        "publishable_key_prefix": STRIPE_PUBLISHABLE_KEY[:7] if STRIPE_PUBLISHABLE_KEY else "None",
-        "secret_key_prefix": STRIPE_SECRET_KEY[:7] if STRIPE_SECRET_KEY else "None"
+        "publishable_key_prefix": (
+            STRIPE_PUBLISHABLE_KEY[:7] if STRIPE_PUBLISHABLE_KEY else "None"
+        ),
+        "secret_key_prefix": (
+            STRIPE_SECRET_KEY[:7] if STRIPE_SECRET_KEY else "None"
+        ),
     }
 
 
@@ -824,16 +951,17 @@ async def test_stripe_simple():
     """Simple Stripe test to verify library and credentials"""
     try:
         import stripe
+
         stripe.api_key = STRIPE_SECRET_KEY
-        
+
         # Try to list a few products to test the connection
         products = stripe.Product.list(limit=1)
-        
+
         return {
             "stripe_library_imported": True,
             "api_key_set": bool(STRIPE_SECRET_KEY),
             "api_connection_test": "success",
-            "product_count": len(products.data)
+            "product_count": len(products.data),
         }
     except Exception as e:
         return {
@@ -841,13 +969,17 @@ async def test_stripe_simple():
             "api_key_set": bool(STRIPE_SECRET_KEY),
             "api_connection_test": "failed",
             "error": str(e),
-            "error_type": type(e).__name__
+            "error_type": type(e).__name__,
         }
 
+
 # Document Upload Interface
+
+
 @app.get("/upload", response_class=HTMLResponse)
 async def upload_interface():
-    return HTMLResponse(content="""
+    return HTMLResponse(
+        content="""
     <!DOCTYPE html>
     <html lang="en">
     <head>
@@ -875,7 +1007,7 @@ async def upload_interface():
                 <h1>📁 Document Upload Center</h1>
                 <p>Upload your institutional documents for AI-powered standards analysis</p>
             </div>
-            
+
             <div class="card">
                 <h2>Upload Documents</h2>
                 <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
@@ -889,7 +1021,7 @@ async def upload_interface():
                     🚀 Process Documents
                 </button>
             </div>
-            
+
             <div class="card">
                 <h2>What We Analyze</h2>
                 <ul class="feature-list">
@@ -901,7 +1033,7 @@ async def upload_interface():
                     <li>Compliance documentation</li>
                 </ul>
             </div>
-            
+
             <div class="card">
                 <h2>AI Analysis Features</h2>
                 <ul class="feature-list">
@@ -913,41 +1045,41 @@ async def upload_interface():
                 </ul>
             </div>
         </div>
-        
+
         <script>
             let selectedFiles = [];
-            
+
             function handleFileSelect(event) {
                 selectedFiles = Array.from(event.target.files);
                 updateFileList();
                 document.getElementById('processBtn').disabled = selectedFiles.length === 0;
             }
-            
+
             function updateFileList() {
                 const fileList = document.getElementById('fileList');
                 if (selectedFiles.length === 0) {
                     fileList.innerHTML = '';
                     return;
                 }
-                
-                fileList.innerHTML = '<h3>Selected Files:</h3>' + 
-                    selectedFiles.map(file => 
+
+                fileList.innerHTML = '<h3>Selected Files:</h3>' +
+                    selectedFiles.map(file =>
                         `<div style="padding: 0.5rem; background: #f7fafc; margin: 0.5rem 0; border-radius: 4px;">
                             📄 ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)
                         </div>`
                     ).join('');
             }
-            
+
             function processFiles() {
                 if (selectedFiles.length === 0) return;
-                
+
                 // In a real implementation, this would upload files to the server
                 alert(`Processing ${selectedFiles.length} files for AI analysis...\\n\\nThis is a demo interface. In the full platform, your documents would be uploaded securely and analyzed by our A³E engine.`);
-                
+
                 // Simulate processing
                 document.getElementById('processBtn').innerHTML = '⏳ Processing...';
                 document.getElementById('processBtn').disabled = true;
-                
+
                 setTimeout(() => {
                     alert('✅ Analysis complete! Your documents have been processed and mapped to relevant accreditation standards.');
                     window.location.href = '/evidence';
@@ -956,12 +1088,17 @@ async def upload_interface():
         </script>
     </body>
     </html>
-    """)
+    """
+    )
+
 
 # Evidence Management Interface
+
+
 @app.get("/evidence", response_class=HTMLResponse)
 async def evidence_interface():
-    return HTMLResponse(content="""
+    return HTMLResponse(
+        content="""
     <!DOCTYPE html>
     <html lang="en">
     <head>
@@ -988,7 +1125,7 @@ async def evidence_interface():
                 <h1>📊 Evidence Management</h1>
                 <p>AI-cataloged evidence mapped to accreditation standards</p>
             </div>
-            
+
             <div class="card">
                 <h2>Evidence Summary</h2>
                 <div class="grid">
@@ -1006,10 +1143,10 @@ async def evidence_interface():
                     </div>
                 </div>
             </div>
-            
+
             <div class="card">
                 <h2>Recent Evidence Items</h2>
-                
+
                 <div class="evidence-item">
                     <h3>Faculty Handbook - Section 3.2: Academic Policies</h3>
                     <p style="color: #718096; margin: 0.5rem 0;">Extracted from: Faculty_Handbook_2024.pdf</p>
@@ -1023,7 +1160,7 @@ async def evidence_interface():
                         <div class="confidence-fill" style="width: 94%;"></div>
                     </div>
                 </div>
-                
+
                 <div class="evidence-item">
                     <h3>Assessment Report - Learning Outcomes Analysis</h3>
                     <p style="color: #718096; margin: 0.5rem 0;">Extracted from: Annual_Assessment_Report_2024.pdf</p>
@@ -1036,7 +1173,7 @@ async def evidence_interface():
                         <div class="confidence-fill" style="width: 87%;"></div>
                     </div>
                 </div>
-                
+
                 <div class="evidence-item">
                     <h3>Strategic Plan - Institutional Effectiveness</h3>
                     <p style="color: #718096; margin: 0.5rem 0;">Extracted from: Strategic_Plan_2024-2029.pdf</p>
@@ -1050,7 +1187,7 @@ async def evidence_interface():
                     </div>
                 </div>
             </div>
-            
+
             <div class="card">
                 <h2>Actions</h2>
                 <a href="/upload" class="btn">📁 Upload More Documents</a>
@@ -1061,12 +1198,17 @@ async def evidence_interface():
         </div>
     </body>
     </html>
-    """)
+    """
+    )
+
 
 # AI Recommendations Interface
+
+
 @app.get("/recommendations", response_class=HTMLResponse)
 async def recommendations_interface():
-    return HTMLResponse(content="""
+    return HTMLResponse(
+        content="""
     <!DOCTYPE html>
     <html lang="en">
     <head>
@@ -1099,10 +1241,10 @@ async def recommendations_interface():
                 <h1>🤖 AI Recommendations</h1>
                 <p>Personalized suggestions to improve your accreditation compliance</p>
             </div>
-            
+
             <div class="card">
                 <h2>Priority Recommendations</h2>
-                
+
                 <div class="recommendation priority-high">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                         <h3>Missing Learning Outcomes Documentation</h3>
@@ -1117,7 +1259,7 @@ async def recommendations_interface():
                     </ul>
                     <button class="btn" onclick="alert('Detailed action plan and templates would be provided here.')">📋 Get Action Plan</button>
                 </div>
-                
+
                 <div class="recommendation priority-medium">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                         <h3>Faculty Qualifications Review Needed</h3>
@@ -1132,7 +1274,7 @@ async def recommendations_interface():
                     </ul>
                     <button class="btn" onclick="alert('Faculty audit checklist and templates would be provided here.')">👥 Review Faculty Matrix</button>
                 </div>
-                
+
                 <div class="recommendation priority-low">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                         <h3>Enhance Financial Resource Documentation</h3>
@@ -1148,7 +1290,7 @@ async def recommendations_interface():
                     <button class="btn" onclick="alert('Financial documentation templates would be provided here.')">💰 View Templates</button>
                 </div>
             </div>
-            
+
             <div class="card">
                 <h2>AI Insights</h2>
                 <p>Based on analysis of your institutional documents and comparison with peer institutions:</p>
@@ -1167,7 +1309,7 @@ async def recommendations_interface():
                     </li>
                 </ul>
             </div>
-            
+
             <div class="card">
                 <h2>Actions</h2>
                 <a href="/evidence" class="btn">📊 Review Supporting Evidence</a>
@@ -1178,12 +1320,17 @@ async def recommendations_interface():
         </div>
     </body>
     </html>
-    """)
+    """
+    )
+
 
 # Onboarding Interface
+
+
 @app.get("/onboarding", response_class=HTMLResponse)
 async def onboarding_interface():
-    return HTMLResponse(content="""
+    return HTMLResponse(
+        content="""
     <!DOCTYPE html>
     <html lang="en">
     <head>
@@ -1218,10 +1365,10 @@ async def onboarding_interface():
                     </div>
                 </div>
             </div>
-            
+
             <div class="card">
                 <h2>Setup Steps</h2>
-                
+
                 <div class="step">
                     <div style="display: flex; align-items: center; margin-bottom: 1rem;">
                         <span class="step-number">1</span>
@@ -1231,7 +1378,7 @@ async def onboarding_interface():
                     <p>Configure your institution details, accreditation requirements, and compliance timeline.</p>
                     <a href="#" class="btn" onclick="alert('Institution profile is already configured!')">✓ Completed</a>
                 </div>
-                
+
                 <div class="step">
                     <div style="display: flex; align-items: center; margin-bottom: 1rem;">
                         <span class="step-number">2</span>
@@ -1247,7 +1394,7 @@ async def onboarding_interface():
                     </ul>
                     <a href="/upload" class="btn">📁 Upload Documents</a>
                 </div>
-                
+
                 <div class="step">
                     <div style="display: flex; align-items: center; margin-bottom: 1rem;">
                         <span class="step-number">3</span>
@@ -1257,7 +1404,7 @@ async def onboarding_interface():
                     <p>Review AI-generated evidence mapping and compliance analysis results.</p>
                     <a href="/evidence" class="btn" disabled style="opacity: 0.5;">📊 Review Evidence</a>
                 </div>
-                
+
                 <div class="step">
                     <div style="display: flex; align-items: center; margin-bottom: 1rem;">
                         <span class="step-number">4</span>
@@ -1268,7 +1415,7 @@ async def onboarding_interface():
                     <a href="/recommendations" class="btn" disabled style="opacity: 0.5;">🤖 View Recommendations</a>
                 </div>
             </div>
-            
+
             <div class="card">
                 <h2>Quick Actions</h2>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
@@ -1289,7 +1436,7 @@ async def onboarding_interface():
                     </div>
                 </div>
             </div>
-            
+
             <div class="card">
                 <h2>What's Next?</h2>
                 <p style="margin-bottom: 1rem;">Once you complete the initial setup:</p>
@@ -1304,5 +1451,5 @@ async def onboarding_interface():
         </div>
     </body>
     </html>
-    """)
-
+    """
+    )

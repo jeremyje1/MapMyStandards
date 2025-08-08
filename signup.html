@@ -9,8 +9,8 @@
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind (built) -->
+    <link rel="stylesheet" href="/assets/styles.css">
     
     <style>
         body { font-family: 'Inter', sans-serif; }
@@ -178,11 +178,12 @@
                                 class="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors">
                             ← Back
                         </button>
-                        <button type="button" onclick="startTrial()" 
+                        <button type="button" onclick="startTrial(this)" 
                                 class="flex-1 bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors">
                             Start Free Trial →
                         </button>
                     </div>
+                    <div id="trial-error" class="hidden text-sm text-red-600 mt-3" role="alert"></div>
                 </div>
             </form>
         </div>
@@ -192,6 +193,28 @@
         let currentStep = 1;
         let selectedPlan = 'monthly';
 
+        // Preselect plan from URL (?plan=monthly|annual)
+        (function initPlanFromQuery() {
+            try {
+                const params = new URLSearchParams(window.location.search);
+                const plan = params.get('plan');
+                if (plan === 'monthly' || plan === 'annual') {
+                    selectedPlan = plan;
+                    // Update selection UI to match the plan from URL
+                    const options = document.querySelectorAll('.plan-option');
+                    options.forEach(p => {
+                        const isSelected = p.dataset.plan === plan;
+                        p.classList.toggle('border-blue-600', isSelected);
+                        p.classList.toggle('bg-blue-50', isSelected);
+                        p.classList.toggle('border-gray-200', !isSelected);
+                    });
+                    const priceText = plan === 'monthly' ? '$49.99/month' : '$499.99/year';
+                    const priceEl = document.getElementById('selected-price');
+                    if (priceEl) { priceEl.textContent = priceText; }
+                }
+            } catch (e) { /* noop */ }
+        })();
+
         // Plan selection
         document.querySelectorAll('.plan-option').forEach(option => {
             option.addEventListener('click', function() {
@@ -200,53 +223,43 @@
                     p.classList.remove('border-blue-600', 'bg-blue-50');
                     p.classList.add('border-gray-200');
                 });
-                
                 // Select this plan
                 this.classList.add('border-blue-600', 'bg-blue-50');
                 this.classList.remove('border-gray-200');
-                
                 selectedPlan = this.dataset.plan;
-                
-                // Update header price
                 const priceText = selectedPlan === 'monthly' ? '$49.99/month' : '$499.99/year';
-                document.getElementById('selected-price').textContent = priceText;
+                const priceEl = document.getElementById('selected-price');
+                if (priceEl) { priceEl.textContent = priceText; }
             });
         });
 
         function nextStep(step) {
             // Validate current step
             if (!validateStep(currentStep)) return;
-            
             // Hide current step
             document.getElementById(`step${currentStep}`).classList.remove('active');
-            
             // Show next step
             document.getElementById(`step${step}`).classList.add('active');
-            
             // Update progress indicators
             updateProgressIndicator(step);
-            
             currentStep = step;
         }
 
         function previousStep(step) {
             // Hide current step
             document.getElementById(`step${currentStep}`).classList.remove('active');
-            
             // Show previous step
             document.getElementById(`step${step}`).classList.add('active');
-            
             // Update progress indicators
             updateProgressIndicator(step);
-            
             currentStep = step;
         }
 
         function updateProgressIndicator(step) {
             // Reset all indicators
             for (let i = 1; i <= 3; i++) {
-                const indicator = document.getElementById(`step${i}-indicator`) || 
-                                document.querySelector(`[data-step="${i}"]`);
+                const indicator = document.getElementById(`step${i}-indicator`) ||
+                                  document.querySelector(`[data-step="${i}"]`);
                 if (indicator) {
                     if (i <= step) {
                         indicator.classList.remove('bg-gray-300', 'text-gray-500');
@@ -270,7 +283,6 @@
                         return false;
                     }
                 }
-                
                 // Validate email format
                 const email = document.getElementById('email');
                 if (!email.value.includes('@')) {
@@ -279,42 +291,49 @@
                     return false;
                 }
             }
-            
             if (step === 2) {
                 const username = document.getElementById('username');
                 const password = document.getElementById('password');
                 const confirmPassword = document.getElementById('confirmPassword');
-                
                 if (!username.value.trim()) {
                     username.focus();
                     alert('Please enter a username');
                     return false;
                 }
-                
                 if (password.value.length < 8) {
                     password.focus();
                     alert('Password must be at least 8 characters');
                     return false;
                 }
-                
                 if (password.value !== confirmPassword.value) {
                     confirmPassword.focus();
                     alert('Passwords do not match');
                     return false;
                 }
             }
-            
             return true;
         }
 
-        async function startTrial() {
+        async function startTrial(button) {
+            const errorEl = document.getElementById('trial-error');
+            const setError = (msg) => {
+                if (!errorEl) return;
+                errorEl.textContent = msg;
+                errorEl.classList.remove('hidden');
+            };
+            const clearError = () => {
+                if (!errorEl) return;
+                errorEl.textContent = '';
+                errorEl.classList.add('hidden');
+            };
+
             try {
+                clearError();
                 // Show loading state
-                const button = event.target;
-                const originalText = button.innerHTML;
+                const originalHTML = button.innerHTML;
                 button.disabled = true;
                 button.innerHTML = '⏳ Creating your account...';
-                
+
                 // Collect all form data
                 const formData = {
                     firstName: document.getElementById('firstName').value,
@@ -325,38 +344,44 @@
                     password: document.getElementById('password').value,
                     plan: selectedPlan
                 };
-                
+
                 // Backend URL - auto-detect environment
-                const BACKEND_URL = window.location.hostname === 'localhost' ? 
-                    'http://localhost:5000' : 
-                    'https://api.mapmystandards.ai'; // UPDATE WITH YOUR BACKEND URL
-                
-                // Create user account and get Stripe checkout session
+                const BACKEND_URL = window.location.hostname === 'localhost' ?
+                    'http://localhost:5000' :
+                    'https://api.mapmystandards.ai';
+
                 const response = await fetch(`${BACKEND_URL}/create-trial-account`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(formData)
                 });
-                
-                const data = await response.json();
-                
-                if (data.success && data.checkout_url) {
-                    // Redirect to Stripe Checkout for payment method collection
-                    window.location.href = data.checkout_url;
-                } else {
-                    throw new Error(data.error || 'Failed to create account');
+
+                let data = {};
+                try { data = await response.json(); } catch (_) { /* ignore JSON errors */ }
+
+                if (!response.ok) {
+                    // Show specific backend error when available
+                    const msg = (data && data.error) ? data.error : 'Failed to create account';
+                    throw new Error(msg);
                 }
-                
+
+                if (data.success && data.checkout_url) {
+                    window.location.href = data.checkout_url;
+                    return;
+                }
+
+                throw new Error(data.error || 'Failed to create account');
+
             } catch (error) {
-                console.error('Error:', error);
-                alert('Sorry, there was an error creating your account. Please try again.');
-                
-                // Reset button
-                const button = event.target;
-                button.disabled = false;
-                button.innerHTML = 'Start Free Trial →';
+                console.error('Start trial error:', error);
+                // Prefer inline message over alert for better UX
+                setError(error.message || 'Sorry, there was an error creating your account. Please try again.');
+            } finally {
+                // Reset button state safely
+                if (button) {
+                    button.disabled = false;
+                    button.innerHTML = 'Start Free Trial →';
+                }
             }
         }
     </script>

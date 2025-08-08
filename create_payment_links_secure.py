@@ -14,25 +14,26 @@ load_dotenv()
 # Set the Stripe API key from environment
 stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
 
+
 def create_payment_links():
     """Create Stripe Payment Links for easy checkout"""
-    
+
     if not stripe.api_key:
         print("❌ Error: STRIPE_SECRET_KEY not found in environment variables")
         return None
-        
+
     # Get price IDs from environment
     monthly_price_id = os.getenv('STRIPE_MONTHLY_PRICE_ID')
     yearly_price_id = os.getenv('STRIPE_YEARLY_PRICE_ID')
-    
+
     if not monthly_price_id or not yearly_price_id:
         print("❌ Error: Price IDs not found in environment variables")
         print("Please set STRIPE_MONTHLY_PRICE_ID and STRIPE_YEARLY_PRICE_ID")
         return None
-    
+
     print("🔗 Creating Stripe Payment Links")
     print("=" * 40)
-    
+
     try:
         # Create monthly payment link
         monthly_link = stripe.PaymentLink.create(
@@ -43,13 +44,14 @@ def create_payment_links():
             after_completion={
                 "type": "redirect",
                 "redirect": {
-                    "url": "https://platform.mapmystandards.ai/dashboard.html?plan=monthly&success=true"
+                    "url": ("https://platform.mapmystandards.ai/"
+                            "dashboard.html?plan=monthly&success=true")
                 }
             }
         )
-        
+
         print(f"✅ Monthly payment link: {monthly_link.url}")
-        
+
         # Create yearly payment link
         yearly_link = stripe.PaymentLink.create(
             line_items=[{
@@ -59,21 +61,23 @@ def create_payment_links():
             after_completion={
                 "type": "redirect",
                 "redirect": {
-                    "url": "https://platform.mapmystandards.ai/dashboard.html?plan=yearly&success=true"
+                    "url": ("https://platform.mapmystandards.ai/"
+                            "dashboard.html?plan=yearly&success=true")
                 }
             }
         )
-        
+
         print(f"✅ Yearly payment link: {yearly_link.url}")
-        
+
         return {
             'monthly_link': monthly_link.url,
             'yearly_link': yearly_link.url
         }
-        
+
     except Exception as e:
         print(f"❌ Error creating payment links: {str(e)}")
         return None
+
 
 if __name__ == "__main__":
     result = create_payment_links()
