@@ -1,47 +1,28 @@
 {
   "version": 2,
+  "name": "mapmystandards-web",
   "builds": [
+    { "src": "package.json", "use": "@vercel/static-build", "config": { "distDir": "." } }
+  ],
+  "headers": [
     {
-      "src": "*.html",
-      "use": "@vercel/static"
+      "source": "/assets/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
     }
   ],
   "rewrites": [
-    {
-      "source": "/",
-      "destination": "/pricing_clean.html"
-    },
-    {
-      "source": "/pricing",
-      "destination": "/pricing_clean.html"
-    },
-    {
-      "source": "/signup",
-      "destination": "/signup.html"
-    },
-    {
-      "source": "/trial",
-      "destination": "/signup.html"
-    },
-    {
-      "source": "/contact",
-      "destination": "/contact.html"
-    },
-    {
-      "source": "/trial-success",
-      "destination": "/trial-success.html"
-    }
+    { "source": "/", "destination": "/pricing_clean.html" },
+    { "source": "/pricing", "destination": "/pricing_clean.html" },
+    { "source": "/signup", "destination": "/signup.html" },
+    { "source": "/trial", "destination": "/signup.html" },
+    { "source": "/contact", "destination": "/contact.html" },
+    { "source": "/trial-success", "destination": "/trial-success.html" }
   ],
   "redirects": [
-    {
-      "source": "/login",
-      "destination": "https://api.mapmystandards.ai/login",
-      "permanent": false
-    },
-    {
-      "source": "/dashboard",
-      "destination": "https://api.mapmystandards.ai/dashboard", 
-      "permanent": false
-    }
-  ]
+    { "source": "/login", "destination": "https://api.mapmystandards.ai/login", "permanent": false },
+    { "source": "/dashboard", "destination": "https://api.mapmystandards.ai/dashboard", "permanent": false }
+  ],
+  "cleanUrls": true
 }
