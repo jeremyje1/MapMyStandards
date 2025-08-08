@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Platform Status | MapMyStandards</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/styles.css" />
+  <style> body { font-family: 'Inter', sans-serif; } code { background:#f3f4f6; padding:2px 6px; border-radius:6px; } </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <div class="max-w-3xl mx-auto px-4 py-12">
+    <div class="bg-white rounded-2xl shadow-sm border p-8">
+      <h1 class="text-2xl font-bold text-gray-900 mb-2">MapMyStandards Platform Status</h1>
+      <p class="text-gray-600 mb-6">Live checks for the frontend and backend services.</p>
+
+      <div id="cssStatus" class="mb-6 p-4 rounded-lg border bg-gray-50">
+        <div class="flex items-center gap-2 mb-1">
+          <span class="text-lg" id="cssIcon">🕒</span>
+          <h2 class="font-semibold text-gray-900">Frontend CSS</h2>
+        </div>
+        <p class="text-sm text-gray-600">Verifying that <code>/assets/styles.css</code> is loaded.</p>
+      </div>
+
+      <div id="apiStatus" class="mb-6 p-4 rounded-lg border bg-gray-50">
+        <div class="flex items-center gap-2 mb-1">
+          <span class="text-lg" id="apiIcon">🕒</span>
+          <h2 class="font-semibold text-gray-900">Backend API</h2>
+        </div>
+        <p class="text-sm text-gray-600">Checking <code>https://api.mapmystandards.ai/status</code> and <code>/health</code>.</p>
+        <pre id="apiOutput" class="mt-3 text-xs text-gray-700 whitespace-pre-wrap"></pre>
+      </div>
+
+      <div class="mt-8 flex items-center justify-between">
+        <a href="/" class="text-blue-600 hover:text-blue-800">← Back to site</a>
+        <button id="rerun" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">Re-run Checks</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function checkCSS() {
+      const testEl = document.createElement('div');
+      testEl.className = 'hidden text-blue-600';
+      document.body.appendChild(testEl);
+      const color = getComputedStyle(testEl).color;
+      document.body.removeChild(testEl);
+      const ok = !!color && color !== 'rgb(0, 0, 0)';
+      document.getElementById('cssIcon').textContent = ok ? '✅' : '❌';
+      document.getElementById('cssStatus').classList.toggle('border-green-300', ok);
+      document.getElementById('cssStatus').classList.toggle('bg-green-50', ok);
+      document.getElementById('cssStatus').classList.toggle('border-red-300', !ok);
+      document.getElementById('cssStatus').classList.toggle('bg-red-50', !ok);
+    }
+
+    async function checkAPI() {
+      const output = document.getElementById('apiOutput');
+      output.textContent = '';
+      const endpoints = [
+        'https://api.mapmystandards.ai/status',
+        'https://api.mapmystandards.ai/health'
+      ];
+      let allOk = true;
+      for (const url of endpoints) {
+        try {
+          const res = await fetch(url, { method: 'GET', headers: { 'accept': 'application/json,text/plain,*/*' } });
+          const text = await res.text();
+          output.textContent += `GET ${url} -> ${res.status}\n${text}\n\n`;
+          if (!(res.status >= 200 && res.status < 400)) allOk = false;
+        } catch (e) {
+          allOk = false;
+          output.textContent += `GET ${url} -> ERROR\n${e}\n\n`;
+        }
+      }
+      document.getElementById('apiIcon').textContent = allOk ? '✅' : '❌';
+      const box = document.getElementById('apiStatus');
+      box.classList.toggle('border-green-300', allOk);
+      box.classList.toggle('bg-green-50', allOk);
+      box.classList.toggle('border-red-300', !allOk);
+      box.classList.toggle('bg-red-50', !allOk);
+    }
+
+    async function run() {
+      await checkCSS();
+      await checkAPI();
+    }
+
+    document.getElementById('rerun').addEventListener('click', run);
+    run();
+  </script>
+</body>
+</html>

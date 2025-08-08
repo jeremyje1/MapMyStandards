@@ -18,7 +18,8 @@
     { "source": "/signup", "destination": "/signup.html" },
     { "source": "/trial", "destination": "/signup.html" },
     { "source": "/contact", "destination": "/contact.html" },
-    { "source": "/trial-success", "destination": "/trial-success.html" }
+    { "source": "/trial-success", "destination": "/trial-success.html" },
+    { "source": "/status", "destination": "/status.html" }
   ],
   "redirects": [
     { "source": "/login", "destination": "https://api.mapmystandards.ai/login", "permanent": false },
