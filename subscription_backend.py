@@ -282,8 +282,10 @@ def create_trial_account():
             if field not in data or not data[field]:
                 return jsonify({"error": f"Missing required field: {field}"}), 400
 
-        # Validate email format
-        if "@" not in data["email"]:
+        # Validate email format (improved validation)
+        import re
+        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        if not re.match(email_pattern, data["email"]):
             return jsonify({"error": "Invalid email format"}), 400
 
         # Validate password length
