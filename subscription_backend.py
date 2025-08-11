@@ -241,6 +241,19 @@ def test_email_config():
         return jsonify({"error": f"Email test failed: {str(e)}"}), 500
 
 
+@app.route("/debug-config")
+def debug_config():
+    """Debug endpoint to check configuration"""
+    return jsonify({
+        "stripe_key_configured": bool(STRIPE_SECRET_KEY),
+        "stripe_publishable_key_configured": bool(STRIPE_PUBLISHABLE_KEY),
+        "monthly_price_id": MONTHLY_PRICE_ID,
+        "annual_price_id": ANNUAL_PRICE_ID,
+        "email_service_configured": bool(email_service),
+        "admin_email_configured": bool(ADMIN_EMAIL)
+    })
+
+
 # Simple in-memory rate limiting (per-process). For clustered deployments use Redis.
 RATE_LIMITS = {}
 
