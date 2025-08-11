@@ -1,0 +1,22 @@
+# MailerSend Configuration for Railway Environment Variables
+# Copy these to Railway dashboard under Environment Variables
+
+# MailerSend SMTP Settings
+SMTP_SERVER=smtp.mailersend.net
+SMTP_PORT=587
+SMTP_USERNAME=MS_xSQiUP@test-vz9dlemv8qp4kj50.mlsender.net
+SMTP_PASSWORD=mssp.49hmROn.3zxk54vkj5zljy6v.inVzjZZ
+
+# Email Settings for MapMyStandards
+ADMIN_EMAIL=info@northpathstrategies.org
+FROM_EMAIL=hello@mapmystandards.ai
+FROM_NAME=MapMyStandards
+
+# Email Configuration
+EMAIL_USE_TLS=true
+EMAIL_USE_SSL=false
+
+# Note: MailerSend trial account limitations:
+# - Can only send to administrator's email
+# - Need to upgrade account for full functionality
+# - Once upgraded, can send to any verified domain

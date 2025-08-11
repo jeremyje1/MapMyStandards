@@ -13,12 +13,17 @@ class EmailNotificationService:
     """Handles email notifications for A³E platform"""
     
     def __init__(self):
-        # Configure with environment variables or fallback to defaults
-        self.smtp_server = os.getenv('SMTP_SERVER', 'smtp.gmail.com')
+        # Configure with environment variables for MailerSend
+        self.smtp_server = os.getenv('SMTP_SERVER', 'smtp.mailersend.net')
         self.smtp_port = int(os.getenv('SMTP_PORT', '587'))
         self.smtp_username = os.getenv('SMTP_USERNAME', '')
         self.smtp_password = os.getenv('SMTP_PASSWORD', '')
-        self.from_email = os.getenv('FROM_EMAIL', 'support@mapmystandards.ai')
+        self.from_email = os.getenv('FROM_EMAIL', 'hello@mapmystandards.ai')
+        self.from_name = os.getenv('FROM_NAME', 'MapMyStandards')
+        
+        # For trial accounts, we may need to limit recipients
+        self.is_trial_account = os.getenv('MAILERSEND_TRIAL', 'true').lower() == 'true'
+        self.admin_email = os.getenv('ADMIN_EMAIL', 'info@northpathstrategies.org')
         
     def send_welcome_email(self, user_email: str, user_name: str, plan: str, api_key: str) -> bool:
         """Send welcome email to new subscribers"""
@@ -239,18 +244,38 @@ class EmailNotificationService:
             return False
     
     def _send_email(self, to_email: str, subject: str, html_body: str) -> bool:
-        """Send email using SMTP"""
+        """Send email using SMTP with MailerSend support"""
         try:
+            # For MailerSend trial accounts, redirect customer emails to admin
+            original_recipient = to_email
+            if self.is_trial_account and to_email != self.admin_email:
+                print(f"Trial account: Redirecting email from {to_email} to admin {self.admin_email}")
+                to_email = self.admin_email
+                # Add original recipient info to subject
+                subject = f"[FOR: {original_recipient}] {subject}"
+            
             msg = MIMEMultipart('alternative')
             msg['Subject'] = subject
-            msg['From'] = self.from_email
+            msg['From'] = f"{self.from_name} <{self.from_email}>"
             msg['To'] = to_email
+            
+            # Add plain text version for better compatibility
+            plain_text = f"""
+{subject}
+
+This email was intended for: {original_recipient}
+(Sent via MailerSend from MapMyStandards platform)
+
+{html_body}
+"""
+            text_part = MIMEText(plain_text, 'plain')
+            msg.attach(text_part)
             
             # Add HTML content
             html_part = MIMEText(html_body, 'html')
             msg.attach(html_part)
             
-            # Send email
+            # Send email using MailerSend SMTP
             server = smtplib.SMTP(self.smtp_server, self.smtp_port)
             server.starttls()
             
@@ -260,11 +285,27 @@ class EmailNotificationService:
             server.send_message(msg)
             server.quit()
             
-            print(f"Email sent successfully to {to_email}")
+            print(f"Email sent successfully to {to_email} (originally for {original_recipient})")
             return True
             
         except Exception as e:
-            print(f"Failed to send email to {to_email}: {e}")
+            print(f"Failed to send email to {to_email} (originally for {original_recipient}): {e}")
+            # For trial accounts, try sending notification to admin about the failure
+            if self.is_trial_account and to_email != self.admin_email:
+                try:
+                    fallback_msg = f"""
+Failed to send email to customer: {original_recipient}
+
+Subject: {subject}
+Error: {str(e)}
+
+This is a MailerSend trial account limitation.
+Consider upgrading to send emails to all customers.
+"""
+                    self._send_email(self.admin_email, f"Email Send Failed - {original_recipient}", fallback_msg)
+                except:
+                    pass  # Don't create infinite loops
+            
             return False
 
 # Initialize email service
