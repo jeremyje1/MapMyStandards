@@ -54,28 +54,20 @@ if CryptContext:
 else:  # fallback (will use legacy SHA-256 only)
     pwd_context = None
 
+def hash_password(password: str) -> str:  # override legacy
+    if pwd_context:
+        return pwd_context.hash(password)
+    return hashlib.sha256(password.encode()).hexdigest()
 
-# Helper functions inserted early so later code can reference them
-if 'pwd_context' not in globals():
-    if CryptContext:
-        pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-    else:
-        pwd_context = None
-
-    def hash_password(password: str) -> str:  # override legacy
+def verify_password(plain: str, stored: str) -> bool:
+    try:
+        if len(stored) == 64 and all(c in "0123456789abcdef" for c in stored.lower()):
+            return hashlib.sha256(plain.encode()).hexdigest() == stored
         if pwd_context:
-            return pwd_context.hash(password)
-        return hashlib.sha256(password.encode()).hexdigest()
-
-    def verify_password(plain: str, stored: str) -> bool:
-        try:
-            if len(stored) == 64 and all(c in "0123456789abcdef" for c in stored.lower()):
-                return hashlib.sha256(plain.encode()).hexdigest() == stored
-            if pwd_context:
-                return pwd_context.verify(plain, stored)
-            return False
-        except Exception:
-            return False
+            return pwd_context.verify(plain, stored)
+        return False
+    except Exception:
+        return False
 
 
 # Define subscription helper utilities early

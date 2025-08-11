@@ -16,19 +16,20 @@ def test_actual_production_api():
     print("=" * 70)
     
     # Use the CORRECT endpoint and field structure (snake_case)
+    # Test with proper camelCase fields as required by backend
     test_data = {
-        "first_name": "Test",
-        "last_name": "User",
+        "firstName": "Test",
+        "lastName": "User",
         "email": f"test+{datetime.now().strftime('%Y%m%d_%H%M%S')}@mapmystandards.ai",
-        "institution_name": "Test Organization",
+        "institution": "Test Organization",
         "username": f"testuser{datetime.now().strftime('%H%M%S')}",
         "password": "TestPassword123!",
-        "plan": "monthly"  # Try monthly first
+        "plan": "monthly"  # lowercase as required
     }
 
     print(f"📧 Email: {test_data['email']}")
-    print(f"👤 Name: {test_data['first_name']} {test_data['last_name']}")
-    print(f"🏢 Institution: {test_data['institution_name']}")
+    print(f"👤 Name: {test_data['firstName']} {test_data['lastName']}")
+    print(f"🏢 Institution: {test_data['institution']}")
     print(f"👤 Username: {test_data['username']}")
     print(f"💳 Plan: {test_data['plan']}")
     
