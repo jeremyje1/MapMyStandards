@@ -9,8 +9,8 @@
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind (built) -->
+    <link rel="stylesheet" href="/assets/styles.css">
     
     <!-- Stripe JS -->
     <script src="https://js.stripe.com/v3/"></script>
@@ -27,24 +27,42 @@
         }
         
         .form-input {
-            width: 100%; padding: 0.75rem 1rem; border: 1px solid #d1d5db; border-radius: 0.5rem; outline: none;
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            outline: none;
+            transition: all 0.2s;
         }
         .form-input:focus {
-            box-shadow: 0 0 0 2px #3b82f6; border-color: transparent;            width: 100%; padding: 0.75rem 1rem; border: 1px solid #d1d5db; border-radius: 0.5rem;
+            box-shadow: 0 0 0 2px #3b82f6;
+            border-color: transparent;
         }
-            outline: none; transition: all 0.2s;
-        }
-        
-        .form-input:focus {
-            box-shadow: 0 0 0 2px #3b82f6; border-color: transparent;        
         .form-label {
-            display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.5rem;        }
-        
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
         .feature-check {
-            display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background-color: #f0fdf4; border-radius: 0.5rem;        }
-        
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background-color: #f0fdf4;
+            border-radius: 0.5rem;
+        }
         .security-badge {
-            display: inline-flex; align-items: center; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; background-color: #dcfce7; color: #166534;        }
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            background-color: #dcfce7;
+            color: #166534;
+        }
     </style>
 </head>
 <body class="bg-gray-50">

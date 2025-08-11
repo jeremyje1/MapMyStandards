@@ -39,8 +39,8 @@ class A3E_SaaS_Integration {
     
     public function enqueue_scripts() {
         if (is_a3e_page()) {
-            // Enqueue Tailwind CSS
-            wp_enqueue_script('tailwind-css', 'https://cdn.tailwindcss.com', array(), '3.0.0');
+            // Use built Tailwind CSS from platform
+            wp_enqueue_style('a3e-styles', 'https://platform.mapmystandards.ai/assets/styles.css', array(), null);
             
             // Enqueue Stripe.js
             wp_enqueue_script('stripe-js', 'https://js.stripe.com/v3/', array(), '3.0.0');
