@@ -1033,11 +1033,11 @@ def dashboard():
                     <div class=\"status-card\">
                         <h2 class=\"text-xl font-semibold mb-6\">Quick Actions</h2>
                         <div class=\"grid grid-cols-1 md:grid-cols-2 gap-4\">
-                            <a href=\"https://engine.mapmystandards.ai\" target=\"_blank\" class=\"block bg-indigo-600 text-white text-center px-6 py-4 rounded-lg font-semibold hover:bg-indigo-700 transition\">
-                                🎯 Launch A³E Engine
+                            <a href=\"http://localhost:8001\" target=\"_blank\" class=\"block bg-indigo-600 text-white text-center px-6 py-4 rounded-lg font-semibold hover:bg-indigo-700 transition\">
+                                🎯 Launch A³E Engine (PRODUCTION)
                             </a>
-                            <a href=\"https://engine.mapmystandards.ai/upload\" target=\"_blank\" class=\"block bg-blue-600 text-white text-center px-6 py-4 rounded-lg font-semibold hover:bg-blue-700 transition\">
-                                📄 Upload Documents
+                            <a href=\"http://localhost:8001/upload\" target=\"_blank\" class=\"block bg-blue-600 text-white text-center px-6 py-4 rounded-lg font-semibold hover:bg-blue-700 transition\">
+                                📄 Upload Real Documents
                             </a>
                             <a href=\"/reports\" class=\"block bg-green-600 text-white text-center px-6 py-4 rounded-lg font-semibold hover:bg-green-700 transition\">
                                 📊 View Reports
@@ -1048,8 +1048,8 @@ def dashboard():
                             <button onclick=\"refreshStatus()\" class=\"bg-gray-600 text-white px-6 py-4 rounded-lg font-semibold hover:bg-gray-700 transition\">
                                 🔄 Refresh Status
                             </button>
-                            <a href=\"https://engine.mapmystandards.ai/docs\" target=\"_blank\" class=\"block bg-yellow-600 text-white text-center px-6 py-4 rounded-lg font-semibold hover:bg-yellow-700 transition\">
-                                📚 API Documentation
+                            <a href=\"http://localhost:8001/docs\" target=\"_blank\" class=\"block bg-yellow-600 text-white text-center px-6 py-4 rounded-lg font-semibold hover:bg-yellow-700 transition\">
+                                📚 A³E API Documentation
                             </a>
                         </div>
                     </div>
