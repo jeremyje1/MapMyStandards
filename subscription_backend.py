@@ -366,10 +366,15 @@ def create_trial_account():
 
     except stripe.error.StripeError as e:
         logger.error(f"Stripe error in create_trial_account: {e}")
-        return jsonify({"error": "Payment system error. Please try again."}), 500
+        logger.error(f"Stripe error type: {type(e)}")
+        logger.error(f"Stripe error message: {str(e)}")
+        return jsonify({"error": f"Payment system error: {str(e)}"}), 500
     except Exception as e:
         logger.error(f"Error in create_trial_account: {e}")
-        return jsonify({"error": "Internal server error"}), 500
+        logger.error(f"Error type: {type(e)}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        return jsonify({"error": f"Internal server error: {str(e)}"}), 500
 
 
 # Email notifications
