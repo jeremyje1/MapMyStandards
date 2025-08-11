@@ -14,8 +14,15 @@ from datetime import datetime
 from flask import Flask, request, jsonify, redirect, session
 from flask_cors import CORS
 from functools import wraps
-from passlib.context import CryptContext  # type: ignore
 import logging
+
+# Try to import passlib, fallback if not available
+try:
+    from passlib.context import CryptContext  # type: ignore
+    CryptContext_available = True
+except ImportError:
+    CryptContext = None
+    CryptContext_available = False
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -40,13 +47,8 @@ ANNUAL_PRICE_ID = os.getenv("ANNUAL_PRICE_ID", "price_1RtXF3K8PKpLCKDZAMb4rM8U")
 stripe.api_key = STRIPE_SECRET_KEY
 
 
-# Ensure CryptContext only defined once
-try:
-    from passlib.context import CryptContext as _PasslibCryptContext  # type: ignore
-except Exception:  # pragma: no cover
-    _PasslibCryptContext = None
-
-CryptContext = _PasslibCryptContext  # unify name
+# Ensure CryptContext only defined once  
+CryptContext = CryptContext if CryptContext_available else None
 
 # Password hashing context (bcrypt) with legacy SHA-256 support
 if CryptContext:
@@ -54,12 +56,14 @@ if CryptContext:
 else:  # fallback (will use legacy SHA-256 only)
     pwd_context = None
 
-def hash_password(password: str) -> str:  # override legacy
+def hash_password(password: str) -> str:
+    """Hash password using bcrypt or fallback to SHA-256"""
     if pwd_context:
         return pwd_context.hash(password)
     return hashlib.sha256(password.encode()).hexdigest()
 
 def verify_password(plain: str, stored: str) -> bool:
+    """Verify password using bcrypt or fallback to SHA-256"""
     try:
         if len(stored) == 64 and all(c in "0123456789abcdef" for c in stored.lower()):
             return hashlib.sha256(plain.encode()).hexdigest() == stored
