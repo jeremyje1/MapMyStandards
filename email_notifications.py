@@ -16,8 +16,15 @@ class EmailNotificationService:
         # Configure SendGrid (primary)
         self.sendgrid_api_key = os.getenv('SENDGRID_API_KEY')
         
-        # Configure MailerSend (backup)
+        # Configure MailerSend API (backup)
         self.mailersend_api_key = os.getenv('MAILERSEND_API_TOKEN')
+        
+        # Configure MailerSend SMTP (tertiary)
+        self.smtp_server = os.getenv('SMTP_SERVER', 'smtp.mailersend.net')
+        self.smtp_port = int(os.getenv('SMTP_PORT', '587'))
+        self.smtp_username = os.getenv('SMTP_USERNAME')
+        self.smtp_password = os.getenv('SMTP_PASSWORD')
+        self.smtp_use_tls = os.getenv('SMTP_USE_TLS', 'true').lower() == 'true'
         
         # Email settings
         self.from_email = os.getenv('EMAIL_FROM', 'support@mapmystandards.ai')
@@ -27,9 +34,14 @@ class EmailNotificationService:
         # Service priority
         self.primary_service = os.getenv('EMAIL_SERVICE_PRIMARY', 'sendgrid')
         self.backup_service = os.getenv('EMAIL_SERVICE_BACKUP', 'mailersend')
+        self.tertiary_service = os.getenv('EMAIL_SERVICE_TERTIARY', 'smtp')
         
         # Check if we have working email configuration
-        self.configured = bool(self.sendgrid_api_key or self.mailersend_api_key)
+        self.configured = bool(
+            self.sendgrid_api_key or 
+            self.mailersend_api_key or 
+            (self.smtp_username and self.smtp_password)
+        )
         
     def _load_mailersend_config(self):
         """Load MailerSend configuration from secure file if available"""
@@ -257,25 +269,32 @@ class EmailNotificationService:
             return False
     
     def _send_email(self, to_email: str, subject: str, html_body: str) -> bool:
-        """Send email using primary service with automatic backup failover"""
+        """Send email using triple redundancy: SendGrid → MailerSend API → MailerSend SMTP"""
         try:
             if not self.configured:
-                print("❌ Email service not configured - No API keys available")
+                print("❌ Email service not configured - No methods available")
                 return False
             
-            # Try primary service first
+            # Try primary service first (SendGrid)
             if self.primary_service == 'sendgrid' and self.sendgrid_api_key:
                 result = self._send_via_sendgrid(to_email, subject, html_body)
                 if result:
                     return True
-                print("⚠️ SendGrid failed, trying backup service...")
+                print("⚠️ SendGrid failed, trying MailerSend API...")
             
-            # Try backup service
+            # Try backup service (MailerSend API)
             if self.backup_service == 'mailersend' and self.mailersend_api_key:
                 result = self._send_via_mailersend(to_email, subject, html_body)
                 if result:
                     return True
-                print("❌ Both email services failed")
+                print("⚠️ MailerSend API failed, trying SMTP...")
+            
+            # Try tertiary service (MailerSend SMTP)
+            if self.tertiary_service == 'smtp' and self.smtp_username and self.smtp_password:
+                result = self._send_via_smtp(to_email, subject, html_body)
+                if result:
+                    return True
+                print("❌ All email services failed")
             
             return False
             
@@ -354,6 +373,51 @@ class EmailNotificationService:
             return False
         except Exception as e:
             print(f"❌ MailerSend error: {e}")
+            return False
+    
+    def _send_via_smtp(self, to_email: str, subject: str, html_body: str) -> bool:
+        """Send email via MailerSend SMTP (tertiary fallback)"""
+        try:
+            import smtplib
+            from email.mime.text import MIMEText
+            from email.mime.multipart import MIMEMultipart
+            
+            msg = MIMEMultipart('alternative')
+            msg['Subject'] = subject
+            msg['From'] = f"{self.from_name} <{self.from_email}>"
+            msg['To'] = to_email
+            
+            # Add plain text version for better compatibility
+            plain_text = f"""
+{subject}
+
+This email was sent from MapMyStandards platform.
+View in a web browser for the best experience.
+"""
+            text_part = MIMEText(plain_text, 'plain')
+            msg.attach(text_part)
+            
+            # Add HTML content
+            html_part = MIMEText(html_body, 'html')
+            msg.attach(html_part)
+            
+            # Send email using MailerSend SMTP
+            server = smtplib.SMTP(self.smtp_server, self.smtp_port)
+            
+            if self.smtp_use_tls:
+                server.starttls()
+            
+            if self.smtp_username and self.smtp_password:
+                server.login(self.smtp_username, self.smtp_password)
+            
+            server.send_message(msg)
+            server.quit()
+            
+            print(f"✅ Email sent via MailerSend SMTP to {to_email}")
+            return True
+            
+        except Exception as e:
+            print(f"❌ MailerSend SMTP error: {e}")
             return False
 
 # Initialize email service
