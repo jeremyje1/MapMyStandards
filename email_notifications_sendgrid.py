@@ -1,5 +1,5 @@
 """
-Email notification system for MapMyStandards with SendGrid (primary) and MailerSend (backup)
+Email notification system for MapMyStandards using SendGrid
 """
 
 import os
@@ -7,42 +7,17 @@ from typing import Dict, Any
 from datetime import datetime, timedelta
 
 class EmailNotificationService:
-    """Handles email notifications for MapMyStandards platform with dual provider support"""
+    """Handles email notifications for MapMyStandards platform using SendGrid"""
     
     def __init__(self):
-        # Load additional environment if available
-        self._load_mailersend_config()
-        
-        # Configure SendGrid (primary)
+        # Configure with SendGrid
         self.sendgrid_api_key = os.getenv('SENDGRID_API_KEY')
-        
-        # Configure MailerSend (backup)
-        self.mailersend_api_key = os.getenv('MAILERSEND_API_TOKEN')
-        
-        # Email settings
         self.from_email = os.getenv('EMAIL_FROM', 'support@mapmystandards.ai')
         self.from_name = os.getenv('EMAIL_FROM_NAME', 'MapMyStandards')
         self.admin_email = os.getenv('ADMIN_EMAIL', 'info@northpathstrategies.org')
         
-        # Service priority
-        self.primary_service = os.getenv('EMAIL_SERVICE_PRIMARY', 'sendgrid')
-        self.backup_service = os.getenv('EMAIL_SERVICE_BACKUP', 'mailersend')
-        
         # Check if we have working email configuration
-        self.configured = bool(self.sendgrid_api_key or self.mailersend_api_key)
-        
-    def _load_mailersend_config(self):
-        """Load MailerSend configuration from secure file if available"""
-        try:
-            if os.path.exists('mailersend_api.env'):
-                with open('mailersend_api.env', 'r') as f:
-                    for line in f:
-                        if line.strip() and not line.startswith('#'):
-                            if '=' in line:
-                                key, value = line.strip().split('=', 1)
-                                os.environ[key] = value
-        except Exception as e:
-            print(f"Note: Could not load MailerSend config: {e}")
+        self.configured = bool(self.sendgrid_api_key)
         
     def send_welcome_email(self, user_email: str, user_name: str, plan: str, api_key: str) -> bool:
         """Send welcome email to new subscribers"""
@@ -257,35 +232,12 @@ class EmailNotificationService:
             return False
     
     def _send_email(self, to_email: str, subject: str, html_body: str) -> bool:
-        """Send email using primary service with automatic backup failover"""
+        """Send email using SendGrid"""
         try:
             if not self.configured:
-                print("❌ Email service not configured - No API keys available")
+                print("Email service not configured - SendGrid API key missing")
                 return False
             
-            # Try primary service first
-            if self.primary_service == 'sendgrid' and self.sendgrid_api_key:
-                result = self._send_via_sendgrid(to_email, subject, html_body)
-                if result:
-                    return True
-                print("⚠️ SendGrid failed, trying backup service...")
-            
-            # Try backup service
-            if self.backup_service == 'mailersend' and self.mailersend_api_key:
-                result = self._send_via_mailersend(to_email, subject, html_body)
-                if result:
-                    return True
-                print("❌ Both email services failed")
-            
-            return False
-            
-        except Exception as e:
-            print(f"❌ Email service error: {e}")
-            return False
-    
-    def _send_via_sendgrid(self, to_email: str, subject: str, html_body: str) -> bool:
-        """Send email via SendGrid"""
-        try:
             import sendgrid
             from sendgrid.helpers.mail import Mail
             
@@ -301,59 +253,14 @@ class EmailNotificationService:
             response = sg.send(message)
             
             if response.status_code in [200, 202]:
-                print(f"✅ Email sent via SendGrid to {to_email} (Status: {response.status_code})")
+                print(f"✅ Email sent successfully to {to_email} (Status: {response.status_code})")
                 return True
             else:
-                print(f"❌ SendGrid failed - Status: {response.status_code}")
+                print(f"❌ Email send failed - Status: {response.status_code}")
                 return False
             
-        except ImportError:
-            print("❌ SendGrid library not installed")
-            return False
         except Exception as e:
-            print(f"❌ SendGrid error: {e}")
-            return False
-    
-    def _send_via_mailersend(self, to_email: str, subject: str, html_body: str) -> bool:
-        """Send email via MailerSend API"""
-        try:
-            import requests
-            
-            url = "https://api.mailersend.com/v1/email"
-            
-            headers = {
-                "Authorization": f"Bearer {self.mailersend_api_key}",
-                "Content-Type": "application/json"
-            }
-            
-            data = {
-                "from": {
-                    "email": self.from_email,
-                    "name": self.from_name
-                },
-                "to": [
-                    {
-                        "email": to_email
-                    }
-                ],
-                "subject": subject,
-                "html": html_body
-            }
-            
-            response = requests.post(url, json=data, headers=headers, timeout=10)
-            
-            if response.status_code in [200, 202]:
-                print(f"✅ Email sent via MailerSend to {to_email} (Status: {response.status_code})")
-                return True
-            else:
-                print(f"❌ MailerSend failed - Status: {response.status_code}, Response: {response.text}")
-                return False
-            
-        except ImportError:
-            print("❌ Requests library not available for MailerSend")
-            return False
-        except Exception as e:
-            print(f"❌ MailerSend error: {e}")
+            print(f"❌ Failed to send email to {to_email}: {e}")
             return False
 
 # Initialize email service

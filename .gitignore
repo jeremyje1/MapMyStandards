@@ -157,3 +157,4 @@ tmp/
 temp/
 .tmp/
 .vercel
+mailersend_api.env
