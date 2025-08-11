@@ -1,0 +1,29 @@
+# Railway Environment Variables Template for MailerSend
+# DO NOT COMMIT ACTUAL CREDENTIALS
+# Use Railway dashboard to set these environment variables
+
+# MailerSend SMTP Settings
+SMTP_SERVER=smtp.mailersend.net
+SMTP_PORT=587
+SMTP_USERNAME=YOUR_MAILERSEND_USERNAME_HERE
+SMTP_PASSWORD=YOUR_MAILERSEND_PASSWORD_HERE
+
+# Email Settings for MapMyStandards
+ADMIN_EMAIL=your-admin@email.com
+FROM_EMAIL=hello@mapmystandards.ai
+FROM_NAME=MapMyStandards
+
+# Email Configuration
+EMAIL_USE_TLS=true
+EMAIL_USE_SSL=false
+
+# INSTRUCTIONS:
+# 1. Go to Railway dashboard
+# 2. Select your service
+# 3. Go to Variables tab
+# 4. Add each variable above with actual values
+# 5. Deploy the service
+
+# SECURITY NOTE:
+# Never commit actual credentials to version control
+# Use Railway's environment variables for production

@@ -28,6 +28,10 @@ test_*smtp*
 test_*auth*
 *email_test*
 *smtp_test*
+mailersend.env
+RAILWAY_EMAIL_ENV_VARS.txt
+*.env
+*_env_vars.txt
 
 # Configuration files that might contain secrets
 config/*.env
