@@ -209,6 +209,38 @@ def home():
     return redirect("https://platform.mapmystandards.ai")
 
 
+@app.route("/health")
+def health_check():
+    """Health check endpoint for deployment verification"""
+    from datetime import datetime
+    return {
+        "service": "mapmystandards-backend",
+        "status": "healthy",
+        "timestamp": datetime.utcnow().isoformat()
+    }
+
+
+@app.route("/test-email")
+def test_email_config():
+    """Test endpoint to verify email configuration"""
+    if not email_service:
+        return jsonify({"error": "Email service not configured"}), 500
+    
+    try:
+        # Send a test email to admin if configured
+        if ADMIN_EMAIL:
+            email_service._send_email(
+                ADMIN_EMAIL,
+                "MapMyStandards Backend Test",
+                "This is a test email to verify SMTP configuration is working correctly."
+            )
+            return jsonify({"status": "success", "message": f"Test email sent to {ADMIN_EMAIL}"})
+        else:
+            return jsonify({"error": "ADMIN_EMAIL not configured"}), 400
+    except Exception as e:
+        return jsonify({"error": f"Email test failed: {str(e)}"}), 500
+
+
 # Simple in-memory rate limiting (per-process). For clustered deployments use Redis.
 RATE_LIMITS = {}
 
