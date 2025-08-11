@@ -283,15 +283,14 @@ def rate_limited(limit: int, window: int):
 
 
 @app.route("/create-trial-account", methods=["POST"])
-@app.route("/trial/signup", methods=["POST"])  # Frontend calls this endpoint
 @rate_limited(limit=10, window=60)  # 10 attempts per minute per IP
 def create_trial_account():
     """Create user account and Stripe checkout session for trial"""
     try:
         data = request.get_json()
 
-        # Validate required fields (updated to match frontend naming)
-        required_fields = ["first_name", "last_name", "email", "institution_name", "plan"]
+        # Validate required fields
+        required_fields = ["firstName", "lastName", "email", "institution", "username", "password", "plan"]
         for field in required_fields:
             if field not in data or not data[field]:
                 return jsonify({"error": f"Missing required field: {field}"}), 400
@@ -302,18 +301,16 @@ def create_trial_account():
         if not re.match(email_pattern, data["email"]):
             return jsonify({"error": "Invalid email format"}), 400
 
-        # Generate temporary password for trial signup
-        import secrets
-        import string
-        temp_password = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(12))
+        # Validate password length
+        if len(data["password"]) < 8:
+            return jsonify({"error": "Password must be at least 8 characters"}), 400
 
-        # Get price ID based on plan (matching frontend values)
-        if data["plan"] == "college":
-            price_id = MONTHLY_PRICE_ID  # $297/month college plan
-        elif data["plan"] == "multicampus":
-            price_id = ANNUAL_PRICE_ID   # Use annual ID for now, adjust later
-        else:
-            return jsonify({"error": "Invalid plan selected"}), 400
+        # Validate plan selection
+        if data["plan"] not in ["monthly", "annual"]:
+            return jsonify({"error": f"Invalid plan selected. Must be 'monthly' or 'annual', received: '{data['plan']}'"}), 400
+
+        # Get price ID based on plan
+        price_id = MONTHLY_PRICE_ID if data["plan"] == "monthly" else ANNUAL_PRICE_ID
 
         conn = sqlite3.connect("mapmystandards.db")
         cursor = conn.cursor()
@@ -325,7 +322,7 @@ def create_trial_account():
             return jsonify({"error": "Email or username already exists"}), 400
 
         # Create user account (initially inactive until trial starts)
-        password_hash = hash_password(temp_password)
+        password_hash = hash_password(data["password"])
 
         cursor.execute(
             """
@@ -333,8 +330,7 @@ def create_trial_account():
                              institution, username, is_active, trial_status)
             VALUES (?, ?, ?, ?, ?, ?, FALSE, 'pending')
         """,
-            (data["email"], password_hash, data["first_name"], data["last_name"], 
-             data["institution_name"], data["email"]),  # Use email as username
+            (data["email"], password_hash, data["firstName"], data["lastName"], data["institution"], data["username"]),
         )
 
         user_id = cursor.lastrowid

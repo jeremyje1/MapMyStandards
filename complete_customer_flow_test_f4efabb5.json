@@ -1,0 +1,27 @@
+{
+  "test_id": "f4efabb5",
+  "timestamp": "2025-08-11T13:36:23.626679",
+  "results": {
+    "production": {
+      "available": true,
+      "health": true,
+      "trial_signup": false,
+      "trial_email_sent": false,
+      "contact_form": false,
+      "contact_email_sent": false,
+      "errors": [
+        "Trial signup: 400",
+        "Contact form: 404"
+      ]
+    },
+    "local": {
+      "available": false,
+      "health": false,
+      "trial_signup": false,
+      "trial_email_sent": false,
+      "contact_form": false,
+      "contact_email_sent": false,
+      "errors": []
+    }
+  }
+}

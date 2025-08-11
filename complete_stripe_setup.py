@@ -10,6 +10,13 @@ from dotenv import load_dotenv
 load_dotenv()
 stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
 
+# Early guard: fail fast if API key isn't configured to avoid cryptic errors later
+if not stripe.api_key:
+    print("❌ STRIPE_SECRET_KEY is not set in environment (.env).")
+    print("   Add STRIPE_SECRET_KEY=<your_stripe_secret> to your .env or export it before running.")
+    print("   Example (zsh): export STRIPE_SECRET_KEY=<value from Stripe dashboard>")
+    raise SystemExit(1)
+
 def get_actual_price_ids():
     """Get the actual Price IDs from your Stripe account"""
     print("🔍 Fetching your actual Price IDs...")
