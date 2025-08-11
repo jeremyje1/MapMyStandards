@@ -993,6 +993,7 @@ def dashboard():
                         <span class=\"ml-2 text-xl font-bold text-gray-900\">MapMyStandards</span>
                     </div>
                     <div class=\"flex items-center space-x-4\">
+                        <a href=\"https://engine.mapmystandards.ai\" target=\"_blank\" class=\"text-indigo-600 hover:text-indigo-800 font-semibold\">🎯 A³E Engine</a>
                         <a href=\"/upload\" class=\"text-gray-700 hover:text-gray-900\">Upload</a>
                         <a href=\"/reports\" class=\"text-gray-700 hover:text-gray-900\">Reports</a>
                         <span class=\"text-gray-700\">Welcome, {session.get('first_name', 'User')}!</span>
@@ -1020,8 +1021,8 @@ def dashboard():
                     <div class=\"text-gray-600\">Account Status</div>
                 </div>
                 <div class=\"status-card\">
-                    <div class=\"text-2xl font-bold text-purple-600\" id=\"notification-count\">0</div>
-                    <div class=\"text-gray-600\">Notifications</div>
+                    <div class=\"text-2xl font-bold text-indigo-600\" id=\"a3e-status\">🎯</div>
+                    <div class=\"text-gray-600\">A³E Engine</div>
                 </div>
             </div>
             
@@ -1032,7 +1033,10 @@ def dashboard():
                     <div class=\"status-card\">
                         <h2 class=\"text-xl font-semibold mb-6\">Quick Actions</h2>
                         <div class=\"grid grid-cols-1 md:grid-cols-2 gap-4\">
-                            <a href=\"/upload\" class=\"block bg-blue-600 text-white text-center px-6 py-4 rounded-lg font-semibold hover:bg-blue-700 transition\">
+                            <a href=\"https://engine.mapmystandards.ai\" target=\"_blank\" class=\"block bg-indigo-600 text-white text-center px-6 py-4 rounded-lg font-semibold hover:bg-indigo-700 transition\">
+                                🎯 Launch A³E Engine
+                            </a>
+                            <a href=\"https://engine.mapmystandards.ai/upload\" target=\"_blank\" class=\"block bg-blue-600 text-white text-center px-6 py-4 rounded-lg font-semibold hover:bg-blue-700 transition\">
                                 📄 Upload Documents
                             </a>
                             <a href=\"/reports\" class=\"block bg-green-600 text-white text-center px-6 py-4 rounded-lg font-semibold hover:bg-green-700 transition\">
@@ -1044,6 +1048,9 @@ def dashboard():
                             <button onclick=\"refreshStatus()\" class=\"bg-gray-600 text-white px-6 py-4 rounded-lg font-semibold hover:bg-gray-700 transition\">
                                 🔄 Refresh Status
                             </button>
+                            <a href=\"https://engine.mapmystandards.ai/docs\" target=\"_blank\" class=\"block bg-yellow-600 text-white text-center px-6 py-4 rounded-lg font-semibold hover:bg-yellow-700 transition\">
+                                📚 API Documentation
+                            </a>
                         </div>
                     </div>
                 </div>
