@@ -5,7 +5,7 @@ import { sendEmail } from '@/lib/email/postmark';
 // Base URL for magic links
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
-export const authOptions: NextAuthOptions = {
+const authOptions: NextAuthOptions = {
   providers: [
     EmailProvider({
       async sendVerificationRequest({ identifier, url /*, provider */ }) {
@@ -37,15 +37,13 @@ export const authOptions: NextAuthOptions = {
     error: '/auth/error',
   },
   callbacks: {
-    async jwt({ token, user }) {
-      // Attach tier/role in future; placeholder
+    async jwt({ token, user }): Promise<any> {
       if (user) {
-        // token.role = user.role
+        // placeholder for role or tier enrichment
       }
       return token;
     },
-    async session({ session, token }) {
-      // session.user.role = token.role
+  async session({ session, token }: { session: any; token: any }): Promise<any> {
       return session;
     },
   },
