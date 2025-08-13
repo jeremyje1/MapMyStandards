@@ -14,11 +14,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <div className="max-w-7xl mx-auto flex items-center justify-between px-4 py-3">
             <a href="/" className="font-semibold text-lg tracking-tight">MapMyStandards</a>
             <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
-              <a className="hover:text-indigo-600" href="/services">Services</a>
-              <a className="hover:text-indigo-600" href="/about">About</a>
-              <a className="hover:text-indigo-600" href="/user-guide">User Guide</a>
-              <a className="hover:text-indigo-600" href="/contact">Contact</a>
-              <a className="hover:text-indigo-600" href="/privacy-policy">Privacy</a>
+              <a className="hover:text-indigo-600" href="/services/">Services</a>
+              <a className="hover:text-indigo-600" href="/about/">About</a>
+              <a className="hover:text-indigo-600" href="/user-guide/">User Guide</a>
+              <a className="hover:text-indigo-600" href="/contact/">Contact</a>
+              <a className="hover:text-indigo-600" href="/privacy-policy/">Privacy</a>
               <a className="rounded bg-emerald-600 text-white px-3 py-1.5 hover:bg-emerald-500 transition" href="/landing?tier=department">Start Trial</a>
             </nav>
           </div>
