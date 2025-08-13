@@ -1008,7 +1008,8 @@
             document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&panel.classList.contains('open')) closePanel(); if(e.key==='Tab'&&panel.classList.contains('open')){ const focusable=Array.from(panel.querySelectorAll(focusableSelectors)); if(!focusable.length) return; const first=focusable[0]; const last=focusable[focusable.length-1]; if(e.shiftKey&&document.activeElement===first){ e.preventDefault(); last.focus(); } else if(!e.shiftKey&&document.activeElement===last){ e.preventDefault(); first.focus(); } }});
             document.addEventListener('click',e=>{ if(panel.classList.contains('open')&&!panel.contains(e.target)&&e.target!==toggle) closePanel(); });
 
-            // Stripe checkout wiring
+            // Stripe checkout wiring (use absolute origin to work from marketing or platform domain)
+            const API_ORIGIN = 'https://platform.mapmystandards.ai';
             const ctas=document.querySelectorAll('a[data-price-key]');
             ctas.forEach(el=>{
                 el.addEventListener('click',async e=>{
@@ -1017,7 +1018,7 @@
                     e.preventDefault();
                     const original=el.textContent; el.textContent='Processing...'; el.style.pointerEvents='none';
                     try {
-                        const resp=await fetch('/api/stripe/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({priceEnvKey:key})});
+                        const resp=await fetch(`${API_ORIGIN}/api/stripe/checkout`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({priceEnvKey:key})});
                         const data=await resp.json();
                         if(data.url){ window.location.href=data.url; } else { el.textContent='Error – Retry'; el.style.background='#dc3545'; el.style.pointerEvents='auto'; }
                     } catch(err){ console.error(err); el.textContent='Error – Retry'; el.style.background='#dc3545'; el.style.pointerEvents='auto'; }
