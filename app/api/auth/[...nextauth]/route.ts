@@ -1,6 +1,6 @@
 import NextAuth, { NextAuthOptions } from 'next-auth';
 import EmailProvider from 'next-auth/providers/email';
-import { sendEmail } from '@/lib/email/postmark';
+import { sendEmail } from '../../../../lib/email/postmark';
 
 // Base URL for magic links
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
