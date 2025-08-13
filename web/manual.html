@@ -3,8 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="MapMyStandards.ai User Manual - Complete Guide to A³E Engine, Document Analysis, and Platform Features">
+        <meta name="description" content="MapMyStandards User Manual – Complete guide to the A³E accreditation engine: setup, evidence ingestion, AI narrative generation, automation, and analytics." />
+        <meta name="keywords" content="accreditation user guide,A3E manual,evidence mapping documentation,accreditation AI guide,MapMyStandards documentation" />
+        <link rel="canonical" href="https://platform.mapmystandards.ai/user-guide/" />
+        <meta name="robots" content="index,follow" />
+        <meta property="og:type" content="article" />
+        <meta property="og:title" content="MapMyStandards A³E User Manual" />
+        <meta property="og:description" content="Operational documentation for the AI accreditation platform: workflows, ingestion, automation, analytics." />
+        <meta property="og:url" content="https://platform.mapmystandards.ai/user-guide/" />
+        <meta property="og:image" content="https://platform.mapmystandards.ai/og/manual-cover.jpg" />
+        <meta property="og:site_name" content="MapMyStandards" />
+        <meta property="article:section" content="Documentation" />
+        <meta property="article:tag" content="Accreditation" />
+        <meta property="article:tag" content="Compliance Automation" />
+        <meta name="author" content="MapMyStandards" />
+        <meta property="article:published_time" content="2025-01-15T09:00:00Z" />
+        <meta property="article:modified_time" content="2025-08-13T09:00:00Z" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="A³E User Manual" />
+        <meta name="twitter:description" content="Comprehensive guide to the MapMyStandards accreditation intelligence engine." />
+        <meta name="twitter:image" content="https://platform.mapmystandards.ai/og/manual-cover.jpg" />
     <title>User Manual - MapMyStandards.ai</title>
+        <script type="application/ld+json">{
+            "@context":"https://schema.org",
+            "@type":"TechArticle",
+            "headline":"MapMyStandards A³E User Manual",
+            "about":["accreditation","evidence mapping","AI narratives"],
+            "publisher":{"@type":"Organization","name":"MapMyStandards"},
+            "url":"https://platform.mapmystandards.ai/user-guide/",
+            "datePublished":"2025-01-15T09:00:00Z",
+            "dateModified":"2025-08-13T09:00:00Z"
+        }</script>
+        <script type="application/ld+json">{
+            "@context":"https://schema.org",
+            "@type":"BreadcrumbList",
+            "itemListElement":[
+                {"@type":"ListItem","position":1,"name":"Home","item":"https://platform.mapmystandards.ai/"},
+                {"@type":"ListItem","position":2,"name":"User Guide","item":"https://platform.mapmystandards.ai/user-guide/"}
+            ]
+        }</script>
     
     <style>
         * {
@@ -26,43 +63,54 @@
             padding: 0 20px;
         }
         
-        /* Header */
-        header {
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            color: white;
-            padding: 1rem 0;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .logo {
-            font-size: 1.8rem;
-            font-weight: bold;
-            text-decoration: none;
-            color: white;
-        }
-        
-        .nav-links {
-            display: flex;
-            list-style: none;
-            gap: 2rem;
-        }
-        
-        .nav-links a {
-            color: white;
-            text-decoration: none;
-            font-weight: 500;
-            transition: opacity 0.3s;
-        }
-        
-        .nav-links a:hover {
-            opacity: 0.8;
-        }
+    /* === Global Theming / Layout Enhancements === */
+    :root { --bg:#ffffff; --bg-alt:#f8f9fa; --bg-accent:#1e3c72; --bg-accent-grad:linear-gradient(115deg,#1e3c72 0%,#2a5298 100%); --text:#2c3e50; --text-light:#6c757d; --border:#e0e6eb; --primary:#667eea; --primary-accent:#764ba2; --radius:10px; --code-bg:#2c3e50; --info:#e8f4f8; --warn:#fef4e6; --tip:#edf7ed; }
+    body.dark { --bg:#0f172a; --bg-alt:#162032; --bg-accent:#162a46; --bg-accent-grad:linear-gradient(115deg,#152a46 0%,#1f3d63 100%); --text:#e2e8f0; --text-light:#94a3b8; --border:#233248; --primary:#8b9fff; --primary-accent:#a17fd6; --code-bg:#1e293b; --info:#132b36; --warn:#3a2d14; --tip:#122c1b; }
+    body { background:var(--bg); color:var(--text); }
+    .manual-hero, header.site-header { background:var(--bg-accent-grad); }
+    .toc, .faq-item, .info-box, .warning-box, .tip-box, .step-list li, .code-block { background:var(--bg-alt); }
+    .code-block { background:var(--code-bg); }
+    .section p, .section li { color:var(--text-light); }
+    .info-box { background:var(--info); }
+    .warning-box { background:var(--warn); }
+    .tip-box { background:var(--tip); }
+    .dark .faq-item { background:#1e293b; }
+    .dark footer { background:#0d1626; }
+    /* Sticky Header */
+    header.site-header { position:sticky; top:0; z-index:140; backdrop-filter:saturate(1.4) blur(14px); -webkit-backdrop-filter:saturate(1.4) blur(14px); border-bottom:1px solid rgba(255,255,255,0.08); transition:all .35s ease; }
+    header.site-header.is-scrolled { box-shadow:0 4px 18px -4px rgba(0,0,0,.25); }
+    .nav-inner { display:flex; justify-content:space-between; align-items:center; min-height:68px; gap:2rem; transition:min-height .35s ease; }
+    header.site-header.is-scrolled .nav-inner { min-height:54px; }
+    .logo { display:flex; align-items:center; gap:.6rem; font-size:1.35rem; font-weight:700; color:#fff; text-decoration:none; letter-spacing:.5px; }
+    .logo img { height:42px; width:auto; filter:brightness(1.05) contrast(1.1); transition:height .35s ease; }
+    header.site-header.is-scrolled .logo img { height:34px; }
+    .nav-primary { display:flex; }
+    .nav-primary ul { list-style:none; display:flex; gap:1rem; margin:0; padding:0; }
+    .nav-primary a { color:#eef4ff; text-decoration:none; padding:.55rem .85rem; font-size:.8rem; font-weight:500; border-radius:6px; transition:background .25s,color .25s; }
+    .nav-primary a:hover, .nav-primary a.active { background:rgba(255,255,255,0.15); color:#fff; }
+    .nav-cta { display:flex; gap:.55rem; align-items:center; }
+    .nav-cta a { text-decoration:none; font-size:.7rem; font-weight:600; padding:.55rem .85rem; border-radius:8px; line-height:1; display:inline-flex; align-items:center; }
+    .btn-login { color:#87ceeb; border:1px solid #87ceeb; }
+    .btn-login:hover { background:rgba(135,206,235,0.16); }
+    .btn-trial { background:#28a745; color:#fff; box-shadow:0 3px 10px rgba(40,167,69,.3); }
+    .btn-trial:hover { background:#218838; }
+    .theme-toggle { background:rgba(255,255,255,0.15); color:#fff; border:1px solid rgba(255,255,255,0.35); border-radius:8px; padding:.5rem .7rem; font-size:.7rem; cursor:pointer; display:inline-flex; align-items:center; gap:.3rem; }
+    .theme-toggle:hover { background:rgba(255,255,255,0.25); }
+    .mobile-menu-toggle { display:none; background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.25); color:#fff; font-size:1rem; cursor:pointer; padding:.55rem .75rem; border-radius:8px; line-height:1; }
+    .mobile-panel { position:fixed; inset:0; background:rgba(18,33,66,0.94); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); transform:translateY(-100%); transition:transform .45s cubic-bezier(.65,.05,.36,1); z-index:300; padding:5rem 1.25rem 2.5rem; }
+    .mobile-panel.open { transform:translateY(0); }
+    .mobile-panel nav ul { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:.4rem; }
+    .mobile-panel nav a { display:block; padding:.95rem 1rem; border-radius:10px; text-decoration:none; font-weight:500; color:#f0f6ff; font-size:.95rem; background:rgba(255,255,255,0.07); }
+    .mobile-panel nav a:hover { background:rgba(255,255,255,0.15); }
+    .mobile-panel .mobile-cta { margin-top:1.2rem; display:flex; gap:.65rem; }
+    .mobile-panel .mobile-cta a { flex:1; text-align:center; }
+    .mobile-panel .close-btn { position:absolute; top:.85rem; right:.85rem; background:rgba(255,255,255,0.2); color:#fff; border:1px solid rgba(255,255,255,0.35); border-radius:8px; font-size:.75rem; padding:.45rem .7rem; cursor:pointer; }
+    .mobile-panel .close-btn:hover { background:rgba(255,255,255,0.3); }
+    @media (max-width:1080px){ .nav-primary{display:none;} .nav-cta{display:none;} .mobile-menu-toggle{display:inline-flex;} }
+    @media (max-width:560px){ .logo img{height:34px;} }
+    /* Reading Progress */
+    #readingProgress { position:fixed; top:0; left:0; height:4px; width:0%; background:linear-gradient(90deg,#667eea,#764ba2); z-index:500; box-shadow:0 0 4px rgba(0,0,0,.3); transition:width .1s linear; }
+    body.dark .toc a.active-toc{color:#fff !important;}
         
         /* Hero Section */
         .manual-hero {
@@ -355,18 +403,46 @@
     </style>
 </head>
 <body>
-    <header>
-        <nav class="container">
-            <a href="https://mapmystandards.ai/" class="logo">MapMyStandards.ai</a>
-            <ul class="nav-links">
-                <li><a href="https://mapmystandards.ai/">Home</a></li>
-                <li><a href="https://mapmystandards.ai/services/">Services</a></li>
-                <li><a href="https://mapmystandards.ai/about/">About</a></li>
-                <li><a href="https://mapmystandards.ai/user-guide/">User Guide</a></li>
-                <li><a href="https://mapmystandards.ai/contact/">Contact</a></li>
-                <li><a href="https://mapmystandards.ai/dashboard">Dashboard</a></li>
-            </ul>
-        </nav>
+    <div id="readingProgress"></div>
+    <header class="site-header" id="siteHeader">
+        <div class="nav-inner container">
+            <a href="https://platform.mapmystandards.ai/" class="logo" aria-label="MapMyStandards Home">
+                <img src="https://mapmystandards.ai/wp-content/uploads/2025/07/Original-Logo.png" alt="MapMyStandards.ai Logo" style="height:42px; width:auto;">
+                <span>MapMyStandards.ai</span>
+            </a>
+            <nav class="nav-primary" aria-label="Primary navigation">
+                <ul>
+                    <li><a href="https://platform.mapmystandards.ai/" class="active">Home</a></li>
+                    <li><a href="https://platform.mapmystandards.ai/services/">Services</a></li>
+                    <li><a href="https://platform.mapmystandards.ai/about/">About</a></li>
+                    <li><a href="https://platform.mapmystandards.ai/user-guide/">User Guide</a></li>
+                    <li><a href="https://platform.mapmystandards.ai/contact/">Contact</a></li>
+                    <li><a href="https://platform.mapmystandards.ai/dashboard">Dashboard</a></li>
+                </ul>
+            </nav>
+            <div class="nav-cta">
+                <button id="themeToggle" class="theme-toggle" aria-label="Toggle dark mode">🌙 <span style="font-size:.65rem; letter-spacing:.5px;">MODE</span></button>
+                <a href="https://platform.mapmystandards.ai/landing" class="btn-trial" aria-label="Start free trial">🚀 Trial</a>
+            </div>
+            <button class="mobile-menu-toggle" id="mobileToggle" aria-label="Open menu" aria-expanded="false">☰</button>
+        </div>
+        <div class="mobile-panel" id="mobilePanel" aria-hidden="true">
+            <button class="close-btn" id="mobileClose" aria-label="Close menu">✕ Close</button>
+            <nav aria-label="Mobile navigation">
+                <ul>
+                    <li><a href="https://platform.mapmystandards.ai/">Home</a></li>
+                    <li><a href="https://platform.mapmystandards.ai/services/">Services</a></li>
+                    <li><a href="https://platform.mapmystandards.ai/about/">About</a></li>
+                    <li><a href="https://platform.mapmystandards.ai/user-guide/">User Guide</a></li>
+                    <li><a href="https://platform.mapmystandards.ai/contact/">Contact</a></li>
+                    <li><a href="https://platform.mapmystandards.ai/dashboard">Dashboard</a></li>
+                </ul>
+                <div class="mobile-cta">
+                    <a href="https://platform.mapmystandards.ai/landing" class="btn-trial" style="flex:1;">Start Trial</a>
+                </div>
+                <button id="themeToggleMobile" class="theme-toggle" style="margin-top:1rem; width:100%; justify-content:center;">🌙 Toggle Theme</button>
+            </nav>
+        </div>
     </header>
 
     <main>
@@ -381,7 +457,9 @@
             <aside class="sidebar">
                 <nav class="toc">
                     <h3>Table of Contents</h3>
+                    <input id="tocFilter" type="text" placeholder="Filter..." style="width:100%; padding:0.5rem 0.6rem; margin-bottom:0.9rem; border:1px solid #d0d7de; border-radius:6px; font-size:0.85rem;" />
                     <ul>
+                        <li><a href="#how-it-works">How It Works</a></li>
                         <li><a href="#getting-started">Getting Started</a>
                             <ul>
                                 <li class="sub-item"><a href="#account-setup">Account Setup</a></li>
@@ -405,6 +483,57 @@
             </aside>
 
             <div class="main-content">
+                <section id="how-it-works" class="section">
+                    <h2>How It Works: The A³E Accreditation Intelligence Loop</h2>
+                    <p>This page gives you the deep dive. Start with the high‑level loop below—every feature in A³E reinforces one of these stages, compounding institutional intelligence and ROI.</p>
+                    <div style="display:grid; gap:1.25rem; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); margin:1.75rem 0;">
+                        <div style="background:#f8f9fa; padding:1rem; border-radius:10px; border-left:4px solid #667eea;">
+                            <h4 style="margin:0 0 .5rem 0; font-size:1rem; color:#2c3e50;">1. Ingest</h4>
+                            <p style="margin:0; font-size:0.85rem; color:#6c757d;">Upload & sync evidence (documents, Canvas, data exports)</p>
+                        </div>
+                        <div style="background:#f8f9fa; padding:1rem; border-radius:10px; border-left:4px solid #667eea;">
+                            <h4 style="margin:0 0 .5rem 0; font-size:1rem; color:#2c3e50;">2. Map</h4>
+                            <p style="margin:0; font-size:0.85rem; color:#6c757d;">AI aligns artifacts to multi‑accreditor standards ontology</p>
+                        </div>
+                        <div style="background:#f8f9fa; padding:1rem; border-radius:10px; border-left:4px solid #667eea;">
+                            <h4 style="margin:0 0 .5rem 0; font-size:1rem; color:#2c3e50;">3. Analyze</h4>
+                            <p style="margin:0; font-size:0.85rem; color:#6c757d;">Gap + sufficiency scoring, risk forecasting, coverage heatmaps</p>
+                        </div>
+                        <div style="background:#f8f9fa; padding:1rem; border-radius:10px; border-left:4px solid #667eea;">
+                style.textContent = '.toc a.active-toc{color:#2c3e50;font-weight:600;position:relative;} .toc a.active-toc::after{content:"";position:absolute;left:-10px;top:50%;transform:translateY(-50%);width:4px;height:18px;background:#667eea;border-radius:2px;}';
+                            <p style="margin:0; font-size:0.85rem; color:#6c757d;">AI produces draft narratives, summaries & executive briefs</p>
+                        </div>
+                        <div style="background:#f8f9fa; padding:1rem; border-radius:10px; border-left:4px solid #667eea;">
+                            <h4 style="margin:0 0 .5rem 0; font-size:1rem; color:#2c3e50;">5. Act</h4>
+                            <p style="margin:0; font-size:0.85rem; color:#6c757d;">Workflow tasks, ownership, progress tracking & audits</p>
+                        </div>
+                        <div style="background:#f8f9fa; padding:1rem; border-radius:10px; border-left:4px solid #667eea;">
+                            <h4 style="margin:0 0 .5rem 0; font-size:1rem; color:#2c3e50;">6. Optimize</h4>
+                            <p style="margin:0; font-size:0.85rem; color:#6c757d;">Feedback signals retrain institutional intelligence loop</p>
+                        </div>
+                    </div>
+                    <div class="tip-box" style="margin-top:1rem;">
+                        <h5>⚡ Compounding Advantage</h5>
+                        <p>Every weekly cycle enriches your institutional graph: more precise mappings, richer narrative priors, stronger predictive alerts—and higher switching costs.</p>
+                    </div>
+                    <h3 style="margin-top:2.5rem;">Key Automation Surfaces</h3>
+                    <ul>
+                        <li><strong>Standards Graph:</strong> Unified multi‑accreditor ontology powering crosswalk intelligence</li>
+                        <li><strong>Evidence Fingerprinting:</strong> Semantic + structural hashing prevents duplication & drift</li>
+                        <li><strong>Risk Engine:</strong> Time‑weighted coverage + volatility scoring highlights latent failure zones</li>
+                        <li><strong>Narrative Memory:</strong> Approved edits feed style & institutional preference vectors</li>
+                        <li><strong>Workflow Genome:</strong> Sequences of past successful remediation patterns accelerate future cycles</li>
+                    </ul>
+                    <div class="info-box">
+                        <h5>🧪 Pilot vs. Annual Tiers</h5>
+                        <p>The 90‑day Pilot activates ingestion + mapping + baseline gap analysis to validate value fast. Annual tiers unlock continuous optimization, connectors, SSO/API, higher capacity, and strategic automation depth.</p>
+                    </div>
+                    <div style="display:flex; gap:1rem; flex-wrap:wrap; margin-top:1.5rem;">
+                        <a href="https://platform.mapmystandards.ai/contact?program=pilot" style="background:#28a745; color:#fff; padding:0.85rem 1.25rem; border-radius:8px; text-decoration:none; font-weight:600; font-size:0.9rem;">Inquire Sponsored Pilot</a>
+                        <a data-price-key="STRIPE_PRICE_DEPARTMENT_ANNUAL" href="https://platform.mapmystandards.ai/landing?tier=department" style="background:#667eea; color:#fff; padding:0.85rem 1.25rem; border-radius:8px; text-decoration:none; font-weight:600; font-size:0.9rem;">Start Full Platform Trial</a>
+                        <a href="#platform-overview" style="background:#f1f3f5; color:#2c3e50; padding:0.85rem 1.25rem; border-radius:8px; text-decoration:none; font-weight:600; font-size:0.9rem;">Deep Feature Overview ↓</a>
+                    </div>
+                </section>
                 <section id="getting-started" class="section">
                     <h2>Getting Started</h2>
                     
@@ -803,6 +932,40 @@ Evidence Type: Policy Documentation
                     </div>
                 </section>
 
+                <section id="security" class="section">
+                    <h2>Security & Compliance Architecture</h2>
+                    <p>Accreditation evidence often contains sensitive academic, governance, and performance information. A³E applies layered controls aligned with higher‑ed risk profiles.</p>
+                    <h3>Data Protection Layers</h3>
+                    <ul>
+                        <li><strong>Encryption in Transit:</strong> TLS 1.2+ enforced across all endpoints</li>
+                        <li><strong>Encryption at Rest:</strong> AES‑256 for database, object storage & backups</li>
+                        <li><strong>Field Level Controls:</strong> Select high‑sensitivity fields tokenized</li>
+                        <li><strong>Evidence Isolation:</strong> Logical tenant boundary + scoped access tokens</li>
+                    </ul>
+                    <h3>Access & Identity</h3>
+                    <ul>
+                        <li>Role‑scoped permission matrix (Reader / Contributor / Owner / Admin)</li>
+                        <li>SSO (SAML / OIDC) for System & Enterprise tiers</li>
+                        <li>Audit trails on artifact view, export, narrative generation & workflow actions</li>
+                        <li>Just‑in‑time elevation for restricted operations (deletion, export)</li>
+                    </ul>
+                    <h3>Compliance Alignment</h3>
+                    <ul>
+                        <li>FERPA handling: automatic redaction pipeline for detected student identifiers</li>
+                        <li>Data residency: primary US region with encrypted multi‑region backups</li>
+                        <li>Business continuity: RPO & RTO targets of &lt; 15 min / &lt; 60 min (tier dependent)</li>
+                        <li>Immutable evidence ledger for accreditation audit defensibility</li>
+                    </ul>
+                    <div class="info-box">
+                        <h5>🔒 Enterprise Controls</h5>
+                        <p>Enterprise deployments can enable private network peering, custom encryption key management (KMS), advanced retention policies, and segregation-of-duties review workflows.</p>
+                    </div>
+                    <div style="display:flex; gap:1rem; flex-wrap:wrap; margin-top:1.25rem;">
+                        <a data-price-key="STRIPE_PRICE_SYSTEM_ANNUAL" href="https://platform.mapmystandards.ai/landing?tier=system" style="background:#667eea; color:#fff; padding:0.75rem 1.15rem; border-radius:8px; text-decoration:none; font-weight:600; font-size:0.85rem;">Upgrade to System Tier</a>
+                        <a data-price-key="ENTERPRISE_CONTACT" href="https://platform.mapmystandards.ai/landing?tier=enterprise" style="background:#2c3e50; color:#fff; padding:0.75rem 1.15rem; border-radius:8px; text-decoration:none; font-weight:600; font-size:0.85rem;">Request Enterprise Briefing</a>
+                    </div>
+                </section>
+
                 <!-- FAQ Section -->
                 <section id="faq" class="section">
                     <h2>Maximizing Platform Value - Frequently Asked Questions</h2>
@@ -917,31 +1080,31 @@ Evidence Type: Policy Documentation
             <div class="footer-content">
                 <div class="footer-section">
                     <h3>Platform Access</h3>
-                    <a href="https://api.mapmystandards.ai/landing">🚀 Start Free Trial</a>
+                    <a href="https://platform.mapmystandards.ai/landing">🚀 Start Free Trial</a>
                     <a href="./customer_experience.html">🔬 Customer Experience</a>
                     <a href="./institutional_dashboard.html">🏛️ Institutional Dashboard</a>
-                    <a href="https://api.mapmystandards.ai/docs">🔧 API Documentation</a>
+                    <a href="https://platform.mapmystandards.ai/docs">🔧 API Documentation</a>
                 </div>
                 
                 <div class="footer-section">
                     <h3>Value Resources</h3>
                     <a href="./features.html">📚 Complete Feature List</a>
                     <a href="./pricing.html">💰 ROI Calculator</a>
-                    <a href="https://mapmystandards.ai/about/">📖 Success Stories</a>
-                    <a href="https://mapmystandards.ai/contact/">🎯 Demo Request</a>
+                    <a href="https://platform.mapmystandards.ai/about/">📖 Success Stories</a>
+                    <a href="https://platform.mapmystandards.ai/contact/">🎯 Demo Request</a>
                 </div>
                 
                 <div class="footer-section">
                     <h3>Support & Training</h3>
                     <a href="mailto:support@mapmystandards.ai">✉️ Technical Support</a>
-                    <a href="https://mapmystandards.ai/contact/">💬 Sales & Success</a>
-                    <a href="https://mapmystandards.ai/privacy-policy/">🔒 Security & Privacy</a>
+                    <a href="https://platform.mapmystandards.ai/contact/">💬 Sales & Success</a>
+                    <a href="https://platform.mapmystandards.ai/privacy-policy/">🔒 Security & Privacy</a>
                     <a href="./manual.html">📋 Complete User Guide</a>
                 </div>
                 
                 <div class="footer-section">
                     <h3>Company</h3>
-                    <a href="https://mapmystandards.ai/about/">About A³E</a>
+                    <a href="https://platform.mapmystandards.ai/about/">About A³E</a>
                     <a href="mailto:sales@mapmystandards.ai">Sales Inquiry</a>
                     <p style="margin-top: 1rem; font-weight: 600;">NorthPath Strategies</p>
                     <p style="margin: 0.5rem 0; font-size: 0.9rem; color: #95a5a6;">Built by accreditation experts</p>
@@ -962,6 +1125,170 @@ Evidence Type: Policy Documentation
             </div>
         </div>
     </footer>
+    <!-- Back to Top Button -->
+    <button id="backToTop" aria-label="Back to top" style="position:fixed; bottom:24px; right:24px; background:#667eea; color:#fff; border:none; border-radius:50%; width:48px; height:48px; font-size:1.1rem; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.15); display:none;">↑</button>
+
+    <script>
+    // === Enhanced Layout Interactions (Header, Theme, Mobile Nav, Progress) ===
+    (function(){
+        const header = document.getElementById('siteHeader');
+        const toggle = document.getElementById('mobileToggle');
+        const panel = document.getElementById('mobilePanel');
+        const closeBtn = document.getElementById('mobileClose');
+        const themeBtn = document.getElementById('themeToggle');
+        const themeBtnMobile = document.getElementById('themeToggleMobile');
+        const progressBar = document.getElementById('readingProgress');
+        const focusableSelectors='a, button';
+        let lastFocus=null;
+        function onScroll(){ window.scrollY>10?header.classList.add('is-scrolled'):header.classList.remove('is-scrolled'); updateProgress(); }
+        function updateProgress(){ if(!progressBar) return; const docH=document.documentElement.scrollHeight - window.innerHeight; const sc= (window.scrollY / docH)*100; progressBar.style.width=sc + '%'; }
+        window.addEventListener('scroll', onScroll, { passive:true }); onScroll();
+        function openPanel(){ lastFocus=document.activeElement; panel.classList.add('open'); panel.setAttribute('aria-hidden','false'); toggle.setAttribute('aria-expanded','true'); document.body.style.overflow='hidden'; const first=panel.querySelector(focusableSelectors); if(first) first.focus(); }
+        function closePanel(){ panel.classList.remove('open'); panel.setAttribute('aria-hidden','true'); toggle.setAttribute('aria-expanded','false'); document.body.style.overflow=''; if(lastFocus) lastFocus.focus(); }
+        toggle && toggle.addEventListener('click', ()=> panel.classList.contains('open')?closePanel():openPanel());
+        closeBtn && closeBtn.addEventListener('click', closePanel);
+        document.addEventListener('click', e=>{ if(panel.classList.contains('open') && !panel.contains(e.target) && e.target!==toggle) closePanel(); });
+        document.addEventListener('keydown', e=>{ if(e.key==='Escape' && panel.classList.contains('open')) closePanel(); if(e.key==='Tab' && panel.classList.contains('open')) { const focusable=Array.from(panel.querySelectorAll(focusableSelectors)); if(!focusable.length) return; const first=focusable[0]; const last=focusable[focusable.length-1]; if(e.shiftKey && document.activeElement===first){ e.preventDefault(); last.focus(); } else if(!e.shiftKey && document.activeElement===last){ e.preventDefault(); first.focus(); } } });
+        function setTheme(mode){ if(mode==='dark'){ document.body.classList.add('dark'); localStorage.setItem('mms-theme','dark'); themeBtn && (themeBtn.innerHTML='☀️ <span style="font-size:.65rem;letter-spacing:.5px;">LIGHT</span>'); themeBtnMobile && (themeBtnMobile.textContent='☀️ Light Mode'); } else { document.body.classList.remove('dark'); localStorage.setItem('mms-theme','light'); themeBtn && (themeBtn.innerHTML='🌙 <span style="font-size:.65rem;letter-spacing:.5px;">MODE</span>'); themeBtnMobile && (themeBtnMobile.textContent='🌙 Dark Mode'); } }
+        const stored=localStorage.getItem('mms-theme');
+        if(stored){ setTheme(stored); } else if(window.matchMedia('(prefers-color-scheme: dark)').matches){ setTheme('dark'); }
+        [themeBtn, themeBtnMobile].forEach(btn => btn && btn.addEventListener('click', ()=> setTheme(document.body.classList.contains('dark')?'light':'dark')));
+    })();
+
+    // ----- TOC Filter -----
+    (function(){
+        const input = document.getElementById('tocFilter');
+        const toc = input ? input.parentElement.querySelector('ul') : null;
+        if (!input || !toc) return;
+        input.addEventListener('input', () => {
+            const q = input.value.toLowerCase();
+            toc.querySelectorAll('li').forEach(li => {
+                const a = li.querySelector('a');
+                if (!a) return;
+                const text = a.textContent.toLowerCase();
+                li.style.display = text.includes(q) ? '' : 'none';
+            });
+        });
+    })();
+
+    // ----- Scrollspy Active TOC Link -----
+    (function(){
+        const headings = Array.from(document.querySelectorAll('.main-content .section[id]'));
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const id = entry.target.getAttribute('id');
+                    document.querySelectorAll('.toc a').forEach(a => a.classList.remove('active-toc'));
+                    const link = document.querySelector('.toc a[href="#'+id+'"]');
+                    if (link) link.classList.add('active-toc');
+                }
+            });
+        }, { rootMargin: '0px 0px -70% 0px', threshold: 0 });
+        headings.forEach(h => observer.observe(h));
+        const style = document.createElement('style');
+        style.textContent = '.toc a.active-toc{color:#2c3e50;font-weight:600;position:relative;} .toc a.active-toc::after{content:"";position:absolute;left:-10px;top:50%;transform:translateY(-50%);width:4px;height:18px;background:#667eea;border-radius:2px;}';
+        document.head.appendChild(style);
+    })();
+
+    // ----- Heading Anchor Copy Buttons -----
+    (function(){
+        const addButtons = (selector) => {
+            document.querySelectorAll(selector).forEach(h => {
+                if (h.dataset.anchorized) return; h.dataset.anchorized = '1';
+                const id = h.id || h.textContent.trim().toLowerCase().replace(/[^a-z0-9]+/g,'-');
+                h.id = id;
+                const btn = document.createElement('button');
+                btn.type='button';
+                btn.setAttribute('aria-label','Copy link to section');
+                btn.textContent='🔗';
+                btn.style.cssText='margin-left:8px;background:transparent;border:none;cursor:pointer;font-size:.9rem;';
+                btn.addEventListener('click', () => {
+                    const url = location.origin + location.pathname + '#' + id;
+                    navigator.clipboard.writeText(url).then(()=>{
+                        btn.textContent='✅'; setTimeout(()=>btn.textContent='🔗',1500);
+                    });
+                });
+                h.appendChild(btn);
+            });
+        };
+        addButtons('.section > h2');
+        addButtons('.section > h3');
+    })();
+
+    // ----- FAQ Accordion -----
+    (function(){
+        const faqItems = document.querySelectorAll('#faq .faq-item');
+        faqItems.forEach(item => {
+            const h3 = item.querySelector('h3');
+            const pList = Array.from(item.querySelectorAll('p'));
+            if (!h3 || pList.length === 0) return;
+            const contentWrapper = document.createElement('div');
+            contentWrapper.style.overflow='hidden';
+            pList.forEach(p => contentWrapper.appendChild(p));
+            contentWrapper.style.maxHeight='0px';
+            contentWrapper.style.transition='max-height .35s ease';
+            item.appendChild(contentWrapper);
+            const toggle = document.createElement('button');
+            toggle.textContent='Expand';
+            toggle.setAttribute('aria-expanded','false');
+            toggle.style.cssText='background:#667eea;color:#fff;border:none;padding:0.35rem 0.75rem;border-radius:6px;font-size:0.7rem;cursor:pointer;margin-top:0.5rem;';
+            item.insertBefore(toggle, contentWrapper);
+            toggle.addEventListener('click', () => {
+                const expanded = toggle.getAttribute('aria-expanded') === 'true';
+                toggle.setAttribute('aria-expanded', String(!expanded));
+                toggle.textContent = expanded ? 'Expand' : 'Collapse';
+                contentWrapper.style.maxHeight = expanded ? '0px' : contentWrapper.scrollHeight + 'px';
+            });
+        });
+    })();
+
+    // ----- Back to Top -----
+    (function(){
+        const btn = document.getElementById('backToTop');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 600) btn.style.display='block'; else btn.style.display='none';
+        });
+        btn.addEventListener('click', () => window.scrollTo({ top:0, behavior:'smooth' }));
+    })();
+
+    // ----- Smooth Anchor Scroll -----
+    (function(){
+        document.querySelectorAll('a[href^="#"]').forEach(a => {
+            a.addEventListener('click', e => {
+                const id = a.getAttribute('href');
+                if (id.length > 1) {
+                    const target = document.querySelector(id);
+                    if (target) { e.preventDefault(); target.scrollIntoView({ behavior:'smooth', block:'start'}); history.replaceState(null,'',id); }
+                }
+            });
+        });
+    })();
+
+    // ----- Stripe Checkout Wiring (if pricing CTAs present) -----
+    ;(function(){
+        const ctas = document.querySelectorAll('a[data-price-key]');
+        if (!ctas.length) return;
+        ctas.forEach(el => {
+            el.addEventListener('click', async (e) => {
+                const key = el.getAttribute('data-price-key');
+                if (!key || key === 'ENTERPRISE_CONTACT') return; // allow normal nav
+                e.preventDefault();
+                const original = el.textContent;
+                el.textContent = 'Processing...';
+                el.style.pointerEvents = 'none';
+                try {
+                    const resp = await fetch('/api/stripe/checkout', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ priceEnvKey:key }) });
+                    const data = await resp.json();
+                    if (data.url) window.location.href = data.url; else { el.textContent='Error – Retry'; el.style.background='#dc3545'; el.style.pointerEvents='auto'; }
+                } catch(err){
+                    el.textContent='Error – Retry'; el.style.background='#dc3545'; el.style.pointerEvents='auto';
+                } finally {
+                    setTimeout(()=>{ if (el.textContent==='Error – Retry'){ el.textContent=original; el.style.background=''; } }, 4000);
+                }
+            });
+        });
+    })();
+    </script>
 </body>
 </html>
 

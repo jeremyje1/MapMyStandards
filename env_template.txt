@@ -23,3 +23,16 @@ BACKEND_URL=https://your-backend-domain.com
 # Development Settings
 FLASK_ENV=production
 DEBUG=False
+
+# Email (Postmark) - Do NOT commit real secrets publicly
+POSTMARK_API_TOKEN=your_postmark_server_token_here
+FROM_EMAIL=info@yourdomain.com
+REPLY_TO_EMAIL=info@yourdomain.com
+POSTMARK_MESSAGE_STREAM=outbound  # or a custom transactional stream name
+# Optional SMTP creds if using SMTP for providers requiring it
+POSTMARK_SMTP_USER=your_postmark_smtp_user_optional
+POSTMARK_SMTP_PASS=your_postmark_smtp_pass_optional
+
+# Legacy / Fallback (SendGrid) - keep only if still used
+# SENDGRID_API_KEY=your_sendgrid_api_key_here
+

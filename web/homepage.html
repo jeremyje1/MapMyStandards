@@ -3,8 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="MapMyStandards.ai - AI-powered accreditation management platform for higher education institutions">
+        <meta name="description" content="MapMyStandards.ai is the AI-powered accreditation management platform (A³E) for colleges, universities, and multi-campus systems: evidence mapping, gap analytics, workflow automation, narratives, and predictive compliance intelligence." />
+        <meta name="keywords" content="accreditation management software,higher education compliance,AI accreditation platform,evidence mapping,gap analysis,accreditation workflow automation,MapMyStandards,A3E engine" />
+        <meta name="author" content="MapMyStandards.ai" />
+        <link rel="canonical" href="https://platform.mapmystandards.ai/" />
+        <!-- Open Graph -->
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="MapMyStandards.ai" />
+        <meta property="og:title" content="MapMyStandards.ai – AI Accreditation Management Platform (A³E)" />
+        <meta property="og:description" content="AI accreditation platform: automated evidence mapping, gap analytics, institutional narratives, predictive compliance & secure document intelligence." />
+        <meta property="og:url" content="https://platform.mapmystandards.ai/" />
+        <meta property="og:image" content="https://platform.mapmystandards.ai/og/accreditation-platform.jpg" />
+        <meta property="og:image:alt" content="Accreditation AI Platform Dashboard" />
+        <!-- Twitter -->
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="MapMyStandards.ai – AI Accreditation Management (A³E)" />
+        <meta name="twitter:description" content="Automate accreditation with AI-driven evidence mapping, gap detection, workflows & narratives." />
+        <meta name="twitter:image" content="https://platform.mapmystandards.ai/og/accreditation-platform.jpg" />
+        <meta name="twitter:site" content="@MapMyStandards" />
+        <!-- Additional SEO -->
+        <meta name="robots" content="index,follow,max-image-preview:large" />
+        <meta name="theme-color" content="#1e3c72" />
     <title>MapMyStandards.ai - Evidence Aligned. Gaps Closed. Accreditation Delivered.</title>
+        <!-- Structured Data -->
+        <script type="application/ld+json">{
+            "@context":"https://schema.org",
+            "@type":"SoftwareApplication",
+            "name":"MapMyStandards A³E Platform",
+            "applicationCategory":"BusinessApplication",
+            "operatingSystem":"Cloud",
+            "url":"https://platform.mapmystandards.ai/",
+            "description":"AI-powered accreditation management platform for higher education: evidence mapping, analytics, workflow automation, and narrative intelligence.",
+            "image":"https://platform.mapmystandards.ai/og/accreditation-platform.jpg",
+            "publisher":{"@type":"Organization","name":"MapMyStandards"},
+            "offers":{"@type":"Offer","price":"9000","priceCurrency":"USD"}
+        }</script>
     
     <style>
         * {
@@ -26,116 +59,40 @@
             padding: 0 20px;
         }
         
-        /* Header - Made Smaller as requested */
-        header {
-            background: linear-gradient(135deg, rgba(30, 60, 114, 0.95) 0%, rgba(42, 82, 152, 0.95) 100%);
-            color: white;
-            padding: 0.6rem 0; /* Reduced from original 1rem */
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            position: relative;
-        }
-        
-        nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: relative;
-            z-index: 10;
-        }
-        
-        .logo {
-            display: flex;
-            align-items: center;
-            text-decoration: none;
-            color: white;
-            font-size: 1.4rem; /* Reduced from 1.8rem */
-            font-weight: 700;
-        }
-        
-        .logo img {
-            height: 38px; /* Reduced from 50px */
-            width: auto;
-            margin-right: 0.75rem; /* Reduced from 1rem */
-            filter: brightness(1.1) contrast(1.1);
-        }
-        
-        .logo-text {
-            display: inline-block;
-            font-size: 1.2rem; /* Reduced from 1.5rem */
-            font-weight: 700;
-        }
-        
-        .nav-links {
-            display: flex;
-            list-style: none;
-            gap: 1.5rem; /* Reduced from 2rem */
-            align-items: center;
-            margin: 0;
-            padding: 0;
-        }
-        
-        .nav-links a {
-            color: white;
-            text-decoration: none;
-            font-weight: 500;
-            transition: all 0.3s;
-            padding: 0.4rem 0.8rem; /* Reduced padding */
-            border-radius: 6px;
-        }
-        
-        .nav-links a:hover {
-            background: rgba(255, 255, 255, 0.1);
-            transform: translateY(-1px);
-        }
-        
-        /* Mobile Menu Toggle */
-        .mobile-menu-toggle {
-            display: none;
-            background: none;
-            border: none;
-            color: white;
-            font-size: 1.3rem; /* Reduced from 1.5rem */
-            cursor: pointer;
-            padding: 0.4rem; /* Reduced from 0.5rem */
-        }
-        
-        .mobile-menu {
-            display: none;
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: rgba(30, 60, 114, 0.98);
-            backdrop-filter: blur(10px);
-            z-index: 1000;
-        }
-        
-        .mobile-menu.active {
-            display: block;
-        }
-        
-        .mobile-menu ul {
-            list-style: none;
-            padding: 1rem 0;
-            margin: 0;
-        }
-        
-        .mobile-menu li {
-            padding: 0;
-        }
-        
-        .mobile-menu a {
-            display: block;
-            padding: 1rem 2rem;
-            color: white;
-            text-decoration: none;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            transition: background 0.3s;
-        }
-        
-        .mobile-menu a:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
+    /* === Enhanced Sticky Header === */
+    .site-header { position:sticky; top:0; z-index:120; backdrop-filter:saturate(1.4) blur(14px); -webkit-backdrop-filter:saturate(1.4) blur(14px); background:linear-gradient(115deg,rgba(30,60,114,.92) 0%,rgba(42,82,152,.92) 100%); border-bottom:1px solid rgba(255,255,255,0.08); transition:all .35s ease; }
+    .site-header.is-scrolled { background:linear-gradient(115deg,rgba(30,60,114,.85) 0%,rgba(42,82,152,.9) 100%); box-shadow:0 4px 18px -4px rgba(0,0,0,.25); }
+    .nav-inner { display:flex; justify-content:space-between; align-items:center; gap:2rem; min-height:68px; transition:min-height .35s ease; }
+    .site-header.is-scrolled .nav-inner { min-height:54px; }
+    .logo { display:flex; align-items:center; gap:.6rem; text-decoration:none; color:#fff; font-weight:700; letter-spacing:.5px; }
+    .logo img { height:44px; width:auto; filter:brightness(1.05) contrast(1.1); transition:height .35s ease; }
+    .site-header.is-scrolled .logo img { height:34px; }
+    .logo-text { font-size:1.15rem; font-weight:700; }
+    .nav-primary { display:flex; align-items:center; }
+    .nav-primary ul { list-style:none; display:flex; gap:1.1rem; margin:0; padding:0; }
+    .nav-primary a { position:relative; color:#eef4ff; text-decoration:none; padding:.5rem .85rem; font-size:.88rem; font-weight:500; border-radius:6px; transition:color .25s, background .25s; }
+    .nav-primary a:hover { background:rgba(255,255,255,0.12); color:#fff; }
+    .nav-primary a.active { background:rgba(255,255,255,0.18); color:#fff; }
+    .nav-cta { display:flex; align-items:center; gap:.65rem; }
+    .nav-cta a { text-decoration:none; font-size:.78rem; font-weight:600; letter-spacing:.35px; padding:.55rem .95rem; border-radius:8px; line-height:1; display:inline-flex; align-items:center; }
+    .btn-login { color:#87ceeb; border:1px solid #87ceeb; background:transparent; }
+    .btn-login:hover { background:rgba(135,206,235,0.12); }
+    .btn-trial { background:#28a745; color:#fff; box-shadow:0 4px 14px rgba(40,167,69,.35); }
+    .btn-trial:hover { background:#218838; }
+    .mobile-menu-toggle { display:none; background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.25); color:#fff; font-size:1rem; cursor:pointer; padding:.55rem .75rem; border-radius:8px; line-height:1; }
+    .mobile-menu-toggle:focus-visible { outline:2px solid #fff; outline-offset:2px; }
+    .mobile-panel { position:fixed; inset:0 0 auto 0; top:0; background:rgba(18,33,66,0.92); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); transform:translateY(-100%); transition:transform .45s cubic-bezier(.65,.05,.36,1); z-index:300; padding:4.5rem 1.25rem 2rem; }
+    .mobile-panel.open { transform:translateY(0); }
+    .mobile-panel nav ul { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:.4rem; }
+    .mobile-panel nav a { display:block; padding:.95rem 1rem; border-radius:10px; text-decoration:none; font-weight:500; color:#f0f6ff; font-size:.95rem; background:rgba(255,255,255,0.05); }
+    .mobile-panel nav a:hover { background:rgba(255,255,255,0.13); }
+    .mobile-panel .mobile-cta { margin-top:1.2rem; display:flex; gap:.65rem; }
+    .mobile-panel .mobile-cta a { flex:1; text-align:center; }
+    .mobile-panel .close-btn { position:absolute; top:.85rem; right:.85rem; background:rgba(255,255,255,0.15); color:#fff; border:1px solid rgba(255,255,255,0.3); border-radius:8px; font-size:.75rem; padding:.45rem .7rem; cursor:pointer; }
+    .mobile-panel .close-btn:hover { background:rgba(255,255,255,0.25); }
+    @media (max-width:1100px){ .nav-primary{display:none;} .nav-cta{display:none;} .mobile-menu-toggle{display:inline-flex;} }
+    @media (max-width:560px){ .logo-text{display:none;} .logo img{height:36px;} }
+    /* === End Enhanced Sticky Header === */
         
         /* Live System Status */
         .system-status {
@@ -414,25 +371,8 @@
                 font-size: 1.2rem;
             }
             
-            .nav-links {
-                display: none;
-            }
-            
-            .mobile-menu-toggle {
-                display: block;
-            }
-            
-            .logo img {
-                height: 32px; /* Reduced for mobile */
-            }
-            
-            .logo-text {
-                font-size: 1rem;
-            }
-            
-            header {
-                padding: 0.5rem 0; /* Even smaller on mobile */
-            }
+            .logo img { height:32px; }
+            .logo-text { font-size:1rem; }
             
             .value-content {
                 grid-template-columns: 1fr;
@@ -468,44 +408,48 @@
 <body>
     <!-- Live System Status Bar -->
     <div class="system-status">
-        🟢 A³E System Online | <a href="https://mapmystandards.ai/dashboard">Live Dashboard</a> | <a href="https://api.mapmystandards.ai/landing">Start 7-Day Trial</a>
+    🟢 A³E System Online | <a href="https://platform.mapmystandards.ai/dashboard">Live Dashboard</a> | <a href="https://platform.mapmystandards.ai/landing">Start 7-Day Trial</a>
     </div>
     
-    <header>
-        <nav class="container">
-            <a href="https://mapmystandards.ai/" class="logo">
-                <img src="https://mapmystandards.ai/wp-content/uploads/2025/07/Original-Logo.png" alt="MapMyStandards.ai Logo">
+    <header class="site-header" id="siteHeader">
+        <div class="nav-inner container">
+            <a href="https://platform.mapmystandards.ai/" class="logo" aria-label="MapMyStandards Home">
+                <img src="https://mapmystandards.ai/wp-content/uploads/2025/07/Original-Logo.png" alt="MapMyStandards.ai Logo" loading="lazy">
                 <span class="logo-text">MapMyStandards.ai</span>
             </a>
-            
-            <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">
-                ☰
-            </button>
-            
-            <ul class="nav-links">
-                <li><a href="https://mapmystandards.ai/">Home</a></li>
-                <li><a href="https://mapmystandards.ai/services/">Services</a></li>
-                <li><a href="https://mapmystandards.ai/about/">About</a></li>
-                <li><a href="https://mapmystandards.ai/user-guide/">User Guide</a></li>
-                <li><a href="https://mapmystandards.ai/contact/">Contact</a></li>
-                <li><a href="https://mapmystandards.ai/dashboard">Dashboard</a></li>
-                <li><a href="./web/login.html" style="color: #87ceeb; border: 1px solid #87ceeb;">Login</a></li>
-                <li><a href="https://api.mapmystandards.ai/landing" style="background: #28a745; color: white; font-weight: 600;">🚀 Free Trial</a></li>
-            </ul>
-            
-            <div class="mobile-menu" id="mobileMenu">
+            <nav class="nav-primary" aria-label="Primary navigation">
                 <ul>
-                    <li><a href="https://mapmystandards.ai/">Home</a></li>
-                    <li><a href="https://mapmystandards.ai/services/">Services</a></li>
-                    <li><a href="https://mapmystandards.ai/about/">About</a></li>
-                    <li><a href="https://mapmystandards.ai/user-guide/">User Guide</a></li>
-                    <li><a href="https://mapmystandards.ai/contact/">Contact</a></li>
-                    <li><a href="https://mapmystandards.ai/dashboard">Dashboard</a></li>
-                    <li><a href="./web/login.html">Login</a></li>
-                    <li><a href="https://api.mapmystandards.ai/landing">🚀 Start Free Trial</a></li>
+                    <li><a href="https://platform.mapmystandards.ai/" class="active">Home</a></li>
+                    <li><a href="https://platform.mapmystandards.ai/services/">Services</a></li>
+                    <li><a href="https://platform.mapmystandards.ai/about/">About</a></li>
+                    <li><a href="https://platform.mapmystandards.ai/user-guide/">User Guide</a></li>
+                    <li><a href="https://platform.mapmystandards.ai/contact/">Contact</a></li>
+                    <li><a href="https://platform.mapmystandards.ai/dashboard">Dashboard</a></li>
                 </ul>
+            </nav>
+            <div class="nav-cta">
+                <a href="./web/login.html" class="btn-login" aria-label="Login to platform">Login</a>
+                <a href="https://platform.mapmystandards.ai/landing" class="btn-trial" aria-label="Start free trial">🚀 Free Trial</a>
             </div>
-        </nav>
+            <button class="mobile-menu-toggle" id="mobileToggle" aria-label="Open menu" aria-expanded="false">☰</button>
+        </div>
+        <div class="mobile-panel" id="mobilePanel" aria-hidden="true">
+            <button class="close-btn" id="mobileClose" aria-label="Close menu">✕ Close</button>
+            <nav aria-label="Mobile navigation">
+                <ul>
+                    <li><a href="https://platform.mapmystandards.ai/">Home</a></li>
+                    <li><a href="https://platform.mapmystandards.ai/services/">Services</a></li>
+                    <li><a href="https://platform.mapmystandards.ai/about/">About</a></li>
+                    <li><a href="https://platform.mapmystandards.ai/user-guide/">User Guide</a></li>
+                    <li><a href="https://platform.mapmystandards.ai/contact/">Contact</a></li>
+                    <li><a href="https://platform.mapmystandards.ai/dashboard">Dashboard</a></li>
+                </ul>
+                <div class="mobile-cta">
+                    <a href="./web/login.html" class="btn-login">Login</a>
+                    <a href="https://platform.mapmystandards.ai/landing" class="btn-trial">Start Trial</a>
+                </div>
+            </nav>
+        </div>
     </header>
 
     <main>
@@ -540,7 +484,7 @@
                 </div>
                 
                 <div style="margin-top: 3rem;">
-                    <a href="https://api.mapmystandards.ai/landing" class="cta-button trial">🚀 Start 7-Day Free Trial</a>
+                    <a href="https://platform.mapmystandards.ai/landing" class="cta-button trial">🚀 Start 7-Day Free Trial</a>
                     <a href="../institutional_dashboard.html" class="cta-button">🎯 See Live Demo</a>
                     <a href="#comprehensive-platform" class="cta-button secondary">Explore Platform</a>
                 </div>
@@ -573,7 +517,7 @@
                         <h3>Institutional Document Vault</h3>
                         <p><strong>Unlimited secure storage</strong> for all your accreditation documents. FERPA-compliant with advanced search, version control, and automated evidence mapping.</p>
                         <div style="background: #f8f9ff; padding: 1rem; border-radius: 8px; margin-top: 1rem;">
-                            <strong>Why you can't leave:</strong> All your institutional data, organized and searchable, with years of AI-powered insights.
+                            <strong>Compounding Value:</strong> Central evidence spine + AI enrichment that keeps improving retrieval, mapping precision, and narrative quality.
                         </div>
                     </article>
                     
@@ -583,7 +527,7 @@
                         <h3>Institutional AI Brain</h3>
                         <p><strong>AI that learns your institution</strong> specifically—your history, context, and processes. Provides 24/7 expert consultation you can't get anywhere else.</p>
                         <div style="background: #f8f9ff; padding: 1rem; border-radius: 8px; margin-top: 1rem;">
-                            <strong>Why you can't leave:</strong> Years of institutional learning and context that's impossible to recreate elsewhere.
+                            <strong>Compounding Value:</strong> Accumulated institutional context, style, and decision memory accelerating every future cycle.
                         </div>
                     </article>
                     
@@ -593,7 +537,7 @@
                         <h3>Complete Workflow Automation</h3>
                         <p><strong>Automate 80% of manual work</strong> with intelligent workflows tailored to your processes. Deadline tracking, evidence mapping, and report generation.</p>
                         <div style="background: #f8f9ff; padding: 1rem; border-radius: 8px; margin-top: 1rem;">
-                            <strong>Why you can't leave:</strong> Custom automations and integrations built specifically for your operations.
+                            <strong>Compounding Value:</strong> Adaptive workflows & integrations embedded in daily operations—continuously increasing throughput & audit readiness.
                         </div>
                     </article>
                     
@@ -603,7 +547,7 @@
                         <h3>Unified Team Collaboration</h3>
                         <p><strong>Centralized communication</strong> and project management for all accreditation activities. Stakeholder coordination, review workflows, and knowledge sharing.</p>
                         <div style="background: #f8f9ff; padding: 1rem; border-radius: 8px; margin-top: 1rem;">
-                            <strong>Why you can't leave:</strong> Your entire team's workflows and collaboration history lives here.
+                            <strong>Compounding Value:</strong> Persistent collaboration history, ownership trails, and shared knowledge reinforcing coordinated execution.
                         </div>
                     </article>
                     
@@ -613,7 +557,7 @@
                         <h3>Predictive Analytics Suite</h3>
                         <p><strong>Advanced compliance forecasting</strong> and industry benchmarking. Real-time risk assessment and optimization recommendations.</p>
                         <div style="background: #f8f9ff; padding: 1rem; border-radius: 8px; margin-top: 1rem;">
-                            <strong>Why you can't leave:</strong> Historical trend data and predictive models built from your institutional patterns.
+                            <strong>Compounding Value:</strong> Longitudinal signals & predictive models refined on your patterns—earlier risk detection every quarter.
                         </div>
                     </article>
                     
@@ -623,7 +567,7 @@
                         <h3>Professional Training Academy</h3>
                         <p><strong>Comprehensive accreditation education</strong> and certification programs. Build internal expertise and reduce consultant dependency.</p>
                         <div style="background: #f8f9ff; padding: 1rem; border-radius: 8px; margin-top: 1rem;">
-                            <strong>Why you can't leave:</strong> Your team's professional development and certifications are tied to the platform.
+                            <strong>Compounding Value:</strong> Embedded upskilling & certification progress elevating internal expertise and reducing external dependency.
                         </div>
                     </article>
                     
@@ -681,17 +625,11 @@
                     <div style="background: rgba(255,255,255,0.1); padding: 2rem; border-radius: 10px; text-align: center;">
                         <h4 style="color: white; margin-bottom: 1rem;">🚀 Start Your Free Trial</h4>
                         <p style="margin-bottom: 1.5rem;">Get full access to the platform with your institutional data for 7 days</p>
-                        <a href="https://api.mapmystandards.ai/landing" class="cta-button" style="background: white; color: #28a745; width: 100%; margin: 0;">Start Free Trial</a>
+                        <a href="https://platform.mapmystandards.ai/landing" class="cta-button" style="background: white; color: #28a745; width: 100%; margin: 0;">Start Free Trial</a>
                     </div>
                 </div>
                 
-                <div style="background: rgba(255,255,255,0.1); padding: 2rem; border-radius: 10px; margin-top: 2rem; max-width: 600px; margin-left: auto; margin-right: auto;">
-                    <h4 style="color: white; margin-bottom: 1rem; text-align: center;">🏆 Institutional Success Stories</h4>
-                    <div style="text-align: center;">
-                        <p style="margin-bottom: 1rem; font-style: italic;">"A³E has become our institutional memory. All our accreditation knowledge, documents, and workflows live here. We couldn't imagine operating without it."</p>
-                        <strong>- Dr. Sarah Mitchell, Accreditation Director</strong>
-                    </div>
-                </div>
+                <!-- Success stories testimonial block removed per request -->
                 
                 <div style="margin-top: 2rem; font-size: 0.9rem; opacity: 0.9; text-align: center;">
                     7-day free trial • No setup fees • Cancel anytime • <a href="https://api.mapmystandards.ai/docs" target="_blank" style="color: white;">Full API Access</a>
@@ -702,154 +640,223 @@
         <!-- Pricing Section -->
         <section id="pricing" class="features" style="background: white;">
             <div class="container">
-                <h2>Comprehensive Platform Pricing</h2>
-                <p style="text-align: center; color: #6c757d; margin-bottom: 1rem; font-size: 1.1rem;">
-                    One platform, unlimited value. All plans include the complete feature suite.
+                <h2>Institutional Pricing Tiers (Annual)</h2>
+                <p style="text-align: center; color: #6c757d; margin-bottom: 1rem; font-size: 1.05rem;">
+                    All tiers include the core platform: secure evidence vault, AI narrative engine, workflow automation, collaboration, analytics, training, and expert email support.
                 </p>
-                <p style="text-align: center; color: #27ae60; margin-bottom: 3rem; font-size: 1rem; font-weight: 600;">
-                    ✨ Every subscription includes unlimited storage, AI assistance, automation, training, and expert support
+                <p style="text-align: center; color: #27ae60; margin-bottom: 2.5rem; font-size: 0.95rem; font-weight: 600;">
+                    Pricing shown is annual (USD). Pilot is a 90‑day accelerated evaluation. Enterprise is custom.
                 </p>
-                
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 2rem; max-width: 800px; margin: 0 auto;">
-                    
-                    <!-- College Plan -->
-                    <div style="background: white; border: 2px solid #e9ecef; border-radius: 15px; padding: 2.5rem; text-align: center; position: relative;">
-                        <h3 style="font-size: 1.8rem; margin-bottom: 1rem; color: #2c3e50;">A³E Complete</h3>
-                        <div style="margin-bottom: 2rem;">
-                            <span style="font-size: 3rem; font-weight: 700; color: #2c3e50;">$297</span>
-                            <span style="color: #6c757d;">/month</span>
+                <div style="display:grid; gap:1.75rem; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); align-items:stretch;">
+                    <!-- Department -->
+                    <div style="background:#ffffff; border:2px solid #e9ecef; border-radius:16px; padding:1.75rem; display:flex; flex-direction:column;">
+                        <h3 style="font-size:1.4rem; margin-bottom:0.5rem; color:#2c3e50;">Department</h3>
+                        <p style="color:#6c757d; font-size:0.85rem; margin-bottom:0.75rem;">Self‑serve entry tier for single academic units</p>
+                        <div style="margin-bottom:1rem;">
+                            <span style="font-size:2.2rem; font-weight:700; color:#2c3e50;">$9,000</span>
+                            <span style="color:#6c757d; font-size:0.85rem;">/year</span>
                         </div>
-                        <p style="color: #6c757d; margin-bottom: 2rem;">Complete accreditation management for single institutions</p>
-                        
-                        <ul style="text-align: left; list-style: none; margin: 2rem 0;">
-                            <li style="padding: 0.5rem 0; padding-left: 1.5rem; position: relative;">
-                                <span style="position: absolute; left: 0; color: #27ae60; font-weight: bold;">✓</span>
-                                <strong>Unlimited</strong> document storage & analysis
-                            </li>
-                            <li style="padding: 0.5rem 0; padding-left: 1.5rem; position: relative;">
-                                <span style="position: absolute; left: 0; color: #27ae60; font-weight: bold;">✓</span>
-                                <strong>AI Brain</strong> that learns your institution
-                            </li>
-                            <li style="padding: 0.5rem 0; padding-left: 1.5rem; position: relative;">
-                                <span style="position: absolute; left: 0; color: #27ae60; font-weight: bold;">✓</span>
-                                <strong>Complete automation</strong> suite
-                            </li>
-                            <li style="padding: 0.5rem 0; padding-left: 1.5rem; position: relative;">
-                                <span style="position: absolute; left: 0; color: #27ae60; font-weight: bold;">✓</span>
-                                <strong>Team collaboration</strong> platform
-                            </li>
-                            <li style="padding: 0.5rem 0; padding-left: 1.5rem; position: relative;">
-                                <span style="position: absolute; left: 0; color: #27ae60; font-weight: bold;">✓</span>
-                                <strong>Training academy</strong> access
-                            </li>
-                            <li style="padding: 0.5rem 0; padding-left: 1.5rem; position: relative;">
-                                <span style="position: absolute; left: 0; color: #27ae60; font-weight: bold;">✓</span>
-                                <strong>Expert support</strong> & consultation
-                            </li>
-                            <li style="padding: 0.5rem 0; padding-left: 1.5rem; position: relative;">
-                                <span style="position: absolute; left: 0; color: #27ae60; font-weight: bold;">✓</span>
-                                <strong>All integrations</strong> included
-                            </li>
+                        <ul style="list-style:none; padding:0; margin:0 0 1rem 0; font-size:0.85rem; line-height:1.4;">
+                            <li>1 standard set</li>
+                            <li>500 artifacts</li>
+                            <li>5 users</li>
+                            <li>4 AI narratives</li>
+                            <li>Email support</li>
                         </ul>
-                        
-                        <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin: 1rem 0; font-size: 0.9rem;">
-                            <strong>💰 ROI:</strong> Save $150K+ annually vs. consultants
-                        </div>
-                        
-                        <a href="https://api.mapmystandards.ai/landing?plan=complete" 
-                           style="display: inline-block; background: #667eea; color: white; padding: 1rem 2rem; text-decoration: none; border-radius: 8px; font-weight: 600; width: 80%; margin-top: 1rem;">
-                            Start 7-Day Trial
-                        </a>
+                        <a data-price-key="STRIPE_PRICE_DEPARTMENT_ANNUAL" href="https://platform.mapmystandards.ai/landing?tier=department" style="margin-top:auto; text-align:center; display:block; background:#667eea; color:#fff; text-decoration:none; padding:0.8rem 1rem; border-radius:8px; font-weight:600; font-size:0.9rem;">Start Trial</a>
                     </div>
-                    
-                    <!-- Enterprise Plan -->
-                    <div style="background: white; border: 2px solid #667eea; border-radius: 15px; padding: 2.5rem; text-align: center; position: relative; transform: scale(1.05);">
-                        <div style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #667eea; color: white; padding: 0.5rem 1.5rem; border-radius: 20px; font-size: 0.9rem; font-weight: 600;">
-                            Most Popular
+                    <!-- Campus -->
+                    <div style="background:#ffffff; border:2px solid #667eea; border-radius:16px; padding:1.75rem; position:relative; display:flex; flex-direction:column;">
+                        <div style="position:absolute; top:-10px; left:50%; transform:translateX(-50%); background:#667eea; color:#fff; padding:0.35rem 1rem; border-radius:14px; font-size:0.7rem; letter-spacing:0.5px; font-weight:600;">POPULAR</div>
+                        <h3 style="font-size:1.4rem; margin-bottom:0.5rem; color:#2c3e50;">Campus</h3>
+                        <p style="color:#6c757d; font-size:0.85rem; margin-bottom:0.75rem;">Multi‑unit team collaboration & scaling</p>
+                        <div style="margin-bottom:1rem;">
+                            <span style="font-size:2.2rem; font-weight:700; color:#2c3e50;">$24,000</span>
+                            <span style="color:#6c757d; font-size:0.85rem;">/year</span>
                         </div>
-                        <h3 style="font-size: 1.8rem; margin-bottom: 1rem; color: #2c3e50;">A³E Enterprise</h3>
-                        <div style="margin-bottom: 2rem;">
-                            <span style="font-size: 3rem; font-weight: 700; color: #2c3e50;">$897</span>
-                            <span style="color: #6c757d;">/month</span>
-                        </div>
-                        <p style="color: #6c757d; margin-bottom: 2rem;">Complete solution for university systems and multi-campus institutions</p>
-                        
-                        <ul style="text-align: left; list-style: none; margin: 2rem 0;">
-                            <li style="padding: 0.5rem 0; padding-left: 1.5rem; position: relative;">
-                                <span style="position: absolute; left: 0; color: #27ae60; font-weight: bold;">✓</span>
-                                <strong>Everything in Complete Plan</strong>
-                            </li>
-                            <li style="padding: 0.5rem 0; padding-left: 1.5rem; position: relative;">
-                                <span style="position: absolute; left: 0; color: #27ae60; font-weight: bold;">✓</span>
-                                <strong>Unlimited</strong> campus/department profiles
-                            </li>
-                            <li style="padding: 0.5rem 0; padding-left: 1.5rem; position: relative;">
-                                <span style="position: absolute; left: 0; color: #27ae60; font-weight: bold;">✓</span>
-                                <strong>Priority</strong> AI processing & support
-                            </li>
-                            <li style="padding: 0.5rem 0; padding-left: 1.5rem; position: relative;">
-                                <span style="position: absolute; left: 0; color: #27ae60; font-weight: bold;">✓</span>
-                                <strong>Advanced</strong> analytics & benchmarking
-                            </li>
-                            <li style="padding: 0.5rem 0; padding-left: 1.5rem; position: relative;">
-                                <span style="position: absolute; left: 0; color: #27ae60; font-weight: bold;">✓</span>
-                                <strong>Dedicated</strong> success manager
-                            </li>
-                            <li style="padding: 0.5rem 0; padding-left: 1.5rem; position: relative;">
-                                <span style="position: absolute; left: 0; color: #27ae60; font-weight: bold;">✓</span>
-                                <strong>Custom</strong> integrations & workflows
-                            </li>
-                            <li style="padding: 0.5rem 0; padding-left: 1.5rem; position: relative;">
-                                <span style="position: absolute; left: 0; color: #27ae60; font-weight: bold;">✓</span>
-                                <strong>White-label</strong> options available
-                            </li>
+                        <ul style="list-style:none; padding:0; margin:0 0 1rem 0; font-size:0.85rem; line-height:1.4;">
+                            <li>3 standard sets</li>
+                            <li>3,000 artifacts</li>
+                            <li>15 users</li>
+                            <li>Unlimited AI narratives</li>
+                            <li>Connectors enabled</li>
+                            <li>Email support</li>
                         </ul>
-                        
-                        <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin: 1rem 0; font-size: 0.9rem;">
-                            <strong>💰 ROI:</strong> Save $300K+ annually system-wide
-                        </div>
-                        
-                        <a href="https://api.mapmystandards.ai/landing?plan=enterprise" 
-                           style="display: inline-block; background: #667eea; color: white; padding: 1rem 2rem; text-decoration: none; border-radius: 8px; font-weight: 600; width: 80%; margin-top: 1rem;">
-                            Start 7-Day Trial
-                        </a>
+                        <a data-price-key="STRIPE_PRICE_CAMPUS_ANNUAL" href="https://platform.mapmystandards.ai/landing?tier=campus" style="margin-top:auto; text-align:center; display:block; background:#667eea; color:#fff; text-decoration:none; padding:0.8rem 1rem; border-radius:8px; font-weight:600; font-size:0.9rem;">Start Trial</a>
                     </div>
-                    
-                </div>
-                
-                <!-- Value Proposition -->
-                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 3rem; border-radius: 15px; margin-top: 3rem; text-align: center;">
-                    <h3 style="color: white; margin-bottom: 2rem;">Why A³E Pays for Itself Every Month</h3>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; margin-bottom: 2rem;">
-                        <div>
-                            <div style="font-size: 2rem; font-weight: bold; margin-bottom: 0.5rem;">$15K-25K</div>
-                            <div>Monthly consultant fees eliminated</div>
+                    <!-- System -->
+                    <div style="background:#ffffff; border:2px solid #e9ecef; border-radius:16px; padding:1.75rem; display:flex; flex-direction:column;">
+                        <h3 style="font-size:1.4rem; margin-bottom:0.5rem; color:#2c3e50;">System</h3>
+                        <p style="color:#6c757d; font-size:0.85rem; margin-bottom:0.75rem;">Advanced scale & governance across divisions</p>
+                        <div style="margin-bottom:1rem;">
+                            <span style="font-size:2.2rem; font-weight:700; color:#2c3e50;">$48,000</span>
+                            <span style="color:#6c757d; font-size:0.85rem;">/year</span>
                         </div>
-                        <div>
-                            <div style="font-size: 2rem; font-weight: bold; margin-bottom: 0.5rem;">60-80 hrs</div>
-                            <div>Staff time saved monthly</div>
-                        </div>
-                        <div>
-                            <div style="font-size: 2rem; font-weight: bold; margin-bottom: 0.5rem;">$2M+</div>
-                            <div>Compliance risk reduction</div>
-                        </div>
-                        <div>
-                            <div style="font-size: 2rem; font-weight: bold; margin-bottom: 0.5rem;">∞</div>
-                            <div>Institutional knowledge preserved</div>
-                        </div>
+                        <ul style="list-style:none; padding:0; margin:0 0 1rem 0; font-size:0.85rem; line-height:1.4;">
+                            <li>10 standard sets</li>
+                            <li>Unlimited artifacts</li>
+                            <li>40 users</li>
+                            <li>Unlimited AI narratives</li>
+                            <li>Connectors + SSO + API</li>
+                            <li>Priority support</li>
+                        </ul>
+                        <a data-price-key="STRIPE_PRICE_SYSTEM_ANNUAL" href="https://platform.mapmystandards.ai/landing?tier=system" style="margin-top:auto; text-align:center; display:block; background:#667eea; color:#fff; text-decoration:none; padding:0.8rem 1rem; border-radius:8px; font-weight:600; font-size:0.9rem;">Start Trial</a>
                     </div>
-                    <p style="font-size: 1.1rem; opacity: 0.95; margin-bottom: 2rem;">
-                        <strong>Your A³E subscription replaces:</strong> Multiple software licenses, consultant retainers, manual processes, and data silos—while becoming more valuable every month as it learns your institution.
-                    </p>
+                    <!-- Enterprise -->
+                    <div style="background:#ffffff; border:2px solid #e9ecef; border-radius:16px; padding:1.75rem; display:flex; flex-direction:column;">
+                        <h3 style="font-size:1.4rem; margin-bottom:0.5rem; color:#2c3e50;">Enterprise</h3>
+                        <p style="color:#6c757d; font-size:0.85rem; margin-bottom:0.75rem;">Custom multi‑campus & complex accreditation</p>
+                        <div style="margin-bottom:1rem;">
+                            <span style="font-size:2.2rem; font-weight:700; color:#2c3e50;">$75K+</span>
+                            <span style="color:#6c757d; font-size:0.85rem;">/year</span>
+                        </div>
+                        <ul style="list-style:none; padding:0; margin:0 0 1rem 0; font-size:0.85rem; line-height:1.4;">
+                            <li>Unlimited sets & artifacts</li>
+                            <li>Unlimited users</li>
+                            <li>Unlimited AI narratives</li>
+                            <li>Connectors + SSO + API</li>
+                            <li>Premium support</li>
+                            <li>Custom integrations</li>
+                        </ul>
+                        <a data-price-key="ENTERPRISE_CONTACT" href="https://platform.mapmystandards.ai/landing?tier=enterprise" style="margin-top:auto; text-align:center; display:block; background:#667eea; color:#fff; text-decoration:none; padding:0.8rem 1rem; border-radius:8px; font-weight:600; font-size:0.9rem;">Request Proposal</a>
+                    </div>
+                    <!-- Pilot pricing card intentionally hidden. Retained in comments for future use.
+                    <div style="background:#ffffff; border:2px dashed #28a745; border-radius:16px; padding:1.75rem; display:flex; flex-direction:column;">
+                        <h3 style="font-size:1.4rem; margin-bottom:0.5rem; color:#2c3e50;">Pilot (90‑Day)</h3>
+                        <p style="color:#6c757d; font-size:0.85rem; margin-bottom:0.75rem;">Accelerated evaluation with upgrade credit</p>
+                        <div style="margin-bottom:1rem;">
+                            <span style="font-size:2.2rem; font-weight:700; color:#2c3e50;">$4,995</span>
+                            <span style="color:#6c757d; font-size:0.85rem;">one‑time</span>
+                        </div>
+                        <ul style="list-style:none; padding:0; margin:0 0 1rem 0; font-size:0.85rem; line-height:1.4;">
+                            <li>1 standard set</li>
+                            <li>250 artifacts</li>
+                            <li>3 users</li>
+                            <li>1 AI narrative</li>
+                            <li>Email support</li>
+                            <li>Upgrade credit applied</li>
+                        </ul>
+                        <a data-price-key="STRIPE_PRICE_PILOT" href="https://platform.mapmystandards.ai/landing?tier=pilot" style="margin-top:auto; text-align:center; display:block; background:#28a745; color:#fff; text-decoration:none; padding:0.8rem 1rem; border-radius:8px; font-weight:600; font-size:0.9rem;">Start Pilot</a>
+                    </div> -->
                 </div>
-                
-                <div style="text-align: center; margin-top: 3rem; padding: 2rem; background: #f8f9fa; border-radius: 10px;">
-                    <h4 style="color: #2c3e50; margin-bottom: 1rem;">💳 Start Your Free Trial</h4>
-                    <p style="color: #6c757d; margin-bottom: 1rem;">
-                        <strong>7-day complete access</strong> • Upload your documents • Experience your institutional AI • No charges during trial
+                <div style="text-align:center; margin-top:2.5rem; font-size:0.8rem; color:#6c757d;">
+                    All pricing USD, annual billing. Pilot converts to annual tier with prorated credit. Enterprise pricing based on scope & integration complexity.
+                </div>
+                <!-- Sponsored Pilot Program CTA -->
+                <div style="margin-top:2rem; background:#f1f5ff; border:1px solid #d9e4ff; padding:1.75rem 1.5rem; border-radius:12px; display:flex; gap:1.5rem; flex-wrap:wrap; align-items:center;">
+                    <div style="flex:1 1 320px; min-width:260px;">
+                        <h3 style="margin:0 0 .65rem 0; font-size:1.15rem; color:#2c3e50;">🎓 Sponsored Pilot & Innovation Program</h3>
+                        <p style="margin:0 0 .6rem 0; font-size:0.9rem; color:#495057; line-height:1.45;">Limited, application‑based 90‑day acceleration for mission‑aligned or resource‑constrained institutions. Includes guided onboarding, baseline gap intelligence, and upgrade credit toward annual tiers.</p>
+                        <ul style="margin:0; padding-left:1.1rem; font-size:0.75rem; color:#546071; line-height:1.3; list-style:disc;">
+                            <li>Capacity each quarter is capped</li>
+                            <li>Discounted or sponsored access (criteria based)</li>
+                            <li>Full data portability if you upgrade</li>
+                        </ul>
+                    </div>
+                    <div style="flex:0 0 220px; text-align:center;">
+                        <a href="https://platform.mapmystandards.ai/contact?program=pilot" style="display:inline-block; background:#667eea; color:#fff; text-decoration:none; padding:0.85rem 1.25rem; border-radius:8px; font-weight:600; font-size:0.85rem; margin-bottom:0.5rem;">Inquire About Pilot</a>
+                        <div style="font-size:0.65rem; color:#6c757d;">Response in 1 business day</div>
+                    </div>
+                </div>
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2.2rem; border-radius: 15px; margin-top: 3rem; text-align: center;">
+                    <h3 style="color: white; margin-bottom: 1.3rem;">Platform ROI & Strategic Value</h3>
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap:1.5rem; margin-bottom:1.5rem;">
+                        <div><div style="font-size:1.6rem; font-weight:700; margin-bottom:0.25rem;">$150K–$300K</div><div style="font-size:0.8rem;">Annual consultant & manual effort savings</div></div>
+                        <div><div style="font-size:1.6rem; font-weight:700; margin-bottom:0.25rem;">80%</div><div style="font-size:0.8rem;">Reduction in manual accreditation tasks</div></div>
+                        <div><div style="font-size:1.6rem; font-weight:700; margin-bottom:0.25rem;">24/7</div><div style="font-size:0.8rem;">Institutional AI knowledge retention</div></div>
+                        <div><div style="font-size:1.6rem; font-weight:700; margin-bottom:0.25rem;">Unlimited</div><div style="font-size:0.8rem;">Evidence mapping & narrative generation</div></div>
+                    </div>
+                    <p style="font-size:0.9rem; opacity:0.95; max-width:780px; margin:0 auto;">Your subscription replaces fragmented tooling, external consultant retainers, and unpredictable manual cycles—while compounding institutional knowledge every month.</p>
+                </div>
+                                <!-- Condensed Comparison Table -->
+                                <div style="margin-top:2.5rem; overflow-x:auto;">
+                                    <h3 style="text-align:center; font-size:1.4rem; color:#2c3e50; margin:0 0 1rem 0;">Quick Feature Comparison</h3>
+                                    <table style="width:100%; border-collapse:collapse; font-size:0.75rem; min-width:780px;">
+                                        <thead>
+                                            <tr style="background:#f1f3f5;">
+                                                <th style="padding:8px 6px; text-align:left; border:1px solid #dee2e6;">Feature</th>
+                                                <th style="padding:8px 6px; border:1px solid #dee2e6;">Pilot</th>
+                                                <th style="padding:8px 6px; border:1px solid #dee2e6;">Department</th>
+                                                <th style="padding:8px 6px; border:1px solid #dee2e6;">Campus</th>
+                                                <th style="padding:8px 6px; border:1px solid #dee2e6;">System</th>
+                                                <th style="padding:8px 6px; border:1px solid #dee2e6;">Enterprise</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td style="padding:6px; border:1px solid #eee;">Standard Sets</td>
+                                                <td style="padding:6px; border:1px solid #eee;">1</td>
+                                                <td style="padding:6px; border:1px solid #eee;">1</td>
+                                                <td style="padding:6px; border:1px solid #eee;">3</td>
+                                                <td style="padding:6px; border:1px solid #eee;">10</td>
+                                                <td style="padding:6px; border:1px solid #eee;">Unlimited</td>
+                                            </tr>
+                                            <tr style="background:#fafbfc;">
+                                                <td style="padding:6px; border:1px solid #eee;">Artifact Capacity</td>
+                                                <td style="padding:6px; border:1px solid #eee;">250</td>
+                                                <td style="padding:6px; border:1px solid #eee;">500</td>
+                                                <td style="padding:6px; border:1px solid #eee;">3,000</td>
+                                                <td style="padding:6px; border:1px solid #eee;">Unlimited</td>
+                                                <td style="padding:6px; border:1px solid #eee;">Unlimited</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding:6px; border:1px solid #eee;">Users</td>
+                                                <td style="padding:6px; border:1px solid #eee;">3</td>
+                                                <td style="padding:6px; border:1px solid #eee;">5</td>
+                                                <td style="padding:6px; border:1px solid #eee;">15</td>
+                                                <td style="padding:6px; border:1px solid #eee;">40</td>
+                                                <td style="padding:6px; border:1px solid #eee;">Unlimited</td>
+                                            </tr>
+                                            <tr style="background:#fafbfc;">
+                                                <td style="padding:6px; border:1px solid #eee;">AI Narratives</td>
+                                                <td style="padding:6px; border:1px solid #eee;">1</td>
+                                                <td style="padding:6px; border:1px solid #eee;">4</td>
+                                                <td style="padding:6px; border:1px solid #eee;">Unlimited</td>
+                                                <td style="padding:6px; border:1px solid #eee;">Unlimited</td>
+                                                <td style="padding:6px; border:1px solid #eee;">Unlimited</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding:6px; border:1px solid #eee;">Connectors</td>
+                                                <td style="padding:6px; border:1px solid #eee;">–</td>
+                                                <td style="padding:6px; border:1px solid #eee;">–</td>
+                                                <td style="padding:6px; border:1px solid #eee;">✔</td>
+                                                <td style="padding:6px; border:1px solid #eee;">✔</td>
+                                                <td style="padding:6px; border:1px solid #eee;">✔</td>
+                                            </tr>
+                                            <tr style="background:#fafbfc;">
+                                                <td style="padding:6px; border:1px solid #eee;">SSO</td>
+                                                <td style="padding:6px; border:1px solid #eee;">–</td>
+                                                <td style="padding:6px; border:1px solid #eee;">–</td>
+                                                <td style="padding:6px; border:1px solid #eee;">–</td>
+                                                <td style="padding:6px; border:1px solid #eee;">✔</td>
+                                                <td style="padding:6px; border:1px solid #eee;">✔</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding:6px; border:1px solid #eee;">API Access</td>
+                                                <td style="padding:6px; border:1px solid #eee;">–</td>
+                                                <td style="padding:6px; border:1px solid #eee;">–</td>
+                                                <td style="padding:6px; border:1px solid #eee;">–</td>
+                                                <td style="padding:6px; border:1px solid #eee;">✔</td>
+                                                <td style="padding:6px; border:1px solid #eee;">✔</td>
+                                            </tr>
+                                            <tr style="background:#fafbfc;">
+                                                <td style="padding:6px; border:1px solid #eee;">Support Level</td>
+                                                <td style="padding:6px; border:1px solid #eee;">Email</td>
+                                                <td style="padding:6px; border:1px solid #eee;">Email</td>
+                                                <td style="padding:6px; border:1px solid #eee;">Email</td>
+                                                <td style="padding:6px; border:1px solid #eee;">Priority</td>
+                                                <td style="padding:6px; border:1px solid #eee;">Premium</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div style="text-align: center; margin-top: 2.5rem; padding: 1.75rem; background: #f8f9fa; border-radius: 10px;">
+                    <h4 style="color: #2c3e50; margin-bottom: 0.75rem;">💳 Start Your Free Trial</h4>
+                    <p style="color: #6c757d; margin-bottom: 0.75rem; font-size:0.9rem;">
+                        7‑day complete access • Upload real evidence • Experience institutional AI • No charge during trial
                     </p>
-                    <p style="color: #6c757d; font-size: 0.95rem;">
-                        See why institutions say: <em>"Once you have all your data in A³E, leaving becomes unthinkable."</em>
+                    <p style="color: #6c757d; font-size: 0.8rem;">
+                        "Once your data & processes live in A³E, switching becomes unthinkable."
                     </p>
                 </div>
             </div>
@@ -899,27 +906,7 @@
                     </div>
                 </div>
                 
-                <!-- Testimonial Section -->
-                <div style="background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%); color: white; padding: 3rem; border-radius: 15px; margin-top: 4rem; text-align: center;">
-                    <h3 style="color: white; margin-bottom: 2rem;">What Institutions Say About A³E</h3>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
-                        <div style="background: rgba(255,255,255,0.1); padding: 2rem; border-radius: 10px;">
-                            <p style="font-style: italic; margin-bottom: 1rem;">"A³E isn't just software—it's become our institutional memory. All our accreditation knowledge, documents, and workflows live here. After two years of use, switching would be unthinkable."</p>
-                            <strong>Dr. Sarah Mitchell</strong><br>
-                            <small>Accreditation Director, State University</small>
-                        </div>
-                        <div style="background: rgba(255,255,255,0.1); padding: 2rem; border-radius: 10px;">
-                            <p style="font-style: italic; margin-bottom: 1rem;">"We've eliminated $200K+ in annual consultant fees because A³E knows our institution better than any external expert ever could. The ROI is incredible."</p>
-                            <strong>Dr. Michael Chen</strong><br>
-                            <small>VP Academic Affairs, Metro College</small>
-                        </div>
-                        <div style="background: rgba(255,255,255,0.1); padding: 2rem; border-radius: 10px;">
-                            <p style="font-style: italic; margin-bottom: 1rem;">"Our accreditation process went from chaotic and stressful to streamlined and predictable. A³E transformed how we think about compliance management."</p>
-                            <strong>Dr. Lisa Rodriguez</strong><br>
-                            <small>Associate Provost, Regional University</small>
-                        </div>
-                    </div>
-                </div>
+                <!-- Testimonial section removed per request -->
             </div>
         </section>
     </main>
@@ -1004,20 +991,40 @@
     </footer>
     
     <script>
-        function toggleMobileMenu() {
-            const mobileMenu = document.getElementById('mobileMenu');
-            mobileMenu.classList.toggle('active');
-        }
-        
-        // Close mobile menu when clicking outside
-        document.addEventListener('click', function(event) {
-            const mobileMenu = document.getElementById('mobileMenu');
-            const menuToggle = document.querySelector('.mobile-menu-toggle');
-            
-            if (!mobileMenu.contains(event.target) && !menuToggle.contains(event.target)) {
-                mobileMenu.classList.remove('active');
-            }
-        });
+        (function(){
+            // Sticky header + mobile panel accessibility
+            const header=document.getElementById('siteHeader');
+            const toggle=document.getElementById('mobileToggle');
+            const panel=document.getElementById('mobilePanel');
+            const closeBtn=document.getElementById('mobileClose');
+            const focusableSelectors='a, button';
+            let lastFocus=null;
+            function onScroll(){ window.scrollY>10?header.classList.add('is-scrolled'):header.classList.remove('is-scrolled'); }
+            window.addEventListener('scroll',onScroll,{passive:true}); onScroll();
+            function openPanel(){ lastFocus=document.activeElement; panel.classList.add('open'); panel.setAttribute('aria-hidden','false'); toggle.setAttribute('aria-expanded','true'); const first=panel.querySelector(focusableSelectors); if(first) first.focus(); document.body.style.overflow='hidden'; }
+            function closePanel(){ panel.classList.remove('open'); panel.setAttribute('aria-hidden','true'); toggle.setAttribute('aria-expanded','false'); document.body.style.overflow=''; if(lastFocus) lastFocus.focus(); }
+            toggle&&toggle.addEventListener('click',()=> panel.classList.contains('open')?closePanel():openPanel());
+            closeBtn&&closeBtn.addEventListener('click',closePanel);
+            document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&panel.classList.contains('open')) closePanel(); if(e.key==='Tab'&&panel.classList.contains('open')){ const focusable=Array.from(panel.querySelectorAll(focusableSelectors)); if(!focusable.length) return; const first=focusable[0]; const last=focusable[focusable.length-1]; if(e.shiftKey&&document.activeElement===first){ e.preventDefault(); last.focus(); } else if(!e.shiftKey&&document.activeElement===last){ e.preventDefault(); first.focus(); } }});
+            document.addEventListener('click',e=>{ if(panel.classList.contains('open')&&!panel.contains(e.target)&&e.target!==toggle) closePanel(); });
+
+            // Stripe checkout wiring
+            const ctas=document.querySelectorAll('a[data-price-key]');
+            ctas.forEach(el=>{
+                el.addEventListener('click',async e=>{
+                    const key=el.getAttribute('data-price-key');
+                    if(!key||key==='ENTERPRISE_CONTACT') return;
+                    e.preventDefault();
+                    const original=el.textContent; el.textContent='Processing...'; el.style.pointerEvents='none';
+                    try {
+                        const resp=await fetch('/api/stripe/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({priceEnvKey:key})});
+                        const data=await resp.json();
+                        if(data.url){ window.location.href=data.url; } else { el.textContent='Error – Retry'; el.style.background='#dc3545'; el.style.pointerEvents='auto'; }
+                    } catch(err){ console.error(err); el.textContent='Error – Retry'; el.style.background='#dc3545'; el.style.pointerEvents='auto'; }
+                    finally { setTimeout(()=>{ if(el.textContent==='Error – Retry'){ el.textContent=original; el.style.background=''; } },4000); }
+                });
+            });
+        })();
     </script>
 </body>
 </html>

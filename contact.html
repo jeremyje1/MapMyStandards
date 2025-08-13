@@ -3,8 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contact - A³E Platform | MapMyStandards</title>
-    <meta name="description" content="Get in touch with the A³E team. Contact us for support, sales inquiries, or enterprise solutions.">
+        <title>Contact MapMyStandards – Accreditation Platform & A³E Support</title>
+        <meta name="description" content="Contact MapMyStandards: sales, support, enterprise accreditation solutions, pricing, implementation, and partnership inquiries." />
+        <meta name="keywords" content="contact accreditation software,MapMyStandards support,accreditation platform sales" />
+        <link rel="canonical" href="https://platform.mapmystandards.ai/contact/" />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="Contact MapMyStandards" />
+        <meta property="og:description" content="Talk with the AI accreditation platform team about automation, evidence mapping, and institutional compliance intelligence." />
+        <meta property="og:url" content="https://platform.mapmystandards.ai/contact/" />
+        <meta property="og:image" content="https://platform.mapmystandards.ai/og/contact.jpg" />
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content="Contact MapMyStandards" />
+        <meta name="twitter:description" content="Reach the A³E accreditation intelligence team." />
+        <meta name="robots" content="index,follow" />
+        <script type="application/ld+json">{
+            "@context":"https://schema.org",
+            "@type":"ContactPage",
+            "url":"https://platform.mapmystandards.ai/contact/",
+            "description":"Contact MapMyStandards accreditation platform team",
+            "publisher":{"@type":"Organization","name":"MapMyStandards"}
+        }</script>
     
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -140,7 +158,7 @@
                     <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
                         <h3 class="text-lg font-bold text-gray-900 mb-4">Quick Actions</h3>
                         <div class="space-y-4">
-                            <a href="./trial.html" 
+                            <a data-price-key="STRIPE_PRICE_DEPARTMENT_ANNUAL" href="https://platform.mapmystandards.ai/landing?tier=department" 
                                class="block w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 text-center">
                                 🚀 Start Free Trial
                             </a>
@@ -260,5 +278,19 @@
             // Note: Form will submit to Formspree, no need to prevent default
         });
     </script>
+<script>
+(function(){
+    const ctas=document.querySelectorAll('a[data-price-key]');
+    ctas.forEach(a=>a.addEventListener('click', async e=>{
+        const key=a.getAttribute('data-price-key');
+        if(!key||key==='ENTERPRISE_CONTACT') return;
+        e.preventDefault();
+        const original=a.textContent; a.textContent='Processing...'; a.style.pointerEvents='none';
+        try { const resp=await fetch('/api/stripe/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({priceEnvKey:key})}); const data=await resp.json(); if(data.url) window.location.href=data.url; else { a.textContent='Error – Retry'; a.style.background='#dc3545'; a.style.pointerEvents='auto'; } }
+        catch(err){ a.textContent='Error – Retry'; a.style.background='#dc3545'; a.style.pointerEvents='auto'; }
+        finally { setTimeout(()=>{ if(a.textContent==='Error – Retry'){ a.textContent=original; a.style.background=''; a.style.pointerEvents='auto'; } },4000); }
+    }));
+})();
+</script>
 </body>
 </html>
