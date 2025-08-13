@@ -18,38 +18,40 @@ const plans: Plan[] = [
     key: 'college',
     name: 'A³E College Plan',
     monthly: 297,
-    annual: 2970,
+    annual: 2970, // 2 months free (12 * 297 = 3564)
     savings: '$40,000-$80,000',
     features: [
-      '🏛️ Up to 3 campus/department profiles',
-      '📄 Unlimited document analysis with institutional memory',
-      '🤖 Full AI pipeline (4-agent system) for comprehensive insights',
-      '🎨 Canvas LMS integration for seamless workflow',
-      '📋 Comprehensive audit trails for bulletproof compliance',
-      '📊 Monthly compliance reports with actionable insights',
-      '✉️ Priority email support for strategic guidance',
-      '🎯 7-day free trial to experience the transformation'
+      '✅ Complete A³E Engine Access',
+      '🏛️ Higher Ed: SACSCOC, HLC, MSCHE, NECHE, WSCUC, NWCCU',
+      '🏫 K-12: Cognia/AdvancED, WASC, NEASC, SACS CASI',
+      '🎓 Specialized: AACSB, ABET, CCNE, CAEP, IB',
+      '🤖 AI Document Analysis & Gap Detection',
+      '🎨 Canvas LMS Integration',
+      '� Compliance Dashboard & Evidence Mapping',
+      '✉️ Email Support (4h response)',
+      '🎯 7-Day Free Trial'
     ],
-    cta: { label: '🚀 Start Free Trial', href: 'https://api.mapmystandards.ai/landing' }
+    cta: { label: '🚀 Start Monthly', href: 'https://mapmystandards.ai/checkout.html?plan=college_monthly' }
   },
   {
     key: 'multi',
     name: 'A³E Multi-Campus Plan',
     monthly: 897,
-    annual: 8970,
+    annual: 8970, // savings relative to 12 * 897 = 10764
     featured: true,
     savings: '$100,000-$200,000',
     features: [
-      '🌟 Unlimited campus/department profiles',
-      '📚 Everything in College Plan PLUS advanced features',
-      '🏷️ White-label option for institutional branding',
-      '🔧 API access (10K calls/month) for deep integration',
-      '👥 Dedicated success manager for strategic optimization',
-      '⚙️ Custom integrations that create operational dependencies',
-      '📞 Phone support for immediate strategic guidance',
-      '⚡ Priority implementation for faster value realization'
+      '🌟 Everything in College Plan',
+      '🏢 Unlimited Campus / Department Profiles',
+      '�️ System-wide Compliance Dashboard',
+      '� Cross-Campus Resource Sharing',
+      '🧩 Multi-District Management Tools',
+      '🏷️ White-Label Reports & Branding',
+      '� API Access (10K calls/mo)',
+      '⚡ Priority Implementation',
+      '📞 Priority Support (2h response)'
     ],
-    cta: { label: '💎 Maximize Institutional Value', href: 'https://api.mapmystandards.ai/landing' }
+    cta: { label: '💎 Start Monthly', href: 'https://mapmystandards.ai/checkout.html?plan=multicampus_monthly' }
   },
   {
     key: 'enterprise',
@@ -59,16 +61,16 @@ const plans: Plan[] = [
     custom: true,
     savings: '$200,000-$500,000',
     features: [
-      '🏗️ Custom deployment options for complete control',
-      '🔓 Unlimited API access for total integration',
-      '🛡️ 24/7 dedicated support for mission-critical operations',
-      '💻 Custom development for unique competitive advantages',
-      '🏢 On-premise deployment for maximum security',
-      '🔒 Advanced security features for sensitive operations',
-      '🌍 Custom accreditor support for international expansion',
-      '🎓 Training and consulting for organizational transformation'
+      '🏗️ Custom / Hybrid / On-Prem Deployment',
+      '🔓 Unlimited API & Data Integration',
+      '🛡️ 24/7 Dedicated Support SLA',
+      '💻 Proprietary Feature Development',
+      '🔒 Advanced Security / Compliance Add-ons',
+      '🌍 International & Emerging Accreditor Support',
+      '📡 Advanced Analytics & Benchmarking',
+      '🎓 Executive Advisory & Governance Workshops'
     ],
-    cta: { label: '🏆 Build Institutional Dominance', href: 'https://mapmystandards.ai/contact/' }
+    cta: { label: '🏆 Request Enterprise Proposal', href: 'https://mapmystandards.ai/contact/' }
   }
 ];
 
@@ -108,8 +110,18 @@ export default function PricingSection() {
                     <li key={f} className="pl-5 relative"><span className="absolute left-0 top-0.5 text-emerald-600">✓</span>{f}</li>
                   ))}
                 </ul>
-                <a href={plan.cta.href} className={`block w-full text-center font-semibold rounded-lg px-4 py-3 ${plan.featured ? 'bg-indigo-600 hover:bg-indigo-500 text-white' : 'bg-indigo-500 hover:bg-indigo-400 text-white'} transition shadow`}>{plan.cta.label}</a>
+                {plan.custom ? (
+                  <a href={plan.cta.href} className={`block w-full text-center font-semibold rounded-lg px-4 py-3 bg-indigo-600 hover:bg-indigo-500 text-white transition shadow`}>{plan.cta.label}</a>
+                ) : (
+                  <div className="space-y-3">
+                    <a href={plan.cta.href} className={`block w-full text-center font-semibold rounded-lg px-4 py-3 ${plan.featured ? 'bg-indigo-600 hover:bg-indigo-500 text-white' : 'bg-indigo-500 hover:bg-indigo-400 text-white'} transition shadow`}>{plan.cta.label}</a>
+                    <a href={plan.key === 'college' ? 'https://mapmystandards.ai/checkout.html?plan=college_yearly' : 'https://mapmystandards.ai/checkout.html?plan=multicampus_yearly'} className="block w-full text-center font-semibold rounded-lg px-4 py-3 bg-slate-800 hover:bg-slate-700 text-white transition shadow">🔁 Choose Annual</a>
+                  </div>
+                )}
                 <p className="text-xs text-slate-500 mt-3"><strong>Typical savings:</strong> {plan.savings} annually</p>
+                {!plan.custom && (
+                  <p className="text-[10px] text-slate-400 mt-1">Annual effective: ${plan.annual / 12 < 1 ? '' : Math.round(plan.annual / 12).toLocaleString()}/mo</p>
+                )}
               </article>
             );
           })}

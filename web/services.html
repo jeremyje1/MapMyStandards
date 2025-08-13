@@ -3,10 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="MapMyStandards.ai Services - A³E Engine, Multi-Accreditor Support, and Professional Consulting">
-    <title>Services - MapMyStandards.ai</title>
-    
+    <meta name="description" content="A³E accreditation operating system services & pricing: multi-accreditor AI engine, compliance automation, strategic consulting, and institutional transformation." />
+    <link rel="canonical" href="https://mapmystandards.ai/services/" />
+    <meta name="robots" content="index,follow" />
+    <title>Services & Pricing | A³E Accreditation Engine | MapMyStandards.ai</title>
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://mapmystandards.ai/services/" />
+    <meta property="og:title" content="A³E Services & Pricing | Accreditation Intelligence Platform" />
+    <meta property="og:description" content="Compare A³E plans: College, Multi-Campus, and Enterprise solutions delivering 300–500% ROI via multi-accreditor AI compliance automation." />
+    <meta property="og:image" content="https://mapmystandards.ai/og-default.png" />
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="A³E Services & Pricing" />
+    <meta name="twitter:description" content="Multi-accreditor AI accreditation engine with compliance automation & strategic services." />
+    <meta name="twitter:image" content="https://mapmystandards.ai/og-default.png" />
+    <meta name="theme-color" content="#1e3c72" />
+    <link rel="preload" href="/fonts/segui.woff2" as="font" type="font/woff2" crossorigin>
     <style>
+        :root {
+            --brand-gradient: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            --accent-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --accent-alt: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --radius-sm: 6px;
+            --radius: 10px;
+            --radius-lg: 15px;
+            --shadow-sm: 0 2px 10px rgba(0,0,0,0.06);
+            --shadow: 0 5px 25px rgba(0,0,0,0.1);
+            --text-dark: #2c3e50;
+            --text-mid: #6c757d;
+            --primary: #667eea;
+        }
         * {
             margin: 0;
             padding: 0;
@@ -28,10 +55,13 @@
         
         /* Header */
         header {
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            background: var(--brand-gradient);
             color: white;
             padding: 1rem 0;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 50;
         }
         
         nav {
@@ -52,6 +82,17 @@
             list-style: none;
             gap: 2rem;
         }
+
+        .mobile-toggle {
+            display: none;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: #fff;
+            padding: 0.6rem 0.9rem;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
         
         .nav-links a {
             color: white;
@@ -66,10 +107,11 @@
         
         /* Hero Section */
         .services-hero {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--accent-gradient);
             color: white;
             padding: 4rem 0;
             text-align: center;
+            position: relative;
         }
         
         .services-hero h1 {
@@ -129,7 +171,7 @@
         }
         
         .platform-visual {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            background: var(--accent-alt);
             height: 350px;
             border-radius: 15px;
             display: flex;
@@ -183,6 +225,28 @@
         .pricing {
             padding: 6rem 0;
             background: white;
+        }
+
+        .billing-toggle {
+            display: inline-flex;
+            border: 1px solid #e2e8f0;
+            border-radius: 40px;
+            overflow: hidden;
+            background: #f1f5f9;
+            margin: 1rem auto 0;
+        }
+        .billing-toggle button {
+            background: transparent;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: #334155;
+        }
+        .billing-toggle button[aria-pressed="true"] {
+            background: var(--primary);
+            color: #fff;
         }
         
         .pricing h2 {
@@ -365,14 +429,25 @@
         }
         
         /* Responsive Design */
-        @media (max-width: 768px) {
+        @media (max-width: 880px) {
             .services-hero h1 {
                 font-size: 2.5rem;
             }
             
             .nav-links {
                 display: none;
+                position: absolute;
+                top: 100%;
+                right: 0;
+                background: var(--brand-gradient);
+                flex-direction: column;
+                padding: 1.5rem 2rem;
+                width: 250px;
+                box-shadow: var(--shadow);
+                border-bottom-left-radius: var(--radius);
             }
+            .nav-links.open { display: flex; }
+            .mobile-toggle { display: inline-block; }
             
             .platform-content {
                 grid-template-columns: 1fr;
@@ -388,12 +463,54 @@
             }
         }
     </style>
+        <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "Product",
+            "name": "A³E Accreditation Engine",
+            "url": "https://mapmystandards.ai/services/",
+            "description": "Multi-accreditor AI accreditation & compliance automation platform with strategic consulting services.",
+            "brand": {"@type": "Brand", "name": "MapMyStandards"},
+            "offers": [
+                {
+                    "@type": "Offer",
+                    "name": "A³E College Plan",
+                    "price": "297",
+                    "priceCurrency": "USD",
+                    "priceValidUntil": "2025-12-31",
+                    "availability": "https://schema.org/InStock",
+                    "url": "https://mapmystandards.ai/services/"
+                },
+                {
+                    "@type": "Offer",
+                    "name": "A³E Multi-Campus Plan",
+                    "price": "897",
+                    "priceCurrency": "USD",
+                    "priceValidUntil": "2025-12-31",
+                    "availability": "https://schema.org/InStock",
+                    "url": "https://mapmystandards.ai/services/"
+                }
+            ]
+        }
+        </script>
+        <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": [
+                {"@type": "Question","name": "What ROI do institutions typically see?","acceptedAnswer": {"@type": "Answer","text": "Typical ROI ranges from 300–500% in the first year with $50K–$150K annual operational savings."}},
+                {"@type": "Question","name": "Do you offer annual discounts?","acceptedAnswer": {"@type": "Answer","text": "Yes, annual billing includes two free months (16% discount) compared to monthly rates."}}
+            ]
+        }
+        </script>
 </head>
 <body>
+        <a href="#main" class="sr-only" style="position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden;">Skip to main content</a>
     <header>
         <nav class="container">
             <a href="https://mapmystandards.ai/" class="logo">MapMyStandards.ai</a>
-            <ul class="nav-links">
+                        <button class="mobile-toggle" aria-expanded="false" aria-controls="primary-navigation">Menu</button>
+                        <ul id="primary-navigation" class="nav-links" role="menubar">
                 <li><a href="https://mapmystandards.ai/">Home</a></li>
                 <li><a href="https://mapmystandards.ai/services/">Services</a></li>
                 <li><a href="https://mapmystandards.ai/about/">About</a></li>
@@ -403,8 +520,7 @@
             </ul>
         </nav>
     </header>
-
-    <main>
+        <main id="main" tabindex="-1">
         <section class="services-hero">
             <div class="container">
                 <h1>🎯 Complete Accreditation Operating System</h1>
@@ -505,69 +621,80 @@
             </div>
         </section>
 
-        <section class="pricing">
+        <section class="pricing" aria-labelledby="pricing-heading">
             <div class="container">
-                <h2>💎 Investment in Institutional Excellence</h2>
+                <h2 id="pricing-heading">💎 Investment in Institutional Excellence</h2>
                 <p style="text-align: center; font-size: 1.2rem; color: #6c757d; margin-bottom: 1rem;">
                     <strong>Transform operational overhead into competitive advantage.</strong> Every A³E plan delivers exponential ROI through streamlined compliance, enhanced credibility, and operational efficiency that compounds over time.
                 </p>
                 <p style="text-align: center; font-size: 1rem; color: #667eea; margin-bottom: 3rem;">
                     <strong>💰 Typical ROI: 300-500% within first year | 🎯 Average savings: $50K-$150K annually</strong>
                 </p>
+                <div class="billing-toggle" role="group" aria-label="Billing period selector">
+                    <button type="button" id="monthlyBtn" aria-pressed="true">Monthly</button>
+                    <button type="button" id="annualBtn" aria-pressed="false">Annual <span style="color:#16a34a;font-weight:600;">2 Months Free</span></button>
+                </div>
                 
                 <div class="pricing-grid">
-                    <article class="pricing-card">
+                    <article class="pricing-card" data-monthly="297" data-annual="2970" aria-label="College Plan">
                         <div class="plan-name">A³E College Plan</div>
-                        <div class="plan-price">$297</div>
-                        <div class="plan-period">per month</div>
+                        <div class="plan-price"><span class="price-amount">$297</span><span class="price-frequency" style="font-size:1rem; color:#6c757d;">/mo</span></div>
+                        <div class="plan-period">or <strong class="annual-equivalent" style="color:#667eea;">$2,970/year (Save $594)</strong></div>
+                        <p style="font-size:0.95rem; color:#6c757d; margin-top:-10px; margin-bottom:1.25rem; font-style:italic;">Perfect for colleges, universities & districts</p>
                         <ul class="plan-features">
-                            <li>🏛️ Up to 3 campus/department profiles</li>
-                            <li>📄 Unlimited document analysis with institutional memory</li>
-                            <li>🤖 Full AI pipeline (4-agent system) for comprehensive insights</li>
-                            <li>🎨 Canvas LMS integration for seamless workflow</li>
-                            <li>📋 Comprehensive audit trails for bulletproof compliance</li>
-                            <li>📊 Monthly compliance reports with actionable insights</li>
-                            <li>✉️ Priority email support for strategic guidance</li>
-                            <li>🎯 7-day free trial to experience the transformation</li>
+                            <li>✅ Complete A³E Engine Access</li>
+                            <li>🏛️ Higher Ed: SACSCOC, HLC, MSCHE, NECHE, WSCUC, NWCCU</li>
+                            <li>🏫 K-12: Cognia/AdvancED, WASC, NEASC, SACS CASI</li>
+                            <li>🎓 Specialized: AACSB, ABET, CCNE, CAEP, IB</li>
+                            <li>🤖 AI Document Analysis & Gap Detection</li>
+                            <li>🎨 Canvas LMS Integration</li>
+                            <li>📊 Compliance Dashboard & Evidence Mapping</li>
+                            <li>✉️ Email Support (4h response)</li>
+                            <li>🎯 7-Day Free Trial</li>
                         </ul>
-                        <a href="https://api.mapmystandards.ai/landing" class="plan-button">🚀 Start Building Advantage</a>
-                        <p style="font-size: 0.9rem; margin-top: 1rem; color: #6c757d;"><strong>Typical savings:</strong> $40,000-$80,000 annually</p>
+                        <a href="https://mapmystandards.ai/checkout.html?plan=college_monthly" class="plan-button">🚀 Start Monthly</a>
+                        <a href="https://mapmystandards.ai/checkout.html?plan=college_yearly" class="plan-button" style="margin-top:0.75rem; background:#2c3e50;">🔁 Choose Annual</a>
+                        <p style="font-size: 0.8rem; margin-top: 0.75rem; color: #6c757d;">Annual effective: $247/mo</p>
                     </article>
                     
-                    <article class="pricing-card featured">
+                    <article class="pricing-card featured" data-monthly="897" data-annual="8970" aria-label="Multi-Campus Plan">
                         <div class="plan-name">A³E Multi-Campus Plan</div>
-                        <div class="plan-price">$897</div>
-                        <div class="plan-period">per month</div>
+                        <div class="plan-price"><span class="price-amount">$897</span><span class="price-frequency" style="font-size:1rem; color:#6c757d;">/mo</span></div>
+                        <div class="plan-period">or <strong class="annual-equivalent" style="color:#667eea;">$8,970/year (Save $1,794)</strong></div>
+                        <p style="font-size:0.95rem; color:#6c757d; margin-top:-10px; margin-bottom:1.25rem; font-style:italic;">For systems, districts & multi-location institutions</p>
                         <ul class="plan-features">
-                            <li>🌟 Unlimited campus/department profiles</li>
-                            <li>📚 Everything in College Plan PLUS advanced features</li>
-                            <li>🏷️ White-label option for institutional branding</li>
-                            <li>🔧 API access (10K calls/month) for deep integration</li>
-                            <li>👥 Dedicated success manager for strategic optimization</li>
-                            <li>⚙️ Custom integrations that create operational dependencies</li>
-                            <li>📞 Phone support for immediate strategic guidance</li>
-                            <li>⚡ Priority implementation for faster value realization</li>
+                            <li>🌟 Everything in College Plan</li>
+                            <li>🏢 Unlimited Campus / Department Profiles</li>
+                            <li>🛰️ System-wide Compliance Dashboard</li>
+                            <li>� Cross-Campus Resource Sharing</li>
+                            <li>🧩 Multi-District Management Tools</li>
+                            <li>🏷️ White-Label Reports & Branding</li>
+                            <li>� API Access (10K calls/mo)</li>
+                            <li>⚡ Priority Implementation</li>
+                            <li>📞 Priority Support (2h response)</li>
                         </ul>
-                        <a href="https://api.mapmystandards.ai/landing" class="plan-button">💎 Maximize Institutional Value</a>
-                        <p style="font-size: 0.9rem; margin-top: 1rem; color: #6c757d;"><strong>Typical savings:</strong> $100,000-$200,000 annually</p>
+                        <a href="https://mapmystandards.ai/checkout.html?plan=multicampus_monthly" class="plan-button">💎 Start Monthly</a>
+                        <a href="https://mapmystandards.ai/checkout.html?plan=multicampus_yearly" class="plan-button" style="margin-top:0.75rem; background:#2c3e50;">🔁 Choose Annual</a>
+                        <p style="font-size: 0.8rem; margin-top: 0.75rem; color: #6c757d;">Annual effective: $748/mo</p>
                     </article>
                     
-                    <article class="pricing-card">
+                    <article class="pricing-card" data-monthly="0" data-annual="0" aria-label="Enterprise Solution">
                         <div class="plan-name">Enterprise Solution</div>
-                        <div class="plan-price">Custom</div>
-                        <div class="plan-period">tailored for dominance</div>
+                        <div class="plan-price"><span class="price-amount">Custom</span></div>
+                        <div class="plan-period">Tailored for dominance</div>
+                        <p style="font-size:0.95rem; color:#6c757d; margin-top:-10px; margin-bottom:1.25rem; font-style:italic;">Custom deployment & strategic expansion</p>
                         <ul class="plan-features">
-                            <li>🏗️ Custom deployment options for complete control</li>
-                            <li>🔓 Unlimited API access for total integration</li>
-                            <li>🛡️ 24/7 dedicated support for mission-critical operations</li>
-                            <li>💻 Custom development for unique competitive advantages</li>
-                            <li>🏢 On-premise deployment for maximum security</li>
-                            <li>🔒 Advanced security features for sensitive operations</li>
-                            <li>🌍 Custom accreditor support for international expansion</li>
-                            <li>🎓 Training and consulting for organizational transformation</li>
+                            <li>🏗️ Custom / Hybrid / On-Prem Deployment</li>
+                            <li>🔓 Unlimited API & Data Integration</li>
+                            <li>🛡️ 24/7 Dedicated Support SLA</li>
+                            <li>💻 Proprietary Feature Development</li>
+                            <li>🔒 Advanced Security / Compliance Add-ons</li>
+                            <li>🌍 International & Emerging Accreditor Support</li>
+                            <li>📡 Advanced Analytics & Benchmarking</li>
+                            <li>🎓 Executive Advisory & Governance Workshops</li>
                         </ul>
-                        <a href="https://mapmystandards.ai/contact/" class="plan-button">🏆 Build Institutional Dominance</a>
-                        <p style="font-size: 0.9rem; margin-top: 1rem; color: #6c757d;"><strong>Typical savings:</strong> $200,000-$500,000 annually</p>
+                        <a href="https://mapmystandards.ai/contact/" class="plan-button">🏆 Request Enterprise Proposal</a>
+                        <p style="font-size: 0.8rem; margin-top: 0.75rem; color: #6c757d;">Custom pricing based on scope</p>
                     </article>
                 </div>
                 
@@ -579,9 +706,9 @@
             </div>
         </section>
 
-        <section class="addons">
+    <section class="addons" aria-labelledby="addons-heading">
             <div class="container">
-                <h2>🚀 Strategic Acceleration Services</h2>
+        <h2 id="addons-heading">🚀 Strategic Acceleration Services</h2>
                 <p style="text-align: center; font-size: 1.1rem; color: #6c757d; margin-bottom: 3rem;">
                     <strong>Maximize your competitive advantage with expert guidance that transforms A³E from powerful tool into institutional game-changer.</strong> These services ensure you extract maximum value and create unshakeable operational dependencies.
                 </p>
@@ -695,6 +822,48 @@
             </div>
         </div>
     </footer>
+    <script>
+        // Mobile navigation toggle
+        const toggleBtn = document.querySelector('.mobile-toggle');
+        const navLinks = document.querySelector('.nav-links');
+        toggleBtn?.addEventListener('click', () => {
+            const expanded = toggleBtn.getAttribute('aria-expanded') === 'true';
+            toggleBtn.setAttribute('aria-expanded', String(!expanded));
+            navLinks.classList.toggle('open');
+        });
+
+        // Pricing billing toggle logic
+        const monthlyBtn = document.getElementById('monthlyBtn');
+        const annualBtn = document.getElementById('annualBtn');
+        const pricingCards = document.querySelectorAll('.pricing-card');
+
+        function formatCurrency(val) { return '$' + val.toLocaleString(); }
+        function setMode(mode) {
+            const annual = mode === 'annual';
+            monthlyBtn.setAttribute('aria-pressed', (!annual).toString());
+            annualBtn.setAttribute('aria-pressed', annual.toString());
+            pricingCards.forEach(card => {
+                const monthly = parseInt(card.getAttribute('data-monthly'), 10);
+                const annualPrice = parseInt(card.getAttribute('data-annual'), 10);
+                const priceAmountEl = card.querySelector('.price-amount');
+                const priceFrequencyEl = card.querySelector('.price-frequency');
+                const annualEquiv = card.querySelector('.annual-equivalent');
+                if(!priceAmountEl) return;
+                if(monthly === 0) { priceAmountEl.textContent = 'Custom'; return; }
+                if(annual) {
+                    priceAmountEl.textContent = formatCurrency(annualPrice);
+                    if(priceFrequencyEl) priceFrequencyEl.textContent = '/yr';
+                    if(annualEquiv) annualEquiv.textContent = formatCurrency(Math.round(annualPrice/12)) + '/mo effective';
+                } else {
+                    priceAmountEl.textContent = formatCurrency(monthly);
+                    if(priceFrequencyEl) priceFrequencyEl.textContent = '/mo';
+                    if(annualEquiv) annualEquiv.textContent = formatCurrency(annualPrice) + '/year';
+                }
+            });
+        }
+        monthlyBtn?.addEventListener('click', () => setMode('monthly'));
+        annualBtn?.addEventListener('click', () => setMode('annual'));
+    </script>
 </body>
 </html>
 
