@@ -13,13 +13,15 @@
     }
   ],
   "rewrites": [
-    { "source": "/", "destination": "/pricing_clean.html" },
-    { "source": "/pricing", "destination": "/pricing_clean.html" },
-    { "source": "/signup", "destination": "/signup.html" },
-    { "source": "/trial", "destination": "/signup.html" },
+    { "source": "/", "destination": "/index.html" },
+    { "source": "/pricing", "destination": "/pricing.html" },
     { "source": "/contact", "destination": "/contact.html" },
-    { "source": "/trial-success", "destination": "/trial-success.html" },
-    { "source": "/status", "destination": "/status.html" }
+    { "source": "/about", "destination": "/web/about/index.html" },
+    { "source": "/services", "destination": "/web/services/index.html" },
+    { "source": "/privacy-policy", "destination": "/web/privacy-policy/index.html" },
+    { "source": "/user-guide", "destination": "/web/user-guide/index.html" },
+    { "source": "/homepage", "destination": "/web/homepage.html" },
+    { "source": "/(.*)", "destination": "/index.html" }
   ],
   "redirects": [
     { "source": "/login", "destination": "https://api.mapmystandards.ai/login", "permanent": false },
