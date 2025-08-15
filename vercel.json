@@ -14,6 +14,11 @@
   ],
   "rewrites": [
     { "source": "/", "destination": "/index.html" },
+  { "source": "/landing", "destination": "/web/landing.html" },
+  { "source": "/trial-signup", "destination": "/web/trial-signup.html" },
+  { "source": "/trial-success", "destination": "/web/trial-success.html" },
+  { "source": "/trial-login", "destination": "/web/trial-login.html" },
+  { "source": "/checkout", "destination": "/web/checkout.html" },
     { "source": "/pricing", "destination": "/pricing.html" },
     { "source": "/contact", "destination": "/contact.html" },
     { "source": "/about", "destination": "/web/about/index.html" },
