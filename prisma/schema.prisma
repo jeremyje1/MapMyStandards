@@ -1,0 +1,297 @@
+// Prisma schema for MapMyStandards core SaaS entities
+// Minimal initial cut – extend with additional domain models as features mature.
+// Run: npx prisma migrate dev --name init_core (locally)
+// In production (Railway/Vercel build): npx prisma migrate deploy
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Tier {
+  department
+  campus
+  system
+  enterprise
+  pilot
+  unknown
+}
+
+model User {
+  id            String         @id @default(cuid())
+  email         String         @unique
+  name          String?
+  tier          Tier?          @default(department)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  subscriptions Subscription[]
+  orgCharts     OrgChart[]
+  scenarios     Scenario[]
+  assessments   Assessment[]
+  memberships   Membership[]
+  documents     Document[]      @relation("UserDocuments")
+  documentVersions DocumentVersion[] @relation("UserDocumentVersions")
+  auditLogs     AuditLog[]      @relation("UserAuditLogs")
+}
+
+model Subscription {
+  id                String   @id @default(cuid())
+  user              User     @relation(fields: [userId], references: [id])
+  userId            String
+  stripeCustomerId  String?
+  stripeSubscriptionId String? @unique
+  priceEnvKey       String?
+  priceId           String?
+  status            String?
+  currentPeriodEnd  DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  @@index([stripeCustomerId])
+}
+
+model OrgChart {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  data      Json     // hierarchical org structure
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([userId])
+}
+
+model Scenario {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  name      String
+  config    Json
+  result    Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([userId])
+}
+
+model Assessment {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  title     String
+  metadata  Json?
+  status    String   @default("draft")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([userId])
+}
+
+// --- RBAC & Document Vault Models ---
+
+enum Role {
+  OWNER
+  CONTRIBUTOR
+  VIEWER
+}
+
+model Org {
+  id          String        @id @default(cuid())
+  name        String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  memberships Membership[]
+  documents   Document[]
+  auditLogs   AuditLog[]
+  gapRuns     GapRun[]
+  narrativeRuns NarrativeRun[]
+}
+
+model Membership {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  org       Org      @relation(fields: [orgId], references: [id])
+  orgId     String
+  role      Role
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([userId, orgId])
+  @@index([orgId])
+  @@index([userId])
+}
+
+model Document {
+  id         String             @id @default(cuid())
+  org        Org                @relation(fields: [orgId], references: [id])
+  orgId      String
+  title      String
+  mime       String
+  size       Int
+  createdBy  User               @relation("UserDocuments", fields: [createdById], references: [id])
+  createdById String
+  isDeleted  Boolean            @default(false)
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+  versions   DocumentVersion[]
+  texts      DocumentText[]
+  evidenceLinks EvidenceLink[]
+  @@index([orgId])
+  @@index([createdById])
+}
+
+model DocumentVersion {
+  id          String    @id @default(cuid())
+  document    Document  @relation(fields: [documentId], references: [id])
+  documentId  String
+  version     Int
+  storageKey  String
+  checksum    String
+  createdAt   DateTime  @default(now())
+  createdBy   User?     @relation("UserDocumentVersions", fields: [createdById], references: [id])
+  createdById String?
+  @@unique([documentId, version])
+  @@index([documentId])
+}
+
+model DocumentText {
+  id          String    @id @default(cuid())
+  document    Document  @relation(fields: [documentId], references: [id])
+  documentId  String
+  version     Int
+  text        String
+  lang        String?   @default("en")
+  searchVector Unsupported("tsvector")?
+  createdAt   DateTime  @default(now())
+  @@unique([documentId, version])
+  @@index([documentId])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  org       Org      @relation(fields: [orgId], references: [id])
+  orgId     String
+  actor     User?    @relation("UserAuditLogs", fields: [actorId], references: [id])
+  actorId   String?
+  action    String
+  target    String?
+  meta      Json?
+  createdAt DateTime  @default(now())
+  @@index([orgId])
+  @@index([actorId])
+}
+
+// --- Accreditation Standards Backbone ---
+
+model Standard {
+  id            String         @id @default(cuid())
+  key           String         @unique
+  name          String
+  version       String?
+  publisher     String?
+  hierarchyJson Json?
+  items         StandardItem[]
+  gapRuns       GapRun[]
+  evidenceLinks EvidenceLink[]
+  narrativeRuns NarrativeRun[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model StandardItem {
+  id          String        @id @default(cuid())
+  standard    Standard      @relation(fields: [standardId], references: [id], onDelete: Cascade)
+  standardId  String
+  code        String
+  title       String
+  description String?
+  parent      StandardItem? @relation("StandardItemParent", fields: [parentId], references: [id])
+  children    StandardItem[] @relation("StandardItemParent")
+  parentId    String?
+  level       Int
+  path        String         // e.g., root/section/subsection (codes)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  evidenceLinks EvidenceLink[]
+  @@unique([standardId, code])
+  @@index([standardId])
+  @@index([parentId])
+  @@index([path])
+}
+
+// --- Evidence Mapping (Automated + Review) ---
+
+enum EvidenceStatus {
+  AUTO
+  CONFIRMED
+  REJECTED
+}
+
+model EvidenceLink {
+  id             String         @id @default(cuid())
+  document       Document       @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  documentId     String
+  version        Int
+  standardItem   StandardItem   @relation(fields: [standardItemId], references: [id], onDelete: Cascade)
+  standardItemId String
+  standard       Standard       @relation(fields: [standardId], references: [id], onDelete: Cascade)
+  standardId     String
+  start          Int
+  end            Int
+  confidence     Float
+  method         String
+  rationale      String?
+  createdBy      String?
+  status         EvidenceStatus @default(AUTO)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  @@index([documentId])
+  @@index([standardItemId])
+  @@index([standardId])
+  @@index([status])
+  @@index([documentId, version])
+}
+
+model GapRun {
+  id          String    @id @default(cuid())
+  standard    Standard  @relation(fields: [standardId], references: [id], onDelete: Cascade)
+  standardId  String
+  org         Org?      @relation(fields: [orgId], references: [id])
+  orgId       String?
+  coveragePct Float
+  missingCount Int
+  totalCount  Int
+  resultJson  Json
+  createdAt   DateTime  @default(now())
+  @@index([standardId])
+  @@index([orgId])
+}
+
+// --- Narrative Export Runs ---
+
+enum NarrativeStatus {
+  PENDING
+  GENERATING
+  COMPLETE
+  FAILED
+}
+
+model NarrativeRun {
+  id          String          @id @default(cuid())
+  standard    Standard        @relation(fields: [standardId], references: [id], onDelete: Cascade)
+  standardId  String
+  org         Org?            @relation(fields: [orgId], references: [id])
+  orgId       String?
+  status      NarrativeStatus @default(PENDING)
+  params      Json
+  pdfKey      String?
+  docxKey     String?
+  progress    Int              @default(0)
+  error       String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  @@index([standardId])
+  @@index([orgId])
+  @@index([status])
+}
+

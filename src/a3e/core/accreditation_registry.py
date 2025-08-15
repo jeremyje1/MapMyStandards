@@ -29,6 +29,9 @@ class InstitutionType(Enum):
     NON_PROFIT = "non_profit"
     PUBLIC = "public"
     PRIVATE = "private"
+    # K-12 institutions
+    K12_SCHOOL = "k12_school"
+    SCHOOL_DISTRICT = "school_district"
 
 
 class AccreditorType(Enum):
@@ -354,6 +357,131 @@ NATIONAL_ACCREDITORS = {
         website="https://www.deac.org", 
         last_updated="2025-01-01"
     ),
+    # K-12 accreditors
+    "cognia": AccreditingBody(
+        id="cognia",
+        name="Cognia",
+        acronym="COGNIA",
+        type=AccreditorType.NATIONAL,
+        recognition_authority="Independent/State Systems",
+        geographic_scope=["National", "International"],
+        applicable_institution_types={
+            InstitutionType.K12_SCHOOL,
+            InstitutionType.SCHOOL_DISTRICT
+        },
+        standards=[
+            Standard(
+                id="cognia_1",
+                title="Leadership and Governance",
+                description="School/district leadership establishes vision, ethical governance, and continuous improvement structures that advance student learning.",
+                evidence_requirements=[
+                    "Board policies and bylaws",
+                    "Strategic/continuous improvement plans",
+                    "Stakeholder engagement artifacts",
+                    "Monitoring and evaluation reports"
+                ],
+                applicable_institution_types={InstitutionType.K12_SCHOOL, InstitutionType.SCHOOL_DISTRICT}
+            ),
+            Standard(
+                id="cognia_2",
+                title="Teaching and Learning",
+                description="Instructional practices are coherent, standards-aligned, and supported by assessment to ensure student growth and achievement.",
+                evidence_requirements=[
+                    "Curriculum maps and pacing guides",
+                    "Assessment frameworks and data",
+                    "Instructional walkthroughs/observations",
+                    "Intervention/MTSS documentation"
+                ],
+                applicable_institution_types={InstitutionType.K12_SCHOOL, InstitutionType.SCHOOL_DISTRICT}
+            ),
+        ],
+        website="https://www.cognia.org",
+        last_updated="2025-01-01"
+    ),
+    "sacs_casi": AccreditingBody(
+        id="sacs_casi",
+        name="SACS Council on Accreditation and School Improvement",
+        acronym="SACS-CASI",
+        type=AccreditorType.NATIONAL,
+        recognition_authority="Independent/State Systems",
+        geographic_scope=["National", "International"],
+        applicable_institution_types={
+            InstitutionType.K12_SCHOOL,
+            InstitutionType.SCHOOL_DISTRICT
+        },
+        standards=[
+            Standard(
+                id="sacs_casi_1",
+                title="Culture of Learning",
+                description="The school maintains a safe, inclusive, and student-centered culture that supports learning and well-being.",
+                evidence_requirements=[
+                    "School climate/safety plans",
+                    "Student support services documentation",
+                    "Family/community engagement evidence",
+                    "Equity and access initiatives"
+                ],
+                applicable_institution_types={InstitutionType.K12_SCHOOL, InstitutionType.SCHOOL_DISTRICT}
+            ),
+        ],
+        website="https://www.cognia.org",
+        last_updated="2025-01-01"
+    ),
+    "nca_casi": AccreditingBody(
+        id="nca_casi",
+        name="North Central Association Commission on Accreditation and School Improvement",
+        acronym="NCA-CASI",
+        type=AccreditorType.NATIONAL,
+        recognition_authority="Independent/State Systems",
+        geographic_scope=["National", "International"],
+        applicable_institution_types={
+            InstitutionType.K12_SCHOOL,
+            InstitutionType.SCHOOL_DISTRICT
+        },
+        standards=[
+            Standard(
+                id="nca_casi_1",
+                title="Improvement Planning and Results",
+                description="The institution implements data-informed improvement planning and regularly evaluates impact on student outcomes.",
+                evidence_requirements=[
+                    "School improvement plans",
+                    "Balanced assessment data reports",
+                    "Program evaluation summaries",
+                    "Public reporting of progress"
+                ],
+                applicable_institution_types={InstitutionType.K12_SCHOOL, InstitutionType.SCHOOL_DISTRICT}
+            ),
+        ],
+        website="https://www.cognia.org",
+        last_updated="2025-01-01"
+    ),
+    "msa_cess": AccreditingBody(
+        id="msa_cess",
+        name="Middle States Association Commissions on Elementary and Secondary Schools",
+        acronym="MSA-CESS",
+        type=AccreditorType.NATIONAL,
+        recognition_authority="Independent/State Systems",
+        geographic_scope=["National", "International"],
+        applicable_institution_types={
+            InstitutionType.K12_SCHOOL,
+            InstitutionType.SCHOOL_DISTRICT
+        },
+        standards=[
+            Standard(
+                id="msa_cess_1",
+                title="Governance, Leadership, and Organizational Capacity",
+                description="The institution’s governance and leadership provide direction, ensure resources, and support achievement of educational goals.",
+                evidence_requirements=[
+                    "Governing body roles and minutes",
+                    "Resource allocation and budgeting",
+                    "Professional development plans",
+                    "Compliance and policy frameworks"
+                ],
+                applicable_institution_types={InstitutionType.K12_SCHOOL, InstitutionType.SCHOOL_DISTRICT}
+            ),
+        ],
+        website="https://www.msa-cess.org",
+        last_updated="2025-01-01"
+    ),
 }
 
 # Programmatic/Specialized Accreditors (Major ones)
@@ -427,6 +555,66 @@ PROGRAMMATIC_ACCREDITORS = {
             ),
         ],
         website="https://www.abet.org",
+        last_updated="2025-01-01"
+    ),
+    
+    "ccne": AccreditingBody(
+        id="ccne",
+        name="Commission on Collegiate Nursing Education",
+        acronym="CCNE",
+        type=AccreditorType.PROGRAMMATIC,
+        recognition_authority="CHEA",
+        geographic_scope=["National", "International"],
+        applicable_institution_types={
+            InstitutionType.UNIVERSITY,
+            InstitutionType.FOUR_YEAR_COLLEGE,
+            InstitutionType.GRADUATE_SCHOOL
+        },
+        standards=[
+            Standard(
+                id="ccne_1",
+                title="Mission and Governance",
+                description="The nursing program has a mission consistent with that of the parent institution and with professional nursing standards, and the governance structure supports achievement of program outcomes.",
+                evidence_requirements=[
+                    "Program mission and alignment",
+                    "Governance policies",
+                    "Faculty bylaws",
+                    "Outcomes assessment reports"
+                ],
+                applicable_institution_types={InstitutionType.UNIVERSITY, InstitutionType.GRADUATE_SCHOOL}
+            ),
+        ],
+        website="https://www.aacnnursing.org/CCNE",
+        last_updated="2025-01-01"
+    ),
+    
+    "caep": AccreditingBody(
+        id="caep",
+        name="Council for the Accreditation of Educator Preparation",
+        acronym="CAEP",
+        type=AccreditorType.PROGRAMMATIC,
+        recognition_authority="CHEA",
+        geographic_scope=["National", "International"],
+        applicable_institution_types={
+            InstitutionType.UNIVERSITY,
+            InstitutionType.FOUR_YEAR_COLLEGE,
+            InstitutionType.GRADUATE_SCHOOL
+        },
+        standards=[
+            Standard(
+                id="caep_1",
+                title="Content and Pedagogical Knowledge",
+                description="Provider ensures candidates develop a deep understanding of content and pedagogy to support P-12 student learning.",
+                evidence_requirements=[
+                    "Program curriculum maps",
+                    "Candidate assessment data",
+                    "P-12 partnership MOUs",
+                    "Licensure pass rates"
+                ],
+                applicable_institution_types={InstitutionType.UNIVERSITY, InstitutionType.FOUR_YEAR_COLLEGE}
+            ),
+        ],
+        website="https://www.caepnet.org",
         last_updated="2025-01-01"
     ),
 }

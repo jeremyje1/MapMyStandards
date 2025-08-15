@@ -4,6 +4,8 @@ import { headers } from 'next/headers';
 import { sendEmail } from '@/lib/email/postmark';
 import { tierFromPriceId } from '@/lib/tiers';
 import { persistUserTier } from '@/lib/tierPersistence';
+import { prisma } from '@/lib/prisma';
+import { Prisma } from '@prisma/client';
 
 // Expect these in env
 const stripeSecret = process.env.STRIPE_SECRET_KEY;
@@ -42,7 +44,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    switch (event.type) {
+  switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
         const customerEmail = session.customer_details?.email;
@@ -63,13 +65,26 @@ export async function POST(req: Request) {
         // Persist tier (stub logs until real DB wired)
         if (customerEmail) {
           try {
-            await persistUserTier({ email: customerEmail, tier: purchasedTier, source: session.id || 'unknown_session' });
+            await persistUserTier({ email: customerEmail, tier: purchasedTier, source: session.id || 'unknown_session', stripeCustomerId: (session.customer as string) || null });
           } catch (e) {
             console.warn('Failed to persist user tier', e);
           }
-        }
 
-        if (customerEmail) {
+          // Provision Org + Membership (idempotent)
+            try {
+              await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+                const user = await tx.user.upsert({ where: { email: customerEmail }, update: {}, create: { email: customerEmail } });
+                const existingMembership = await tx.membership.findFirst({ where: { userId: user.id } });
+                if (!existingMembership) {
+                  const orgName = session.customer_details?.name || customerEmail.split('@')[0];
+                  const org = await tx.org.create({ data: { name: orgName } });
+                  await tx.membership.create({ data: { orgId: org.id, userId: user.id, role: 'OWNER' } });
+                }
+              });
+            } catch (e) {
+              console.warn('Org provisioning skipped/failed', e);
+            }
+
           const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
           const onboardingUrl = `${appUrl}/assessment/onboarding`;
           await sendEmail({
@@ -85,6 +100,47 @@ export async function POST(req: Request) {
             `,
             tag: 'onboarding',
           });
+        }
+        break; }
+      case 'customer.subscription.created':
+      case 'customer.subscription.updated': {
+        const sub = event.data.object as Stripe.Subscription;
+        const stripeCustomerId = sub.customer as string;
+        let email: string | null = null;
+        try {
+          const cust = await stripe.customers.retrieve(stripeCustomerId);
+          if (!cust || (cust as any).deleted) {
+            console.warn('Customer deleted or missing for subscription', stripeCustomerId);
+          } else {
+            email = (cust as Stripe.Customer).email || null;
+          }
+        } catch (e) {
+          console.warn('Failed fetching customer for subscription', e);
+        }
+        const priceId = (sub.items.data[0]?.price?.id) || null;
+        const tier = tierFromPriceId(priceId) || 'unknown';
+
+        // Derive env key name holding this price (for analytics/debug)
+        let priceEnvKey: string | null = null;
+        for (const k of Object.keys(process.env)) {
+          if (k.startsWith('STRIPE_PRICE_') && process.env[k] === priceId) { priceEnvKey = k; break; }
+        }
+        try {
+          if (email) {
+            await persistUserTier({
+              email,
+              tier,
+              source: sub.id,
+              stripeCustomerId,
+              stripeSubscriptionId: sub.id,
+              priceId,
+              priceEnvKey,
+              status: sub.status,
+              currentPeriodEnd: sub.current_period_end ? new Date(sub.current_period_end * 1000) : null,
+            });
+          }
+        } catch (e) {
+          console.warn('Failed to persist subscription update', e);
         }
         break; }
       default: break;

@@ -1,0 +1,6 @@
+Position_ID,Unit_ID,Title,FTE,Salary,Benefits_%,Vacant_YN
+P001,U001,Director of Accreditation,1.0,95000,25,N
+P002,U001,Assessment Coordinator,1.0,72000,25,N
+P003,U002,Institutional Research Analyst,1.0,78000,25,N
+P004,U003,Faculty Chair - General Education,0.5,60000,25,N
+P005,U004,Student Success Advisor,1.0,56000,25,Y

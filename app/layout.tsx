@@ -1,5 +1,6 @@
 import './globals.css';
 import { ReactNode } from 'react';
+import { Providers } from './providers';
 
 export const metadata = {
   title: 'MapMyStandards',
@@ -19,11 +20,13 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               <a className="hover:text-indigo-600" href="/user-guide/">User Guide</a>
               <a className="hover:text-indigo-600" href="/contact/">Contact</a>
               <a className="hover:text-indigo-600" href="/privacy-policy/">Privacy</a>
-              <a className="rounded bg-emerald-600 text-white px-3 py-1.5 hover:bg-emerald-500 transition" href="/landing?tier=department">Start Trial</a>
+              <a className="rounded bg-emerald-600 text-white px-3 py-1.5 hover:bg-emerald-500 transition" href="https://platform.mapmystandards.ai/landing?tier=department">Start Trial</a>
             </nav>
           </div>
         </header>
-        <main className="p-6 max-w-7xl mx-auto">{children}</main>
+        <Providers>
+          <main className="p-6 max-w-7xl mx-auto">{children}</main>
+        </Providers>
       </body>
     </html>
   );

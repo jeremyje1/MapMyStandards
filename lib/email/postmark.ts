@@ -1,7 +1,7 @@
 import { ServerClient } from 'postmark';
 
 const TOKEN = process.env.POSTMARK_API_TOKEN;
-const FROM = process.env.FROM_EMAIL || process.env.EMAIL_FROM || 'support@example.com';
+const FROM = process.env.FROM_EMAIL || process.env.EMAIL_FROM || 'info@northpathstrategies.org';
 const REPLY = process.env.REPLY_TO_EMAIL || FROM;
 const STREAM = process.env.POSTMARK_MESSAGE_STREAM || 'outbound';
 
@@ -33,5 +33,3 @@ export async function sendEmail({ to, subject, html, text, tag }: SendEmailParam
     MessageStream: STREAM,
   });
 }
-// lib/email/postmark.ts
-// (Removed duplicate implementation block that followed – cleaned for single export)

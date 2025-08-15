@@ -1,0 +1,94 @@
+{
+  "metadata": {
+    "key": "SACSCOC_2024_DEMO",
+    "name": "SACSCOC Principles of Accreditation (Demo Subset)",
+    "version": "2024.demo",
+    "publisher": "SACSCOC (Demo subset for testing)",
+    "importedAt": "2025-08-13T16:36:53.687440+00:00",
+    "notes": "Paraphrased demo subset for testing MapMyStandards import. NOT official text."
+  },
+  "items": [
+    {
+      "code": "CR 1.1",
+      "title": "Institutional Integrity (Core Requirement)",
+      "description": "The institution operates with integrity and consistent ethical standards across governance, academics, and operations. (Paraphrased demo text)",
+      "level": 1,
+      "parent": null,
+      "weight": 1.0,
+      "evidenceExamples": [
+        "Board minutes referencing ethics policy review",
+        "Annual compliance attestation documents"
+      ],
+      "rubric": {
+        "levels": [
+          "Insufficient",
+          "Developing",
+          "Meets",
+          "Exceeds"
+        ],
+        "anchors": [
+          "Policies absent or not applied",
+          "Policies exist with inconsistent application",
+          "Policies exist and are consistently applied",
+          "Policies are exemplary and externally benchmarked"
+        ]
+      }
+    },
+    {
+      "code": "7.1",
+      "title": "Institutional Planning",
+      "description": "The institution engages in ongoing, comprehensive, and integrated planning processes. (Paraphrased demo text)",
+      "level": 1,
+      "parent": null,
+      "weight": 1.0,
+      "evidenceExamples": [
+        "Strategic plan with KPIs",
+        "Annual planning cycle calendar"
+      ],
+      "rubric": {
+        "levels": [
+          "Insufficient",
+          "Developing",
+          "Meets",
+          "Exceeds"
+        ]
+      }
+    },
+    {
+      "code": "8.2.a",
+      "title": "Student Achievement",
+      "description": "The institution identifies, evaluates, and publishes goals and outcomes for student achievement. (Paraphrased demo text)",
+      "level": 2,
+      "parent": "7.1",
+      "weight": 1.0,
+      "evidenceExamples": [
+        "Student achievement dashboard or fact book",
+        "Program-level outcomes with thresholds"
+      ],
+      "rubric": {
+        "levels": [
+          "Insufficient",
+          "Developing",
+          "Meets",
+          "Exceeds"
+        ]
+      }
+    },
+    {
+      "code": "9.1",
+      "title": "Program Length",
+      "description": "The institution ensures program length is appropriate to the degree level. (Paraphrased demo text)",
+      "level": 1,
+      "parent": null,
+      "weight": 1.0
+    },
+    {
+      "code": "10.4",
+      "title": "Academic Governance",
+      "description": "The institution demonstrates effective academic governance and faculty role in curriculum and assessment. (Paraphrased demo text)",
+      "level": 1,
+      "parent": null,
+      "weight": 1.0
+    }
+  ]
+}

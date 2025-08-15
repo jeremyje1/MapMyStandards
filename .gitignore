@@ -163,3 +163,9 @@ temp/
 .tmp/
 .vercel
 mailersend_api.env
+
+# Next.js build output
+.next/
+
+# TypeScript incremental build info
+*.tsbuildinfo

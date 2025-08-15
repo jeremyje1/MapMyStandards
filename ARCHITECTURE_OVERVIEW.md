@@ -128,3 +128,25 @@ STRIPE_YEARLY_CHECKOUT_URL=https://buy.stripe.com/...
 ---
 
 This architecture provides a clean separation between marketing and platform functionality, ensuring optimal user experience and conversion rates while maintaining security and scalability.
+
+## Additional Platform Scaffolding (2025-08 Iteration)
+
+New components added in feature branch `feat/mms-vault-mapping-dashboard`:
+
+- Vault Mapping Dashboard scaffold (`/app/vault-mapping/page.tsx`) – placeholder UI showing planned KPIs & heat map area.
+- Tier feature definitions (`lib/tiers.ts`) and tier persistence stub (`lib/tierPersistence.ts`).
+- In-memory DB abstraction (`lib/db.ts`) to unblock early persistence flows prior to Prisma/SQL integration.
+- Stripe webhook now resolves tier from price IDs and calls tier persistence stub.
+- Postmark email abstraction (`lib/email/postmark.ts`).
+- Vitest testing harness (`vitest.config.ts`) with initial tests in `tests/` for tiers and in-memory DB.
+
+### Testing
+
+Run unit tests:
+
+```
+npm install
+npm test
+```
+
+Planned future work: replace `lib/db.ts` with real ORM layer, expand test coverage to API routes (Stripe checkout, webhook, support contact), and integrate end-to-end mapping tests once data models are finalized.

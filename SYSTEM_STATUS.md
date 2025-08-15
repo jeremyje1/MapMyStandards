@@ -35,7 +35,7 @@ The A³E (Accreditation Analytics & Automation Engine) system has been successfu
 
 ### 🏛️ Multi-Accreditor Support
 
-**11 US Accrediting Bodies** fully supported:
+**US Accreditors fully supported (core set):**
 - New England Commission of Higher Education (NECHE)
 - Middle States Commission on Higher Education (MSCHE) 
 - Southern Association of Colleges and Schools Commission on Colleges (SACSCOC)
@@ -47,6 +47,14 @@ The A³E (Accreditation Analytics & Automation Engine) system has been successfu
 - Distance Education Accrediting Commission (DEAC)
 - Association to Advance Collegiate Schools of Business (AACSB)
 - ABET (Accreditation Board for Engineering and Technology)
+- Commission on Collegiate Nursing Education (CCNE)
+- Council for the Accreditation of Educator Preparation (CAEP)
+
+**K-12 Accreditors (explicit registry support):**
+- Cognia (COGNIA)
+- SACS Council on Accreditation and School Improvement (SACS-CASI)
+- North Central Association Commission on Accreditation and School Improvement (NCA-CASI)
+- Middle States Association Commissions on Elementary and Secondary Schools (MSA-CESS)
 
 ### 🌐 API Endpoints Active
 

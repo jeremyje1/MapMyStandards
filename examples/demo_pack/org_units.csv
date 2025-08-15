@@ -1,0 +1,6 @@
+Unit_ID,Parent_ID,Name,Type,Location
+U001,,Accreditation Office,Department,Main Campus
+U002,U001,Institutional Research,Team,Main Campus
+U003,,Academic Affairs,Division,Main Campus
+U004,U003,Student Success,Department,Main Campus
+U005,U003,Gen Ed Programs,Department,Main Campus

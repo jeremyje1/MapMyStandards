@@ -1,6 +1,7 @@
 import NextAuth, { NextAuthOptions } from 'next-auth';
 import EmailProvider from 'next-auth/providers/email';
 import { sendEmail } from '../../../../lib/email/postmark';
+import { getUserTier } from '@/lib/tierPersistence';
 
 // Base URL for magic links
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
@@ -38,12 +39,18 @@ const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async jwt({ token, user }): Promise<any> {
-      if (user) {
-        // placeholder for role or tier enrichment
+      if (user?.email) {
+        try {
+          const tier = await getUserTier(user.email);
+          if (tier) (token as any).tier = tier;
+        } catch (e) {
+          console.warn('Tier lookup failed', e);
+        }
       }
       return token;
     },
-  async session({ session, token }: { session: any; token: any }): Promise<any> {
+    async session({ session, token }: { session: any; token: any }): Promise<any> {
+      if (session?.user) (session.user as any).tier = (token as any).tier;
       return session;
     },
   },

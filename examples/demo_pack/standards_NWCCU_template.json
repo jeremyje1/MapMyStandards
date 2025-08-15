@@ -1,0 +1,44 @@
+{
+  "metadata": {
+    "key": "NWCCU_2024_DEMO",
+    "name": "NWCCU Standards (Demo Subset)",
+    "version": "2024.demo",
+    "publisher": "NWCCU (Demo subset for testing)",
+    "importedAt": "2025-08-13T16:36:53.687440+00:00",
+    "notes": "Paraphrased demo subset for testing MapMyStandards import. NOT official text."
+  },
+  "items": [
+    {
+      "code": "1.A",
+      "title": "Mission",
+      "description": "The institution articulates a clear mission and widely communicates it. (Paraphrased demo text)",
+      "level": 1,
+      "parent": null,
+      "weight": 1.0
+    },
+    {
+      "code": "1.B",
+      "title": "Enhancement of Student Learning",
+      "description": "The institution engages in ongoing planning and resource allocation to support learning. (Paraphrased demo text)",
+      "level": 1,
+      "parent": null,
+      "weight": 1.0
+    },
+    {
+      "code": "2.C",
+      "title": "Educational Resources",
+      "description": "Programs are supported by adequate faculty, facilities, and learning resources. (Paraphrased demo text)",
+      "level": 1,
+      "parent": null,
+      "weight": 1.0
+    },
+    {
+      "code": "2.C.1",
+      "title": "Faculty Qualifications",
+      "description": "Faculty are qualified to deliver and assess the curriculum. (Paraphrased demo text)",
+      "level": 2,
+      "parent": "2.C",
+      "weight": 1.0
+    }
+  ]
+}

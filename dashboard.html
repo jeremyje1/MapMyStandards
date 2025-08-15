@@ -6,7 +6,17 @@
     <title>Dashboard Access - A³E | MapMyStandards.ai</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Tailwind (built) -->
-    <link rel="stylesheet" href="/assets/styles.css">
+    <link id="mms-tailwind" rel="stylesheet" href="./assets/styles.css">
+    <script>
+        (function(){
+            const candidates=['./assets/styles.css','assets/styles.css','/assets/styles.css','../assets/styles.css','/public/assets/styles.css'];
+            function hasTw(){
+                try{const d=document.createElement('div');d.style.position='absolute';d.style.left='-9999px';d.className='text-5xl';document.documentElement.appendChild(d);const s=getComputedStyle(d).fontSize;d.remove();return s && parseFloat(s)>=48;}catch{return false;}
+            }
+            function tryNext(i){ if(i>=candidates.length) return; const link=document.getElementById('mms-tailwind'); if(!link) return; link.href=candidates[i]; link.onload=()=>setTimeout(()=>{ if(!hasTw()) tryNext(i+1); },0); link.onerror=()=>tryNext(i+1); }
+            document.addEventListener('DOMContentLoaded', ()=>{ setTimeout(()=>{ if(!hasTw()) tryNext(0); },0); });
+        })();
+    </script>
     <style>body { font-family: 'Inter', sans-serif; }</style>
 </head>
 <body class="bg-gray-50">
@@ -30,6 +40,20 @@
             </div>
 
             <div class="bg-white rounded-2xl shadow-sm p-8 space-y-6">
+                <!-- Demo Center -->
+                <div class="bg-amber-50 border border-amber-200 rounded-lg p-6">
+                    <h3 class="text-lg font-semibold text-amber-900 mb-2">🧪 Demo Center</h3>
+                    <p class="text-sm text-amber-800 mb-3">Try the local demo without signing in. It imports a sample standard and uploads the demo evidence pack against your running API.</p>
+                    <div class="flex gap-2 mb-2">
+                        <input id="mms-demo-base" class="flex-1 border border-amber-300 rounded px-3 py-2 text-sm" placeholder="http://localhost:3000" />
+                        <button id="mms-demo-save" class="bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold px-3 py-2 rounded">Save</button>
+                    </div>
+                    <div class="flex gap-2">
+                        <button id="mms-run-demo" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-3 py-2 rounded">Run Local Demo</button>
+                        <a class="bg-white border border-amber-300 text-amber-900 font-medium px-3 py-2 rounded" href="/examples/demo_pack/mms_demo_evidence_pack.zip">Download Pack</a>
+                    </div>
+                    <pre id="mms-demo-log" class="mt-3 bg-white border border-amber-200 rounded p-2 text-xs overflow-auto max-h-40"></pre>
+                </div>
                 <!-- Trial Access -->
                 <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
                     <h3 class="text-lg font-semibold text-blue-900 mb-2">🚀 Trial Users</h3>
@@ -91,6 +115,69 @@
                 window.location.href = 'https://mapmystandards.ai/customer-dashboard/';
             }
             // Otherwise, show this authentication page
+            (function() {
+                const baseInput = document.getElementById('mms-demo-base');
+                const saveBtn = document.getElementById('mms-demo-save');
+                const runBtn = document.getElementById('mms-run-demo');
+                const logEl = document.getElementById('mms-demo-log');
+                if (!baseInput || !runBtn) return;
+
+                function detectDefaultBase() {
+                    const saved = localStorage.getItem('mms_demo_base');
+                    if (saved) return saved;
+                    if (location.hostname.endsWith('mapmystandards.ai')) {
+                        return 'https://api.mapmystandards.ai';
+                    }
+                    return location.origin || 'http://localhost:3000';
+                }
+                function setBasePlaceholder() {
+                    baseInput.placeholder = detectDefaultBase();
+                    baseInput.value = localStorage.getItem('mms_demo_base') || '';
+                }
+                function log(msg, data) {
+                    if (!logEl) return;
+                    const time = new Date().toISOString();
+                    logEl.textContent += `[${time}] ${msg}` + (data ? `\n${typeof data === 'string' ? data : JSON.stringify(data, null, 2)}` : '') + '\n\n';
+                    logEl.scrollTop = logEl.scrollHeight;
+                }
+                async function postJson(url, payload) {
+                    const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    const text = await res.text();
+                    let body; try { body = JSON.parse(text); } catch { body = text; }
+                    if (!res.ok) throw new Error(`HTTP ${res.status}: ${text}`);
+                    return body;
+                }
+                async function postFile(url, blob, filename) {
+                    const form = new FormData(); form.append('file', blob, filename);
+                    const res = await fetch(url, { method: 'POST', body: form });
+                    const text = await res.text();
+                    let body; try { body = JSON.parse(text); } catch { body = text; }
+                    if (!res.ok) throw new Error(`HTTP ${res.status}: ${text}`);
+                    return body;
+                }
+                async function runDemo() {
+                    const base = (baseInput.value || detectDefaultBase()).replace(/\/$/, '');
+                    localStorage.setItem('mms_demo_base', base);
+                    log(`Using API base: ${base}`);
+                    try {
+                        const std = await fetch('/examples/demo_pack/standards_SACSCOC_template.json').then(r => { if (!r.ok) throw new Error(`Failed to load standards JSON (${r.status})`); return r.json(); });
+                        log('Posting to /api/standards/import ...');
+                        const imp = await postJson(`${base}/api/standards/import`, std);
+                        log('Standards imported:', imp);
+                        const zipBlob = await fetch('/examples/demo_pack/mms_demo_evidence_pack.zip').then(r => { if (!r.ok) throw new Error(`Failed to load demo pack (${r.status})`); return r.blob(); });
+                        log('Uploading demo pack to /api/upload ...');
+                        const up = await postFile(`${base}/api/upload`, zipBlob, 'mms_demo_evidence_pack.zip');
+                        log('Upload response:', up);
+                        try { const mapRes = await fetch(`${base}/api/map`, { method: 'POST' }); log('Mapping result:', await mapRes.text()); } catch (e) { log('Map endpoint not available (continuing).'); }
+                        try { const gapsRes = await fetch(`${base}/api/gaps/run`, { method: 'POST' }); log('Gap analysis result:', await gapsRes.text()); } catch (e) { log('Gaps endpoint not available (continuing).'); }
+                        log('Demo finished. Open your dashboard or docs list to view results.');
+                    } catch (err) { log('Demo failed:', String(err)); }
+                }
+
+                setBasePlaceholder();
+                saveBtn?.addEventListener('click', () => { const val = baseInput.value || detectDefaultBase(); localStorage.setItem('mms_demo_base', val); log(`Saved API base: ${val}`); });
+                runBtn.addEventListener('click', runDemo);
+            })();
         });
     </script>
 </body>

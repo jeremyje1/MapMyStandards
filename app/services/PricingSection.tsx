@@ -29,7 +29,7 @@ const plans: Plan[] = [
       'Baseline analytics',
       'Email notifications'
     ],
-    cta: { label: '🚀 Start Department', href: 'https://mapmystandards.ai/checkout.html?plan=department_annual' },
+  cta: { label: '🚀 Start Department', href: 'https://platform.mapmystandards.ai/landing?tier=department' },
     footnote: 'Ideal starter for first accreditation cycle'
   },
   {
@@ -48,7 +48,7 @@ const plans: Plan[] = [
       'Canvas LMS integration',
       'Email support (standard SLA)'
     ],
-    cta: { label: '💎 Start Campus', href: 'https://mapmystandards.ai/checkout.html?plan=campus_annual' },
+  cta: { label: '💎 Start Campus', href: 'https://platform.mapmystandards.ai/landing?tier=campus' },
     footnote: 'Most institutions start here'
   },
   {
@@ -66,7 +66,7 @@ const plans: Plan[] = [
       'Quarterly progress review',
       'Priority support response'
     ],
-    cta: { label: '� Start System', href: 'https://mapmystandards.ai/checkout.html?plan=system_annual' },
+  cta: { label: '🏢 Start System', href: 'https://platform.mapmystandards.ai/landing?tier=system' },
     footnote: 'Includes strategic onboarding'
   },
   {
@@ -83,7 +83,7 @@ const plans: Plan[] = [
       'Executive accreditation dashboards',
       'Co-development roadmap options'
     ],
-    cta: { label: '🏆 Request Proposal', href: 'https://mapmystandards.ai/contact/' },
+  cta: { label: '🏆 Request Proposal', href: 'https://platform.mapmystandards.ai/contact' },
     footnote: 'Tailored pricing based on scope'
   }
 ];
@@ -122,7 +122,7 @@ export default function PricingSection() {
         <div className="mt-16 text-center bg-gradient-to-r from-indigo-500 to-violet-600 rounded-2xl p-10 text-white shadow-lg">
           <h3 className="text-2xl font-bold mb-3">🎯 Execution Velocity Guarantee</h3>
           <p className="max-w-2xl mx-auto text-base md:text-lg font-medium mb-6">A³E compresses accreditation execution cycles and eliminates redundant manual effort. If you do not achieve measurable operational acceleration by your first major submission milestone, we continue advisory support at no additional cost until you do.</p>
-          <a href="https://api.mapmystandards.ai/landing" className="inline-block bg-white text-indigo-600 font-semibold px-8 py-3 rounded-full shadow hover:shadow-md transition">Start Annual Deployment</a>
+          <a href="https://platform.mapmystandards.ai/landing" className="inline-block bg-white text-indigo-600 font-semibold px-8 py-3 rounded-full shadow hover:shadow-md transition">Start Annual Deployment</a>
         </div>
       </div>
     </section>

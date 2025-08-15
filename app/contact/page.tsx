@@ -8,7 +8,7 @@ export default function ContactPage() {
       <ul className="list-disc pl-6">
         <li>Email: support@mapmystandards.ai</li>
         <li>Pilot Inquiries: <a className="text-blue-600" href="/contact?program=pilot">Request Sponsored Pilot</a></li>
-        <li>Start Trial: <a className="text-blue-600" href="/landing?tier=department">Department Tier Trial</a></li>
+  <li>Start Trial: <a className="text-blue-600" href="https://platform.mapmystandards.ai/landing?tier=department">Department Tier Trial</a></li>
       </ul>
     </div>
   );

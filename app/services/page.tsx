@@ -31,7 +31,7 @@ export default function ServicesPage() {
           <h1 className="text-4xl md:text-5xl font-extrabold leading-tight tracking-tight">🎯 Complete Accreditation Operating System</h1>
           <p className="mt-6 text-lg md:text-xl font-medium text-indigo-50 max-w-3xl mx-auto">Transform your institution into an accreditation powerhouse with A³E—the comprehensive platform that becomes indispensable to your operations, maximizes ROI, and creates unshakeable competitive advantages.</p>
           <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="https://api.mapmystandards.ai/landing" className="bg-white text-indigo-600 font-semibold px-8 py-4 rounded-full shadow hover:shadow-md transition">🚀 Start Free Trial</a>
+            <a href="https://platform.mapmystandards.ai/landing" className="bg-white text-indigo-600 font-semibold px-8 py-4 rounded-full shadow hover:shadow-md transition">🚀 Start Free Trial</a>
             <a href="/customer_experience.html" className="backdrop-blur bg-white/10 hover:bg-white/20 text-white font-semibold px-8 py-4 rounded-full border border-white/30 transition">🔬 See Full Experience</a>
           </div>
         </div>
@@ -153,7 +153,7 @@ export default function ServicesPage() {
           <div>
             <h3 className="text-slate-100 font-semibold mb-3">Platform Access</h3>
             <ul className="space-y-2 text-sm">
-              <li><a className="hover:text-white transition" href="https://api.mapmystandards.ai/landing">🚀 Start Free Trial</a></li>
+              <li><a className="hover:text-white transition" href="https://platform.mapmystandards.ai/landing">🚀 Start Free Trial</a></li>
               <li><a className="hover:text-white transition" href="/customer_experience.html">🔬 Customer Experience</a></li>
               <li><a className="hover:text-white transition" href="/institutional_dashboard.html">🏛️ Institutional Dashboard</a></li>
               <li><a className="hover:text-white transition" href="https://api.mapmystandards.ai/docs">🔧 API Documentation</a></li>
@@ -210,8 +210,9 @@ export default function ServicesPage() {
             description: 'Multi-accreditor AI accreditation & compliance automation platform with strategic consulting services.',
             brand: { '@type': 'Brand', name: 'MapMyStandards' },
             offers: [
-              { '@type': 'Offer', name: 'A³E College Plan', price: '297', priceCurrency: 'USD', priceValidUntil: '2025-12-31', availability: 'https://schema.org/InStock', url: 'https://mapmystandards.ai/services/' },
-              { '@type': 'Offer', name: 'A³E Multi-Campus Plan', price: '897', priceCurrency: 'USD', priceValidUntil: '2025-12-31', availability: 'https://schema.org/InStock', url: 'https://mapmystandards.ai/services/' }
+              { '@type': 'Offer', name: 'A³E Department (Annual)', price: '9000', priceCurrency: 'USD', priceValidUntil: '2025-12-31', availability: 'https://schema.org/InStock', url: 'https://platform.mapmystandards.ai/landing?tier=department' },
+              { '@type': 'Offer', name: 'A³E Campus (Annual)', price: '24000', priceCurrency: 'USD', priceValidUntil: '2025-12-31', availability: 'https://schema.org/InStock', url: 'https://platform.mapmystandards.ai/landing?tier=campus' },
+              { '@type': 'Offer', name: 'A³E System (Annual)', price: '48000', priceCurrency: 'USD', priceValidUntil: '2025-12-31', availability: 'https://schema.org/InStock', url: 'https://platform.mapmystandards.ai/landing?tier=system' }
             ]
         }) }}
       />
