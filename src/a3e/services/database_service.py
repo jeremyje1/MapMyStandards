@@ -27,11 +27,14 @@ class DatabaseService:
     """Database service for A3E system"""
     
     def __init__(self, database_url: str):
-        # Convert postgres:// to postgresql+asyncpg:// for async support
+        # Normalize and adapt URL for async usage
         if database_url.startswith("postgresql://"):
             database_url = database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
         elif database_url.startswith("postgres://"):
             database_url = database_url.replace("postgres://", "postgresql+asyncpg://", 1)
+        elif database_url.startswith("sqlite://") and "+aiosqlite" not in database_url:
+            # Use aiosqlite driver for async support
+            database_url = database_url.replace("sqlite://", "sqlite+aiosqlite://")
         
         self.database_url = database_url
         self.engine = None
@@ -40,12 +43,16 @@ class DatabaseService:
     async def initialize(self):
         """Initialize database connection and session factory"""
         try:
-            self.engine = create_async_engine(
-                self.database_url,
-                echo=settings.is_development,
-                pool_size=settings.database_pool_size,
-                max_overflow=settings.database_max_overflow
-            )
+            engine_args = {
+                "echo": getattr(settings, 'is_development', False)
+            }
+            # Only pass pool sizing for non-sqlite databases
+            if not self.database_url.startswith("sqlite"):
+                engine_args.update({
+                    "pool_size": settings.database_pool_size,
+                    "max_overflow": settings.database_max_overflow
+                })
+            self.engine = create_async_engine(self.database_url, **engine_args)
             
             self.async_session = async_sessionmaker(
                 self.engine,
