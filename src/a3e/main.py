@@ -7,7 +7,7 @@ Features proprietary ontology, vector-weighted matching, multi-agent pipeline, a
 
 from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, BackgroundTasks, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, HTMLResponse
+from fastapi.responses import JSONResponse, HTMLResponse, FileResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
@@ -716,8 +716,8 @@ else:
             WEB_DIR = alt_path
             break
 
-def _read_web_file(filename: str) -> str:
-    """Read HTML file from web directory"""
+def _read_web_file(filename: str) -> Optional[str]:
+    """Read HTML file from web directory with debug logging"""
     file_path = WEB_DIR / filename
     logger.info(f"Attempting to read file: {file_path}")
     logger.info(f"File exists: {file_path.exists()}")
@@ -725,14 +725,18 @@ def _read_web_file(filename: str) -> str:
     logger.info(f"WEB_DIR contents: {list(WEB_DIR.iterdir()) if WEB_DIR.exists() else 'WEB_DIR does not exist'}")
     
     try:
-        content = file_path.read_text(encoding='utf-8')
-        logger.info(f"Successfully read {filename}, content length: {len(content)}")
-        return content
-    except Exception as e:
-        logger.error(f"Error reading {filename}: {e}")
+        with file_path.open("r", encoding="utf-8") as f:
+            content = f.read()
+            logger.info(f"Successfully read {filename}, content length: {len(content)}")
+            return content
+    except FileNotFoundError:
+        logger.error(f"Web file not found: {file_path}")
         logger.error(f"Current working directory: {Path.cwd()}")
         logger.error(f"__file__ location: {Path(__file__).resolve()}")
-        return f"<html><body><h1>Error</h1><p>Could not load {filename}: {e}</p><p>File path: {file_path}</p><p>WEB_DIR: {WEB_DIR}</p></body></html>"
+        return None
+    except Exception as e:
+        logger.error(f"Error reading {filename}: {e}")
+        return None
 
 # Debug route to test backend connectivity
 @app.get("/api/test", include_in_schema=False)
@@ -776,8 +780,6 @@ async def favicon():  # noqa: D401
     return Response(status_code=204)
 
 # Mount static files for web assets and add direct routes for key pages
-import os
-from fastapi.responses import FileResponse
 
 # Mount /web for static assets (js, images, etc.)
 if WEB_DIR.exists():
