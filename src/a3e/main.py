@@ -697,20 +697,55 @@ async def _execute_workflow_background(
 
 # Resolve absolute path to /web directory (three levels up from this file: src/a3e/main.py -> repo root /web)
 WEB_DIR = (Path(__file__).resolve().parent.parent.parent / "web").resolve()
-if not WEB_DIR.exists():
+logger.info(f"Web directory resolved to: {WEB_DIR}")
+logger.info(f"Web directory exists: {WEB_DIR.exists()}")
+if WEB_DIR.exists():
+    web_files = list(WEB_DIR.glob("*.html"))
+    logger.info(f"Found HTML files in web dir: {[f.name for f in web_files]}")
+else:
     logger.warning(f"WEB_DIR does not exist at expected path: {WEB_DIR}")
+    # Try alternative paths
+    alt_paths = [
+        Path("/app/web"),
+        Path(__file__).parent.parent / "web", 
+        Path(__file__).parent / "web"
+    ]
+    for alt_path in alt_paths:
+        if alt_path.exists():
+            logger.info(f"Alternative web directory found: {alt_path}")
+            WEB_DIR = alt_path
+            break
 
-def _read_web_file(filename: str) -> Optional[str]:
-    path = WEB_DIR / filename
+def _read_web_file(filename: str) -> str:
+    """Read HTML file from web directory"""
+    file_path = WEB_DIR / filename
+    logger.info(f"Attempting to read file: {file_path}")
+    logger.info(f"File exists: {file_path.exists()}")
+    logger.info(f"File is file: {file_path.is_file()}")
+    logger.info(f"WEB_DIR contents: {list(WEB_DIR.iterdir()) if WEB_DIR.exists() else 'WEB_DIR does not exist'}")
+    
     try:
-        with path.open("r", encoding="utf-8") as f:
-            return f.read()
-    except FileNotFoundError:
-        logger.error(f"Web file not found: {path}")
-        return None
+        content = file_path.read_text(encoding='utf-8')
+        logger.info(f"Successfully read {filename}, content length: {len(content)}")
+        return content
     except Exception as e:
-        logger.error(f"Error reading web file {path}: {e}")
-        return None
+        logger.error(f"Error reading {filename}: {e}")
+        logger.error(f"Current working directory: {Path.cwd()}")
+        logger.error(f"__file__ location: {Path(__file__).resolve()}")
+        return f"<html><body><h1>Error</h1><p>Could not load {filename}: {e}</p><p>File path: {file_path}</p><p>WEB_DIR: {WEB_DIR}</p></body></html>"
+
+# Debug route to test backend connectivity
+@app.get("/api/test", include_in_schema=False)
+async def test_api():
+    """Simple test endpoint to verify backend is working"""
+    return {
+        "status": "ok", 
+        "message": "Backend is accessible",
+        "web_dir": str(WEB_DIR),
+        "web_dir_exists": WEB_DIR.exists(),
+        "cwd": str(Path.cwd()),
+        "file_location": str(Path(__file__).resolve())
+    }
 
 @app.get("/landing", response_class=HTMLResponse, include_in_schema=False)
 async def landing_page(request: Request):  # noqa: D401
