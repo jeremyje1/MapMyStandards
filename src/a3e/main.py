@@ -60,12 +60,30 @@ except ImportError as e:
 logging.basicConfig(level=getattr(logging, settings.log_level), format=settings.log_format)
 logger = logging.getLogger(__name__)
 
-# One-time warning logger to avoid duplicate noise across workers
+# Cross-worker warning deduplication using filesystem
+import tempfile
+import os.path
+
+def log_warning_once_global(message: str, key: str = None):
+    """Log warning once across all workers using filesystem marker"""
+    if key is None:
+        key = message[:50]  # Use first 50 chars as key
+    marker_file = os.path.join(tempfile.gettempdir(), f"a3e_warning_{hash(key) % 10000}.tmp")
+    if not os.path.exists(marker_file):
+        try:
+            with open(marker_file, 'w') as f:
+                f.write(message)
+            logger.warning(message)
+        except OSError:
+            # Fallback to regular logging if filesystem issues
+            logger.warning(message)
+
+# One-time warning logger to avoid duplicate noise within worker
 _LOGGED_WARNINGS = set()
 def log_warning_once(message: str):  # pragma: no cover - simple helper
     if message not in _LOGGED_WARNINGS:
         _LOGGED_WARNINGS.add(message)
-        logger.warning(message)
+        log_warning_once_global(message)
 
 if '_vector_import_error' in globals():
     log_warning_once("Vector service not available - AI features disabled")
@@ -97,14 +115,18 @@ async def lifespan(app: FastAPI):
         logger.info("✅ Database service initialized")
         
         try:
-            vector_service = VectorService(
-                host=settings.milvus_host,
-                port=settings.milvus_port
-            )
-            await vector_service.initialize()
-            logger.info("✅ Vector service initialized")
+            if VECTOR_SERVICE_AVAILABLE:
+                vector_service = VectorService(
+                    host=settings.milvus_host,
+                    port=settings.milvus_port
+                )
+                await vector_service.initialize()
+                logger.info("✅ Vector service initialized")
+            else:
+                log_warning_once("⚠️ Vector service unavailable - missing dependencies (numpy, pymilvus, sentence-transformers)")
+                vector_service = None
         except Exception as e:
-            logger.warning(f"⚠️ Vector service unavailable (development mode): {e}")
+            log_warning_once(f"⚠️ Vector service unavailable (development mode): {str(e)}")
             vector_service = None
         
         llm_service = LLMService(settings)
@@ -119,8 +141,11 @@ async def lifespan(app: FastAPI):
                 agent_orchestrator = A3EAgentOrchestrator(llm_service, vector_service)  # type: ignore
                 logger.info("✅ Agent orchestrator initialized")
             except Exception as e:
-                logger.warning(f"⚠️ Agent orchestrator unavailable (development mode): {e}")
+                log_warning_once(f"⚠️ Agent orchestrator unavailable (development mode): {str(e)}")
                 agent_orchestrator = None
+        else:
+            log_warning_once("⚠️ Agent orchestrator unavailable - missing dependencies (autogen)")
+            agent_orchestrator = None
         
         # Load accreditation standards into vector database
         await _load_accreditation_standards()

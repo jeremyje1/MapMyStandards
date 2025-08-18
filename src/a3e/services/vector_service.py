@@ -54,6 +54,9 @@ class VectorService:
         
     async def initialize(self):
         """Initialize vector database connection and embedding model"""
+        if not VECTOR_FEATURES_AVAILABLE:
+            raise Exception("Vector features not available - missing dependencies (numpy, pymilvus, sentence-transformers)")
+            
         try:
             # Connect to Milvus
             connections.connect(
