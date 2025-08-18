@@ -8,7 +8,7 @@ Supports all US accrediting bodies with contextual mapping.
 from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean, Float, JSON, ForeignKey, Enum as SQLEnum, Table, UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy.dialects.postgresql import UUID
 from datetime import datetime
 from enum import Enum
 import uuid
@@ -70,7 +70,7 @@ class Institution(Base):
     ein = Column(String(10), unique=True, nullable=True)       # Employer Identification Number
     
     # Institution characteristics
-    institution_types = Column(JSONB, nullable=False)  # List of InstitutionType enums
+    institution_types = Column(JSON, nullable=False)  # List of InstitutionType enums
     state = Column(String(2), nullable=False)
     city = Column(String(100), nullable=False)
     zip_code = Column(String(10), nullable=True)
@@ -111,8 +111,8 @@ class Accreditor(Base):
     type = Column(SQLEnum(AccreditorType), nullable=False)
     recognition_authority = Column(String(20), nullable=False)  # USDE, CHEA, Both
     
-    geographic_scope = Column(JSONB, nullable=False)  # List of states or ["National"]
-    applicable_institution_types = Column(JSONB, nullable=False)  # List of InstitutionType enums
+    geographic_scope = Column(JSON, nullable=False)  # List of states or ["National"]
+    applicable_institution_types = Column(JSON, nullable=False)  # List of InstitutionType enums
     
     website = Column(String(255), nullable=True)
     contact_email = Column(String(255), nullable=True)
@@ -145,16 +145,16 @@ class Standard(Base):
     level = Column(Integer, nullable=False, default=1)  # 1=main, 2=sub, 3=sub-sub
     
     # Applicability
-    applicable_institution_types = Column(JSONB, nullable=False)
+    applicable_institution_types = Column(JSON, nullable=False)
     weight = Column(Float, default=1.0)  # Relative importance
     
     # Evidence requirements
-    evidence_requirements = Column(JSONB, nullable=False)  # List of required evidence types
-    sample_evidence_descriptions = Column(JSONB, nullable=True)
+    evidence_requirements = Column(JSON, nullable=False)  # List of required evidence types
+    sample_evidence_descriptions = Column(JSON, nullable=True)
     
     # Processing metadata
     embedding_vector = Column(Text, nullable=True)  # Serialized embedding
-    keywords = Column(JSONB, nullable=True)  # Extracted keywords for matching
+    keywords = Column(JSON, nullable=True)  # Extracted keywords for matching
     
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -188,14 +188,14 @@ class Evidence(Base):
     
     # Content and processing
     extracted_text = Column(Text, nullable=True)
-    structured_data = Column(JSONB, nullable=True)  # For data extracts, surveys, etc.
+    structured_data = Column(JSON, nullable=True)  # For data extracts, surveys, etc.
     processing_status = Column(SQLEnum(ProcessingStatus), default=ProcessingStatus.PENDING)
     processing_error = Column(Text, nullable=True)
     
     # Vector embeddings and search
     embedding_vector = Column(Text, nullable=True)  # Serialized embedding
-    keywords = Column(JSONB, nullable=True)
-    entities = Column(JSONB, nullable=True)  # Named entities extracted
+    keywords = Column(JSON, nullable=True)
+    entities = Column(JSON, nullable=True)  # Named entities extracted
     
     # Temporal information
     evidence_date = Column(DateTime, nullable=True)  # When the evidence was created
@@ -234,18 +234,18 @@ class AgentWorkflow(Base):
     max_rounds = Column(Integer, default=3)
     
     # Configuration
-    agent_config = Column(JSONB, nullable=True)  # Agent-specific configuration
+    agent_config = Column(JSON, nullable=True)  # Agent-specific configuration
     llm_model = Column(String(100), nullable=True)
     temperature = Column(Float, default=0.1)
     
     # Results
-    output_data = Column(JSONB, nullable=True)  # Final agent output
-    intermediate_results = Column(JSONB, nullable=True)  # Round-by-round results
+    output_data = Column(JSON, nullable=True)  # Final agent output
+    intermediate_results = Column(JSON, nullable=True)  # Round-by-round results
     error_message = Column(Text, nullable=True)
     
     # Performance metrics
     execution_time_seconds = Column(Float, nullable=True)
-    token_usage = Column(JSONB, nullable=True)
+    token_usage = Column(JSON, nullable=True)
     cost_estimate = Column(Float, nullable=True)
     
     # Timestamps
@@ -278,9 +278,9 @@ class GapAnalysis(Base):
     standards_insufficient_evidence = Column(Integer, nullable=False)
     
     # Detailed gap data
-    gap_details = Column(JSONB, nullable=False)  # Standard-by-standard gap analysis
-    risk_assessment = Column(JSONB, nullable=True)  # Risk levels per standard
-    recommendations = Column(JSONB, nullable=True)  # AI-generated recommendations
+    gap_details = Column(JSON, nullable=False)  # Standard-by-standard gap analysis
+    risk_assessment = Column(JSON, nullable=True)  # Risk levels per standard
+    recommendations = Column(JSON, nullable=True)  # AI-generated recommendations
     
     # Quality metrics
     confidence_score = Column(Float, default=0.0)
@@ -314,12 +314,12 @@ class Narrative(Base):
     # Content
     title = Column(String(500), nullable=False)
     content = Column(Text, nullable=False)
-    citations = Column(JSONB, nullable=True)  # Evidence citations with page numbers
+    citations = Column(JSON, nullable=True)  # Evidence citations with page numbers
     
     # Generation metadata
     generated_by = Column(String(50), default="agent")  # agent, human, hybrid
     llm_model = Column(String(100), nullable=True)
-    generation_config = Column(JSONB, nullable=True)
+    generation_config = Column(JSON, nullable=True)
     
     # Quality and review
     quality_score = Column(Float, default=0.0)
@@ -359,8 +359,8 @@ class AuditLog(Base):
     user_role = Column(String(50), nullable=True)
     
     # Change details
-    old_values = Column(JSONB, nullable=True)
-    new_values = Column(JSONB, nullable=True)
+    old_values = Column(JSON, nullable=True)
+    new_values = Column(JSON, nullable=True)
     change_summary = Column(String(500), nullable=True)
     
     # Context

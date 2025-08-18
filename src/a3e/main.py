@@ -59,12 +59,20 @@ except ImportError as e:
 # Configure logging
 logging.basicConfig(level=getattr(logging, settings.log_level), format=settings.log_format)
 logger = logging.getLogger(__name__)
+
+# One-time warning logger to avoid duplicate noise across workers
+_LOGGED_WARNINGS = set()
+def log_warning_once(message: str):  # pragma: no cover - simple helper
+    if message not in _LOGGED_WARNINGS:
+        _LOGGED_WARNINGS.add(message)
+        logger.warning(message)
+
 if '_vector_import_error' in globals():
-    logger.warning("Vector service not available - AI features disabled")
+    log_warning_once("Vector service not available - AI features disabled")
 if '_auth_import_exception' in globals():
-    logger.warning(f"Auth router import failed: {_auth_import_exception}")
+    log_warning_once(f"Auth router import failed: {_auth_import_exception}")
 if not globals().get('AGENT_ORCHESTRATOR_AVAILABLE', False):
-    logger.warning(f"Agent orchestrator unavailable - advanced multi-agent flows disabled: {globals().get('_agent_orchestrator_import_exception')}")
+    log_warning_once(f"Agent orchestrator unavailable - advanced multi-agent flows disabled: {globals().get('_agent_orchestrator_import_exception')}")
 
 # Global service instances
 db_service: Optional[DatabaseService] = None
@@ -79,6 +87,8 @@ async def lifespan(app: FastAPI):
     global db_service, vector_service, llm_service, document_service, agent_orchestrator
     
     logger.info("🚀 Starting A3E Application...")
+    # Record startup time for uptime calculations
+    app.state.start_time = datetime.utcnow()
     
     # Initialize services
     try:
@@ -299,34 +309,84 @@ async def custom_swagger_ui_html(request: Request):
 
 @app.get("/health")
 async def health_check():
-    """Health check endpoint."""
+    """Comprehensive health/status endpoint with per-service diagnostics.
+
+    Returns structured JSON containing:
+      - overall status (healthy / degraded / unhealthy)
+      - per-service status + optional latency metrics
+      - uptime and versioning metadata
+    """
     try:
-        # Check database connectivity
-        db_healthy = await db_service.health_check() if db_service else False
-        
-        # Check vector database connectivity
-        vector_healthy = await vector_service.health_check() if vector_service else False
-        
-        # Check LLM service
-        llm_healthy = await llm_service.health_check() if llm_service else False
-        
-        overall_healthy = all([db_healthy, vector_healthy, llm_healthy])
-        
-        return {
-            "status": "healthy" if overall_healthy else "unhealthy",
-            "timestamp": datetime.utcnow().isoformat(),
-            "services": {
-                "database": "healthy" if db_healthy else "unhealthy",
-                "vector_db": "healthy" if vector_healthy else "unhealthy",
-                "llm_service": "healthy" if llm_healthy else "unhealthy",
-                "proprietary_ontology": "active",
-                "vector_matching": "active", 
-                "multi_agent_pipeline": "active",
-                "audit_traceability": "active"
-            },
+        from time import perf_counter
+        now = datetime.utcnow()
+        uptime_seconds = None
+        if hasattr(app.state, 'start_time'):
+            uptime_seconds = (now - app.state.start_time).total_seconds()
+
+        # Helper to measure latency of async call returning bool
+        async def timed(check_coro):
+            start = perf_counter()
+            try:
+                ok = await check_coro
+            except Exception:
+                ok = False
+            duration_ms = round((perf_counter() - start) * 1000, 2)
+            return ok, duration_ms
+
+        db_ok, db_latency = (False, None)
+        if db_service:
+            db_ok, db_latency = await timed(db_service.health_check())
+
+        vector_status = "unavailable"
+        vector_ok = False
+        vector_latency = None
+        if vector_service:
+            vector_ok, vector_latency = await timed(vector_service.health_check())
+            vector_status = "healthy" if vector_ok else "unhealthy"
+
+        llm_ok, llm_latency = (False, None)
+        if llm_service:
+            llm_ok, llm_latency = await timed(llm_service.health_check())
+
+        orchestrator_status = "unavailable"
+        if agent_orchestrator:
+            # Simple heartbeat attribute/method optional
+            orchestrator_status = "healthy"
+
+        # Determine overall status: all core (db + llm) must be healthy; vector/orchestrator are optional
+        core_services_ok = all([db_ok, llm_ok])
+        degraded = core_services_ok and not all([vector_ok, orchestrator_status == "healthy"])
+        if core_services_ok and not degraded:
+            overall = "healthy"
+        elif core_services_ok and degraded:
+            overall = "degraded"
+        else:
+            overall = "unhealthy"
+
+        body: Dict[str, Any] = {
+            "status": overall,
+            "timestamp": now.isoformat(),
+            "uptime_seconds": uptime_seconds,
             "version": settings.version,
-            "proprietary_capabilities": "enabled"
+            "environment": settings.environment,
+            "services": {
+                "database": {"status": "healthy" if db_ok else "unhealthy", "latency_ms": db_latency},
+                "llm_service": {"status": "healthy" if llm_ok else "unhealthy", "latency_ms": llm_latency},
+                "vector_db": {"status": vector_status, "latency_ms": vector_latency},
+                "agent_orchestrator": {"status": orchestrator_status}
+            },
+            "capabilities": {
+                "proprietary_ontology": True,
+                "vector_matching": vector_ok,
+                "multi_agent_pipeline": orchestrator_status == "healthy",
+                "audit_traceability": True
+            }
         }
+
+        status_code = 200 if overall in ("healthy", "degraded") else 503
+        if overall == "degraded":
+            body["note"] = "Core services healthy. Optional advanced services unavailable or unhealthy."
+        return JSONResponse(status_code=status_code, content=body)
     except Exception as e:
         logger.error(f"Health check failed: {e}")
         return JSONResponse(
