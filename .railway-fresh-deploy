@@ -1,1 +1,4 @@
-# Fresh Railway deployment - Login page security fixes - Tue Aug  6 2025
+# Fresh Railway deployment - package.json fix - Sun Aug 18 2025
+Deploy trigger: 2025-08-18-19:20
+Fixed package.json syntax error  
+Force fresh deployment after JSON fix
