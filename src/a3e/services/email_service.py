@@ -257,13 +257,14 @@ Message:
 Sent from MapMyStandards.ai contact form
         """
         
+        safe_message_html = message.replace('\n', '<br>')
         html_body = f"""
         <h2>New Contact Form Submission</h2>
         <p><strong>Name:</strong> {name}</p>
         <p><strong>Email:</strong> <a href="mailto:{email}">{email}</a></p>
         <p><strong>Message:</strong></p>
         <div style="background: #f8f9fa; padding: 15px; border-radius: 5px;">
-            {message.replace('\n', '<br>')}
+            {safe_message_html}
         </div>
         <hr>
         <p><em>Sent from MapMyStandards.ai contact form</em></p>

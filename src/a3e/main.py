@@ -34,7 +34,16 @@ except ImportError:
 
 from .services.llm_service import LLMService
 from .services.document_service import DocumentService
-from .agents import A3EAgentOrchestrator
+"""NOTE: Agent Orchestrator is optional. It depends on heavy LLM coordination
+libraries (e.g., autogen) that aren't required for core API functionality.
+We attempt to import it but degrade gracefully if unavailable so the
+application can still boot for marketing pages and basic data endpoints."""
+try:  # Optional orchestrator (may require missing deps like 'autogen')
+    from .agents import A3EAgentOrchestrator  # type: ignore
+    AGENT_ORCHESTRATOR_AVAILABLE = True
+except Exception as e:  # Broad except to catch ImportError + transitive errors
+    AGENT_ORCHESTRATOR_AVAILABLE = False
+    _agent_orchestrator_import_exception = e
 from .api.routes import integrations_router, proprietary_router
 # Import auth router separately to handle any import issues
 try:
@@ -51,6 +60,8 @@ if '_vector_import_error' in globals():
     logger.warning("Vector service not available - AI features disabled")
 if '_auth_import_exception' in globals():
     logger.warning(f"Auth router import failed: {_auth_import_exception}")
+if not globals().get('AGENT_ORCHESTRATOR_AVAILABLE', False):
+    logger.warning(f"Agent orchestrator unavailable - advanced multi-agent flows disabled: {globals().get('_agent_orchestrator_import_exception')}")
 
 # Global service instances
 db_service: Optional[DatabaseService] = None

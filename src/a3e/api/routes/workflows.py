@@ -5,14 +5,23 @@ Provides REST endpoints for managing accreditation workflows and agent orchestra
 """
 
 from fastapi import APIRouter, HTTPException, Depends, Query, BackgroundTasks
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, TYPE_CHECKING
 from pydantic import BaseModel, Field
 import logging
 from datetime import datetime
 
 from ...core.config import settings
 from ...services.database_service import DatabaseService
-from ...agents import A3EAgentOrchestrator
+try:  # Optional heavy dependency
+    from ...agents import A3EAgentOrchestrator  # type: ignore
+    _workflow_orchestrator_available = True
+except Exception as e:  # Catch broad to handle transitive ImportError chain
+    _workflow_orchestrator_available = False
+    _workflow_orchestrator_import_error = e
+    # Provide stub type for type-checkers while avoiding runtime NameError
+    if TYPE_CHECKING:  # pragma: no cover
+        class A3EAgentOrchestrator:  # type: ignore
+            ...
 
 logger = logging.getLogger(__name__)
 
@@ -87,6 +96,8 @@ async def get_db_service():
 
 # Dependency for agent orchestrator
 async def get_agent_orchestrator():
+    if not _workflow_orchestrator_available:
+        raise HTTPException(status_code=503, detail="Agent orchestrator unavailable on this deployment")
     return A3EAgentOrchestrator()
 
 @router.get("/workflows", response_model=List[WorkflowResponse])
@@ -245,7 +256,7 @@ async def execute_workflow(
     execution_data: WorkflowExecution,
     background_tasks: BackgroundTasks,
     db: DatabaseService = Depends(get_db_service),
-    orchestrator: A3EAgentOrchestrator = Depends(get_agent_orchestrator)
+    orchestrator: 'A3EAgentOrchestrator' = Depends(get_agent_orchestrator)
 ):
     """Execute a workflow using the agent orchestrator"""
     try:
@@ -292,7 +303,7 @@ async def execute_workflow(
 
 async def _execute_workflow_background(
     workflow_id: str,
-    orchestrator: A3EAgentOrchestrator,
+    orchestrator: 'A3EAgentOrchestrator',
     db: DatabaseService
 ):
     """Background task for workflow execution"""

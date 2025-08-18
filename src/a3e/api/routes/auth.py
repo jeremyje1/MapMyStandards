@@ -10,9 +10,9 @@ import secrets
 import time
 from datetime import datetime, timedelta
 import jwt
-from ..core.auth import generate_secure_token
-from ..services.payment_service import PaymentService
-from ..services.email_service import EmailService
+from ...core.auth import generate_secure_token
+from ...services.payment_service import PaymentService
+from ...services.email_service import EmailService
 import logging
 
 logger = logging.getLogger(__name__)

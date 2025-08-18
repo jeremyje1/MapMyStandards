@@ -118,6 +118,16 @@ class Settings(BaseSettings):
         if isinstance(v, str):
             return Environment(v.lower())
         return v
+
+# Singleton settings cache
+_settings_instance: Optional[Settings] = None
+
+def get_settings() -> Settings:
+    """Return a cached Settings instance (lazy-loaded)."""
+    global _settings_instance
+    if _settings_instance is None:
+        _settings_instance = Settings()  # type: ignore
+    return _settings_instance
     
     @property
     def is_development(self) -> bool:
