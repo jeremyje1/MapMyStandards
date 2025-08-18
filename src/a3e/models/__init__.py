@@ -14,7 +14,7 @@ from enum import Enum
 import uuid
 from typing import Optional, List, Dict, Any
 
-from a3e.core.accreditation_registry import InstitutionType, AccreditorType
+from ..core.accreditation_registry import InstitutionType, AccreditorType
 
 Base = declarative_base()
 
@@ -375,3 +375,21 @@ class AuditLog(Base):
     __table_args__ = (
         UniqueConstraint('entity_type', 'entity_id', 'timestamp', name='uq_audit_entity_time'),
     )
+
+
+# Export all models for easy importing
+__all__ = [
+    'Base',
+    'Institution',
+    'Evidence', 
+    'Standard',
+    'Accreditor',
+    'AgentWorkflow',
+    'GapAnalysis',
+    'Narrative',
+    'AuditLog',
+    'ProcessingStatus',
+    'EvidenceType',
+    'InstitutionType',
+    'AccreditorType'
+]
