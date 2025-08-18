@@ -5,19 +5,28 @@ Handles trial signup, subscription management, and billing
 
 from fastapi import APIRouter, HTTPException, Depends, status
 from pydantic import BaseModel, EmailStr
-from typing impo        "multicampus_yearly": {
-            "name": "A³E Multi-Campus Plan (Annual)",
-            "price": 8073.00,
-            "currency": "USD",
-            "interval": "year",
-            "trial_days": 7,ional, Dict, Any
-from ..services.payment_service import PaymentService
-from ..core.auth import verify_api_key
+from typing import Optional, Dict, Any
 import logging
+
+try:
+    from ...services.payment_service import PaymentService  # type: ignore
+    _payment_service_available = True
+except Exception as e:  # catch ImportError or dependency errors
+    _payment_service_available = False
+    _payment_service_import_error = e
+from ...core.auth import verify_api_key
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/billing", tags=["billing"])
+
+# Basic static pricing reference (can be expanded or sourced dynamically later)
+PRICING: Dict[str, Dict[str, Any]] = {
+    "college_monthly": {"interval": "month", "trial_days": 7},
+    "college_yearly": {"interval": "year", "trial_days": 7},
+    "multicampus_monthly": {"interval": "month", "trial_days": 7},
+    "multicampus_yearly": {"interval": "year", "trial_days": 7},
+}
 
 # Pydantic Models
 class TrialSignupRequest(BaseModel):
@@ -39,12 +48,17 @@ class PaymentResponse(BaseModel):
     message: str
     data: Optional[Dict[str, Any]] = None
 
-# Initialize payment service
-payment_service = PaymentService()
+# Lazy initialize payment service only when endpoint hit
+_payment_service_instance: Optional[PaymentService] = None
 
 def get_payment_service() -> PaymentService:
-    """Dependency function to get payment service instance"""
-    return payment_service
+    """Dependency function to get / create payment service instance"""
+    if not _payment_service_available:
+        raise HTTPException(status_code=503, detail="Payment service unavailable on this deployment")
+    global _payment_service_instance
+    if _payment_service_instance is None:
+        _payment_service_instance = PaymentService()  # type: ignore
+    return _payment_service_instance
 
 @router.post("/trial/signup")
 async def trial_signup(request: TrialSignupRequest, payment_service: PaymentService = Depends(get_payment_service)):
@@ -83,7 +97,10 @@ async def trial_signup(request: TrialSignupRequest, payment_service: PaymentServ
         raise HTTPException(status_code=500, detail="Failed to create trial subscription")
 
 @router.post("/subscription/create", response_model=PaymentResponse)
-async def create_subscription(request: SubscriptionRequest):
+async def create_subscription(
+    request: SubscriptionRequest,
+    payment_service: PaymentService = Depends(get_payment_service)
+):
     """Create a paid subscription"""
     try:
         result = await payment_service.create_subscription(
@@ -108,7 +125,8 @@ async def create_subscription(request: SubscriptionRequest):
 @router.post("/subscription/cancel")
 async def cancel_subscription(
     customer_id: str,
-    api_key: str = Depends(verify_api_key)
+    api_key: str = Depends(verify_api_key),
+    payment_service: PaymentService = Depends(get_payment_service)
 ):
     """Cancel an active subscription"""
     try:
@@ -128,7 +146,10 @@ async def cancel_subscription(
         )
 
 @router.get("/account/status")
-async def get_account_status(api_key: str = Depends(verify_api_key)):
+async def get_account_status(
+    api_key: str = Depends(verify_api_key),
+    payment_service: PaymentService = Depends(get_payment_service)
+):
     """Get current account status and usage"""
     try:
         result = await payment_service.get_account_status(api_key)

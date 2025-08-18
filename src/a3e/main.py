@@ -39,8 +39,11 @@ libraries (e.g., autogen) that aren't required for core API functionality.
 We attempt to import it but degrade gracefully if unavailable so the
 application can still boot for marketing pages and basic data endpoints."""
 try:  # Optional orchestrator (may require missing deps like 'autogen')
+    from typing import TYPE_CHECKING
     from .agents import A3EAgentOrchestrator  # type: ignore
     AGENT_ORCHESTRATOR_AVAILABLE = True
+    if TYPE_CHECKING:  # pragma: no cover
+        from .agents import A3EAgentOrchestrator as _A3EAgentOrchestratorType
 except Exception as e:  # Broad except to catch ImportError + transitive errors
     AGENT_ORCHESTRATOR_AVAILABLE = False
     _agent_orchestrator_import_exception = e
@@ -68,7 +71,7 @@ db_service: Optional[DatabaseService] = None
 vector_service: Optional[VectorService] = None
 llm_service: Optional[LLMService] = None
 document_service: Optional[DocumentService] = None
-agent_orchestrator: Optional[A3EAgentOrchestrator] = None
+agent_orchestrator: Optional['A3EAgentOrchestrator'] = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -101,12 +104,13 @@ async def lifespan(app: FastAPI):
         document_service = DocumentService(settings)
         logger.info("✅ Document service initialized")
         
-        try:
-            agent_orchestrator = A3EAgentOrchestrator(llm_service, vector_service)
-            logger.info("✅ Agent orchestrator initialized")
-        except Exception as e:
-            logger.warning(f"⚠️ Agent orchestrator unavailable (development mode): {e}")
-            agent_orchestrator = None
+        if AGENT_ORCHESTRATOR_AVAILABLE:
+            try:
+                agent_orchestrator = A3EAgentOrchestrator(llm_service, vector_service)  # type: ignore
+                logger.info("✅ Agent orchestrator initialized")
+            except Exception as e:
+                logger.warning(f"⚠️ Agent orchestrator unavailable (development mode): {e}")
+                agent_orchestrator = None
         
         # Load accreditation standards into vector database
         await _load_accreditation_standards()

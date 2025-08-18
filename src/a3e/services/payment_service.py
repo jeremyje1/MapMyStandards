@@ -20,8 +20,14 @@ class PaymentService:
     
     def __init__(self):
         self.settings = get_settings()
-        stripe.api_key = self.settings.STRIPE_SECRET_KEY
-        self.db_service = DatabaseService()
+        # Stripe API key may not be set in minimal deployments; guard access
+        stripe.api_key = getattr(self.settings, 'STRIPE_SECRET_KEY', '') or ''
+        # Initialize database service lazily with configured database URL
+        try:
+            self.db_service = DatabaseService(self.settings.database_url)
+        except Exception as e:
+            logger.warning(f"Database service init skipped in PaymentService: {e}")
+            self.db_service = None  # type: ignore
         
     async def create_trial_subscription(self, email: str, plan: str, payment_method_id: str, coupon_code: Optional[str] = None) -> Dict[str, Any]:
         """Simplified trial subscription creator.

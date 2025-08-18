@@ -19,6 +19,16 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
+# Lightweight API key dependency to avoid heavy payment service on basic user info lookup
+from fastapi import Header
+async def _api_key_header(x_api_key: Optional[str] = Header(None)) -> str:
+    if not x_api_key:
+        raise HTTPException(status_code=401, detail="API key required")
+    # Basic format check; replace with full verification when payment service ready
+    if not x_api_key.startswith("a3e_"):
+        raise HTTPException(status_code=401, detail="Invalid API key format")
+    return x_api_key
+
 # Pydantic models
 class UserRegistrationRequest(BaseModel):
     name: str
@@ -226,7 +236,7 @@ async def request_password_reset(request: PasswordResetRequest):
         raise HTTPException(status_code=500, detail="Password reset failed")
 
 @router.get("/user/{user_id}")
-async def get_user_info(user_id: str, api_key: str = Depends()):
+async def get_user_info(user_id: str, api_key: str = Depends(_api_key_header)):
     """
     Get user information (protected endpoint)
     """

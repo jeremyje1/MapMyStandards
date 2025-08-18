@@ -128,39 +128,39 @@ def get_settings() -> Settings:
     if _settings_instance is None:
         _settings_instance = Settings()  # type: ignore
     return _settings_instance
-    
-    @property
-    def is_development(self) -> bool:
-        return self.environment == Environment.DEVELOPMENT
-    
-    @property
-    def is_production(self) -> bool:
-        return self.environment == Environment.PRODUCTION
-    
-    @property
-    def cors_origins_list(self) -> List[str]:
-        if isinstance(self.cors_origins, str):
-            return [origin.strip() for origin in self.cors_origins.split(",")]
-        return self.cors_origins
-    
-    @property
-    def supported_file_types_list(self) -> List[str]:
-        if isinstance(self.supported_file_types, str):
-            return [file_type.strip() for file_type in self.supported_file_types.split(",")]
-        return self.supported_file_types
-    
-    @property
-    def milvus_uri(self) -> str:
-        return f"http://{self.milvus_host}:{self.milvus_port}"
-    
-    @property
-    def database_config(self) -> Dict[str, Any]:
-        return {
-            "url": self.database_url,
-            "pool_size": self.database_pool_size,
-            "max_overflow": self.database_max_overflow,
-            "echo": self.is_development,
-        }
+
+@property
+def is_development(self: Settings) -> bool:  # type: ignore
+    return self.environment == Environment.DEVELOPMENT
+
+@property
+def is_production(self: Settings) -> bool:  # type: ignore
+    return self.environment == Environment.PRODUCTION
+
+@property
+def cors_origins_list(self: Settings) -> List[str]:  # type: ignore
+    if isinstance(self.cors_origins, str):
+        return [origin.strip() for origin in self.cors_origins.split(",")]
+    return self.cors_origins
+
+@property
+def supported_file_types_list(self: Settings) -> List[str]:  # type: ignore
+    if isinstance(self.supported_file_types, str):
+        return [file_type.strip() for file_type in self.supported_file_types.split(",")]
+    return self.supported_file_types
+
+@property
+def milvus_uri(self: Settings) -> str:  # type: ignore
+    return f"http://{self.milvus_host}:{self.milvus_port}"
+
+@property
+def database_config(self: Settings) -> Dict[str, Any]:  # type: ignore
+    return {
+        "url": self.database_url,
+        "pool_size": self.database_pool_size,
+        "max_overflow": self.database_max_overflow,
+        "echo": is_development.__get__(self, Settings)(),
+    }
     
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -171,3 +171,13 @@ def get_settings() -> Settings:
 
 # Global settings instance
 settings = Settings()
+
+# Dynamically attach convenience properties that were previously misplaced
+def _is_dev(self: Settings) -> bool:  # type: ignore
+    return self.environment == Environment.DEVELOPMENT
+
+def _is_prod(self: Settings) -> bool:  # type: ignore
+    return self.environment == Environment.PRODUCTION
+
+Settings.is_development = property(_is_dev)  # type: ignore
+Settings.is_production = property(_is_prod)  # type: ignore
