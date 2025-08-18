@@ -1,0 +1,13 @@
+{
+  "recommendations": [
+    "ms-python.python",
+    "ms-python.flake8",
+    "bradlc.vscode-tailwindcss"
+  ],
+  "unwantedRecommendations": [
+    "ms-python.pylint",
+    "ms-toolsai.jupyter",
+    "ms-python.isort",
+    "ms-python.black-formatter"
+  ]
+}

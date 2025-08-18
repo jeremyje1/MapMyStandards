@@ -1,0 +1,56 @@
+{
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/node_modules/**": true,
+    "**/stripe_venv/**": true,
+    "**/__pycache__/**": true,
+    "**/.pytest_cache/**": true,
+    "**/venv/**": true,
+    "**/env/**": true,
+    "**/*.pyc": true,
+    "**/*.log": true,
+    "**/dist/**": true,
+    "**/build/**": true
+  },
+  "files.exclude": {
+    "**/stripe_venv": true,
+    "**/__pycache__": true,
+    "**/*.pyc": true,
+    "**/.pytest_cache": true,
+    "**/.coverage": true,
+    "**/venv": true,
+    "**/env": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/bower_components": true,
+    "**/*.code-search": true,
+    "**/stripe_venv": true,
+    "**/__pycache__": true,
+    "**/venv": true,
+    "**/env": true,
+    "**/*.pyc": true,
+    "**/dist": true,
+    "**/build": true
+  },
+  "files.autoSave": "onFocusChange",
+  "editor.semanticHighlighting.enabled": false,
+  "editor.bracketPairColorization.enabled": false,
+  "editor.minimap.enabled": false,
+  "editor.codeLens": false,
+  "editor.hover.delay": 1000,
+  "editor.quickSuggestions": {
+    "other": false,
+    "comments": false,
+    "strings": false
+  },
+  "extensions.autoUpdate": false,
+  "workbench.editor.enablePreview": false,
+  "workbench.editor.limit.enabled": true,
+  "workbench.editor.limit.value": 10,
+  "typescript.disableAutomaticTypeAcquisition": true,
+  "python.analysis.autoImportCompletions": false,
+  "python.analysis.indexing": false,
+  "python.defaultInterpreterPath": "/usr/bin/python3"
+}
