@@ -358,6 +358,7 @@ async def health_check():
             duration_ms = round((perf_counter() - start) * 1000, 2)
             return ok, duration_ms
 
+        # Check if services are initialized (during startup they might be None)
         db_ok, db_latency = (False, None)
         if db_service:
             db_ok, db_latency = await timed(db_service.health_check())
@@ -378,15 +379,22 @@ async def health_check():
             # Simple heartbeat attribute/method optional
             orchestrator_status = "healthy"
 
-        # Determine overall status: all core (db + llm) must be healthy; vector/orchestrator are optional
-        core_services_ok = all([db_ok, llm_ok])
-        degraded = core_services_ok and not all([vector_ok, orchestrator_status == "healthy"])
-        if core_services_ok and not degraded:
-            overall = "healthy"
-        elif core_services_ok and degraded:
-            overall = "degraded"
+        # Determine overall status: 
+        # - If no services initialized yet (startup), return "starting"
+        # - If core services (db) available, determine healthy/degraded/unhealthy
+        if not db_service:
+            overall = "starting"
+            status_code = 200  # Allow health checks during startup
         else:
-            overall = "unhealthy"
+            core_services_ok = all([db_ok, llm_ok])
+            degraded = core_services_ok and not all([vector_ok, orchestrator_status == "healthy"])
+            if core_services_ok and not degraded:
+                overall = "healthy"
+            elif core_services_ok and degraded:
+                overall = "degraded"
+            else:
+                overall = "unhealthy"
+            status_code = 200 if overall in ("healthy", "degraded") else 503
 
         body: Dict[str, Any] = {
             "status": overall,
@@ -395,8 +403,8 @@ async def health_check():
             "version": settings.version,
             "environment": settings.environment,
             "services": {
-                "database": {"status": "healthy" if db_ok else "unhealthy", "latency_ms": db_latency},
-                "llm_service": {"status": "healthy" if llm_ok else "unhealthy", "latency_ms": llm_latency},
+                "database": {"status": "healthy" if db_ok else ("unavailable" if not db_service else "unhealthy"), "latency_ms": db_latency},
+                "llm_service": {"status": "healthy" if llm_ok else ("unavailable" if not llm_service else "unhealthy"), "latency_ms": llm_latency},
                 "vector_db": {"status": vector_status, "latency_ms": vector_latency},
                 "agent_orchestrator": {"status": orchestrator_status}
             },
@@ -408,9 +416,11 @@ async def health_check():
             }
         }
 
-        status_code = 200 if overall in ("healthy", "degraded") else 503
         if overall == "degraded":
             body["note"] = "Core services healthy. Optional advanced services unavailable or unhealthy."
+        elif overall == "starting":
+            body["note"] = "Application starting up. Services initializing."
+            
         return JSONResponse(status_code=status_code, content=body)
     except Exception as e:
         logger.error(f"Health check failed: {e}")
