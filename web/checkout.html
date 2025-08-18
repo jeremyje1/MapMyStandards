@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - A³E | MapMyStandards.ai</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind (built) -->
+    <link rel="stylesheet" href="/assets/styles.css">
+    
+    <!-- Stripe.js -->
+    <script src="https://js.stripe.com/v3/"></script>
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-6">
+                <div class="flex items-center">
+                    <img src="https://mapmystandards.ai/wp-content/uploads/2025/07/Original-Logo.png" alt="MapMyStandards.ai" class="h-12 w-auto">
+                </div>
+                <a href="https://mapmystandards.ai/" class="text-gray-600 hover:text-gray-900">← Back to Home</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Left Column - Plan Details -->
+            <div class="bg-white rounded-2xl shadow-sm p-8">
+                <h2 class="text-2xl font-bold mb-6">Your Plan</h2>
+                
+                <div id="planDetails" class="border rounded-lg p-6 mb-6">
+                    <!-- Plan details will be populated by JavaScript -->
+                </div>
+
+                <div class="space-y-4">
+                    <h3 class="font-semibold text-lg">What's Included:</h3>
+                    <ul id="planFeatures" class="space-y-2 text-gray-600">
+                        <!-- Features will be populated by JavaScript -->
+                    </ul>
+                </div>
+
+                <div class="mt-8 p-4 bg-blue-50 rounded-lg">
+                    <h4 class="font-semibold text-blue-900 mb-2">7-Day Free Trial</h4>
+                    <p class="text-sm text-blue-700">
+                        Start your free trial today. Credit card required for seamless conversion. 
+                        Cancel anytime during the trial period with no charges.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Right Column - Payment Form -->
+            <div class="bg-white rounded-2xl shadow-sm p-8">
+                <h2 class="text-2xl font-bold mb-6">Payment Information</h2>
+
+                <!-- Trial Form (No Payment Required) -->
+                <div id="trialForm" class="space-y-6">
+                    <form id="trial-signup-form">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Institution Name</label>
+                                <input type="text" id="institutionName" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Work Email</label>
+                                <input type="email" id="email" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Create Password</label>
+                                <input type="password" id="password" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required minlength="8"
+                                       placeholder="Minimum 8 characters">
+                                <p class="text-xs text-gray-500 mt-1">Use this password to access your dashboard in the future</p>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                                <input type="password" id="confirmPassword" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required minlength="8"
+                                       placeholder="Confirm your password">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Your Role</label>
+                                <select id="role" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                                    <option value="">Select your role</option>
+                                    <option value="administrator">Administrator</option>
+                                    <option value="faculty">Faculty Member</option>
+                                    <option value="compliance">Compliance Officer</option>
+                                    <option value="staff">Staff Member</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number (Optional)</label>
+                                <input type="tel" id="phone" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+
+                            <div class="flex items-start">
+                                <input type="checkbox" id="terms" class="mt-1 mr-2" required>
+                                <label for="terms" class="text-sm text-gray-600">
+                                    I agree to the <a href="https://mapmystandards.ai/privacy-policy/" class="text-blue-600 hover:text-blue-700">Terms of Service</a> 
+                                    and <a href="https://mapmystandards.ai/privacy-policy/" class="text-blue-600 hover:text-blue-700">Privacy Policy</a>
+                                </label>
+                            </div>
+
+                            <div class="flex items-start">
+                                <input type="checkbox" id="newsletter" class="mt-1 mr-2">
+                                <label for="newsletter" class="text-sm text-gray-600">
+                                    Send me product updates and educational content about accreditation
+                                </label>
+                            </div>
+                        </div>
+
+                        <button type="submit" id="trial-submit" class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors mt-6">
+                            Start Free Trial
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Payment Form (For Paid Plans) -->
+                <div id="paymentForm" class="space-y-6" style="display: none;">
+                    <form id="payment-form">
+                        <div id="card-element" class="p-3 border border-gray-300 rounded-lg">
+                            <!-- Stripe Elements will create form elements here -->
+                        </div>
+                        
+                        <div id="card-errors" role="alert" class="text-red-600 text-sm mt-2"></div>
+
+                        <button type="submit" id="submit-payment" class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors mt-6">
+                            Complete Payment
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Loading State -->
+                <div id="loading" class="text-center py-8" style="display: none;">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <p class="text-gray-600">Processing your request...</p>
+                </div>
+
+                <!-- Success State -->
+                <div id="success" class="text-center py-8" style="display: none;">
+                    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Welcome to A³E!</h3>
+                    <p class="text-gray-600 mb-4">Your account has been created successfully.</p>
+                    <div id="successDetails" class="bg-gray-50 rounded-lg p-4 text-sm text-left">
+                        <!-- Success details will be populated -->
+                    </div>
+                    <button onclick="goToDashboard()" class="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
+                        Go to Dashboard
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center">
+                <div class="text-gray-600 text-sm">
+                    © 2025 MapMyStandards.ai. All rights reserved.
+                </div>
+                <div class="flex space-x-6 text-sm">
+                    <a href="https://mapmystandards.ai/user-guide/" class="text-gray-600 hover:text-gray-900">Help</a>
+                    <a href="https://mapmystandards.ai/privacy-policy/" class="text-gray-600 hover:text-gray-900">Privacy</a>
+                    <a href="https://mapmystandards.ai/privacy-policy/" class="text-gray-600 hover:text-gray-900">Terms</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Stripe configuration - will be initialized after loading the key
+        let stripe = null;
+        let elements = null;
+
+        // Load Stripe publishable key from API
+        async function initializeStripe() {
+            try {
+                // Use production API endpoint
+                const response = await fetch('https://api.mapmystandards.ai/config/stripe-key');
+                const data = await response.json();
+                
+                if (data.publishable_key) {
+                    stripe = Stripe(data.publishable_key);
+                    elements = stripe.elements();
+                    console.log('✅ Stripe initialized successfully with', data.environment, 'key');
+                } else {
+                    throw new Error('No publishable key received');
+                }
+            } catch (error) {
+                console.error('❌ Failed to load Stripe key from API:', error);
+                showError('Payment system temporarily unavailable. Please try again in a few moments or contact support@mapmystandards.ai');
+            }
+        }
+
+        // Get plan from URL parameters - default to College plan
+        const urlParams = new URLSearchParams(window.location.search);
+        const selectedPlan = urlParams.get('plan') || 'college_monthly';
+
+        // Plan configurations (matches your $297/$897 Stripe pricing)
+        const plans = {
+            // Simple aliases
+            college: {
+                name: 'A³E College Plan',
+                price: '$297',
+                interval: 'per month',
+                trial: '7-day free trial',
+                popular: true,
+                features: [
+                    'Unlimited document analysis',
+                    'Up to 3 campus/department profiles',
+                    'Full AI pipeline (4-agent system)',
+                    'Canvas LMS integration',
+                    'Comprehensive audit trails',
+                    'Monthly compliance reports',
+                    'Priority email support',
+                    '7-day free trial included'
+                ]
+            },
+            multicampus: {
+                name: 'A³E Multi-Campus Plan',
+                price: '$897',
+                interval: 'per month',
+                trial: '7-day free trial',
+                features: [
+                    'Everything in College Plan',
+                    'Unlimited campus/department profiles',
+                    'White-label option available',
+                    'API access (10K calls/month)',
+                    'Dedicated success manager',
+                    'Custom integrations',
+                    'Phone support',
+                    '7-day free trial included'
+                ]
+            },
+            // Full plan names (for backward compatibility)
+            college_monthly: {
+                name: 'A³E College Plan',
+                price: '$297',
+                interval: 'per month',
+                trial: '7-day free trial',
+                popular: true,
+                features: [
+                    'Unlimited document analysis',
+                    'Up to 3 campus/department profiles',
+                    'Full AI pipeline (4-agent system)',
+                    'Canvas LMS integration',
+                    'Comprehensive audit trails',
+                    'Monthly compliance reports',
+                    'Priority email support',
+                    '7-day free trial included'
+                ]
+            },
+            college_yearly: {
+                name: 'A³E College Plan (Annual)',
+                price: '$2,970',
+                interval: 'per year',
+                trial: '7-day free trial',
+                savings: '2 months free',
+                features: [
+                    'Everything in Monthly Plan',
+                    '2 months free (annual billing)',
+                    'Unlimited document analysis',
+                    'Up to 3 campus/department profiles',
+                    'Full AI pipeline (4-agent system)',
+                    'Canvas LMS integration',
+                    'Priority email support',
+                    '7-day free trial included'
+                ]
+            },
+            multicampus_monthly: {
+                name: 'A³E Multi-Campus Plan',
+                price: '$897',
+                interval: 'per month',
+                trial: '7-day free trial',
+                features: [
+                    'Everything in College Plan',
+                    'Unlimited campus/department profiles',
+                    'White-label option available',
+                    'API access (10K calls/month)',
+                    'Dedicated success manager',
+                    'Custom integrations',
+                    'Phone support',
+                    '7-day free trial included'
+                ]
+            },
+            multicampus_yearly: {
+                name: 'A³E Multi-Campus Plan (Annual)',
+                price: '$8,073',
+                interval: 'per year',
+                trial: '7-day free trial',
+                savings: '2 months free',
+                features: [
+                    'Everything in Monthly Plan',
+                    '2 months free (annual billing)',
+                    'Unlimited campus/department profiles',
+                    'API access (10K calls/month)',
+                    'Dedicated success manager',
+                    'Custom integrations',
+                    'Phone support',
+                    '7-day free trial included'
+                ]
+            }
+        };
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('Page loaded, selected plan:', selectedPlan);
+            
+            // Initialize Stripe first
+            await initializeStripe();
+            
+            // Then set up the page
+            displayPlanDetails(selectedPlan);
+            setupForms();
+        });
+
+        function displayPlanDetails(plan) {
+            let planConfig = plans[plan];
+            
+            if (!planConfig) {
+                // Fallback to college plan if plan not found
+                planConfig = plans['college'];
+                console.log('Plan not found, using college as fallback');
+            }
+            
+            document.getElementById('planDetails').innerHTML = `
+                <div class="flex justify-between items-center mb-4">
+                    <div>
+                        <h3 class="text-lg font-semibold">${planConfig.name}</h3>
+                        ${planConfig.popular ? '<span class="inline-block bg-blue-500 text-white text-xs px-2 py-1 rounded-full mt-1">Most Popular</span>' : ''}
+                    </div>
+                    <div class="text-right">
+                        <div class="text-2xl font-bold">${planConfig.price}</div>
+                        <div class="text-sm text-gray-600">${planConfig.interval}</div>
+                        ${planConfig.savings ? `<div class="text-xs text-green-600">${planConfig.savings}</div>` : ''}
+                    </div>
+                </div>
+                <div class="text-sm text-blue-600 font-medium mb-2">${planConfig.trial}</div>
+            `;
+
+            const featuresHtml = planConfig.features.map(feature => 
+                `<li class="flex items-center"><span class="text-green-500 mr-2">✓</span>${feature}</li>`
+            ).join('');
+            
+            document.getElementById('planFeatures').innerHTML = featuresHtml;
+        }
+
+        function setupForms() {
+            // Trial form submission
+            document.getElementById('trial-signup-form').addEventListener('submit', handleTrialSignup);
+
+            // If enterprise plan, redirect to contact
+            if (selectedPlan === 'enterprise' || selectedPlan === 'enterprise_monthly') {
+                document.getElementById('trialForm').innerHTML = `
+                    <div class="text-center py-8">
+                        <h3 class="text-xl font-semibold mb-4">Enterprise Plan</h3>
+                        <p class="text-gray-600 mb-6">Contact our sales team for custom pricing and implementation.</p>
+                        <button onclick="contactSales()" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700">
+                            Contact Sales
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        async function handleTrialSignup(e) {
+            e.preventDefault();
+            
+            // Validate password confirmation
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (password !== confirmPassword) {
+                showError('Passwords do not match. Please try again.');
+                return;
+            }
+            
+            if (password.length < 8) {
+                showError('Password must be at least 8 characters long.');
+                return;
+            }
+            
+            const formData = {
+                name: document.getElementById('institutionName').value,
+                institution_name: document.getElementById('institutionName').value,
+                email: document.getElementById('email').value,
+                password: password,
+                role: document.getElementById('role').value,
+                plan: selectedPlan,
+                phone: document.getElementById('phone')?.value || '',
+                newsletter_opt_in: document.getElementById('newsletter')?.checked || false
+            };
+
+            // Show loading state
+            const submitBtn = document.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = 'Creating Account...';
+
+            try {
+                // Create trial account with user registration via API
+                const response = await fetch('https://api.mapmystandards.ai/trial/signup', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    // Store the authentication data
+                    // Store basic trial information
+                    localStorage.setItem("a3e_trial_id", result.trial_id);
+                    localStorage.setItem("a3e_user_email", formData.email);
+                    localStorage.setItem("a3e_plan_type", selectedPlan);
+                    localStorage.setItem("a3e_expires_at", result.expires_at);                    
+                    // Redirect to trial success page
+                    window.location.href = `./trial-success.html?trial_id=${result.trial_id}&plan=${selectedPlan}`;
+                } else {
+                    throw new Error(result.detail || result.message || 'Account creation failed');
+                }
+            } catch (error) {
+                console.error('Trial signup error:', error);
+                showError('Unable to create account. Please try again or contact support@mapmystandards.ai');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
+        }
+
+        function showLoading() {
+            document.getElementById('trialForm').style.display = 'none';
+            document.getElementById('paymentForm').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('success').style.display = 'none';
+        }
+
+        function showSuccess(data) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('success').style.display = 'block';
+
+            document.getElementById('successDetails').innerHTML = `
+                <div class="space-y-2">
+                    <div><strong>API Key:</strong> <code class="bg-gray-200 px-2 py-1 rounded text-xs">${data.api_key}</code></div>
+                    <div><strong>Trial Ends:</strong> ${new Date(data.trial_end).toLocaleDateString()}</div>
+                    <div class="text-sm text-gray-600 mt-4">
+                        Save your API key - you'll need it to access the A³E API. Check your email for setup instructions.
+                    </div>
+                </div>
+            `;
+        }
+
+        function showError(message) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('trialForm').style.display = 'block';
+            
+            // Show error message
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'bg-red-50 border border-red-200 rounded-lg p-4 mb-4';
+            errorDiv.innerHTML = `
+                <div class="flex">
+                    <div class="text-red-600">
+                        <strong>Error:</strong> ${message}
+                    </div>
+                </div>
+            `;
+            
+            const form = document.getElementById('trial-signup-form');
+            form.insertBefore(errorDiv, form.firstChild);
+            
+            // Remove error after 5 seconds
+            setTimeout(() => errorDiv.remove(), 5000);
+        }
+
+        function goToDashboard() {
+            window.location.href = 'https://mapmystandards.ai/dashboard/';
+        }
+
+        function contactSales() {
+            window.location.href = 'https://mapmystandards.ai/contact/';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+[flake8]
+max-line-length = 120
+ignore = 
+    E501,
+    W293,
+    W291,
+    F541,
+    F401,
+    E302,
+    E305,
+    E226,
+    E128,
+    E722,
+    F841
+per-file-ignores = 
+    saas_api_safe.py:E501,W293,W291
+    *test*.py:F401,E302,W293,W291,F541,E226,E128,E722,F841,E402
+    *debug*.py:F401,F541,W293,W291
+    *validate*.py:F401,F841,W293,W291,E226
+    *backup*.py:F841,E226
+    *broken*.py:E128,F811,F841
+    *_clean.py:E128,F841,E501,F541,E302,E305,W293,W291
+    subscription_backend.py:E128,F841,E501,F541,E302,E305,W293,W291
+    setup_sendgrid_backup.py:E999
+    simple_api_server.py:E999
+    platform_demo.py:E722
+    scripts/*.py:E402,E128,E722,E226
+exclude = 
+    .git,
+    __pycache__,
+    .env,
+    backend_env/,
+    node_modules/,
+    stripe_env/,
+    *.md

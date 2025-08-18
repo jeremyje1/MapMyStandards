@@ -1,0 +1,18 @@
+dockerfiles_backup/
+*.dockerfile
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Ignore other API files to ensure only saas_api_safe.py is used
+railway_test_api.py
+simple_trial_api*.py
+minimal_test_api.py
+ultra_minimal_api.py
+working_saas_api.py
+debug_api.py
+platform_demo.py
+test_*.py
+**/test_*.py
+**/tests/
+**/__pycache__/

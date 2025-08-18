@@ -1,0 +1,6 @@
+# MailerSend SMTP configuration for production
+SMTP_SERVER=smtp.mailersend.net
+SMTP_PORT=587
+SMTP_USE_TLS=true
+SMTP_USERNAME=your_mailersend_username
+SMTP_PASSWORD=your_mailersend_password

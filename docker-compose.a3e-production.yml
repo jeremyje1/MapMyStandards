@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  # A³E Enhanced Production Service
+  a3e-enhanced:
+    build:
+      context: .
+      dockerfile: Dockerfile.a3e-enhanced
+    container_name: a3e-enhanced-production
+    ports:
+      - "80:80"
+    environment:
+      - PORT=80
+      - ENVIRONMENT=production
+      - DATABASE_URL=sqlite:///data/a3e_production.db
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./uploads:/app/production_uploads
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - a3e-network
+
+  # Nginx Reverse Proxy (for production SSL termination)
+  nginx:
+    image: nginx:alpine
+    container_name: a3e-nginx
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - a3e-enhanced
+    restart: unless-stopped
+    networks:
+      - a3e-network
+
+  # Backup service for database
+  backup:
+    image: alpine:latest
+    container_name: a3e-backup
+    volumes:
+      - ./data:/data
+      - ./backups:/backups
+    command: |
+      sh -c "
+        while true; do
+          sleep 86400
+          timestamp=$$(date +%Y%m%d_%H%M%S)
+          cp /data/a3e_production.db /backups/a3e_production_$$timestamp.db
+          find /backups -name 'a3e_production_*.db' -mtime +7 -delete
+        done
+      "
+    restart: unless-stopped
+
+networks:
+  a3e-network:
+    driver: bridge
+
+volumes:
+  a3e-data:
+  a3e-logs:
+  a3e-uploads:

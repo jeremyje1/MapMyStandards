@@ -1,0 +1,26 @@
+{
+  "version": 2,
+  "name": "mapmystandards-web",
+  "headers": [
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    }
+  ],
+  "rewrites": [
+    { "source": "/", "destination": "/pricing_clean.html" },
+    { "source": "/pricing", "destination": "/pricing_clean.html" },
+    { "source": "/signup", "destination": "/signup.html" },
+    { "source": "/trial", "destination": "/signup.html" },
+    { "source": "/contact", "destination": "/contact.html" },
+    { "source": "/trial-success", "destination": "/trial-success.html" },
+    { "source": "/status", "destination": "/status.html" }
+  ],
+  "redirects": [
+    { "source": "/login", "destination": "https://api.mapmystandards.ai/login", "permanent": false },
+    { "source": "/dashboard", "destination": "https://api.mapmystandards.ai/dashboard", "permanent": false }
+  ],
+  "cleanUrls": true
+}

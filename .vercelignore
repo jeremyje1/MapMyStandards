@@ -1,0 +1,76 @@
+# Vercel Deployment Ignore File
+
+# Virtual environments - these are too large for deployment
+venv/
+stripe_venv/
+env/
+ENV/
+.venv/
+myenv/
+env.bak/
+venv.bak/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Development files
+.git/
+.gitignore
+README.md
+*.md
+LICENSE*
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test files
+test_*.py
+*_test.py
+tests/
+
+# Documentation
+docs/
+
+# Scripts (deployment scripts not needed)
+scripts/
+
+# Logs
+*.log
+logs/
+
+# Database files (not needed for serverless)
+*.db
+*.sqlite3
+data/audit/
+
+# Backup files
+backups/
+*.backup
+*.bak
+
+# Docker files (not needed for Vercel)
+Dockerfile*
+docker-compose*.yml
+
+# Deployment files (not needed in build)
+deploy*.sh
+*.sh
+
+# Large config files
+config/standards_config.yaml
+
+# Temporary files
+tmp/
+temp/
+.tmp/

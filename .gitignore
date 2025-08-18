@@ -1,0 +1,160 @@
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Performance optimization - Exclude large directories
+stripe_venv/
+venv/
+env/
+node_modules/
+__pycache__/
+.pytest_cache/
+*.pyc
+*.pyo
+*.pyd
+.DS_Store
+
+# Security - Never commit these files
+*password*
+*secret*
+*credential*
+*key*.txt
+*key*.json
+
+# Email test files that might contain credentials
+test_*email*
+test_*smtp*
+test_*auth*
+*email_test*
+*smtp_test*
+mailersend.env
+RAILWAY_EMAIL_ENV_VARS.txt
+*.env
+*_env_vars.txt
+
+# Configuration files that might contain secrets
+config/*.env
+config/*secret*
+config/*password*
+
+# API keys and sensitive configuration
+.env*
+secrets/
+credentials/
+keys/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+stripe_venv/
+.venv/
+myenv/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# Dependency directories
+node_modules/
+
+# Optional npm cache directory
+.npm
+
+# ESLint cache
+.eslintcache
+
+# Database
+*.db
+*.sqlite3
+
+# Uploads and data
+uploads/
+data/
+documents/
+artifacts/
+
+# AWS
+.aws/
+
+# Docker
+.dockerignore
+
+# Pytest
+.pytest_cache/
+.coverage
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# Secrets and keys
+*.pem
+*.key
+secrets/
+config/secrets.yaml
+
+# Backup files
+*.backup
+*.bak
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+.vercel
+mailersend_api.env

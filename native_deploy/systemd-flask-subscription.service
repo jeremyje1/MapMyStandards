@@ -1,0 +1,23 @@
+#[Unit]
+Description=MapMyStandards Flask Subscription Backend (Gunicorn)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/mapmystandards
+Environment=PORT=8001
+Environment=APP_ENV=production
+# Optional: EnvironmentFile=/opt/mapmystandards/env.production
+ExecStartPre=/bin/bash -lc '[ -d flask_env ] || python3 -m venv flask_env'
+ExecStartPre=/bin/bash -lc 'source flask_env/bin/activate && pip install --upgrade pip && pip install -r requirements.txt gunicorn'
+ExecStart=/bin/bash -lc 'source flask_env/bin/activate && exec gunicorn subscription_backend:app -b 0.0.0.0:${PORT} --workers 4 --threads 2 --timeout 90'
+Restart=on-failure
+RestartSec=5
+User=www-data
+Group=www-data
+StandardOutput=append:/opt/mapmystandards/logs/flask.out
+StandardError=append:/opt/mapmystandards/logs/flask.err
+PIDFile=/opt/mapmystandards/logs/flask.pid
+
+[Install]
+WantedBy=multi-user.target

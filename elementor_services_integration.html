@@ -1,0 +1,141 @@
+<!-- MapMyStandards.ai - Services/Pricing Page Integration for Elementor -->
+<!-- Add this to your services/pricing page using Elementor's HTML widget -->
+
+<style>
+.pricing-integration {
+    margin: 2rem 0;
+}
+
+.trial-banner {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 15px;
+    text-align: center;
+    margin: 2rem 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.pricing-card {
+    background: white;
+    border-radius: 15px;
+    padding: 2rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    margin: 1rem;
+    text-align: center;
+    transition: transform 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.pricing-card:hover {
+    transform: translateY(-10px);
+    border-color: #667eea;
+}
+
+.pricing-card.featured {
+    border-color: #667eea;
+    transform: scale(1.05);
+}
+
+.price-amount {
+    font-size: 3rem;
+    font-weight: 700;
+    color: #667eea;
+    margin: 1rem 0;
+}
+
+.trial-cta {
+    display: inline-block;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1rem 2rem;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    margin: 1rem 0;
+    transition: all 0.3s ease;
+}
+
+.feature-list {
+    list-style: none;
+    padding: 0;
+    margin: 2rem 0;
+}
+
+.feature-list li {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #eee;
+}
+
+.feature-list li:before {
+    content: "✅";
+    margin-right: 0.5rem;
+}
+</style>
+
+<div class="pricing-integration">
+    <!-- Trial Banner -->
+    <div class="trial-banner">
+        <h2>🚀 Start Your 7-Day Free Trial</h2>
+        <p>Experience the full power of A³E with instant access - no limitations</p>
+        <a href="https://api.mapmystandards.ai/landing" class="trial-cta" target="_blank">
+            🎯 Launch Free Trial Now
+        </a>
+    </div>
+
+    <!-- Pricing Cards -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin: 3rem 0;">
+        
+        <!-- College Plan -->
+        <div class="pricing-card">
+            <h3>A³E College Plan</h3>
+            <div class="price-amount">$297</div>
+            <p>per month</p>
+            
+            <ul class="feature-list">
+                <li>Up to 3 campus/department profiles</li>
+                <li>Unlimited document analysis</li>
+                <li>Full AI pipeline (4-agent system)</li>
+                <li>Canvas LMS integration</li>
+                <li>7-day free trial</li>
+            </ul>
+            
+            <a href="https://api.mapmystandards.ai/landing" class="trial-cta">🚀 Start Free Trial</a>
+        </div>
+
+        <!-- Multi-Campus Plan (Featured) -->
+        <div class="pricing-card featured">
+            <h3>A³E Multi-Campus</h3>
+            <div class="price-amount">$897</div>
+            <p>per month</p>
+            
+            <ul class="feature-list">
+                <li>Unlimited campus/department profiles</li>
+                <li>Everything in College Plan</li>
+                <li>White-label option available</li>
+                <li>API access (10K calls/month)</li>
+                <li>Dedicated success manager</li>
+            </ul>
+            
+            <a href="https://api.mapmystandards.ai/landing" class="trial-cta">🎯 Get Started</a>
+        </div>
+
+        <!-- Enterprise Plan -->
+        <div class="pricing-card">
+            <h3>Enterprise Solution</h3>
+            <div class="price-amount">Custom</div>
+            <p>tailored pricing</p>
+            
+            <ul class="feature-list">
+                <li>Custom deployment options</li>
+                <li>Unlimited API access</li>
+                <li>24/7 dedicated support</li>
+                <li>Custom development</li>
+                <li>Training and consulting</li>
+            </ul>
+            
+            <a href="https://mapmystandards.ai/contact/" class="trial-cta">💬 Contact Sales</a>
+        </div>
+    </div>
+</div>

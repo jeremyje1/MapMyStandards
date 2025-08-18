@@ -1,0 +1,38 @@
+# MapMyStandards Environment Configuration
+# Copy this file to .env and fill in your actual values
+
+# Stripe Configuration (Get these from your Stripe Dashboard)
+# Format: STRIPE_PUBLISHABLE_KEY starts with pk_live_
+# Format: STRIPE_SECRET_KEY starts with sk_live_
+STRIPE_PUBLISHABLE_KEY=get_from_stripe_dashboard
+STRIPE_SECRET_KEY=get_from_stripe_dashboard
+
+# Stripe Product/Price IDs (created by create_stripe_subscriptions.py)
+MONTHLY_PRICE_ID=price_1RtXF3K8PKpLCKDZJNfi3Rvi
+ANNUAL_PRICE_ID=price_1RtXF3K8PKpLCKDZAMb4rM8U
+
+# Webhook Configuration
+STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret_here
+
+# Application Settings
+TRIAL_PERIOD_DAYS=7
+SUPPORT_EMAIL=support@mapmystandards.ai
+PLATFORM_URL=https://platform.mapmystandards.ai
+BACKEND_URL=https://your-backend-domain.com
+
+# Development Settings
+FLASK_ENV=production
+DEBUG=False
+
+# Email (Postmark) - Do NOT commit real secrets publicly
+POSTMARK_API_TOKEN=your_postmark_server_token_here
+FROM_EMAIL=info@yourdomain.com
+REPLY_TO_EMAIL=info@yourdomain.com
+POSTMARK_MESSAGE_STREAM=outbound  # or a custom transactional stream name
+# Optional SMTP creds if using SMTP for providers requiring it
+POSTMARK_SMTP_USER=your_postmark_smtp_user_optional
+POSTMARK_SMTP_PASS=your_postmark_smtp_pass_optional
+
+# Legacy / Fallback (SendGrid) - keep only if still used
+# SENDGRID_API_KEY=your_sendgrid_api_key_here
+

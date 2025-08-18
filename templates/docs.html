@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A³E - Autonomous Accreditation & Audit Engine</title>
+    <link rel="icon" type="image/png" href="https://fastapi.tiangolo.com/img/favicon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css">
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary-color: #10b981;
+            --accent-color: #f59e0b;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --background: #f8fafc;
+            --card-bg: #ffffff;
+            --border-color: #e5e7eb;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        /* Custom Header */
+        .a3e-header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: var(--shadow);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: between;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+
+        .title-group h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .version-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .badge {
+            background: var(--secondary-color);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        /* Feature Cards */
+        .features-section {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card:nth-child(1) .feature-icon {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+        .feature-card:nth-child(2) .feature-icon {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+        }
+        .feature-card:nth-child(3) .feature-icon {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+        }
+        .feature-card:nth-child(4) .feature-icon {
+            background: linear-gradient(135deg, #43e97b, #38f9d7);
+        }
+
+        .feature-card h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-card p {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+
+        /* Swagger Container */
+        .swagger-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        /* Swagger UI Customizations */
+        .swagger-ui {
+            font-family: 'Inter', sans-serif !important;
+        }
+
+        .swagger-ui .info {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            padding: 2rem;
+            margin: 0;
+        }
+
+        .swagger-ui .info h1 {
+            color: white !important;
+            font-size: 2rem !important;
+            font-weight: 700 !important;
+            margin-bottom: 1rem !important;
+        }
+
+        .swagger-ui .info p {
+            color: rgba(255, 255, 255, 0.9) !important;
+            font-size: 1.1rem !important;
+            line-height: 1.6 !important;
+        }
+
+        .swagger-ui .scheme-container {
+            background: var(--background);
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .swagger-ui .opblock {
+            border-radius: 12px !important;
+            margin-bottom: 1rem !important;
+            box-shadow: var(--shadow) !important;
+            border: 1px solid var(--border-color) !important;
+        }
+
+        .swagger-ui .opblock.opblock-get {
+            border-left: 4px solid var(--secondary-color) !important;
+        }
+
+        .swagger-ui .opblock.opblock-post {
+            border-left: 4px solid var(--accent-color) !important;
+        }
+
+        .swagger-ui .opblock-summary {
+            padding: 1rem 1.5rem !important;
+        }
+
+        .swagger-ui .opblock-summary-method {
+            border-radius: 6px !important;
+            font-weight: 600 !important;
+            min-width: 80px !important;
+        }
+
+        .swagger-ui .opblock-summary-path {
+            font-family: 'JetBrains Mono', 'Monaco', 'Consolas', monospace !important;
+            font-weight: 500 !important;
+        }
+
+        .swagger-ui .opblock-tag {
+            background: var(--background) !important;
+            border-radius: 12px !important;
+            padding: 1rem 1.5rem !important;
+            margin-bottom: 1.5rem !important;
+            border: 1px solid var(--border-color) !important;
+        }
+
+        .swagger-ui .opblock-tag-section h3 {
+            color: var(--text-primary) !important;
+            font-weight: 600 !important;
+            font-size: 1.25rem !important;
+        }
+
+        /* Footer */
+        .a3e-footer {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 2rem;
+            text-align: center;
+            color: var(--text-secondary);
+            backdrop-filter: blur(10px);
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                padding: 0 1rem;
+            }
+            
+            .features-section {
+                padding: 1rem;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .swagger-container {
+                margin: 0 1rem 2rem;
+                border-radius: 12px;
+            }
+        }
+
+        /* Custom animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .feature-card {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .feature-card:nth-child(2) { animation-delay: 0.1s; }
+        .feature-card:nth-child(3) { animation-delay: 0.2s; }
+        .feature-card:nth-child(4) { animation-delay: 0.3s; }
+    </style>
+</head>
+<body>
+    <!-- Custom Header -->
+    <header class="a3e-header">
+        <div class="header-content">
+            <div class="logo-section">
+                <div class="logo">A³E</div>
+                <div class="title-group">
+                    <h1>Autonomous Accreditation & Audit Engine</h1>
+                    <div class="version-badge">
+                        <span>Version 0.1.0</span>
+                        <span class="badge">OAS 3.1</span>
+                        <span class="badge" style="background: var(--accent-color);">LIVE</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Feature Cards -->
+    <section class="features-section">
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🧠</div>
+                <h3>Proprietary Accreditation Ontology</h3>
+                <p>Hierarchical concept framework with 500+ accreditation concepts</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔍</div>
+                <h3>Vector-Weighted Standards Matching</h3>
+                <p>Multi-dimensional similarity algorithm with 512-dimensional embeddings</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🤖</div>
+                <h3>Multi-Agent LLM Pipeline</h3>
+                <p>Four specialized agents (Mapper → GapFinder → Narrator → Verifier)</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📋</div>
+                <h3>Audit-Ready Traceability</h3>
+                <p>Complete immutable trail from evidence to final output</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Swagger UI Container -->
+    <div class="swagger-container">
+        <div id="swagger-ui"></div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="a3e-footer">
+        <div class="footer-content">
+            <p>© 2025 A³E - Autonomous Accreditation & Audit Engine. All rights reserved.</p>
+            <p>Powered by FastAPI • Multi-Accreditor Support • Proprietary AI Intelligence</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+    <script>
+        const ui = SwaggerUIBundle({
+            url: '/openapi.json',
+            dom_id: '#swagger-ui',
+            layout: 'BaseLayout',
+            deepLinking: true,
+            showExtensions: true,
+            showCommonExtensions: true,
+            oauth2RedirectUrl: window.location.origin + '/docs/oauth2-redirect',
+            presets: [
+                SwaggerUIBundle.presets.apis,
+                SwaggerUIBundle.SwaggerUIStandalonePreset
+            ],
+            plugins: [
+                SwaggerUIBundle.plugins.DownloadUrl
+            ],
+            tryItOutEnabled: true,
+            requestInterceptor: (request) => {
+                // Add custom headers or modify requests here
+                return request;
+            },
+            responseInterceptor: (response) => {
+                // Handle responses here
+                return response;
+            }
+        });
+
+        // Custom enhancements
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add custom styling after Swagger UI loads
+            setTimeout(() => {
+                // Remove default Swagger UI header info
+                const info = document.querySelector('.swagger-ui .info');
+                if (info) {
+                    info.style.display = 'none';
+                }
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

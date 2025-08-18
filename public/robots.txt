@@ -1,0 +1,15 @@
+# robots.txt for MapMyStandards A³E Platform
+User-agent: *
+# Allow everything by default
+Allow: /
+
+# Disallow internal API and auth callback paths (if proxied under platform)
+Disallow: /api/
+Disallow: /auth/
+Disallow: /dashboard/internal/
+
+# Explicitly allow important assets
+Allow: /assets/
+Allow: /og/
+
+Sitemap: https://platform.mapmystandards.ai/sitemap.xml

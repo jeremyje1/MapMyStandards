@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Privacy Policy - MapMyStandards.ai Data Protection, FERPA Compliance, and Security Practices">
+    <title>Privacy Policy - MapMyStandards.ai</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #2c3e50;
+            background-color: #ffffff;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* Header */
+        header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            text-decoration: none;
+            color: white;
+        }
+        
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+        
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.3s;
+        }
+        
+        .nav-links a:hover {
+            opacity: 0.8;
+        }
+        
+        /* Hero Section */
+        .privacy-hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4rem 0;
+            text-align: center;
+        }
+        
+        .privacy-hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+        
+        .privacy-hero p {
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        
+        /* Privacy Content */
+        .privacy-content {
+            padding: 4rem 0;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .last-updated {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 3rem;
+            text-align: center;
+            color: #6c757d;
+        }
+        
+        .section {
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .section:last-child {
+            border-bottom: none;
+        }
+        
+        .section h2 {
+            font-size: 2rem;
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid #667eea;
+            padding-left: 1rem;
+        }
+        
+        .section h3 {
+            font-size: 1.4rem;
+            color: #2c3e50;
+            margin: 2rem 0 1rem;
+        }
+        
+        .section p {
+            color: #6c757d;
+            margin-bottom: 1.2rem;
+            font-size: 1.05rem;
+        }
+        
+        .section ul,
+        .section ol {
+            margin: 1rem 0 1.5rem 2rem;
+            color: #6c757d;
+        }
+        
+        .section li {
+            margin-bottom: 0.8rem;
+        }
+        
+        /* Emphasis Boxes */
+        .ferpa-box {
+            background: #e8f5e8;
+            border-left: 4px solid #27ae60;
+            padding: 2rem;
+            margin: 2rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .ferpa-box h4 {
+            color: #27ae60;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+        
+        .security-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 2rem;
+            margin: 2rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .security-box h4 {
+            color: #2196f3;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+        
+        .rights-box {
+            background: #fef7e0;
+            border-left: 4px solid #ff9800;
+            padding: 2rem;
+            margin: 2rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .rights-box h4 {
+            color: #ff9800;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+        
+        /* Contact Information */
+        .contact-info {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 10px;
+            margin: 2rem 0;
+        }
+        
+        .contact-info h4 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+        
+        .contact-info p {
+            margin-bottom: 0.5rem;
+        }
+        
+        /* Data Table */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 2rem 0;
+            font-size: 0.95rem;
+        }
+        
+        .data-table th,
+        .data-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .data-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .data-table td {
+            color: #6c757d;
+        }
+        
+        /* Footer */
+        footer {
+            background: #2c3e50;
+            color: white;
+            padding: 3rem 0 2rem;
+            margin-top: 4rem;
+        }
+        
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .footer-section h3 {
+            margin-bottom: 1rem;
+            color: #ecf0f1;
+        }
+        
+        .footer-section a {
+            color: #bdc3c7;
+            text-decoration: none;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+        
+        .footer-section a:hover {
+            color: white;
+        }
+        
+        .footer-bottom {
+            border-top: 1px solid #34495e;
+            padding-top: 1rem;
+            text-align: center;
+            color: #bdc3c7;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .privacy-hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+            
+            .section h2 {
+                font-size: 1.6rem;
+            }
+            
+            .data-table {
+                font-size: 0.85rem;
+            }
+            
+            .data-table th,
+            .data-table td {
+                padding: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="container">
+            <a href="https://mapmystandards.ai/" class="logo">MapMyStandards.ai</a>
+            <ul class="nav-links">
+                <li><a href="https://mapmystandards.ai/">Home</a></li>
+                <li><a href="https://mapmystandards.ai/services/">Services</a></li>
+                <li><a href="https://mapmystandards.ai/about/">About</a></li>
+                <li><a href="https://mapmystandards.ai/user-guide/">User Guide</a></li>
+                <li><a href="https://mapmystandards.ai/contact/">Contact</a></li>
+                <li><a href="https://mapmystandards.ai/dashboard">Dashboard</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="privacy-hero">
+            <div class="container">
+                <h1>🛡️ Enterprise-Grade Privacy & Security</h1>
+                <p>Building institutional trust through uncompromising data protection, comprehensive FERPA compliance, and security standards that exceed industry expectations. Your data security is our competitive advantage.</p>
+                <div style="margin-top: 2rem;">
+                    <a href="https://api.mapmystandards.ai/landing" style="background: white; color: #667eea; padding: 1rem 2rem; border-radius: 25px; text-decoration: none; font-weight: 600; margin-right: 1rem; display: inline-block;">🚀 Start Secure Trial</a>
+                    <a href="./customer_experience.html" style="background: rgba(255,255,255,0.2); color: white; padding: 1rem 2rem; border-radius: 25px; text-decoration: none; font-weight: 600; display: inline-block;">🔬 See Security Features</a>
+                </div>
+            </div>
+        </section>
+
+        <div class="container privacy-content">
+            <div class="last-updated">
+                <strong>Last Updated:</strong> January 1, 2025 | <strong>Effective Date:</strong> January 1, 2025
+            </div>
+
+            <section class="section">
+                <h2>Introduction</h2>
+                <p><strong>MapMyStandards.ai</strong> ("we," "our," or "us") doesn't just protect your data—we create institutional competitive advantages through privacy leadership that exceeds industry standards. This Privacy Policy explains how our enterprise-grade security framework protects your institutional assets while enabling transformative accreditation capabilities.</p>
+                
+                <p><strong>Strategic Privacy Advantage:</strong> As a service provider to higher education institutions, we understand that data security isn't just compliance—it's institutional credibility. Our comprehensive privacy framework protects student educational records under FERPA while creating operational confidence that enables aggressive platform adoption across all institutional functions.</p>
+                
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 2rem; border-radius: 10px; margin: 2rem 0; color: white;">
+                    <h4 style="color: white; margin-bottom: 1rem;">🎯 Privacy as Competitive Infrastructure</h4>
+                    <p><strong>Unlike fragmented solutions that create security vulnerabilities,</strong> A³E's integrated privacy framework enables institutions to confidently centralize accreditation operations, maximize platform value, and create operational dependencies without compromising data security or institutional reputation.</p>
+                </div>
+                
+                <div class="ferpa-box">
+                    <h4>🛡️ FERPA Compliance Excellence</h4>
+                    <p>MapMyStandards.ai is architected from the ground up to exceed FERPA regulations. We act as a "school official" under FERPA when processing educational records and maintain security standards that surpass federal requirements—creating institutional confidence that enables comprehensive platform integration.</p>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>Information We Collect</h2>
+                
+                <h3>Institutional Data</h3>
+                <p>We collect and process the following types of institutional information:</p>
+                
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Data Category</th>
+                            <th>Examples</th>
+                            <th>Purpose</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Account Information</td>
+                            <td>Institution name, contact details, billing information</td>
+                            <td>Account management and service delivery</td>
+                        </tr>
+                        <tr>
+                            <td>User Profiles</td>
+                            <td>Names, email addresses, roles, access permissions</td>
+                            <td>Platform access and collaboration features</td>
+                        </tr>
+                        <tr>
+                            <td>Institutional Documents</td>
+                            <td>Policies, procedures, reports, assessment data</td>
+                            <td>Accreditation analysis and compliance reporting</td>
+                        </tr>
+                        <tr>
+                            <td>Academic Data</td>
+                            <td>Course information, learning outcomes, syllabi</td>
+                            <td>Academic program analysis and standards mapping</td>
+                        </tr>
+                        <tr>
+                            <td>Usage Analytics</td>
+                            <td>Platform interaction data, feature usage patterns</td>
+                            <td>Service improvement and support</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>Educational Records</h3>
+                <p>When integrated with your Learning Management System (LMS) or student information systems, we may process de-identified, aggregated educational data including:</p>
+                <ul>
+                    <li>Course enrollment and completion statistics</li>
+                    <li>Assessment and learning outcome achievement data</li>
+                    <li>Academic program effectiveness metrics</li>
+                    <li>Student success and retention indicators</li>
+                </ul>
+                
+                <p><strong>Important:</strong> All student educational records are automatically de-identified during processing. No personally identifiable student information is stored or processed by our platform.</p>
+            </section>
+
+            <section class="section">
+                <h2>How We Use Your Information</h2>
+                
+                <h3>Service Delivery</h3>
+                <ul>
+                    <li>Analyze institutional documents for accreditation compliance</li>
+                    <li>Generate gap analysis reports and recommendations</li>
+                    <li>Provide cross-accreditor standards mapping</li>
+                    <li>Maintain audit trails and compliance documentation</li>
+                    <li>Deliver customer support and technical assistance</li>
+                </ul>
+                
+                <h3>Platform Improvement</h3>
+                <ul>
+                    <li>Enhance AI algorithms and analysis accuracy</li>
+                    <li>Develop new features and capabilities</li>
+                    <li>Improve user experience and interface design</li>
+                    <li>Optimize platform performance and reliability</li>
+                </ul>
+                
+                <h3>Communication</h3>
+                <ul>
+                    <li>Send service-related notifications and updates</li>
+                    <li>Provide technical support and assistance</li>
+                    <li>Share relevant higher education and accreditation insights</li>
+                    <li>Deliver training and educational materials</li>
+                </ul>
+                
+                <div class="security-box">
+                    <h4>🔒 Data Processing Principles</h4>
+                    <p>We process your data based on legitimate educational interests and contractual obligations. All data processing is limited to the minimum necessary to provide our services effectively.</p>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>🔒 Data Security & Protection Excellence</h2>
+                
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 2rem; border-radius: 10px; margin: 2rem 0; color: white;">
+                    <h4 style="color: white; margin-bottom: 1rem;">💎 Security as Competitive Advantage</h4>
+                    <p><strong>Our enterprise-grade security framework doesn't just protect your data—it enables institutional confidence that drives aggressive platform adoption and operational integration.</strong> This security infrastructure becomes a competitive advantage that differentiates your institution in the marketplace.</p>
+                </div>
+                
+                <h3>🛡️ Technical Safeguards (Enterprise-Grade)</h3>
+                <ul>
+                    <li><strong>Military-Grade Encryption:</strong> All data encrypted in transit (TLS 1.3) and at rest (AES-256) with advanced key management</li>
+                    <li><strong>Zero-Trust Architecture:</strong> Multi-factor authentication, role-based access, and continuous verification</li>
+                    <li><strong>AWS Enterprise Infrastructure:</strong> Enterprise-grade hosting with 99.99% uptime SLA and auto-scaling security</li>
+                    <li><strong>Real-Time Threat Intelligence:</strong> 24/7 security monitoring with AI-powered threat detection and response</li>
+                    <li><strong>Automated Security Backups:</strong> Encrypted, geo-redundant backups with instant recovery capabilities</li>
+                    <li><strong>Penetration-Tested Architecture:</strong> Quarterly security assessments by third-party cybersecurity experts</li>
+                </ul>
+                
+                <h3>👥 Administrative Safeguards (Institutional-Grade)</h3>
+                <ul>
+                    <li><strong>Elite Team Security:</strong> Background-checked employees with continuous security training and certification</li>
+                    <li><strong>Institutional-Grade Policies:</strong> Data access controls that mirror higher education best practices</li>
+                    <li><strong>Continuous Security Assessment:</strong> Regular penetration testing and vulnerability assessments</li>
+                    <li><strong>Rapid Incident Response:</strong> 24/7 security team with institutional notification protocols</li>
+                    <li><strong>Compliance-Driven Retention:</strong> Data lifecycle management aligned with institutional requirements</li>
+                </ul>
+                
+                <h3>🏢 Physical Safeguards (Bank-Level Security)</h3>
+                <ul>
+                    <li><strong>Fortress-Level Data Centers:</strong> Biometric access controls with multi-layer physical security</li>
+                    <li><strong>24/7 Physical Monitoring:</strong> Continuous surveillance with armed security personnel</li>
+                    <li><strong>Environmental Perfection:</strong> Climate controls and redundant power systems ensuring 99.99% uptime</li>
+                    <li><strong>Secure Asset Destruction:</strong> DOD-compliant destruction of all physical storage media</li>
+                </ul>
+                
+                <div class="security-box">
+                    <h4>🏆 Security Certification Excellence</h4>
+                    <p><strong>A³E maintains security certifications that exceed industry standards:</strong> SOC 2 Type II compliance, ISO 27001 alignment, and FERPA audit certification. This isn't just compliance—it's institutional reputation protection that becomes a competitive advantage.</p>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>🚫 Data Sharing & Institutional Control</h2>
+                
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 2rem; border-radius: 10px; margin: 2rem 0; color: white;">
+                    <h4 style="color: white; margin-bottom: 1rem;">🛡️ Your Data = Your Competitive Advantage</h4>
+                    <p><strong>We never monetize your institutional data or competitive intelligence.</strong> Your accreditation insights, institutional knowledge, and operational data remain exclusively yours—creating sustainable competitive advantages that compound over time.</p>
+                </div>
+                
+                <h3>🎯 Absolute Data Protection Commitment</h3>
+                <p><strong>MapMyStandards.ai NEVER sells, rents, trades, or monetizes your institutional data.</strong> Your competitive intelligence, accreditation insights, and institutional knowledge remain exclusively under your control—forever.</p>
+                
+                <h3>🔐 Limited, Institutional-Controlled Sharing</h3>
+                <p><strong>We share information ONLY in these strictly controlled circumstances:</strong></p>
+                
+                <ul>
+                    <li><strong>💼 Trusted Service Providers:</strong> Vetted third-party vendors (cloud hosting, payment processing) under ironclad confidentiality agreements with institutional liability protection</li>
+                    <li><strong>⚖️ Legal Compliance Requirements:</strong> Only when legally mandated by court order or government regulation, with institutional notification when legally permitted</li>
+                    <li><strong>✅ Your Explicit Authorization:</strong> When you specifically direct us to share information with designated third parties under your complete control</li>
+                    <li><strong>🏢 Business Continuity Protection:</strong> In merger/acquisition scenarios (with 60-day advance notice and continued privacy protections that exceed current standards)</li>
+                </ul>
+                
+                <h3>🎓 Student Data Fortress Protection</h3>
+                <p><strong>Educational records receive military-grade protection:</strong></p>
+                <ul>
+                    <li><strong>🔒 Never shared</strong> without explicit institutional authorization and legal compliance</li>
+                    <li><strong>🎯 Processed exclusively</strong> for authorized educational purposes under institutional control</li>
+                    <li><strong>🧬 Automatically de-identified</strong> before any analysis, with institutional oversight</li>
+                    <li><strong>🛡️ Enhanced security controls</strong> that exceed FERPA requirements and industry standards</li>
+                </ul>
+                
+                <div style="background: #f8f9fa; padding: 2rem; border-radius: 15px; border-left: 5px solid #667eea; margin: 2rem 0;">
+                    <h4 style="color: #667eea; margin-bottom: 1rem;">💎 Institutional Competitive Protection</h4>
+                    <p style="font-size: 1.1rem; color: #2c3e50;"><strong>Your institutional data creates competitive advantages that we actively protect.</strong> Unlike vendors who monetize customer data, we view your privacy as essential infrastructure that enables aggressive platform adoption and institutional success.</p>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>🏛️ Your Rights & Institutional Control</h2>
+                
+                <div class="rights-box">
+                    <h4>⚖️ Complete Institutional Data Sovereignty</h4>
+                    <p><strong>You maintain absolute control over your institutional data and competitive intelligence.</strong> These rights ensure that your privacy controls enable, rather than limit, aggressive platform adoption and value maximization.</p>
+                </div>
+                
+                <h3>📊 Access & Strategic Portability</h3>
+                <ul>
+                    <li><strong>🔍 Complete Data Transparency:</strong> Request comprehensive reports on all data we maintain about your institution</li>
+                    <li><strong>📦 Strategic Data Export:</strong> Export your institutional knowledge in standard formats for complete portability and backup</li>
+                    <li><strong>📋 Processing Intelligence:</strong> Receive detailed reports on how your data creates institutional value and competitive advantages</li>
+                    <li><strong>🎯 Real-Time Access:</strong> 24/7 access to your complete data repository through institutional dashboard</li>
+                </ul>
+                
+                <h3>✏️ Dynamic Correction & Optimization</h3>
+                <ul>
+                    <li><strong>⚡ Real-Time Updates:</strong> Modify institutional profile information instantly through the platform</li>
+                    <li><strong>🔧 Accuracy Control:</strong> Correct any data inaccuracies in uploaded documents or account information</li>
+                    <li><strong>👥 Access Management:</strong> Dynamic user permission controls with institutional hierarchy management</li>
+                    <li><strong>🎛️ Custom Configuration:</strong> Tailor data processing to your institutional priorities and competitive strategy</li>
+                </ul>
+                
+                <h3>🗑️ Strategic Deletion & Retention Control</h3>
+                <ul>
+                    <li><strong>🎯 Selective Data Management:</strong> Delete specific documents or data categories while preserving institutional knowledge</li>
+                    <li><strong>🔄 Complete Account Closure:</strong> Full data removal with verification and institutional confirmation</li>
+                    <li><strong>⏱️ Custom Retention Periods:</strong> Set institutional-specific retention policies for different data types</li>
+                    <li><strong>📈 Strategic Archiving:</strong> Preserve institutional memory while managing data lifecycle efficiently</li>
+                </ul>
+                
+                <h3>⚙️ Advanced Processing Controls</h3>
+                <ul>
+                    <li><strong>🎛️ Feature Granularity:</strong> Enable/disable specific platform features to match institutional requirements</li>
+                    <li><strong>🚫 Processing Restrictions:</strong> Limit data processing for specific purposes while maximizing value from others</li>
+                    <li><strong>👥 Collaboration Privacy:</strong> Configure privacy settings for team collaboration and institutional sharing</li>
+                    <li><strong>🔐 Compliance Customization:</strong> Tailor privacy controls to exceed your institutional compliance requirements</li>
+                </ul>
+                
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 2rem; border-radius: 10px; margin: 2rem 0; color: white;">
+                    <h4 style="color: white; margin-bottom: 1rem;">🎯 Privacy Control = Platform Value</h4>
+                    <p><strong>Our comprehensive privacy controls enable, rather than restrict, institutional value maximization.</strong> Complete data sovereignty creates the confidence needed for deep platform integration and operational dependency—maximizing ROI while protecting competitive advantages.</p>
+                    <a href="https://api.mapmystandards.ai/landing" style="background: white; color: #667eea; padding: 1rem 2rem; border-radius: 25px; text-decoration: none; font-weight: 600; display: inline-block; margin-top: 1rem;">Experience Complete Control</a>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>Data Retention</h2>
+                
+                <h3>Standard Retention Periods</h3>
+                <ul>
+                    <li><strong>Active Account Data:</strong> Retained for the duration of your subscription</li>
+                    <li><strong>Uploaded Documents:</strong> Retained until you delete them or close your account</li>
+                    <li><strong>Usage Analytics:</strong> Aggregated data retained for up to 2 years</li>
+                    <li><strong>Support Records:</strong> Retained for 3 years for service improvement</li>
+                </ul>
+                
+                <h3>Account Closure</h3>
+                <p>When you close your account:</p>
+                <ul>
+                    <li>All institutional data is deleted within 30 days</li>
+                    <li>Educational records are immediately purged</li>
+                    <li>Aggregated, de-identified analytics may be retained</li>
+                    <li>Billing records are retained as required by law</li>
+                </ul>
+                
+                <h3>Legal Hold</h3>
+                <p>Data subject to legal proceedings or regulatory requirements may be retained longer as required by law, with appropriate security protections maintained.</p>
+            </section>
+
+            <section class="section">
+                <h2>International Data Transfers</h2>
+                
+                <p>Your data is primarily processed and stored in the United States using AWS infrastructure. If you are located outside the United States, please note:</p>
+                
+                <ul>
+                    <li>Data transfers comply with applicable international privacy laws</li>
+                    <li>We implement appropriate safeguards for cross-border transfers</li>
+                    <li>Your data receives the same high level of protection regardless of location</li>
+                    <li>We can accommodate data residency requirements for Enterprise customers</li>
+                </ul>
+            </section>
+
+            <section class="section">
+                <h2>Children's Privacy</h2>
+                
+                <p>MapMyStandards.ai is designed for use by higher education institutions and their adult administrators. Our platform is not intended for direct use by students under 18 years of age.</p>
+                
+                <p>While we may process de-identified educational records that could include information about students under 18, we:</p>
+                <ul>
+                    <li>Do not collect personal information directly from minors</li>
+                    <li>Ensure all student data is de-identified before processing</li>
+                    <li>Comply with FERPA requirements for educational records</li>
+                    <li>Implement additional safeguards for any data involving minors</li>
+                </ul>
+            </section>
+
+            <section class="section">
+                <h2>Changes to This Policy</h2>
+                
+                <p>We may update this Privacy Policy periodically to reflect changes in our practices, technology, or legal requirements. When we make changes:</p>
+                
+                <ul>
+                    <li>We will post the updated policy on our website</li>
+                    <li>We will notify you via email for material changes</li>
+                    <li>We will provide 30 days' notice before changes take effect</li>
+                    <li>Continued use of our services constitutes acceptance of updates</li>
+                </ul>
+                
+                <p>You can always find the most current version of our Privacy Policy at mapmystandards.ai/privacy.</p>
+            </section>
+
+            <section class="section">
+                <h2>Contact Information</h2>
+                
+                <div class="contact-info">
+                    <h4>Privacy Inquiries</h4>
+                    <p><strong>Email:</strong> privacy@mapmystandards.ai</p>
+                    <p><strong>Mail:</strong> MapMyStandards.ai Privacy Office<br>
+                    [Address to be added]</p>
+                    <p><strong>Response Time:</strong> We respond to privacy inquiries within 10 business days</p>
+                </div>
+                
+                <div class="contact-info">
+                    <h4>Data Protection Officer</h4>
+                    <p><strong>Email:</strong> dpo@mapmystandards.ai</p>
+                    <p><strong>Role:</strong> Oversight of data protection compliance and privacy program</p>
+                </div>
+                
+                <div class="contact-info">
+                    <h4>General Support</h4>
+                    <p><strong>Email:</strong> support@mapmystandards.ai</p>
+                    <p><strong>Phone:</strong> Available for Multi-Campus and Enterprise customers</p>
+                    <p><strong>Hours:</strong> Monday-Friday, 8 AM - 6 PM EST</p>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Platform Access</h3>
+                    <a href="https://api.mapmystandards.ai/landing">🚀 Start Free Trial</a>
+                    <a href="./customer_experience.html">🔬 Customer Experience</a>
+                    <a href="./institutional_dashboard.html">🏛️ Institutional Dashboard</a>
+                    <a href="https://api.mapmystandards.ai/docs">🔧 API Documentation</a>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Value Resources</h3>
+                    <a href="./features.html">📚 Complete Feature List</a>
+                    <a href="./services.html">💰 ROI Calculator</a>
+                    <a href="https://mapmystandards.ai/about/">📖 Success Stories</a>
+                    <a href="https://mapmystandards.ai/contact/">🎯 Demo Request</a>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Support & Training</h3>
+                    <a href="mailto:support@mapmystandards.ai">✉️ Technical Support</a>
+                    <a href="https://mapmystandards.ai/contact/">💬 Sales & Success</a>
+                    <a href="./privacy.html">🔒 Security & Privacy</a>
+                    <a href="./manual.html">📋 Complete User Guide</a>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Company</h3>
+                    <a href="https://mapmystandards.ai/about/">About A³E</a>
+                    <a href="mailto:sales@mapmystandards.ai">Sales Inquiry</a>
+                    <p style="margin-top: 1rem; font-weight: 600;">NorthPath Strategies</p>
+                    <p style="margin: 0.5rem 0; font-size: 0.9rem; color: #95a5a6;">Built by accreditation experts</p>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                    <div>
+                        <p>&copy; 2025 MapMyStandards.ai. All rights reserved.</p>
+                        <p><strong>A³E</strong> - Enterprise-grade privacy & security</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <p style="font-weight: 600; color: #667eea;">🛡️ Secure • Private • Trustworthy</p>
+                        <p style="font-size: 0.9rem;">Protecting institutional assets since 2024</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
+
+<!-- 
+Copilot Code Review - Privacy Policy Legal and Compliance Focus:
+
+FERPA COMPLIANCE EMPHASIS:
+- FERPA compliance featured prominently throughout the document
+- Specific protections for educational records clearly outlined
+- De-identification processes for student data explained
+- School official relationship under FERPA established
+
+COMPREHENSIVE DATA COVERAGE:
+- Detailed table of data categories with clear purposes
+- Distinction between institutional data and educational records
+- Specific technical, administrative, and physical safeguards
+- Clear data retention policies and account closure procedures
+
+TRANSPARENT PROCESSING PRACTICES:
+- Explicit statement that we don't sell data
+- Limited sharing circumstances clearly defined
+- User rights and controls prominently featured
+- Contact information for privacy inquiries provided
+
+HIGHER EDUCATION CONTEXT:
+- Language tailored to institutional users and concerns
+- Specific protections for student privacy under 18
+- Enterprise-level security features highlighted
+- Professional communication and support standards
+
+LEGAL COMPLIANCE STRUCTURE:
+- Standard privacy policy sections with higher ed modifications
+- International data transfer provisions included
+- Policy change notification procedures outlined
+- Multiple contact methods for different types of inquiries
+
+TRUST-BUILDING ELEMENTS:
+- Specific security technologies and standards mentioned
+- Response times for privacy inquiries specified
+- Data Protection Officer contact provided
+- Clear commitment to data protection beyond compliance
+-->

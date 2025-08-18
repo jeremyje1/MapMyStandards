@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - A³E | MapMyStandards.ai</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind (built) -->
+    <link rel="stylesheet" href="/assets/styles.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-bg {
+            background: linear-gradient(135deg, rgba(30, 60, 114, 0.95) 0%, rgba(42, 82, 152, 0.95) 100%);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-6">
+                <div class="flex items-center">
+                    <img src="https://mapmystandards.ai/wp-content/uploads/2025/07/Original-Logo.png" alt="MapMyStandards.ai" class="h-12 w-auto mr-3">
+                    <span class="text-xl font-bold text-gray-900">MapMyStandards.ai</span>
+                </div>
+                <a href="https://mapmystandards.ai/" class="text-gray-600 hover:text-gray-900">← Back to Home</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="min-h-screen flex items-center justify-center py-12 px-4">
+        <div class="max-w-md w-full space-y-8">
+            <div class="text-center">
+                <h2 class="text-3xl font-extrabold text-gray-900">Sign In to A³E</h2>
+                <p class="mt-2 text-sm text-gray-600">Access your accreditation management platform</p>
+            </div>
+            
+            <div class="bg-white rounded-2xl shadow-sm p-8">
+                <!-- Login Options -->
+                <div class="space-y-4">
+                    <!-- Trial Access -->
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                        <h3 class="text-lg font-semibold text-blue-900 mb-2">Trial Access</h3>
+                        <p class="text-sm text-blue-700 mb-4">Access your 7-day free trial with your trial ID</p>
+                        
+                        <form id="trial-access-form" class="space-y-4">
+                            <div>
+                                <label for="trialId" class="block text-sm font-medium text-gray-700 mb-1">Trial ID</label>
+                                <input id="trialId" type="text" required 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                       placeholder="Enter your trial ID">
+                                <p class="mt-1 text-xs text-gray-500">Find this in your trial confirmation email</p>
+                            </div>
+                            <button type="submit" id="trial-access-btn" 
+                                    class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700">
+                                Access Trial Dashboard
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Customer Login -->
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Customer Login</h3>
+                        <p class="text-sm text-gray-600 mb-4">For paying customers with email/password accounts</p>
+                        
+                        <form id="customer-login-form" class="space-y-4">
+                            <div>
+                                <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email address</label>
+                                <input type="email" id="email" name="email" required 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                       placeholder="Enter your email">
+                            </div>
+                            <div>
+                                <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                                <input type="password" id="password" name="password" required 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                       placeholder="Enter your password">
+                            </div>
+                            
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="remember" name="remember" class="mr-2">
+                                    <label for="remember" class="text-sm text-gray-600">Remember me</label>
+                                </div>
+                                <button type="button" onclick="showPasswordReset()" class="text-sm text-blue-600 hover:text-blue-700">
+                                    Forgot password?
+                                </button>
+                            </div>
+
+                            <button type="submit" id="login-btn" 
+                                    class="w-full bg-gray-600 text-white py-2 rounded-lg font-semibold hover:bg-gray-700">
+                                Sign In
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Password Reset Form (Hidden) -->
+                    <div id="password-reset-section" class="bg-yellow-50 border border-yellow-200 rounded-lg p-6" style="display: none;">
+                        <h3 class="text-lg font-semibold text-yellow-900 mb-2">Reset Password</h3>
+                        <p class="text-sm text-yellow-700 mb-4">Enter your email to receive reset instructions</p>
+                        
+                        <form id="password-reset-form" class="space-y-4">
+                            <div>
+                                <label for="resetEmail" class="block text-sm font-medium text-gray-700 mb-1">Email address</label>
+                                <input type="email" id="resetEmail" name="resetEmail" required 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div class="flex space-x-3">
+                                <button type="submit" id="reset-btn" 
+                                        class="flex-1 bg-yellow-600 text-white py-2 rounded-lg font-semibold hover:bg-yellow-700">
+                                    Send Reset Link
+                                </button>
+                                <button type="button" onclick="hidePasswordReset()" 
+                                        class="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg font-semibold hover:bg-gray-400">
+                                    Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Message Display -->
+                <div id="message" class="mt-4" style="display: none;"></div>
+
+                <!-- Sign Up Link -->
+                <div class="mt-8 pt-6 border-t border-gray-200">
+                    <div class="text-center text-sm text-gray-600">
+                        Don't have an account? 
+                        <a href="https://api.mapmystandards.ai/landing" class="text-blue-600 hover:text-blue-700 font-medium">
+                            Start free trial
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize form handlers
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('trial-access-form').addEventListener('submit', handleTrialAccess);
+            document.getElementById('customer-login-form').addEventListener('submit', handleCustomerLogin);
+            document.getElementById('password-reset-form').addEventListener('submit', handlePasswordReset);
+            
+            // Check for saved trial
+            checkSavedTrial();
+        });
+
+        function checkSavedTrial() {
+            const savedTrialId = localStorage.getItem('a3e_trial_id');
+            if (savedTrialId) {
+                document.getElementById('trialId').value = savedTrialId;
+                document.getElementById('trialId').style.backgroundColor = '#f0fdf4';
+            }
+        }
+
+        async function handleTrialAccess(e) {
+            e.preventDefault();
+            const trialId = document.getElementById('trialId').value.trim();
+            const accessBtn = document.getElementById('trial-access-btn');
+            
+            if (!trialId) {
+                showMessage('Please enter a trial ID', 'error');
+                return;
+            }
+            
+            accessBtn.disabled = true;
+            accessBtn.innerHTML = 'Checking...';
+            
+            try {
+                // Validate trial ID format
+                const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+                if (!uuidRegex.test(trialId)) {
+                    throw new Error('Invalid trial ID format. Please check and try again.');
+                }
+                
+                // Check if trial exists and is valid
+                const response = await fetch(`https://api.mapmystandards.ai/dashboard/${trialId}`);
+                
+                if (response.ok) {
+                    localStorage.setItem('a3e_trial_id', trialId);
+                    localStorage.setItem('a3e_user_type', 'trial');
+                    window.location.href = `https://api.mapmystandards.ai/dashboard/${trialId}`;
+                } else if (response.status === 404) {
+                    throw new Error('Trial not found. Please check your trial ID or start a new trial.');
+                } else {
+                    throw new Error('Unable to access trial. Please try again or contact support.');
+                }
+                
+            } catch (error) {
+                showMessage(error.message, 'error');
+                accessBtn.disabled = false;
+                accessBtn.innerHTML = 'Access Trial Dashboard';
+            }
+        }
+
+        async function handleCustomerLogin(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const remember = document.getElementById('remember').checked;
+
+            const loginBtn = document.getElementById('login-btn');
+            const originalText = loginBtn.innerHTML;
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = 'Signing in...';
+
+            try {
+                const response = await fetch('https://api.mapmystandards.ai/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password, remember })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    // Store authentication data
+                    localStorage.setItem('a3e_api_key', result.data.api_key);
+                    localStorage.setItem('a3e_user_email', email);
+                    localStorage.setItem('a3e_user_type', 'customer');
+                    localStorage.setItem('a3e_plan_type', result.data.plan);
+                    localStorage.setItem('a3e_customer_id', result.data.customer_id);
+                    
+                    if (remember) {
+                        localStorage.setItem('a3e_remember_login', 'true');
+                    }
+
+                    showMessage('Login successful! Redirecting...', 'success');
+                    
+                    // Redirect to dashboard
+                    setTimeout(() => {
+                        window.location.href = 'https://mapmystandards.ai/dashboard';
+                    }, 1000);
+                } else {
+                    throw new Error(result.message || 'Login failed');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showMessage(error.message || 'Login service temporarily unavailable. Please try trial access or contact support.', 'error');
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = originalText;
+            }
+        }
+
+        async function handlePasswordReset(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('resetEmail').value;
+            const resetBtn = document.getElementById('reset-btn');
+            const originalText = resetBtn.innerHTML;
+            resetBtn.disabled = true;
+            resetBtn.innerHTML = 'Sending...';
+
+            try {
+                const response = await fetch('https://api.mapmystandards.ai/auth/password-reset', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    showMessage('Password reset link sent to your email', 'success');
+                    hidePasswordReset();
+                } else {
+                    throw new Error(result.message || 'Password reset failed');
+                }
+            } catch (error) {
+                console.error('Password reset error:', error);
+                showMessage(error.message || 'Password reset service temporarily unavailable. Please contact support.', 'error');
+                resetBtn.disabled = false;
+                resetBtn.innerHTML = originalText;
+            }
+        }
+
+        function showPasswordReset() {
+            document.getElementById('password-reset-section').style.display = 'block';
+            document.getElementById('resetEmail').focus();
+        }
+
+        function hidePasswordReset() {
+            document.getElementById('password-reset-section').style.display = 'none';
+            document.getElementById('password-reset-form').reset();
+        }
+
+        function showMessage(text, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.className = `p-4 rounded-lg text-sm ${type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`;
+            messageDiv.textContent = text;
+            messageDiv.style.display = 'block';
+            
+            // Hide message after 5 seconds
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

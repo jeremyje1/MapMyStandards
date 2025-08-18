@@ -1,0 +1,8 @@
+# Force deployment Sat Aug  2 10:29:21 CDT 2025
+Mon Aug 11 12:41:57 CDT 2025: MailerSend configuration updated - triggering backend redeploy
+Mon Aug 11 13:54:15 CDT 2025: Force redeploy after API field structure fixes
+Mon Aug 11 14:03:26 CDT 2025: Add explicit plan validation
+Mon Aug 11 14:05:48 CDT 2025: Fix hash_password function definition
+Mon Aug 11 14:08:39 CDT 2025: Fix passlib imports and hash_password availability
+Mon Aug 11 14:46:02 CDT 2025: Add full features - upload, reports, email status, notifications
+Mon Aug 11 14:56:08 CDT 2025: Configure MailerSend SMTP with trial account handling

@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - A³E | MapMyStandards.ai</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind (built) -->
+    <link rel="stylesheet" href="/assets/styles.css">
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        
+        /* Custom header styling to match homepage */
+        .login-header {
+            background: 
+                linear-gradient(135deg, rgba(30, 60, 114, 0.95) 0%, rgba(42, 82, 152, 0.95) 100%),
+                url('https://mapmystandards.ai/wp-content/uploads/2025/07/Original-Logo.png');
+            background-size: 120px auto, auto;
+            background-repeat: repeat, no-repeat;
+            background-position: center, right 20px center;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="login-header text-white shadow-sm border-b border-blue-600">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-6 relative z-10">
+                <div class="flex items-center space-x-4">
+                    <a href="https://mapmystandards.ai/" class="flex items-center">
+                        <img src="https://mapmystandards.ai/wp-content/uploads/2025/07/Original-Logo.png" alt="MapMyStandards.ai" class="h-14 w-auto filter brightness-110 contrast-110">
+                    </a>
+                    <div class="border-l border-white border-opacity-30 pl-4 ml-4">
+                        <h1 class="text-lg font-semibold">Login to A³E</h1>
+                        <p class="text-sm text-blue-100">Access your dashboard</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="https://mapmystandards.ai/" class="text-blue-100 hover:text-white transition-colors">← Back to Home</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-md w-full space-y-8">
+            <div class="text-center">
+                <h2 class="text-3xl font-bold text-gray-900 mb-2">Welcome back</h2>
+                <p class="text-gray-600">Sign in to your A³E account</p>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm p-8">
+                <!-- Login Form -->
+                <form id="loginForm" class="space-y-6">
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email address</label>
+                        <input type="email" id="email" name="email" required 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               placeholder="Enter your email">
+                    </div>
+
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                        <input type="password" id="password" name="password" required 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               placeholder="Enter your password">
+                    </div>
+
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <input type="checkbox" id="remember" name="remember" class="mr-2">
+                            <label for="remember" class="text-sm text-gray-600">Remember me</label>
+                        </div>
+                        <a href="#" onclick="showForgotPassword()" class="text-sm text-blue-600 hover:text-blue-700">
+                            Forgot password?
+                        </a>
+                    </div>
+
+                    <button type="submit" id="loginBtn" 
+                            class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                        Sign In
+                    </button>
+                </form>
+
+                <!-- Forgot Password Form (Hidden initially) -->
+                <form id="forgotPasswordForm" class="space-y-6" style="display: none;">
+                    <div class="text-center mb-6">
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">Reset your password</h3>
+                        <p class="text-sm text-gray-600">Enter your email and we'll send you a reset link</p>
+                    </div>
+
+                    <div>
+                        <label for="resetEmail" class="block text-sm font-medium text-gray-700 mb-1">Email address</label>
+                        <input type="email" id="resetEmail" name="resetEmail" required 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               placeholder="Enter your email">
+                    </div>
+
+                    <button type="submit" id="resetBtn" 
+                            class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                        Send Reset Link
+                    </button>
+
+                    <button type="button" onclick="showLogin()" 
+                            class="w-full text-gray-600 hover:text-gray-800 py-2">
+                        ← Back to login
+                    </button>
+                </form>
+
+                <!-- Error/Success Messages -->
+                <div id="message" class="mt-4" style="display: none;"></div>
+
+                <!-- Divider -->
+                <div class="mt-8 pt-6 border-t border-gray-200">
+                    <div class="text-center text-sm text-gray-600">
+                        Don't have an account? 
+                        <a href="https://api.mapmystandards.ai/landing" class="text-blue-600 hover:text-blue-700 font-medium">
+                            Start free trial
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Form handling
+        document.getElementById('loginForm').addEventListener('submit', handleLogin);
+        document.getElementById('forgotPasswordForm').addEventListener('submit', handlePasswordReset);
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const remember = document.getElementById('remember').checked;
+
+            const loginBtn = document.getElementById('loginBtn');
+            const originalText = loginBtn.innerHTML;
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = 'Signing in...';
+
+            try {
+                const response = await fetch('https://api.mapmystandards.ai/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password, remember })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    // Store authentication data
+                    localStorage.setItem('a3e_api_key', result.data.api_key);
+                    localStorage.setItem('a3e_user_email', email);
+                    localStorage.setItem('a3e_plan_type', result.data.plan);
+                    localStorage.setItem('a3e_customer_id', result.data.customer_id);
+                    localStorage.setItem('a3e_subscription_id', result.data.subscription_id);
+                    
+                    if (remember) {
+                        localStorage.setItem('a3e_remember_login', 'true');
+                    }
+
+                    showMessage('Login successful! Redirecting to dashboard...', 'success');
+                    
+                    // Redirect to dashboard
+                    setTimeout(() => {
+                        window.location.href = './dashboard.html';
+                    }, 1000);
+                } else {
+                    throw new Error(result.message || 'Login failed');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showMessage(error.message || 'Login failed. Please check your credentials.', 'error');
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = originalText;
+            }
+        }
+
+        async function handlePasswordReset(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('resetEmail').value;
+            const resetBtn = document.getElementById('resetBtn');
+            const originalText = resetBtn.innerHTML;
+            resetBtn.disabled = true;
+            resetBtn.innerHTML = 'Sending...';
+
+            try {
+                const response = await fetch('https://api.mapmystandards.ai/auth/password-reset', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    showMessage('Password reset link sent! Check your email.', 'success');
+                    setTimeout(() => showLogin(), 3000);
+                } else {
+                    throw new Error(result.message || 'Password reset failed');
+                }
+            } catch (error) {
+                console.error('Password reset error:', error);
+                showMessage(error.message || 'Failed to send reset link.', 'error');
+                resetBtn.disabled = false;
+                resetBtn.innerHTML = originalText;
+            }
+        }
+
+        function showForgotPassword() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('forgotPasswordForm').style.display = 'block';
+            document.getElementById('resetEmail').focus();
+        }
+
+        function showLogin() {
+            document.getElementById('forgotPasswordForm').style.display = 'none';
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('email').focus();
+        }
+
+        function showMessage(text, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.className = `p-4 rounded-lg text-sm ${type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`;
+            messageDiv.textContent = text;
+            messageDiv.style.display = 'block';
+            
+            // Hide message after 5 seconds
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        // Check if user is already logged in
+        document.addEventListener('DOMContentLoaded', function() {
+            const apiKey = localStorage.getItem('a3e_api_key');
+            if (apiKey) {
+                // User is already logged in, redirect to dashboard
+                window.location.href = './dashboard.html';
+            }
+        });
+    </script>
+</body>
+</html>

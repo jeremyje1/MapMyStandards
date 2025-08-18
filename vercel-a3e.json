@@ -1,0 +1,17 @@
+{
+  "builds": [
+    {
+      "src": "a3e_main_deploy.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "a3e_main_deploy.py"
+    }
+  ],
+  "env": {
+    "ENVIRONMENT": "production"
+  }
+}

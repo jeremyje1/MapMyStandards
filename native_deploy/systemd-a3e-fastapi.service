@@ -1,0 +1,19 @@
+[Unit]
+Description=A3E FastAPI Service (Gunicorn/Uvicorn)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/mapmystandards
+ExecStart=/opt/mapmystandards/a3e_fastapi_env/bin/gunicorn src.a3e.main:app -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8000 --workers 4 --threads 2 --timeout 60
+Environment=PORT=8000
+Restart=on-failure
+RestartSec=5
+User=www-data
+Group=www-data
+PIDFile=/opt/mapmystandards/logs/fastapi.pid
+StandardOutput=append:/opt/mapmystandards/logs/console.out
+StandardError=append:/opt/mapmystandards/logs/error.log
+
+[Install]
+WantedBy=multi-user.target
