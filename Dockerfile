@@ -34,17 +34,5 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD curl -fsS http://127.0.0.1:${PORT:-8000}/login || exit 1
 
-# Runtime selection: fastapi (default) or flask
-ENV APP_SERVER=fastapi
-
-# Gunicorn base args
-ENV GUNICORN_CMD_ARGS="--workers=4 --threads=2 --timeout=60"
-
-# Entry command chooses FastAPI uvicorn worker or legacy Flask backend
-CMD ["bash", "-lc", "if [ \"$APP_SERVER\" = \"fastapi\" ]; then \
-    echo 'Starting FastAPI (src.a3e.main:app)'; \
-    gunicorn src.a3e.main:app -k uvicorn.workers.UvicornWorker -b 0.0.0.0:${PORT:-8000}; \
-else \
-    echo 'Starting Flask (subscription_backend:app)'; \
-    gunicorn subscription_backend:app -b 0.0.0.0:${PORT:-8000}; \
-fi"]
+# Use uvicorn directly for FastAPI
+CMD uvicorn src.a3e.main:app --host 0.0.0.0 --port ${PORT:-8000}
