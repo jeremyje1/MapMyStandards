@@ -2,7 +2,7 @@
 Authentication API routes for user registration, login, and password management
 """
 
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Depends, status, Header
 from pydantic import BaseModel, EmailStr
 from typing import Optional
 import hashlib
@@ -20,7 +20,6 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
 # Lightweight API key dependency to avoid heavy payment service on basic user info lookup
-from fastapi import Header
 async def _api_key_header(x_api_key: Optional[str] = Header(None)) -> str:
     if not x_api_key:
         raise HTTPException(status_code=401, detail="API key required")

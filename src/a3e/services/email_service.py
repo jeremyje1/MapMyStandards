@@ -1,30 +1,33 @@
-"""
-Email service for MapMyStandards.ai
-Handles email sending via SendGrid API
+"""Email service for MapMyStandards.ai.
+
+All imports consolidated at top to satisfy lint (E402). Supports SendGrid primary
+delivery with SMTP fallback. Functions are synchronous for simplicity.
 """
 
 import os
-from typing import List, Optional
 import logging
+import smtplib
+from typing import List, Optional
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
+from email import encoders
+import email  # noqa: F401  (legacy module reference retained)
 
-logger = logging.getLogger(__name__)
-
-# Try SendGrid first, fallback to SMTP
+# Optional SendGrid
 try:
-    from sendgrid import SendGridAPIClient
-    from sendgrid.helpers.mail import Mail, From, To, Subject, Content, Attachment, FileContent, FileName, FileType, Disposition
+    from sendgrid import SendGridAPIClient  # type: ignore
+    from sendgrid.helpers.mail import (
+        Mail, From, To, Subject, Content,
+        Attachment, FileContent, FileName, FileType, Disposition
+    )
     import base64
     SENDGRID_AVAILABLE = True
 except ImportError:
     SENDGRID_AVAILABLE = False
-    logger.warning("SendGrid not available - email functionality limited")
-
-# Fallback SMTP imports
-import smtplib
-import email.mime.text
-import email.mime.multipart
-import email.mime.base
-import email
+    base64 = None  # type: ignore
+    logging.getLogger(__name__).warning("SendGrid not available - email functionality limited")
+logger = logging.getLogger(__name__)
 
 class EmailService:
     def __init__(self):
@@ -94,7 +97,7 @@ class EmailService:
             # Create the email
             mail = Mail(
                 from_email=From(from_email or self.default_from, self.default_from_name),
-                to_emails=[To(email) for email in to_emails],
+                to_emails=[To(addr) for addr in to_emails],
                 subject=Subject(subject)
             )
             
@@ -149,18 +152,18 @@ class EmailService:
         """Send email via SMTP (fallback method)"""
         try:
             # Create message
-            msg = email.mime.multipart.MIMEMultipart('alternative')
+            msg = MIMEMultipart('alternative')
             msg['From'] = from_email or self.default_from
             msg['To'] = ', '.join(to_emails)
             msg['Subject'] = subject
             
             # Add text body
-            text_part = email.mime.text.MIMEText(body, 'plain')
+            text_part = MIMEText(body, 'plain')
             msg.attach(text_part)
             
             # Add HTML body if provided
             if html_body:
-                html_part = email.mime.text.MIMEText(html_body, 'html')
+                html_part = MIMEText(html_body, 'html')
                 msg.attach(html_part)
             
             # Add attachments if provided
@@ -168,9 +171,9 @@ class EmailService:
                 for file_path in attachments:
                     if os.path.isfile(file_path):
                         with open(file_path, 'rb') as attachment:
-                            part = email.mime.base.MIMEBase('application', 'octet-stream')
+                            part = MIMEBase('application', 'octet-stream')
                             part.set_payload(attachment.read())
-                            email.encoders.encode_base64(part)
+                            encoders.encode_base64(part)
                             part.add_header(
                                 'Content-Disposition',
                                 f'attachment; filename= {os.path.basename(file_path)}'
@@ -193,54 +196,9 @@ class EmailService:
         except Exception as e:
             logger.error(f"Failed to send email via SMTP: {e}")
             return False
-        try:
-            # Create message
-            msg = MimeMultipart('alternative')
-            msg['From'] = from_email or self.default_from
-            msg['To'] = ', '.join(to_emails)
-            msg['Subject'] = subject
-            
-            # Add text body
-            text_part = MimeText(body, 'plain')
-            msg.attach(text_part)
-            
-            # Add HTML body if provided
-            if html_body:
-                html_part = MimeText(html_body, 'html')
-                msg.attach(html_part)
-            
-            # Add attachments if provided
-            if attachments:
-                for file_path in attachments:
-                    if os.path.isfile(file_path):
-                        with open(file_path, 'rb') as attachment:
-                            part = MimeBase('application', 'octet-stream')
-                            part.set_payload(attachment.read())
-                            encoders.encode_base64(part)
-                            part.add_header(
-                                'Content-Disposition',
-                                f'attachment; filename= {os.path.basename(file_path)}'
-                            )
-                            msg.attach(part)
-            
-            # Connect to server and send
-            server = smtplib.SMTP(self.smtp_server, self.smtp_port)
-            
-            if self.use_tls:
-                server.starttls()
-            
-            server.login(self.username, self.password)
-            server.send_message(msg, to_addrs=to_emails)
-            server.quit()
-            
-            logger.info(f"Email sent successfully to {', '.join(to_emails)}")
-            return True
-            
-        except Exception as e:
-            logger.error(f"Failed to send email: {e}")
-            return False
+    # Removed duplicate legacy block using Mime* names (unreachable and undefined)
     
-    def send_contact_form_email(self, name: str, email: str, message: str) -> bool:
+    def send_contact_form_email(self, name: str, user_email: str, message: str) -> bool:
         """Send contact form submission email"""
         subject = f"New Contact Form Submission from {name}"
         
@@ -248,7 +206,7 @@ class EmailService:
 New contact form submission received:
 
 Name: {name}
-Email: {email}
+Email: {user_email}
 
 Message:
 {message}
@@ -261,7 +219,7 @@ Sent from MapMyStandards.ai contact form
         html_body = f"""
         <h2>New Contact Form Submission</h2>
         <p><strong>Name:</strong> {name}</p>
-        <p><strong>Email:</strong> <a href="mailto:{email}">{email}</a></p>
+    <p><strong>Email:</strong> <a href="mailto:{user_email}">{user_email}</a></p>
         <p><strong>Message:</strong></p>
         <div style="background: #f8f9fa; padding: 15px; border-radius: 5px;">
             {safe_message_html}
@@ -362,7 +320,7 @@ The MapMyStandards.ai Team
             body=body
         )
     
-    async def send_password_reset_email(self, email: str, reset_link: str, user_name: str) -> bool:
+    async def send_password_reset_email(self, recipient_email: str, reset_link: str, user_name: str) -> bool:
         """Send password reset email"""
         subject = "Reset Your MapMyStandards.ai Password"
         
@@ -415,7 +373,7 @@ The MapMyStandards.ai Team
         """
         
         return self.send_email(
-            to_emails=[email],
+            to_emails=[recipient_email],
             subject=subject,
             body=body,
             html_body=html_body

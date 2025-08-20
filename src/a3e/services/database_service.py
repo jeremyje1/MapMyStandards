@@ -82,7 +82,7 @@ class DatabaseService:
     ) -> List[Standard]:
         """List standards with filters"""
         try:
-            query = select(Standard).where(Standard.is_active == True)
+            query = select(Standard).where(Standard.is_active)
             
             if accreditor_id:
                 query = query.where(Standard.accreditor_id == accreditor_id)
@@ -128,7 +128,7 @@ class DatabaseService:
         try:
             query = select(Standard).where(
                 Standard.accreditor_id == accreditor_id,
-                Standard.is_active == True
+                Standard.is_active
             )
             result = await self.session.execute(query)
             standards = result.scalars().all()
@@ -157,7 +157,7 @@ class DatabaseService:
             if accreditor_id:
                 query = query.where(Standard.accreditor_id == accreditor_id)
             
-            query = query.where(Standard.is_active == True)
+            query = query.where(Standard.is_active)
             result = await self.session.execute(query)
             return [row[0] for row in result.all()]
             
@@ -175,7 +175,7 @@ class DatabaseService:
         """Search standards using full-text search"""
         try:
             search_query = select(Standard).where(
-                Standard.is_active == True,
+                Standard.is_active,
                 or_(
                     Standard.title.ilike(f"%{query}%"),
                     Standard.description.ilike(f"%{query}%")
@@ -208,7 +208,7 @@ class DatabaseService:
     ) -> List[Evidence]:
         """List evidence with filters"""
         try:
-            query = select(Evidence).where(Evidence.is_active == True)
+            query = select(Evidence).where(Evidence.is_active)
             
             if institution_id:
                 query = query.where(Evidence.institution_id == institution_id)
@@ -285,7 +285,7 @@ class DatabaseService:
     async def get_evidence_types(self) -> List[str]:
         """Get list of all evidence types"""
         try:
-            query = select(Evidence.evidence_type).distinct().where(Evidence.is_active == True)
+            query = select(Evidence.evidence_type).distinct().where(Evidence.is_active)
             result = await self.session.execute(query)
             return [row[0] for row in result.all()]
             
@@ -298,7 +298,7 @@ class DatabaseService:
         try:
             query = select(Evidence).where(
                 Evidence.institution_id == institution_id,
-                Evidence.is_active == True
+                Evidence.is_active
             )
             result = await self.session.execute(query)
             evidence_list = result.scalars().all()
@@ -331,7 +331,7 @@ class DatabaseService:
     ) -> List[AgentWorkflow]:
         """List workflows with filters"""
         try:
-            query = select(AgentWorkflow).where(AgentWorkflow.is_active == True)
+            query = select(AgentWorkflow).where(AgentWorkflow.is_active)
             
             if institution_id:
                 query = query.where(AgentWorkflow.institution_id == institution_id)
@@ -406,7 +406,7 @@ class DatabaseService:
             # Get evidence count for this workflow
             evidence_query = select(Evidence).where(
                 Evidence.workflow_id == workflow_id,
-                Evidence.is_active == True
+                Evidence.is_active
             )
             evidence_result = await self.session.execute(evidence_query)
             evidence_count = len(evidence_result.scalars().all())
@@ -445,7 +445,7 @@ class DatabaseService:
     ) -> Dict[str, Any]:
         """Get comprehensive workflow statistics"""
         try:
-            query = select(AgentWorkflow).where(AgentWorkflow.is_active == True)
+            query = select(AgentWorkflow).where(AgentWorkflow.is_active)
             
             if institution_id:
                 query = query.where(AgentWorkflow.institution_id == institution_id)
@@ -579,7 +579,7 @@ class DatabaseService:
         """List institutions with optional filters"""
         try:
             async with self.async_session() as session:
-                query = select(Institution).where(Institution.is_active == True)
+                query = select(Institution).where(Institution.is_active)
                 
                 if state:
                     query = query.where(Institution.state == state.upper())
@@ -601,86 +601,7 @@ class DatabaseService:
             return []
     
     # Evidence operations
-    async def create_evidence(self, evidence_data: Dict[str, Any]) -> Evidence:
-        """Create new evidence item"""
-        try:
-            async with self.async_session() as session:
-                evidence = Evidence(**evidence_data)
-                session.add(evidence)
-                await session.commit()
-                await session.refresh(evidence)
-                return evidence
-        except Exception as e:
-            logger.error(f"Failed to create evidence: {e}")
-            raise
-    
-    async def get_evidence(self, evidence_id: str) -> Optional[Evidence]:
-        """Get evidence by ID"""
-        try:
-            async with self.async_session() as session:
-                result = await session.execute(
-                    select(Evidence)
-                    .where(Evidence.id == evidence_id)
-                    .options(selectinload(Evidence.standards))
-                )
-                return result.scalar_one_or_none()
-        except Exception as e:
-            logger.error(f"Failed to get evidence: {e}")
-            return None
-    
-    async def get_institution_evidence(
-        self,
-        institution_id: str,
-        evidence_type: Optional[EvidenceType] = None,
-        processing_status: Optional[ProcessingStatus] = None
-    ) -> List[Evidence]:
-        """Get all evidence for an institution"""
-        try:
-            async with self.async_session() as session:
-                query = select(Evidence).where(Evidence.institution_id == institution_id)
-                
-                if evidence_type:
-                    query = query.where(Evidence.evidence_type == evidence_type)
-                
-                if processing_status:
-                    query = query.where(Evidence.processing_status == processing_status)
-                
-                result = await session.execute(query)
-                return list(result.scalars().all())
-        except Exception as e:
-            logger.error(f"Failed to get institution evidence: {e}")
-            return []
-    
-    async def update_evidence_status(
-        self,
-        evidence_id: str,
-        status: ProcessingStatus,
-        error_message: Optional[str] = None
-    ):
-        """Update evidence processing status"""
-        try:
-            async with self.async_session() as session:
-                update_data = {
-                    "processing_status": status,
-                    "updated_at": datetime.utcnow()
-                }
-                
-                if status == ProcessingStatus.COMPLETED:
-                    update_data["processed_at"] = datetime.utcnow()
-                elif status == ProcessingStatus.FAILED and error_message:
-                    update_data["processing_error"] = error_message
-                
-                await session.execute(
-                    update(Evidence)
-                    .where(Evidence.id == evidence_id)
-                    .values(**update_data)
-                )
-                await session.commit()
-        except Exception as e:
-            logger.error(f"Failed to update evidence status: {e}")
-            raise
-    
-    # Standard operations
+    # Standard operations (duplicate evidence methods removed - see earlier definitions)
     async def get_accreditor_standards(
         self,
         accreditor_id: str,
@@ -722,51 +643,7 @@ class DatabaseService:
             return None
     
     # Workflow operations
-    async def create_workflow(self, workflow_data: Dict[str, Any]) -> AgentWorkflow:
-        """Create new agent workflow"""
-        try:
-            async with self.async_session() as session:
-                workflow = AgentWorkflow(**workflow_data)
-                session.add(workflow)
-                await session.commit()
-                await session.refresh(workflow)
-                return workflow
-        except Exception as e:
-            logger.error(f"Failed to create workflow: {e}")
-            raise
-    
-    async def update_workflow(
-        self,
-        workflow_id: str,
-        update_data: Dict[str, Any]
-    ):
-        """Update workflow with new data"""
-        try:
-            async with self.async_session() as session:
-                update_data["updated_at"] = datetime.utcnow()
-                await session.execute(
-                    update(AgentWorkflow)
-                    .where(AgentWorkflow.id == workflow_id)
-                    .values(**update_data)
-                )
-                await session.commit()
-        except Exception as e:
-            logger.error(f"Failed to update workflow: {e}")
-            raise
-    
-    async def get_workflow(self, workflow_id: str) -> Optional[AgentWorkflow]:
-        """Get workflow by ID"""
-        try:
-            async with self.async_session() as session:
-                result = await session.execute(
-                    select(AgentWorkflow)
-                    .where(AgentWorkflow.id == workflow_id)
-                    .options(selectinload(AgentWorkflow.institution))
-                )
-                return result.scalar_one_or_none()
-        except Exception as e:
-            logger.error(f"Failed to get workflow: {e}")
-            return None
+    # Duplicate workflow CRUD methods removed - earlier implementations retained
     
     async def list_institution_workflows(
         self,
@@ -865,7 +742,7 @@ class DatabaseService:
                         and_(
                             GapAnalysis.institution_id == institution_id,
                             GapAnalysis.accreditor_id == accreditor_id,
-                            GapAnalysis.is_current == True
+                            GapAnalysis.is_current
                         )
                     )
                     .order_by(GapAnalysis.analysis_date.desc())

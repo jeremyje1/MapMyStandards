@@ -11,32 +11,28 @@ import logging
 from typing import Dict, Any, Optional, List
 from dataclasses import dataclass
 
-# Initialize logger early
-logger = logging.getLogger(__name__)
-
 # Optional AWS imports
-try:
-    import boto3
-    from botocore.exceptions import ClientError
+try:  # Optional AWS
+    import boto3  # type: ignore
+    from botocore.exceptions import ClientError  # type: ignore
     AWS_AVAILABLE = True
-except ImportError:
+except ImportError:  # pragma: no cover - optional dependency
     AWS_AVAILABLE = False
-    logger.warning("AWS SDK not available - Bedrock features disabled")
     
-    # Mock classes for AWS
-    class ClientError(Exception):
+    class ClientError(Exception):  # type: ignore
         pass
 
 # Optional AI service imports (should be available in minimal requirements)
-try:
-    import openai
-    import anthropic
+try:  # Optional AI services
+    import openai  # type: ignore
+    import anthropic  # type: ignore
     AI_SERVICES_AVAILABLE = True
-except ImportError:
+except ImportError:  # pragma: no cover
     AI_SERVICES_AVAILABLE = False
-    logger.warning("AI services not available - LLM features limited")
 
 from ..core.config import Settings
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass

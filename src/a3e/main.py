@@ -16,6 +16,8 @@ from typing import List, Optional, Dict, Any
 import uvicorn
 import logging
 import os
+import tempfile
+import os.path
 from pathlib import Path
 from datetime import datetime
 
@@ -23,6 +25,10 @@ from .core.config import settings
 from .core.accreditation_registry import ALL_ACCREDITORS, get_accreditors_by_institution_type, get_accreditors_by_state
 from .models import Institution, Evidence, Standard, AgentWorkflow, GapAnalysis
 from .services.database_service import DatabaseService
+from .api import api_router
+from .api.routes.billing import router as billing_router
+from pydantic import BaseModel, EmailStr  # Inline temporary auth models kept at top to avoid E402
+from typing import Optional as _OptionalType  # alias to avoid shadowing later Optional usage
 # Optional services - will gracefully degrade if dependencies missing
 try:
     from .services.vector_service import VectorService
@@ -34,6 +40,7 @@ except ImportError:
 
 from .services.llm_service import LLMService
 from .services.document_service import DocumentService
+from .api.routes import integrations_router, proprietary_router
 """NOTE: Agent Orchestrator is optional. It depends on heavy LLM coordination
 libraries (e.g., autogen) that aren't required for core API functionality.
 We attempt to import it but degrade gracefully if unavailable so the
@@ -47,7 +54,6 @@ try:  # Optional orchestrator (may require missing deps like 'autogen')
 except Exception as e:  # Broad except to catch ImportError + transitive errors
     AGENT_ORCHESTRATOR_AVAILABLE = False
     _agent_orchestrator_import_exception = e
-from .api.routes import integrations_router, proprietary_router
 # Import auth router separately to handle any import issues
 try:
     from .api.routes.auth import router as auth_router
@@ -61,8 +67,6 @@ logging.basicConfig(level=getattr(logging, settings.log_level), format=settings.
 logger = logging.getLogger(__name__)
 
 # Cross-worker warning deduplication using filesystem
-import tempfile
-import os.path
 
 def log_warning_once_global(message: str, key: str = None):
     """Log warning once across all workers using filesystem marker"""
@@ -227,15 +231,7 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     # TODO: Implement JWT token validation
     return {"user_id": "demo_user", "email": "demo@example.com"}
 
-# Include API routes
-from .api import api_router
-from .api.routes.billing import router as billing_router
-
-# Add basic auth endpoints directly (temporary fix for Railway deployment)
-from pydantic import BaseModel, EmailStr
-from typing import Optional
-
-class LoginRequest(BaseModel):
+class LoginRequest(BaseModel):  # Temporary inline models
     email: EmailStr
     password: str
     remember: bool = False
@@ -247,7 +243,7 @@ class UserRegistrationRequest(BaseModel):
     password: str
     role: str
     plan: str
-    phone: Optional[str] = ""
+    phone: _OptionalType[str] = ""
     newsletter_opt_in: bool = False
 
 class PasswordResetRequest(BaseModel):
@@ -256,10 +252,9 @@ class PasswordResetRequest(BaseModel):
 class AuthResponse(BaseModel):
     success: bool
     message: str
-    data: Optional[dict] = None
+    data: _OptionalType[dict] = None
 
-# Simple in-memory user storage for Railway deployment
-temp_users = {}
+temp_users = {}  # Simple in-memory user storage for temporary endpoints
 
 @app.post("/auth/login", response_model=AuthResponse)
 async def login_user(request: LoginRequest):
@@ -787,16 +782,15 @@ if WEB_DIR.exists():
     logger.info(f"Web directory mounted from: {WEB_DIR}")
 
     @app.get("/login", response_class=FileResponse, include_in_schema=False)
-    async def login_page():
+    async def login_page():  # noqa: D401
         return FileResponse(str(WEB_DIR / "login.html"))
 
-    
     @app.get("/dashboard", response_class=FileResponse, include_in_schema=False)
-    async def dashboard_page():
+    async def dashboard_page():  # noqa: D401
         return FileResponse(str(WEB_DIR / "dashboard.html"))
-        
+
     @app.get("/homepage", response_class=FileResponse, include_in_schema=False)
-    async def homepage():
+    async def homepage():  # noqa: D401
         return FileResponse(str(WEB_DIR / "homepage.html"))
         
 else:
@@ -809,19 +803,19 @@ else:
 
         # Add direct routes for key pages
         @app.get("/login", response_class=FileResponse, include_in_schema=False)
-        async def login_page():
+        async def login_page():  # noqa: D401
             return FileResponse(os.path.join(alt_web_directory, "login.html"))
 
         @app.get("/checkout", response_class=FileResponse, include_in_schema=False)
-        async def checkout_page():
+        async def checkout_page_alt():  # noqa: D401 - alt name to avoid redefinition
             return FileResponse(os.path.join(alt_web_directory, "checkout.html"))
 
         @app.get("/dashboard", response_class=FileResponse, include_in_schema=False)
-        async def dashboard_page():
+        async def dashboard_page():  # noqa: D401
             return FileResponse(os.path.join(alt_web_directory, "dashboard.html"))
 
         @app.get("/homepage", response_class=FileResponse, include_in_schema=False)
-        async def homepage():
+        async def homepage():  # noqa: D401
             return FileResponse(os.path.join(alt_web_directory, "homepage.html"))
     else:
         logger.error("Web directory not found - static files will not be served")

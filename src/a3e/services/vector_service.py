@@ -16,14 +16,15 @@ logger = logging.getLogger(__name__)
 
 # Optional imports for AI features
 try:
-    import numpy as np
-    from pymilvus import connections, Collection, CollectionSchema, DataType, FieldSchema, utility
-    from sentence_transformers import SentenceTransformer
+    import numpy as np  # noqa: F401
+    from pymilvus import connections, Collection, CollectionSchema, DataType, FieldSchema, utility  # noqa: F401
+    from sentence_transformers import SentenceTransformer  # noqa: F401
     VECTOR_FEATURES_AVAILABLE = True
 except ImportError as e:
     logger.warning(f"Vector features not available: {e}")
     VECTOR_FEATURES_AVAILABLE = False
     # Create mock classes
+    
     class MockNdarray:
         def __init__(self, data):
             self.data = data
@@ -38,13 +39,14 @@ except ImportError as e:
     class SentenceTransformer:
         def __init__(self, *args, **kwargs):
             pass
+
         def encode(self, *args, **kwargs):
             return []
 
 
 class VectorService:
     """Vector database service for semantic search and similarity matching"""
-    
+
     def __init__(self, host: str = "localhost", port: int = 19530):
         self.host = host
         self.port = port
@@ -357,11 +359,7 @@ class VectorService:
             )
             
             # Weighted average (excerpt-evidence similarity is most important)
-            accuracy_score = (
-                0.2 * narrative_evidence_sim +
-                0.3 * narrative_excerpt_sim +
-                0.5 * evidence_excerpt_sim
-            )
+            accuracy_score = (0.2 * narrative_evidence_sim + 0.3 * narrative_excerpt_sim + 0.5 * evidence_excerpt_sim)
             
             return float(accuracy_score)
             
