@@ -7,6 +7,7 @@
     <meta name="description" content="A³E is the complete accreditation operating system – institutional memory, evidence automation, predictive compliance, and strategic intelligence in one unified platform.">
     <link rel="canonical" href="https://platform.mapmystandards.ai/landing" />
     <meta name="theme-color" content="#0f172a" />
+    <meta name="keywords" content="accreditation software, accreditation platform, institutional effectiveness, higher education compliance, accreditation management, evidence management" />
     <!-- Open Graph / Twitter -->
     <meta property="og:title" content="A³E – Accreditation Operating System" />
     <meta property="og:description" content="Automate evidence, preserve institutional memory, eliminate consultant costs. Start your free trial." />
@@ -19,13 +20,33 @@
     <meta name="twitter:image" content="https://mapmystandards.ai/wp-content/uploads/2025/08/ChatGPT-Image-Aug-4-2025-03_38_23-PM.png" />
     
     <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="icon" type="image/png" href="https://mapmystandards.ai/wp-content/uploads/2025/07/cropped-Original-Logo-Symbol.png" />
     
     <!-- Tailwind (built) -->
     <link rel="stylesheet" href="/assets/styles.css">
     
-    <!-- Custom CSS -->
+        <!-- Structured Data -->
+        <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            "name": "A³E Accreditation Operating System",
+            "applicationCategory": "BusinessApplication",
+            "operatingSystem": "Web",
+            "url": "https://platform.mapmystandards.ai/landing",
+            "image": "https://mapmystandards.ai/wp-content/uploads/2025/08/ChatGPT-Image-Aug-4-2025-03_38_23-PM.png",
+            "description": "Unified accreditation operating system: institutional memory, evidence automation, predictive compliance, strategic intelligence.",
+            "offers": {
+                "@type": "Offer",
+                "price": "297",
+                "priceCurrency": "USD"
+            }
+        }
+        </script>
+        <!-- Custom CSS -->
     <style>
         /* ================= Core Theme Enhancements ================ */
         /* Modern Dark Theme with Full-Width Background */
@@ -166,8 +187,27 @@
             transition: width 0.3s ease;
         }
         
+        .nav-link:focus-visible {outline:2px solid #3b82f6; outline-offset:3px; border-radius:4px;}
         .nav-link:hover::after {
             width: 100%;
+        }
+        /* Mobile nav */
+        .mobile-nav {display:none;}
+        .mobile-nav.open {display:block; animation:fadeIn .35s ease;}
+        @keyframes fadeIn {from{opacity:0; transform:translateY(-6px);} to{opacity:1; transform:none;}}
+        .hamburger {width:42px; height:42px; border:1px solid rgba(255,255,255,.2); border-radius:12px; display:flex; flex-direction:column; justify-content:center; gap:5px; padding:0 10px; cursor:pointer; background:rgba(255,255,255,.06); transition:.3s;}
+        .hamburger span {height:2px; width:100%; background:#fff; display:block; transition:.35s;}
+        .hamburger.active {background:#2563eb; border-color:#2563eb;}
+        .hamburger.active span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+        .hamburger.active span:nth-child(2){opacity:0;}
+        .hamburger.active span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+        @media (max-width: 860px){
+            nav[aria-label="Main"] {display:none !important;}
+            .hamburger{display:flex;}
+            .mobile-nav{background:rgba(15,23,42,.97); backdrop-filter:blur(20px); position:absolute; top:100%; left:0; right:0; padding:1.25rem 1.25rem 2rem; border-bottom:1px solid rgba(255,255,255,.1);}
+            .mobile-nav a {display:block; padding:.85rem 0; font-weight:500; color:#cbd5e1; border-bottom:1px solid rgba(255,255,255,.06);}
+            .mobile-nav a:last-child{border-bottom:0;}
+            .mobile-nav a:hover{color:#fff;}
         }
         
         /* Custom scrollbar */
@@ -233,9 +273,20 @@
                     <a href="https://mapmystandards.ai/contact/" class="text-gray-300 hover:text-white nav-link">Contact</a>
                 </nav>
                 <div class="flex items-center space-x-4">
+                    <button id="navToggle" aria-label="Toggle navigation" class="hamburger md:hidden" aria-expanded="false" aria-controls="mobileMenu">
+                        <span></span><span></span><span></span>
+                    </button>
                     <a href="https://mapmystandards.ai/dashboard" class="text-gray-300 hover:text-white nav-link">Dashboard</a>
                     <a href="https://api.mapmystandards.ai/landing" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 modern-button font-medium">Start 7-Day Trial</a>
                 </div>
+            </div>
+            <div id="mobileMenu" class="mobile-nav" role="navigation" aria-label="Mobile" hidden>
+                <a href="#features">Features</a>
+                <a href="#pricing">Pricing</a>
+                <a href="#demo">Demo</a>
+                <a href="https://mapmystandards.ai/contact/">Contact</a>
+                <a href="https://mapmystandards.ai/dashboard">Dashboard</a>
+                <a href="https://api.mapmystandards.ai/landing" class="mt-2 bg-blue-600 text-white px-4 py-3 rounded-xl text-center font-semibold">Start Trial</a>
             </div>
         </div>
     </header>
@@ -305,6 +356,16 @@
                     <div class="text-4xl font-bold text-blue-400 mb-2">Unthinkable</div>
                     <div class="text-gray-300 font-medium text-lg">Switching Cost</div>
                     <div class="text-sm text-gray-400 mt-1">After 6 months of use</div>
+                </div>
+            </div>
+            <!-- Trusted By Logos -->
+            <div class="mt-20">
+                <h3 class="text-center text-gray-300 uppercase tracking-wider text-sm mb-6">Trusted by forward-thinking institutions</h3>
+                <div class="flex flex-wrap justify-center gap-8 items-center opacity-80">
+                    <img src="https://dummyimage.com/120x40/1e293b/ffffff&text=College+One" width="120" height="40" alt="College One" loading="lazy" class="grayscale hover:grayscale-0 transition" />
+                    <img src="https://dummyimage.com/120x40/1e293b/ffffff&text=Tech+U" width="120" height="40" alt="Tech University" loading="lazy" class="grayscale hover:grayscale-0 transition" />
+                    <img src="https://dummyimage.com/120x40/1e293b/ffffff&text=State+Edu" width="120" height="40" alt="State Education" loading="lazy" class="grayscale hover:grayscale-0 transition" />
+                    <img src="https://dummyimage.com/120x40/1e293b/ffffff&text=Global+Inst" width="120" height="40" alt="Global Institute" loading="lazy" class="grayscale hover:grayscale-0 transition" />
                 </div>
             </div>
         </div>
@@ -393,6 +454,40 @@
                         <p class="text-blue-300 text-sm text-center mt-2">- Dr. Sarah Chen, Accreditation Director</p>
                     </div>
                 </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonial Slider -->
+    <section class="py-20 section-darker" aria-label="Customer testimonials">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row md:items-end md:justify-between mb-10 gap-6">
+                <div>
+                    <h2 class="text-4xl font-bold text-white mb-3">Customer Proof</h2>
+                    <p class="text-gray-300 max-w-xl">Real institutional impact from real accreditation teams.</p>
+                </div>
+                <div class="flex gap-3">
+                    <button id="testimonialPrev" aria-label="Previous testimonial" class="w-11 h-11 rounded-xl glass-card hover:bg-white/10">◀</button>
+                    <button id="testimonialNext" aria-label="Next testimonial" class="w-11 h-11 rounded-xl glass-card hover:bg-white/10">▶</button>
+                </div>
+            </div>
+            <div id="testimonialTrack" class="testimonial-track pb-2" aria-live="polite">
+                <article class="testimonial glass-card p-6 rounded-2xl min-w-[340px]" role="group" aria-roledescription="slide">
+                    <p class="text-gray-200 mb-4">“Within 90 days A³E replaced three disconnected tools and two external consultants. We now predict compliance gaps before they appear.”</p>
+                    <div class="text-sm text-blue-300 font-medium">Director of Institutional Effectiveness</div>
+                </article>
+                <article class="testimonial glass-card p-6 rounded-2xl min-w-[340px]" role="group" aria-roledescription="slide">
+                    <p class="text-gray-200 mb-4">“The institutional memory alone makes it impossible to go back. Turnover risk is effectively eliminated.”</p>
+                    <div class="text-sm text-blue-300 font-medium">Accreditation Coordinator</div>
+                </article>
+                <article class="testimonial glass-card p-6 rounded-2xl min-w-[340px]" role="group" aria-roledescription="slide">
+                    <p class="text-gray-200 mb-4">“Narrative generation cut our reporting cycle time by 70%. Faculty adoption skyrocketed.”</p>
+                    <div class="text-sm text-blue-300 font-medium">Provost, Midwestern University</div>
+                </article>
+                <article class="testimonial glass-card p-6 rounded-2xl min-w-[340px]" role="group" aria-roledescription="slide">
+                    <p class="text-gray-200 mb-4">“A³E’s predictive risk scoring let us remediate issues six months earlier than our previous process.”</p>
+                    <div class="text-sm text-blue-300 font-medium">Quality Assurance Lead</div>
+                </article>
             </div>
         </div>
     </section>
@@ -843,6 +938,35 @@
                 }
             });
         });
+
+        // Mobile navigation toggle
+        const navToggle = document.getElementById('navToggle');
+        const mobileMenu = document.getElementById('mobileMenu');
+        navToggle?.addEventListener('click', ()=>{
+            const open = navToggle.classList.toggle('active');
+            mobileMenu?.classList.toggle('open', open);
+            if (mobileMenu) {
+                if(open){ mobileMenu.removeAttribute('hidden'); } else { mobileMenu.setAttribute('hidden',''); }
+            }
+            navToggle.setAttribute('aria-expanded', open? 'true':'false');
+        });
+        mobileMenu?.querySelectorAll('a').forEach(a=>a.addEventListener('click', ()=>{ navToggle?.click(); }));
+
+        // Testimonial slider logic
+        const track = document.getElementById('testimonialTrack');
+        const prevBtn = document.getElementById('testimonialPrev');
+        const nextBtn = document.getElementById('testimonialNext');
+        function scrollByCard(dir){
+            if(!track) return; const card = track.querySelector('.testimonial');
+            if(!card) return; const w = card.offsetWidth + 20; // gap approx
+            track.scrollBy({left: dir * w, behavior:'smooth'});
+        }
+        prevBtn?.addEventListener('click', ()=>scrollByCard(-1));
+        nextBtn?.addEventListener('click', ()=>scrollByCard(1));
+        // Auto-advance
+        let testimonialTimer = setInterval(()=>scrollByCard(1), 6000);
+        track?.addEventListener('pointerenter', ()=>clearInterval(testimonialTimer));
+        track?.addEventListener('pointerleave', ()=> testimonialTimer = setInterval(()=>scrollByCard(1), 6000));
     </script>
 </body>
 </html>
