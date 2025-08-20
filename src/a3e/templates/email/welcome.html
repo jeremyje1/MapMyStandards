@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to A³E</title>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 40px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .logo {
+            max-width: 200px;
+            height: auto;
+        }
+        h1 {
+            color: #1e3a8a;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        h2 {
+            color: #1e3a8a;
+            font-size: 20px;
+            margin-top: 30px;
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: #3b82f6;
+            color: white !important;
+            padding: 14px 32px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            margin: 20px 0;
+        }
+        .cta-button:hover {
+            background-color: #2563eb;
+        }
+        .credentials-box {
+            background-color: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .credential-item {
+            margin: 10px 0;
+        }
+        .credential-label {
+            font-weight: 600;
+            color: #4b5563;
+        }
+        .credential-value {
+            font-family: 'Courier New', monospace;
+            background-color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            border: 1px solid #d1d5db;
+            display: inline-block;
+            margin-top: 5px;
+            word-break: break-all;
+        }
+        .steps {
+            margin: 30px 0;
+        }
+        .step {
+            display: flex;
+            align-items: flex-start;
+            margin: 15px 0;
+        }
+        .step-number {
+            background-color: #3b82f6;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid #e5e7eb;
+            color: #6b7280;
+            font-size: 14px;
+        }
+        .social-links {
+            margin: 20px 0;
+        }
+        .social-links a {
+            margin: 0 10px;
+            color: #6b7280;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="https://mapmystandards.ai/wp-content/uploads/2025/07/Original-Logo.png" alt="MapMyStandards.ai" class="logo">
+            <h1>Welcome to A³E, {{name}}! 🎉</h1>
+            <p style="font-size: 18px; color: #4b5563;">Your 7-day free trial is now active</p>
+        </div>
+
+        <p>Thank you for choosing A³E - the Autonomous Accreditation & Audit Engine that's about to transform how {{institution_name}} handles compliance.</p>
+
+        <div class="credentials-box">
+            <h3 style="margin-top: 0;">Your Access Credentials</h3>
+            <div class="credential-item">
+                <div class="credential-label">Email:</div>
+                <div class="credential-value">{{email}}</div>
+            </div>
+            <div class="credential-item">
+                <div class="credential-label">Trial ID:</div>
+                <div class="credential-value">{{trial_id}}</div>
+            </div>
+            <div class="credential-item">
+                <div class="credential-label">API Key:</div>
+                <div class="credential-value">{{api_key}}</div>
+            </div>
+            <div class="credential-item">
+                <div class="credential-label">Trial Expires:</div>
+                <div class="credential-value">{{expires_date}}</div>
+            </div>
+        </div>
+
+        <div style="text-align: center;">
+            <a href="https://api.mapmystandards.ai/dashboard" class="cta-button">Access Your Dashboard</a>
+        </div>
+
+        <h2>🚀 Get Started in 3 Simple Steps</h2>
+        <div class="steps">
+            <div class="step">
+                <div class="step-number">1</div>
+                <div>
+                    <strong>Upload Your First Document</strong><br>
+                    Start building your institutional memory by uploading accreditation documents. Our AI will immediately begin analysis.
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <div>
+                    <strong>Explore Your Analytics</strong><br>
+                    Watch as A³E identifies gaps, maps standards, and generates insights that would take weeks to produce manually.
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <div>
+                    <strong>Generate Your First Report</strong><br>
+                    Experience the power of automated narrative generation and see your ROI materialize instantly.
+                </div>
+            </div>
+        </div>
+
+        <h2>📊 What You Can Expect</h2>
+        <ul style="color: #4b5563;">
+            <li><strong>20-30 hours</strong> saved weekly on compliance tasks</li>
+            <li><strong>$4,000+</strong> in monthly operational savings</li>
+            <li><strong>100%</strong> audit trail coverage</li>
+            <li><strong>Zero</strong> compliance gaps missed</li>
+        </ul>
+
+        <h2>🎯 Your Trial Timeline</h2>
+        <p>You have <strong>7 days</strong> to explore all features without any charges. Here's what happens:</p>
+        <ul style="color: #4b5563;">
+            <li>Days 1-3: Upload and analyze documents</li>
+            <li>Days 4-5: Generate reports and share with your team</li>
+            <li>Days 6-7: Calculate your ROI and prepare for seamless upgrade</li>
+        </ul>
+
+        <div style="background-color: #fef3c7; border: 1px solid #fcd34d; border-radius: 8px; padding: 20px; margin: 30px 0;">
+            <p style="margin: 0;"><strong>💡 Pro Tip:</strong> The more documents you analyze during your trial, the more valuable A³E becomes. Start uploading now to maximize your evaluation!</p>
+        </div>
+
+        <h2>Need Help?</h2>
+        <p>Our success team is standing by to ensure you get maximum value from A³E:</p>
+        <ul>
+            <li>📧 Email: <a href="mailto:support@mapmystandards.ai">support@mapmystandards.ai</a></li>
+            <li>📚 User Guide: <a href="https://mapmystandards.ai/user-guide/">mapmystandards.ai/user-guide</a></li>
+            <li>🎯 Live Demo: <a href="https://mapmystandards.ai/dashboard">View Dashboard</a></li>
+        </ul>
+
+        <div class="footer">
+            <p style="font-weight: 600; color: #374151;">Ready to transform your accreditation process?</p>
+            <a href="https://api.mapmystandards.ai/dashboard" class="cta-button">Start Now</a>
+            
+            <div class="social-links">
+                <a href="https://mapmystandards.ai">Website</a> |
+                <a href="https://mapmystandards.ai/privacy-policy/">Privacy</a> |
+                <a href="https://mapmystandards.ai/contact/">Contact</a>
+            </div>
+            
+            <p>© 2025 MapMyStandards.ai - Transforming Accreditation with AI</p>
+            <p style="font-size: 12px;">You're receiving this because you signed up for A³E. Your trial will automatically end after 7 days unless you choose to upgrade.</p>
+        </div>
+    </div>
+</body>
+</html>

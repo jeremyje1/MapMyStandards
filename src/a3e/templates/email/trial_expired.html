@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your A³E Trial Has Expired</title>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 40px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            max-width: 180px;
+            height: auto;
+        }
+        h1 {
+            color: #dc2626;
+            font-size: 26px;
+            margin-bottom: 10px;
+        }
+        .expired-box {
+            background-color: #fee2e2;
+            border: 2px solid #dc2626;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            margin: 30px 0;
+        }
+        .expired-icon {
+            font-size: 60px;
+            margin-bottom: 10px;
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: #10b981;
+            color: white !important;
+            padding: 16px 40px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 18px;
+            margin: 20px 0;
+        }
+        .cta-button:hover {
+            background-color: #059669;
+        }
+        .secondary-button {
+            display: inline-block;
+            background-color: transparent;
+            color: #3b82f6 !important;
+            padding: 12px 30px;
+            text-decoration: none;
+            border: 2px solid #3b82f6;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            margin: 10px;
+        }
+        .secondary-button:hover {
+            background-color: #3b82f6;
+            color: white !important;
+        }
+        .achievement-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 30px 0;
+            padding: 25px;
+            background-color: #f9fafb;
+            border-radius: 8px;
+        }
+        .achievement-box {
+            text-align: center;
+        }
+        .achievement-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+        .achievement-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1e3a8a;
+            margin: 0;
+        }
+        .achievement-label {
+            color: #6b7280;
+            font-size: 14px;
+            margin: 5px 0 0 0;
+        }
+        .lost-access {
+            background-color: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 30px 0;
+        }
+        .lost-item {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            color: #92400e;
+        }
+        .x-mark {
+            color: #dc2626;
+            font-size: 20px;
+            margin-right: 10px;
+        }
+        .testimonial {
+            background-color: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 20px;
+            margin: 30px 0;
+            font-style: italic;
+            color: #4b5563;
+        }
+        .testimonial-author {
+            text-align: right;
+            margin-top: 10px;
+            font-style: normal;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        .win-back-offer {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            border: 2px solid #3b82f6;
+            border-radius: 12px;
+            padding: 30px;
+            margin: 30px 0;
+            text-align: center;
+        }
+        .offer-badge {
+            background-color: #dc2626;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid #e5e7eb;
+            color: #6b7280;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="https://mapmystandards.ai/wp-content/uploads/2025/07/Original-Logo.png" alt="MapMyStandards.ai" class="logo">
+            <h1>Your A³E Trial Has Expired</h1>
+        </div>
+
+        <div class="expired-box">
+            <div class="expired-icon">⏱️</div>
+            <p style="font-size: 20px; color: #dc2626; margin: 0;">
+                Your 14-day trial ended on {{expiration_date}}
+            </p>
+            <p style="color: #991b1b; margin: 10px 0;">
+                But it's not too late to regain your accreditation advantage!
+            </p>
+        </div>
+
+        <p style="font-size: 18px; text-align: center; color: #374151;">
+            Hi {{name}}, we hope you found value in A³E during your trial.
+        </p>
+
+        <h2 style="color: #1e3a8a; text-align: center;">What You Achieved in 14 Days</h2>
+        <div class="achievement-grid">
+            <div class="achievement-box">
+                <div class="achievement-icon">📄</div>
+                <p class="achievement-value">{{docs_analyzed}}</p>
+                <p class="achievement-label">Documents Analyzed</p>
+            </div>
+            <div class="achievement-box">
+                <div class="achievement-icon">⏰</div>
+                <p class="achievement-value">{{hours_saved}}</p>
+                <p class="achievement-label">Hours Saved</p>
+            </div>
+            <div class="achievement-box">
+                <div class="achievement-icon">💰</div>
+                <p class="achievement-value">${{money_saved}}</p>
+                <p class="achievement-label">Estimated Savings</p>
+            </div>
+            <div class="achievement-box">
+                <div class="achievement-icon">📈</div>
+                <p class="achievement-value">{{compliance_score}}%</p>
+                <p class="achievement-label">Compliance Score</p>
+            </div>
+        </div>
+
+        <div class="lost-access">
+            <h3 style="margin-top: 0; color: #92400e;">❌ You No Longer Have Access To:</h3>
+            <div class="lost-item">
+                <span class="x-mark">✗</span>
+                <span>Your analyzed documents and compliance mappings</span>
+            </div>
+            <div class="lost-item">
+                <span class="x-mark">✗</span>
+                <span>AI-powered gap analysis and recommendations</span>
+            </div>
+            <div class="lost-item">
+                <span class="x-mark">✗</span>
+                <span>Automated evidence organization</span>
+            </div>
+            <div class="lost-item">
+                <span class="x-mark">✗</span>
+                <span>Narrative generation and reporting tools</span>
+            </div>
+            <div class="lost-item">
+                <span class="x-mark">✗</span>
+                <span>API access and integrations</span>
+            </div>
+        </div>
+
+        <div class="win-back-offer">
+            <span class="offer-badge">EXCLUSIVE WIN-BACK OFFER</span>
+            <h2 style="color: #1e3a8a; margin: 15px 0;">Come Back & Save 30%</h2>
+            <p style="font-size: 18px; color: #1f2937; margin: 15px 0;">
+                Reactivate within 7 days and get:
+            </p>
+            <ul style="text-align: left; display: inline-block; color: #374151;">
+                <li><strong>30% off</strong> your first 3 months</li>
+                <li><strong>All your data restored</strong> instantly</li>
+                <li><strong>Free migration assistance</strong> ($500 value)</li>
+                <li><strong>Priority support</strong> for 90 days</li>
+            </ul>
+            <p style="color: #dc2626; font-weight: bold; margin: 20px 0;">
+                Use code: COMEBACK30<br>
+                <span style="font-size: 14px; color: #6b7280;">Expires {{offer_expiry_date}}</span>
+            </p>
+        </div>
+
+        <div style="text-align: center;">
+            <a href="https://api.mapmystandards.ai/landing?plan={{recommended_plan}}&email={{email}}&code=COMEBACK30" class="cta-button">
+                Reactivate & Save 30%
+            </a>
+        </div>
+
+        <div class="testimonial">
+            <p>"I let my trial expire thinking we didn't need it. Two weeks later, drowning in compliance work, I came back. Best decision ever - A³E has transformed our accreditation process."</p>
+            <p class="testimonial-author">- Michael Rodriguez, VP Academic Affairs</p>
+        </div>
+
+        <h3 style="color: #1e3a8a; text-align: center;">Still Not Sure?</h3>
+        <p style="text-align: center; color: #4b5563;">
+            We understand. Sometimes you need more time to evaluate or get buy-in from stakeholders.
+        </p>
+        
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="https://mapmystandards.ai/contact/" class="secondary-button">
+                Schedule a Demo
+            </a>
+            <a href="https://api.mapmystandards.ai/request-extension?email={{email}}" class="secondary-button">
+                Request Trial Extension
+            </a>
+        </div>
+
+        <div style="background-color: #f3f4f6; border-radius: 8px; padding: 25px; margin: 30px 0;">
+            <h3 style="margin-top: 0; color: #1f2937;">What Happens Next?</h3>
+            <p style="color: #4b5563; margin: 10px 0;">
+                <strong>Next 7 days:</strong> Your data remains available for instant reactivation<br>
+                <strong>After 7 days:</strong> Your data will be archived (can be restored with support)<br>
+                <strong>After 30 days:</strong> Your data will be permanently deleted per our privacy policy
+            </p>
+        </div>
+
+        <p style="text-align: center; color: #6b7280;">
+            Have questions or need help deciding?<br>
+            📧 <a href="mailto:support@mapmystandards.ai">support@mapmystandards.ai</a><br>
+            📞 <a href="tel:+1-888-555-0123">1-888-555-0123</a><br>
+            💬 <a href="https://mapmystandards.ai/contact/">Chat with our team</a>
+        </p>
+
+        <div class="footer">
+            <p>© 2025 MapMyStandards.ai - Simplifying Accreditation Excellence</p>
+            <p style="font-size: 12px;">
+                You're receiving this because your A³E trial recently expired.<br>
+                Your account email: {{email}}<br>
+                <a href="{{unsubscribe_link}}" style="color: #6b7280;">Unsubscribe from marketing emails</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

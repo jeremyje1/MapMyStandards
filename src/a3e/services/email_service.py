@@ -378,6 +378,222 @@ The MapMyStandards.ai Team
             body=body,
             html_body=html_body
         )
+    
+    def send_trial_reminder_email(
+        self, 
+        recipient_email: str, 
+        user_name: str,
+        days_remaining: int,
+        institution_name: str = "Your Institution",
+        docs_analyzed: int = 0,
+        hours_saved: int = 0,
+        compliance_score: int = 0,
+        estimated_savings: str = "500+",
+        recommended_plan: str = "professional",
+        discount_percent: int = 20
+    ) -> bool:
+        """Send trial reminder email with personalized stats"""
+        try:
+            # Load template
+            template_path = os.path.join(
+                os.path.dirname(__file__), 
+                "..", 
+                "templates", 
+                "email", 
+                "trial_reminder.html"
+            )
+            
+            with open(template_path, 'r') as f:
+                template = f.read()
+            
+            # Calculate dynamic values
+            recommended_plan_name = {
+                "essential": "Essential Plan",
+                "professional": "Professional Plan", 
+                "enterprise": "Enterprise Plan"
+            }.get(recommended_plan, "Professional Plan")
+            
+            recommended_plan_price = {
+                "essential": "$497",
+                "professional": "$997",
+                "enterprise": "$1,997"
+            }.get(recommended_plan, "$997")
+            
+            annual_savings = {
+                "essential": "$1,194",
+                "professional": "$2,394",
+                "enterprise": "$4,794"
+            }.get(recommended_plan, "$2,394")
+            
+            # Replace template variables
+            html_body = template
+            replacements = {
+                "{{name}}": user_name,
+                "{{email}}": recipient_email,
+                "{{days_remaining}}": str(days_remaining),
+                "{{institution_name}}": institution_name,
+                "{{docs_analyzed}}": str(docs_analyzed),
+                "{{hours_saved}}": str(hours_saved),
+                "{{compliance_score}}": str(compliance_score),
+                "{{estimated_savings}}": estimated_savings,
+                "{{recommended_plan}}": recommended_plan,
+                "{{recommended_plan_name}}": recommended_plan_name,
+                "{{recommended_plan_price}}": recommended_plan_price,
+                "{{annual_savings}}": annual_savings,
+                "{{discount_percent}}": str(discount_percent),
+                "{{unsubscribe_link}}": f"https://api.mapmystandards.ai/unsubscribe?email={recipient_email}"
+            }
+            
+            for key, value in replacements.items():
+                html_body = html_body.replace(key, value)
+            
+            # Handle conditional content based on days remaining
+            if days_remaining == 7:
+                subject = "Your A³E Trial - 7 Days to Transform Your Accreditation Process"
+            elif days_remaining == 3:
+                subject = "⚡ Only 3 Days Left in Your A³E Trial"
+            else:
+                subject = "🚨 Final Day - Your A³E Trial Expires Tomorrow"
+            
+            return self.send_email(
+                to_emails=[recipient_email],
+                subject=subject,
+                body=f"Hi {user_name}, your A³E trial has {days_remaining} days remaining.",
+                html_body=html_body
+            )
+            
+        except Exception as e:
+            logger.error(f"Failed to send trial reminder email: {str(e)}")
+            return False
+    
+    def send_trial_expired_email(
+        self,
+        recipient_email: str,
+        user_name: str,
+        expiration_date: str,
+        institution_name: str = "Your Institution",
+        docs_analyzed: int = 0,
+        hours_saved: int = 0,
+        money_saved: str = "500",
+        compliance_score: int = 0,
+        recommended_plan: str = "professional",
+        offer_expiry_date: str = None
+    ) -> bool:
+        """Send trial expiration email with win-back offer"""
+        try:
+            # Load template
+            template_path = os.path.join(
+                os.path.dirname(__file__),
+                "..",
+                "templates",
+                "email",
+                "trial_expired.html"
+            )
+            
+            with open(template_path, 'r') as f:
+                template = f.read()
+            
+            # Calculate offer expiry if not provided
+            if not offer_expiry_date:
+                from datetime import datetime, timedelta
+                offer_expiry = datetime.now() + timedelta(days=7)
+                offer_expiry_date = offer_expiry.strftime("%B %d, %Y")
+            
+            # Replace template variables
+            html_body = template
+            replacements = {
+                "{{name}}": user_name,
+                "{{email}}": recipient_email,
+                "{{expiration_date}}": expiration_date,
+                "{{institution_name}}": institution_name,
+                "{{docs_analyzed}}": str(docs_analyzed),
+                "{{hours_saved}}": str(hours_saved),
+                "{{money_saved}}": money_saved,
+                "{{compliance_score}}": str(compliance_score),
+                "{{recommended_plan}}": recommended_plan,
+                "{{offer_expiry_date}}": offer_expiry_date,
+                "{{unsubscribe_link}}": f"https://api.mapmystandards.ai/unsubscribe?email={recipient_email}"
+            }
+            
+            for key, value in replacements.items():
+                html_body = html_body.replace(key, value)
+            
+            subject = "Your A³E Trial Has Expired - But There's Still Time!"
+            
+            return self.send_email(
+                to_emails=[recipient_email],
+                subject=subject,
+                body=f"Hi {user_name}, your A³E trial has expired but we have a special offer for you.",
+                html_body=html_body
+            )
+            
+        except Exception as e:
+            logger.error(f"Failed to send trial expired email: {str(e)}")
+            return False
+    
+    async def send_enhanced_password_reset_email(
+        self,
+        recipient_email: str,
+        user_name: str,
+        reset_link: str,
+        reset_code: str,
+        request_time: str,
+        ip_address: str = "Unknown",
+        location: str = "Unknown",
+        device: str = "Unknown",
+        request_id: str = None,
+        expiry_hours: int = 24
+    ) -> bool:
+        """Send enhanced password reset email with security details"""
+        try:
+            # Load template
+            template_path = os.path.join(
+                os.path.dirname(__file__),
+                "..",
+                "templates",
+                "email",
+                "password_reset.html"
+            )
+            
+            with open(template_path, 'r') as f:
+                template = f.read()
+            
+            # Generate request ID if not provided
+            if not request_id:
+                import uuid
+                request_id = str(uuid.uuid4())[:8]
+            
+            # Replace template variables
+            html_body = template
+            replacements = {
+                "{{name}}": user_name,
+                "{{email}}": recipient_email,
+                "{{reset_link}}": reset_link,
+                "{{reset_code}}": reset_code,
+                "{{request_time}}": request_time,
+                "{{ip_address}}": ip_address,
+                "{{location}}": location,
+                "{{device}}": device,
+                "{{request_id}}": request_id,
+                "{{expiry_hours}}": str(expiry_hours),
+                "{{unsubscribe_link}}": f"https://api.mapmystandards.ai/unsubscribe?email={recipient_email}"
+            }
+            
+            for key, value in replacements.items():
+                html_body = html_body.replace(key, value)
+            
+            subject = "Password Reset Request - MapMyStandards A³E"
+            
+            return self.send_email(
+                to_emails=[recipient_email],
+                subject=subject,
+                body=f"Hi {user_name}, click here to reset your password: {reset_link}",
+                html_body=html_body
+            )
+            
+        except Exception as e:
+            logger.error(f"Failed to send password reset email: {str(e)}")
+            return False
 
 # Create global email service instance
 email_service = EmailService()

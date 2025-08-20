@@ -62,6 +62,42 @@ except ImportError as e:
     auth_router_available = False
     _auth_import_exception = e
 
+# Import new routers
+try:
+    from .api.routes.trial import router as trial_router
+    trial_router_available = True
+except ImportError as e:
+    trial_router_available = False
+    _trial_import_exception = e
+
+try:
+    from .api.routes.auth_impl import router as auth_impl_router
+    auth_impl_router_available = True
+except ImportError as e:
+    auth_impl_router_available = False
+    _auth_impl_import_exception = e
+
+try:
+    from .api.routes.documents import router as documents_router
+    documents_router_available = True
+except ImportError as e:
+    documents_router_available = False
+    _documents_import_exception = e
+
+try:
+    from .api.routes.dashboard import router as dashboard_router
+    dashboard_router_available = True
+except ImportError as e:
+    dashboard_router_available = False
+    _dashboard_import_exception = e
+
+try:
+    from .api.routes.compliance import router as compliance_router
+    compliance_router_available = True
+except ImportError as e:
+    compliance_router_available = False
+    _compliance_import_exception = e
+
 # Configure logging
 logging.basicConfig(level=getattr(logging, settings.log_level), format=settings.log_format)
 logger = logging.getLogger(__name__)
@@ -302,6 +338,38 @@ if auth_router_available:
     app.include_router(auth_router)
 else:
     logger.warning("Auth router not available - using temporary auth endpoints")
+
+# Include new routers
+if trial_router_available:
+    app.include_router(trial_router)
+    logger.info("✅ Trial router loaded")
+else:
+    logger.warning("⚠️ Trial router not available")
+
+if auth_impl_router_available:
+    app.include_router(auth_impl_router)
+    logger.info("✅ Auth implementation router loaded")
+else:
+    logger.warning("⚠️ Auth implementation router not available")
+
+if documents_router_available:
+    app.include_router(documents_router)
+    logger.info("✅ Documents router loaded")
+else:
+    logger.warning("⚠️ Documents router not available")
+
+if dashboard_router_available:
+    app.include_router(dashboard_router)
+    logger.info("✅ Dashboard router loaded")
+else:
+    logger.warning("⚠️ Dashboard router not available")
+
+if compliance_router_available:
+    app.include_router(compliance_router)
+    logger.info("✅ Compliance router loaded")
+else:
+    logger.warning("⚠️ Compliance router not available")
+
 app.include_router(integrations_router)
 app.include_router(proprietary_router)
 app.include_router(billing_router)

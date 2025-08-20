@@ -159,3 +159,8 @@ temp/
 .tmp/
 .vercel
 mailersend_api.env
+.env*.local
+
+# Environment files with sensitive data
+.env.vercel*
+.env.local

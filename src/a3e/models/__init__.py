@@ -18,6 +18,9 @@ from ..core.accreditation_registry import InstitutionType, AccreditorType
 
 Base = declarative_base()
 
+# Import user models after Base is defined
+from .user import User, UserSession, PasswordReset, UsageEvent
+
 # Association tables for many-to-many relationships
 institution_accreditor_association = Table(
     'institution_accreditor',
