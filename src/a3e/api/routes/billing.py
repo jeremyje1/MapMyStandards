@@ -3,10 +3,11 @@ Payment API Routes for A³E
 Handles trial signup, subscription management, and billing
 """
 
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Depends, status, Request
 from pydantic import BaseModel, EmailStr
 from typing import Optional, Dict, Any
 import logging
+import os
 
 try:
     from ...services.payment_service import PaymentService  # type: ignore
@@ -261,30 +262,70 @@ async def get_pricing_plans():
     )
 
 @router.post("/webhook/stripe")
-async def stripe_webhook(request: dict):
+async def stripe_webhook(request: Request):
     """Handle Stripe webhooks for payment events"""
     try:
-        # Verify webhook signature
-        # Process webhook events (payment success, failures, etc.)
+        # Get raw body for signature verification
+        body = await request.body()
+        sig_header = request.headers.get('stripe-signature')
         
-        event_type = request.get("type")
+        # For development, accept webhooks without signature verification
+        # In production, always verify with stripe.Webhook.construct_event
+        webhook_secret = os.getenv('STRIPE_WEBHOOK_SECRET')
         
-        if event_type == "payment_intent.succeeded":
+        if webhook_secret and sig_header:
+            try:
+                import stripe
+                event = stripe.Webhook.construct_event(
+                    body, sig_header, webhook_secret
+                )
+            except ValueError:
+                logger.error("Invalid webhook payload")
+                raise HTTPException(status_code=400, detail="Invalid payload")
+            except stripe.error.SignatureVerificationError:
+                logger.error("Invalid webhook signature")
+                raise HTTPException(status_code=400, detail="Invalid signature")
+        else:
+            # Development mode - parse without verification
+            import json
+            event = json.loads(body)
+            logger.warning("⚠️ Webhook signature not verified (dev mode)")
+        
+        event_type = event.get("type")
+        logger.info(f"Processing webhook: {event_type}")
+        
+        # Handle checkout session completed
+        if event_type == "checkout.session.completed":
+            session = event["data"]["object"]
+            customer_email = session.get("customer_details", {}).get("email")
+            if customer_email:
+                # Log successful subscription
+                logger.info(f"✅ New subscription: {customer_email}")
+                # TODO: Update user subscription status in database
+                
+        elif event_type == "payment_intent.succeeded":
             # Handle successful payment
-            await _handle_payment_success(request["data"]["object"])
+            payment = event["data"]["object"]
+            logger.info(f"✅ Payment succeeded: {payment.get('id')}")
+            
         elif event_type == "invoice.payment_failed":
             # Handle failed payment
-            await _handle_payment_failure(request["data"]["object"])
+            invoice = event["data"]["object"]
+            logger.warning(f"⚠️ Payment failed for customer: {invoice.get('customer')}")
+            
         elif event_type == "customer.subscription.deleted":
             # Handle subscription cancellation
-            await _handle_subscription_cancelled(request["data"]["object"])
+            subscription = event["data"]["object"]
+            logger.info(f"Subscription cancelled: {subscription.get('id')}")
         
-        return {"status": "success"}
+        return {"status": "success", "type": event_type}
         
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Webhook processing error: {e}")
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Webhook processing failed"
         )
 
