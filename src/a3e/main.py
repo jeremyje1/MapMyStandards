@@ -211,7 +211,24 @@ async def lifespan(app: FastAPI):
             log_warning_once("⚠️ Agent orchestrator unavailable - missing dependencies (autogen)")
             agent_orchestrator = None
         
-        # Load accreditation standards into vector database
+            # Verify Tailwind build present (strict in production)
+            try:
+                css_path = WEB_DIR / "static" / "css" / "tailwind.css"
+                if settings.is_production:
+                    if not css_path.exists():
+                        raise RuntimeError(f"tailwind.css missing at {css_path}")
+                    if css_path.stat().st_size < 5000:  # heuristically too small
+                        raise RuntimeError(f"tailwind.css suspiciously small ({css_path.stat().st_size} bytes)")
+                else:
+                    if not css_path.exists():
+                        logger.warning("Tailwind CSS not found (development mode) - some pages may be unstyled")
+                logger.info("Tailwind CSS check passed: exists=%s size=%s",
+                            css_path.exists(), css_path.stat().st_size if css_path.exists() else None)
+            except Exception as css_err:
+                logger.error(f"Critical frontend asset error: {css_err}")
+                raise
+
+            # Load accreditation standards into vector database
         await _load_accreditation_standards()
         logger.info("✅ Accreditation standards loaded")
         
