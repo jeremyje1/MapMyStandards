@@ -1,0 +1,14 @@
+{
+  "name": "mapmystandards-web",
+  "version": "1.0.0",
+  "description": "MapMyStandards web frontend",
+  "scripts": {
+    "build-css": "tailwindcss -i ./src/input.css -o ./static/css/tailwind.css --minify",
+    "watch-css": "tailwindcss -i ./src/input.css -o ./static/css/tailwind.css --watch",
+    "build": "npm run build-css",
+    "dev": "npm run watch-css"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.0"
+  }
+}

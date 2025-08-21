@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Tailwind (built) -->
-    <link rel="stylesheet" href="/assets/styles.css">
+    <link rel="stylesheet" href="/web/static/css/tailwind.css">
     
     <style>
         body { font-family: 'Inter', sans-serif; }
@@ -80,7 +80,7 @@
             </div>
 
             <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                <a href="/web/onboarding.html" class="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors" id="onboardingLink">
+                <a href="/onboarding" class="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors" id="onboardingLink">
                     🚀 Begin Guided Onboarding
                 </a>
                 <a href="/web/dashboard.html" class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors" id="dashboardLink">
@@ -382,7 +382,7 @@
             
             if (countdown <= 0) {
                 clearInterval(timer);
-                window.location.href = '/web/onboarding.html';
+                window.location.href = '/onboarding';
             }
         }, 1000);
         
