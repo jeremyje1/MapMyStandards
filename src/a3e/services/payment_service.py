@@ -11,6 +11,11 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from ..core.config import get_settings
 from ..services.database_service import DatabaseService
+try:
+    from ..services.email_service import EmailService  # type: ignore
+    _email_available = True
+except Exception:
+    _email_available = False
 import logging
 
 logger = logging.getLogger(__name__)
@@ -143,6 +148,15 @@ class PaymentService:
                         }
             except Exception as di_err:
                 logger.debug(f"Unable to parse discount info (non-fatal): {di_err}")
+
+            # Fire welcome email (non-blocking best-effort)
+            try:
+                if _email_available:
+                    EmailService().send_welcome_email(email, email.split('@')[0])
+                else:
+                    logger.debug("Email service not available; skipping welcome email")
+            except Exception as em_err:
+                logger.warning(f"Unable to send welcome email: {em_err}")
 
             return {
                 'success': True,
@@ -434,8 +448,12 @@ class PaymentService:
         # Implementation would update database record
         pass
     
-    async def _send_welcome_email(self, email: str, institution_name: str, api_key: str):
-        """Send welcome email with onboarding information"""
-        # Implementation would send email via your email service
-        logger.info(f"Welcome email sent to {email}")
-        pass
+    async def _send_welcome_email(self, email: str, institution_name: str, api_key: str):  # legacy helper (unused now)
+        try:
+            if _email_available:
+                EmailService().send_welcome_email(email, institution_name or email.split('@')[0])
+                logger.info(f"Welcome email dispatched to {email}")
+            else:
+                logger.debug("Email service not available for welcome email helper")
+        except Exception as e:
+            logger.warning(f"Welcome email helper failed: {e}")
