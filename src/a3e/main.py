@@ -957,6 +957,14 @@ if WEB_DIR.exists():
         logger.warning("⚠️ No assets directory found to mount at /assets (styles.css 404 risk)")
     logger.info(f"Web directory mounted from: {WEB_DIR}")
 
+    # Explicit route for Tailwind CSS (some platforms mis-handle nested static dirs)
+    @app.get("/web/static/css/tailwind.css", include_in_schema=False)
+    async def tailwind_css():  # noqa: D401
+        css_file = WEB_DIR / "static" / "css" / "tailwind.css"
+        if css_file.exists():
+            return FileResponse(str(css_file), media_type="text/css")
+        return Response(status_code=404, content="/* tailwind.css missing */", media_type="text/css")
+
     @app.get("/login", response_class=FileResponse, include_in_schema=False)
     async def login_page():  # noqa: D401
         return FileResponse(str(WEB_DIR / "login.html"))
