@@ -71,7 +71,8 @@ class PaymentService:
             async def _call(func, *f_args, **f_kwargs):
                 # Use loop.run_in_executor for Python 3.8 compatibility
                 loop = asyncio.get_event_loop()
-                return await loop.run_in_executor(None, func, *f_args, **f_kwargs)
+                # run_in_executor doesn't support kwargs, so we use a lambda
+                return await loop.run_in_executor(None, lambda: func(*f_args, **f_kwargs))
 
             logger.info("[trial] Starting customer lookup/create for %s", email)
             customers = await _call(stripe.Customer.list, email=email, limit=1)
@@ -394,39 +395,50 @@ class PaymentService:
     
     def _get_price_id(self, plan: str) -> str:
         """Get Stripe price ID for plan (uses environment variables)"""
-        # Temporary hardcoded price IDs from Railway environment
-        # TODO: Fix environment variable loading issue
-        hardcoded_price_ids = {
-            "college": "price_1RyVQ4K8PKpLCKDZON0IMe3F",  # STRIPE_PRICE_ID_PROFESSIONAL_MONTHLY
-            "multicampus": "price_1RyVQgK8PKpLCKDZTais3Tyx",  # STRIPE_PRICE_ID_INSTITUTION_MONTHLY
-            "college_monthly": "price_1RyVQ4K8PKpLCKDZON0IMe3F",
-            "college_yearly": "price_1RyVQFK8PKpLCKDZ7KxYraxk",  # STRIPE_PRICE_ID_PROFESSIONAL_ANNUAL
-            "multicampus_monthly": "price_1RyVQgK8PKpLCKDZTais3Tyx",
-            "multicampus_yearly": "price_1RyVQrK8PKpLCKDZUshqaOvZ"  # STRIPE_PRICE_ID_INSTITUTION_ANNUAL
+        # Check if we're in live mode
+        import stripe as _stripe
+        is_live_mode = _stripe.api_key and str(_stripe.api_key).startswith('sk_live')
+        
+        # Try environment variables first
+        env_price_ids = {
+            "college": self.settings.STRIPE_PRICE_COLLEGE_MONTHLY or os.getenv('STRIPE_PRICE_ID_PROFESSIONAL_MONTHLY', ''),
+            "multicampus": self.settings.STRIPE_PRICE_MULTI_CAMPUS_MONTHLY or os.getenv('STRIPE_PRICE_ID_INSTITUTION_MONTHLY', ''),
+            "college_monthly": self.settings.STRIPE_PRICE_COLLEGE_MONTHLY or os.getenv('STRIPE_PRICE_ID_PROFESSIONAL_MONTHLY', ''),
+            "college_yearly": self.settings.STRIPE_PRICE_COLLEGE_YEARLY or os.getenv('STRIPE_PRICE_ID_PROFESSIONAL_ANNUAL', ''),
+            "multicampus_monthly": self.settings.STRIPE_PRICE_MULTI_CAMPUS_MONTHLY or os.getenv('STRIPE_PRICE_ID_INSTITUTION_MONTHLY', ''), 
+            "multicampus_yearly": self.settings.STRIPE_PRICE_MULTI_CAMPUS_YEARLY or os.getenv('STRIPE_PRICE_ID_INSTITUTION_ANNUAL', '')
         }
         
-        # Try environment variables first, then fallback to hardcoded
-        price_ids = {
-            "college": self.settings.STRIPE_PRICE_COLLEGE_MONTHLY or os.getenv('STRIPE_PRICE_ID_PROFESSIONAL_MONTHLY', '') or hardcoded_price_ids.get("college", ''),
-            "multicampus": self.settings.STRIPE_PRICE_MULTI_CAMPUS_MONTHLY or os.getenv('STRIPE_PRICE_ID_INSTITUTION_MONTHLY', '') or hardcoded_price_ids.get("multicampus", ''),
-            "college_monthly": self.settings.STRIPE_PRICE_COLLEGE_MONTHLY or os.getenv('STRIPE_PRICE_ID_PROFESSIONAL_MONTHLY', '') or hardcoded_price_ids.get("college_monthly", ''),
-            "college_yearly": self.settings.STRIPE_PRICE_COLLEGE_YEARLY or os.getenv('STRIPE_PRICE_ID_PROFESSIONAL_ANNUAL', '') or hardcoded_price_ids.get("college_yearly", ''),
-            "multicampus_monthly": self.settings.STRIPE_PRICE_MULTI_CAMPUS_MONTHLY or os.getenv('STRIPE_PRICE_ID_INSTITUTION_MONTHLY', '') or hardcoded_price_ids.get("multicampus_monthly", ''), 
-            "multicampus_yearly": self.settings.STRIPE_PRICE_MULTI_CAMPUS_YEARLY or os.getenv('STRIPE_PRICE_ID_INSTITUTION_ANNUAL', '') or hardcoded_price_ids.get("multicampus_yearly", '')
-        }
-        price_id = price_ids.get(plan, '')
+        price_id = env_price_ids.get(plan, '')
         
-        # Debug logging
+        # In live mode, refuse to use hardcoded fallbacks
+        if is_live_mode and not price_id:
+            logger.error(f"CRITICAL: No price ID configured for plan '{plan}' in live mode!")
+            logger.error("Required environment variables:")
+            logger.error("  STRIPE_PRICE_COLLEGE_MONTHLY")
+            logger.error("  STRIPE_PRICE_COLLEGE_YEARLY")
+            logger.error("  STRIPE_PRICE_MULTI_CAMPUS_MONTHLY")
+            logger.error("  STRIPE_PRICE_MULTI_CAMPUS_YEARLY")
+            raise ValueError(f"Price configuration missing for plan '{plan}' in live mode. Please configure environment variables.")
+        
+        # Development mode only: temporary hardcoded fallbacks
+        if not price_id and not is_live_mode:
+            hardcoded_price_ids = {
+                "college": "price_1RyVQ4K8PKpLCKDZON0IMe3F",
+                "multicampus": "price_1RyVQgK8PKpLCKDZTais3Tyx",
+                "college_monthly": "price_1RyVQ4K8PKpLCKDZON0IMe3F",
+                "college_yearly": "price_1RyVQFK8PKpLCKDZ7KxYraxk",
+                "multicampus_monthly": "price_1RyVQgK8PKpLCKDZTais3Tyx",
+                "multicampus_yearly": "price_1RyVQrK8PKpLCKDZUshqaOvZ"
+            }
+            price_id = hardcoded_price_ids.get(plan, '')
+            if price_id:
+                logger.warning(f"[DEV MODE] Using hardcoded price ID for plan '{plan}': {price_id}")
+        
         if not price_id:
             logger.error(f"No price ID found for plan: {plan}")
-            logger.error(f"Settings STRIPE_PRICE_COLLEGE_MONTHLY: {self.settings.STRIPE_PRICE_COLLEGE_MONTHLY}")
-            logger.error(f"Direct env STRIPE_PRICE_ID_PROFESSIONAL_MONTHLY: {os.getenv('STRIPE_PRICE_ID_PROFESSIONAL_MONTHLY')}")
         else:
             logger.info(f"Using price ID {price_id} for plan {plan}")
-            # Warn if using fallback while on live key
-            import stripe as _stripe
-            if (not self.settings.STRIPE_PRICE_COLLEGE_MONTHLY) and _stripe.api_key and str(_stripe.api_key).startswith('sk_live'):
-                logger.warning("[pricing] Using fallback (likely test) price ID %s under live secret key. Configure live price env vars.", price_id)
         
         return price_id
     
