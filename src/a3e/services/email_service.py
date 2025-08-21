@@ -460,6 +460,9 @@ The MapMyStandards.ai Team
             
             # Replace template variables
             html_body = template
+            from src.a3e.core.config import settings
+            base_app = settings.PUBLIC_APP_URL.rstrip('/')
+            base_api = settings.PUBLIC_API_URL.rstrip('/')
             replacements = {
                 "{{name}}": user_name,
                 "{{email}}": recipient_email,
@@ -474,7 +477,7 @@ The MapMyStandards.ai Team
                 "{{recommended_plan_price}}": recommended_plan_price,
                 "{{annual_savings}}": annual_savings,
                 "{{discount_percent}}": str(discount_percent),
-                "{{unsubscribe_link}}": f"https://api.mapmystandards.ai/unsubscribe?email={recipient_email}"
+                "{{unsubscribe_link}}": f"{base_api}/unsubscribe?email={recipient_email}"
             }
             
             for key, value in replacements.items():
@@ -534,6 +537,8 @@ The MapMyStandards.ai Team
             
             # Replace template variables
             html_body = template
+            from src.a3e.core.config import settings
+            base_api = settings.PUBLIC_API_URL.rstrip('/')
             replacements = {
                 "{{name}}": user_name,
                 "{{email}}": recipient_email,
@@ -545,7 +550,7 @@ The MapMyStandards.ai Team
                 "{{compliance_score}}": str(compliance_score),
                 "{{recommended_plan}}": recommended_plan,
                 "{{offer_expiry_date}}": offer_expiry_date,
-                "{{unsubscribe_link}}": f"https://api.mapmystandards.ai/unsubscribe?email={recipient_email}"
+                "{{unsubscribe_link}}": f"{base_api}/unsubscribe?email={recipient_email}"
             }
             
             for key, value in replacements.items():
@@ -598,6 +603,8 @@ The MapMyStandards.ai Team
             
             # Replace template variables
             html_body = template
+            from src.a3e.core.config import settings
+            base_api = settings.PUBLIC_API_URL.rstrip('/')
             replacements = {
                 "{{name}}": user_name,
                 "{{email}}": recipient_email,
@@ -609,7 +616,7 @@ The MapMyStandards.ai Team
                 "{{device}}": device,
                 "{{request_id}}": request_id,
                 "{{expiry_hours}}": str(expiry_hours),
-                "{{unsubscribe_link}}": f"https://api.mapmystandards.ai/unsubscribe?email={recipient_email}"
+                "{{unsubscribe_link}}": f"{base_api}/unsubscribe?email={recipient_email}"
             }
             
             for key, value in replacements.items():

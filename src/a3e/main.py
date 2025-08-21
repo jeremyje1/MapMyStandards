@@ -633,6 +633,22 @@ async def health_check():
             }
         )
 
+@app.get("/health/frontend")
+async def frontend_health():
+    """Report presence & size of critical frontend assets (tailwind.css)."""
+    css_path = WEB_DIR / "static" / "css" / "tailwind.css"
+    exists = css_path.exists()
+    size = css_path.stat().st_size if exists else None
+    status = "healthy" if exists and size and size > 5000 else ("degraded" if exists else "missing")
+    return {
+        "asset": "tailwind.css",
+        "exists": exists,
+        "size_bytes": size,
+        "status": status,
+        "threshold_min_bytes": 5000,
+        "timestamp": datetime.utcnow().isoformat()
+    }
+
 @app.get(f"{settings.api_prefix}/accreditors")
 async def list_accreditors(
     state: Optional[str] = None,

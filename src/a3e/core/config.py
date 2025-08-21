@@ -100,6 +100,10 @@ class Settings(BaseSettings):
         default="http://localhost:3000,http://localhost:8080",
         env="CORS_ORIGINS"
     )
+
+    # Public URLs (used in emails/static links)
+    PUBLIC_APP_URL: str = Field(default="https://platform.mapmystandards.ai", env="PUBLIC_APP_URL")
+    PUBLIC_API_URL: str = Field(default="https://api.mapmystandards.ai", env="PUBLIC_API_URL")
     
     # Payment Configuration (Stripe)
     STRIPE_SECRET_KEY: str = Field(default="", env="STRIPE_SECRET_KEY")

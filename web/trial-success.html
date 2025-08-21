@@ -11,23 +11,21 @@
     
         <!-- Tailwind (built) -->
         <link rel="stylesheet" href="/web/static/css/tailwind.css?v=1" id="tailwindStylesheet">
-        <script>
-            // Minimal Tailwind load failure detector
-            window.addEventListener('load', () => {
-                const el = document.createElement('div');
-                el.className = 'hidden';
-                document.body.appendChild(el);
-                const ok = window.getComputedStyle(el).display === 'none';
-                document.body.removeChild(el);
-                if(!ok){
-                    console.warn('Tailwind CSS likely failed to load.');
-                    const warn=document.createElement('div');
-                    warn.textContent='⚠ Tailwind CSS missing';
-                    warn.style.cssText='position:fixed;bottom:8px;right:8px;background:#fee2e2;color:#991b1b;padding:6px 10px;border-radius:6px;font:12px Inter,system-ui;z-index:9999';
-                    document.body.appendChild(warn);
+            <script>
+                // Tailwind load check (dev only)
+                if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+                    window.addEventListener('load', () => {
+                        const el = document.createElement('div');
+                            el.className = 'hidden';
+                            document.body.appendChild(el);
+                            const ok = window.getComputedStyle(el).display === 'none';
+                            document.body.removeChild(el);
+                            if(!ok){
+                                console.warn('Tailwind CSS likely failed to load (dev).');
+                            }
+                    });
                 }
-            });
-        </script>
+            </script>
     
     <style>
         body { font-family: 'Inter', sans-serif; }
@@ -414,6 +412,26 @@
                         });
                         const container=document.querySelector('.gradient-bg .flex.flex-col');
                         if(container) container.appendChild(btn);
+                })();
+
+                // Dev-only performance hints (basic) – only on localhost
+                (function perfBanner(){
+                    if(!(location.hostname === 'localhost' || location.hostname === '127.0.0.1')) return;
+                    window.addEventListener('load', () => {
+                        const t = performance.timing;
+                        const navStart = t.navigationStart;
+                        const dcl = t.domContentLoadedEventEnd - navStart;
+                        const load = t.loadEventEnd - navStart;
+                        const banner = document.createElement('div');
+                        banner.style.cssText='position:fixed;bottom:0;left:0;right:0;background:#1f2937;color:#f8fafc;font:12px/1.4 Inter,system-ui;padding:4px 10px;display:flex;align-items:center;justify-content:space-between;z-index:9999;box-shadow:0 -2px 6px rgba(0,0,0,0.25)';
+                        banner.innerHTML = `<span>Perf DCL: ${dcl}ms · Load: ${load}ms</span>`;
+                        const close = document.createElement('button');
+                        close.textContent='×';
+                        close.style.cssText='background:none;border:none;color:#f8fafc;font-size:14px;cursor:pointer;margin-left:12px';
+                        close.onclick=()=>banner.remove();
+                        banner.appendChild(close);
+                        document.body.appendChild(banner);
+                    });
                 })();
     </script>
 </body>
