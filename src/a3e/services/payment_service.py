@@ -52,7 +52,7 @@ class PaymentService:
                 logger.error("Stripe API key not configured - check STRIPE_SECRET_KEY environment variable")
                 logger.error(f"Current settings has STRIPE_SECRET_KEY: {bool(self.settings.STRIPE_SECRET_KEY)}")
                 logger.error(f"stripe.api_key is: {stripe.api_key}")
-                return {'success': False, 'error': 'Payment system not configured. Please contact support.'}
+                return {'success': False, 'stage': 'precheck', 'error': 'Payment system not configured. Please contact support.'}
             
             # Helper to run blocking stripe calls in a thread
             async def _call(func, *f_args, **f_kwargs):
@@ -93,8 +93,14 @@ class PaymentService:
             
             if not price_id:
                 logger.error(f"No price ID found for plan: {plan}")
-                logger.error(f"Available price IDs: college={self.settings.STRIPE_PRICE_COLLEGE_MONTHLY}, multicampus={self.settings.STRIPE_PRICE_MULTI_CAMPUS_MONTHLY}")
-                return {'success': False, 'error': f'Invalid plan selected: {plan}'}
+                logger.error(
+                    "Available price IDs (env) college=%s college_yearly=%s multicampus=%s multicampus_yearly=%s",
+                    self.settings.STRIPE_PRICE_COLLEGE_MONTHLY,
+                    getattr(self.settings, 'STRIPE_PRICE_COLLEGE_YEARLY', None),
+                    self.settings.STRIPE_PRICE_MULTI_CAMPUS_MONTHLY,
+                    getattr(self.settings, 'STRIPE_PRICE_MULTI_CAMPUS_YEARLY', None)
+                )
+                return {'success': False, 'stage': 'price_lookup', 'error': f'Invalid plan selected: {plan}'}
             
             # Create subscription with trial
             subscription_params = {
@@ -188,10 +194,10 @@ class PaymentService:
             
         except stripe.error.StripeError as e:
             logger.error(f"Stripe error creating trial subscription: {e}")
-            return {'success': False, 'error': str(e)}
+            return {'success': False, 'stage': 'stripe', 'error': str(e)}
         except Exception as e:
             logger.error(f"Error creating trial subscription: {e}")
-            return {'success': False, 'error': 'Failed to create trial subscription'}
+            return {'success': False, 'stage': 'unexpected', 'error': 'Failed to create trial subscription'}
     
     async def create_subscription(self, 
                                 customer_id: str,

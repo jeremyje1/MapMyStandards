@@ -114,6 +114,15 @@ async def trial_signup(request: TrialSignupRequest, payment_service: PaymentServ
                 }
             }
         else:
+            # Enhanced diagnostics for 400 errors seen in client
+            logger.error(
+                "Trial signup failed (email=%s plan=%s payment_method_id=%s) -> %s",
+                request.email,
+                request.plan,
+                request.payment_method_id[:10] + '...' if request.payment_method_id else None,
+                result
+            )
+            # Provide a stable error structure
             raise HTTPException(status_code=400, detail=result['error'])
             
     except HTTPException:
