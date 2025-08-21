@@ -527,8 +527,13 @@
                 console.log('Submitting trial signup with data:', data);
                 
                 // Ensure required fields are present
-                if (!data.institution_name || !data.email || !data.role) {
-                    throw new Error('Missing required fields. Please complete all steps.');
+                if (!data.institution_name || !data.email) {
+                    throw new Error('Missing required fields: institution_name and email are required.');
+                }
+                
+                // Ensure plan is set from radio selection
+                if (!data.plan) {
+                    data.plan = 'college'; // Default plan if none selected
                 }
 
                 const controller = new AbortController();

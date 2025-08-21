@@ -35,12 +35,20 @@ PRICING: Dict[str, Dict[str, Any]] = {
 class TrialSignupRequest(BaseModel):
     institution_name: str
     email: EmailStr
-    role: str
+    role: Optional[str] = None  # Made optional since frontend might not send it
     plan: str = "college_monthly"  # Updated default to match stripe_trial_setup.md
     payment_method_id: str  # Stripe payment method ID
+    first_name: Optional[str] = None  # Accept first_name from frontend
+    last_name: Optional[str] = None  # Accept last_name from frontend
     phone: Optional[str] = None
     newsletter_opt_in: bool = False
     coupon_code: Optional[str] = None  # Added coupon support
+    cardholder_name: Optional[str] = None  # Frontend sends this
+    billing_email: Optional[str] = None  # Frontend sends this
+    billing_address: Optional[str] = None  # Frontend sends this
+    billing_zip: Optional[str] = None  # Frontend sends this
+    user_count: Optional[str] = None  # Frontend might send this
+    primary_accreditor: Optional[str] = None  # Frontend might send this
 
 class SubscriptionRequest(BaseModel):
     customer_id: str
@@ -71,7 +79,7 @@ async def trial_signup(request: TrialSignupRequest, payment_service: PaymentServ
     Requires credit card for seamless conversion.
     """
     logger.info(f"Trial signup request received for email: {request.email}, plan: {request.plan}")
-    logger.info(f"Full request data: institution_name={request.institution_name}, role={request.role}")
+    logger.info(f"Full request data: institution_name={request.institution_name}, role={request.role}, first_name={request.first_name}, last_name={request.last_name}")
     try:
         # Create trial subscription with Stripe
         try:
