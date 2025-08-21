@@ -27,6 +27,9 @@ class PaymentService:
             logger.info(f"Stripe initialized with key ending in ...{stripe_key[-4:]}")
         else:
             logger.warning("No Stripe secret key found - payment features will not work")
+            # Debug: check environment variables directly
+            logger.warning(f"STRIPE_SECRET_KEY from env: {bool(os.getenv('STRIPE_SECRET_KEY'))}")
+            logger.warning(f"STRIPE_PRICE_ID_PROFESSIONAL_MONTHLY from env: {os.getenv('STRIPE_PRICE_ID_PROFESSIONAL_MONTHLY', 'Not found')}")
         
         # Initialize database service lazily with configured database URL
         try:
@@ -70,6 +73,12 @@ class PaymentService:
             
             # Get the price ID for the plan
             price_id = self._get_price_id(plan)
+            logger.info(f"Price ID for plan '{plan}': {price_id}")
+            
+            if not price_id:
+                logger.error(f"No price ID found for plan: {plan}")
+                logger.error(f"Available price IDs: college={self.settings.STRIPE_PRICE_COLLEGE_MONTHLY}, multicampus={self.settings.STRIPE_PRICE_MULTI_CAMPUS_MONTHLY}")
+                return {'success': False, 'error': f'Invalid plan selected: {plan}'}
             
             # Create subscription with trial
             subscription_params = {
@@ -302,14 +311,22 @@ class PaymentService:
         """Get Stripe price ID for plan (uses environment variables)"""
         # Map simple plan names to monthly prices (trials start with monthly)
         price_ids = {
-            "college": self.settings.STRIPE_PRICE_COLLEGE_MONTHLY,
-            "multicampus": self.settings.STRIPE_PRICE_MULTI_CAMPUS_MONTHLY,
-            "college_monthly": self.settings.STRIPE_PRICE_COLLEGE_MONTHLY,
-            "college_yearly": self.settings.STRIPE_PRICE_COLLEGE_YEARLY,
-            "multicampus_monthly": self.settings.STRIPE_PRICE_MULTI_CAMPUS_MONTHLY, 
-            "multicampus_yearly": self.settings.STRIPE_PRICE_MULTI_CAMPUS_YEARLY
+            "college": self.settings.STRIPE_PRICE_COLLEGE_MONTHLY or os.getenv('STRIPE_PRICE_ID_PROFESSIONAL_MONTHLY', ''),
+            "multicampus": self.settings.STRIPE_PRICE_MULTI_CAMPUS_MONTHLY or os.getenv('STRIPE_PRICE_ID_INSTITUTION_MONTHLY', ''),
+            "college_monthly": self.settings.STRIPE_PRICE_COLLEGE_MONTHLY or os.getenv('STRIPE_PRICE_ID_PROFESSIONAL_MONTHLY', ''),
+            "college_yearly": self.settings.STRIPE_PRICE_COLLEGE_YEARLY or os.getenv('STRIPE_PRICE_ID_PROFESSIONAL_ANNUAL', ''),
+            "multicampus_monthly": self.settings.STRIPE_PRICE_MULTI_CAMPUS_MONTHLY or os.getenv('STRIPE_PRICE_ID_INSTITUTION_MONTHLY', ''), 
+            "multicampus_yearly": self.settings.STRIPE_PRICE_MULTI_CAMPUS_YEARLY or os.getenv('STRIPE_PRICE_ID_INSTITUTION_ANNUAL', '')
         }
-        return price_ids.get(plan, self.settings.STRIPE_PRICE_COLLEGE_MONTHLY)
+        price_id = price_ids.get(plan, '')
+        
+        # Debug logging
+        if not price_id:
+            logger.error(f"No price ID found for plan: {plan}")
+            logger.error(f"Settings STRIPE_PRICE_COLLEGE_MONTHLY: {self.settings.STRIPE_PRICE_COLLEGE_MONTHLY}")
+            logger.error(f"Direct env STRIPE_PRICE_ID_PROFESSIONAL_MONTHLY: {os.getenv('STRIPE_PRICE_ID_PROFESSIONAL_MONTHLY')}")
+        
+        return price_id
     
     def _generate_api_key(self, account_id: int) -> str:
         """Generate a secure API key"""
