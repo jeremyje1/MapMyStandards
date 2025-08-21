@@ -26,6 +26,7 @@ alembic==1.13.1
 asyncpg==0.29.0
 psycopg2-binary==2.9.9
 aiosqlite==0.20.0
+greenlet==3.0.3  # Required for SQLAlchemy async context switching
 
 # --- Additional FastAPI dependencies ---
 python-jose[cryptography]==3.3.0
