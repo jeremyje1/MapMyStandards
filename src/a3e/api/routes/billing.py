@@ -122,8 +122,9 @@ async def trial_signup(request: TrialSignupRequest, payment_service: PaymentServ
                 request.payment_method_id[:10] + '...' if request.payment_method_id else None,
                 result
             )
-            # Provide a stable error structure
-            raise HTTPException(status_code=400, detail=result['error'])
+            # Provide a structured error so frontend can surface stage
+            error_payload = {"error": result.get('error', 'Unknown error'), "stage": result.get('stage')}
+            raise HTTPException(status_code=400, detail=error_payload)
             
     except HTTPException:
         raise

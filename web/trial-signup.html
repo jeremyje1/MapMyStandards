@@ -584,7 +584,22 @@
                     if (response.status === 504) {
                         throw new Error('Signup timed out. Please retry.');
                     }
-                    throw new Error(result.detail || 'Signup failed');
+                    // Attempt to extract structured error (FastAPI puts payload in detail)
+                    let errMsg = 'Signup failed';
+                    let stage = '';
+                    if (result && result.detail) {
+                        if (typeof result.detail === 'string') {
+                            errMsg = result.detail;
+                        } else if (typeof result.detail === 'object') {
+                            errMsg = result.detail.error || errMsg;
+                            stage = result.detail.stage || '';
+                        }
+                    }
+                    if (stage) {
+                        errMsg += ` (stage: ${stage})`;
+                    }
+                    console.error('Trial signup error:', result);
+                    throw new Error(errMsg);
                 }
             } catch (error) {
                 document.getElementById('card-errors').textContent = error.message;
