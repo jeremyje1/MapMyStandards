@@ -56,7 +56,9 @@ class PaymentService:
             
             # Helper to run blocking stripe calls in a thread
             async def _call(func, *f_args, **f_kwargs):
-                return await asyncio.to_thread(func, *f_args, **f_kwargs)
+                # Use loop.run_in_executor for Python 3.8 compatibility
+                loop = asyncio.get_event_loop()
+                return await loop.run_in_executor(None, func, *f_args, **f_kwargs)
 
             logger.info("[trial] Starting customer lookup/create for %s", email)
             customers = await _call(stripe.Customer.list, email=email, limit=1)
