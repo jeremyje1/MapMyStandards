@@ -42,7 +42,7 @@
                 </div>
                 <div class="flex items-center space-x-4">
                     <span class="text-sm text-blue-100" id="userEmail">Loading...</span>
-                    <a href="https://api.mapmystandards.ai/landing" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                    <a href="/landing" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
                         🚀 Upgrade Plan
                     </a>
                     <a href="https://mapmystandards.ai/user-guide/" target="_blank" class="text-blue-100 hover:text-white transition-colors">
@@ -61,11 +61,11 @@
                 <h1 class="text-3xl font-bold mb-2">🎯 Welcome to Your A³E Command Center</h1>
                 <p class="text-blue-100 mb-4">Transform your institution into an accreditation powerhouse with AI-powered analytics that become more valuable every day. Your journey to operational excellence starts here.</p>
                 <div class="flex flex-wrap gap-4">
-                    <a href="https://api.mapmystandards.ai/upload" target="_blank" 
+                    <a href="/upload" target="_blank" 
                        class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-6 py-2 rounded-lg transition-colors backdrop-blur-sm">
                         � Start Analysis - Build Your Advantage
                     </a>
-                    <a href="https://api.mapmystandards.ai/docs" target="_blank" 
+                    <a href="/docs" target="_blank" 
                        class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-6 py-2 rounded-lg transition-colors backdrop-blur-sm">
                         📖 API Documentation
                     </a>
@@ -175,7 +175,7 @@
                         <h2 class="text-lg font-semibold text-gray-900">Analysis Sessions - Building Your Advantage</h2>
                         <p class="text-sm text-gray-600">Each analysis strengthens your institutional knowledge and competitive position</p>
                     </div>
-                    <a href="https://api.mapmystandards.ai/upload" target="_blank" 
+                    <a href="/upload" target="_blank" 
                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
                         🚀 Start Analysis →
                     </a>
@@ -190,7 +190,7 @@
                         <p class="text-lg font-medium mb-2">🎯 Ready to Build Your Institutional Advantage?</p>
                         <p class="text-sm mb-4">Upload documents and start creating irreplaceable institutional knowledge that grows more valuable every day</p>
                         <div class="space-y-2">
-                            <a href="https://api.mapmystandards.ai/upload" target="_blank" 
+                            <a href="/upload" target="_blank" 
                                class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
                                 🚀 Start Your First Analysis
                             </a>
@@ -315,7 +315,7 @@
                     const apiKey = localStorage.getItem('a3e_api_key');
                     if (!apiKey) {
                         // Redirect to login page if no API key
-                        window.location.href = './login.html';
+                        window.location.href = '/login';
                         return;
                     }
                 }
@@ -333,7 +333,7 @@
                 if (!isWordPressDeployment && (error.status === 401 || error.status === 403)) {
                     localStorage.clear(); // Clear all stored data
                     alert('Your session has expired. Please log in again.');
-                    window.location.href = './login.html';
+                    window.location.href = '/login';
                 }
             }
         }
@@ -398,7 +398,7 @@
                         <p class="text-lg font-medium mb-2">Ready to start your first analysis?</p>
                         <p class="text-sm mb-4">Upload documents and map evidence to accreditation standards</p>
                         <div class="space-y-2">
-                            <a href="https://api.mapmystandards.ai/upload" target="_blank" 
+                            <a href="/upload" target="_blank" 
                                class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
                                 🚀 Start Analysis
                             </a>
@@ -532,7 +532,7 @@
                 window.location.href = 'https://mapmystandards.ai/';
             } else {
                 // Redirect to login page for local/API deployment
-                window.location.href = './login.html';
+                window.location.href = '/login';
             }
         }
 

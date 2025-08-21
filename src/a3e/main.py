@@ -375,6 +375,14 @@ app.include_router(proprietary_router)
 app.include_router(billing_router)
 app.include_router(api_router, prefix=settings.api_prefix)
 
+# Import and include customer pages router
+try:
+    from .routes.customer_pages import router as customer_pages_router
+    app.include_router(customer_pages_router)
+    logger.info("✅ Customer pages router loaded")
+except ImportError as e:
+    logger.warning(f"⚠️ Customer pages router not available: {e}")
+
 # Import and include tier router
 try:
     from src.a3e.api.routes.tier import router as tier_router
@@ -386,7 +394,12 @@ except ImportError:
 # Root endpoints
 @app.get("/", response_class=HTMLResponse, include_in_schema=False)
 async def root_page(request: Request):
-    """Enhanced landing page with system overview."""
+    """Customer-friendly homepage."""
+    # Try to serve the customer homepage if it exists
+    customer_homepage = WEB_DIR / "customer_homepage.html"
+    if customer_homepage.exists():
+        return FileResponse(str(customer_homepage))
+    # Fallback to template if needed
     return templates.TemplateResponse("index.html", {"request": request})
 
 @app.get("/api", include_in_schema=False)

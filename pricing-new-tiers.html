@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pricing - A³E Platform | MapMyStandards</title>
-    <meta name="description" content="Choose the perfect A³E plan for your institution. Start with a free trial or subscribe to our monthly or annual plans for complete accreditation management.">
+    <meta name="description" content="Choose the perfect A³E plan for your institution. Start with a free trial of our accreditation management platform.">
     
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -16,6 +16,13 @@
         body { font-family: 'Inter', sans-serif; }
         .gradient-bg {
             background: linear-gradient(135deg, rgba(30, 60, 114, 0.95) 0%, rgba(42, 82, 152, 0.95) 100%);
+        }
+        .tier-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .tier-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
         }
     </style>
 </head>
@@ -51,18 +58,29 @@
     <section class="gradient-bg py-20">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h1 class="text-4xl md:text-6xl font-bold text-white mb-6">
-                Choose Your Plan
+                Simple, Transparent Pricing
             </h1>
             <p class="text-xl text-blue-100 mb-8 max-w-3xl mx-auto">
-                Select the perfect A³E plan for your institution's accreditation needs
+                Choose the perfect plan for your accreditation needs. All plans include our core platform features.
             </p>
+            
+            <!-- Billing Toggle -->
+            <div class="inline-flex items-center bg-white/10 backdrop-blur-sm rounded-full p-1">
+                <button id="monthly-toggle" class="px-4 py-2 rounded-full bg-white text-gray-900 font-medium transition-all">
+                    Monthly
+                </button>
+                <button id="annual-toggle" class="px-4 py-2 rounded-full text-white font-medium transition-all">
+                    Annual (Save up to 17%)
+                </button>
+            </div>
         </div>
     </section>
 
-    <!-- Pricing Plans -->
+    <!-- Pricing Tiers -->
     <section class="py-20 bg-gray-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <!-- Free Trial Notice -->
+            
+            <!-- Free Trial Banner -->
             <div class="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-2xl p-6 mb-12 text-center">
                 <div class="flex items-center justify-center mb-4">
                     <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
@@ -73,28 +91,13 @@
                 <p class="text-gray-700 mb-4">
                     Try any plan risk-free. Full access to all features. No credit card required.
                 </p>
-                <a href="/trial" class="inline-flex items-center bg-green-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-green-700 transition-colors">
-                    Start Free Trial →
-                </a>
-            </div>
-
-            <!-- Billing Toggle -->
-            <div class="text-center mb-12">
-                <div class="inline-flex items-center bg-gray-200 rounded-full p-1">
-                    <button id="monthly-toggle" class="px-4 py-2 rounded-full bg-white text-gray-900 font-medium transition-all">
-                        Monthly
-                    </button>
-                    <button id="annual-toggle" class="px-4 py-2 rounded-full text-gray-600 font-medium transition-all">
-                        Annual (Save up to 17%)
-                    </button>
-                </div>
             </div>
 
             <!-- Pricing Grid -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                 
                 <!-- Starter Tier -->
-                <div class="bg-white rounded-3xl shadow-xl border-2 border-gray-200 overflow-hidden hover:shadow-2xl transition-shadow">
+                <div class="tier-card bg-white rounded-3xl shadow-xl border-2 border-gray-200 overflow-hidden">
                     <div class="p-8">
                         <h3 class="text-2xl font-bold text-gray-900 mb-2">Starter</h3>
                         <p class="text-gray-600 text-sm mb-6">Individual departments or pilot programs</p>
@@ -146,7 +149,7 @@
                 </div>
 
                 <!-- Professional Tier (Popular) -->
-                <div class="bg-white rounded-3xl shadow-xl border-2 border-blue-500 overflow-hidden relative hover:shadow-2xl transition-shadow">
+                <div class="tier-card bg-white rounded-3xl shadow-xl border-2 border-blue-500 overflow-hidden relative">
                     <div class="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
                         <span class="bg-blue-600 text-white px-4 py-1 rounded-full text-sm font-semibold">
                             Most Popular
@@ -208,7 +211,7 @@
                 </div>
 
                 <!-- Institution Tier -->
-                <div class="bg-white rounded-3xl shadow-xl border-2 border-gray-200 overflow-hidden hover:shadow-2xl transition-shadow">
+                <div class="tier-card bg-white rounded-3xl shadow-xl border-2 border-gray-200 overflow-hidden">
                     <div class="p-8">
                         <h3 class="text-2xl font-bold text-gray-900 mb-2">Institution</h3>
                         <p class="text-gray-600 text-sm mb-6">Full institutions with multiple accreditations</p>
@@ -268,7 +271,7 @@
                 </div>
 
                 <!-- Enterprise Tier -->
-                <div class="bg-gradient-to-br from-purple-900 to-blue-900 rounded-3xl shadow-xl overflow-hidden text-white hover:shadow-2xl transition-shadow">
+                <div class="tier-card bg-gradient-to-br from-purple-900 to-blue-900 rounded-3xl shadow-xl overflow-hidden text-white">
                     <div class="p-8">
                         <h3 class="text-2xl font-bold mb-2">Enterprise</h3>
                         <p class="text-purple-200 text-sm mb-6">Multi-campus systems & consortiums</p>
@@ -317,17 +320,71 @@
                 </div>
             </div>
 
-            <!-- Money-back Guarantee -->
-            <div class="text-center mt-12">
-                <div class="bg-gray-100 rounded-2xl p-6 inline-block">
-                    <div class="flex items-center justify-center text-gray-700">
-                        <span class="text-2xl mr-3">🛡️</span>
-                        <span class="font-semibold">30-day money-back guarantee</span>
+            <!-- Additional Info -->
+            <div class="mt-16 text-center">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+                    <div class="bg-white rounded-2xl p-6">
+                        <span class="text-3xl mb-3 block">🛡️</span>
+                        <h4 class="font-semibold text-gray-900 mb-2">30-Day Guarantee</h4>
+                        <p class="text-gray-600 text-sm">Not satisfied? Get a full refund within 30 days.</p>
+                    </div>
+                    <div class="bg-white rounded-2xl p-6">
+                        <span class="text-3xl mb-3 block">🔒</span>
+                        <h4 class="font-semibold text-gray-900 mb-2">Secure & Compliant</h4>
+                        <p class="text-gray-600 text-sm">SOC 2 Type II certified. FERPA compliant.</p>
+                    </div>
+                    <div class="bg-white rounded-2xl p-6">
+                        <span class="text-3xl mb-3 block">🚀</span>
+                        <h4 class="font-semibold text-gray-900 mb-2">Quick Setup</h4>
+                        <p class="text-gray-600 text-sm">Get started in minutes with our onboarding team.</p>
                     </div>
                 </div>
             </div>
         </div>
     </section>
+
+    <!-- FAQ Section -->
+    <section class="py-20 bg-white">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-bold text-gray-900 text-center mb-12">Frequently Asked Questions</h2>
+            
+            <div class="space-y-8">
+                <div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-3">Can I change plans anytime?</h3>
+                    <p class="text-gray-600">Yes! You can upgrade or downgrade your plan at any time. Changes take effect on your next billing cycle.</p>
+                </div>
+                
+                <div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-3">What payment methods do you accept?</h3>
+                    <p class="text-gray-600">We accept all major credit cards, ACH transfers, and can arrange invoicing for annual plans.</p>
+                </div>
+                
+                <div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-3">Do you offer discounts for multiple institutions?</h3>
+                    <p class="text-gray-600">Yes! Contact our sales team for consortium and multi-institution pricing.</p>
+                </div>
+                
+                <div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-3">What's included in the free trial?</h3>
+                    <p class="text-gray-600">Full access to all features of your selected plan. No credit card required to start.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center">
+                <p class="text-gray-400">&copy; 2025 MapMyStandards. All rights reserved.</p>
+                <div class="mt-4 space-x-6">
+                    <a href="/privacy" class="text-gray-400 hover:text-white">Privacy Policy</a>
+                    <a href="/terms" class="text-gray-400 hover:text-white">Terms of Service</a>
+                    <a href="/contact" class="text-gray-400 hover:text-white">Contact Us</a>
+                </div>
+            </div>
+        </div>
+    </footer>
 
     <script>
         // Billing toggle functionality
@@ -341,9 +398,9 @@
         monthlyToggle.addEventListener('click', () => {
             billingMode = 'monthly';
             monthlyToggle.classList.add('bg-white', 'text-gray-900');
-            monthlyToggle.classList.remove('text-gray-600');
+            monthlyToggle.classList.remove('text-white');
             annualToggle.classList.remove('bg-white', 'text-gray-900');
-            annualToggle.classList.add('text-gray-600');
+            annualToggle.classList.add('text-white');
             
             monthlyPrices.forEach(el => el.classList.remove('hidden'));
             annualPrices.forEach(el => el.classList.add('hidden'));
@@ -352,9 +409,9 @@
         annualToggle.addEventListener('click', () => {
             billingMode = 'annual';
             annualToggle.classList.add('bg-white', 'text-gray-900');
-            annualToggle.classList.remove('text-gray-600');
+            annualToggle.classList.remove('text-white');
             monthlyToggle.classList.remove('bg-white', 'text-gray-900');
-            monthlyToggle.classList.add('text-gray-600');
+            monthlyToggle.classList.add('text-white');
             
             annualPrices.forEach(el => el.classList.remove('hidden'));
             monthlyPrices.forEach(el => el.classList.add('hidden'));
@@ -380,35 +437,6 @@
             const priceId = priceIds[tier][billingMode];
             window.location.href = `/trial?plan=${tier}&billing=${billingMode}&price_id=${priceId}`;
         }
-    </script>
-
-    <!-- Footer -->
-    <footer class="bg-gray-900 text-white py-12">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center">
-                <div class="flex justify-center items-center mb-6">
-                    <div class="w-12 h-12 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-lg flex items-center justify-center mr-3">
-                        <span class="text-black font-bold text-xl">M</span>
-                    </div>
-                    <span class="text-2xl font-bold">MapMyStandards</span>
-                </div>
-                
-                <div class="flex justify-center space-x-8 mb-6">
-                    <a href="/" class="text-gray-300 hover:text-yellow-400 transition-colors">Platform</a>
-                    <a href="/trial" class="text-gray-300 hover:text-yellow-400 transition-colors">Free Trial</a>
-                    <a href="/contact" class="text-gray-300 hover:text-yellow-400 transition-colors">Contact</a>
-                    <a href="/login" class="text-gray-300 hover:text-yellow-400 transition-colors">Login</a>
-                </div>
-                
-                <p class="text-gray-400 text-sm">
-                    © 2025 MapMyStandards. All rights reserved.
-                </p>
-            </div>
-        </div>
-    </footer>
-
-    <script>
-        // Remove disabled behavior and checkout overrides
     </script>
 </body>
 </html>
