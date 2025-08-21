@@ -70,6 +70,11 @@ def get_payment_service() -> PaymentService:
     global _payment_service_instance
     if _payment_service_instance is None:
         _payment_service_instance = PaymentService()  # type: ignore
+        try:
+            import stripe  # local import for safety
+            logger.info("[billing] PaymentService instantiated (stripe_key_present=%s)", bool(stripe.api_key))
+        except Exception:
+            pass
     return _payment_service_instance
 
 @router.post("/trial/signup")
@@ -81,6 +86,18 @@ async def trial_signup(request: TrialSignupRequest, payment_service: PaymentServ
     logger.info(f"Trial signup request received for email: {request.email}, plan: {request.plan}")
     logger.info(f"Full request data: institution_name={request.institution_name}, role={request.role}, first_name={request.first_name}, last_name={request.last_name}")
     try:
+        # Log Stripe key presence + short payment method id for diagnostics
+        try:
+            import stripe
+            logger.info(
+                "[trial] stripe_key_present=%s key_type=%s pm_prefix=%s plan=%s",
+                bool(stripe.api_key),
+                ('live' if stripe.api_key and str(stripe.api_key).startswith('sk_live') else 'test' if stripe.api_key and str(stripe.api_key).startswith('sk_test') else 'unset'),
+                (request.payment_method_id[:8] + '...' if request.payment_method_id else None),
+                request.plan
+            )
+        except Exception:
+            logger.info("[trial] Unable to introspect Stripe module for diagnostics")
         # Create trial subscription with Stripe
         try:
             # Guard against long blocking by imposing a timeout (15s)
@@ -154,6 +171,35 @@ async def trial_last_failure(payment_service: PaymentService = Depends(get_payme
     """Return (and preserve) the last in-memory trial signup failure details for debugging."""
     failure = getattr(payment_service, 'last_trial_failure', None)
     return {"failure": failure}
+
+@router.get("/trial/diagnose", include_in_schema=False)
+async def trial_diagnose(payment_service: PaymentService = Depends(get_payment_service)):
+    """Expose current plan->price resolution & stripe key presence for debugging."""
+    from ..core.config import get_settings  # type: ignore
+    settings = get_settings()
+    import stripe
+    # Reuse internal helper via price lookup calls
+    plans = [
+        'college', 'college_monthly', 'college_yearly', 'multicampus', 'multicampus_monthly', 'multicampus_yearly'
+    ]
+    price_map = {}
+    for p in plans:
+        try:
+            price_map[p] = payment_service._get_price_id(p)  # type: ignore (debug only)
+        except Exception as e:
+            price_map[p] = f"error: {e}"  # noqa: E501
+    return {
+        'stripe_key_present': bool(stripe.api_key),
+        'stripe_key_type': 'live' if stripe.api_key and stripe.api_key.startswith('sk_live') else ('test' if stripe.api_key and stripe.api_key.startswith('sk_test') else 'unset'),
+        'plans': price_map,
+        'env_prices': {
+            'STRIPE_PRICE_COLLEGE_MONTHLY': settings.STRIPE_PRICE_COLLEGE_MONTHLY,
+            'STRIPE_PRICE_COLLEGE_YEARLY': settings.STRIPE_PRICE_COLLEGE_YEARLY,
+            'STRIPE_PRICE_MULTI_CAMPUS_MONTHLY': settings.STRIPE_PRICE_MULTI_CAMPUS_MONTHLY,
+            'STRIPE_PRICE_MULTI_CAMPUS_YEARLY': settings.STRIPE_PRICE_MULTI_CAMPUS_YEARLY
+        },
+        'last_failure': getattr(payment_service, 'last_trial_failure', None)
+    }
 
 @router.post("/subscription/create", response_model=PaymentResponse)
 async def create_subscription(
