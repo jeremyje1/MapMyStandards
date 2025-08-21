@@ -16,6 +16,7 @@ except Exception as e:  # catch ImportError or dependency errors
     _payment_service_available = False
     _payment_service_import_error = e
 from ...core.auth import verify_api_key
+from ...core.config import get_settings
 
 logger = logging.getLogger(__name__)
 
@@ -68,6 +69,7 @@ async def trial_signup(request: TrialSignupRequest, payment_service: PaymentServ
     Create a 7-day free trial subscription with automatic billing.
     Requires credit card for seamless conversion.
     """
+    logger.info(f"Trial signup request received for email: {request.email}, plan: {request.plan}")
     try:
         # Create trial subscription with Stripe
         result = await payment_service.create_trial_subscription(
@@ -350,29 +352,34 @@ async def _handle_subscription_cancelled(subscription):
     logger.info(f"Subscription cancelled for customer {customer_id}")
 
 
-@router.get("/config/stripe-key", response_model=Dict[str, str])
+@router.get("/config/stripe-key", include_in_schema=False)
 async def get_stripe_publishable_key():
-    """Get Stripe publishable key for frontend initialization"""
-    try:
-        publishable_key = os.getenv("STRIPE_PUBLISHABLE_KEY", "")
-        
-        if not publishable_key:
-            logger.error("STRIPE_PUBLISHABLE_KEY not configured")
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="Payment system not configured"
-            )
-        
-        # Determine environment based on key prefix
-        environment = "test" if publishable_key.startswith("pk_test_") else "live"
-        
-        return {
-            "publishable_key": publishable_key,
-            "environment": environment
+    """Get Stripe publishable key for client-side initialization"""
+    settings = get_settings()
+    key = settings.STRIPE_PUBLISHABLE_KEY
+    
+    return {
+        "publishable_key": key,
+        "environment": "live" if key.startswith("pk_live") else "test"
+    }
+
+@router.get("/config/debug", include_in_schema=False)
+async def debug_stripe_config():
+    """Debug endpoint to check Stripe configuration"""
+    settings = get_settings()
+    import stripe
+    
+    return {
+        "stripe_key_configured": bool(stripe.api_key),
+        "stripe_key_length": len(stripe.api_key) if stripe.api_key else 0,
+        "publishable_key_exists": bool(settings.STRIPE_PUBLISHABLE_KEY),
+        "publishable_key_starts": settings.STRIPE_PUBLISHABLE_KEY[:10] if settings.STRIPE_PUBLISHABLE_KEY else None,
+        "secret_key_exists": bool(settings.STRIPE_SECRET_KEY),
+        "secret_key_length": len(settings.STRIPE_SECRET_KEY) if settings.STRIPE_SECRET_KEY else 0,
+        "price_ids": {
+            "college_monthly": settings.STRIPE_PRICE_COLLEGE_MONTHLY or "Not set",
+            "college_yearly": settings.STRIPE_PRICE_COLLEGE_YEARLY or "Not set",
+            "multicampus_monthly": settings.STRIPE_PRICE_MULTI_CAMPUS_MONTHLY or "Not set",
+            "multicampus_yearly": settings.STRIPE_PRICE_MULTI_CAMPUS_YEARLY or "Not set"
         }
-    except Exception as e:
-        logger.error(f"Error getting Stripe key: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Unable to retrieve payment configuration"
-        )
+    }
