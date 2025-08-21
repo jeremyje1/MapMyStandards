@@ -423,6 +423,10 @@ class PaymentService:
             logger.error(f"Direct env STRIPE_PRICE_ID_PROFESSIONAL_MONTHLY: {os.getenv('STRIPE_PRICE_ID_PROFESSIONAL_MONTHLY')}")
         else:
             logger.info(f"Using price ID {price_id} for plan {plan}")
+            # Warn if using fallback while on live key
+            import stripe as _stripe
+            if (not self.settings.STRIPE_PRICE_COLLEGE_MONTHLY) and _stripe.api_key and str(_stripe.api_key).startswith('sk_live'):
+                logger.warning("[pricing] Using fallback (likely test) price ID %s under live secret key. Configure live price env vars.", price_id)
         
         return price_id
     

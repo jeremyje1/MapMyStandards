@@ -201,6 +201,33 @@ async def trial_diagnose(payment_service: PaymentService = Depends(get_payment_s
         'last_failure': getattr(payment_service, 'last_trial_failure', None)
     }
 
+@router.get("/trial/verify-prices", include_in_schema=False)
+async def trial_verify_prices(payment_service: PaymentService = Depends(get_payment_service)):
+    """Retrieve each configured price from Stripe to confirm it exists under current key."""
+    import stripe
+    plans = ['college_monthly', 'college_yearly', 'multicampus_monthly', 'multicampus_yearly']
+    results = {}
+    for p in plans:
+        pid = payment_service._get_price_id(p)  # type: ignore
+        if not pid:
+            results[p] = {'price_id': None, 'exists': False, 'error': 'missing_price_id'}
+            continue
+        try:
+            price_obj = stripe.Price.retrieve(pid)
+            results[p] = {
+                'price_id': pid,
+                'exists': True,
+                'currency': getattr(price_obj, 'currency', None),
+                'unit_amount': getattr(price_obj, 'unit_amount', None),
+                'recurring': getattr(price_obj, 'recurring', None),
+                'livemode': getattr(price_obj, 'livemode', None)
+            }
+        except stripe.error.InvalidRequestError as e:
+            results[p] = {'price_id': pid, 'exists': False, 'error': str(e)}
+        except Exception as e:  # pragma: no cover
+            results[p] = {'price_id': pid, 'exists': False, 'error': f'unexpected: {e}'}
+    return {'verification': results}
+
 @router.post("/subscription/create", response_model=PaymentResponse)
 async def create_subscription(
     request: SubscriptionRequest,
