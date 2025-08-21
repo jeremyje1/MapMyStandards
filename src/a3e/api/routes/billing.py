@@ -4,6 +4,7 @@ Handles trial signup, subscription management, and billing
 """
 
 from fastapi import APIRouter, HTTPException, Depends, status, Request
+from fastapi import APIRouter as _APIRouterAlias
 from pydantic import BaseModel, EmailStr
 from typing import Optional, Dict, Any
 import logging
@@ -344,6 +345,13 @@ async def stripe_webhook(request: Request):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Webhook processing failed"
         )
+
+# Legacy/alternate path handler (Stripe webhooks currently hitting /api/billing/webhook/stripe)
+legacy_router = _APIRouterAlias(prefix="/api/billing", tags=["billing-legacy"])
+
+@legacy_router.post("/webhook/stripe", include_in_schema=False)
+async def stripe_webhook_legacy(request: Request):
+    return await stripe_webhook(request)
 
 async def _handle_payment_success(payment_intent):
     """Handle successful payment"""

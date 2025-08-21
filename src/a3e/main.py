@@ -27,6 +27,11 @@ from .models import Institution, Evidence, Standard, AgentWorkflow, GapAnalysis
 from .services.database_service import DatabaseService
 from .api import api_router
 from .api.routes.billing import router as billing_router
+try:
+    from .api.routes.billing import legacy_router as billing_legacy_router  # type: ignore
+    _billing_legacy_available = True
+except Exception:
+    _billing_legacy_available = False
 from pydantic import BaseModel, EmailStr  # Inline temporary auth models kept at top to avoid E402
 from typing import Optional as _OptionalType  # alias to avoid shadowing later Optional usage
 # Optional services - will gracefully degrade if dependencies missing
@@ -399,6 +404,8 @@ else:
 app.include_router(integrations_router)
 app.include_router(proprietary_router)
 app.include_router(billing_router)
+if _billing_legacy_available:
+    app.include_router(billing_legacy_router)
 app.include_router(api_router, prefix=settings.api_prefix)
 
 # Import and include customer pages router

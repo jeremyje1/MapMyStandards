@@ -112,15 +112,47 @@ class PaymentService:
             
             await self._create_account_record(account_data)
             
+            # Safely extract trial_end (can be None if no trial set)
+            trial_end_ts = getattr(subscription, 'trial_end', None)
+            if trial_end_ts:
+                try:
+                    trial_end_iso = datetime.fromtimestamp(trial_end_ts).isoformat()
+                except Exception:
+                    trial_end_iso = None
+            else:
+                trial_end_iso = None
+
+            # Safely extract discount / coupon information (not present for most trial subscriptions)
+            discount_info = None
+            try:
+                # subscription may be StripeObject (attr access) or dict-like
+                raw_discount = getattr(subscription, 'discount', None)
+                if not raw_discount and isinstance(subscription, dict):  # defensive
+                    raw_discount = subscription.get('discount')
+                if raw_discount:
+                    # raw_discount may itself be a dict or StripeObject
+                    coupon = getattr(raw_discount, 'coupon', None) or (raw_discount.get('coupon') if isinstance(raw_discount, dict) else None)
+                    if coupon:
+                        name = getattr(coupon, 'name', None) or (coupon.get('name') if isinstance(coupon, dict) else None)
+                        percent_off = getattr(coupon, 'percent_off', None) or (coupon.get('percent_off') if isinstance(coupon, dict) else None)
+                        amount_off = getattr(coupon, 'amount_off', None) or (coupon.get('amount_off') if isinstance(coupon, dict) else None)
+                        discount_info = {
+                            'name': name,
+                            'percent_off': percent_off,
+                            'amount_off': amount_off / 100 if amount_off else None
+                        }
+            except Exception as di_err:
+                logger.debug(f"Unable to parse discount info (non-fatal): {di_err}")
+
             return {
                 'success': True,
                 'customer_id': customer.id,
                 'subscription_id': subscription.id,
                 'api_key': api_key,
-                'trial_end': datetime.fromtimestamp(subscription.trial_end).isoformat(),
-                'status': subscription.status,
+                'trial_end': trial_end_iso,
+                'status': getattr(subscription, 'status', None) or (subscription.get('status') if isinstance(subscription, dict) else None),
                 'coupon_applied': coupon_code if coupon_code else None,
-                'discount_info': subscription.discount.coupon.name if subscription.discount else None
+                'discount_info': discount_info
             }
             
         except stripe.error.StripeError as e:
