@@ -41,6 +41,11 @@ async def trial_signup_page():
     """Trial signup page"""
     return serve_html_file("trial-signup.html", fallback="landing.html")
 
+@router.get("/trial-success", response_class=HTMLResponse, include_in_schema=False)
+async def trial_success_page():
+    """Trial success page"""
+    return serve_html_file("trial-success.html", fallback="landing.html")
+
 @router.get("/pricing", response_class=HTMLResponse, include_in_schema=False)
 async def pricing_page():
     """Pricing page"""

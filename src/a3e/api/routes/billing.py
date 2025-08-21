@@ -35,6 +35,7 @@ class TrialSignupRequest(BaseModel):
     email: EmailStr
     role: str
     plan: str = "college_monthly"  # Updated default to match stripe_trial_setup.md
+    payment_method_id: str  # Stripe payment method ID
     phone: Optional[str] = None
     newsletter_opt_in: bool = False
     coupon_code: Optional[str] = None  # Added coupon support
@@ -72,7 +73,7 @@ async def trial_signup(request: TrialSignupRequest, payment_service: PaymentServ
         result = await payment_service.create_trial_subscription(
             email=request.email,
             plan=request.plan,
-            payment_method_id=getattr(request, 'payment_method_id', None),
+            payment_method_id=request.payment_method_id,
             coupon_code=request.coupon_code
         )
         
