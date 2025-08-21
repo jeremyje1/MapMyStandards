@@ -31,7 +31,7 @@ jobs:
             name: mapmystandards-native
             path: dist/*.tar.gz
       - name: Optional remote deploy
-        if: ${{ secrets.DEPLOY_HOST && secrets.DEPLOY_USER && secrets.DEPLOY_KEY }}
+        if: ${{ secrets.DEPLOY_HOST != '' && secrets.DEPLOY_USER != '' && secrets.DEPLOY_KEY != '' }}
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.DEPLOY_HOST }}

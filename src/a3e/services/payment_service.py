@@ -309,14 +309,25 @@ class PaymentService:
     
     def _get_price_id(self, plan: str) -> str:
         """Get Stripe price ID for plan (uses environment variables)"""
-        # Map simple plan names to monthly prices (trials start with monthly)
+        # Temporary hardcoded price IDs from Railway environment
+        # TODO: Fix environment variable loading issue
+        hardcoded_price_ids = {
+            "college": "price_1RyVQ4K8PKpLCKDZON0IMe3F",  # STRIPE_PRICE_ID_PROFESSIONAL_MONTHLY
+            "multicampus": "price_1RyVQgK8PKpLCKDZTais3Tyx",  # STRIPE_PRICE_ID_INSTITUTION_MONTHLY
+            "college_monthly": "price_1RyVQ4K8PKpLCKDZON0IMe3F",
+            "college_yearly": "price_1RyVQFK8PKpLCKDZ7KxYraxk",  # STRIPE_PRICE_ID_PROFESSIONAL_ANNUAL
+            "multicampus_monthly": "price_1RyVQgK8PKpLCKDZTais3Tyx",
+            "multicampus_yearly": "price_1RyVQrK8PKpLCKDZUshqaOvZ"  # STRIPE_PRICE_ID_INSTITUTION_ANNUAL
+        }
+        
+        # Try environment variables first, then fallback to hardcoded
         price_ids = {
-            "college": self.settings.STRIPE_PRICE_COLLEGE_MONTHLY or os.getenv('STRIPE_PRICE_ID_PROFESSIONAL_MONTHLY', ''),
-            "multicampus": self.settings.STRIPE_PRICE_MULTI_CAMPUS_MONTHLY or os.getenv('STRIPE_PRICE_ID_INSTITUTION_MONTHLY', ''),
-            "college_monthly": self.settings.STRIPE_PRICE_COLLEGE_MONTHLY or os.getenv('STRIPE_PRICE_ID_PROFESSIONAL_MONTHLY', ''),
-            "college_yearly": self.settings.STRIPE_PRICE_COLLEGE_YEARLY or os.getenv('STRIPE_PRICE_ID_PROFESSIONAL_ANNUAL', ''),
-            "multicampus_monthly": self.settings.STRIPE_PRICE_MULTI_CAMPUS_MONTHLY or os.getenv('STRIPE_PRICE_ID_INSTITUTION_MONTHLY', ''), 
-            "multicampus_yearly": self.settings.STRIPE_PRICE_MULTI_CAMPUS_YEARLY or os.getenv('STRIPE_PRICE_ID_INSTITUTION_ANNUAL', '')
+            "college": self.settings.STRIPE_PRICE_COLLEGE_MONTHLY or os.getenv('STRIPE_PRICE_ID_PROFESSIONAL_MONTHLY', '') or hardcoded_price_ids.get("college", ''),
+            "multicampus": self.settings.STRIPE_PRICE_MULTI_CAMPUS_MONTHLY or os.getenv('STRIPE_PRICE_ID_INSTITUTION_MONTHLY', '') or hardcoded_price_ids.get("multicampus", ''),
+            "college_monthly": self.settings.STRIPE_PRICE_COLLEGE_MONTHLY or os.getenv('STRIPE_PRICE_ID_PROFESSIONAL_MONTHLY', '') or hardcoded_price_ids.get("college_monthly", ''),
+            "college_yearly": self.settings.STRIPE_PRICE_COLLEGE_YEARLY or os.getenv('STRIPE_PRICE_ID_PROFESSIONAL_ANNUAL', '') or hardcoded_price_ids.get("college_yearly", ''),
+            "multicampus_monthly": self.settings.STRIPE_PRICE_MULTI_CAMPUS_MONTHLY or os.getenv('STRIPE_PRICE_ID_INSTITUTION_MONTHLY', '') or hardcoded_price_ids.get("multicampus_monthly", ''), 
+            "multicampus_yearly": self.settings.STRIPE_PRICE_MULTI_CAMPUS_YEARLY or os.getenv('STRIPE_PRICE_ID_INSTITUTION_ANNUAL', '') or hardcoded_price_ids.get("multicampus_yearly", '')
         }
         price_id = price_ids.get(plan, '')
         
@@ -325,6 +336,8 @@ class PaymentService:
             logger.error(f"No price ID found for plan: {plan}")
             logger.error(f"Settings STRIPE_PRICE_COLLEGE_MONTHLY: {self.settings.STRIPE_PRICE_COLLEGE_MONTHLY}")
             logger.error(f"Direct env STRIPE_PRICE_ID_PROFESSIONAL_MONTHLY: {os.getenv('STRIPE_PRICE_ID_PROFESSIONAL_MONTHLY')}")
+        else:
+            logger.info(f"Using price ID {price_id} for plan {plan}")
         
         return price_id
     
