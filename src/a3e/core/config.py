@@ -38,6 +38,9 @@ class Settings(BaseSettings):
     database_url: str = Field(default="sqlite:///./a3e.db", env="DATABASE_URL")
     database_pool_size: int = Field(default=20, env="DATABASE_POOL_SIZE")
     database_max_overflow: int = Field(default=30, env="DATABASE_MAX_OVERFLOW")
+    database_init_retries: int = Field(default=10, env="DATABASE_INIT_RETRIES")
+    database_init_backoff: float = Field(default=3.0, env="DATABASE_INIT_BACKOFF")
+    allow_start_without_db: bool = Field(default=True, env="ALLOW_START_WITHOUT_DB")
     
     # Vector Database (Milvus) Configuration
     milvus_host: str = Field(default="localhost", env="MILVUS_HOST")

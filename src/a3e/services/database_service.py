@@ -43,32 +43,56 @@ class DatabaseService:
     async def initialize(self):
         """Initialize database connection and session factory"""
         try:
-            engine_args = {
-                "echo": getattr(settings, 'is_development', False)
-            }
-            # Only pass pool sizing for non-sqlite databases
+            engine_args = {"echo": getattr(settings, 'is_development', False)}
             if not self.database_url.startswith("sqlite"):
                 engine_args.update({
                     "pool_size": settings.database_pool_size,
                     "max_overflow": settings.database_max_overflow
                 })
-            self.engine = create_async_engine(self.database_url, **engine_args)
-            
-            self.async_session = async_sessionmaker(
-                self.engine,
-                class_=AsyncSession,
-                expire_on_commit=False
-            )
-            
-            # Test connection
-            async with self.engine.begin() as conn:
-                await conn.execute(text("SELECT 1"))
-            
-            logger.info("✅ Database service initialized")
-            
-        except Exception as e:
-            logger.error(f"Failed to initialize database: {e}")
-            raise
+
+            attempts = 0
+            last_error: Optional[Exception] = None
+            max_attempts = getattr(settings, 'database_init_retries', 5)
+            backoff = getattr(settings, 'database_init_backoff', 2.0)
+
+            while attempts < max_attempts:
+                attempts += 1
+                try:
+                    self.engine = create_async_engine(self.database_url, **engine_args)
+                    self.async_session = async_sessionmaker(self.engine, class_=AsyncSession, expire_on_commit=False)
+                    async with self.engine.begin() as conn:
+                        await conn.execute(text("SELECT 1"))
+                    logger.info(f"✅ Database service initialized (attempt {attempts})")
+                    return
+                except Exception as e:
+                    last_error = e
+                    logger.warning(f"Database init attempt {attempts}/{max_attempts} failed: {e}")
+                    # Clean up engine before retry
+                    try:
+                        if self.engine:
+                            await self.engine.dispose()  # type: ignore
+                    except Exception:
+                        pass
+                    if attempts < max_attempts:
+                        await asyncio.sleep(backoff)
+
+            # If we reach here, all attempts failed
+            msg = f"Failed to initialize database after {max_attempts} attempts: {last_error}" if last_error else "Unknown DB init failure"
+            if getattr(settings, 'allow_start_without_db', False):
+                logger.error(msg + " - continuing in degraded mode (DB-dependent endpoints will fail)")
+                self.engine = None
+                self.async_session = None
+            else:
+                logger.error(msg)
+                raise last_error if last_error else RuntimeError(msg)
+        except Exception as outer_e:
+            # If retry logic itself raised unexpectedly before completion
+            logger.error(f"Database initialization fatal error: {outer_e}")
+            if getattr(settings, 'allow_start_without_db', False):
+                self.engine = None
+                self.async_session = None
+            else:
+                raise
     
     # Additional methods for API routes
     async def list_standards(
