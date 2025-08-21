@@ -5,6 +5,7 @@ Handles Stripe payments, subscriptions, and trial management
 
 import os
 import stripe
+import asyncio  # Added to allow background task for non-critical DB/email work
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
 from sqlalchemy.orm import Session
@@ -53,22 +54,30 @@ class PaymentService:
                 logger.error(f"stripe.api_key is: {stripe.api_key}")
                 return {'success': False, 'error': 'Payment system not configured. Please contact support.'}
             
-            # Create or retrieve customer
-            customers = stripe.Customer.list(email=email, limit=1)
+            # Helper to run blocking stripe calls in a thread
+            async def _call(func, *f_args, **f_kwargs):
+                return await asyncio.to_thread(func, *f_args, **f_kwargs)
+
+            logger.info("[trial] Starting customer lookup/create for %s", email)
+            customers = await _call(stripe.Customer.list, email=email, limit=1)
             if customers.data:
                 customer = customers.data[0]
+                logger.info("[trial] Reusing existing customer %s", customer.id)
             else:
-                customer = stripe.Customer.create(
+                customer = await _call(
+                    stripe.Customer.create,
                     email=email,
                     payment_method=payment_method_id,
                     invoice_settings={
                         'default_payment_method': payment_method_id,
                     }
                 )
+                logger.info("[trial] Created new customer %s", customer.id)
             
             # Attach payment method if not already attached
             try:
-                stripe.PaymentMethod.attach(
+                await _call(
+                    stripe.PaymentMethod.attach,
                     payment_method_id,
                     customer=customer.id,
                 )
@@ -99,7 +108,9 @@ class PaymentService:
             if coupon_code:
                 subscription_params['coupon'] = coupon_code
             
-            subscription = stripe.Subscription.create(**subscription_params)
+            logger.info("[trial] Creating subscription for customer %s plan %s", customer.id, plan)
+            subscription = await _call(stripe.Subscription.create, **subscription_params)
+            logger.info("[trial] Subscription %s status=%s", subscription.id, getattr(subscription, 'status', None))
             
             # Generate API key
             api_key = self._generate_api_key(customer.id)
@@ -115,7 +126,11 @@ class PaymentService:
                 'trial_end': datetime.fromtimestamp(subscription.trial_end).isoformat()
             }
             
-            await self._create_account_record(account_data)
+            # Persist account + send password setup email in background so slow DB/email doesn't block checkout UX
+            try:
+                asyncio.create_task(self._create_account_record(account_data))  # fire and forget
+            except Exception as bg_err:
+                logger.warning(f"Failed to schedule account record creation task: {bg_err}")
             
             # Safely extract trial_end (can be None if no trial set)
             trial_end_ts = getattr(subscription, 'trial_end', None)

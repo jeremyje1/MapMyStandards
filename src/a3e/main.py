@@ -950,6 +950,15 @@ if WEB_DIR.exists():
     @app.get("/homepage", response_class=FileResponse, include_in_schema=False)
     async def homepage():  # noqa: D401
         return FileResponse(str(WEB_DIR / "homepage.html"))
+
+    @app.get("/onboarding", response_class=FileResponse, include_in_schema=False)
+    @app.get("/onboarding.html", response_class=FileResponse, include_in_schema=False)
+    async def onboarding_page():  # noqa: D401
+        """Serve onboarding wizard page."""
+        target = WEB_DIR / "onboarding.html"
+        if target.exists():
+            return FileResponse(str(target))
+        return HTMLResponse("<h1>Onboarding page not found</h1>", status_code=404)
         
 else:
     logger.warning(f"Web directory not found at: {WEB_DIR}")
@@ -975,6 +984,14 @@ else:
         @app.get("/homepage", response_class=FileResponse, include_in_schema=False)
         async def homepage():  # noqa: D401
             return FileResponse(os.path.join(alt_web_directory, "homepage.html"))
+
+        @app.get("/onboarding", response_class=FileResponse, include_in_schema=False)
+        @app.get("/onboarding.html", response_class=FileResponse, include_in_schema=False)
+        async def onboarding_page():  # noqa: D401
+            target = os.path.join(alt_web_directory, "onboarding.html")
+            if os.path.exists(target):
+                return FileResponse(target)
+            return HTMLResponse("<h1>Onboarding page not found</h1>", status_code=404)
     else:
         logger.error("Web directory not found - static files will not be served")
 

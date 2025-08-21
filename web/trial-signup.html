@@ -523,13 +523,26 @@
                 const data = Object.fromEntries(formData);
                 data.payment_method_id = paymentMethod.id;
 
-                const response = await fetch('/api/v1/billing/trial/signup', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(data)
-                });
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), 20000);
+                let response;
+                try {
+                    response = await fetch('/api/v1/billing/trial/signup', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(data),
+                        signal: controller.signal
+                    });
+                } catch(fetchErr) {
+                    if (fetchErr.name === 'AbortError') {
+                        throw new Error('Request taking too long. Please check your connection and try again.');
+                    }
+                    throw fetchErr;
+                } finally {
+                    clearTimeout(timeout);
+                }
 
                 const result = await response.json();
 
@@ -554,12 +567,20 @@
                         window.location.href = `/trial-success?trial_id=${result.trial_id}&plan=${planParam}`;
                     }, 2500);
                 } else {
+                    // Distinguish timeout from other errors
+                    if (response.status === 504) {
+                        throw new Error('Signup timed out. Please retry.');
+                    }
                     throw new Error(result.detail || 'Signup failed');
                 }
             } catch (error) {
                 document.getElementById('card-errors').textContent = error.message;
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Start Free Trial →';
+                // Offer quick retry if aborted/timeout
+                if (/(timed out|too long)/i.test(error.message)) {
+                    submitBtn.textContent = 'Retry Signup →';
+                }
             }
         });
 

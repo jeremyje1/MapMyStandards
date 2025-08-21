@@ -73,12 +73,21 @@ async def trial_signup(request: TrialSignupRequest, payment_service: PaymentServ
     logger.info(f"Trial signup request received for email: {request.email}, plan: {request.plan}")
     try:
         # Create trial subscription with Stripe
-        result = await payment_service.create_trial_subscription(
-            email=request.email,
-            plan=request.plan,
-            payment_method_id=request.payment_method_id,
-            coupon_code=request.coupon_code
-        )
+        try:
+            # Guard against long blocking by imposing a timeout (15s)
+            import asyncio
+            result = await asyncio.wait_for(
+                payment_service.create_trial_subscription(
+                    email=request.email,
+                    plan=request.plan,
+                    payment_method_id=request.payment_method_id,
+                    coupon_code=request.coupon_code
+                ),
+                timeout=15
+            )
+        except asyncio.TimeoutError:
+            logger.error("Trial signup timed out (Stripe or DB slow)")
+            raise HTTPException(status_code=504, detail="Signup timed out, please retry in a moment")
         
         if result['success']:
             return {
@@ -113,6 +122,13 @@ async def trial_signup(request: TrialSignupRequest, payment_service: PaymentServ
             )
         
         raise HTTPException(status_code=500, detail=f"Failed to create trial subscription: {str(e)}")
+
+@router.get("/trial/ping", include_in_schema=False)
+async def trial_ping():
+    """Lightweight latency/availability probe for signup flow debugging."""
+    import time
+    import uuid
+    return {"ok": True, "ts": time.time(), "id": str(uuid.uuid4())}
 
 @router.post("/subscription/create", response_model=PaymentResponse)
 async def create_subscription(

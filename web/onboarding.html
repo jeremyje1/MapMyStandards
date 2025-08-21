@@ -127,8 +127,13 @@
     const GOALS = [
       'Map standards quickly','Automate evidence tagging','Prep self-study','Mid-cycle review','Close assessment loop','Data for board','Accreditation visit prep','Track progress','AI narrative drafts','Gap analysis','Document organization','Expedite compliance'
     ];
-
-    const state = { step:1, total:4, data:{} };
+    const state = { step:1, total:4, data:{}, email:null, apiKey:null };
+    // Pull pending trial context (email & api key) stored during signup
+    try {
+      state.email = sessionStorage.getItem('a3e_pending_email') || localStorage.getItem('a3e_email') || null;
+      state.apiKey = sessionStorage.getItem('a3e_pending_api_key') || localStorage.getItem('a3e_api_key') || null;
+      if(state.email){ state.data.email = state.email; }
+    } catch(e){ console.warn('Unable to load stored trial context', e); }
     const fillEl = document.getElementById('progressFill');
     const pctEl = document.getElementById('progressPct');
     const backBtn = document.getElementById('backBtn');
@@ -180,12 +185,21 @@
     }
 
     async function persist(partial=false){
+      // If we still don't have email, skip to avoid noisy 500s
+      if(!state.email){
+        console.info('Skipping persist – no email available yet');
+        return;
+      }
       try {
-        await fetch('/api/v1/onboarding/progress', {
+        const payload = { data: state.data, step: state.step, complete: state.step === state.total, email: state.email };
+        const headers = { 'Content-Type':'application/json' };
+        if(state.apiKey){ headers['X-API-Key'] = state.apiKey; }
+        const res = await fetch('/api/v1/onboarding/progress', {
           method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({ data: state.data, step: state.step, complete: state.step === state.total })
+          headers,
+          body: JSON.stringify(payload)
         });
+        if(!res.ok){ console.warn('Persist response not ok', res.status); }
       } catch(e){ console.warn('Persist failed', e); }
     }
 
@@ -204,6 +218,19 @@
 
     // Initialize
     showStep();
+    // If no email, display a gentle notice so user knows progress won't stick
+    if(!state.email){
+      const notice = document.createElement('div');
+      notice.style.background = '#422006';
+      notice.style.color = '#fbbf24';
+      notice.style.padding = '10px 14px';
+      notice.style.border = '1px solid #92400e';
+      notice.style.borderRadius = '10px';
+      notice.style.fontSize = '.75rem';
+      notice.style.margin = '0 0 18px';
+      notice.textContent = 'We could not detect your signup email. Progress will not save unless you refresh after completing signup.';
+      document.querySelector('.shell').insertBefore(notice, document.querySelector('.shell').firstChild.nextSibling);
+    }
   </script>
 </body>
 </html>
