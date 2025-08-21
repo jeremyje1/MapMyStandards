@@ -105,10 +105,10 @@ class Settings(BaseSettings):
     STRIPE_SECRET_KEY: str = Field(default="", env="STRIPE_SECRET_KEY")
     STRIPE_PUBLISHABLE_KEY: str = Field(default="", env="STRIPE_PUBLISHABLE_KEY")
     STRIPE_WEBHOOK_SECRET: str = Field(default="", env="STRIPE_WEBHOOK_SECRET")
-    STRIPE_PRICE_COLLEGE_MONTHLY: str = Field(default="", env="STRIPE_PRICE_COLLEGE_MONTHLY")
-    STRIPE_PRICE_COLLEGE_YEARLY: str = Field(default="", env="STRIPE_PRICE_COLLEGE_YEARLY")
-    STRIPE_PRICE_MULTI_CAMPUS_MONTHLY: str = Field(default="", env="STRIPE_PRICE_MULTI_CAMPUS_MONTHLY")
-    STRIPE_PRICE_MULTI_CAMPUS_YEARLY: str = Field(default="", env="STRIPE_PRICE_MULTI_CAMPUS_YEARLY")
+    STRIPE_PRICE_COLLEGE_MONTHLY: str = Field(default="", env="STRIPE_PRICE_ID_PROFESSIONAL_MONTHLY")
+    STRIPE_PRICE_COLLEGE_YEARLY: str = Field(default="", env="STRIPE_PRICE_ID_PROFESSIONAL_ANNUAL")
+    STRIPE_PRICE_MULTI_CAMPUS_MONTHLY: str = Field(default="", env="STRIPE_PRICE_ID_INSTITUTION_MONTHLY")
+    STRIPE_PRICE_MULTI_CAMPUS_YEARLY: str = Field(default="", env="STRIPE_PRICE_ID_INSTITUTION_ANNUAL")
     
     # Rate Limiting
     rate_limit_requests: int = Field(default=100, env="RATE_LIMIT_REQUESTS")

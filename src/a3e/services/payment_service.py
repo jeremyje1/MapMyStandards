@@ -298,7 +298,10 @@ class PaymentService:
     
     def _get_price_id(self, plan: str) -> str:
         """Get Stripe price ID for plan (uses environment variables)"""
+        # Map simple plan names to monthly prices (trials start with monthly)
         price_ids = {
+            "college": self.settings.STRIPE_PRICE_COLLEGE_MONTHLY,
+            "multicampus": self.settings.STRIPE_PRICE_MULTI_CAMPUS_MONTHLY,
             "college_monthly": self.settings.STRIPE_PRICE_COLLEGE_MONTHLY,
             "college_yearly": self.settings.STRIPE_PRICE_COLLEGE_YEARLY,
             "multicampus_monthly": self.settings.STRIPE_PRICE_MULTI_CAMPUS_MONTHLY, 
