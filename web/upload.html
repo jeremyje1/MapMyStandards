@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evidence Upload - A³E | MapMyStandards.ai</title>
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f3f4f6;
+            color: #333;
+        }
+        
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-decoration: none;
+            color: white;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+        
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            opacity: 0.9;
+        }
+        
+        .nav-links a:hover {
+            opacity: 1;
+        }
+        
+        /* Main Content */
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 20px;
+        }
+        
+        .page-title {
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            color: #1e3c72;
+        }
+        
+        /* Upload Area */
+        .upload-container {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .upload-zone {
+            border: 2px dashed #cbd5e1;
+            border-radius: 8px;
+            padding: 3rem;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .upload-zone:hover,
+        .upload-zone.dragover {
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+        
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .upload-text {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+            color: #4b5563;
+        }
+        
+        .upload-subtext {
+            color: #9ca3af;
+            font-size: 0.875rem;
+        }
+        
+        #fileInput {
+            display: none;
+        }
+        
+        /* Form Fields */
+        .upload-form {
+            margin-top: 2rem;
+            display: none;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #374151;
+        }
+        
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: #10b981;
+        }
+        
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        /* File List */
+        .file-list {
+            margin-top: 1.5rem;
+        }
+        
+        .file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            background: #f9fafb;
+            border-radius: 6px;
+            margin-bottom: 0.75rem;
+        }
+        
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .file-icon {
+            font-size: 1.5rem;
+        }
+        
+        .file-name {
+            font-weight: 500;
+        }
+        
+        .file-size {
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+        
+        .remove-file {
+            color: #ef4444;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 4px;
+            transition: background 0.3s;
+        }
+        
+        .remove-file:hover {
+            background: #fee2e2;
+        }
+        
+        /* Buttons */
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #059669;
+        }
+        
+        .btn-primary:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #374151;
+        }
+        
+        .btn-secondary:hover {
+            background: #d1d5db;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        /* Progress */
+        .upload-progress {
+            display: none;
+            margin-top: 2rem;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #10b981;
+            transition: width 0.3s;
+            width: 0%;
+        }
+        
+        .progress-text {
+            margin-top: 0.5rem;
+            text-align: center;
+            color: #6b7280;
+        }
+        
+        /* Recent Uploads */
+        .recent-uploads {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: #1e3c72;
+        }
+        
+        .uploads-list {
+            display: grid;
+            gap: 1rem;
+        }
+        
+        .upload-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: box-shadow 0.3s;
+        }
+        
+        .upload-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .upload-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1rem;
+        }
+        
+        .upload-title {
+            font-weight: 600;
+            color: #1e3c72;
+            margin-bottom: 0.25rem;
+        }
+        
+        .upload-date {
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+        
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .status-completed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .status-processing {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .upload-stats {
+            display: flex;
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+        
+        .stat {
+            font-size: 0.875rem;
+        }
+        
+        .stat-label {
+            color: #6b7280;
+        }
+        
+        .stat-value {
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        /* Messages */
+        .message {
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        
+        .message-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+        
+        .message-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="logo">MapMyStandards A³E</a>
+            <nav class="nav-links">
+                <a href="/dashboard">Dashboard</a>
+                <a href="/standards">Standards</a>
+                <a href="/reports">Reports</a>
+                <a href="#" onclick="logout()">Logout</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container">
+        <h1 class="page-title">📤 Upload Evidence</h1>
+        
+        <!-- Messages -->
+        <div id="message" class="message"></div>
+        
+        <!-- Upload Container -->
+        <div class="upload-container">
+            <div class="upload-zone" onclick="document.getElementById('fileInput').click()" 
+                 ondrop="handleDrop(event)" ondragover="handleDragOver(event)" 
+                 ondragleave="handleDragLeave(event)">
+                <div class="upload-icon">📁</div>
+                <div class="upload-text">Drop files here or click to browse</div>
+                <div class="upload-subtext">
+                    Support for PDF, Word, Excel, PowerPoint, and more (max 100MB per file)
+                </div>
+                <input type="file" id="fileInput" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.md" 
+                       onchange="handleFileSelect(event)">
+            </div>
+            
+            <!-- File List -->
+            <div id="fileList" class="file-list"></div>
+            
+            <!-- Upload Form -->
+            <form id="uploadForm" class="upload-form">
+                <div class="form-group">
+                    <label class="form-label">Title (Optional)</label>
+                    <input type="text" id="title" class="form-input" 
+                           placeholder="e.g., 2025 Curriculum Assessment Plan">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Description (Optional)</label>
+                    <textarea id="description" class="form-textarea" 
+                              placeholder="Brief description of the evidence..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Accreditor</label>
+                    <select id="accreditor" class="form-select">
+                        <option value="">Select accreditor...</option>
+                        <option value="SACSCOC">SACSCOC - Southern Association</option>
+                        <option value="HLC">HLC - Higher Learning Commission</option>
+                        <option value="MSCHE">MSCHE - Middle States</option>
+                        <option value="WASC">WASC - Western Association</option>
+                        <option value="NECHE">NECHE - New England Commission</option>
+                        <option value="NWCCU">NWCCU - Northwest Commission</option>
+                    </select>
+                </div>
+                
+                <div class="button-group">
+                    <button type="submit" class="btn btn-primary" id="uploadBtn">
+                        Start Analysis
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="resetUpload()">
+                        Clear
+                    </button>
+                </div>
+            </form>
+            
+            <!-- Progress -->
+            <div id="uploadProgress" class="upload-progress">
+                <div class="progress-bar">
+                    <div id="progressFill" class="progress-fill"></div>
+                </div>
+                <div id="progressText" class="progress-text">Uploading... 0%</div>
+            </div>
+        </div>
+        
+        <!-- Recent Uploads -->
+        <div class="recent-uploads">
+            <h2 class="section-title">Recent Uploads</h2>
+            <div id="recentUploads" class="uploads-list">
+                <!-- Populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedFiles = [];
+        
+        // Check authentication
+        function checkAuth() {
+            const token = localStorage.getItem('a3e_api_key');
+            if (!token) {
+                window.location.href = '/login';
+            }
+        }
+        
+        // File handling
+        function handleFileSelect(event) {
+            const files = Array.from(event.target.files);
+            addFiles(files);
+        }
+        
+        function handleDrop(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            document.querySelector('.upload-zone').classList.remove('dragover');
+            
+            const files = Array.from(event.dataTransfer.files);
+            addFiles(files);
+        }
+        
+        function handleDragOver(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            document.querySelector('.upload-zone').classList.add('dragover');
+        }
+        
+        function handleDragLeave(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            document.querySelector('.upload-zone').classList.remove('dragover');
+        }
+        
+        function addFiles(files) {
+            selectedFiles = [...selectedFiles, ...files];
+            displayFiles();
+            document.getElementById('uploadForm').style.display = 'block';
+        }
+        
+        function displayFiles() {
+            const fileList = document.getElementById('fileList');
+            fileList.innerHTML = '';
+            
+            selectedFiles.forEach((file, index) => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                fileItem.innerHTML = `
+                    <div class="file-info">
+                        <div class="file-icon">${getFileIcon(file.name)}</div>
+                        <div>
+                            <div class="file-name">${file.name}</div>
+                            <div class="file-size">${formatFileSize(file.size)}</div>
+                        </div>
+                    </div>
+                    <div class="remove-file" onclick="removeFile(${index})">✕</div>
+                `;
+                fileList.appendChild(fileItem);
+            });
+        }
+        
+        function removeFile(index) {
+            selectedFiles.splice(index, 1);
+            displayFiles();
+            if (selectedFiles.length === 0) {
+                document.getElementById('uploadForm').style.display = 'none';
+            }
+        }
+        
+        function getFileIcon(filename) {
+            const ext = filename.split('.').pop().toLowerCase();
+            const icons = {
+                pdf: '📄',
+                doc: '📝',
+                docx: '📝',
+                xls: '📊',
+                xlsx: '📊',
+                ppt: '📊',
+                pptx: '📊',
+                txt: '📃',
+                csv: '📊',
+                md: '📝'
+            };
+            return icons[ext] || '📎';
+        }
+        
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // Upload handling
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (selectedFiles.length === 0) {
+                showMessage('Please select files to upload', 'error');
+                return;
+            }
+            
+            const uploadBtn = document.getElementById('uploadBtn');
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = 'Uploading...';
+            
+            document.getElementById('uploadProgress').style.display = 'block';
+            
+            try {
+                // Single file upload for now (extend to batch later)
+                const formData = new FormData();
+                formData.append('file', selectedFiles[0]);
+                formData.append('title', document.getElementById('title').value);
+                formData.append('description', document.getElementById('description').value);
+                formData.append('accreditor', document.getElementById('accreditor').value);
+                
+                const response = await fetch('/api/v1/upload/evidence', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('a3e_api_key')}`
+                    },
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    showMessage('Upload successful! Analysis has started.', 'success');
+                    resetUpload();
+                    loadRecentUploads();
+                    
+                    // Redirect to analysis view after delay
+                    setTimeout(() => {
+                        window.location.href = `/analysis/${result.data.id}`;
+                    }, 2000);
+                } else {
+                    throw new Error(result.detail || result.message || 'Upload failed');
+                }
+            } catch (error) {
+                console.error('Upload error:', error);
+                showMessage(error.message || 'Upload failed', 'error');
+            } finally {
+                uploadBtn.disabled = false;
+                uploadBtn.textContent = 'Start Analysis';
+                document.getElementById('uploadProgress').style.display = 'none';
+            }
+        });
+        
+        function resetUpload() {
+            selectedFiles = [];
+            document.getElementById('fileInput').value = '';
+            document.getElementById('fileList').innerHTML = '';
+            document.getElementById('uploadForm').reset();
+            document.getElementById('uploadForm').style.display = 'none';
+        }
+        
+        // Load recent uploads
+        async function loadRecentUploads() {
+            try {
+                const response = await fetch('/api/v1/upload/list?limit=5', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('a3e_api_key')}`
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    displayRecentUploads(result.data.uploads);
+                }
+            } catch (error) {
+                console.error('Failed to load recent uploads:', error);
+            }
+        }
+        
+        function displayRecentUploads(uploads) {
+            const container = document.getElementById('recentUploads');
+            
+            if (uploads.length === 0) {
+                container.innerHTML = '<p style="color: #6b7280;">No uploads yet. Upload your first evidence document above!</p>';
+                return;
+            }
+            
+            container.innerHTML = uploads.map(upload => `
+                <div class="upload-card">
+                    <div class="upload-header">
+                        <div>
+                            <div class="upload-title">${upload.title}</div>
+                            <div class="upload-date">${new Date(upload.uploaded_at).toLocaleDateString()}</div>
+                        </div>
+                        <span class="status-badge status-${upload.status}">${upload.status}</span>
+                    </div>
+                    ${upload.status === 'completed' ? `
+                        <div class="upload-stats">
+                            <div class="stat">
+                                <span class="stat-label">Standards Matched:</span>
+                                <span class="stat-value">${upload.standards_matched}</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-label">Confidence:</span>
+                                <span class="stat-value">${Math.round(upload.confidence_score * 100)}%</span>
+                            </div>
+                        </div>
+                    ` : `
+                        <div class="progress-bar" style="margin-top: 1rem;">
+                            <div class="progress-fill" style="width: ${upload.progress || 0}%"></div>
+                        </div>
+                    `}
+                </div>
+            `).join('');
+        }
+        
+        function showMessage(text, type) {
+            const messageEl = document.getElementById('message');
+            messageEl.className = `message message-${type}`;
+            messageEl.textContent = text;
+            messageEl.style.display = 'block';
+            
+            setTimeout(() => {
+                messageEl.style.display = 'none';
+            }, 5000);
+        }
+        
+        function logout() {
+            localStorage.clear();
+            window.location.href = '/login';
+        }
+        
+        // Initialize
+        checkAuth();
+        loadRecentUploads();
+        
+        // Simulate upload progress (remove in production)
+        let uploadProgress = 0;
+        function updateProgress() {
+            if (uploadProgress < 100) {
+                uploadProgress += Math.random() * 20;
+                uploadProgress = Math.min(uploadProgress, 100);
+                document.getElementById('progressFill').style.width = uploadProgress + '%';
+                document.getElementById('progressText').textContent = `Uploading... ${Math.round(uploadProgress)}%`;
+                
+                if (uploadProgress < 100) {
+                    setTimeout(updateProgress, 500);
+                }
+            }
+        }
+    </script>
+</body>
+</html>

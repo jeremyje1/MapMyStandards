@@ -187,6 +187,17 @@
             justify-content: center;
             color: white;
             font-size: 3rem;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .member-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
         }
         
         .member-name {
@@ -436,6 +447,51 @@
             </div>
         </section>
 
+        <!-- Founder's Story Section -->
+        <section style="padding: 4rem 0; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);">
+            <div class="container">
+                <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 3rem; color: #2c3e50;">The Story Behind A³E</h2>
+                
+                <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 3rem; align-items: center; max-width: 1000px; margin: 0 auto;">
+                    <div style="text-align: center;">
+                        <div style="width: 200px; height: 200px; margin: 0 auto; border-radius: 50%; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 5px solid white;">
+                            <img src="https://mapmystandards.ai/wp-content/uploads/2025/08/IMG_3158.jpg" alt="Jeremy Estrella" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'; this.parentElement.style.background='linear-gradient(135deg, #667eea 0%, #764ba2 100%)'; this.parentElement.innerHTML='<div style=&quot;color: white; font-size: 4rem; display: flex; align-items: center; justify-content: center; height: 100%;&quot;>JE</div>'">
+                        </div>
+                        <h3 style="margin-top: 1.5rem; color: #2c3e50; font-size: 1.4rem;">Jeremy Estrella</h3>
+                        <p style="color: #667eea; font-weight: 600;">Founder & CEO</p>
+                        <p style="color: #6c757d; font-size: 0.9rem; margin-top: 0.5rem;">Vice President of Academic Affairs<br>Louisiana State Colleges</p>
+                    </div>
+                    
+                    <div>
+                        <blockquote style="font-size: 1.2rem; line-height: 1.8; color: #2c3e50; font-style: italic; margin: 0; padding: 1.5rem; background: white; border-radius: 10px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); position: relative;">
+                            <span style="font-size: 3rem; color: #667eea; position: absolute; top: -10px; left: 20px;">"</span>
+                            <p style="margin-bottom: 1rem;">During my years as a QEP Director, I watched brilliant educators spend countless nights assembling evidence binders instead of focusing on student success. I saw institutions hire expensive consultants to tell them what they already knew, simply because the knowledge wasn't organized.</p>
+                            
+                            <p style="margin-bottom: 1rem;">The breaking point came during a particularly grueling reaffirmation cycle where we lost three key staff members. With them went years of institutional knowledge—document locations, narrative context, the 'why' behind our processes. We essentially started from scratch.</p>
+                            
+                            <p>That's when I realized: accreditation shouldn't be about reinventing the wheel every decade. It should be about continuous improvement, preserved knowledge, and empowering institutions to tell their own stories. A³E is my answer to that challenge—bringing together AI innovation with deep accreditation expertise to transform how higher education approaches compliance and quality assurance.</p>
+                            <span style="font-size: 3rem; color: #667eea; position: absolute; bottom: -20px; right: 20px;">"</span>
+                        </blockquote>
+                        
+                        <div style="margin-top: 2rem; display: flex; gap: 2rem; flex-wrap: wrap;">
+                            <div style="flex: 1; min-width: 200px; background: white; padding: 1rem; border-radius: 8px; text-align: center;">
+                                <strong style="color: #667eea; font-size: 1.5rem;">15+</strong>
+                                <p style="color: #6c757d; font-size: 0.9rem; margin: 0;">Years in Higher Ed Leadership</p>
+                            </div>
+                            <div style="flex: 1; min-width: 200px; background: white; padding: 1rem; border-radius: 8px; text-align: center;">
+                                <strong style="color: #667eea; font-size: 1.5rem;">QEP</strong>
+                                <p style="color: #6c757d; font-size: 0.9rem; margin: 0;">Director Experience</p>
+                            </div>
+                            <div style="flex: 1; min-width: 200px; background: white; padding: 1rem; border-radius: 8px; text-align: center;">
+                                <strong style="color: #667eea; font-size: 1.5rem;">SACSCOC</strong>
+                                <p style="color: #6c757d; font-size: 0.9rem; margin: 0;">Reaffirmation Success</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <section class="mission">
             <div class="container">
                 <div class="mission-content">
@@ -506,10 +562,30 @@
                 
                 <div class="team-grid">
                     <article class="team-member">
-                        <div class="member-photo">JE</div>
-                        <h3 class="member-name">Dr. Jeremy Estrella</h3>
+                        <div class="member-photo">
+                            <img src="https://mapmystandards.ai/wp-content/uploads/2025/08/IMG_3158.jpg" alt="Jeremy Estrella" onerror="this.style.display='none'; this.parentElement.innerHTML='JE'">
+                        </div>
+                        <h3 class="member-name">Jeremy Estrella</h3>
                         <div class="member-title">Founder & CEO</div>
-                        <p class="member-bio">Former SACSCOC Accreditation Director with 15+ years in higher education administration. Led successful reaffirmation efforts at multiple institutions and served as peer reviewer for 25+ accreditation visits. PhD in Educational Leadership, expertise in institutional effectiveness and AI applications in education.</p>
+                        <p class="member-bio">Jeremy Estrella brings over 15 years of transformative leadership in higher education to MapMyStandards. Currently serving as Vice President of Academic Affairs at Louisiana State Colleges, he has championed innovative approaches to institutional effectiveness and accreditation across multiple institutions.</p>
+                        
+                        <div style="margin-top: 1.5rem; text-align: left; background: #f8f9fa; padding: 1.5rem; border-radius: 10px;">
+                            <h4 style="color: #667eea; margin-bottom: 1rem; font-size: 1.1rem;">The A³E Story</h4>
+                            <p style="font-size: 0.95rem; line-height: 1.7; color: #6c757d; margin-bottom: 1rem;">
+                                "The idea for A³E came during my tenure as a QEP Director, where I witnessed firsthand the tremendous burden placed on institutions during reaffirmation cycles. I watched talented faculty and staff spend hundreds of hours on repetitive documentation tasks instead of focusing on student success.
+                            </p>
+                            <p style="font-size: 0.95rem; line-height: 1.7; color: #6c757d; margin-bottom: 1rem;">
+                                Through my experience developing and implementing Quality Enhancement Plans for SACSCOC accreditation, I recognized a pattern: every institution was reinventing the wheel, losing institutional knowledge with staff turnover, and spending excessive resources on consultants for work that could be systematized.
+                            </p>
+                            <p style="font-size: 0.95rem; line-height: 1.7; color: #6c757d;">
+                                Combining my educational leadership experience with emerging AI technologies, I envisioned a platform that would preserve institutional memory, automate evidence mapping, and empower institutions to manage accreditation internally. A³E is the culmination of that vision—turning accreditation from a burden into a strategic advantage."
+                            </p>
+                        </div>
+                        
+                        <div style="margin-top: 1rem; padding: 1rem; background: white; border-left: 4px solid #667eea;">
+                            <p style="font-size: 0.9rem; color: #2c3e50;"><strong>Academic Credentials:</strong> M.Ed. Adult Education (FHSU), B.S. Business Management (FHSU)</p>
+                            <p style="font-size: 0.9rem; color: #2c3e50; margin-top: 0.5rem;"><strong>Accreditation Experience:</strong> QEP Director for SACSCOC Reaffirmation, Institutional Effectiveness Leadership</p>
+                        </div>
                     </article>
                     
                     <article class="team-member">

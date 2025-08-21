@@ -98,6 +98,20 @@ except ImportError as e:
     compliance_router_available = False
     _compliance_import_exception = e
 
+try:
+    from .api.routes.auth_complete import router as auth_complete_router
+    auth_complete_router_available = True
+except ImportError as e:
+    auth_complete_router_available = False
+    _auth_complete_import_exception = e
+
+try:
+    from .api.routes.upload import router as upload_router
+    upload_router_available = True
+except ImportError as e:
+    upload_router_available = False
+    _upload_import_exception = e
+
 # Configure logging
 logging.basicConfig(level=getattr(logging, settings.log_level), format=settings.log_format)
 logger = logging.getLogger(__name__)
@@ -369,6 +383,18 @@ if compliance_router_available:
     logger.info("✅ Compliance router loaded")
 else:
     logger.warning("⚠️ Compliance router not available")
+
+if auth_complete_router_available:
+    app.include_router(auth_complete_router)
+    logger.info("✅ Auth complete router loaded")
+else:
+    logger.warning("⚠️ Auth complete router not available")
+
+if upload_router_available:
+    app.include_router(upload_router)
+    logger.info("✅ Upload router loaded")
+else:
+    logger.warning("⚠️ Upload router not available")
 
 app.include_router(integrations_router)
 app.include_router(proprietary_router)

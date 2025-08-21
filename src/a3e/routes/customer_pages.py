@@ -73,8 +73,8 @@ async def docs_redirect():
 
 @router.get("/upload", response_class=HTMLResponse, include_in_schema=False)
 async def upload_page():
-    """Upload interface (redirect to dashboard for now)"""
-    return RedirectResponse(url="/dashboard")
+    """Evidence upload page"""
+    return serve_html_file("upload.html")
 
 @router.get("/services", response_class=HTMLResponse, include_in_schema=False) 
 async def services_page():

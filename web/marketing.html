@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A³E Platform by MapMyStandards - AI-powered accreditation management for higher education. Automate evidence mapping, generate narratives, track compliance. Start free trial." />
+    <meta name="keywords" content="accreditation management software, higher education compliance, AI accreditation platform, evidence mapping, gap analysis, accreditation workflow automation, MapMyStandards, A3E platform, college accreditation, university compliance" />
+    <meta name="author" content="MapMyStandards" />
+    <link rel="canonical" href="https://platform.mapmystandards.ai/" />
+    
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="MapMyStandards A³E Platform" />
+    <meta property="og:title" content="A³E Platform - AI-Powered Accreditation Management | MapMyStandards" />
+    <meta property="og:description" content="Transform your accreditation process with AI. Automate evidence mapping, generate narratives, ensure compliance. Trusted by 500+ institutions. Start free trial." />
+    <meta property="og:url" content="https://platform.mapmystandards.ai/" />
+    <meta property="og:image" content="https://platform.mapmystandards.ai/og/a3e-platform-preview.jpg" />
+    <meta property="og:image:alt" content="A³E Accreditation Management Platform Dashboard" />
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="A³E Platform - AI Accreditation Management" />
+    <meta name="twitter:description" content="Automate accreditation with AI. Evidence mapping, narrative generation, compliance tracking. Start free trial." />
+    <meta name="twitter:image" content="https://platform.mapmystandards.ai/og/a3e-platform-preview.jpg" />
+    <meta name="twitter:site" content="@MapMyStandards" />
+    
+    <!-- Additional SEO -->
+    <meta name="robots" content="index,follow,max-image-preview:large" />
+    <meta name="theme-color" content="#1e3c72" />
+    
+    <title>A³E Platform - AI-Powered Accreditation Management | MapMyStandards</title>
+    
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "A³E Platform by MapMyStandards",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Cloud-based SaaS",
+        "url": "https://platform.mapmystandards.ai/",
+        "description": "AI-powered accreditation management platform for higher education institutions. Automate evidence mapping, generate narratives, track compliance, and manage accreditation workflows.",
+        "image": "https://platform.mapmystandards.ai/og/a3e-platform-preview.jpg",
+        "publisher": {
+            "@type": "Organization",
+            "name": "MapMyStandards",
+            "url": "https://mapmystandards.ai"
+        },
+        "offers": [{
+            "@type": "Offer",
+            "name": "Starter Plan",
+            "price": "99",
+            "priceCurrency": "USD",
+            "priceSpecification": {
+                "@type": "PriceSpecification",
+                "price": "99",
+                "priceCurrency": "USD",
+                "unitText": "MONTH"
+            }
+        },{
+            "@type": "Offer",
+            "name": "Professional Plan",
+            "price": "299",
+            "priceCurrency": "USD",
+            "priceSpecification": {
+                "@type": "PriceSpecification",
+                "price": "299",
+                "priceCurrency": "USD",
+                "unitText": "MONTH"
+            }
+        },{
+            "@type": "Offer",
+            "name": "Institution Plan",
+            "price": "599",
+            "priceCurrency": "USD",
+            "priceSpecification": {
+                "@type": "PriceSpecification",
+                "price": "599",
+                "priceCurrency": "USD",
+                "unitText": "MONTH"
+            }
+        }],
+        "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.8",
+            "reviewCount": "127"
+        }
+    }
+    </script>
+    
+    <!-- Modern CSS -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary-blue: #1e3c72;
+            --secondary-blue: #2a5298;
+            --accent-purple: #667eea;
+            --success-green: #28a745;
+            --text-dark: #2c3e50;
+            --text-light: #6c757d;
+            --bg-light: #f8f9fa;
+            --white: #ffffff;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-dark);
+            background-color: var(--white);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .container-wide {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* Enhanced Premium Header */
+        .site-header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            backdrop-filter: saturate(180%) blur(20px);
+            -webkit-backdrop-filter: saturate(180%) blur(20px);
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.95));
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+        
+        .site-header.scrolled {
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.08);
+            background: rgba(255, 255, 255, 0.98);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        }
+        
+        .nav-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.25rem 0;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.875rem;
+            text-decoration: none;
+            color: var(--primary-blue);
+            font-weight: 700;
+            font-size: 1.375rem;
+            transition: all 0.3s;
+        }
+        
+        .logo:hover {
+            transform: translateX(2px);
+        }
+        
+        .logo img {
+            height: 45px;
+            width: auto;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+        }
+        
+        .logo-text {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            line-height: 1.2;
+        }
+        
+        .logo-main {
+            font-size: 1.375rem;
+            color: var(--primary-blue);
+        }
+        
+        .logo-tagline {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            font-weight: 500;
+            margin-top: -2px;
+        }
+        
+        .nav-main {
+            display: flex;
+            gap: 3rem;
+            align-items: center;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 2.5rem;
+            list-style: none;
+            align-items: center;
+        }
+        
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-dark);
+            font-weight: 500;
+            position: relative;
+            transition: color 0.3s;
+            font-size: 0.95rem;
+        }
+        
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--accent-purple);
+            transition: width 0.3s;
+        }
+        
+        .nav-links a:hover {
+            color: var(--accent-purple);
+        }
+        
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+        
+        .nav-cta {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+        
+        .btn {
+            padding: 0.625rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            letter-spacing: 0.025em;
+        }
+        
+        .btn-outline {
+            border: 1.5px solid var(--text-dark);
+            color: var(--text-dark);
+            background: transparent;
+        }
+        
+        .btn-outline:hover {
+            background: var(--text-dark);
+            color: var(--white);
+            transform: translateY(-1px);
+        }
+        
+        .btn-primary {
+            background: var(--accent-purple);
+            color: var(--white);
+            box-shadow: 0 4px 14px rgba(102, 126, 234, 0.25);
+            border: 1px solid var(--accent-purple);
+        }
+        
+        .btn-primary:hover {
+            background: #5a67d8;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, var(--success-green) 0%, #1e7e34 100%);
+            color: var(--white);
+            box-shadow: 0 4px 14px rgba(40, 167, 69, 0.3);
+            border: 1px solid var(--success-green);
+        }
+        
+        .btn-success:hover {
+            background: linear-gradient(135deg, #218838 0%, #1c7430 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+        }
+        
+        /* Mobile Menu */
+        .mobile-toggle {
+            display: none;
+            background: transparent;
+            border: 1.5px solid var(--text-dark);
+            padding: 0.5rem 0.625rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .mobile-toggle:hover {
+            background: var(--text-dark);
+        }
+        
+        .mobile-toggle span {
+            display: block;
+            width: 22px;
+            height: 2px;
+            background: var(--text-dark);
+            margin: 4px 0;
+            transition: 0.3s;
+        }
+        
+        .mobile-toggle:hover span {
+            background: var(--white);
+        }
+        
+        /* Animations */
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.8;
+                transform: scale(1.2);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
+            color: var(--white);
+            padding: 5rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="rgba(255,255,255,0.05)" fill-opacity="1" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,122.7C672,117,768,139,864,133.3C960,128,1056,96,1152,90.7C1248,85,1344,107,1392,117.3L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>');
+            background-size: cover;
+            opacity: 0.1;
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .hero h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+        }
+        
+        .hero-tagline {
+            font-size: 1.5rem;
+            font-weight: 300;
+            margin-bottom: 2rem;
+            opacity: 0.95;
+        }
+        
+        .hero-description {
+            font-size: 1.125rem;
+            margin-bottom: 3rem;
+            opacity: 0.9;
+            line-height: 1.8;
+        }
+        
+        .hero-cta {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 3rem;
+        }
+        
+        .hero-cta .btn {
+            font-size: 1.125rem;
+            padding: 0.75rem 2rem;
+        }
+        
+        /* Trust Indicators */
+        .trust-bar {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-top: 3rem;
+        }
+        
+        .trust-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            text-align: center;
+        }
+        
+        .trust-item {
+            font-size: 0.875rem;
+        }
+        
+        .trust-item strong {
+            display: block;
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        /* Features Section */
+        .features {
+            padding: 5rem 0;
+            background: var(--bg-light);
+        }
+        
+        .section-header {
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto 3rem;
+        }
+        
+        .section-header h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--text-dark);
+        }
+        
+        .section-header p {
+            font-size: 1.125rem;
+            color: var(--text-light);
+            line-height: 1.8;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+        
+        .feature-card {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s;
+            border: 1px solid transparent;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            border-color: var(--accent-purple);
+        }
+        
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--accent-purple) 0%, #764ba2 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .feature-card h3 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: var(--text-dark);
+        }
+        
+        .feature-card p {
+            color: var(--text-light);
+            line-height: 1.8;
+            margin-bottom: 1rem;
+        }
+        
+        .feature-value {
+            background: #f0f4ff;
+            padding: 1rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            color: var(--accent-purple);
+            font-weight: 600;
+        }
+        
+        /* Pricing Section */
+        .pricing {
+            padding: 5rem 0;
+            background: var(--white);
+        }
+        
+        .pricing-toggle {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 3rem;
+        }
+        
+        .toggle-wrapper {
+            background: var(--bg-light);
+            padding: 0.25rem;
+            border-radius: 12px;
+            display: inline-flex;
+        }
+        
+        .toggle-option {
+            padding: 0.75rem 2rem;
+            border-radius: 8px;
+            background: transparent;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: var(--text-light);
+        }
+        
+        .toggle-option.active {
+            background: var(--white);
+            color: var(--text-dark);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .pricing-card {
+            background: var(--white);
+            border: 2px solid #e9ecef;
+            border-radius: 16px;
+            padding: 2rem;
+            position: relative;
+            transition: all 0.3s;
+        }
+        
+        .pricing-card.popular {
+            border-color: var(--accent-purple);
+            transform: scale(1.05);
+        }
+        
+        .pricing-card:hover {
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        }
+        
+        .popular-badge {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--accent-purple);
+            color: var(--white);
+            padding: 0.25rem 1rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .pricing-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .pricing-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--text-dark);
+        }
+        
+        .pricing-description {
+            font-size: 0.875rem;
+            color: var(--text-light);
+            margin-bottom: 1.5rem;
+        }
+        
+        .pricing-price {
+            display: flex;
+            align-items: baseline;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .price-amount {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+        
+        .price-period {
+            font-size: 1rem;
+            color: var(--text-light);
+        }
+        
+        .price-savings {
+            font-size: 0.875rem;
+            color: var(--success-green);
+            font-weight: 600;
+        }
+        
+        .pricing-features {
+            list-style: none;
+            margin: 2rem 0;
+        }
+        
+        .pricing-features li {
+            padding: 0.5rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-dark);
+        }
+        
+        .pricing-features li::before {
+            content: '✓';
+            color: var(--success-green);
+            font-weight: bold;
+        }
+        
+        .pricing-cta {
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+            text-decoration: none;
+            display: block;
+            transition: all 0.3s;
+        }
+        
+        .pricing-card .pricing-cta {
+            background: var(--text-dark);
+            color: var(--white);
+        }
+        
+        .pricing-card.popular .pricing-cta {
+            background: var(--accent-purple);
+        }
+        
+        .pricing-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* Value Props */
+        .value-props {
+            padding: 5rem 0;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+        
+        .value-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+        
+        .value-card {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+        
+        .value-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--accent-purple);
+            margin-bottom: 0.5rem;
+        }
+        
+        .value-label {
+            font-size: 1rem;
+            color: var(--text-dark);
+        }
+        
+        /* CTA Section */
+        .cta-section {
+            padding: 5rem 0;
+            background: var(--primary-blue);
+            color: var(--white);
+            text-align: center;
+        }
+        
+        .cta-content h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .cta-content p {
+            font-size: 1.25rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+        
+        /* Footer */
+        footer {
+            background: var(--text-dark);
+            color: var(--white);
+            padding: 3rem 0 2rem;
+        }
+        
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .footer-section h3 {
+            margin-bottom: 1rem;
+            font-size: 1.125rem;
+        }
+        
+        .footer-section a {
+            color: #bdc3c7;
+            text-decoration: none;
+            display: block;
+            padding: 0.25rem 0;
+            transition: color 0.3s;
+        }
+        
+        .footer-section a:hover {
+            color: var(--white);
+        }
+        
+        .footer-bottom {
+            border-top: 1px solid #34495e;
+            padding-top: 2rem;
+            text-align: center;
+            color: #bdc3c7;
+        }
+        
+        /* Responsive */
+        @media (max-width: 968px) {
+            .nav-links, .nav-cta {
+                display: none;
+            }
+            
+            .mobile-toggle {
+                display: block;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .logo-tagline {
+                display: none;
+            }
+            
+            .logo img {
+                height: 38px;
+            }
+            
+            .hero h1 {
+                font-size: 2rem;
+            }
+            
+            .hero-tagline {
+                font-size: 1.25rem;
+            }
+            
+            .pricing-card.popular {
+                transform: scale(1);
+            }
+            
+            .features-grid, .pricing-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .logo-main {
+                font-size: 1.125rem;
+            }
+            
+            .nav-wrapper {
+                padding: 1rem 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- System Status Bar -->
+    <div style="background: linear-gradient(90deg, #1e3c72 0%, #2a5298 100%); color: white; text-align: center; padding: 0.625rem; font-size: 0.8125rem; font-weight: 500;">
+        <div class="container" style="display: flex; justify-content: center; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
+            <span style="display: flex; align-items: center; gap: 0.5rem;">
+                <span style="width: 8px; height: 8px; background: #4ade80; border-radius: 50%; display: inline-block; animation: pulse 2s infinite;"></span>
+                A³E Platform Live
+            </span>
+            <span style="opacity: 0.9;">|</span>
+            <a href="https://platform.mapmystandards.ai/health" style="color: white; text-decoration: none; opacity: 0.9;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.9'">System Status</a>
+            <span style="opacity: 0.9;">|</span>
+            <a href="#pricing" style="color: white; text-decoration: none; opacity: 0.9;">View Pricing</a>
+            <span style="opacity: 0.9;">|</span>
+            <span style="background: rgba(255, 255, 255, 0.2); padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.75rem;">
+                🎉 Save up to 17% with annual billing
+            </span>
+        </div>
+    </div>
+    
+    <!-- Header -->
+    <header class="site-header" id="header">
+        <div class="container-wide">
+            <nav class="nav-wrapper">
+                <a href="/" class="logo">
+                    <img src="https://mapmystandards.ai/wp-content/uploads/2025/07/Original-Logo.png" alt="MapMyStandards Logo">
+                    <div class="logo-text">
+                        <span class="logo-main">MapMyStandards</span>
+                        <span class="logo-tagline">A³E Accreditation Platform</span>
+                    </div>
+                </a>
+                
+                <div class="nav-main">
+                    <ul class="nav-links">
+                        <li><a href="https://platform.mapmystandards.ai/">Home</a></li>
+                        <li><a href="https://platform.mapmystandards.ai/features">Features</a></li>
+                        <li><a href="#pricing">Pricing</a></li>
+                        <li><a href="https://platform.mapmystandards.ai/contact">Demo</a></li>
+                        <li><a href="https://platform.mapmystandards.ai/about">About</a></li>
+                        <li><a href="https://platform.mapmystandards.ai/contact">Contact</a></li>
+                    </ul>
+                    
+                    <div class="nav-cta">
+                        <a href="https://platform.mapmystandards.ai/login" class="btn btn-outline">Sign In</a>
+                        <a href="https://platform.mapmystandards.ai/trial-signup" class="btn btn-success">
+                            <span>🚀</span> Start Free Trial
+                        </a>
+                    </div>
+                </div>
+                
+                <button class="mobile-toggle" aria-label="Menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="container">
+                <div class="hero-content">
+                    <h1>The AI-Powered Accreditation Platform That Pays for Itself</h1>
+                    <p class="hero-tagline">Transform Your Accreditation Process with Intelligent Automation</p>
+                    <p class="hero-description">
+                        Join 500+ institutions saving $150K+ annually by replacing manual processes and expensive consultants 
+                        with AI that learns your institution. Automate evidence mapping, generate narratives instantly, 
+                        and never lose institutional knowledge again.
+                    </p>
+                    
+                    <div class="hero-cta">
+                        <a href="https://platform.mapmystandards.ai/trial-signup" class="btn btn-success">
+                            <span>🚀</span> Start 7-Day Free Trial
+                        </a>
+                        <a href="https://platform.mapmystandards.ai/contact" class="btn" style="background: white; color: var(--primary-blue);">
+                            <span>🎯</span> See Live Demo
+                        </a>
+                    </div>
+                    
+                    <div class="trust-bar">
+                        <div class="trust-items">
+                            <div class="trust-item">
+                                <strong>500+</strong>
+                                Institutions Trust A³E
+                            </div>
+                            <div class="trust-item">
+                                <strong>$150K+</strong>
+                                Average Annual Savings
+                            </div>
+                            <div class="trust-item">
+                                <strong>80%</strong>
+                                Time Reduction
+                            </div>
+                            <div class="trust-item">
+                                <strong>4.8/5</strong>
+                                Customer Rating
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section class="features">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Everything You Need for Accreditation Success</h2>
+                    <p>A³E becomes your institution's accreditation nervous system—more valuable every month as it learns your processes, preserves your knowledge, and automates your workflows.</p>
+                </div>
+                
+                <div class="features-grid">
+                    <article class="feature-card">
+                        <div class="feature-icon">📚</div>
+                        <h3>Secure Evidence Vault</h3>
+                        <p>Unlimited FERPA-compliant storage with intelligent organization. Upload once, map to multiple standards automatically.</p>
+                        <div class="feature-value">
+                            💡 Replaces: Scattered drives & folders costing 20+ hours/week
+                        </div>
+                    </article>
+                    
+                    <article class="feature-card">
+                        <div class="feature-icon">🤖</div>
+                        <h3>AI That Knows Your Institution</h3>
+                        <p>Custom AI trained on your data, policies, and history. Get instant answers and generate perfect narratives in your voice.</p>
+                        <div class="feature-value">
+                            💡 Replaces: $150K+ annual consultant fees
+                        </div>
+                    </article>
+                    
+                    <article class="feature-card">
+                        <div class="feature-icon">⚡</div>
+                        <h3>Workflow Automation</h3>
+                        <p>Automate evidence collection, deadline tracking, and report generation. Set it up once, run forever.</p>
+                        <div class="feature-value">
+                            💡 Saves: 80% of manual accreditation work
+                        </div>
+                    </article>
+                    
+                    <article class="feature-card">
+                        <div class="feature-icon">📊</div>
+                        <h3>Predictive Compliance</h3>
+                        <p>Real-time gap analysis and risk forecasting. Know what's missing before reviewers do.</p>
+                        <div class="feature-value">
+                            💡 Prevents: Costly compliance failures
+                        </div>
+                    </article>
+                    
+                    <article class="feature-card">
+                        <div class="feature-icon">👥</div>
+                        <h3>Team Collaboration Hub</h3>
+                        <p>Centralize communication, assign tasks, track progress. Everyone stays aligned and accountable.</p>
+                        <div class="feature-value">
+                            💡 Eliminates: Email chaos & missed deadlines
+                        </div>
+                    </article>
+                    
+                    <article class="feature-card">
+                        <div class="feature-icon">🎓</div>
+                        <h3>Built-in Training Academy</h3>
+                        <p>Comprehensive accreditation training and certification. Build internal expertise, reduce external dependency.</p>
+                        <div class="feature-value">
+                            💡 Creates: Self-sufficient accreditation teams
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pricing Section -->
+        <section class="pricing" id="pricing">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Simple, Transparent Pricing That Scales With You</h2>
+                    <p>Choose the plan that fits your institution. All plans include core features. No setup fees. Cancel anytime.</p>
+                </div>
+                
+                <div class="pricing-toggle">
+                    <div class="toggle-wrapper">
+                        <button class="toggle-option active" onclick="togglePricing('monthly')">Monthly</button>
+                        <button class="toggle-option" onclick="togglePricing('annual')">Annual (Save up to 17%)</button>
+                    </div>
+                </div>
+                
+                <div class="pricing-grid">
+                    <!-- Starter Plan -->
+                    <div class="pricing-card">
+                        <div class="pricing-header">
+                            <h3 class="pricing-name">Starter</h3>
+                            <p class="pricing-description">Perfect for individual departments or pilot programs</p>
+                            <div class="pricing-price">
+                                <span class="price-amount monthly-price">$99</span>
+                                <span class="price-amount annual-price" style="display:none;">$999</span>
+                                <span class="price-period monthly-price">/month</span>
+                                <span class="price-period annual-price" style="display:none;">/year</span>
+                            </div>
+                            <div class="price-savings annual-price" style="display:none;">Save $189/year</div>
+                        </div>
+                        
+                        <ul class="pricing-features">
+                            <li>1 accreditation standard</li>
+                            <li>Up to 100 evidence artifacts</li>
+                            <li>3 users</li>
+                            <li>10 AI narratives/month</li>
+                            <li>Basic analytics & reporting</li>
+                            <li>Email support</li>
+                            <li>7-day free trial</li>
+                        </ul>
+                        
+                        <a href="https://platform.mapmystandards.ai/trial-signup?plan=starter" class="pricing-cta" data-monthly-price="price_1RyVPPK8PKpLCKDZFbwkFdqq" data-annual-price="price_1RyVPgK8PKpLCKDZe8nu4ium">
+                            Start Free Trial
+                        </a>
+                    </div>
+                    
+                    <!-- Professional Plan -->
+                    <div class="pricing-card popular">
+                        <span class="popular-badge">Most Popular</span>
+                        <div class="pricing-header">
+                            <h3 class="pricing-name">Professional</h3>
+                            <p class="pricing-description">For growing programs and multi-department institutions</p>
+                            <div class="pricing-price">
+                                <span class="price-amount monthly-price">$299</span>
+                                <span class="price-amount annual-price" style="display:none;">$2,999</span>
+                                <span class="price-period monthly-price">/month</span>
+                                <span class="price-period annual-price" style="display:none;">/year</span>
+                            </div>
+                            <div class="price-savings annual-price" style="display:none;">Save $589/year</div>
+                        </div>
+                        
+                        <ul class="pricing-features">
+                            <li>3 accreditation standards</li>
+                            <li>Up to 500 evidence artifacts</li>
+                            <li>10 users</li>
+                            <li>50 AI narratives/month</li>
+                            <li>Advanced analytics & reports</li>
+                            <li>Canvas LMS integration</li>
+                            <li>Priority email support</li>
+                            <li>14-day free trial</li>
+                        </ul>
+                        
+                        <a href="https://platform.mapmystandards.ai/trial-signup?plan=professional" class="pricing-cta" data-monthly-price="price_1RyVQ4K8PKpLCKDZON0IMe3F" data-annual-price="price_1RyVQFK8PKpLCKDZ7KxYraxk">
+                            Start Free Trial
+                        </a>
+                    </div>
+                    
+                    <!-- Institution Plan -->
+                    <div class="pricing-card">
+                        <div class="pricing-header">
+                            <h3 class="pricing-name">Institution</h3>
+                            <p class="pricing-description">Complete solution for full institutions</p>
+                            <div class="pricing-price">
+                                <span class="price-amount monthly-price">$599</span>
+                                <span class="price-amount annual-price" style="display:none;">$5,999</span>
+                                <span class="price-period monthly-price">/month</span>
+                                <span class="price-period annual-price" style="display:none;">/year</span>
+                            </div>
+                            <div class="price-savings annual-price" style="display:none;">Save $1,189/year</div>
+                        </div>
+                        
+                        <ul class="pricing-features">
+                            <li><strong>Unlimited</strong> standards</li>
+                            <li><strong>Unlimited</strong> artifacts</li>
+                            <li>25 users</li>
+                            <li><strong>Unlimited</strong> AI narratives</li>
+                            <li>All integrations (Canvas, SSO)</li>
+                            <li>API access</li>
+                            <li>Dedicated success manager</li>
+                            <li>Phone & email support</li>
+                            <li>Custom onboarding</li>
+                        </ul>
+                        
+                        <a href="https://platform.mapmystandards.ai/trial-signup?plan=institution" class="pricing-cta" data-monthly-price="price_1RyVQgK8PKpLCKDZTais3Tyx" data-annual-price="price_1RyVQrK8PKpLCKDZUshqaOvZ">
+                            Start Free Trial
+                        </a>
+                    </div>
+                    
+                    <!-- Enterprise Plan -->
+                    <div class="pricing-card">
+                        <div class="pricing-header">
+                            <h3 class="pricing-name">Enterprise</h3>
+                            <p class="pricing-description">For multi-campus systems & consortiums</p>
+                            <div class="pricing-price">
+                                <span class="price-amount">Custom</span>
+                            </div>
+                            <div class="price-savings">Contact for pricing</div>
+                        </div>
+                        
+                        <ul class="pricing-features">
+                            <li>Everything in Institution</li>
+                            <li><strong>Unlimited users</strong></li>
+                            <li>White-label options</li>
+                            <li>Custom integrations</li>
+                            <li>SLA guarantees</li>
+                            <li>On-premise option</li>
+                            <li>24/7 dedicated support</li>
+                        </ul>
+                        
+                        <a href="https://platform.mapmystandards.ai/contact?plan=enterprise" class="pricing-cta">
+                            Contact Sales
+                        </a>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 2rem; color: var(--text-light);">
+                    <p>All prices in USD. No setup fees. Cancel anytime. 30-day money-back guarantee.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Value Props -->
+        <section class="value-props">
+            <div class="container">
+                <div class="section-header">
+                    <h2>The ROI is Clear: A³E Pays for Itself</h2>
+                    <p>Our customers consistently report savings that far exceed their subscription cost.</p>
+                </div>
+                
+                <div class="value-grid">
+                    <div class="value-card">
+                        <div class="value-number">$150K-$300K</div>
+                        <div class="value-label">Annual Savings</div>
+                    </div>
+                    <div class="value-card">
+                        <div class="value-number">80%</div>
+                        <div class="value-label">Time Reduction</div>
+                    </div>
+                    <div class="value-card">
+                        <div class="value-number">100%</div>
+                        <div class="value-label">Evidence Organized</div>
+                    </div>
+                    <div class="value-card">
+                        <div class="value-number">24/7</div>
+                        <div class="value-label">AI Support</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA Section -->
+        <section class="cta-section">
+            <div class="container">
+                <div class="cta-content">
+                    <h2>Ready to Transform Your Accreditation Process?</h2>
+                    <p>Join 500+ institutions already using A³E to save time, money, and stress.</p>
+                    <div class="hero-cta">
+                        <a href="https://platform.mapmystandards.ai/trial-signup" class="btn" style="background: white; color: var(--primary-blue); font-size: 1.125rem; padding: 0.75rem 2rem;">
+                            Start Your Free Trial
+                        </a>
+                        <a href="https://platform.mapmystandards.ai/contact" class="btn btn-outline" style="border-color: white; color: white; font-size: 1.125rem; padding: 0.75rem 2rem;">
+                            Schedule a Demo
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-section">
+                    <h3>Product</h3>
+                    <a href="https://platform.mapmystandards.ai/features">Features</a>
+                    <a href="https://platform.mapmystandards.ai/pricing">Pricing</a>
+                    <a href="https://platform.mapmystandards.ai/contact">Live Demo</a>
+                    <a href="https://platform.mapmystandards.ai/redoc">API Documentation</a>
+                    <a href="https://platform.mapmystandards.ai/integrations">Integrations</a>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Use Cases</h3>
+                    <a href="/solutions/colleges">Colleges</a>
+                    <a href="/solutions/universities">Universities</a>
+                    <a href="/solutions/systems">Multi-Campus Systems</a>
+                    <a href="/solutions/departments">Academic Departments</a>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Company</h3>
+                    <a href="https://platform.mapmystandards.ai/about">About Us</a>
+                    <a href="https://platform.mapmystandards.ai/contact">Contact</a>
+                    <a href="https://platform.mapmystandards.ai/careers">Careers</a>
+                    <a href="https://platform.mapmystandards.ai/blog">Blog</a>
+                    <a href="https://platform.mapmystandards.ai/press">Press</a>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Support</h3>
+                    <a href="https://platform.mapmystandards.ai/help">Help Center</a>
+                    <a href="https://platform.mapmystandards.ai/docs">Documentation</a>
+                    <a href="https://platform.mapmystandards.ai/training">Training Academy</a>
+                    <a href="https://platform.mapmystandards.ai/health">System Status</a>
+                    <a href="https://platform.mapmystandards.ai/contact">Contact Support</a>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2025 MapMyStandards. All rights reserved.</p>
+                <p>A³E - Accreditation Assessment Analytics Engine</p>
+                <div style="margin-top: 1rem;">
+                    <a href="https://platform.mapmystandards.ai/privacy" style="color: #bdc3c7; margin: 0 1rem;">Privacy Policy</a>
+                    <a href="https://platform.mapmystandards.ai/terms" style="color: #bdc3c7; margin: 0 1rem;">Terms of Service</a>
+                    <a href="https://platform.mapmystandards.ai/security" style="color: #bdc3c7; margin: 0 1rem;">Security</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        // Sticky header on scroll
+        window.addEventListener('scroll', function() {
+            const header = document.getElementById('header');
+            if (window.scrollY > 10) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
+        
+        // Pricing toggle
+        function togglePricing(mode) {
+            const monthlyElements = document.querySelectorAll('.monthly-price');
+            const annualElements = document.querySelectorAll('.annual-price');
+            const toggleOptions = document.querySelectorAll('.toggle-option');
+            
+            toggleOptions.forEach(opt => opt.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            if (mode === 'annual') {
+                monthlyElements.forEach(el => el.style.display = 'none');
+                annualElements.forEach(el => el.style.display = 'block');
+            } else {
+                monthlyElements.forEach(el => el.style.display = 'block');
+                annualElements.forEach(el => el.style.display = 'none');
+            }
+        }
+        
+        // Update pricing links based on billing mode
+        document.querySelectorAll('.pricing-cta').forEach(cta => {
+            cta.addEventListener('click', function(e) {
+                e.preventDefault();
+                const isAnnual = document.querySelector('.annual-price').style.display !== 'none';
+                const priceId = isAnnual ? this.dataset.annualPrice : this.dataset.monthlyPrice;
+                const billing = isAnnual ? 'annual' : 'monthly';
+                const plan = this.href.split('plan=')[1];
+                
+                if (priceId) {
+                    window.location.href = `/trial-signup?plan=${plan}&billing=${billing}&price_id=${priceId}`;
+                } else {
+                    window.location.href = this.href;
+                }
+            });
+        });
+    </script>
+</body>
+</html>
