@@ -21,7 +21,13 @@ class PaymentService:
     def __init__(self):
         self.settings = get_settings()
         # Stripe API key may not be set in minimal deployments; guard access
-        stripe.api_key = getattr(self.settings, 'STRIPE_SECRET_KEY', '') or ''
+        stripe_key = self.settings.STRIPE_SECRET_KEY
+        if stripe_key:
+            stripe.api_key = stripe_key
+            logger.info(f"Stripe initialized with key ending in ...{stripe_key[-4:]}")
+        else:
+            logger.warning("No Stripe secret key found - payment features will not work")
+        
         # Initialize database service lazily with configured database URL
         try:
             self.db_service = DatabaseService(self.settings.database_url)
@@ -32,6 +38,11 @@ class PaymentService:
     async def create_trial_subscription(self, email: str, plan: str, payment_method_id: str, coupon_code: Optional[str] = None) -> Dict[str, Any]:
         """Create a real Stripe trial subscription with 7-day free trial"""
         try:
+            # Check if Stripe is configured
+            if not stripe.api_key:
+                logger.error("Stripe API key not configured")
+                return {'success': False, 'error': 'Payment system not configured. Please contact support.'}
+            
             # Create or retrieve customer
             customers = stripe.Customer.list(email=email, limit=1)
             if customers.data:
