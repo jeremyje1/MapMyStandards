@@ -175,7 +175,7 @@ async def trial_last_failure(payment_service: PaymentService = Depends(get_payme
 @router.get("/trial/diagnose", include_in_schema=False)
 async def trial_diagnose(payment_service: PaymentService = Depends(get_payment_service)):
     """Expose current plan->price resolution & stripe key presence for debugging."""
-    from ..core.config import get_settings  # type: ignore
+    # Reuse already-imported settings function (imported at module top as get_settings)
     settings = get_settings()
     import stripe
     # Reuse internal helper via price lookup calls

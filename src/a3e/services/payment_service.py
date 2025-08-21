@@ -56,6 +56,16 @@ class PaymentService:
                 logger.error(f"stripe.api_key is: {stripe.api_key}")
                 self.last_trial_failure = {'stage': 'precheck', 'error': 'Payment system not configured. Please contact support.'}
                 return {'success': False, 'stage': 'precheck', 'error': 'Payment system not configured. Please contact support.'}
+
+            # Normalize simple plan codes to explicit interval-specific keys
+            original_plan = plan
+            if plan in ("college", "multicampus"):
+                plan = f"{plan}_monthly"
+                logger.info("[trial] Normalized plan '%s' -> '%s'", original_plan, plan)
+            elif plan.endswith("_annual"):
+                # Accept accidental *_annual to *_yearly
+                plan = plan.replace("_annual", "_yearly")
+                logger.info("[trial] Normalized annual alias to '%s'", plan)
             
             # Helper to run blocking stripe calls in a thread
             async def _call(func, *f_args, **f_kwargs):
@@ -103,8 +113,8 @@ class PaymentService:
                     self.settings.STRIPE_PRICE_MULTI_CAMPUS_MONTHLY,
                     getattr(self.settings, 'STRIPE_PRICE_MULTI_CAMPUS_YEARLY', None)
                 )
-                self.last_trial_failure = {'stage': 'price_lookup', 'error': f'Invalid plan selected: {plan}', 'plan': plan}
-                return {'success': False, 'stage': 'price_lookup', 'error': f'Invalid plan selected: {plan}'}
+                self.last_trial_failure = {'stage': 'price_lookup', 'error': f'Invalid plan selected: {plan}', 'plan': plan, 'original_plan': original_plan}
+                return {'success': False, 'stage': 'price_lookup', 'error': f'Invalid plan selected: {original_plan}'}
             
             # Create subscription with trial
             subscription_params = {
@@ -133,7 +143,7 @@ class PaymentService:
                 'subscription_id': subscription.id,
                 'email': email,
                 'api_key': api_key,
-                'plan': plan,
+                'plan': plan,  # normalized stored
                 'status': 'trialing',
                 'trial_end': datetime.fromtimestamp(subscription.trial_end).isoformat()
             }
