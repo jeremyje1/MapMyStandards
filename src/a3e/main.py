@@ -270,14 +270,38 @@ app = FastAPI(
     redoc_url="/redoc" if settings.is_development else None,
 )
 
-# Add CORS middleware
+# Add CORS middleware (parse comma-separated env var properly)
+_cors_origins: list[str] = []
+try:
+    if isinstance(settings.cors_origins, str):
+        _cors_origins = [o.strip() for o in settings.cors_origins.split(',') if o.strip()]
+    else:  # type: ignore
+        _cors_origins = list(settings.cors_origins)  # type: ignore
+except Exception:
+    _cors_origins = []
+
+# Ensure platform + api domains are allowed (idempotent append)
+for required_origin in [
+    "https://platform.mapmystandards.ai",
+    "https://api.mapmystandards.ai",
+    "http://localhost:8000",
+    "http://localhost:3000",
+]:
+    if required_origin not in _cors_origins:
+        _cors_origins.append(required_origin)
+
+if not _cors_origins:
+    _cors_origins = ["http://localhost:8000"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins,
+    allow_origins=_cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    max_age=86400,
 )
+logger.info("CORS configured allow_origins=%s", _cors_origins)
 
 # Security
 security = HTTPBearer()
@@ -960,9 +984,14 @@ if WEB_DIR.exists():
     # Explicit route for Tailwind CSS (some platforms mis-handle nested static dirs)
     @app.get("/web/static/css/tailwind.css", include_in_schema=False)
     async def tailwind_css():  # noqa: D401
+        """Serve compiled Tailwind CSS with light caching and ETag for busting."""
         css_file = WEB_DIR / "static" / "css" / "tailwind.css"
         if css_file.exists():
-            return FileResponse(str(css_file), media_type="text/css")
+            headers = {
+                "Cache-Control": "public, max-age=300",  # 5 minutes
+                "ETag": str(css_file.stat().st_mtime_ns)
+            }
+            return FileResponse(str(css_file), media_type="text/css", headers=headers)
         return Response(status_code=404, content="/* tailwind.css missing */", media_type="text/css")
 
     @app.get("/login", response_class=FileResponse, include_in_schema=False)

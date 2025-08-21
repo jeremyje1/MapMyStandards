@@ -9,8 +9,25 @@
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Tailwind (built) -->
-    <link rel="stylesheet" href="/web/static/css/tailwind.css">
+        <!-- Tailwind (built) -->
+        <link rel="stylesheet" href="/web/static/css/tailwind.css?v=1" id="tailwindStylesheet">
+        <script>
+            // Minimal Tailwind load failure detector
+            window.addEventListener('load', () => {
+                const el = document.createElement('div');
+                el.className = 'hidden';
+                document.body.appendChild(el);
+                const ok = window.getComputedStyle(el).display === 'none';
+                document.body.removeChild(el);
+                if(!ok){
+                    console.warn('Tailwind CSS likely failed to load.');
+                    const warn=document.createElement('div');
+                    warn.textContent='⚠ Tailwind CSS missing';
+                    warn.style.cssText='position:fixed;bottom:8px;right:8px;background:#fee2e2;color:#991b1b;padding:6px 10px;border-radius:6px;font:12px Inter,system-ui;z-index:9999';
+                    document.body.appendChild(warn);
+                }
+            });
+        </script>
     
     <style>
         body { font-family: 'Inter', sans-serif; }
@@ -65,7 +82,7 @@
             <div class="bg-white bg-opacity-10 p-6 rounded-2xl mb-8">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
                     <div>
-                        <div class="text-3xl font-bold text-yellow-300" id="trial-days">7</div>
+                        <div class="text-3xl font-bold text-yellow-300" id="trial-days">--</div>
                         <div class="text-sm">Days Remaining</div>
                     </div>
                     <div>
@@ -84,7 +101,7 @@
                     🚀 Begin Guided Onboarding
                 </a>
                 <a href="/web/dashboard.html" class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors" id="dashboardLink">
-                    � Skip & Go To Dashboard
+                    ⏭️ Skip & Go To Dashboard
                 </a>
             </div>
             
@@ -158,7 +175,7 @@
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-gray-600">Trial Started:</span>
-                                <span class="font-medium" id="trial-start-date">Today</span>
+                                <span class="font-medium" id="trial-start-date">Loading...</span>
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-gray-600">Trial Ends:</span>
@@ -323,52 +340,39 @@
         
         document.getElementById('selected-plan').textContent = planNames[plan] || 'A³E College Plan';
 
-        // Fetch trial information if we have a trial ID
-        if (trialId) {
-            fetch(`https://api.mapmystandards.ai/dashboard/${trialId}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.trial_end) {
-                        const endDate = new Date(data.trial_end);
-                        const today = new Date();
-                        const daysRemaining = Math.ceil((endDate - today) / (1000 * 60 * 60 * 24));
-                        
-                        document.getElementById('trial-start-date').textContent = today.toLocaleDateString();
-                        document.getElementById('trial-end-date').textContent = endDate.toLocaleDateString();
-                        
-                        if (document.getElementById('trial-days')) {
-                            document.getElementById('trial-days').textContent = `${daysRemaining} days`;
-                        }
+                function setTrialDates(startDate, endDate){
+                    const startEl = document.getElementById('trial-start-date');
+                    const endEl = document.getElementById('trial-end-date');
+                    const daysEl = document.getElementById('trial-days');
+                    if(startEl) startEl.textContent = startDate.toLocaleDateString();
+                    if(endEl) endEl.textContent = endDate.toLocaleDateString();
+                    const delta = Math.ceil((endDate - new Date()) / (1000*60*60*24));
+                    if(daysEl) daysEl.textContent = Math.max(0, delta).toString();
+                }
+                async function loadTrial(){
+                    if(!trialId){
+                        const now = new Date();
+                        const end = new Date(now); end.setDate(end.getDate()+7);
+                        setTrialDates(now, end);
+                        return;
                     }
-                    
-                    // Store trial ID for dashboard access
-                    localStorage.setItem('a3e_trial_id', trialId);
-                    
-                    // Update dashboard link to include trial ID
-                    const dashboardLinks = document.querySelectorAll('a[href="dashboard.html"]');
-                    dashboardLinks.forEach(link => {
-                        link.href = `dashboard.html?trial_id=${trialId}`;
-                    });
-                })
-                .catch(error => {
-                    console.log('Could not fetch trial details:', error);
-                    // Fall back to default dates
-                    const today = new Date();
-                    const endDate = new Date(today);
-                    endDate.setDate(endDate.getDate() + 7);
-                    
-                    document.getElementById('trial-start-date').textContent = today.toLocaleDateString();
-                    document.getElementById('trial-end-date').textContent = endDate.toLocaleDateString();
-                });
-        } else {
-            // Default behavior if no trial ID
-            const today = new Date();
-            const endDate = new Date(today);
-            endDate.setDate(endDate.getDate() + 7);
-
-            document.getElementById('trial-start-date').textContent = today.toLocaleDateString();
-            document.getElementById('trial-end-date').textContent = endDate.toLocaleDateString();
-        }
+                    try {
+                        const resp = await fetch(`/api/v1/dashboard/${trialId}`);
+                        if(!resp.ok) throw new Error('HTTP '+resp.status);
+                        const data = await resp.json();
+                        const start = data.trial_start ? new Date(data.trial_start) : new Date();
+                        const end = data.trial_end ? new Date(data.trial_end) : new Date(Date.now()+7*86400000);
+                        setTrialDates(start, end);
+                        localStorage.setItem('a3e_trial_id', trialId);
+                        document.querySelectorAll('a[href="dashboard.html"]').forEach(a=>a.href=`dashboard.html?trial_id=${trialId}`);
+                    } catch(e){
+                        console.warn('Trial fetch failed; fallback', e);
+                        const now = new Date();
+                        const end = new Date(now); end.setDate(end.getDate()+7);
+                        setTrialDates(now, end);
+                    }
+                }
+                loadTrial();
         
     // Auto-redirect to onboarding after 12 seconds
     let countdown = 12;
@@ -387,12 +391,26 @@
         }, 1000);
         
         // Allow manual cancellation of auto-redirect
-        document.addEventListener('click', () => {
-            clearInterval(timer);
-            if (countdownElement) {
-                countdownElement.parentElement.style.display = 'none';
-            }
-        });
+                document.addEventListener('click', () => {
+                        clearInterval(timer);
+                        if (countdownElement && countdownElement.parentElement) {
+                                countdownElement.parentElement.style.display = 'none';
+                        }
+                });
+
+                // API Key copy helper if stored
+                (function addCopyKey(){
+                    const key = localStorage.getItem('a3e_api_key');
+                        if(!key) return;
+                        const btn = document.createElement('button');
+                        btn.className='mt-4 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg text-sm font-medium';
+                        btn.textContent='Copy API Key';
+                        btn.addEventListener('click', async ()=>{
+                            try { await navigator.clipboard.writeText(key); btn.textContent='Copied!'; setTimeout(()=>btn.textContent='Copy API Key',2000);}catch(e){btn.textContent='Failed';}
+                        });
+                        const container=document.querySelector('.gradient-bg .flex.flex-col');
+                        if(container) container.appendChild(btn);
+                })();
     </script>
 </body>
 </html>
