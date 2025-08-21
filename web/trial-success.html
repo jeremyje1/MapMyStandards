@@ -285,6 +285,29 @@
     </footer>
 
     <script>
+        // Persist trial identifiers and any pending API key for dashboard usage
+        (function persistTrialContext(){
+            const params = new URLSearchParams(window.location.search);
+            const trialIdParam = params.get('trial_id');
+            if (trialIdParam) {
+                localStorage.setItem('a3e_trial_id', trialIdParam);
+            }
+            const planParam = params.get('plan');
+            if (planParam && !localStorage.getItem('a3e_plan_type')) {
+                localStorage.setItem('a3e_plan_type', planParam);
+            }
+            // Promote session-scoped api key (set during signup) into persistent storage
+            const pendingKey = sessionStorage.getItem('a3e_pending_api_key');
+            if (pendingKey && !localStorage.getItem('a3e_api_key')) {
+                localStorage.setItem('a3e_api_key', pendingKey);
+                sessionStorage.removeItem('a3e_pending_api_key');
+            }
+            const pendingEmail = sessionStorage.getItem('a3e_pending_email');
+            if (pendingEmail && !localStorage.getItem('a3e_user_email')) {
+                localStorage.setItem('a3e_user_email', pendingEmail);
+                sessionStorage.removeItem('a3e_pending_email');
+            }
+        })();
         // Get parameters from URL
         const urlParams = new URLSearchParams(window.location.search);
         const trialId = urlParams.get('trial_id');

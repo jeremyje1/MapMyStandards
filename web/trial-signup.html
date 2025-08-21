@@ -533,11 +533,26 @@
 
                 const result = await response.json();
 
-                if (response.ok) {
+                if (response.ok && result.success) {
+                    // Persist credentials for dashboard usage
+                    if (result.data) {
+                        if (result.data.api_key) {
+                            // Use sessionStorage first for security; success page will promote
+                            sessionStorage.setItem('a3e_pending_api_key', result.data.api_key);
+                        }
+                        if (data.email) {
+                            sessionStorage.setItem('a3e_pending_email', data.email);
+                        }
+                        if (data.plan) {
+                            localStorage.setItem('a3e_plan_type', data.plan);
+                        }
+                    }
                     showStep(3);
+                    // Redirect sooner after storage
                     setTimeout(() => {
-                        window.location.href = `/trial-success?trial_id=${result.trial_id}`;
-                    }, 3000);
+                        const planParam = encodeURIComponent(data.plan || 'college');
+                        window.location.href = `/trial-success?trial_id=${result.trial_id}&plan=${planParam}`;
+                    }, 2500);
                 } else {
                     throw new Error(result.detail || 'Signup failed');
                 }

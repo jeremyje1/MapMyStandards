@@ -918,6 +918,18 @@ async def favicon():  # noqa: D401
 # Mount /web for static assets (js, images, etc.)
 if WEB_DIR.exists():
     app.mount("/web", StaticFiles(directory=str(WEB_DIR)), name="web")
+    # Also mount /assets if repository has compiled assets (Tailwind build output)
+    assets_dir_candidates = [
+        Path(project_root) / "assets",
+        Path(project_root) / "public" / "assets"
+    ]
+    for assets_dir in assets_dir_candidates:
+        if assets_dir.exists():
+            app.mount("/assets", StaticFiles(directory=str(assets_dir)), name="assets")
+            logger.info(f"✅ Mounted assets directory at /assets from {assets_dir}")
+            break
+    else:
+        logger.warning("⚠️ No assets directory found to mount at /assets (styles.css 404 risk)")
     logger.info(f"Web directory mounted from: {WEB_DIR}")
 
     @app.get("/login", response_class=FileResponse, include_in_schema=False)
