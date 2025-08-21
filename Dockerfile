@@ -32,7 +32,7 @@ EXPOSE 8000
 
 # Simple healthcheck (login page is public GET)
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD curl -fsS http://127.0.0.1:${PORT:-8000}/login || exit 1
+  CMD sh -c 'curl -fsS http://127.0.0.1:${PORT:-8000}/health || exit 1'
 
-# Use uvicorn directly for FastAPI
-CMD uvicorn src.a3e.main:app --host 0.0.0.0 --port ${PORT:-8000}
+# Use shell form to properly expand PORT variable
+CMD ["sh", "-c", "uvicorn src.a3e.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
