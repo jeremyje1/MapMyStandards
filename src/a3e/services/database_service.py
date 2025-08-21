@@ -8,6 +8,7 @@ Handles all CRUD operations for institutions, evidence, standards, and workflows
 import asyncio
 import logging
 from typing import List, Dict, Any, Optional, Union
+from contextlib import asynccontextmanager
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy import text, select, insert, update, delete, and_, or_
 from sqlalchemy.orm import selectinload
@@ -39,6 +40,8 @@ class DatabaseService:
         self.database_url = database_url
         self.engine = None
         self.async_session = None
+        # Convenience handle to last-used session for legacy methods expecting self.session
+        self.session = None  # type: ignore
     
     async def initialize(self):
         """Initialize database connection and session factory"""
@@ -93,6 +96,20 @@ class DatabaseService:
                 self.async_session = None
             else:
                 raise
+
+    @asynccontextmanager
+    async def get_session(self):  # Added to support patterns used across routers
+        """Async context manager yielding a session (initializing engine if needed)."""
+        if not self.async_session:
+            await self.initialize()
+        if not self.async_session:  # still none after initialize (degraded mode)
+            raise RuntimeError("Database session factory unavailable")
+        async with self.async_session() as session:  # type: ignore
+            self.session = session  # provide for legacy helper methods relying on self.session
+            try:
+                yield session
+            finally:
+                self.session = None
     
     # Additional methods for API routes
     async def list_standards(

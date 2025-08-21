@@ -417,10 +417,89 @@ class PaymentService:
             raise
 
     async def _create_account_record(self, account_data: Dict[str, Any]) -> int:
-        """Create account record in database"""
-        # Implementation would depend on your database schema
-        # This is a placeholder
-        return 1  # Return account ID
+        """Create or update user account + issue password setup token if new.
+
+        Returns a pseudo account ID (1) for backward compatibility (TODO: real user.id).
+        """
+        try:
+            from sqlalchemy import select
+            from ..models.user import User, PasswordReset  # type: ignore
+            if not self.db_service:
+                logger.warning("DB service unavailable - cannot persist account")
+                return 1
+            async with self.db_service.get_session() as session:  # type: ignore
+                # Find or create user
+                result = await session.execute(select(User).where(User.email == account_data['email']))
+                user = result.scalar_one_or_none()
+                new_user = False
+                if not user:
+                    # Minimal user with placeholder password (must set via setup link)
+                    import bcrypt
+                    import secrets
+                    placeholder = bcrypt.hashpw(secrets.token_hex(16).encode(), bcrypt.gensalt()).decode()
+                    user = User(
+                        email=account_data['email'],
+                        name=account_data['email'].split('@')[0].title(),
+                        password_hash=placeholder,
+                        api_key=account_data['api_key'],
+                        subscription_tier=account_data.get('plan', 'trial'),
+                        stripe_customer_id=account_data.get('customer_id'),
+                        stripe_subscription_id=account_data.get('subscription_id'),
+                        is_trial=True,
+                        trial_started_at=datetime.utcnow(),
+                        trial_ends_at=datetime.fromisoformat(account_data['trial_end']) if account_data.get('trial_end') else None
+                    )
+                    session.add(user)
+                    new_user = True
+                else:
+                    # Update Stripe / plan fields if missing
+                    updated = False
+                    for attr, key in [
+                        ('stripe_customer_id', 'customer_id'),
+                        ('stripe_subscription_id', 'subscription_id'),
+                        ('subscription_tier', 'plan'),
+                        ('api_key', 'api_key')
+                    ]:
+                        val = account_data.get(key)
+                        if val and getattr(user, attr) != val:
+                            setattr(user, attr, val)
+                            updated = True
+                    if updated:
+                        user.updated_at = datetime.utcnow()
+                await session.flush()
+
+                if new_user:
+                    # Create password setup token (PasswordReset entry reused)
+                    import secrets
+                    token = secrets.token_urlsafe(48)
+                    code = secrets.token_hex(3)
+                    expires_at = datetime.utcnow() + timedelta(hours=48)
+                    reset = PasswordReset(
+                        user_id=user.id,
+                        reset_token=token,
+                        reset_code=code,
+                        expires_at=expires_at
+                    )
+                    session.add(reset)
+                    await session.commit()
+
+                    # Send password setup email (best-effort)
+                    try:
+                        if _email_available:
+                            from ..services.email_service import EmailService  # type: ignore
+                            base_url = getattr(self.settings, 'PUBLIC_APP_URL', None) or os.getenv('PUBLIC_APP_URL') or 'https://platform.mapmystandards.ai'
+                            setup_link = f"{base_url}/set-password.html?token={token}"
+                            EmailService().send_password_setup_email(user.email, user.name or user.email.split('@')[0], setup_link)
+                        else:
+                            logger.debug("Email service not available for password setup email")
+                    except Exception as e:
+                        logger.warning(f"Failed to send password setup email: {e}")
+                else:
+                    await session.commit()
+            return 1
+        except Exception as e:
+            logger.warning(f"_create_account_record failed: {e}")
+            return 1
     
     async def _get_account_by_api_key(self, api_key: str) -> Optional[Dict[str, Any]]:
         """Get account by API key"""

@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Welcome Onboarding - MapMyStandards</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="/assets/styles.css" />
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#0f172a;color:#f1f5f9;}
+    h1{font-size:1.9rem;font-weight:650;letter-spacing:-.5px;background:linear-gradient(90deg,#6366f1,#8b5cf6);-webkit-background-clip:text;color:transparent;margin:0 0 8px}
+    .sub{color:#94a3b8;font-size:.95rem;margin-bottom:28px;line-height:1.5}
+    .shell{max-width:900px;margin:40px auto;padding:0 20px 80px}
+    .panel{background:#1e293b;border:1px solid #334155;border-radius:18px;padding:34px 36px;margin-bottom:34px;position:relative;box-shadow:0 10px 30px -8px rgba(0,0,0,.5)}
+    .step-badge{position:absolute;top:-14px;left:22px;background:#6366f1;color:#fff;border-radius:26px;padding:6px 14px;font-size:.75rem;font-weight:600;letter-spacing:.05em}
+    .grid{display:grid;gap:22px}
+    @media (min-width:850px){.grid.cols-2{grid-template-columns:repeat(2,1fr)}}
+    label{display:block;font-size:.75rem;letter-spacing:.08em;font-weight:600;color:#64748b;text-transform:uppercase;margin:16px 0 6px}
+    input,select,textarea{width:100%;background:#0f172a;border:1px solid #334155;color:#f8fafc;padding:12px 14px;border-radius:12px;font-size:.95rem;resize:vertical;max-height:220px}
+    input:focus,select:focus,textarea:focus{outline:2px solid #6366f1;outline-offset:2px}
+    button.primary{background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff;padding:14px 24px;border:none;border-radius:14px;font-weight:600;font-size:1rem;cursor:pointer;box-shadow:0 6px 20px -5px rgba(79,70,229,.6)}
+    button.primary:hover{filter:brightness(1.12)}
+    .actions{display:flex;justify-content:space-between;gap:14px;margin-top:34px;flex-wrap:wrap}
+    .secondary-btn{background:#334155;color:#e2e8f0;border:none;padding:12px 20px;border-radius:12px;font-weight:500;cursor:pointer}
+    .secondary-btn:hover{background:#475569}
+    .progress-wrap{position:sticky;top:0;backdrop-filter:blur(12px);background:rgba(15,23,42,.65);padding:12px 20px;margin:-12px -20px 32px;border:1px solid #1e293b;border-radius:14px;display:flex;align-items:center;gap:18px}
+    .bar{flex:1;height:8px;border-radius:6px;background:#1e293b;overflow:hidden}
+    .fill{height:100%;width:0;background:linear-gradient(90deg,#6366f1,#22c55e);transition:width .4s cubic-bezier(.4,0,.2,1)}
+    .pct{font-size:.75rem;font-weight:600;letter-spacing:.05em;color:#94a3b8;width:48px;text-align:right}
+    .hidden{display:none!important}
+    .inline-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+    .badge{background:#334155;color:#e2e8f0;padding:4px 10px;font-size:.65rem;border-radius:30px;letter-spacing:.05em;font-weight:600}
+    .success-msg{background:#022c22;color:#34d399;padding:18px 20px;border:1px solid #065f46;border-radius:14px;font-size:.9rem;margin-top:24px;display:none}
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="progress-wrap"><div class="bar"><div class="fill" id="progressFill"></div></div><div class="pct" id="progressPct">0%</div></div>
+    <header style="margin-bottom:14px">
+      <h1>Welcome – Let's Get You Productive</h1>
+      <p class="sub" id="welcomeCopy">4 guided steps. About 2 minutes total. You can skip and fill later in Settings.</p>
+    </header>
+
+    <!-- Step 1: Institution Basics -->
+    <section class="panel" data-step="1">
+      <span class="step-badge">STEP 1</span>
+      <h2 style="margin:0 0 6px;font-size:1.25rem;font-weight:600">Institution Basics</h2>
+      <p style="margin:0 0 18px;color:#94a3b8;font-size:.9rem">We tailor accreditation mapping based on your institutional profile.</p>
+      <div class="grid cols-2">
+        <div>
+          <label for="institution_name">Institution Name</label>
+          <input id="institution_name" placeholder="Example College" />
+        </div>
+        <div>
+          <label for="state">State / Region</label>
+          <input id="state" placeholder="CA" maxlength="30" />
+        </div>
+        <div>
+          <label for="institution_size">Enrollment (approx)</label>
+          <select id="institution_size">
+            <option value="">Select</option>
+            <option value="under_1000">Under 1,000</option>
+            <option value="1k_5k">1,000 – 5,000</option>
+            <option value="5k_15k">5,000 – 15,000</option>
+            <option value="15k_plus">15,000+</option>
+          </select>
+        </div>
+        <div>
+          <label for="primary_accreditor">Primary Accreditor</label>
+          <input id="primary_accreditor" placeholder="MSCHE, HLC, SACSCOC..." />
+        </div>
+      </div>
+    </section>
+
+    <!-- Step 2: Your Goals -->
+    <section class="panel" data-step="2">
+      <span class="step-badge">STEP 2</span>
+      <h2 style="margin:0 0 6px;font-size:1.25rem;font-weight:600">Primary Goals</h2>
+      <p style="margin:0 0 18px;color:#94a3b8;font-size:.9rem">What do you want to achieve first? Helps us surface the right features.</p>
+      <div>
+        <label>Top Priorities</label>
+        <div style="display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));margin-top:4px" id="goalCheckboxes"></div>
+      </div>
+      <div style="margin-top:18px">
+        <label for="other_goal">Other / Custom Goal</label>
+        <input id="other_goal" placeholder="e.g. Prepare mid-cycle update" />
+      </div>
+    </section>
+
+    <!-- Step 3: First Documents -->
+    <section class="panel" data-step="3">
+      <span class="step-badge">STEP 3</span>
+      <h2 style="margin:0 0 6px;font-size:1.25rem;font-weight:600">Initial Documents</h2>
+      <p style="margin:0 0 18px;color:#94a3b8;font-size:.9rem">What will you upload or analyze first?</p>
+      <label for="doc_types">Document Types</label>
+      <textarea id="doc_types" rows="3" placeholder="Strategic plan, Assessment reports, Faculty CVs..."></textarea>
+      <label for="launch_timing" style="margin-top:18px">Launch Timing</label>
+      <select id="launch_timing">
+        <option value="">Select timing</option>
+        <option value="this_week">This week</option>
+        <option value="this_month">This month</option>
+        <option value="this_quarter">This quarter</option>
+        <option value="undecided">Not sure</option>
+      </select>
+    </section>
+
+    <!-- Step 4: Success Triggers -->
+    <section class="panel" data-step="4">
+      <span class="step-badge">STEP 4</span>
+      <h2 style="margin:0 0 6px;font-size:1.25rem;font-weight:600">Define Success</h2>
+      <p style="margin:0 0 18px;color:#94a3b8;font-size:.9rem">This helps us align trial guidance to your outcomes.</p>
+      <label for="success_definition">In 30 days success looks like...</label>
+      <textarea id="success_definition" rows="3" placeholder="e.g. All core standards mapped with initial evidence notes"></textarea>
+      <div class="inline-badges" id="autoBadges"></div>
+    </section>
+
+    <div class="actions">
+      <button class="secondary-btn" id="backBtn" disabled>Back</button>
+      <div style="flex:1"></div>
+      <button class="secondary-btn" id="skipBtn" type="button">Skip</button>
+      <button class="primary" id="nextBtn">Continue</button>
+    </div>
+    <div class="success-msg" id="successMsg">Setup saved. Redirecting you to your dashboard...</div>
+  </div>
+
+  <script>
+    // Config
+    const GOALS = [
+      'Map standards quickly','Automate evidence tagging','Prep self-study','Mid-cycle review','Close assessment loop','Data for board','Accreditation visit prep','Track progress','AI narrative drafts','Gap analysis','Document organization','Expedite compliance'
+    ];
+
+    const state = { step:1, total:4, data:{} };
+    const fillEl = document.getElementById('progressFill');
+    const pctEl = document.getElementById('progressPct');
+    const backBtn = document.getElementById('backBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const skipBtn = document.getElementById('skipBtn');
+    const successMsg = document.getElementById('successMsg');
+
+    // Build goal checkboxes
+    const goalWrap = document.getElementById('goalCheckboxes');
+    GOALS.forEach(g => {
+      const id = 'goal_' + g.replace(/[^a-z0-9]+/gi,'_').toLowerCase();
+      const lbl = document.createElement('label');
+      lbl.style.display='flex';lbl.style.alignItems='center';lbl.style.gap='8px';lbl.style.background='#0f172a';lbl.style.padding='10px 12px';lbl.style.border='1px solid #334155';lbl.style.borderRadius='12px';lbl.style.cursor='pointer';
+      lbl.innerHTML = `<input type="checkbox" id="${id}" value="${g}" style="accent-color:#6366f1;width:16px;height:16px"> <span style='font-size:.8rem;font-weight:500;'>${g}</span>`;
+      goalWrap.appendChild(lbl);
+    });
+
+    function updateProgress(){
+      const pct = Math.round(((state.step-1)/state.total)*100);
+      fillEl.style.width = pct + '%';
+      pctEl.textContent = pct + '%';
+    }
+
+    function showStep(){
+      document.querySelectorAll('.panel').forEach(p=>{
+        p.classList.toggle('hidden', parseInt(p.dataset.step) !== state.step);
+      });
+      backBtn.disabled = state.step === 1;
+      nextBtn.textContent = state.step === state.total ? 'Finish' : 'Continue';
+      updateProgress();
+    }
+
+    function collectStep(){
+      if(state.step === 1){
+        state.data.institution_name = document.getElementById('institution_name').value.trim();
+        state.data.state = document.getElementById('state').value.trim();
+        state.data.institution_size = document.getElementById('institution_size').value;
+        state.data.primary_accreditor = document.getElementById('primary_accreditor').value.trim();
+      } else if(state.step === 2){
+        state.data.goals = Array.from(goalWrap.querySelectorAll('input:checked')).map(i=>i.value);
+        const other = document.getElementById('other_goal').value.trim();
+        if(other) state.data.goals.push(other);
+      } else if(state.step === 3){
+        state.data.doc_types = document.getElementById('doc_types').value.trim();
+        state.data.launch_timing = document.getElementById('launch_timing').value;
+      } else if(state.step === 4){
+        state.data.success_definition = document.getElementById('success_definition').value.trim();
+      }
+    }
+
+    async function persist(partial=false){
+      try {
+        await fetch('/api/v1/onboarding/progress', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ data: state.data, step: state.step, complete: state.step === state.total })
+        });
+      } catch(e){ console.warn('Persist failed', e); }
+    }
+
+    backBtn.addEventListener('click', ()=>{ if(state.step>1){ collectStep(); state.step--; showStep(); persist(true);} });
+    nextBtn.addEventListener('click', async ()=>{
+      collectStep();
+      if(state.step < state.total){ state.step++; showStep(); persist(true); }
+      else {
+        await persist();
+        successMsg.style.display='block';
+        fillEl.style.width='100%'; pctEl.textContent='100%';
+        setTimeout(()=>{ window.location.href='/web/dashboard.html'; }, 1500);
+      }
+    });
+    skipBtn.addEventListener('click', ()=>{ window.location.href='/web/dashboard.html'; });
+
+    // Initialize
+    showStep();
+  </script>
+</body>
+</html>

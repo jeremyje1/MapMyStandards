@@ -28,6 +28,11 @@ from .services.database_service import DatabaseService
 from .api import api_router
 from .api.routes.billing import router as billing_router
 try:
+    from .api.routes.onboarding import router as onboarding_router
+    _onboarding_available = True
+except Exception as _e:
+    _onboarding_available = False
+try:
     from .api.routes.billing import legacy_router as billing_legacy_router  # type: ignore
     _billing_legacy_available = True
 except Exception:
@@ -406,6 +411,8 @@ app.include_router(proprietary_router)
 app.include_router(billing_router)
 if _billing_legacy_available:
     app.include_router(billing_legacy_router)
+if _onboarding_available:
+    app.include_router(onboarding_router)
 app.include_router(api_router, prefix=settings.api_prefix)
 
 # Import and include customer pages router

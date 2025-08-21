@@ -294,6 +294,39 @@ NorthPath Strategies
             body=body,
             html_body=html_body
         )
+
+    def send_password_setup_email(self, user_email: str, user_name: str, setup_link: str, expires_hours: int = 48) -> bool:
+        """Send initial password setup (or reset) email with secure link."""
+        subject = "Set up your MapMyStandards password"
+        body = f"""
+Dear {user_name},
+
+Welcome! Please set your password to complete your account setup.
+
+Password setup link (valid {expires_hours} hours):
+{setup_link}
+
+If you did not request this, you can ignore the email.
+
+Best,
+MapMyStandards.ai Team
+"""
+        html_body = f"""
+        <div style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto;'>
+            <h2 style='color:#1e3c72;'>Set Your Password</h2>
+            <p>Hi {user_name},</p>
+            <p>Click the button below to create your password and finish setting up your account. This link is valid for <strong>{expires_hours} hours</strong>.</p>
+            <p style='text-align:center;margin:30px 0;'>
+                <a href='{setup_link}' style='background:#1e3c72;color:#fff;padding:12px 22px;border-radius:6px;text-decoration:none;font-weight:600;'>Set Password</a>
+            </p>
+            <p>If the button does not work, copy and paste this URL into your browser:</p>
+            <code style='display:block;background:#f5f7fa;padding:10px;border-radius:4px;font-size:12px;word-break:break-all;'>{setup_link}</code>
+            <p style='font-size:12px;color:#667;'>If you did not request this, you can safely ignore the email.</p>
+            <hr style='border:1px solid #eee;'>
+            <p style='font-size:12px;color:#999;'>support@mapmystandards.ai</p>
+        </div>
+        """
+        return self.send_email([user_email], subject, body, html_body=html_body)
     
     def send_trial_expiration_notice(self, user_email: str, user_name: str, days_remaining: int) -> bool:
         """Send trial expiration notice"""

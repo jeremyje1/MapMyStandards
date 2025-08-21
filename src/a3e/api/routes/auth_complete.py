@@ -16,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...core.config import settings
 from ...models import User
+from ...models.user import PasswordReset
 from ...services.database_service import DatabaseService
 from ...services.email_service import EmailService
 
@@ -50,6 +51,13 @@ class PasswordResetRequest(BaseModel):
 class PasswordResetConfirm(BaseModel):
     token: str
     new_password: str
+
+class PasswordSetupRequest(BaseModel):
+    email: EmailStr
+
+class PasswordSetupComplete(BaseModel):
+    token: str
+    password: str
 
 class AuthResponse(BaseModel):
     success: bool
@@ -270,6 +278,58 @@ async def confirm_password_reset(request: PasswordResetConfirm):
     except Exception as e:
         logger.error(f"Password reset confirmation error: {e}")
         raise HTTPException(status_code=500, detail="Password reset failed")
+
+@router.post("/password/setup", response_model=AuthResponse)
+async def initiate_password_setup(request: PasswordSetupRequest, db: AsyncSession = Depends(get_db)):
+    """Generate a password setup token for a user who lacks a real password (re-send)."""
+    try:
+        result = await db.execute(select(User).where(User.email == request.email))
+        user = result.scalar_one_or_none()
+        if not user:
+            return AuthResponse(success=True, message="If an account exists, setup instructions were sent.")
+        # Issue new token
+        token = secrets.token_urlsafe(48)
+        code = secrets.token_hex(3)
+        expires_at = datetime.utcnow() + timedelta(hours=48)
+        reset = PasswordReset(user_id=user.id, reset_token=token, reset_code=code, expires_at=expires_at)
+        db.add(reset)
+        await db.commit()
+        # Email
+        try:
+            EmailService().send_password_setup_email(user.email, user.name or user.email.split('@')[0], f"https://platform.mapmystandards.ai/set-password.html?token={token}")
+        except Exception as e:
+            logger.warning(f"Failed to send password setup email: {e}")
+        return AuthResponse(success=True, message="Password setup link sent if the account exists.")
+    except Exception as e:
+        logger.error(f"initiate_password_setup error: {e}")
+        return AuthResponse(success=True, message="Password setup link sent if the account exists.")
+
+@router.post("/password/setup/complete", response_model=AuthResponse)
+async def complete_password_setup(request: PasswordSetupComplete, db: AsyncSession = Depends(get_db)):
+    """Set the initial password using a setup token."""
+    try:
+        # Find valid token
+        result = await db.execute(select(PasswordReset).where(PasswordReset.reset_token == request.token))
+        reset = result.scalar_one_or_none()
+        if not reset or not reset.is_valid:
+            raise HTTPException(status_code=400, detail="Invalid or expired token")
+        # Load user
+        user_result = await db.execute(select(User).where(User.id == reset.user_id))
+        user = user_result.scalar_one_or_none()
+        if not user:
+            raise HTTPException(status_code=400, detail="Invalid token")
+        # Update password
+        new_hash = bcrypt.hashpw(request.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        user.password_hash = new_hash
+        user.is_verified = True
+        reset.used_at = datetime.utcnow()
+        await db.commit()
+        return AuthResponse(success=True, message="Password set successfully. You can now log in.")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"complete_password_setup error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to set password")
 
 @router.get("/verify-token")
 async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):

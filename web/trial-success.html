@@ -80,18 +80,18 @@
             </div>
 
             <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                <a href="/dashboard" class="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors" id="dashboardLink">
-                    🚀 Launch A³E Dashboard
+                <a href="/web/onboarding.html" class="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors" id="onboardingLink">
+                    🚀 Begin Guided Onboarding
                 </a>
-                <a href="#getting-started" class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors">
-                    📚 Getting Started Guide
+                <a href="/web/dashboard.html" class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors" id="dashboardLink">
+                    � Skip & Go To Dashboard
                 </a>
             </div>
             
             <!-- Auto-redirect notice -->
             <div class="mt-6 text-center">
                 <p class="text-blue-100 text-sm">
-                    You'll be automatically redirected to your dashboard in <span id="countdown">10</span> seconds...
+                    You'll be automatically redirected to onboarding in <span id="countdown">12</span> seconds...
                 </p>
             </div>
         </div>
@@ -370,8 +370,8 @@
             document.getElementById('trial-end-date').textContent = endDate.toLocaleDateString();
         }
         
-        // Auto-redirect to dashboard after 10 seconds
-        let countdown = 10;
+    // Auto-redirect to onboarding after 12 seconds
+    let countdown = 12;
         const countdownElement = document.getElementById('countdown');
         
         const timer = setInterval(() => {
@@ -382,7 +382,7 @@
             
             if (countdown <= 0) {
                 clearInterval(timer);
-                window.location.href = '/dashboard';
+                window.location.href = '/web/onboarding.html';
             }
         }, 1000);
         
