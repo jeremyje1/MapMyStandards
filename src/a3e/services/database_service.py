@@ -526,6 +526,9 @@ class DatabaseService:
     async def health_check(self) -> bool:
         """Check database connectivity"""
         try:
+            if not self.async_session or not self.engine:
+                logger.warning("Database not initialized - health check returning False")
+                return False
             async with self.async_session() as session:
                 await session.execute(text("SELECT 1"))
                 return True
