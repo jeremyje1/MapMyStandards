@@ -97,9 +97,21 @@ async def trial_signup(request: TrialSignupRequest, payment_service: PaymentServ
         else:
             raise HTTPException(status_code=400, detail=result['error'])
             
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Trial signup error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to create trial subscription")
+        logger.error(f"Error type: {type(e).__name__}")
+        logger.error(f"Error details: {str(e)}")
+        
+        # Check if this is a Stripe configuration issue
+        if "API key" in str(e):
+            raise HTTPException(
+                status_code=503, 
+                detail="Payment system is not properly configured. Please contact support."
+            )
+        
+        raise HTTPException(status_code=500, detail=f"Failed to create trial subscription: {str(e)}")
 
 @router.post("/subscription/create", response_model=PaymentResponse)
 async def create_subscription(

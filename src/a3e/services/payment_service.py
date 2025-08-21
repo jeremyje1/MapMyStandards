@@ -40,7 +40,9 @@ class PaymentService:
         try:
             # Check if Stripe is configured
             if not stripe.api_key:
-                logger.error("Stripe API key not configured")
+                logger.error("Stripe API key not configured - check STRIPE_SECRET_KEY environment variable")
+                logger.error(f"Current settings has STRIPE_SECRET_KEY: {bool(self.settings.STRIPE_SECRET_KEY)}")
+                logger.error(f"stripe.api_key is: {stripe.api_key}")
                 return {'success': False, 'error': 'Payment system not configured. Please contact support.'}
             
             # Create or retrieve customer

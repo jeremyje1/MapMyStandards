@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     # Application
     app_name: str = "A3E - Autonomous Accreditation & Audit Engine"
     version: str = "0.1.0"
-    environment: Environment = Environment.DEVELOPMENT
+    environment: Environment = Field(default=Environment.DEVELOPMENT, env="RAILWAY_ENVIRONMENT")
     debug: bool = Field(default=False, env="DEBUG")
     
     # API Configuration
