@@ -518,34 +518,78 @@
 
     <!-- JavaScript -->
     <script>
-        // Initialize Stripe
-        const stripe = Stripe('pk_test_your_stripe_public_key_here'); // Replace with your actual Stripe public key
-        const elements = stripe.elements();
+        // Initialize Stripe variables
+        let stripe = null;
+        let elements = null;
+        let cardElement = null;
 
-        // Create card element
-        const cardElement = elements.create('card', {
-            style: {
-                base: {
-                    fontSize: '16px',
-                    color: '#424770',
-                    '::placeholder': {
-                        color: '#aab7c4',
-                    },
-                },
-            },
-        });
+        // Load Stripe publishable key from API
+        async function initializeStripe() {
+            try {
+                const response = await fetch('/api/v1/billing/config/stripe-key');
+                const data = await response.json();
+                
+                if (data.publishable_key) {
+                    stripe = Stripe(data.publishable_key);
+                    elements = stripe.elements();
+                    console.log('✅ Stripe initialized successfully with', data.environment, 'key');
+                    
+                    // Create card element
+                    cardElement = elements.create('card', {
+                        style: {
+                            base: {
+                                fontSize: '16px',
+                                color: '#424770',
+                                '::placeholder': {
+                                    color: '#aab7c4',
+                                },
+                            },
+                        },
+                    });
 
-        cardElement.mount('#card-element');
-
-        // Handle card errors
-        cardElement.on('change', ({error}) => {
-            const displayError = document.getElementById('card-errors');
-            if (error) {
-                displayError.textContent = error.message;
-            } else {
-                displayError.textContent = '';
+                    cardElement.mount('#card-element');
+                    
+                    // Handle card errors
+                    cardElement.on('change', ({error}) => {
+                        const displayError = document.getElementById('card-errors');
+                        if (error) {
+                            displayError.textContent = error.message;
+                        } else {
+                            displayError.textContent = '';
+                        }
+                    });
+                } else {
+                    throw new Error('No publishable key received');
+                }
+            } catch (error) {
+                console.error('❌ Failed to load Stripe key from API:', error);
+                showError('Payment system temporarily unavailable. Please try again in a few moments or contact support@mapmystandards.ai');
             }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeStripe();
         });
+
+        // Show error function
+        function showError(message) {
+            const errorDiv = document.getElementById('card-errors');
+            if (errorDiv) {
+                errorDiv.textContent = message;
+            }
+            // Also show in a more prominent way
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4';
+            alertDiv.innerHTML = `
+                <strong class="font-bold">Error:</strong>
+                <span class="block sm:inline">${message}</span>
+            `;
+            const form = document.getElementById('trialSignupForm');
+            if (form) {
+                form.insertBefore(alertDiv, form.firstChild);
+            }
+        }
 
         // Step navigation
         function nextStep() {
@@ -630,6 +674,11 @@
             const formObject = Object.fromEntries(formData);
 
             try {
+                // Check if Stripe is initialized
+                if (!stripe || !cardElement) {
+                    throw new Error('Payment system not initialized. Please refresh the page and try again.');
+                }
+
                 // Create payment method with Stripe
                 const {paymentMethod, error} = await stripe.createPaymentMethod({
                     type: 'card',
@@ -652,7 +701,7 @@
                 }
 
                 // Send data to your backend API
-                const response = await fetch('https://api.mapmystandards.ai/trial/signup', {
+                const response = await fetch('/api/v1/billing/trial/signup', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

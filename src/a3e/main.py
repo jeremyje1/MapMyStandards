@@ -20,6 +20,7 @@ import tempfile
 import os.path
 from pathlib import Path
 from datetime import datetime
+import httpx
 
 from .core.config import settings
 from .core.accreditation_registry import ALL_ACCREDITORS, get_accreditors_by_institution_type, get_accreditors_by_state
@@ -400,6 +401,36 @@ app.include_router(integrations_router)
 app.include_router(proprietary_router)
 app.include_router(billing_router)
 app.include_router(api_router, prefix=settings.api_prefix)
+
+# Add compatibility routes for old API endpoints
+@app.post("/trial/signup")
+async def trial_signup_compat(request: Request):
+    """Compatibility route for old trial signup endpoint"""
+    from fastapi.responses import JSONResponse
+    
+    # Get JSON body
+    body = await request.json()
+    
+    # Forward to the new billing endpoint
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            f"http://localhost:8000/api/v1/billing/trial/signup",
+            json=body,
+            headers=request.headers
+        )
+        return JSONResponse(content=response.json(), status_code=response.status_code)
+
+@app.get("/config/stripe-key")
+async def stripe_key_compat():
+    """Compatibility route for old stripe key endpoint"""
+    from fastapi.responses import JSONResponse
+    
+    # Forward to the new billing endpoint
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            f"http://localhost:8000/api/v1/billing/config/stripe-key"
+        )
+        return JSONResponse(content=response.json(), status_code=response.status_code)
 
 # Import and include customer pages router
 try:

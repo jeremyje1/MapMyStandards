@@ -346,3 +346,31 @@ async def _handle_subscription_cancelled(subscription):
     customer_id = subscription.get("customer")
     # Update account status
     logger.info(f"Subscription cancelled for customer {customer_id}")
+
+
+@router.get("/config/stripe-key", response_model=Dict[str, str])
+async def get_stripe_publishable_key():
+    """Get Stripe publishable key for frontend initialization"""
+    try:
+        publishable_key = os.getenv("STRIPE_PUBLISHABLE_KEY", "")
+        
+        if not publishable_key:
+            logger.error("STRIPE_PUBLISHABLE_KEY not configured")
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Payment system not configured"
+            )
+        
+        # Determine environment based on key prefix
+        environment = "test" if publishable_key.startswith("pk_test_") else "live"
+        
+        return {
+            "publishable_key": publishable_key,
+            "environment": environment
+        }
+    except Exception as e:
+        logger.error(f"Error getting Stripe key: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unable to retrieve payment configuration"
+        )
