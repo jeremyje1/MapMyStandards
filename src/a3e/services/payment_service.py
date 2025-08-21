@@ -26,6 +26,8 @@ class PaymentService:
     
     def __init__(self):
         self.settings = get_settings()
+        # In-memory debug storage for last trial failure (ephemeral)
+        self.last_trial_failure: Optional[Dict[str, Any]] = None
         # Stripe API key may not be set in minimal deployments; guard access
         stripe_key = self.settings.STRIPE_SECRET_KEY
         if stripe_key:
@@ -36,7 +38,7 @@ class PaymentService:
             # Debug: check environment variables directly
             logger.warning(f"STRIPE_SECRET_KEY from env: {bool(os.getenv('STRIPE_SECRET_KEY'))}")
             logger.warning(f"STRIPE_PRICE_ID_PROFESSIONAL_MONTHLY from env: {os.getenv('STRIPE_PRICE_ID_PROFESSIONAL_MONTHLY', 'Not found')}")
-        
+
         # Initialize database service lazily with configured database URL
         try:
             self.db_service = DatabaseService(self.settings.database_url)
@@ -52,6 +54,7 @@ class PaymentService:
                 logger.error("Stripe API key not configured - check STRIPE_SECRET_KEY environment variable")
                 logger.error(f"Current settings has STRIPE_SECRET_KEY: {bool(self.settings.STRIPE_SECRET_KEY)}")
                 logger.error(f"stripe.api_key is: {stripe.api_key}")
+                self.last_trial_failure = {'stage': 'precheck', 'error': 'Payment system not configured. Please contact support.'}
                 return {'success': False, 'stage': 'precheck', 'error': 'Payment system not configured. Please contact support.'}
             
             # Helper to run blocking stripe calls in a thread
@@ -100,6 +103,7 @@ class PaymentService:
                     self.settings.STRIPE_PRICE_MULTI_CAMPUS_MONTHLY,
                     getattr(self.settings, 'STRIPE_PRICE_MULTI_CAMPUS_YEARLY', None)
                 )
+                self.last_trial_failure = {'stage': 'price_lookup', 'error': f'Invalid plan selected: {plan}', 'plan': plan}
                 return {'success': False, 'stage': 'price_lookup', 'error': f'Invalid plan selected: {plan}'}
             
             # Create subscription with trial
@@ -194,9 +198,11 @@ class PaymentService:
             
         except stripe.error.StripeError as e:
             logger.error(f"Stripe error creating trial subscription: {e}")
+            self.last_trial_failure = {'stage': 'stripe', 'error': str(e), 'email': email, 'plan': plan}
             return {'success': False, 'stage': 'stripe', 'error': str(e)}
         except Exception as e:
             logger.error(f"Error creating trial subscription: {e}")
+            self.last_trial_failure = {'stage': 'unexpected', 'error': str(e), 'email': email, 'plan': plan}
             return {'success': False, 'stage': 'unexpected', 'error': 'Failed to create trial subscription'}
     
     async def create_subscription(self, 

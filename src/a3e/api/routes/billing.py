@@ -149,6 +149,12 @@ async def trial_ping():
     import uuid
     return {"ok": True, "ts": time.time(), "id": str(uuid.uuid4())}
 
+@router.get("/trial/last-failure", include_in_schema=False)
+async def trial_last_failure(payment_service: PaymentService = Depends(get_payment_service)):
+    """Return (and preserve) the last in-memory trial signup failure details for debugging."""
+    failure = getattr(payment_service, 'last_trial_failure', None)
+    return {"failure": failure}
+
 @router.post("/subscription/create", response_model=PaymentResponse)
 async def create_subscription(
     request: SubscriptionRequest,
