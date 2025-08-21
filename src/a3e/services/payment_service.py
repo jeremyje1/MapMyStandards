@@ -30,28 +30,83 @@ class PaymentService:
             self.db_service = None  # type: ignore
         
     async def create_trial_subscription(self, email: str, plan: str, payment_method_id: str, coupon_code: Optional[str] = None) -> Dict[str, Any]:
-        """Simplified trial subscription creator.
-        This placeholder avoids external Stripe calls so the application can boot
-        in minimal environments. Replace with full implementation once Stripe
-        environment variables and webhooks are configured.
-        """
+        """Create a real Stripe trial subscription with 7-day free trial"""
         try:
-            fake_customer_id = f"cust_{hash(email) & 0xffffffff:x}"
-            fake_subscription_id = f"sub_{hash(email+plan) & 0xffffffff:x}"
-            api_key = self._generate_api_key(fake_customer_id)
+            # Create or retrieve customer
+            customers = stripe.Customer.list(email=email, limit=1)
+            if customers.data:
+                customer = customers.data[0]
+            else:
+                customer = stripe.Customer.create(
+                    email=email,
+                    payment_method=payment_method_id,
+                    invoice_settings={
+                        'default_payment_method': payment_method_id,
+                    }
+                )
+            
+            # Attach payment method if not already attached
+            try:
+                stripe.PaymentMethod.attach(
+                    payment_method_id,
+                    customer=customer.id,
+                )
+            except stripe.error.InvalidRequestError:
+                # Payment method might already be attached
+                pass
+            
+            # Get the price ID for the plan
+            price_id = self._get_price_id(plan)
+            
+            # Create subscription with trial
+            subscription_params = {
+                'customer': customer.id,
+                'items': [{'price': price_id}],
+                'trial_period_days': 7,
+                'payment_behavior': 'default_incomplete',
+                'payment_settings': {'save_default_payment_method': 'on_subscription'},
+                'expand': ['latest_invoice.payment_intent']
+            }
+            
+            # Apply coupon if provided
+            if coupon_code:
+                subscription_params['coupon'] = coupon_code
+            
+            subscription = stripe.Subscription.create(**subscription_params)
+            
+            # Generate API key
+            api_key = self._generate_api_key(customer.id)
+            
+            # Store account info in database
+            account_data = {
+                'customer_id': customer.id,
+                'subscription_id': subscription.id,
+                'email': email,
+                'api_key': api_key,
+                'plan': plan,
+                'status': 'trialing',
+                'trial_end': datetime.fromtimestamp(subscription.trial_end).isoformat()
+            }
+            
+            await self._create_account_record(account_data)
+            
             return {
                 'success': True,
-                'customer_id': fake_customer_id,
-                'subscription_id': fake_subscription_id,
+                'customer_id': customer.id,
+                'subscription_id': subscription.id,
                 'api_key': api_key,
-                'trial_end': (datetime.utcnow() + timedelta(days=7)).isoformat(),
-                'status': 'trialing',
+                'trial_end': datetime.fromtimestamp(subscription.trial_end).isoformat(),
+                'status': subscription.status,
                 'coupon_applied': coupon_code if coupon_code else None,
-                'discount_info': None
+                'discount_info': subscription.discount.coupon.name if subscription.discount else None
             }
+            
+        except stripe.error.StripeError as e:
+            logger.error(f"Stripe error creating trial subscription: {e}")
+            return {'success': False, 'error': str(e)}
         except Exception as e:
-            logger.error(f"Error creating simplified trial: {e}")
-            return {'success': False, 'error': 'Internal server error'}
+            logger.error(f"Error creating trial subscription: {e}")
+            return {'success': False, 'error': 'Failed to create trial subscription'}
     
     async def create_subscription(self, 
                                 customer_id: str,

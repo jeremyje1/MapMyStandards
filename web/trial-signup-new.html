@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Start Your 7-Day Free Trial | MapMyStandards A³E</title>
+    <meta name="description" content="Start your 7-day free trial of A³E - AI-powered accreditation management platform.">
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Stripe JS -->
+    <script src="https://js.stripe.com/v3/"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        
+        .step-indicator {
+            transition: all 0.3s ease;
+        }
+        
+        .step-indicator.active {
+            background-color: #3b82f6;
+            color: white;
+        }
+        
+        .step-indicator.completed {
+            background-color: #10b981;
+            color: white;
+        }
+        
+        #card-element {
+            padding: 1rem;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 0.5rem;
+            background-color: white;
+        }
+        
+        #card-element.StripeElement--focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-6">
+                <div class="flex items-center">
+                    <h1 class="text-2xl font-bold text-gray-900">MapMyStandards</h1>
+                    <span class="ml-2 text-sm text-gray-500">A³E Platform</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="https://mapmystandards.ai" class="text-gray-600 hover:text-gray-900">← Back to Site</a>
+                    <a href="mailto:support@mapmystandards.ai" class="text-blue-600 hover:text-blue-700">Need Help?</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- Page Title -->
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold text-gray-900 mb-2">Start Your 7-Day Free Trial</h2>
+                <p class="text-lg text-gray-600">No credit card charges during trial. Cancel anytime.</p>
+            </div>
+
+            <!-- Progress Steps -->
+            <div class="flex justify-center mb-12">
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center">
+                        <div id="step1-indicator" class="step-indicator active w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center font-semibold">1</div>
+                        <span class="ml-2 text-sm font-medium text-gray-900">Institution Info</span>
+                    </div>
+                    <div class="w-16 h-0.5 bg-gray-300"></div>
+                    <div class="flex items-center">
+                        <div id="step2-indicator" class="step-indicator w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center font-semibold">2</div>
+                        <span class="ml-2 text-sm font-medium text-gray-500">Payment Details</span>
+                    </div>
+                    <div class="w-16 h-0.5 bg-gray-300"></div>
+                    <div class="flex items-center">
+                        <div id="step3-indicator" class="step-indicator w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center font-semibold">3</div>
+                        <span class="ml-2 text-sm font-medium text-gray-500">Confirmation</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Main Form -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-xl shadow-lg p-8">
+                        <form id="trial-form">
+                            <!-- Step 1: Institution Information -->
+                            <div id="step1" class="space-y-6">
+                                <h3 class="text-xl font-semibold text-gray-900 mb-6">Tell us about your institution</h3>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">First Name *</label>
+                                        <input type="text" name="first_name" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Last Name *</label>
+                                        <input type="text" name="last_name" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Institution Name *</label>
+                                    <input type="text" name="institution_name" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Work Email *</label>
+                                        <input type="email" name="email" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                        <p class="text-xs text-gray-500 mt-1">Must be institutional email address</p>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                                        <input type="tel" name="phone" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Your Role *</label>
+                                        <select name="role" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                            <option value="">Select your role</option>
+                                            <option value="president">President/Chancellor</option>
+                                            <option value="provost">Provost/VP Academic Affairs</option>
+                                            <option value="dean">Dean</option>
+                                            <option value="ir_director">IR Director</option>
+                                            <option value="accreditation_liaison">Accreditation Liaison</option>
+                                            <option value="compliance_officer">Compliance Officer</option>
+                                            <option value="faculty">Faculty</option>
+                                            <option value="staff">Staff</option>
+                                            <option value="other">Other</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Estimated User Count</label>
+                                        <select name="user_count" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                            <option value="">Select range</option>
+                                            <option value="1-5">1-5 users</option>
+                                            <option value="6-20">6-20 users</option>
+                                            <option value="21-50">21-50 users</option>
+                                            <option value="51+">51+ users</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Primary Accreditor</label>
+                                    <select name="primary_accreditor" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                        <option value="">Select primary accreditor</option>
+                                        <optgroup label="Higher Education - Regional">
+                                            <option value="SACSCOC">SACSCOC (Southern Association)</option>
+                                            <option value="HLC">Higher Learning Commission (North Central)</option>
+                                            <option value="MSCHE">Middle States Commission on Higher Education</option>
+                                            <option value="NEASC">New England Commission of Higher Education</option>
+                                            <option value="NWCCU">Northwest Commission on Colleges and Universities</option>
+                                            <option value="WSCUC">WASC Senior College and University Commission</option>
+                                        </optgroup>
+                                        <optgroup label="K-12 Education">
+                                            <option value="COGNIA">Cognia (formerly AdvancED)</option>
+                                            <option value="WASC">WASC (K-12 Schools)</option>
+                                            <option value="NAIS">NAIS (Independent Schools)</option>
+                                        </optgroup>
+                                    </select>
+                                </div>
+
+                                <button type="button" onclick="nextStep()" class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                                    Continue to Payment →
+                                </button>
+                            </div>
+
+                            <!-- Step 2: Payment Information -->
+                            <div id="step2" class="space-y-6 hidden">
+                                <h3 class="text-xl font-semibold text-gray-900 mb-6">Choose your plan and payment method</h3>
+                                
+                                <!-- Plan Selection -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-4">Select Your Plan</label>
+                                    <div class="space-y-4">
+                                        <label class="flex p-4 border-2 border-blue-500 bg-blue-50 rounded-lg cursor-pointer">
+                                            <input type="radio" name="plan" value="college" class="mt-1" checked>
+                                            <div class="ml-3 flex-1">
+                                                <div class="flex justify-between items-start">
+                                                    <div>
+                                                        <span class="font-semibold text-gray-900">A³E College Plan</span>
+                                                        <span class="ml-2 text-sm text-blue-600 font-medium">Most Popular</span>
+                                                        <p class="text-sm text-gray-600 mt-1">For individual schools, colleges, and universities</p>
+                                                    </div>
+                                                    <div class="text-right">
+                                                        <p class="text-2xl font-bold text-gray-900">$297</p>
+                                                        <p class="text-sm text-gray-500">/month</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </label>
+                                        
+                                        <label class="flex p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-300">
+                                            <input type="radio" name="plan" value="multicampus" class="mt-1">
+                                            <div class="ml-3 flex-1">
+                                                <div class="flex justify-between items-start">
+                                                    <div>
+                                                        <span class="font-semibold text-gray-900">Multi-Campus Plan</span>
+                                                        <p class="text-sm text-gray-600 mt-1">For university systems, school districts, multi-location institutions</p>
+                                                    </div>
+                                                    <div class="text-right">
+                                                        <p class="text-2xl font-bold text-gray-900">$897</p>
+                                                        <p class="text-sm text-gray-500">/month</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- Trial Notice -->
+                                <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                                    <div class="flex">
+                                        <svg class="h-5 w-5 text-amber-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <div class="ml-3">
+                                            <p class="text-sm text-amber-800">
+                                                <strong>7-Day Free Trial:</strong> You won't be charged for 7 days. Cancel anytime during your trial with no charges.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Payment Information -->
+                                <div class="bg-gray-50 rounded-lg p-6">
+                                    <h4 class="font-medium text-gray-900 mb-4">Payment Information</h4>
+                                    
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Cardholder Name *</label>
+                                            <input type="text" name="cardholder_name" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Billing Email *</label>
+                                            <input type="email" name="billing_email" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Card Information *</label>
+                                        <div id="card-element">
+                                            <!-- Stripe Elements will create form elements here -->
+                                        </div>
+                                        <div id="card-errors" role="alert" class="text-red-600 text-sm mt-2"></div>
+                                    </div>
+
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div class="md:col-span-2">
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Billing Address *</label>
+                                            <input type="text" name="billing_address" required placeholder="Street address" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">ZIP Code *</label>
+                                            <input type="text" name="billing_zip" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="flex space-x-4">
+                                    <button type="button" onclick="previousStep()" class="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors">
+                                        ← Back
+                                    </button>
+                                    <button type="submit" class="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                                        Start Free Trial →
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Step 3: Confirmation (shown after successful submission) -->
+                            <div id="step3" class="space-y-6 hidden text-center">
+                                <div class="py-8">
+                                    <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                                        <svg class="w-10 h-10 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                        </svg>
+                                    </div>
+                                    <h3 class="text-2xl font-semibold text-gray-900 mb-2">Welcome to A³E!</h3>
+                                    <p class="text-gray-600 mb-8">Your free trial has been activated. Check your email for login instructions.</p>
+                                    <a href="/dashboard" class="inline-block bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                                        Go to Dashboard →
+                                    </a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="lg:col-span-1 space-y-6">
+                    <!-- Plan Details -->
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">What's Included</h3>
+                        <ul class="space-y-3">
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                                <span class="text-sm text-gray-600">AI-powered accreditation evidence mapping</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                                <span class="text-sm text-gray-600">Automated compliance reports</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                                <span class="text-sm text-gray-600">Real-time collaboration tools</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                                <span class="text-sm text-gray-600">Unlimited document uploads</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                                <span class="text-sm text-gray-600">Priority support</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Security Badge -->
+                    <div class="bg-gray-50 rounded-xl p-6">
+                        <h4 class="font-medium text-gray-900 mb-3">Security & Compliance</h4>
+                        <div class="flex items-center justify-center space-x-4">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/b/ba/Stripe_Logo%2C_revised_2016.svg" alt="Stripe" class="h-8">
+                            <div class="text-center">
+                                <p class="text-xs text-gray-500">PCI DSS Level 1</p>
+                                <p class="text-xs text-gray-500">Bank-level encryption</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Support -->
+                    <div class="bg-blue-50 rounded-xl p-6">
+                        <h4 class="font-medium text-blue-900 mb-2">Need Help?</h4>
+                        <p class="text-sm text-blue-700 mb-4">Our team is here to help you get started.</p>
+                        <a href="mailto:support@mapmystandards.ai" class="text-sm text-blue-600 hover:text-blue-800 font-medium">
+                            support@mapmystandards.ai
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-gray-300 py-8 mt-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <h3 class="text-white font-bold text-lg">MapMyStandards</h3>
+                    <p class="text-sm mt-1">Simplifying accreditation with AI</p>
+                </div>
+                <div class="flex space-x-6 text-sm">
+                    <a href="https://mapmystandards.ai/privacy/" class="hover:text-white">Privacy Policy</a>
+                    <a href="https://mapmystandards.ai/terms/" class="hover:text-white">Terms of Service</a>
+                    <a href="https://mapmystandards.ai/contact/" class="hover:text-white">Contact</a>
+                </div>
+            </div>
+            <div class="mt-6 pt-6 border-t border-gray-800 text-center text-sm">
+                <p>&copy; 2024 MapMyStandards. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        let stripe = null;
+        let elements = null;
+        let cardElement = null;
+        let currentStep = 1;
+
+        // Initialize Stripe
+        async function initializeStripe() {
+            try {
+                const response = await fetch('/api/v1/billing/config/stripe-key');
+                const data = await response.json();
+                
+                if (data.publishable_key) {
+                    stripe = Stripe(data.publishable_key);
+                    elements = stripe.elements();
+                    
+                    cardElement = elements.create('card', {
+                        style: {
+                            base: {
+                                fontSize: '16px',
+                                color: '#424770',
+                                '::placeholder': {
+                                    color: '#aab7c4',
+                                },
+                            },
+                        },
+                    });
+
+                    cardElement.mount('#card-element');
+                    
+                    cardElement.on('change', ({error}) => {
+                        const displayError = document.getElementById('card-errors');
+                        if (error) {
+                            displayError.textContent = error.message;
+                        } else {
+                            displayError.textContent = '';
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to load Stripe:', error);
+            }
+        }
+
+        // Step navigation
+        function showStep(step) {
+            document.getElementById('step1').classList.add('hidden');
+            document.getElementById('step2').classList.add('hidden');
+            document.getElementById('step3').classList.add('hidden');
+            
+            document.getElementById(`step${step}`).classList.remove('hidden');
+            
+            // Update indicators
+            for (let i = 1; i <= 3; i++) {
+                const indicator = document.getElementById(`step${i}-indicator`);
+                if (i < step) {
+                    indicator.classList.add('completed');
+                    indicator.classList.remove('active');
+                } else if (i === step) {
+                    indicator.classList.add('active');
+                    indicator.classList.remove('completed');
+                } else {
+                    indicator.classList.remove('active', 'completed');
+                }
+            }
+            
+            currentStep = step;
+        }
+
+        function nextStep() {
+            if (currentStep === 1 && validateStep1()) {
+                showStep(2);
+                if (!stripe) {
+                    initializeStripe();
+                }
+            }
+        }
+
+        function previousStep() {
+            if (currentStep === 2) {
+                showStep(1);
+            }
+        }
+
+        function validateStep1() {
+            const form = document.getElementById('trial-form');
+            const step1Inputs = form.querySelectorAll('#step1 input[required], #step1 select[required]');
+            
+            for (let input of step1Inputs) {
+                if (!input.value) {
+                    input.focus();
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        // Form submission
+        document.getElementById('trial-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (!stripe || !cardElement) {
+                alert('Please wait for the payment form to load.');
+                return;
+            }
+
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Processing...';
+
+            try {
+                // Create payment method
+                const {error, paymentMethod} = await stripe.createPaymentMethod({
+                    type: 'card',
+                    card: cardElement,
+                    billing_details: {
+                        name: document.querySelector('input[name="cardholder_name"]').value,
+                        email: document.querySelector('input[name="billing_email"]').value,
+                        address: {
+                            line1: document.querySelector('input[name="billing_address"]').value,
+                            postal_code: document.querySelector('input[name="billing_zip"]').value,
+                        }
+                    }
+                });
+
+                if (error) {
+                    throw new Error(error.message);
+                }
+
+                // Submit to backend
+                const formData = new FormData(e.target);
+                const data = Object.fromEntries(formData);
+                data.payment_method_id = paymentMethod.id;
+
+                const response = await fetch('/api/v1/billing/trial/signup', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showStep(3);
+                    setTimeout(() => {
+                        window.location.href = `/trial-success?trial_id=${result.trial_id}`;
+                    }, 3000);
+                } else {
+                    throw new Error(result.detail || 'Signup failed');
+                }
+            } catch (error) {
+                document.getElementById('card-errors').textContent = error.message;
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Start Free Trial →';
+            }
+        });
+
+        // Auto-populate billing email
+        document.querySelector('input[name="email"]').addEventListener('blur', function() {
+            const billingEmailField = document.querySelector('input[name="billing_email"]');
+            if (!billingEmailField.value) {
+                billingEmailField.value = this.value;
+            }
+        });
+    </script>
+</body>
+</html>

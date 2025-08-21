@@ -81,6 +81,7 @@ async def trial_signup(request: TrialSignupRequest, payment_service: PaymentServ
             return {
                 "success": True,
                 "message": "7-day free trial started successfully",
+                "trial_id": result['subscription_id'],  # Add trial_id for frontend redirect
                 "data": {
                     "api_key": result['api_key'],
                     "trial_end": result['trial_end'], 
