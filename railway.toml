@@ -2,11 +2,11 @@
 builder = "nixpacks"
 
 [deploy]
-startCommand = "python run_app.py"
-healthcheckPath = "/docs"
+startCommand = "python src/a3e/main_production.py"
+healthcheckPath = "/health"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
 
 [environments.production]
-startCommand = "python run_app.py"
+startCommand = "python src/a3e/main_production.py"

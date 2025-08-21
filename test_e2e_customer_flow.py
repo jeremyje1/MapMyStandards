@@ -10,7 +10,7 @@ import time
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://mapmystandards-prod-production.up.railway.app"
+BASE_URL = "https://api.mapmystandards.ai"
 API_BASE = f"{BASE_URL}/api"
 
 # Test user data
