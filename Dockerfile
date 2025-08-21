@@ -22,6 +22,9 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 # Copy application source
 COPY . .
 
+# Make startup script executable
+RUN chmod +x start.sh
+
 # Create non-root user
 RUN useradd --create-home --shell /bin/bash appuser \
     && chown -R appuser:appuser /app
@@ -34,5 +37,5 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD sh -c 'curl -fsS http://127.0.0.1:${PORT:-8000}/health || exit 1'
 
-# Use shell form to properly expand PORT variable
-CMD ["sh", "-c", "uvicorn src.a3e.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+# Use startup script
+CMD ["./start.sh"]
