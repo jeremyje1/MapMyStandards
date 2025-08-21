@@ -71,6 +71,7 @@ async def trial_signup(request: TrialSignupRequest, payment_service: PaymentServ
     Requires credit card for seamless conversion.
     """
     logger.info(f"Trial signup request received for email: {request.email}, plan: {request.plan}")
+    logger.info(f"Full request data: institution_name={request.institution_name}, role={request.role}")
     try:
         # Create trial subscription with Stripe
         try:

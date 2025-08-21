@@ -522,6 +522,14 @@
                 const formData = new FormData(e.target);
                 const data = Object.fromEntries(formData);
                 data.payment_method_id = paymentMethod.id;
+                
+                // Log the data being sent for debugging
+                console.log('Submitting trial signup with data:', data);
+                
+                // Ensure required fields are present
+                if (!data.institution_name || !data.email || !data.role) {
+                    throw new Error('Missing required fields. Please complete all steps.');
+                }
 
                 const controller = new AbortController();
                 const timeout = setTimeout(() => controller.abort(), 20000);
