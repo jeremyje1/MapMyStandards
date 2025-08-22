@@ -1069,9 +1069,10 @@ if WEB_DIR.exists():
     async def login_page():  # noqa: D401
         return FileResponse(str(WEB_DIR / "login.html"))
 
-    @app.get("/dashboard", response_class=FileResponse, include_in_schema=False)
+    @app.get("/dashboard", response_class=HTMLResponse, include_in_schema=False)
     async def dashboard_page():  # noqa: D401
-        return FileResponse(str(WEB_DIR / "dashboard.html"))
+        """Temporary: redirect dashboard to upload until dashboard UI complete."""
+        return HTMLResponse("<html><head><meta http-equiv='refresh' content='0; url=/upload'></head><body>Redirecting to dashboard...</body></html>")
 
     @app.get("/homepage", response_class=FileResponse, include_in_schema=False)
     async def homepage():  # noqa: D401

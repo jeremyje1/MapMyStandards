@@ -211,10 +211,11 @@
         await persist();
         successMsg.style.display='block';
         fillEl.style.width='100%'; pctEl.textContent='100%';
-        setTimeout(()=>{ window.location.href='/web/dashboard.html'; }, 1500);
+    // Redirect to main dashboard (temporarily using /upload until dashboard fully implemented)
+    setTimeout(()=>{ window.location.href='/dashboard'; }, 1500);
       }
     });
-    skipBtn.addEventListener('click', ()=>{ window.location.href='/web/dashboard.html'; });
+  skipBtn.addEventListener('click', ()=>{ window.location.href='/dashboard'; });
 
     // Initialize
     showStep();
