@@ -22,18 +22,43 @@ else
   pip install fastapi uvicorn >/dev/null
 fi
 
-# Build Tailwind (requires Node). If Node not present, warn and continue (CSS may be stale)
+# Build Tailwind (requires Node). If Node not present, try npx fallback.
 if command -v npm >/dev/null 2>&1; then
   if [ -f web/package.json ]; then
     pushd web >/dev/null
     npm install --no-audit --no-fund >/dev/null 2>&1 || true
-    npm run build-css || { echo "⚠️ Tailwind build failed; using existing CSS" >&2; }
+    # Attempt standard build; fall back to npx if it fails
+    if ! npm run build-css >/dev/null 2>&1; then
+      echo "⚠️ npm run build-css failed; attempting direct Tailwind build via npx" >&2
+      if command -v npx >/dev/null 2>&1; then
+        npx tailwindcss -c tailwind.config.js -i src/input.css -o static/css/tailwind.css --minify || \
+          echo "⚠️ Tailwind build via npx failed" >&2
+      fi
+    fi
     popd >/dev/null
   else
-    echo "ℹ️ No web/package.json; skipping Tailwind build"
+    # Fallback: direct npx build when package.json missing but source exists
+    if [ -f web/src/input.css ]; then
+      echo "ℹ️ web/package.json missing; attempting Tailwind build via npx"
+      if command -v npx >/dev/null 2>&1; then
+        npx tailwindcss -c web/tailwind.config.js -i web/src/input.css -o web/static/css/tailwind.css --minify || \
+          echo "⚠️ Tailwind build via npx failed" >&2
+      else
+        echo "⚠️ npx not found; cannot build Tailwind CSS" >&2
+      fi
+    else
+      echo "ℹ️ No Tailwind source file; skipping build"
+    fi
   fi
 else
-  echo "⚠️ npm not found; skipping Tailwind build (expect prebuilt web/static/css/tailwind.css)" >&2
+  # Attempt to use npx if npm isn't available
+  if command -v npx >/dev/null 2>&1 && [ -f web/src/input.css ]; then
+    echo "⚠️ npm not found; using npx tailwindcss directly"
+    npx tailwindcss -c web/tailwind.config.js -i web/src/input.css -o web/static/css/tailwind.css --minify || \
+      echo "⚠️ Tailwind build via npx failed" >&2
+  else
+    echo "⚠️ Neither npm nor npx found; skipping Tailwind build (expect prebuilt web/static/css/tailwind.css)" >&2
+  fi
 fi
 
 CSS_FILE="web/static/css/tailwind.css"
