@@ -6,6 +6,7 @@ import requests
 import json
 from datetime import datetime
 import time
+from test_urls import API_BASE as API_URL, APP_BASE as APP_URL
 
 print("🎉 COMPLETE CUSTOMER FLOW TEST")
 print("=" * 70)
@@ -36,7 +37,7 @@ print()
 print("📋 STEP 1: Creating trial account...")
 try:
     response = requests.post(
-        "https://api.mapmystandards.ai/create-trial-account",
+        f"{API_URL.rstrip('/')}/create-trial-account",
         json=test_data,
         timeout=15,
         headers={'Content-Type': 'application/json'}
@@ -55,10 +56,10 @@ try:
         print("\n📋 STEP 2: Testing system health...")
         
         health_tests = [
-            ("Frontend", "https://platform.mapmystandards.ai"),
-            ("Backend Health", "https://api.mapmystandards.ai/health"),
-            ("Backend Config", "https://api.mapmystandards.ai/debug-config"),
-            ("Email Test", "https://api.mapmystandards.ai/test-email")
+            ("Frontend", APP_URL),
+            ("Backend Health", f"{API_URL.rstrip('/')}/health"),
+            ("Backend Config", f"{API_URL.rstrip('/')}/debug-config"),
+            ("Email Test", f"{API_URL.rstrip('/')}/test-email")
         ]
         
         all_healthy = True

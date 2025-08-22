@@ -40,7 +40,7 @@ def test_url(url, expected_status=200, check_content=None):
 def main():
     print("🚀 Testing MapMyStandards Platform Deployment\n")
 
-    base_url = "https://platform.mapmystandards.ai"
+    from test_urls import APP_BASE as base_url
 
     # Test cases: (path, expected_content_check)
     test_cases = [

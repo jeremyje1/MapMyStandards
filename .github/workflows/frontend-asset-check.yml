@@ -1,0 +1,30 @@
+name: Frontend Asset Integrity
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  asset-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Ensure tailwind.css exists and above threshold
+        run: |
+          FILE=web/static/css/tailwind.css
+          MIN_BYTES=5000
+          if [ ! -f "$FILE" ]; then
+            echo "ERROR: $FILE missing" >&2
+            exit 1
+          fi
+          SIZE=$(stat -c%s "$FILE") || SIZE=$(wc -c < "$FILE")
+          echo "tailwind.css size=$SIZE bytes"
+            
+          if [ "$SIZE" -lt "$MIN_BYTES" ]; then
+            echo "ERROR: $FILE size ($SIZE) below threshold $MIN_BYTES" >&2
+            exit 1
+          fi
+          echo "✅ Asset check passed"

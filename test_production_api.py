@@ -6,6 +6,7 @@ Quick Production API Test - Test the correct field format for trial signup
 import requests
 import json
 from datetime import datetime
+from test_urls import API_BASE as API_URL
 
 def test_production_trial_signup():
     """Test production API with correct field format"""
@@ -30,7 +31,7 @@ def test_production_trial_signup():
     try:
         print("\n🚀 Sending request to production API...")
         response = requests.post(
-            "https://api.mapmystandards.ai/trial/signup",
+            f"{API_URL.rstrip('/')}/trial/signup",
             json=test_data,
             timeout=15
         )
@@ -87,7 +88,7 @@ def test_contact_form():
     try:
         print("\n🚀 Sending contact form...")
         response = requests.post(
-            "https://api.mapmystandards.ai/contact",
+            f"{API_URL.rstrip('/')}/contact",
             json=contact_data,
             timeout=15
         )

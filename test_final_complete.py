@@ -4,12 +4,11 @@
 import requests
 import json
 import time
+from test_urls import API_BASE as API_URL, APP_BASE as FRONTEND_URL
 
-API_URL = "https://api.mapmystandards.ai"
-FRONTEND_URL = "https://platform.mapmystandards.ai"
 
 print("🧪 MapMyStandards Final Platform Test")
-print("=" * 50)
+# Future URL references must use API_URL / FRONTEND_URL constants above.
 
 # 1. API Health
 print("\n1️⃣ API Health Check")

@@ -4,8 +4,7 @@
 import requests
 import json
 import time
-
-API_URL = "https://api.mapmystandards.ai"
+from test_urls import API_BASE as API_URL
 
 print("🧪 Testing Trial Signup with Correct Fields")
 print("=" * 50)
@@ -28,7 +27,7 @@ print(f"\n1️⃣ Testing Trial Signup with all required fields...")
 print(f"Email: {test_email}")
 
 response = requests.post(
-    f"{API_URL}/api/trial/signup",
+    f"{API_URL.rstrip('/')}/api/trial/signup",
     json=signup_data,
     headers={"Content-Type": "application/json"}
 )
@@ -49,7 +48,7 @@ if response.status_code == 200:
         
         # Check trial status
         status_response = requests.get(
-            f"{API_URL}/api/trial/status/{test_email}",
+            f"{API_URL.rstrip('/')}/api/trial/status/{test_email}",
             headers=headers
         )
         print(f"\nTrial status: {status_response.status_code}")
@@ -58,7 +57,7 @@ if response.status_code == 200:
         
         # Check dashboard
         dashboard_response = requests.get(
-            f"{API_URL}/api/dashboard/overview",
+            f"{API_URL.rstrip('/')}/api/dashboard/overview",
             headers=headers
         )
         print(f"\nDashboard: {dashboard_response.status_code}")
@@ -72,7 +71,7 @@ if response.status_code == 200:
         }
         
         checkout_response = requests.post(
-            f"{API_URL}/api/checkout/create-session",
+            f"{API_URL.rstrip('/')}/api/checkout/create-session",
             json=checkout_data,
             headers={**headers, "Content-Type": "application/json"}
         )
@@ -104,7 +103,7 @@ register_data = {
 }
 
 register_response = requests.post(
-    f"{API_URL}/auth/register-trial",
+    f"{API_URL.rstrip('/')}/auth/register-trial",
     json=register_data,
     headers={"Content-Type": "application/json"}
 )

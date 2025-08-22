@@ -66,3 +66,30 @@ The code now includes a defensive check that will raise an error if:
 2. Never commit these to version control
 3. The system will refuse to use test prices with live keys as of the latest update
 4. Without these variables, trial signups will fail with a clear error message
+
+## Public URL Variables (New)
+
+Set the public-facing base URLs used across emails, links, and tests:
+
+```bash
+PUBLIC_APP_URL=https://platform.mapmystandards.ai
+PUBLIC_API_URL=https://api.mapmystandards.ai
+```
+
+These default to production domains if not set, but specifying them explicitly:
+- Enables staging deployments (`https://staging.platform...`) without code edits
+- Ensures emails and absolute links resolve correctly
+- Keeps test code domain-agnostic
+
+## URL Reference Best Practices
+
+To avoid hard-coded domains scattered through the codebase:
+
+1. Backend code: use `settings.PUBLIC_APP_URL` and `settings.PUBLIC_API_URL`.
+2. Tests: import `API_BASE` / `APP_BASE` from `test_urls.py` (added in this repo).
+3. Emails: rely on helper `build_unsubscribe_link()` and construct links via helpers.
+4. Static HTML: prefer relative links (`/trial`, `/contact`) unless an absolute URL is required for external contexts.
+5. Documentation: when referencing domains, prefer placeholders like `${PUBLIC_APP_URL}` where feasible.
+
+Benefit: Single-point domain change (vars) instead of sweeping find/replace operations.
+

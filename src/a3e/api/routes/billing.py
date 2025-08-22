@@ -4,6 +4,7 @@ Handles trial signup, subscription management, and billing
 """
 
 from fastapi import APIRouter, HTTPException, Depends, status, Request
+from fastapi.responses import JSONResponse
 from fastapi import APIRouter as _APIRouterAlias
 from pydantic import BaseModel, EmailStr
 from typing import Optional, Dict, Any
@@ -174,32 +175,48 @@ async def trial_last_failure(payment_service: PaymentService = Depends(get_payme
 
 @router.get("/trial/diagnose", include_in_schema=False)
 async def trial_diagnose(payment_service: PaymentService = Depends(get_payment_service)):
-    """Expose current plan->price resolution & stripe key presence for debugging."""
-    # Reuse already-imported settings function (imported at module top as get_settings)
-    settings = get_settings()
-    import stripe
-    # Reuse internal helper via price lookup calls
-    plans = [
-        'college', 'college_monthly', 'college_yearly', 'multicampus', 'multicampus_monthly', 'multicampus_yearly'
-    ]
-    price_map = {}
-    for p in plans:
-        try:
-            price_map[p] = payment_service._get_price_id(p)  # type: ignore (debug only)
-        except Exception as e:
-            price_map[p] = f"error: {e}"  # noqa: E501
-    return {
-        'stripe_key_present': bool(stripe.api_key),
-        'stripe_key_type': 'live' if stripe.api_key and stripe.api_key.startswith('sk_live') else ('test' if stripe.api_key and stripe.api_key.startswith('sk_test') else 'unset'),
-        'plans': price_map,
-        'env_prices': {
-            'STRIPE_PRICE_COLLEGE_MONTHLY': settings.STRIPE_PRICE_COLLEGE_MONTHLY,
-            'STRIPE_PRICE_COLLEGE_YEARLY': settings.STRIPE_PRICE_COLLEGE_YEARLY,
-            'STRIPE_PRICE_MULTI_CAMPUS_MONTHLY': settings.STRIPE_PRICE_MULTI_CAMPUS_MONTHLY,
-            'STRIPE_PRICE_MULTI_CAMPUS_YEARLY': settings.STRIPE_PRICE_MULTI_CAMPUS_YEARLY
-        },
-        'last_failure': getattr(payment_service, 'last_trial_failure', None)
-    }
+    """Expose current plan->price resolution & stripe key presence for debugging.
+
+    Hardened to always return JSON (never bare 500 plain text) with an 'ok' flag.
+    """
+    import time
+    started = time.time()
+    try:
+        settings = get_settings()
+        import stripe
+        plans = [
+            'college', 'college_monthly', 'college_yearly', 'multicampus', 'multicampus_monthly', 'multicampus_yearly'
+        ]
+        price_map = {}
+        for p in plans:
+            try:
+                price_map[p] = payment_service._get_price_id(p)  # type: ignore (debug only)
+            except Exception as e:  # pragma: no cover - defensive
+                price_map[p] = f"error: {e}"  # noqa: E501
+        import stripe as _s  # alias for reuse
+        resp = {
+            'ok': True,
+            'stripe_key_present': bool(_s.api_key),
+            'stripe_key_type': 'live' if _s.api_key and _s.api_key.startswith('sk_live') else ('test' if _s.api_key and _s.api_key.startswith('sk_test') else 'unset'),
+            'plans': price_map,
+            'env_prices': {
+                'STRIPE_PRICE_COLLEGE_MONTHLY': settings.STRIPE_PRICE_COLLEGE_MONTHLY,
+                'STRIPE_PRICE_COLLEGE_YEARLY': settings.STRIPE_PRICE_COLLEGE_YEARLY,
+                'STRIPE_PRICE_MULTI_CAMPUS_MONTHLY': settings.STRIPE_PRICE_MULTI_CAMPUS_MONTHLY,
+                'STRIPE_PRICE_MULTI_CAMPUS_YEARLY': settings.STRIPE_PRICE_MULTI_CAMPUS_YEARLY
+            },
+            'last_failure': getattr(payment_service, 'last_trial_failure', None),
+            'elapsed_ms': int((time.time() - started) * 1000)
+        }
+        return resp
+    except Exception as e:  # pragma: no cover - diagnostic path
+        logger.exception("trial_diagnose failure")
+        return JSONResponse(status_code=500, content={
+            'ok': False,
+            'error': str(e),
+            'error_type': type(e).__name__,
+            'elapsed_ms': int((time.time() - started) * 1000)
+        })
 
 @router.get("/trial/verify-prices", include_in_schema=False)
 async def trial_verify_prices(payment_service: PaymentService = Depends(get_payment_service)):

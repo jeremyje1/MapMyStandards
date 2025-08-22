@@ -8,10 +8,8 @@ import requests
 import json
 import time
 from datetime import datetime
-
-# Configuration
-BASE_URL = "https://api.mapmystandards.ai"
-API_BASE = f"{BASE_URL}/api"
+from test_urls import API_BASE as BASE_URL
+API_BASE = f"{BASE_URL.rstrip('/')}/api"
 
 # Test user data
 test_email = f"test_user_{int(time.time())}@example.com"
@@ -28,12 +26,12 @@ def test_api_health():
     """Test if the API is responding"""
     print("1️⃣ Testing API Health...")
     try:
-        response = requests.get(f"{BASE_URL}/")
-        print(f"   ✅ API is responding (Status: {response.status_code})")
-        return True
+        response = requests.get(f"{BASE_URL.rstrip('/')}/", timeout=10)
     except Exception as e:
         print(f"   ❌ API not responding: {e}")
         return False
+    print(f"   ✅ API is responding (Status: {response.status_code})")
+    return True
 
 def test_trial_signup():
     """Test trial account signup"""

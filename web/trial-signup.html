@@ -12,11 +12,9 @@
     <!-- Stripe JS -->
     <script src="https://js.stripe.com/v3/"></script>
     
-    <!-- Tailwind CSS -->
-    <link rel="stylesheet" href="/web/static/css/tailwind.css" integrity>
-    <!-- If styling looks broken, open /debug/static and verify tailwind_exists=true -->
-    <!-- Temporary fallback for missing classes -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CSS (pre-built, served by FastAPI at /web/static/css/tailwind.css) -->
+    <link rel="stylesheet" href="/web/static/css/tailwind.css" id="tailwindStylesheet">
+    <!-- NOTE: CDN development build removed for production hardening. If this stylesheet fails to load, a runtime banner will appear. Check /health/frontend for asset status. -->
     
     <style>
         body { 
@@ -397,6 +395,26 @@
         let elements = null;
         let cardElement = null;
         let currentStep = 1;
+
+        // Verify Tailwind loaded (basic heuristic) and surface a warning banner if not.
+        window.addEventListener('load', () => {
+            const link = document.getElementById('tailwindStylesheet');
+            let loaded = false;
+            try {
+                if (link && link.sheet && link.sheet.cssRules && link.sheet.cssRules.length > 10) {
+                    loaded = true;
+                }
+            } catch (e) {
+                // Accessing cssRules may throw if not same-origin (shouldn't here) – ignore.
+            }
+            if (!loaded) {
+                console.warn('tailwind.css appears missing or nearly empty.');
+                const warn = document.createElement('div');
+                warn.textContent = '⚠️ Styling failed to load (tailwind.css). Please refresh. If persistent, visit /health/frontend.';
+                warn.style.cssText = 'background:#fef3c7;color:#92400e;padding:8px;text-align:center;font-size:14px;font-weight:500;';
+                document.body.prepend(warn);
+            }
+        });
 
         // Initialize Stripe
         async function initializeStripe() {

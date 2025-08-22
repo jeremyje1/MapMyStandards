@@ -635,17 +635,43 @@ async def health_check():
 
 @app.get("/health/frontend")
 async def frontend_health():
-    """Report presence & size of critical frontend assets (tailwind.css)."""
+    """Report presence & size of critical frontend assets (CSS, logo, core JS)."""
+    assets = []
+    
+    def assess(path: Path, name: str, min_bytes: int) -> dict:
+        exists = path.exists()
+        size = path.stat().st_size if exists else None
+        status = "healthy" if exists and size and size >= min_bytes else ("degraded" if exists else "missing")
+        return {
+            "name": name,
+            "path": str(path),
+            "exists": exists,
+            "size_bytes": size,
+            "min_threshold": min_bytes,
+            "status": status,
+        }
     css_path = WEB_DIR / "static" / "css" / "tailwind.css"
-    exists = css_path.exists()
-    size = css_path.stat().st_size if exists else None
-    status = "healthy" if exists and size and size > 5000 else ("degraded" if exists else "missing")
+    assets.append(assess(css_path, "tailwind.css", 5000))
+    # Common logo filenames (first existing reported)
+    logo_candidates = [
+        WEB_DIR / "static" / "img" / "logo.png",
+        WEB_DIR / "static" / "img" / "logo.svg",
+        WEB_DIR / "static" / "img" / "logo-dark.png",
+    ]
+    for lc in logo_candidates:
+        if lc.exists():
+            assets.append(assess(lc, lc.name, 500))
+            break
+    core_js = WEB_DIR / "js" / "a3e-sdk.js"
+    assets.append(assess(core_js, "a3e-sdk.js", 200))
+    overall = "healthy"
+    if any(a["status"] == "missing" for a in assets):
+        overall = "missing"
+    elif any(a["status"] == "degraded" for a in assets):
+        overall = "degraded"
     return {
-        "asset": "tailwind.css",
-        "exists": exists,
-        "size_bytes": size,
-        "status": status,
-        "threshold_min_bytes": 5000,
+        "status": overall,
+        "assets": assets,
         "timestamp": datetime.utcnow().isoformat()
     }
 
@@ -1026,6 +1052,18 @@ if WEB_DIR.exists():
             }
             return FileResponse(str(css_file), media_type="text/css", headers=headers)
         return Response(status_code=404, content="/* tailwind.css missing */", media_type="text/css")
+
+    # Provide legacy/alternate path commonly expected (/static/css/tailwind.css)
+    @app.get("/static/css/tailwind.css", include_in_schema=False)
+    async def tailwind_css_alias():  # noqa: D401
+        css_file = WEB_DIR / "static" / "css" / "tailwind.css"
+        if css_file.exists():
+            headers = {
+                "Cache-Control": "public, max-age=300",
+                "ETag": str(css_file.stat().st_mtime_ns)
+            }
+            return FileResponse(str(css_file), media_type="text/css", headers=headers)
+        return Response(status_code=404, content="/* tailwind.css missing (alias) */", media_type="text/css")
 
     @app.get("/login", response_class=FileResponse, include_in_schema=False)
     async def login_page():  # noqa: D401
