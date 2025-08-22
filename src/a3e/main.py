@@ -126,6 +126,9 @@ except ImportError as e:
 logging.basicConfig(level=getattr(logging, settings.log_level), format=settings.log_format)
 logger = logging.getLogger(__name__)
 
+# Optional strict asset enforcement (set STRICT_FRONTEND_ASSETS=1 to fail startup if missing)
+STRICT_FRONTEND_ASSETS = os.getenv("STRICT_FRONTEND_ASSETS", "0").lower() in ("1", "true", "yes")
+
 # Cross-worker warning deduplication using filesystem
 
 def log_warning_once_global(message: str, key: str = None):
@@ -210,23 +213,32 @@ async def lifespan(app: FastAPI):
         else:
             log_warning_once("⚠️ Agent orchestrator unavailable - missing dependencies (autogen)")
             agent_orchestrator = None
-        
-            # Verify Tailwind build present (strict in production)
-            try:
-                css_path = WEB_DIR / "static" / "css" / "tailwind.css"
-                if settings.is_production:
-                    if not css_path.exists():
-                        raise RuntimeError(f"tailwind.css missing at {css_path}")
-                    if css_path.stat().st_size < 5000:  # heuristically too small
-                        raise RuntimeError(f"tailwind.css suspiciously small ({css_path.stat().st_size} bytes)")
+
+        # Verify Tailwind build presence (non-fatal unless STRICT_FRONTEND_ASSETS enabled)
+        try:
+            css_path = WEB_DIR / "static" / "css" / "tailwind.css"
+            css_issue = None
+            if not css_path.exists():
+                css_issue = f"missing at {css_path}"
+            else:
+                size = css_path.stat().st_size
+                if size < 5000:
+                    css_issue = f"suspiciously small ({size} bytes)"
+            if css_issue:
+                msg = f"[frontend-assets] tailwind.css {css_issue}"
+                if settings.is_production and STRICT_FRONTEND_ASSETS:
+                    logger.error(msg + " (STRICT mode - aborting startup)")
+                    raise RuntimeError(msg)
                 else:
-                    if not css_path.exists():
-                        logger.warning("Tailwind CSS not found (development mode) - some pages may be unstyled")
-                logger.info("Tailwind CSS check passed: exists=%s size=%s",
-                            css_path.exists(), css_path.stat().st_size if css_path.exists() else None)
-            except Exception as css_err:
-                logger.error(f"Critical frontend asset error: {css_err}")
+                    logger.warning(msg + " (degraded mode; CDN fallback will be used)")
+                    app.state.tailwind_degraded = True  # type: ignore[attr-defined]
+            else:
+                logger.info("Tailwind CSS OK (size=%s bytes)", css_path.stat().st_size)
+        except Exception as css_err:
+            # Only fatal if strict
+            if settings.is_production and STRICT_FRONTEND_ASSETS:
                 raise
+            logger.error(f"Non-fatal frontend asset verification error: {css_err}")
 
             # Load accreditation standards into vector database
         await _load_accreditation_standards()
