@@ -81,6 +81,21 @@ async def upload_page():
     """Evidence upload page"""
     return serve_html_file("upload.html")
 
+@router.get("/onboarding", response_class=HTMLResponse, include_in_schema=False)
+async def onboarding_page():
+    """Onboarding page"""
+    return serve_html_file("onboarding.html", fallback="dashboard.html")
+
+@router.get("/standards", response_class=HTMLResponse, include_in_schema=False)
+async def standards_page():
+    """Standards page"""
+    return serve_html_file("standards.html")
+
+@router.get("/reports", response_class=HTMLResponse, include_in_schema=False)
+async def reports_page():
+    """Reports page"""
+    return serve_html_file("reports.html")
+
 @router.get("/services", response_class=HTMLResponse, include_in_schema=False) 
 async def services_page():
     """Services page"""

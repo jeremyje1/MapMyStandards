@@ -5,107 +5,165 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reports - A³E | MapMyStandards.ai</title>
     
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Tailwind (built) -->
-    <link rel="stylesheet" href="/web/static/css/tailwind.css">
-    <script src="https://cdn.tailwindcss.com"></script>
-    
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f3f4f6;
+            color: #333;
+        }
+        
+        /* Header - matching upload.html styling */
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-decoration: none;
+            color: white;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+        
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            opacity: 0.9;
+            cursor: pointer;
+        }
+        
+        .nav-links a:hover {
+            opacity: 1;
+        }
+        
+        .nav-links a.active {
+            font-weight: 600;
+            opacity: 1;
+        }
+        
+        /* Main Content */
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 20px;
+        }
+        
+        .placeholder-content {
+            background: white;
+            border-radius: 12px;
+            padding: 4rem 2rem;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        .placeholder-icon {
+            font-size: 4rem;
+            margin-bottom: 2rem;
+        }
+        
+        .placeholder-title {
+            font-size: 2rem;
+            color: #1e3c72;
+            margin-bottom: 1rem;
+        }
+        
+        .placeholder-text {
+            color: #6b7280;
+            font-size: 1.125rem;
+            line-height: 1.6;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+        
+        .placeholder-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background: #d1d5db;
+        }
     </style>
 </head>
-<body class="bg-gray-50">
+<body>
     <!-- Header -->
-    <header class="bg-white shadow-sm border-b">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center py-4">
-                <div class="flex items-center space-x-8">
-                    <a href="/" class="flex items-center">
-                        <img src="https://mapmystandards.ai/wp-content/uploads/2025/07/Original-Logo.png" alt="MapMyStandards.ai" class="h-10 w-auto">
-                    </a>
-                    <nav class="hidden md:flex space-x-6">
-                        <a href="/dashboard" class="text-gray-600 hover:text-gray-900 font-medium">Dashboard</a>
-                        <a href="/upload" class="text-gray-600 hover:text-gray-900 font-medium">Upload Evidence</a>
-                        <a href="/standards" class="text-gray-600 hover:text-gray-900 font-medium">Standards</a>
-                        <a href="/reports" class="text-blue-600 font-medium border-b-2 border-blue-600">Reports</a>
-                    </nav>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <span class="text-sm text-gray-600">Trial User</span>
-                    <button onclick="logout()" class="text-sm text-red-600 hover:text-red-700 font-medium">Logout</button>
-                </div>
-            </div>
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="logo">MapMyStandards A³E</a>
+            <nav class="nav-links">
+                <a href="/dashboard">Dashboard</a>
+                <a href="/standards">Standards</a>
+                <a href="/reports" class="active">Reports</a>
+                <a href="#" onclick="logout()">Logout</a>
+            </nav>
         </div>
     </header>
 
     <!-- Main Content -->
-    <main class="py-12">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center">
-                <div class="mx-auto flex items-center justify-center h-24 w-24 rounded-full bg-purple-100 mb-8">
-                    <svg class="h-12 w-12 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                </div>
-                <h1 class="text-3xl font-bold text-gray-900 mb-4">Reports & Analytics</h1>
-                <p class="text-xl text-gray-600 mb-8">Comprehensive reporting and analytics features are coming soon.</p>
-                
-                <div class="bg-white rounded-lg shadow-lg p-8 max-w-2xl mx-auto">
-                    <h2 class="text-xl font-semibold mb-4">Upcoming features:</h2>
-                    <ul class="text-left space-y-3 text-gray-700">
-                        <li class="flex items-start">
-                            <svg class="h-6 w-6 text-green-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                            </svg>
-                            <span>Automated compliance reports</span>
-                        </li>
-                        <li class="flex items-start">
-                            <svg class="h-6 w-6 text-green-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                            </svg>
-                            <span>Real-time analytics dashboards</span>
-                        </li>
-                        <li class="flex items-start">
-                            <svg class="h-6 w-6 text-green-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                            </svg>
-                            <span>Custom report builder</span>
-                        </li>
-                        <li class="flex items-start">
-                            <svg class="h-6 w-6 text-green-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                            </svg>
-                            <span>Export to PDF, Excel, and more</span>
-                        </li>
-                        <li class="flex items-start">
-                            <svg class="h-6 w-6 text-green-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                            </svg>
-                            <span>Scheduled report delivery</span>
-                        </li>
-                    </ul>
-                    
-                    <div class="mt-8 pt-8 border-t">
-                        <p class="text-gray-600 mb-4">Start by uploading your evidence:</p>
-                        <a href="/upload" class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">
-                            Upload Evidence
-                            <svg class="ml-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
-                            </svg>
-                        </a>
-                    </div>
-                </div>
+    <div class="container">
+        <div class="placeholder-content">
+            <div class="placeholder-icon">📈</div>
+            <h1 class="placeholder-title">Reports & Analytics Coming Soon</h1>
+            <p class="placeholder-text">
+                We're developing advanced reporting capabilities that will generate comprehensive compliance reports, 
+                gap analyses, and accreditation-ready narratives. Export your data in multiple formats and track 
+                your progress over time.
+            </p>
+            <div class="placeholder-actions">
+                <a href="/upload" class="btn btn-primary">Upload Evidence</a>
+                <a href="/dashboard" class="btn btn-secondary">Back to Dashboard</a>
             </div>
         </div>
-    </main>
+    </div>
 
     <script>
         function logout() {
-            localStorage.removeItem('a3e_api_key');
-            localStorage.removeItem('a3e_user_email');
+            localStorage.clear();
             window.location.href = '/login';
         }
     </script>
