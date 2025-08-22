@@ -1045,6 +1045,11 @@ async def favicon():  # noqa: D401
 # Mount /web for static assets (js, images, etc.)
 if WEB_DIR.exists():
     app.mount("/web", StaticFiles(directory=str(WEB_DIR)), name="web")
+    # Add backup mount for simpler CSS paths (/static/css/tailwind.css)
+    static_dir = WEB_DIR / "static"
+    if static_dir.exists():
+        app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+        logger.info("Static assets available at both /web/static and /static")
     # Also mount /assets if repository has compiled assets (Tailwind build output)
     assets_dir_candidates = [
         Path(project_root) / "assets",

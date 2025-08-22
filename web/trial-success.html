@@ -11,32 +11,27 @@
     
         <!-- Tailwind (built) -->
         <link rel="stylesheet" href="/web/static/css/tailwind.css?v=1" id="tailwindStylesheet">
+        <!-- Backup static path -->
+        <link rel="stylesheet" href="/static/css/tailwind.css?v=1" id="tailwindStylesheetBackup">
             <script>
-                // Tailwind load check (dev only)
-                if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
-                    window.addEventListener('load', () => {
-                        const el = document.createElement('div');
-                            el.className = 'hidden';
-                            document.body.appendChild(el);
-                            const ok = window.getComputedStyle(el).display === 'none';
-                            document.body.removeChild(el);
-                            if(!ok){
-                                console.warn('Tailwind CSS likely failed to load (dev).');
-                            }
-                    });
-                }
+                // Tailwind load check with user-friendly fallback
+                window.addEventListener('load', () => {
+                    const el = document.createElement('div');
+                    el.className = 'hidden';
+                    document.body.appendChild(el);
+                    const ok = window.getComputedStyle(el).display === 'none';
+                    document.body.removeChild(el);
+                    if(!ok){
+                        // Load CDN silently without user-visible warnings
+                        const s=document.createElement('script'); 
+                        s.src='https://cdn.tailwindcss.com'; 
+                        document.head.appendChild(s);
+                    }
+                });
             </script>
     
     <style>
         body { font-family: 'Inter', sans-serif; }
-        .gradient-bg { 
-            background: 
-                linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%),
-                url('https://mapmystandards.ai/wp-content/uploads/2025/08/ChatGPT-Image-Aug-1-2025-09_45_55-AM.png');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-        }
         
         .celebration-animation {
             animation: bounce 2s ease-in-out infinite;
@@ -59,53 +54,53 @@
     <!-- Header -->
     <header class="bg-white shadow-sm border-b">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center py-6">
+            <div class="flex justify-between items-center py-4">
                 <div class="flex items-center">
-                    <img src="https://mapmystandards.ai/wp-content/uploads/2025/07/Original-Logo.png" alt="MapMyStandards.ai" class="h-12 w-auto">
+                    <img src="https://mapmystandards.ai/wp-content/uploads/2025/07/Original-Logo.png" alt="MapMyStandards.ai" class="h-8 w-auto">
+                    <span class="ml-3 text-lg font-semibold text-gray-900">A³E Platform</span>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <span class="text-green-600 font-medium">✅ Trial Active</span>
+                    <span class="text-green-600 font-medium text-sm">✅ Trial Active</span>
                 </div>
             </div>
         </div>
     </header>
 
     <!-- Success Section -->
-    <section class="gradient-bg text-white py-20 relative overflow-hidden">
-        <div class="pointer-events-none absolute inset-0 bg-gradient-to-br from-blue-600/20 to-purple-600/20 mix-blend-overlay"></div>
+    <section class="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-12 relative">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <div class="celebration-animation text-6xl mb-6">🎉</div>
-            <h1 class="text-4xl font-bold mb-4">Welcome to A³E!</h1>
-            <p class="text-xl mb-8">Your 7-day free trial is now active. You have full access to transform your accreditation process.</p>
+            <div class="celebration-animation text-4xl mb-4">🎉</div>
+            <h1 class="text-3xl font-bold mb-3">Welcome to A³E!</h1>
+            <p class="text-lg mb-6">Your 7-day free trial is now active. You have full access to transform your accreditation process.</p>
             
-            <div class="bg-white/10 backdrop-blur-sm p-6 rounded-2xl mb-8 border border-white/20 shadow-lg">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+            <div class="bg-white/10 backdrop-blur-sm p-4 rounded-xl mb-6 border border-white/20 shadow-lg max-w-2xl mx-auto">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
                     <div>
-                        <div class="text-3xl font-bold text-yellow-300" id="trial-days">--</div>
+                        <div class="text-2xl font-bold text-yellow-300" id="trial-days">--</div>
                         <div class="text-sm">Days Remaining</div>
                     </div>
                     <div>
-                        <div class="text-3xl font-bold text-yellow-300">∞</div>
+                        <div class="text-2xl font-bold text-yellow-300">∞</div>
                         <div class="text-sm">Document Analyses</div>
                     </div>
                     <div>
-                        <div class="text-3xl font-bold text-yellow-300">24/7</div>
+                        <div class="text-2xl font-bold text-yellow-300">24/7</div>
                         <div class="text-sm">System Access</div>
                     </div>
                 </div>
             </div>
 
-            <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                <a href="/onboarding" class="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors" id="onboardingLink">
+            <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                <a href="/onboarding" class="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors" id="onboardingLink">
                     🚀 Begin Guided Onboarding
                 </a>
-                <a href="/dashboard" class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors" id="dashboardLink">
+                <a href="/dashboard" class="border-2 border-white text-white px-6 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors" id="dashboardLink">
                     ⏭️ Skip & Go To Dashboard
                 </a>
             </div>
             
             <!-- Auto-redirect notice -->
-            <div class="mt-6 text-center">
+            <div class="mt-4 text-center">
                 <p class="text-blue-100 text-sm">
                     You'll be automatically redirected to onboarding in <span id="countdown">12</span> seconds...
                 </p>
@@ -129,7 +124,7 @@
                     </div>
                     <h3 class="text-xl font-semibold mb-3">Access Your Dashboard</h3>
                     <p class="text-gray-600 mb-4">Log into your A³E dashboard and explore the interface. Your account is ready to use.</p>
-                    <a href="dashboard.html" class="text-blue-600 hover:text-blue-800 font-medium">
+                    <a href="/dashboard" class="text-blue-600 hover:text-blue-800 font-medium">
                         Go to Dashboard →
                     </a>
                 </div>
@@ -264,7 +259,7 @@
                     </div>
                     <h3 class="text-lg font-semibold text-gray-900 mb-2">Schedule a Demo</h3>
                     <p class="text-gray-600 mb-4">Book a personalized demo with our accreditation experts</p>
-                    <a href="contact.html" class="text-green-600 hover:text-green-800 font-medium">
+                    <a href="/contact" class="text-green-600 hover:text-green-800 font-medium">
                         Schedule Demo Call
                     </a>
                 </div>
@@ -295,9 +290,9 @@
                 </div>
                 <p class="text-gray-400 mb-6">Transforming accreditation with AI-powered analytics and automation</p>
                 <div class="flex justify-center space-x-6">
-                    <a href="privacy.html" class="text-gray-400 hover:text-white">Privacy</a>
-                    <a href="privacy.html" class="text-gray-400 hover:text-white">Terms</a>
-                    <a href="contact.html" class="text-gray-400 hover:text-white">Contact</a>
+                    <a href="/privacy" class="text-gray-400 hover:text-white">Privacy</a>
+                    <a href="/privacy" class="text-gray-400 hover:text-white">Terms</a>
+                    <a href="/contact" class="text-gray-400 hover:text-white">Contact</a>
                 </div>
             </div>
         </div>
