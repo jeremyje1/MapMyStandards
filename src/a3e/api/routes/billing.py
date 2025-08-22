@@ -86,6 +86,8 @@ async def trial_signup(request: TrialSignupRequest, payment_service: PaymentServ
     """
     logger.info(f"Trial signup request received for email: {request.email}, plan: {request.plan}")
     logger.info(f"Full request data: institution_name={request.institution_name}, role={request.role}, first_name={request.first_name}, last_name={request.last_name}")
+    import time
+    started = time.time()
     try:
         # Log Stripe key presence + short payment method id for diagnostics
         try:
@@ -99,10 +101,10 @@ async def trial_signup(request: TrialSignupRequest, payment_service: PaymentServ
             )
         except Exception:
             logger.info("[trial] Unable to introspect Stripe module for diagnostics")
-        # Create trial subscription with Stripe
+        # Create trial subscription with Stripe (timed)
+        import asyncio
+        stage = "create_trial_subscription"
         try:
-            # Guard against long blocking by imposing a timeout (15s)
-            import asyncio
             result = await asyncio.wait_for(
                 payment_service.create_trial_subscription(
                     email=request.email,
@@ -110,13 +112,24 @@ async def trial_signup(request: TrialSignupRequest, payment_service: PaymentServ
                     payment_method_id=request.payment_method_id,
                     coupon_code=request.coupon_code
                 ),
-                timeout=15
+                timeout=12
             )
         except asyncio.TimeoutError:
-            logger.error("Trial signup timed out (Stripe or DB slow)")
-            raise HTTPException(status_code=504, detail="Signup timed out, please retry in a moment")
-        
+            elapsed = int((time.time() - started) * 1000)
+            logger.error("Trial signup timed out after %sms (stage=%s)", elapsed, stage)
+            if hasattr(payment_service, 'last_trial_failure'):
+                setattr(payment_service, 'last_trial_failure', {
+                    'stage': stage,
+                    'elapsed_ms': elapsed,
+                    'email': request.email,
+                    'plan': request.plan,
+                    'timeout_sec': 12
+                })
+            raise HTTPException(status_code=504, detail={"error": "Signup timed out", "stage": stage, "elapsed_ms": elapsed})
+
         if result['success']:
+            elapsed_total = int((time.time() - started) * 1000)
+            result.setdefault('timing_ms', elapsed_total)
             return {
                 "success": True,
                 "message": "7-day free trial started successfully",
@@ -147,18 +160,19 @@ async def trial_signup(request: TrialSignupRequest, payment_service: PaymentServ
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Trial signup error: {e}")
+        elapsed_total = int((time.time() - started) * 1000)
+        logger.error(f"Trial signup error after {elapsed_total}ms: {e}")
         logger.error(f"Error type: {type(e).__name__}")
         logger.error(f"Error details: {str(e)}")
-        
+
         # Check if this is a Stripe configuration issue
         if "API key" in str(e):
             raise HTTPException(
-                status_code=503, 
+                status_code=503,
                 detail="Payment system is not properly configured. Please contact support."
             )
-        
-        raise HTTPException(status_code=500, detail=f"Failed to create trial subscription: {str(e)}")
+
+        raise HTTPException(status_code=500, detail={"error": f"Failed to create trial subscription: {str(e)}", "elapsed_ms": elapsed_total})
 
 @router.get("/trial/ping", include_in_schema=False)
 async def trial_ping():
