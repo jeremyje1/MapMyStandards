@@ -8,8 +8,8 @@
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Tailwind (built) -->
-    <link rel="stylesheet" href="/assets/styles.css">
+    <!-- Tailwind compiled stylesheet -->
+    <link id="tailwindStylesheet" rel="stylesheet" href="/web/static/css/tailwind.css">
     
     <style>
         body { font-family: 'Inter', sans-serif; }
@@ -22,9 +22,22 @@
                 url('https://mapmystandards.ai/wp-content/uploads/2025/07/Original-Logo.png');
             background-size: 120px auto, auto;
             background-repeat: repeat, no-repeat;
-            background-position: center, right 20px center;
         }
     </style>
+    <script>
+        // Tailwind fallback if compiled file missing
+        window.addEventListener('load', () => {
+            const link = document.getElementById('tailwindStylesheet');
+            let ok = false; try { if (link && link.sheet && link.sheet.cssRules && link.sheet.cssRules.length > 10) ok = true; } catch(e) {}
+            if (!ok) {
+                const s = document.createElement('script'); s.src='https://cdn.tailwindcss.com'; document.head.appendChild(s);
+                const warn = document.createElement('div');
+                warn.textContent = '⚠️ Core stylesheet missing; using CDN fallback.';
+                warn.style.cssText='background:#fef3c7;color:#92400e;padding:6px;text-align:center;font-size:12px;font-weight:500';
+                document.body.prepend(warn);
+            }
+        });
+    </script>
 </head>
 <body class="bg-gray-50">
     <!-- Header -->
@@ -112,14 +125,13 @@
                     </button>
                 </form>
 
-                <!-- Error/Success Messages -->
                 <div id="message" class="mt-4" style="display: none;"></div>
 
                 <!-- Divider -->
                 <div class="mt-8 pt-6 border-t border-gray-200">
                     <div class="text-center text-sm text-gray-600">
                         Don't have an account? 
-                        <a href="/landing" class="text-blue-600 hover:text-blue-700 font-medium">
+                        <a href="/trial-signup" class="text-blue-600 hover:text-blue-700 font-medium">
                             Start free trial
                         </a>
                     </div>

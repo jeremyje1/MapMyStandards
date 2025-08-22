@@ -1071,8 +1071,12 @@ if WEB_DIR.exists():
 
     @app.get("/dashboard", response_class=HTMLResponse, include_in_schema=False)
     async def dashboard_page():  # noqa: D401
-        """Temporary: redirect dashboard to upload until dashboard UI complete."""
-        return HTMLResponse("<html><head><meta http-equiv='refresh' content='0; url=/upload'></head><body>Redirecting to dashboard...</body></html>")
+        """Serve the primary dashboard HTML (no longer redirect)."""
+        dashboard_file = WEB_DIR / "dashboard.html"
+        if dashboard_file.exists():
+            return FileResponse(str(dashboard_file))
+        # Fallback (keep legacy redirect behaviour if file missing)
+        return HTMLResponse("<html><head><meta http-equiv='refresh' content='0; url=/upload'></head><body>Redirecting to upload (dashboard missing)...</body></html>")
 
     @app.get("/homepage", response_class=FileResponse, include_in_schema=False)
     async def homepage():  # noqa: D401
