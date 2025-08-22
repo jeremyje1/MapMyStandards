@@ -15,6 +15,44 @@ router = APIRouter(tags=["pages"])
 # Get web directory path
 WEB_DIR = Path(__file__).resolve().parent.parent.parent.parent / "web"
 
+# Local frontend health endpoint (duplicate logic to ensure it isn't shadowed by the catch-all).
+# This ensures deployments depending on /health/frontend don't fail if router ordering or precedence changes.
+@router.get("/health/frontend", include_in_schema=False)
+async def frontend_health_inline():
+    css_path = WEB_DIR / "static" / "css" / "tailwind.css"
+    logo_candidates = [
+        WEB_DIR / "static" / "img" / "logo.png",
+        WEB_DIR / "static" / "img" / "logo.svg",
+        WEB_DIR / "static" / "img" / "logo-dark.png",
+    ]
+    core_js = WEB_DIR / "js" / "a3e-sdk.js"
+
+    def assess(path: Path, name: str, min_bytes: int) -> dict:
+        exists = path.exists()
+        size = path.stat().st_size if exists else None
+        status = "healthy" if exists and size and size >= min_bytes else ("degraded" if exists else "missing")
+        return {
+            "name": name,
+            "path": str(path),
+            "exists": exists,
+            "size_bytes": size,
+            "min_threshold": min_bytes,
+            "status": status,
+        }
+
+    assets = [assess(css_path, "tailwind.css", 5000)]
+    for lc in logo_candidates:
+        if lc.exists():
+            assets.append(assess(lc, lc.name, 500))
+            break
+    assets.append(assess(core_js, "a3e-sdk.js", 200))
+    overall = "healthy"
+    if any(a["status"] == "missing" for a in assets):
+        overall = "missing"
+    elif any(a["status"] == "degraded" for a in assets):
+        overall = "degraded"
+    return {"status": overall, "assets": assets}
+
 def serve_html_file(filename: str, fallback: str = None):
     """Serve an HTML file from the web directory"""
     file_path = WEB_DIR / filename

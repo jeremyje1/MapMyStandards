@@ -28,6 +28,7 @@ async def get_db():
 class TrialSignupRequest(BaseModel):
     name: str
     institution_name: str
+    institution_type: Optional[str] = None
     email: EmailStr
     password: str
     role: str
@@ -69,6 +70,14 @@ async def send_welcome_email(email: str, name: str, api_key: str):
     except Exception as e:
         print(f"Failed to send welcome email: {e}")
 
+async def notify_admin_new_signup(email: str, name: str, institution: str | None):
+    """Send admin notification about new signup."""
+    try:
+        from ...services.email_service import email_service
+        email_service.send_admin_new_signup_notification(email, name, institution, trial=True)
+    except Exception as e:
+        print(f"Failed to send admin signup notification: {e}")
+
 @router.post("/signup", response_model=TrialSignupResponse)
 async def signup_trial(
     request: TrialSignupRequest, 
@@ -85,19 +94,19 @@ async def signup_trial(
         stmt = select(User).where(User.email == request.email)
         result = await db.execute(stmt)
         existing_user = result.scalar_one_or_none()
-        
+
         if existing_user:
             raise HTTPException(
                 status_code=400,
                 detail="An account with this email already exists"
             )
-        
+
         # Create user account
         api_key = generate_api_key()
         password_hash = hash_password(request.password)
-        
-        # Calculate trial expiration (14 days)
-        trial_expires = datetime.utcnow() + timedelta(days=14)
+
+        # Calculate trial expiration (7 days)
+        trial_expires = datetime.utcnow() + timedelta(days=7)
         
         # Create new user
         new_user = User(
@@ -130,23 +139,19 @@ async def signup_trial(
         db.add(new_user)
         await db.commit()
         await db.refresh(new_user)
-        
-        # Send welcome email in background
-        background_tasks.add_task(
-            send_welcome_email,
-            request.email,
-            request.name,
-            api_key
-        )
-        
+
+        # Send welcome + admin notification emails in background
+        background_tasks.add_task(send_welcome_email, request.email, request.name, api_key)
+        background_tasks.add_task(notify_admin_new_signup, request.email, request.name, request.institution_name)
+
         logger.info(f"Trial account created for {request.email}")
-        
+
         return TrialSignupResponse(
             success=True,
             message="Trial account created successfully",
-            user_id=str(new_user.id),
+            trial_id=str(new_user.id),
             api_key=api_key,
-            trial_ends_at=trial_expires
+            expires_at=trial_expires.isoformat()
         )
         
     except HTTPException:
@@ -193,7 +198,8 @@ async def extend_trial(email: EmailStr, days: int = 7, db: AsyncSession = Depend
     
     # Extend trial
     if not user.trial_ends_at:
-        user.trial_ends_at = datetime.utcnow() + timedelta(days=14)
+        # Initialize original trial to 7 days if missing
+        user.trial_ends_at = datetime.utcnow() + timedelta(days=7)
     
     user.trial_ends_at = user.trial_ends_at + timedelta(days=days)
     

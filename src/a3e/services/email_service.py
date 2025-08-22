@@ -11,6 +11,7 @@ from __future__ import annotations
 import os
 import logging
 import smtplib
+from datetime import datetime
 from typing import List, Optional
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -104,7 +105,6 @@ class EmailService:
             # Create the email
             mail = Mail(
                 from_email=From(from_email or self.default_from, self.default_from_name),
-                to_emails=[To(addr) for addr in to_emails],
                 subject=Subject(subject)
             )
             
@@ -279,6 +279,35 @@ Sent from MapMyStandards.ai contact form
         </div>
         """
         return self.send_email([user_email], subject, body, html_body=html_body)
+
+    def send_admin_new_signup_notification(self, user_email: str, user_name: str, institution: str | None = None, trial: bool = True) -> bool:
+        """Notify internal admin address of a new signup."""
+        admin_recipient = os.getenv("ADMIN_NOTIFICATION_EMAIL", "info@northpathstrategies.org")
+        subject = f"New {'Trial ' if trial else ''}Signup: {user_name} <{user_email}>"
+        institution_line = f"Institution: {institution}" if institution else "Institution: (not provided)"
+        body = (
+            f"New user signup on MapMyStandards.ai\n\n"
+            f"Name: {user_name}\n"
+            f"Email: {user_email}\n"
+            f"{institution_line}\n"
+            f"Trial: {'Yes' if trial else 'No'}\n"
+            f"Timestamp (UTC): {datetime.utcnow().isoformat()}\n"
+        )
+        html_body = f"""
+        <div style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto;'>
+            <h2 style='color:#1e3c72;margin:0 0 10px;'>New {'Trial ' if trial else ''}Signup</h2>
+            <table style='width:100%;border-collapse:collapse;'>
+                <tr><td style='padding:4px 0;font-weight:600;'>Name:</td><td>{user_name}</td></tr>
+                <tr><td style='padding:4px 0;font-weight:600;'>Email:</td><td><a href='mailto:{user_email}'>{user_email}</a></td></tr>
+                <tr><td style='padding:4px 0;font-weight:600;'>Institution:</td><td>{institution or '(not provided)'}</td></tr>
+                <tr><td style='padding:4px 0;font-weight:600;'>Trial:</td><td>{'Yes' if trial else 'No'}</td></tr>
+                <tr><td style='padding:4px 0;font-weight:600;'>Timestamp (UTC):</td><td>{datetime.utcnow().isoformat()}</td></tr>
+            </table>
+            <hr style='border:1px solid #eee;margin:16px 0;'>
+            <p style='font-size:12px;color:#888;'>Automated notification • MapMyStandards.ai</p>
+        </div>
+        """
+        return self.send_email([admin_recipient], subject, body, html_body=html_body)
 
     def send_password_setup_email(self, user_email: str, user_name: str, setup_link: str, expires_hours: int = 48) -> bool:
         """Send initial password setup (or reset) email with secure link."""

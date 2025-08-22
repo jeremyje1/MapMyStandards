@@ -82,13 +82,20 @@ mkdir -p "$LOG_DIR"
 echo "▶️  Starting uvicorn on :$PORT"
 nohup uvicorn src.a3e.main:app --host 0.0.0.0 --port "$PORT" > "$LOG_DIR/main_app.log" 2>&1 &
 PID=$!
-sleep 3
+sleep 2
 
-if curl -fsS "http://localhost:$PORT/health/frontend" >/dev/null; then
-  echo "✅ App healthy (frontend health) PID=$PID"
-else
-  echo "⚠️ Health check failed; see $LOG_DIR/main_app.log" >&2
-  exit 1
-fi
+echo "🔍 Waiting for frontend health endpoint..."
+ATTEMPTS=0
+MAX_ATTEMPTS=12
+until curl -fsS "http://localhost:$PORT/health/frontend" >/dev/null; do
+  ATTEMPTS=$((ATTEMPTS+1))
+  if [ $ATTEMPTS -ge $MAX_ATTEMPTS ]; then
+    echo "❌ Health check failed after $ATTEMPTS attempts; see $LOG_DIR/main_app.log" >&2
+    exit 1
+  fi
+  echo "⏳ Attempt $ATTEMPTS/$MAX_ATTEMPTS: frontend health not ready yet" >&2
+  sleep 1
+done
+echo "✅ App healthy (frontend health) PID=$PID after $ATTEMPTS attempts"
 
 echo "Deployment complete: http://localhost:$PORT"

@@ -458,6 +458,13 @@ app.include_router(api_router, prefix=settings.api_prefix)
 
 # Import and include customer pages router
 try:
+    from .routes import upload_api as lightweight_upload_api
+    app.include_router(lightweight_upload_api.router)
+    logger.info("✅ Lightweight upload_api router loaded (placeholder)")
+except Exception as e:
+    logger.warning(f"⚠️ Could not load lightweight upload_api router: {e}")
+
+try:
     from .routes.customer_pages import router as customer_pages_router
     app.include_router(customer_pages_router)
     logger.info("✅ Customer pages router loaded")
