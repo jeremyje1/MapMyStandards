@@ -33,8 +33,11 @@ async def login_page():
 
 @router.get("/dashboard", response_class=HTMLResponse, include_in_schema=False)
 async def dashboard_page():
-    """Dashboard page"""
-    return serve_html_file("dashboard.html")
+    """Dashboard page placeholder redirect until unified dashboard available."""
+    try:
+        return serve_html_file("dashboard.html")
+    except HTTPException:
+        return RedirectResponse(url="/upload")
 
 @router.get("/trial-signup", response_class=HTMLResponse, include_in_schema=False)
 async def trial_signup_page():

@@ -632,15 +632,11 @@
                 });
                 
                 if (!response.ok) {
-                    if (response.status === 413) {
-                        throw new Error('File too large. Maximum file size is 100MB.');
-                    } else if (response.status === 415) {
-                        throw new Error('Unsupported file type. Only PDF, Word, Excel, and PowerPoint files are supported.');
-                    } else if (response.status === 401) {
-                        throw new Error('Session expired. Please log in again.');
-                    } else if (response.status === 500) {
-                        throw new Error('Server error. Please try again later or contact support.');
-                    }
+                    if (response.status === 413) throw new Error('File too large. Maximum file size is 100MB.');
+                    if (response.status === 415) throw new Error('Unsupported file type. Only PDF, Word, Excel, and PowerPoint files are supported.');
+                    if (response.status === 401) throw new Error('Session expired. Please log in again.');
+                    if (response.status === 500) throw new Error('Server error. Please try again later or contact support.');
+                    throw new Error(`Upload failed (status ${response.status}). Please try again.`);
                 }
                 
                 const result = await response.json();
@@ -648,8 +644,7 @@
                 if (response.ok && result.success) {
                     updateProgress(100, 'Upload complete!');
                     showMessage('Upload successful! Analysis has started.', 'success');
-                    resetUpload();
-                    loadRecentUploads();
+                    startPollingRecent();
                     
                     // Redirect to analysis view after delay
                     setTimeout(() => {
@@ -673,9 +668,7 @@
             } finally {
                 uploadBtn.disabled = false;
                 uploadBtn.textContent = 'Start Analysis';
-                setTimeout(() => {
-                    document.getElementById('uploadProgress').style.display = 'none';
-                }, 2000);
+                setTimeout(()=>{document.getElementById('uploadProgress').style.display='none';},2500);
             }
         });
         
@@ -688,7 +681,7 @@
         }
         
         // Load recent uploads
-        async function loadRecentUploads() {
+    async function loadRecentUploads() {
             try {
                 const response = await fetch('/api/v1/upload/list?limit=5', {
                     headers: {
@@ -706,7 +699,7 @@
             }
         }
         
-        function displayRecentUploads(uploads) {
+    function displayRecentUploads(uploads) {
             const container = document.getElementById('recentUploads');
             
             if (uploads.length === 0) {
@@ -754,7 +747,8 @@
             }, 5000);
         }
         
-        function logout() {
+    let pollingInterval=null; function startPollingRecent(){ if(pollingInterval) return; pollingInterval=setInterval(()=>{loadRecentUploads();},3000); setTimeout(()=>{clearInterval(pollingInterval); pollingInterval=null;},30000);} 
+    function logout() {
             localStorage.clear();
             window.location.href = '/login';
         }

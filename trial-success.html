@@ -10,7 +10,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Tailwind (built) -->
-    <link rel="stylesheet" href="/assets/styles.css">
+    <link id="tailwindStylesheet" rel="stylesheet" href="/web/static/css/tailwind.css">
+    <script>window.addEventListener('load',()=>{const l=document.getElementById('tailwindStylesheet');if(!l)return;fetch(l.href,{method:'HEAD'}).then(r=>{if(!r.ok){const s=document.createElement('script');s.src='https://cdn.tailwindcss.com';document.head.appendChild(s);}}).catch(()=>{const s=document.createElement('script');s.src='https://cdn.tailwindcss.com';document.head.appendChild(s);});});</script>
     
     <style>
         body { font-family: 'Inter', sans-serif; }
@@ -80,7 +81,7 @@
             </div>
 
             <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                <a href="dashboard.html" class="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors" id="dashboardLink">
+                <a href="/upload" class="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors" id="dashboardLink">
                     🚀 Launch A³E Dashboard
                 </a>
                 <a href="#getting-started" class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors">
@@ -112,7 +113,7 @@
                     </div>
                     <h3 class="text-xl font-semibold mb-3">Access Your Dashboard</h3>
                     <p class="text-gray-600 mb-4">Log into your A³E dashboard and explore the interface. Your account is ready to use.</p>
-                    <a href="dashboard.html" class="text-blue-600 hover:text-blue-800 font-medium">
+                    <a href="/upload" class="text-blue-600 hover:text-blue-800 font-medium">
                         Go to Dashboard →
                     </a>
                 </div>
@@ -322,10 +323,7 @@
                     localStorage.setItem('a3e_trial_id', trialId);
                     
                     // Update dashboard link to include trial ID
-                    const dashboardLinks = document.querySelectorAll('a[href="dashboard.html"]');
-                    dashboardLinks.forEach(link => {
-                        link.href = `dashboard.html?trial_id=${trialId}`;
-                    });
+                    const mainLink=document.getElementById('dashboardLink'); if(mainLink) mainLink.href=`/upload?trial_id=${trialId}`;
                 })
                 .catch(error => {
                     console.log('Could not fetch trial details:', error);
@@ -359,7 +357,7 @@
             
             if (countdown <= 0) {
                 clearInterval(timer);
-                window.location.href = 'dashboard.html';
+                window.location.href = '/upload';
             }
         }, 1000);
         
