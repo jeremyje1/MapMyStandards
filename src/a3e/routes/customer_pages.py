@@ -109,17 +109,6 @@ async def manual_page():
     """User manual page"""
     return serve_html_file("manual.html")
 
-@router.get("/health/frontend", response_class=JSONResponse, include_in_schema=False)
-async def frontend_health_inline():  # lightweight duplicate for visibility
-    """Shallow frontend asset probe (duplicate of main for environments where main route not mounted first)."""
-    base = Path(__file__).resolve().parent.parent.parent / "web"
-    css = base / "static" / "css" / "tailwind.css"
-    exists = css.exists()
-    size = css.stat().st_size if exists else 0
-    return {
-        "status": "healthy" if exists and size >= 5000 else ("degraded" if exists else "missing"),
-        "tailwind": {"exists": exists, "size": size},
-    }
 
 # Catch-all for missing pages
 @router.get("/{path:path}", response_class=HTMLResponse, include_in_schema=False)

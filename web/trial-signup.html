@@ -261,6 +261,7 @@
                                         <div id="card-element">
                                             <!-- Stripe Elements will create form elements here -->
                                         </div>
+                                        <p id="zip-helper" class="mt-2 text-xs text-gray-500">If the card widget requests ZIP again, enter the same billing ZIP — this second prompt is normal for address verification.</p>
                                         <div id="card-errors" role="alert" class="text-red-600 text-sm mt-2"></div>
                                     </div>
 
@@ -441,12 +442,16 @@
 
                     cardElement.mount('#card-element');
                     
-                    cardElement.on('change', ({error}) => {
+                    cardElement.on('change', ({error, complete}) => {
                         const displayError = document.getElementById('card-errors');
                         if (error) {
                             displayError.textContent = error.message;
                         } else {
                             displayError.textContent = '';
+                        }
+                        if (complete) {
+                            const helper = document.getElementById('zip-helper');
+                            if (helper) helper.textContent = 'Card details complete. ZIP verified if no errors.';
                         }
                     });
                 }
