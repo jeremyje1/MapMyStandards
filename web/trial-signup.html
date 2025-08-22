@@ -478,6 +478,11 @@
             }
             
             currentStep = step;
+            // Auto-scroll newly revealed step into view for better UX
+            const stepEl = document.getElementById(`step${step}`);
+            if (stepEl) {
+                stepEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
         }
 
         function nextStep() {
