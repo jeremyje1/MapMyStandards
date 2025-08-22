@@ -1085,6 +1085,21 @@ if WEB_DIR.exists():
         if target.exists():
             return FileResponse(str(target))
         return HTMLResponse("<h1>Onboarding page not found</h1>", status_code=404)
+    
+    @app.get("/standards", response_class=FileResponse, include_in_schema=False)
+    async def standards_page():  # noqa: D401
+        """Serve standards page."""
+        return FileResponse(str(WEB_DIR / "standards.html"))
+    
+    @app.get("/reports", response_class=FileResponse, include_in_schema=False)
+    async def reports_page():  # noqa: D401
+        """Serve reports page."""
+        return FileResponse(str(WEB_DIR / "reports.html"))
+    
+    @app.get("/upload", response_class=FileResponse, include_in_schema=False)
+    async def upload_page():  # noqa: D401
+        """Serve upload page."""
+        return FileResponse(str(WEB_DIR / "upload.html"))
         
 else:
     logger.warning(f"Web directory not found at: {WEB_DIR}")

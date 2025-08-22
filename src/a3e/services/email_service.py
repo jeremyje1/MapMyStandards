@@ -1,8 +1,12 @@
 """Email service for MapMyStandards.ai.
 
-All imports consolidated at top to satisfy lint (E402). Supports SendGrid primary
-delivery with SMTP fallback. Functions are synchronous for simplicity.
+Provides unified email sending via SendGrid (preferred) with SMTP fallback.
+Includes helper methods for common transactional emails. Keeps implementation
+simple (synchronous) since volume is low and sending is usually off the main
+request path via background task.
 """
+
+from __future__ import annotations
 
 import os
 import logging
@@ -12,22 +16,25 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email import encoders
-import email  # noqa: F401  (legacy module reference retained)
 
 # Optional SendGrid
-try:
+try:  # pragma: no cover - optional dependency
     from sendgrid import SendGridAPIClient  # type: ignore
     from sendgrid.helpers.mail import (
         Mail, From, To, Subject, Content,
         Attachment, FileContent, FileName, FileType, Disposition
     )
-    import base64
+    import base64  # type: ignore
     SENDGRID_AVAILABLE = True
-except ImportError:
+except Exception:  # pragma: no cover - absence is acceptable
     SENDGRID_AVAILABLE = False
     base64 = None  # type: ignore
-    logging.getLogger(__name__).warning("SendGrid not available - email functionality limited")
+    logging.getLogger(__name__).warning("SendGrid not available - falling back to SMTP if configured")
+
+from ..core.url_helpers import build_unsubscribe_link
+
 logger = logging.getLogger(__name__)
+
 
 class EmailService:
     def __init__(self):
@@ -236,84 +243,56 @@ Sent from MapMyStandards.ai contact form
         )
     
     def send_welcome_email(self, user_email: str, user_name: str) -> bool:
-        """Send welcome email to new users"""
+        """Send welcome email to new users."""
         subject = "Welcome to MapMyStandards.ai!"
-        
-        body = f"""
-Dear {user_name},
-
-Welcome to MapMyStandards.ai! We're excited to help you streamline your accreditation process.
-
-Your account has been successfully created. Here's what you can do next:
-
-1. Complete your institutional profile
-2. Upload your first accreditation documents
-3. Start using our A³E Engine for intelligent analysis
-
-If you have any questions, please don't hesitate to reach out to our support team.
-
-Best regards,
-The MapMyStandards.ai Team
-
----
-support@mapmystandards.ai
-NorthPath Strategies
-        """
-        
+        body = (
+            f"Dear {user_name},\n\n"
+            "Welcome to MapMyStandards.ai! We're excited to help you streamline your accreditation process.\n\n"
+            "Your account has been successfully created. Here's what you can do next:\n\n"
+            "1. Complete your institutional profile\n"
+            "2. Upload your first accreditation documents\n"
+            "3. Start using our A³E Engine for intelligent analysis\n\n"
+            "If you have any questions, please don't hesitate to reach out to our support team.\n\n"
+            "Best regards,\nThe MapMyStandards.ai Team\n\n"
+            "--\n"
+            "support@mapmystandards.ai\n"
+            "NorthPath Strategies"
+        )
         html_body = f"""
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #1e3c72;">Welcome to MapMyStandards.ai!</h2>
-            
+        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
+            <h2 style="color:#1e3c72;margin-top:0;">Welcome to MapMyStandards.ai!</h2>
             <p>Dear {user_name},</p>
-            
             <p>Welcome to MapMyStandards.ai! We're excited to help you streamline your accreditation process.</p>
-            
             <p>Your account has been successfully created. Here's what you can do next:</p>
-            
             <ol>
                 <li>Complete your institutional profile</li>
                 <li>Upload your first accreditation documents</li>
                 <li>Start using our A³E Engine for intelligent analysis</li>
             </ol>
-            
             <p>If you have any questions, please don't hesitate to reach out to our support team.</p>
-            
             <p>Best regards,<br>The MapMyStandards.ai Team</p>
-            
-            <hr style="border: 1px solid #eee;">
-            <p style="color: #6c757d; font-size: 12px;">
+            <hr style="border:1px solid #eee;">
+            <p style="color:#6c757d;font-size:12px;">
                 <a href="mailto:support@mapmystandards.ai">support@mapmystandards.ai</a><br>
-                NorthPath Strategies
+                NorthPath Strategies · <a href="{build_unsubscribe_link()}">Unsubscribe</a>
             </p>
         </div>
         """
-        
-        return self.send_email(
-            to_emails=[user_email],
-            subject=subject,
-            body=body,
-            html_body=html_body
-        )
+        return self.send_email([user_email], subject, body, html_body=html_body)
 
     def send_password_setup_email(self, user_email: str, user_name: str, setup_link: str, expires_hours: int = 48) -> bool:
         """Send initial password setup (or reset) email with secure link."""
         subject = "Set up your MapMyStandards password"
-        body = f"""
-Dear {user_name},
-
-Welcome! Please set your password to complete your account setup.
-
-Password setup link (valid {expires_hours} hours):
-{setup_link}
-
-If you did not request this, you can ignore the email.
-
-Best,
-MapMyStandards.ai Team
-"""
+        body = (
+            f"Dear {user_name},\n\n"
+            "Welcome! Please set your password to complete your account setup.\n\n"
+            f"Password setup link (valid {expires_hours} hours):\n{setup_link}\n\n"
+            "If you did not request this, you can ignore the email.\n\n"
+            "Best,\nMapMyStandards.ai Team"
+        )
         html_body = f"""
         <div style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto;'>
-            <h2 style='color:#1e3c72;'>Set Your Password</h2>
+            <h2 style='color:#1e3c72;margin-top:0;'>Set Your Password</h2>
             <p>Hi {user_name},</p>
             <p>Click the button below to create your password and finish setting up your account. This link is valid for <strong>{expires_hours} hours</strong>.</p>
             <p style='text-align:center;margin:30px 0;'>
@@ -323,7 +302,7 @@ MapMyStandards.ai Team
             <code style='display:block;background:#f5f7fa;padding:10px;border-radius:4px;font-size:12px;word-break:break-all;'>{setup_link}</code>
             <p style='font-size:12px;color:#667;'>If you did not request this, you can safely ignore the email.</p>
             <hr style='border:1px solid #eee;'>
-            <p style='font-size:12px;color:#999;'>support@mapmystandards.ai</p>
+            <p style='font-size:12px;color:#999;'>support@mapmystandards.ai · <a href="{build_unsubscribe_link()}">Unsubscribe</a></p>
         </div>
         """
         return self.send_email([user_email], subject, body, html_body=html_body)
