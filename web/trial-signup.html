@@ -13,80 +13,180 @@
     <link rel="preload" href="/assets/styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="/assets/styles.css"></noscript>
     
-    <!-- Fallback CSS loading with multiple sources -->
+    <!-- Simplified CSS loading - no external dependencies -->
     <script>
-        // Try multiple CSS sources to prevent styling issues
-        function tryLoadCSS(sources) {
-            let loaded = false;
-            sources.forEach((src, index) => {
-                if (loaded) return;
-                
-                const link = document.createElement('link');
-                link.rel = 'stylesheet';
-                link.href = src;
-                link.onload = () => {
-                    if (!loaded) {
-                        loaded = true;
-                        document.body.classList.add('css-loaded');
-                        console.log(`CSS loaded from: ${src}`);
-                    }
-                };
-                link.onerror = () => {
-                    console.warn(`Failed to load CSS from: ${src}`);
-                    if (index === sources.length - 1 && !loaded) {
-                        // Last fallback failed, show content anyway after delay
-                        setTimeout(() => {
-                            if (!loaded) {
-                                document.body.classList.add('css-loaded');
-                                console.warn('All CSS sources failed, using embedded styles');
-                            }
-                        }, 1500);
-                    }
-                };
-                document.head.appendChild(link);
-            });
-        }
-
-        // Try loading CSS from multiple sources
-        tryLoadCSS([
-            '/assets/styles.css',
-            '/web/static/css/tailwind.css',
-            'https://cdn.tailwindcss.com'
-        ]);
+        // Simple CSS loaded state activation
+        document.addEventListener('DOMContentLoaded', function() {
+            if (document.body) {
+                document.body.classList.add('css-loaded');
+            }
+        });
     </script>
     
     <!-- Stripe JS -->
     <script src="https://js.stripe.com/v3/"></script>
     
     <style>
-        /* Prevent FOUC by hiding content until CSS loads */
+        /* Comprehensive embedded styles for trial signup page */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
         body { 
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #1f2937;
+            background-color: #f9fafb;
             opacity: 0;
             transition: opacity 0.3s ease;
         }
+        
         body.css-loaded { opacity: 1; }
         
-        /* Emergency fallback styles */
-        .container { max-width: 1200px; margin: 0 auto; padding: 0 1rem; }
-        .btn { padding: 0.75rem 1.5rem; border-radius: 0.375rem; font-weight: 600; text-decoration: none; display: inline-block; }
-        .btn-primary { background: #3b82f6; color: white; border: none; }
-        .form-input { width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 0.375rem; }
+        /* Header Styles */
+        header {
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
         
+        .max-w-7xl {
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+        
+        .mx-auto { margin-left: auto; margin-right: auto; }
+        .px-4 { padding-left: 1rem; padding-right: 1rem; }
+        .py-6 { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+        .py-12 { padding-top: 3rem; padding-bottom: 3rem; }
+        
+        .flex { display: flex; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .justify-center { justify-content: center; }
+        .space-x-4 > * + * { margin-left: 1rem; }
+        
+        .text-2xl { font-size: 1.5rem; line-height: 2rem; }
+        .text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
+        .text-lg { font-size: 1.125rem; line-height: 1.75rem; }
+        .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+        
+        .font-bold { font-weight: 700; }
+        .font-semibold { font-weight: 600; }
+        .font-medium { font-weight: 500; }
+        
+        .text-gray-900 { color: #111827; }
+        .text-gray-600 { color: #4b5563; }
+        .text-gray-500 { color: #6b7280; }
+        .text-blue-600 { color: #2563eb; }
+        .text-white { color: white; }
+        
+        .bg-white { background-color: white; }
+        .bg-gray-50 { background-color: #f9fafb; }
+        .bg-gray-200 { background-color: #e5e7eb; }
+        .bg-blue-600 { background-color: #2563eb; }
+        .bg-green-600 { background-color: #059669; }
+        
+        .mb-2 { margin-bottom: 0.5rem; }
+        .mb-8 { margin-bottom: 2rem; }
+        .mb-12 { margin-bottom: 3rem; }
+        .ml-2 { margin-left: 0.5rem; }
+        
+        /* Button Styles */
+        .btn { 
+            padding: 0.75rem 1.5rem; 
+            border-radius: 0.375rem; 
+            font-weight: 600; 
+            text-decoration: none; 
+            display: inline-block;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        
+        .btn-primary { 
+            background: #2563eb; 
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+        
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+        
+        /* Form Styles */
+        .form-input { 
+            width: 100%; 
+            padding: 0.75rem; 
+            border: 1px solid #d1d5db; 
+            border-radius: 0.375rem;
+            background: white;
+            font-size: 1rem;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        /* Step Indicator */
         .step-indicator {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            background-color: #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
             transition: all 0.3s ease;
         }
         
         .step-indicator.active {
-            background-color: #3b82f6;
+            background-color: #2563eb;
             color: white;
         }
         
         .step-indicator.completed {
-            background-color: #10b981;
+            background-color: #059669;
             color: white;
         }
         
+        /* Grid and Layout */
+        .grid { display: grid; }
+        .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+        .gap-8 { gap: 2rem; }
+        .gap-6 { gap: 1.5rem; }
+        .gap-4 { gap: 1rem; }
+        
+        @media (min-width: 1024px) {
+            .lg\\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        }
+        
+        /* Card Styles */
+        .card {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 2rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        /* Progress Bar */
+        .w-16 { width: 4rem; }
+        .h-05 { height: 0.125rem; }
+        .bg-gray-300 { background-color: #d1d5db; }
+        .w-10 { width: 2.5rem; }
+        .h-10 { height: 2.5rem; }
+        .rounded-full { border-radius: 9999px; }
+        
+        /* Stripe Elements */
         #card-element {
             padding: 1rem;
             border: 1.5px solid #e5e7eb;
@@ -95,61 +195,35 @@
         }
         
         #card-element.StripeElement--focus {
-            border-color: #3b82f6;
+            border-color: #2563eb;
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
+        
+        /* Utility Classes */
+        .text-center { text-align: center; }
+        .hidden { display: none; }
+        .block { display: block; }
+        .w-full { width: 100%; }
+        .mt-4 { margin-top: 1rem; }
+        .mt-6 { margin-top: 1.5rem; }
+        .p-4 { padding: 1rem; }
+        
+        /* Links */
+        a {
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        
+        a:hover {
+            opacity: 0.8;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .px-4 { padding-left: 0.5rem; padding-right: 0.5rem; }
+            .text-3xl { font-size: 1.5rem; line-height: 2rem; }
+        }
     </style>
-    
-    <!-- Advanced CSS loading with FOUC prevention -->
-    <script>
-        (function() {
-            let cssLoaded = false;
-            const loadCSS = (href) => {
-                const link = document.createElement('link');
-                link.rel = 'stylesheet';
-                link.href = href;
-                link.onload = () => {
-                    if (!cssLoaded) {
-                        cssLoaded = true;
-                        document.body.classList.add('css-loaded');
-                    }
-                };
-                link.onerror = () => {
-                    // Try next CSS source on error
-                    tryNextCSS();
-                };
-                document.head.appendChild(link);
-            };
-            
-            // Try multiple CSS sources
-            const cssSources = [
-                '/web/static/css/tailwind.css',
-                '/static/css/tailwind.css',
-                'https://cdn.tailwindcss.com'
-            ];
-            
-            let currentIndex = 0;
-            const tryNextCSS = () => {
-                if (currentIndex < cssSources.length && !cssLoaded) {
-                    loadCSS(cssSources[currentIndex]);
-                    currentIndex++;
-                    setTimeout(() => {
-                        if (!cssLoaded) tryNextCSS();
-                    }, 800); // Try next source after 800ms
-                }
-            };
-            
-            // Start loading CSS immediately
-            tryNextCSS();
-            
-            // Fallback: show content after 2.5 seconds even if CSS doesn't load
-            setTimeout(() => {
-                if (!cssLoaded) {
-                    document.body.classList.add('css-loaded');
-                }
-            }, 2500);
-        })();
-    </script>
 </head>
 <body class="bg-gray-50">
     <!-- Header -->
@@ -720,24 +794,6 @@
                 localStorage.removeItem(`trial_signup_${fieldId}`);
             });
         }
-
-                // Silent Tailwind CSS fallback without user-visible warnings
-                window.addEventListener('load', () => {
-                    const link = document.getElementById('tailwindStylesheet');
-                    let loaded = false;
-                    try {
-                        if (link && link.sheet && link.sheet.cssRules && link.sheet.cssRules.length > 10) {
-                            loaded = true;
-                        }
-                    } catch (e) { /* ignore */ }
-                    if (!loaded) {
-                        console.info('Loading Tailwind CSS from CDN as fallback');
-                        const cdn = document.createElement('script');
-                        cdn.src = 'https://cdn.tailwindcss.com';
-                        document.head.appendChild(cdn);
-                        // No user-visible warning - handle silently for better UX
-                    }
-                });
 
         // Initialize Stripe
         async function initializeStripe() {
