@@ -75,6 +75,155 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         }
         
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        
+        .page-title {
+            font-size: 2.5rem;
+            color: #1e3c72;
+            margin-bottom: 1rem;
+        }
+        
+        .page-subtitle {
+            font-size: 1.25rem;
+            color: #6b7280;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        /* Filters */
+        .filters {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .filter-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .filter-select {
+            padding: 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: white;
+            font-size: 0.875rem;
+            min-width: 150px;
+        }
+        
+        /* Loading state */
+        .loading {
+            text-align: center;
+            padding: 3rem;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 2rem;
+            height: 2rem;
+            border: 3px solid #e5e7eb;
+            border-top-color: #1e3c72;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Standards grid */
+        .standards-grid {
+            display: grid;
+            gap: 1.5rem;
+        }
+        
+        .standard-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .standard-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+        
+        .standard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+        
+        .standard-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            background: #f3f4f6;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            color: #6b7280;
+        }
+        
+        .standard-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1e3c72;
+            margin-bottom: 0.75rem;
+        }
+        
+        .standard-description {
+            color: #6b7280;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+        
+        .standard-meta {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            font-size: 0.875rem;
+            color: #9ca3af;
+            flex-wrap: wrap;
+        }
+        
+        .accreditor-info {
+            background: #dbeafe;
+            color: #1e40af;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .accreditor-name {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .standards-count {
+            font-size: 1.125rem;
+            opacity: 0.8;
+        }
+        
         .placeholder-icon {
             font-size: 4rem;
             margin-bottom: 2rem;
@@ -146,23 +295,181 @@
 
     <!-- Main Content -->
     <div class="container">
-        <div class="placeholder-content">
-            <div class="placeholder-icon">📊</div>
-            <h1 class="placeholder-title">Standards Management Coming Soon</h1>
-            <p class="placeholder-text">
-                We're building a comprehensive standards management system that will allow you to browse, 
-                search, and manage accreditation standards from multiple accreditors. This feature will 
-                include AI-powered mapping and gap analysis tools.
-            </p>
-            <div class="placeholder-actions">
-                <a href="/upload" class="btn btn-primary">Upload Evidence</a>
-                <a href="/dashboard" class="btn btn-secondary">Back to Dashboard</a>
+        <div class="page-header">
+            <h1 class="page-title">📊 Accreditation Standards</h1>
+            <p class="page-subtitle">Browse and explore accreditation standards from multiple accreditors to understand requirements and plan your evidence collection.</p>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+            <div class="filter-group">
+                <label class="filter-label">Accreditor</label>
+                <select id="accreditorSelect" class="filter-select">
+                    <option value="">Loading accreditors...</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Institution Type</label>
+                <select id="institutionTypeSelect" class="filter-select">
+                    <option value="">All Types</option>
+                    <option value="college">College</option>
+                    <option value="university">University</option>
+                    <option value="community_college">Community College</option>
+                    <option value="graduate_school">Graduate School</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Content Area -->
+        <div id="contentArea">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p style="margin-top: 1rem;">Loading accreditors...</p>
             </div>
         </div>
     </div>
 
     <script>
+        let accreditors = [];
+        let currentStandards = [];
+
+        // Load accreditors on page load
+        async function loadAccreditors() {
+            try {
+                const response = await fetch('/api/v1/accreditors');
+                const data = await response.json();
+                
+                accreditors = data.accreditors;
+                populateAccreditorSelect();
+                showAccreditorSelection();
+            } catch (error) {
+                console.error('Error loading accreditors:', error);
+                document.getElementById('contentArea').innerHTML = `
+                    <div style="text-align: center; padding: 3rem; color: #ef4444;">
+                        <h3>Error loading accreditors</h3>
+                        <p>Please try refreshing the page.</p>
+                    </div>
+                `;
+            }
+        }
+
+        function populateAccreditorSelect() {
+            const select = document.getElementById('accreditorSelect');
+            select.innerHTML = '<option value="">Select an accreditor</option>';
+            
+            accreditors.forEach(acc => {
+                const option = document.createElement('option');
+                option.value = acc.id;
+                option.textContent = `${acc.name} (${acc.acronym})`;
+                select.appendChild(option);
+            });
+        }
+
+        function showAccreditorSelection() {
+            document.getElementById('contentArea').innerHTML = `
+                <div style="text-align: center; padding: 3rem;">
+                    <h3 style="color: #6b7280; margin-bottom: 1rem;">Select an accreditor above to view standards</h3>
+                    <p style="color: #9ca3af;">Available accreditors: ${accreditors.map(a => a.acronym).join(', ')}</p>
+                </div>
+            `;
+        }
+
+        async function loadStandards(accreditorId, institutionType = null) {
+            if (!accreditorId) {
+                showAccreditorSelection();
+                return;
+            }
+
+            document.getElementById('contentArea').innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 1rem;">Loading standards...</p>
+                </div>
+            `;
+
+            try {
+                let url = `/api/v1/accreditors/${accreditorId}/standards`;
+                if (institutionType) {
+                    url += `?institution_type=${institutionType}`;
+                }
+
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                currentStandards = data.standards;
+                displayStandards(data);
+            } catch (error) {
+                console.error('Error loading standards:', error);
+                document.getElementById('contentArea').innerHTML = `
+                    <div style="text-align: center; padding: 3rem; color: #ef4444;">
+                        <h3>Error loading standards</h3>
+                        <p>Please try again or select a different accreditor.</p>
+                    </div>
+                `;
+            }
+        }
+
+        function displayStandards(data) {
+            const accreditor = data.accreditor;
+            const standards = data.standards;
+
+            let html = `
+                <div class="accreditor-info">
+                    <div class="accreditor-name">${accreditor.name} (${accreditor.acronym})</div>
+                    <div class="standards-count">${standards.length} standards available</div>
+                </div>
+            `;
+
+            if (standards.length === 0) {
+                html += `
+                    <div style="text-align: center; padding: 3rem; color: #6b7280;">
+                        <h3>No standards found</h3>
+                        <p>Try selecting a different institution type or accreditor.</p>
+                    </div>
+                `;
+            } else {
+                html += '<div class="standards-grid">';
+                
+                standards.forEach(standard => {
+                    html += `
+                        <div class="standard-card">
+                            <div class="standard-header">
+                                <div class="standard-id">${standard.id}</div>
+                            </div>
+                            <h3 class="standard-title">${standard.title}</h3>
+                            <p class="standard-description">${standard.description}</p>
+                            <div class="standard-meta">
+                                ${standard.sub_standards_count > 0 ? `<span>${standard.sub_standards_count} sub-standards</span>` : ''}
+                                <span>Weight: ${standard.weight}</span>
+                                <span>Types: ${standard.applicable_institution_types.join(', ')}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+            }
+
+            document.getElementById('contentArea').innerHTML = html;
+        }
+
+        // Event listeners
+        document.getElementById('accreditorSelect').addEventListener('change', function() {
+            const accreditorId = this.value;
+            const institutionType = document.getElementById('institutionTypeSelect').value;
+            loadStandards(accreditorId, institutionType);
+        });
+
+        document.getElementById('institutionTypeSelect').addEventListener('change', function() {
+            const accreditorId = document.getElementById('accreditorSelect').value;
+            const institutionType = this.value;
+            loadStandards(accreditorId, institutionType);
+        });
+
         function logout() {
             localStorage.clear();
             window.location.href = '/login';
         }
+
+        // Initialize
+        loadAccreditors();
