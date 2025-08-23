@@ -17,7 +17,7 @@
     }
   ],
   "rewrites": [
-    { "source": "/", "destination": "/pricing_clean.html" },
+    { "source": "/", "destination": "/web/CUSTOMER-HOMEPAGE.html" },
     { "source": "/pricing", "destination": "/pricing_clean.html" },
     { "source": "/signup", "destination": "/web/trial-signup.html" },
     { "source": "/trial", "destination": "/web/trial-signup.html" },

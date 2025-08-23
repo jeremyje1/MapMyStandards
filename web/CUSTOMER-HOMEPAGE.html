@@ -6,23 +6,67 @@
     <meta name="description" content="MapMyStandards A³E – AI-powered accreditation platform that transforms compliance from a burden into a strategic advantage. Save 20-30 hours weekly.">
     <meta name="keywords" content="accreditation software, higher education compliance, AI accreditation, evidence mapping, gap analysis">
         <title>MapMyStandards A³E - Transform Accreditation with AI</title>
-        <!-- Compiled Tailwind (built via npm run build-css) -->
-        <link id="tailwindStylesheet" rel="stylesheet" href="/web/static/css/tailwind.css" />
+        
+        <!-- Fonts -->
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+        
+        <!-- Preload CSS to prevent FOUC -->
+        <link rel="preload" href="/assets/styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="/assets/styles.css"></noscript>
+        
+        <!-- Fallback CSS loading with multiple sources -->
         <script>
-            // CDN fallback if compiled Tailwind missing
-            window.addEventListener('load', () => {
-                const link = document.getElementById('tailwindStylesheet');
-                if (!link) return;
-                fetch(link.href, { method: 'HEAD' }).then(r => { if(!r.ok){ const s=document.createElement('script'); s.src='https://cdn.tailwindcss.com'; document.head.appendChild(s); } }).catch(()=>{ const s=document.createElement('script'); s.src='https://cdn.tailwindcss.com'; document.head.appendChild(s);});
-            });
+            // Try multiple CSS sources to prevent styling issues
+            function tryLoadCSS(sources) {
+                let loaded = false;
+                sources.forEach((src, index) => {
+                    if (loaded) return;
+                    
+                    const link = document.createElement('link');
+                    link.rel = 'stylesheet';
+                    link.href = src;
+                    link.onload = () => {
+                        if (!loaded) {
+                            loaded = true;
+                            document.body.classList.add('css-loaded');
+                            console.log(`CSS loaded from: ${src}`);
+                        }
+                    };
+                    link.onerror = () => {
+                        console.warn(`Failed to load CSS from: ${src}`);
+                        if (index === sources.length - 1 && !loaded) {
+                            // Last fallback failed, show content anyway after delay
+                            setTimeout(() => {
+                                if (!loaded) {
+                                    document.body.classList.add('css-loaded');
+                                    console.warn('All CSS sources failed, using embedded styles');
+                                }
+                            }, 1500);
+                        }
+                    };
+                    document.head.appendChild(link);
+                });
+            }
+
+            // Try loading CSS from multiple sources
+            tryLoadCSS([
+                '/assets/styles.css',
+                '/web/static/css/tailwind.css'
+            ]);
         </script>
         <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             line-height: 1.6;
             color: #333;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        body.css-loaded { 
+            opacity: 1; 
         }
         
         .container {
@@ -272,8 +316,8 @@
             <ul class="nav-links">
                 <li><a href="#features">Features</a></li>
                 <li><a href="#how-it-works">How It Works</a></li>
-                <li><a href="https://platform.mapmystandards.ai/login" rel="noopener">Login</a></li>
-                <li><a href="https://platform.mapmystandards.ai/trial-signup" class="btn btn-primary">Start Free Trial</a></li>
+                <li><a href="https://api.mapmystandards.ai/login" rel="noopener">Login</a></li>
+                <li><a href="/trial" class="btn btn-primary">Start Free Trial</a></li>
             </ul>
         </nav>
     </header>
@@ -285,7 +329,7 @@
             <p>Save 20-30 hours weekly with AI-powered evidence mapping, gap analysis, and automated narrative generation for higher education accreditation.</p>
             
             <div class="hero-buttons">
-                <a href="https://platform.mapmystandards.ai/trial-signup" class="btn btn-primary">Start 7-Day Free Trial</a>
+                <a href="/trial" class="btn btn-primary">Start 7-Day Free Trial</a>
             </div>
             
             <div class="value-props">
@@ -391,7 +435,7 @@
             <h2>Ready to Transform Your Accreditation Process?</h2>
             <p>Join leading institutions saving thousands of hours and dollars with A³E</p>
             <div class="hero-buttons">
-                <a href="https://platform.mapmystandards.ai/trial-signup" class="btn btn-primary">Start Your Free Trial</a>
+                <a href="/trial" class="btn btn-primary">Start Your Free Trial</a>
                 <a href="/contact" class="btn btn-secondary">Schedule a Demo</a>
             </div>
         </div>
@@ -410,5 +454,17 @@
             <p>&copy; 2025 MapMyStandards A³E. Transforming accreditation with AI.</p>
         </div>
     </footer>
+    
+    <script>
+        // Activate CSS-loaded state when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if CSS is loaded, if not, wait a bit then show anyway
+            setTimeout(() => {
+                if (!document.body.classList.contains('css-loaded')) {
+                    document.body.classList.add('css-loaded');
+                }
+            }, 500);
+        });
+    </script>
 </body>
 </html>
