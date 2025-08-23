@@ -15,6 +15,10 @@ __pycache__/
 *.pyd
 .DS_Store
 
+# Next.js build output
+.next/
+out/
+
 # Security - Never commit these files
 *password*
 *secret*
