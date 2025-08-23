@@ -26,8 +26,8 @@
     { "source": "/status", "destination": "/status.html" }
   ],
   "redirects": [
-    { "source": "/login", "destination": "https://api.mapmystandards.ai/login", "permanent": false },
-    { "source": "/dashboard", "destination": "https://api.mapmystandards.ai/dashboard", "permanent": false }
+    { "source": "/login", "destination": "https://platform.mapmystandards.ai/login", "permanent": false },
+    { "source": "/dashboard", "destination": "https://platform.mapmystandards.ai/dashboard", "permanent": false }
   ],
   "cleanUrls": true
 }
