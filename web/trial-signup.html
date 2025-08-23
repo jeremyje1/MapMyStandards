@@ -491,27 +491,40 @@
             const domain = email.toLowerCase().split('@')[1];
             if (!domain) return false;
             
-            // Common institutional domains
-            const institutionalDomains = [
-                '.edu', '.edu.au', '.edu.sg', '.edu.my', '.edu.ph', '.edu.hk', '.edu.tw',
-                '.ac.uk', '.ac.in', '.ac.za', '.ac.nz', '.ac.jp', '.ac.kr', '.ac.th',
-                '.university', '.college', '.school'
+            // Comprehensive institutional domain patterns
+            const institutionalPatterns = [
+                /\.edu$/,           // Standard .edu domains
+                /\.ac\./,           // International academic domains (.ac.uk, .ac.jp, etc.)
+                /\.edu\./,          // Educational subdomains
+                /university\./,     // University in domain
+                /college\./,        // College in domain
+                /school\./,         // School in domain
+                /\.k12\./,          // K-12 schools
+                /district\./,       // School districts
+                /academy\./         // Academies
             ];
             
-            // Known institutional domains (partial list)
-            const knownInstitutions = [
-                'harvard.edu', 'mit.edu', 'stanford.edu', 'berkeley.edu', 'yale.edu',
-                'princeton.edu', 'caltech.edu', 'columbia.edu', 'cornell.edu', 'penn.edu',
-                'ox.ac.uk', 'cam.ac.uk', 'imperial.ac.uk', 'ucl.ac.uk', 'kcl.ac.uk',
-                'utoronto.ca', 'mcgill.ca', 'ubc.ca', 'anu.edu.au', 'unsw.edu.au'
+            // Extended known institutional domains
+            const knownInstitutionalDomains = [
+                'harvard.edu', 'stanford.edu', 'mit.edu', 'yale.edu', 'princeton.edu',
+                'columbia.edu', 'upenn.edu', 'dartmouth.edu', 'brown.edu', 'cornell.edu',
+                'uchicago.edu', 'northwestern.edu', 'duke.edu', 'vanderbilt.edu', 'rice.edu',
+                'emory.edu', 'georgetown.edu', 'carnegiemellon.edu', 'wustl.edu', 'tufts.edu',
+                'berkeley.edu', 'ucla.edu', 'usc.edu', 'caltech.edu', 'nyu.edu', 'bu.edu',
+                'ox.ac.uk', 'cam.ac.uk', 'imperial.ac.uk', 'ucl.ac.uk', 'kcl.ac.uk', 'lse.ac.uk',
+                'toronto.ca', 'mcgill.ca', 'ubc.ca', 'uwaterloo.ca', 'queensu.ca', 'yorku.ca',
+                'sydney.edu.au', 'unsw.edu.au', 'anu.edu.au', 'unimelb.edu.au', 'monash.edu',
+                'tokyo.ac.jp', 'kyoto-u.ac.jp', 'osaka-u.ac.jp', 'tohoku.ac.jp', 'waseda.jp',
+                'nus.edu.sg', 'ntu.edu.sg', 'um.edu.my', 'hku.hk', 'cuhk.edu.hk', 'ntu.edu.tw'
             ];
             
-            // Check if domain matches institutional patterns
-            const isInstitutional = institutionalDomains.some(suffix => domain.endsWith(suffix)) ||
-                                  knownInstitutions.includes(domain) ||
+            // Check multiple validation methods
+            const isInstitutional = institutionalPatterns.some(pattern => pattern.test(domain)) ||
+                                  knownInstitutionalDomains.includes(domain) ||
                                   domain.includes('university') ||
                                   domain.includes('college') ||
-                                  domain.includes('school');
+                                  domain.includes('school') ||
+                                  domain.includes('institute');
             
             return isInstitutional;
         }
