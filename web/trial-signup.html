@@ -4,22 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Start Your 7-Day Free Trial | MapMyStandards A³E</title>
-    <!-- Load compiled Tailwind CSS -->
-    <link id="tailwindStylesheet" rel="stylesheet" href="/web/static/css/tailwind.css" />
-    <!-- Backup static path -->
-    <link id="tailwindStylesheetBackup" rel="stylesheet" href="/static/css/tailwind.css" />
     <meta name="description" content="Start your 7-day free trial of A³E - AI-powered accreditation management platform.">
     
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
+    <!-- Preload CSS to prevent FOUC -->
+    <link rel="preload" href="/web/static/css/tailwind.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/web/static/css/tailwind.css"></noscript>
+    
     <!-- Stripe JS -->
     <script src="https://js.stripe.com/v3/"></script>
     
     <style>
+        /* Prevent FOUC by hiding content until CSS loads */
         body { 
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
+        body.css-loaded { opacity: 1; }
+        
+        /* Emergency fallback styles */
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 1rem; }
+        .btn { padding: 0.75rem 1.5rem; border-radius: 0.375rem; font-weight: 600; text-decoration: none; display: inline-block; }
+        .btn-primary { background: #3b82f6; color: white; border: none; }
+        .form-input { width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 0.375rem; }
         
         .step-indicator {
             transition: all 0.3s ease;
@@ -47,6 +57,57 @@
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
     </style>
+    
+    <!-- Advanced CSS loading with FOUC prevention -->
+    <script>
+        (function() {
+            let cssLoaded = false;
+            const loadCSS = (href) => {
+                const link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = href;
+                link.onload = () => {
+                    if (!cssLoaded) {
+                        cssLoaded = true;
+                        document.body.classList.add('css-loaded');
+                    }
+                };
+                link.onerror = () => {
+                    // Try next CSS source on error
+                    tryNextCSS();
+                };
+                document.head.appendChild(link);
+            };
+            
+            // Try multiple CSS sources
+            const cssSources = [
+                '/web/static/css/tailwind.css',
+                '/static/css/tailwind.css',
+                'https://cdn.tailwindcss.com'
+            ];
+            
+            let currentIndex = 0;
+            const tryNextCSS = () => {
+                if (currentIndex < cssSources.length && !cssLoaded) {
+                    loadCSS(cssSources[currentIndex]);
+                    currentIndex++;
+                    setTimeout(() => {
+                        if (!cssLoaded) tryNextCSS();
+                    }, 800); // Try next source after 800ms
+                }
+            };
+            
+            // Start loading CSS immediately
+            tryNextCSS();
+            
+            // Fallback: show content after 2.5 seconds even if CSS doesn't load
+            setTimeout(() => {
+                if (!cssLoaded) {
+                    document.body.classList.add('css-loaded');
+                }
+            }, 2500);
+        })();
+    </script>
 </head>
 <body class="bg-gray-50">
     <!-- Header -->
@@ -106,17 +167,17 @@
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">First Name *</label>
-                                        <input type="text" name="first_name" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                        <input type="text" id="firstName" name="first_name" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Last Name *</label>
-                                        <input type="text" name="last_name" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                        <input type="text" id="lastName" name="last_name" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                                     </div>
                                 </div>
 
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Institution Name *</label>
-                                    <input type="text" name="institution_name" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <input type="text" id="institutionName" name="institution_name" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                                 </div>
 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -423,37 +484,153 @@
         let cardElement = null;
         let currentStep = 1;
 
-        // Institutional email validation
+        // Enhanced institutional email validation
         function validateInstitutionalEmail(email) {
+            if (!email || !email.includes('@')) return false;
+            
+            const domain = email.toLowerCase().split('@')[1];
+            if (!domain) return false;
+            
+            // Common institutional domains
             const institutionalDomains = [
                 '.edu', '.edu.au', '.edu.sg', '.edu.my', '.edu.ph', '.edu.hk', '.edu.tw',
                 '.ac.uk', '.ac.in', '.ac.za', '.ac.nz', '.ac.jp', '.ac.kr', '.ac.th',
                 '.university', '.college', '.school'
             ];
             
-            return institutionalDomains.some(domain => email.toLowerCase().endsWith(domain));
+            // Known institutional domains (partial list)
+            const knownInstitutions = [
+                'harvard.edu', 'mit.edu', 'stanford.edu', 'berkeley.edu', 'yale.edu',
+                'princeton.edu', 'caltech.edu', 'columbia.edu', 'cornell.edu', 'penn.edu',
+                'ox.ac.uk', 'cam.ac.uk', 'imperial.ac.uk', 'ucl.ac.uk', 'kcl.ac.uk',
+                'utoronto.ca', 'mcgill.ca', 'ubc.ca', 'anu.edu.au', 'unsw.edu.au'
+            ];
+            
+            // Check if domain matches institutional patterns
+            const isInstitutional = institutionalDomains.some(suffix => domain.endsWith(suffix)) ||
+                                  knownInstitutions.includes(domain) ||
+                                  domain.includes('university') ||
+                                  domain.includes('college') ||
+                                  domain.includes('school');
+            
+            return isInstitutional;
         }
 
-        // Add email validation listener
-        document.addEventListener('DOMContentLoaded', function() {
+        // Real-time email validation with improved feedback
+        function validateEmailField() {
             const emailField = document.getElementById('emailField');
             const emailError = document.getElementById('emailError');
             
-            if (emailField) {
-                emailField.addEventListener('blur', function() {
-                    const email = this.value.trim();
-                    if (email && !validateInstitutionalEmail(email)) {
-                        emailError.classList.remove('hidden');
-                        this.classList.add('border-red-500');
-                        this.classList.remove('border-gray-300');
-                    } else {
-                        emailError.classList.add('hidden');
-                        this.classList.remove('border-red-500');
-                        this.classList.add('border-gray-300');
-                    }
-                });
+            if (!emailField || !emailError) return;
+            
+            const email = emailField.value.trim();
+            
+            if (!email) {
+                // Empty field - hide error
+                emailError.classList.add('hidden');
+                emailField.classList.remove('border-red-500', 'border-green-500');
+                emailField.classList.add('border-gray-300');
+                return false;
             }
+            
+            if (!email.includes('@')) {
+                // Invalid email format
+                emailError.textContent = 'Please enter a valid email address';
+                emailError.classList.remove('hidden');
+                emailField.classList.add('border-red-500');
+                emailField.classList.remove('border-gray-300', 'border-green-500');
+                return false;
+            }
+            
+            if (!validateInstitutionalEmail(email)) {
+                // Not institutional email
+                emailError.textContent = 'Please use your institutional email address (.edu, .ac.uk, etc.)';
+                emailError.classList.remove('hidden');
+                emailField.classList.add('border-red-500');
+                emailField.classList.remove('border-gray-300', 'border-green-500');
+                return false;
+            }
+            
+            // Valid institutional email
+            emailError.classList.add('hidden');
+            emailField.classList.remove('border-red-500', 'border-gray-300');
+            emailField.classList.add('border-green-500');
+            return true;
+        }
+
+        // Add email validation listeners with persistence
+        document.addEventListener('DOMContentLoaded', function() {
+            const emailField = document.getElementById('emailField');
+            
+            if (emailField) {
+                // Load saved email from localStorage
+                const savedEmail = localStorage.getItem('trial_signup_email');
+                if (savedEmail) {
+                    emailField.value = savedEmail;
+                    validateEmailField();
+                }
+                
+                // Real-time validation
+                emailField.addEventListener('input', function() {
+                    // Save to localStorage as user types
+                    localStorage.setItem('trial_signup_email', this.value);
+                    
+                    // Debounce validation
+                    clearTimeout(this.validationTimeout);
+                    this.validationTimeout = setTimeout(validateEmailField, 300);
+                });
+                
+                emailField.addEventListener('blur', validateEmailField);
+            }
+            
+            // Comprehensive form persistence for all fields
+            initializeFormPersistence();
         });
+
+        // Form persistence system
+        function initializeFormPersistence() {
+            const formFields = [
+                'firstName', 'lastName', 'institutionName', 'emailField', 
+                'role', 'phone', 'accreditor', 'institution_type'
+            ];
+            
+            // Load saved form data
+            formFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    const savedValue = localStorage.getItem(`trial_signup_${fieldId}`);
+                    if (savedValue) {
+                        field.value = savedValue;
+                        
+                        // Trigger validation for email field
+                        if (fieldId === 'emailField') {
+                            validateEmailField();
+                        }
+                    }
+                    
+                    // Add auto-save listener
+                    field.addEventListener('input', function() {
+                        localStorage.setItem(`trial_signup_${fieldId}`, this.value);
+                    });
+                    
+                    field.addEventListener('change', function() {
+                        localStorage.setItem(`trial_signup_${fieldId}`, this.value);
+                    });
+                }
+            });
+        }
+        
+        // Clear form data when trial is successfully completed
+        function clearFormData() {
+            const formFields = [
+                'firstName', 'lastName', 'institutionName', 'emailField', 
+                'role', 'phone', 'accreditor', 'institution_type', 'trial_signup_email'
+            ];
+            
+            formFields.forEach(fieldId => {
+                localStorage.removeItem(`trial_signup_${fieldId}`);
+            });
+        }
 
                 // Silent Tailwind CSS fallback without user-visible warnings
                 window.addEventListener('load', () => {

@@ -8,36 +8,21 @@
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Tailwind compiled stylesheet with backup -->
-    <link id="tailwindStylesheet" rel="stylesheet" href="/web/static/css/tailwind.css">
-    <link id="tailwindStylesheetBackup" rel="stylesheet" href="/static/css/tailwind.css" />
-    <link rel="stylesheet" href="/static/styles.css" />
+    <!-- Preload CSS to prevent FOUC -->
+    <link rel="preload" href="/web/static/css/tailwind.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/web/static/css/tailwind.css"></noscript>
     
-    <!-- Silent CDN fallback for CSS loading issues -->
-    <script>
-        // Silent CSS fallback without user-visible warnings
-        window.addEventListener('load', () => {
-            const checkCSS = () => {
-                const testEl = document.createElement('div');
-                testEl.className = 'bg-blue-500 text-white p-4';
-                document.body.appendChild(testEl);
-                const computed = getComputedStyle(testEl);
-                const hasCSS = computed.backgroundColor.includes('rgb') && computed.color.includes('rgb');
-                document.body.removeChild(testEl);
-                
-                if (!hasCSS) {
-                    const link = document.createElement('link');
-                    link.rel = 'stylesheet';
-                    link.href = 'https://cdn.tailwindcss.com';
-                    document.head.appendChild(link);
-                }
-            };
-            setTimeout(checkCSS, 100);
-        });
-    </script>
-    
+    <!-- Immediate fallback CSS to prevent FOUC -->
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        /* Hide content until CSS loads to prevent FOUC */
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        body.css-loaded { opacity: 1; }
+        
+        /* Ensure immediate basic styling */
         .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
         
         /* Custom header styling to match homepage */
@@ -48,6 +33,58 @@
             background-size: 120px auto, auto;
             background-repeat: repeat, no-repeat;
         }
+        
+        /* Emergency fallback styles */
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 1rem; }
+        .btn { padding: 0.75rem 1.5rem; border-radius: 0.375rem; font-weight: 600; text-decoration: none; display: inline-block; }
+        .btn-primary { background: #3b82f6; color: white; border: none; }
+        .form-input { width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 0.375rem; }
+    </style>
+    
+    <!-- Advanced CSS loading with multiple fallbacks -->
+    <script>
+        (function() {
+            let cssLoaded = false;
+            const loadCSS = (href) => {
+                const link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = href;
+                link.onload = () => {
+                    if (!cssLoaded) {
+                        cssLoaded = true;
+                        document.body.classList.add('css-loaded');
+                    }
+                };
+                document.head.appendChild(link);
+            };
+            
+            // Try multiple CSS sources
+            const cssSources = [
+                '/web/static/css/tailwind.css',
+                '/static/css/tailwind.css',
+                'https://cdn.tailwindcss.com'
+            ];
+            
+            let currentIndex = 0;
+            const tryNextCSS = () => {
+                if (currentIndex < cssSources.length && !cssLoaded) {
+                    loadCSS(cssSources[currentIndex]);
+                    currentIndex++;
+                    setTimeout(tryNextCSS, 500); // Try next source after 500ms
+                }
+            };
+            
+            // Start loading CSS immediately
+            tryNextCSS();
+            
+            // Fallback: show content after 2 seconds even if CSS doesn't load
+            setTimeout(() => {
+                if (!cssLoaded) {
+                    document.body.classList.add('css-loaded');
+                }
+            }, 2000);
+        })();
+    </script>
     </style>
     <script>
         // Tailwind fallback if compiled file missing
