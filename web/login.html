@@ -85,21 +85,6 @@
             }, 2000);
         })();
     </script>
-    </style>
-    <script>
-        // Tailwind fallback if compiled file missing
-        window.addEventListener('load', () => {
-            const link = document.getElementById('tailwindStylesheet');
-            let ok = false; try { if (link && link.sheet && link.sheet.cssRules && link.sheet.cssRules.length > 10) ok = true; } catch(e) {}
-            if (!ok) {
-                const s = document.createElement('script'); s.src='https://cdn.tailwindcss.com'; document.head.appendChild(s);
-                const warn = document.createElement('div');
-                warn.textContent = '⚠️ Core stylesheet missing; using CDN fallback.';
-                warn.style.cssText='background:#fef3c7;color:#92400e;padding:6px;text-align:center;font-size:12px;font-weight:500';
-                document.body.prepend(warn);
-            }
-        });
-    </script>
 </head>
 <body class="bg-gray-50">
     <!-- Header -->
@@ -324,7 +309,152 @@
                 // User is already logged in, redirect to dashboard
                 window.location.href = '/dashboard';
             }
+            
+            // Form persistence functionality
+            initializeFormPersistence();
+            
+            // Enhanced email validation for institutional domains
+            initializeEmailValidation();
         });
+        
+        // Form persistence system
+        function initializeFormPersistence() {
+            const fields = [
+                { id: 'email', key: 'login_email' },
+                { id: 'resetEmail', key: 'login_reset_email' },
+                { id: 'remember', key: 'login_remember' }
+            ];
+            
+            fields.forEach(field => {
+                const element = document.getElementById(field.id);
+                if (!element) return;
+                
+                // Load saved value
+                const savedValue = localStorage.getItem(field.key);
+                if (savedValue) {
+                    if (element.type === 'checkbox') {
+                        element.checked = savedValue === 'true';
+                    } else {
+                        element.value = savedValue;
+                    }
+                }
+                
+                // Save on change
+                element.addEventListener('input', function() {
+                    if (element.type === 'checkbox') {
+                        localStorage.setItem(field.key, element.checked);
+                    } else {
+                        localStorage.setItem(field.key, element.value);
+                    }
+                });
+            });
+        }
+        
+        // Enhanced email validation for institutional domains
+        function initializeEmailValidation() {
+            const emailFields = ['email', 'resetEmail'];
+            
+            emailFields.forEach(fieldId => {
+                const emailField = document.getElementById(fieldId);
+                if (!emailField) return;
+                
+                // Create validation feedback element
+                const validationDiv = document.createElement('div');
+                validationDiv.id = fieldId + '_validation';
+                validationDiv.className = 'text-sm mt-1 min-h-[20px]';
+                emailField.parentNode.insertBefore(validationDiv, emailField.nextSibling);
+                
+                emailField.addEventListener('input', debounce(function() {
+                    validateInstitutionalEmail(emailField, validationDiv);
+                }, 300));
+                
+                emailField.addEventListener('blur', function() {
+                    validateInstitutionalEmail(emailField, validationDiv);
+                });
+            });
+        }
+        
+        // Comprehensive institutional domain validation
+        function validateInstitutionalEmail(emailField, validationDiv) {
+            const email = emailField.value.trim();
+            
+            if (!email) {
+                validationDiv.innerHTML = '';
+                emailField.classList.remove('border-green-500', 'border-red-500');
+                return;
+            }
+            
+            if (!isValidEmail(email)) {
+                showValidationMessage(validationDiv, 'Please enter a valid email address', 'error');
+                emailField.classList.remove('border-green-500');
+                emailField.classList.add('border-red-500');
+                return;
+            }
+            
+            const domain = email.split('@')[1]?.toLowerCase();
+            
+            // Comprehensive institutional domain patterns
+            const institutionalPatterns = [
+                /\.edu$/,           // Standard .edu domains
+                /\.ac\./,           // International academic domains (.ac.uk, .ac.jp, etc.)
+                /\.edu\./,          // Educational subdomains
+                /university\./,     // University in domain
+                /college\./,        // College in domain
+                /school\./,         // School in domain
+                /\.k12\./,          // K-12 schools
+                /district\./,       // School districts
+                /academy\./         // Academies
+            ];
+            
+            // Known institutional domains
+            const knownInstitutionalDomains = [
+                'harvard.edu', 'stanford.edu', 'mit.edu', 'yale.edu', 'princeton.edu',
+                'columbia.edu', 'upenn.edu', 'dartmouth.edu', 'brown.edu', 'cornell.edu',
+                'uchicago.edu', 'northwestern.edu', 'duke.edu', 'vanderbilt.edu', 'rice.edu',
+                'emory.edu', 'georgetown.edu', 'carnegiemellon.edu', 'wustl.edu', 'tufts.edu',
+                'ox.ac.uk', 'cam.ac.uk', 'toronto.ca', 'mcgill.ca', 'ubc.ca',
+                'sydney.edu.au', 'unsw.edu.au', 'anu.edu.au', 'tokyo.ac.jp', 'kyoto-u.ac.jp'
+            ];
+            
+            const isInstitutional = institutionalPatterns.some(pattern => pattern.test(domain)) ||
+                                  knownInstitutionalDomains.includes(domain);
+            
+            if (isInstitutional) {
+                showValidationMessage(validationDiv, '✓ Institutional email verified', 'success');
+                emailField.classList.remove('border-red-500');
+                emailField.classList.add('border-green-500');
+            } else {
+                showValidationMessage(validationDiv, 'Please use your institutional email address (.edu domain preferred)', 'warning');
+                emailField.classList.remove('border-green-500', 'border-red-500');
+            }
+        }
+        
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+        
+        function showValidationMessage(element, message, type) {
+            const colors = {
+                success: 'text-green-600',
+                error: 'text-red-600',
+                warning: 'text-amber-600'
+            };
+            
+            element.innerHTML = `<span class="${colors[type]}">${message}</span>`;
+        }
+        
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
     </script>
 </body>
 </html>
