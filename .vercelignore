@@ -74,3 +74,34 @@ config/standards_config.yaml
 tmp/
 temp/
 .tmp/
+
+# Large Python applications (not needed for Next.js deployment)
+*.py
+a3e_*.py
+run_app.py
+app.py
+auth.py
+diagnostic_*.py
+debug_*.py
+create_*.py
+check_*.py
+complete_*.py
+
+# Large environment directories
+a3e_enhanced_env/
+stripe_venv/
+*_env/
+
+# Large log files
+*.log
+a3e_production.log
+deployment_log.txt
+
+# Production data and reports
+production_reports/
+reports/
+data/
+uploads/
+
+# JSON test files
+complete_*.json

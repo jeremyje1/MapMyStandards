@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build && next export || echo 'Static export skipped'",
+    "build": "next build",
     "start": "next start",
     "tailwind:dev": "tailwindcss -i ./src/styles/tailwind.css -o ./public/styles.css --watch",
     "tailwind:build": "tailwindcss -i ./src/styles/tailwind.css -o ./public/styles.css --minify",
