@@ -604,6 +604,14 @@
                         if (data.plan) {
                             localStorage.setItem('a3e_plan_type', data.plan);
                         }
+                        // Store signup data for onboarding pre-population
+                        const signupData = {
+                            institution_name: data.institution_name,
+                            primary_accreditor: data.primary_accreditor,
+                            role: data.role,
+                            user_count: data.user_count
+                        };
+                        sessionStorage.setItem('a3e_signup_data', JSON.stringify(signupData));
                     }
                     showStep(3);
                     // Redirect sooner after storage
