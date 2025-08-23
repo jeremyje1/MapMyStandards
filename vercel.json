@@ -16,6 +16,12 @@
       ]
     }
   ],
+  "redirects": [
+    { "source": "/login", "destination": "https://platform.mapmystandards.ai/login", "permanent": false },
+    { "source": "/dashboard", "destination": "https://platform.mapmystandards.ai/dashboard", "permanent": false },
+    { "source": "/trial-signup", "destination": "https://platform.mapmystandards.ai/trial-signup", "permanent": false },
+    { "source": "/app", "destination": "https://platform.mapmystandards.ai/", "permanent": false }
+  ],
   "rewrites": [
     { "source": "/", "destination": "/web/CUSTOMER-HOMEPAGE.html" },
     { "source": "/pricing", "destination": "/pricing_clean.html" },
@@ -24,10 +30,6 @@
     { "source": "/contact", "destination": "/contact.html" },
     { "source": "/trial-success", "destination": "/trial-success.html" },
     { "source": "/status", "destination": "/status.html" }
-  ],
-  "redirects": [
-    { "source": "/login", "destination": "https://platform.mapmystandards.ai/login", "permanent": false },
-    { "source": "/dashboard", "destination": "https://platform.mapmystandards.ai/dashboard", "permanent": false }
   ],
   "cleanUrls": true
 }

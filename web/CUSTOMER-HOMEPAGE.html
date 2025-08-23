@@ -14,45 +14,12 @@
         <link rel="preload" href="/assets/styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
         <noscript><link rel="stylesheet" href="/assets/styles.css"></noscript>
         
-        <!-- Fallback CSS loading with multiple sources -->
+        <!-- Fallback CSS loading - simplified for homepage -->
         <script>
-            // Try multiple CSS sources to prevent styling issues
-            function tryLoadCSS(sources) {
-                let loaded = false;
-                sources.forEach((src, index) => {
-                    if (loaded) return;
-                    
-                    const link = document.createElement('link');
-                    link.rel = 'stylesheet';
-                    link.href = src;
-                    link.onload = () => {
-                        if (!loaded) {
-                            loaded = true;
-                            document.body.classList.add('css-loaded');
-                            console.log(`CSS loaded from: ${src}`);
-                        }
-                    };
-                    link.onerror = () => {
-                        console.warn(`Failed to load CSS from: ${src}`);
-                        if (index === sources.length - 1 && !loaded) {
-                            // Last fallback failed, show content anyway after delay
-                            setTimeout(() => {
-                                if (!loaded) {
-                                    document.body.classList.add('css-loaded');
-                                    console.warn('All CSS sources failed, using embedded styles');
-                                }
-                            }, 1500);
-                        }
-                    };
-                    document.head.appendChild(link);
-                });
-            }
-
-            // Try loading CSS from multiple sources
-            tryLoadCSS([
-                '/assets/styles.css',
-                '/web/static/css/tailwind.css'
-            ]);
+            // Skip external CSS loading for homepage since we have full embedded styles
+            document.addEventListener('DOMContentLoaded', function() {
+                document.body.classList.add('css-loaded');
+            });
         </script>
         <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
