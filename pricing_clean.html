@@ -9,11 +9,82 @@
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Tailwind (built) -->
-    <link rel="stylesheet" href="/assets/styles.css">
+    <!-- Preload CSS to prevent FOUC -->
+    <link rel="preload" href="/assets/styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/assets/styles.css"></noscript>
+    
+    <!-- Fallback CSS loading with multiple sources -->
+    <script>
+        // Try multiple CSS sources to prevent styling issues
+        function tryLoadCSS(sources) {
+            let loaded = false;
+            sources.forEach((src, index) => {
+                if (loaded) return;
+                
+                const link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = src;
+                link.onload = () => {
+                    if (!loaded) {
+                        loaded = true;
+                        document.body.classList.add('css-loaded');
+                        console.log(`CSS loaded from: ${src}`);
+                    }
+                };
+                link.onerror = () => {
+                    console.warn(`Failed to load CSS from: ${src}`);
+                    if (index === sources.length - 1 && !loaded) {
+                        // Last fallback failed, show content anyway after delay
+                        setTimeout(() => {
+                            if (!loaded) {
+                                document.body.classList.add('css-loaded');
+                                console.warn('All CSS sources failed, showing unstyled content');
+                            }
+                        }, 1500);
+                    }
+                };
+                document.head.appendChild(link);
+            });
+        }
+
+        // Try loading CSS from multiple sources
+        tryLoadCSS([
+            '/assets/styles.css',
+            '/web/static/css/tailwind.css',
+            'https://cdn.tailwindcss.com'
+        ]);
+    </script>
     
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        /* Prevent FOUC by hiding content until CSS loads */
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        body.css-loaded { opacity: 1; }
+        
+        /* Emergency fallback styles */
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 1rem; }
+        .max-w-7xl { max-width: 80rem; margin: 0 auto; }
+        .mx-auto { margin-left: auto; margin-right: auto; }
+        .px-4 { padding-left: 1rem; padding-right: 1rem; }
+        .bg-gray-50 { background-color: #f9fafb; }
+        .bg-white { background-color: white; }
+        .text-xl { font-size: 1.25rem; line-height: 1.75rem; }
+        .font-bold { font-weight: 700; }
+        .text-gray-900 { color: #111827; }
+        .shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+        .border-b { border-bottom: 1px solid #e5e7eb; }
+        .h-16 { height: 4rem; }
+        .flex { display: flex; }
+        .justify-between { justify-content: space-between; }
+        .items-center { align-items: center; }
+        .space-x-6 > * + * { margin-left: 1.5rem; }
+        .text-gray-600 { color: #4b5563; }
+        .hover\:text-gray-900:hover { color: #111827; }
+        .text-blue-600 { color: #2563eb; }
+        .font-medium { font-weight: 500; }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -233,5 +304,17 @@
             </div>
         </div>
     </footer>
+    
+    <script>
+        // Activate CSS-loaded state when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if CSS is loaded, if not, wait a bit then show anyway
+            setTimeout(() => {
+                if (!document.body.classList.contains('css-loaded')) {
+                    document.body.classList.add('css-loaded');
+                }
+            }, 500);
+        });
+    </script>
 </body>
 </html>
