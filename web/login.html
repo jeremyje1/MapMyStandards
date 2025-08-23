@@ -8,9 +8,33 @@
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Tailwind compiled stylesheet -->
+    <!-- Tailwind compiled stylesheet with backup -->
     <link id="tailwindStylesheet" rel="stylesheet" href="/web/static/css/tailwind.css">
+    <link id="tailwindStylesheetBackup" rel="stylesheet" href="/static/css/tailwind.css" />
     <link rel="stylesheet" href="/static/styles.css" />
+    
+    <!-- Silent CDN fallback for CSS loading issues -->
+    <script>
+        // Silent CSS fallback without user-visible warnings
+        window.addEventListener('load', () => {
+            const checkCSS = () => {
+                const testEl = document.createElement('div');
+                testEl.className = 'bg-blue-500 text-white p-4';
+                document.body.appendChild(testEl);
+                const computed = getComputedStyle(testEl);
+                const hasCSS = computed.backgroundColor.includes('rgb') && computed.color.includes('rgb');
+                document.body.removeChild(testEl);
+                
+                if (!hasCSS) {
+                    const link = document.createElement('link');
+                    link.rel = 'stylesheet';
+                    link.href = 'https://cdn.tailwindcss.com';
+                    document.head.appendChild(link);
+                }
+            };
+            setTimeout(checkCSS, 100);
+        });
+    </script>
     
     <style>
         body { font-family: 'Inter', sans-serif; }
