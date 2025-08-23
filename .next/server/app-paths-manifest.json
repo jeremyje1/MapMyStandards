@@ -1,1 +1,17 @@
-{}
+{
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
+  "/auth/signin/page": "app/auth/signin/page.js",
+  "/auth/error/page": "app/auth/error/page.js",
+  "/page": "app/page.js",
+  "/auth/verify-request/page": "app/auth/verify-request/page.js",
+  "/api/stripe/webhook/route": "app/api/stripe/webhook/route.js",
+  "/api/dev/send-test-email/route": "app/api/dev/send-test-email/route.js",
+  "/about/page": "app/about/page.js",
+  "/api/stripe/checkout/route": "app/api/stripe/checkout/route.js",
+  "/privacy-policy/page": "app/privacy-policy/page.js",
+  "/contact/page": "app/contact/page.js",
+  "/user-guide/page": "app/user-guide/page.js",
+  "/services/page": "app/services/page.js",
+  "/api/support/contact/route": "app/api/support/contact/route.js"
+}
