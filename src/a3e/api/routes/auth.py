@@ -267,3 +267,46 @@ async def get_user_info(user_id: str, api_key: str = Depends(_api_key_header)):
     except Exception as e:
         logger.error(f"Get user info error: {e}")
         raise HTTPException(status_code=500, detail="Failed to get user information")
+
+@router.post("/create-test-user", response_model=LoginResponse)
+async def create_test_user():
+    """
+    Create a test user for development and testing purposes
+    """
+    try:
+        test_email = "testuser@example.com"
+        test_password = "testpass123"
+        
+        # Create test user if it doesn't exist
+        if test_email not in users_db:
+            password_hash = hash_password(test_password)
+            user_id = secrets.token_urlsafe(16)
+            
+            users_db[test_email] = {
+                'user_id': user_id,
+                'name': 'Test User',
+                'institution_name': 'Test University',
+                'email': test_email,
+                'password_hash': password_hash,
+                'role': 'Accreditation Coordinator',
+                'phone': '555-123-4567',
+                'plan': 'trial',
+                'created_at': datetime.now().isoformat(),
+                'newsletter_opt_in': True
+            }
+            
+            logger.info(f"Created test user: {test_email}")
+            
+            return LoginResponse(
+                success=True,
+                message=f"Test user created successfully. Email: {test_email}, Password: {test_password}"
+            )
+        else:
+            return LoginResponse(
+                success=True,
+                message=f"Test user already exists. Email: {test_email}, Password: {test_password}"
+            )
+            
+    except Exception as e:
+        logger.error(f"Create test user error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to create test user")
