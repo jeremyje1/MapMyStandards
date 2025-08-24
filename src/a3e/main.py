@@ -27,6 +27,7 @@ from .models import Institution, Evidence, Standard, AgentWorkflow, GapAnalysis
 from .services.database_service import DatabaseService
 from .api import api_router
 from .api.routes.billing import router as billing_router
+from pydantic import BaseModel, EmailStr
 try:
     from .api.routes.onboarding import router as onboarding_router
     _onboarding_available = True
@@ -37,8 +38,6 @@ try:
     _billing_legacy_available = True
 except Exception:
     _billing_legacy_available = False
-from pydantic import BaseModel, EmailStr  # Inline temporary auth models kept at top to avoid E402
-from typing import Optional as _OptionalType  # alias to avoid shadowing later Optional usage
 # Optional services - will gracefully degrade if dependencies missing
 try:
     from .services.vector_service import VectorService
@@ -373,7 +372,7 @@ class UserRegistrationRequest(BaseModel):
     password: str
     role: str
     plan: str
-    phone: _OptionalType[str] = ""
+    phone: Optional[str] = ""
     newsletter_opt_in: bool = False
 
 class PasswordResetRequest(BaseModel):
@@ -382,39 +381,14 @@ class PasswordResetRequest(BaseModel):
 class AuthResponse(BaseModel):
     success: bool
     message: str
-    data: _OptionalType[dict] = None
+    data: Optional[dict] = None
 
-temp_users = {}  # Simple in-memory user storage for temporary endpoints
-
-@app.post("/auth/login", response_model=AuthResponse)
-async def login_user(request: LoginRequest):
-    """Temporary login endpoint for Railway deployment"""
-    return AuthResponse(
-        success=False,
-        message="Authentication system is being deployed. Please try again in a few minutes."
-    )
-
-@app.post("/auth/register-trial", response_model=AuthResponse)
-async def register_trial_user(request: UserRegistrationRequest):
-    """Temporary registration endpoint for Railway deployment"""
-    return AuthResponse(
-        success=False,
-        message="Registration system is being deployed. Please try again in a few minutes."
-    )
-
-@app.post("/auth/password-reset", response_model=AuthResponse)
-async def request_password_reset(request: PasswordResetRequest):
-    """Temporary password reset endpoint for Railway deployment"""
-    return AuthResponse(
-        success=False,
-        message="Password reset system is being deployed. Please try again in a few minutes."
-    )
-
-# Include other routers
+# Include authentication routers
 if auth_router_available:
     app.include_router(auth_router)
+    logger.info("✅ Auth router loaded")
 else:
-    logger.warning("Auth router not available - using temporary auth endpoints")
+    logger.warning("⚠️ Auth router not available - authentication disabled")
 
 # Include new routers
 if trial_router_available:
