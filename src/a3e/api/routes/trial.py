@@ -70,7 +70,7 @@ async def send_welcome_email(email: str, name: str, api_key: str):
     except Exception as e:
         print(f"Failed to send welcome email: {e}")
 
-async def notify_admin_new_signup(email: str, name: str, institution: str | None):
+async def notify_admin_new_signup(email: str, name: str, institution: Optional[str]):
     """Send admin notification about new signup."""
     try:
         from ...services.email_service import email_service
