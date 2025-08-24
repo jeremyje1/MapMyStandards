@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - A³E | MapMyStandards.ai</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Comprehensive embedded styles - no external dependencies -->
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f9fafb;
+            color: #1f2937;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        
+        /* Header */
+        .login-header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-decoration: none;
+            color: white;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+        
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            opacity: 0.9;
+            transition: opacity 0.2s;
+        }
+        
+        .nav-links a:hover {
+            opacity: 1;
+        }
+        
+        /* Main Content */
+        .container {
+            max-width: 400px;
+            margin: 3rem auto;
+            padding: 0 20px;
+        }
+        
+        .login-card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .login-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #1e3c72;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-label {
+            display: block;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .checkbox {
+            margin: 0;
+        }
+        
+        /* Button Styles */
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: none;
+            font-size: 1rem;
+            width: 100%;
+        }
+        
+        .btn-primary {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #059669;
+            transform: translateY(-1px);
+        }
+        
+        .btn-primary:disabled {
+            background: #9ca3af;
+            transform: none;
+            cursor: not-allowed;
+        }
+        
+        /* Links */
+        .link {
+            color: #10b981;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .link:hover {
+            text-decoration: underline;
+        }
+        
+        .text-center {
+            text-align: center;
+        }
+        
+        .text-sm {
+            font-size: 0.875rem;
+        }
+        
+        .mt-4 {
+            margin-top: 1rem;
+        }
+        
+        /* Alert Styles */
+        .alert {
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+        
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+        
+        /* Loading States */
+        .loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #10b981;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .nav-links {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 1rem;
+            }
+            
+            .container {
+                margin: 2rem auto;
+                padding: 0 15px;
+            }
+            
+            .login-card {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+        .flex { display: flex; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .relative { position: relative; }
+        .z-10 { z-index: 10; }
+        
+        /* Typography */
+        .text-lg { font-size: 1.125rem; line-height: 1.75rem; }
+        .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+        .text-2xl { font-size: 1.5rem; line-height: 2rem; }
+        .text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
+        .font-semibold { font-weight: 600; }
+        .font-bold { font-weight: 700; }
+        .text-center { text-align: center; }
+        .text-white { color: white; }
+        .text-gray-900 { color: #111827; }
+        .text-gray-600 { color: #4b5563; }
+        .text-blue-100 { color: #dbeafe; }
+        .text-blue-600 { color: #2563eb; }
+        
+        /* Form elements */
+        .form-input, .w-full { width: 100%; }
+        .form-input {
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            font-size: 1rem;
+            line-height: 1.5;
+            background-color: white;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        /* Buttons */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.375rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+        .btn-secondary {
+            background: transparent;
+            color: #2563eb;
+            border: 1px solid #2563eb;
+        }
+        .btn-secondary:hover {
+            background: #2563eb;
+            color: white;
+        }
+        
+        /* Cards and containers */
+        .bg-white { background-color: white; }
+        .bg-gray-50 { background-color: #f9fafb; }
+        .shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+        .shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .rounded-lg { border-radius: 0.5rem; }
+        .border { border: 1px solid #e5e7eb; }
+        .border-t { border-top: 1px solid #e5e7eb; }
+        
+        /* Links */
+        a {
+            color: #2563eb;
+            text-decoration: none;
+        }
+        a:hover {
+            color: #1d4ed8;
+            text-decoration: underline;
+        }
+        
+        /* Images */
+        .h-14 { height: 3.5rem; }
+        .w-auto { width: auto; }
+        .filter { filter: brightness(1.1) contrast(1.1); }
+        
+        /* Hidden elements */
+        .hidden { display: none; }
+        
+        /* Responsive */
+        @media (min-width: 640px) {
+            .sm\\:px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
+        }
+        @media (min-width: 1024px) {
+            .lg\\:px-8 { padding-left: 2rem; padding-right: 2rem; }
+        }
+        
+        /* Border colors for validation */
+        .border-green-500 { border-color: #10b981; }
+        .border-red-500 { border-color: #ef4444; }
+        .text-green-600 { color: #059669; }
+        .text-red-600 { color: #dc2626; }
+        .text-amber-600 { color: #d97706; }
+        .min-h-20px { min-height: 20px; }
+        
+        /* Additional missing classes */
+        .min-h-screen { min-height: 100vh; }
+        .justify-center { justify-content: center; }
+        .w-full { width: 100%; }
+        .block { display: block; }
+        .font-medium { font-weight: 500; }
+        .text-gray-700 { color: #374151; }
+        .mb-1 { margin-bottom: 0.25rem; }
+        .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
+        .py-2 { padding-left: 0.5rem; padding-right: 0.5rem; }
+        .border-gray-300 { border-color: #d1d5db; }
+        .rounded-lg { border-radius: 0.5rem; }
+        .rounded-2xl { border-radius: 1rem; }
+        .focus\\:outline-none:focus { outline: none; }
+        .focus\\:ring-2:focus { box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+        .focus\\:ring-blue-500:focus { box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+        .border-b { border-bottom: 1px solid #e5e7eb; }
+        .border-blue-600 { border-bottom-color: #2563eb; }
+        .border-l { border-left: 1px solid rgba(255, 255, 255, 0.3); }
+        .border-white { border-color: white; }
+        .border-opacity-30 { border-color: rgba(255, 255, 255, 0.3); }
+        .pl-4 { padding-left: 1rem; }
+        .ml-4 { margin-left: 1rem; }
+        .hover\\:text-white:hover { color: white; }
+        .transition-colors { transition: color 0.2s; }
+        .brightness-110 { filter: brightness(1.1); }
+        .contrast-110 { filter: brightness(1.1) contrast(1.1); }
+        .p-8 { padding: 2rem; }
+        .mt-6 { margin-top: 1.5rem; }
+        .mt-4 { margin-top: 1rem; }
+        .text-xs { font-size: 0.75rem; line-height: 1rem; }
+        .text-red-500 { color: #ef4444; }
+        .cursor-pointer { cursor: pointer; }
+        .hover\\:bg-blue-700:hover { background-color: #1d4ed8; }
+        .disabled\\:opacity-50:disabled { opacity: 0.5; }
+        .disabled\\:cursor-not-allowed:disabled { cursor: not-allowed; }
+    </style>
+    
+    <!-- Enhanced CSS loading with reliable fallback -->
+    <script>
+        (function() {
+            let cssLoaded = false;
+            let tailwindScriptAdded = false;
+            
+            const showContent = () => {
+                document.body.classList.add('css-loaded');
+            };
+            
+            const loadCSS = (href) => {
+                const link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = href;
+                link.onload = () => {
+                    if (!cssLoaded) {
+                        cssLoaded = true;
+                        showContent();
+                    }
+                };
+                link.onerror = () => {
+                    // If this CSS fails, try next one
+                    tryNextCSS();
+                };
+                document.head.appendChild(link);
+            };
+            
+            const loadTailwindScript = () => {
+                if (!tailwindScriptAdded) {
+                    tailwindScriptAdded = true;
+                    const script = document.createElement('script');
+                    script.src = 'https://cdn.tailwindcss.com';
+                    script.onload = () => {
+                        if (!cssLoaded) {
+                            cssLoaded = true;
+                            // Give Tailwind a moment to initialize
+                            setTimeout(showContent, 100);
+                        }
+                    };
+                    document.head.appendChild(script);
+                }
+            };
+            
+            // Try multiple CSS sources
+            const cssSources = [
+                '/web/static/css/tailwind.css',
+                '/static/css/tailwind.css'
+            ];
+            
+            let currentIndex = 0;
+            const tryNextCSS = () => {
+                if (currentIndex < cssSources.length && !cssLoaded) {
+                    loadCSS(cssSources[currentIndex]);
+                    currentIndex++;
+                } else if (!cssLoaded && !tailwindScriptAdded) {
+                    // All CSS files failed, try the script
+                    loadTailwindScript();
+                }
+            };
+            
+            // Start loading CSS immediately
+            tryNextCSS();
+            
+            // Fallback: show content after 1.5 seconds with embedded styles
+            setTimeout(() => {
+                if (!cssLoaded) {
+                    showContent();
+                }
+            }, 1500);
+        })();
+    </script>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="login-header text-white shadow-sm border-b border-blue-600">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-6 relative z-10">
+                <div class="flex items-center space-x-4">
+                    <a href="https://mapmystandards.ai/" class="flex items-center">
+                        <img src="https://mapmystandards.ai/wp-content/uploads/2025/07/Original-Logo.png" alt="MapMyStandards.ai" class="h-14 w-auto filter brightness-110 contrast-110">
+                    </a>
+                    <div class="border-l border-white border-opacity-30 pl-4 ml-4">
+                        <h1 class="text-lg font-semibold">Login to A³E</h1>
+                        <p class="text-sm text-blue-100">Access your dashboard</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="https://mapmystandards.ai/" class="text-blue-100 hover:text-white transition-colors">← Back to Home</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-md w-full space-y-8">
+            <div class="text-center">
+                <h2 class="text-3xl font-bold text-gray-900 mb-2">Welcome back</h2>
+                <p class="text-gray-600">Sign in to your A³E account</p>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm p-8">
+                <!-- Login Form -->
+                <form id="loginForm" class="space-y-6">
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email address</label>
+                        <input type="email" id="email" name="email" required 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               placeholder="Enter your email">
+                    </div>
+
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                        <input type="password" id="password" name="password" required 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               placeholder="Enter your password">
+                    </div>
+
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <input type="checkbox" id="remember" name="remember" class="mr-2">
+                            <label for="remember" class="text-sm text-gray-600">Remember me</label>
+                        </div>
+                        <a href="#" onclick="showForgotPassword()" class="text-sm text-blue-600 hover:text-blue-700">
+                            Forgot password?
+                        </a>
+                    </div>
+
+                    <button type="submit" id="loginBtn" 
+                            class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                        Sign In
+                    </button>
+                </form>
+
+                <!-- Forgot Password Form (Hidden initially) -->
+                <form id="forgotPasswordForm" class="space-y-6" style="display: none;">
+                    <div class="text-center mb-6">
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">Reset your password</h3>
+                        <p class="text-sm text-gray-600">Enter your email and we'll send you a reset link</p>
+                    </div>
+
+                    <div>
+                        <label for="resetEmail" class="block text-sm font-medium text-gray-700 mb-1">Email address</label>
+                        <input type="email" id="resetEmail" name="resetEmail" required 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               placeholder="Enter your email">
+                    </div>
+
+                    <button type="submit" id="resetBtn" 
+                            class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                        Send Reset Link
+                    </button>
+
+                    <button type="button" onclick="showLogin()" 
+                            class="w-full text-gray-600 hover:text-gray-800 py-2">
+                        ← Back to login
+                    </button>
+                </form>
+
+                <div id="message" class="mt-4" style="display: none;"></div>
+
+                <!-- Divider -->
+                <div class="mt-8 pt-6 border-t border-gray-200">
+                    <div class="text-center text-sm text-gray-600">
+                        Don't have an account? 
+                        <a href="/trial-signup" class="text-blue-600 hover:text-blue-700 font-medium">
+                            Start free trial
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Form handling
+        document.getElementById('loginForm').addEventListener('submit', handleLogin);
+        document.getElementById('forgotPasswordForm').addEventListener('submit', handlePasswordReset);
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const remember = document.getElementById('remember').checked;
+
+            const loginBtn = document.getElementById('loginBtn');
+            const originalText = loginBtn.innerHTML;
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = 'Signing in...';
+
+            try {
+                const response = await fetch('/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password, remember })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    // Store authentication data
+                    localStorage.setItem('a3e_api_key', result.data.api_key);
+                    localStorage.setItem('a3e_user_email', email);
+                    localStorage.setItem('a3e_plan_type', result.data.plan);
+                    localStorage.setItem('a3e_customer_id', result.data.customer_id);
+                    localStorage.setItem('a3e_subscription_id', result.data.subscription_id);
+                    
+                    if (remember) {
+                        localStorage.setItem('a3e_remember_login', 'true');
+                    }
+
+                    showMessage('Login successful! Redirecting to dashboard...', 'success');
+                    
+                    // Redirect to dashboard
+                    setTimeout(() => {
+                        window.location.href = '/dashboard';
+                    }, 1000);
+                } else {
+                    throw new Error(result.message || 'Login failed');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showMessage(error.message || 'Login failed. Please check your credentials.', 'error');
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = originalText;
+            }
+        }
+
+        async function handlePasswordReset(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('resetEmail').value;
+            const resetBtn = document.getElementById('resetBtn');
+            const originalText = resetBtn.innerHTML;
+            resetBtn.disabled = true;
+            resetBtn.innerHTML = 'Sending...';
+
+            try {
+                const response = await fetch('/auth/password-reset', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    showMessage('Password reset link sent! Check your email.', 'success');
+                    setTimeout(() => showLogin(), 3000);
+                } else {
+                    throw new Error(result.message || 'Password reset failed');
+                }
+            } catch (error) {
+                console.error('Password reset error:', error);
+                showMessage(error.message || 'Failed to send reset link.', 'error');
+                resetBtn.disabled = false;
+                resetBtn.innerHTML = originalText;
+            }
+        }
+
+        function showForgotPassword() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('forgotPasswordForm').style.display = 'block';
+            document.getElementById('resetEmail').focus();
+        }
+
+        function showLogin() {
+            document.getElementById('forgotPasswordForm').style.display = 'none';
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('email').focus();
+        }
+
+        function showMessage(text, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.className = `p-4 rounded-lg text-sm ${type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`;
+            messageDiv.textContent = text;
+            messageDiv.style.display = 'block';
+            
+            // Hide message after 5 seconds
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        // Check if user is already logged in
+        document.addEventListener('DOMContentLoaded', function() {
+            const apiKey = localStorage.getItem('a3e_api_key');
+            if (apiKey) {
+                // User is already logged in, redirect to dashboard
+                window.location.href = '/dashboard';
+            }
+            
+            // Form persistence functionality
+            initializeFormPersistence();
+            
+            // Enhanced email validation for institutional domains
+            initializeEmailValidation();
+        });
+        
+        // Form persistence system
+        function initializeFormPersistence() {
+            const fields = [
+                { id: 'email', key: 'login_email' },
+                { id: 'resetEmail', key: 'login_reset_email' },
+                { id: 'remember', key: 'login_remember' }
+            ];
+            
+            fields.forEach(field => {
+                const element = document.getElementById(field.id);
+                if (!element) return;
+                
+                // Load saved value
+                const savedValue = localStorage.getItem(field.key);
+                if (savedValue) {
+                    if (element.type === 'checkbox') {
+                        element.checked = savedValue === 'true';
+                    } else {
+                        element.value = savedValue;
+                    }
+                }
+                
+                // Save on change
+                element.addEventListener('input', function() {
+                    if (element.type === 'checkbox') {
+                        localStorage.setItem(field.key, element.checked);
+                    } else {
+                        localStorage.setItem(field.key, element.value);
+                    }
+                });
+            });
+        }
+        
+        // Enhanced email validation for institutional domains
+        function initializeEmailValidation() {
+            const emailFields = ['email', 'resetEmail'];
+            
+            emailFields.forEach(fieldId => {
+                const emailField = document.getElementById(fieldId);
+                if (!emailField) return;
+                
+                // Create validation feedback element
+                const validationDiv = document.createElement('div');
+                validationDiv.id = fieldId + '_validation';
+                validationDiv.className = 'text-sm mt-1 min-h-[20px]';
+                emailField.parentNode.insertBefore(validationDiv, emailField.nextSibling);
+                
+                emailField.addEventListener('input', debounce(function() {
+                    validateInstitutionalEmail(emailField, validationDiv);
+                }, 300));
+                
+                emailField.addEventListener('blur', function() {
+                    validateInstitutionalEmail(emailField, validationDiv);
+                });
+            });
+        }
+        
+        // Comprehensive institutional domain validation
+        function validateInstitutionalEmail(emailField, validationDiv) {
+            const email = emailField.value.trim();
+            
+            if (!email) {
+                validationDiv.innerHTML = '';
+                emailField.classList.remove('border-green-500', 'border-red-500');
+                return;
+            }
+            
+            if (!isValidEmail(email)) {
+                showValidationMessage(validationDiv, 'Please enter a valid email address', 'error');
+                emailField.classList.remove('border-green-500');
+                emailField.classList.add('border-red-500');
+                return;
+            }
+            
+            const domain = email.split('@')[1]?.toLowerCase();
+            
+            // Comprehensive institutional domain patterns
+            const institutionalPatterns = [
+                /\.edu$/,           // Standard .edu domains
+                /\.ac\./,           // International academic domains (.ac.uk, .ac.jp, etc.)
+                /\.edu\./,          // Educational subdomains
+                /university\./,     // University in domain
+                /college\./,        // College in domain
+                /school\./,         // School in domain
+                /\.k12\./,          // K-12 schools
+                /district\./,       // School districts
+                /academy\./         // Academies
+            ];
+            
+            // Known institutional domains
+            const knownInstitutionalDomains = [
+                'harvard.edu', 'stanford.edu', 'mit.edu', 'yale.edu', 'princeton.edu',
+                'columbia.edu', 'upenn.edu', 'dartmouth.edu', 'brown.edu', 'cornell.edu',
+                'uchicago.edu', 'northwestern.edu', 'duke.edu', 'vanderbilt.edu', 'rice.edu',
+                'emory.edu', 'georgetown.edu', 'carnegiemellon.edu', 'wustl.edu', 'tufts.edu',
+                'ox.ac.uk', 'cam.ac.uk', 'toronto.ca', 'mcgill.ca', 'ubc.ca',
+                'sydney.edu.au', 'unsw.edu.au', 'anu.edu.au', 'tokyo.ac.jp', 'kyoto-u.ac.jp'
+            ];
+            
+            const isInstitutional = institutionalPatterns.some(pattern => pattern.test(domain)) ||
+                                  knownInstitutionalDomains.includes(domain);
+            
+            if (isInstitutional) {
+                showValidationMessage(validationDiv, '✓ Institutional email verified', 'success');
+                emailField.classList.remove('border-red-500');
+                emailField.classList.add('border-green-500');
+            } else {
+                showValidationMessage(validationDiv, 'Please use your institutional email address (.edu domain preferred)', 'warning');
+                emailField.classList.remove('border-green-500', 'border-red-500');
+            }
+        }
+        
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+        
+        function showValidationMessage(element, message, type) {
+            const colors = {
+                success: 'text-green-600',
+                error: 'text-red-600',
+                warning: 'text-amber-600'
+            };
+            
+            element.innerHTML = `<span class="${colors[type]}">${message}</span>`;
+        }
+        
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+    </script>
+</body>
+</html>
