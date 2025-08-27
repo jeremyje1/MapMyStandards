@@ -433,6 +433,35 @@ if upload_router_available:
 else:
     logger.warning("⚠️ Upload router not available")
 
+# Include new enhanced routers
+try:
+    from .api.routes.uploads_fixed import router as uploads_fixed_router
+    app.include_router(uploads_fixed_router)
+    logger.info("✅ Enhanced uploads router loaded")
+except ImportError as e:
+    logger.warning(f"⚠️ Enhanced uploads router not available: {e}")
+
+try:
+    from .api.routes.reports import router as reports_router
+    app.include_router(reports_router)
+    logger.info("✅ Reports router loaded")
+except ImportError as e:
+    logger.warning(f"⚠️ Reports router not available: {e}")
+
+try:
+    from .api.routes.metrics import router as metrics_router
+    app.include_router(metrics_router)
+    logger.info("✅ Metrics router loaded")
+except ImportError as e:
+    logger.warning(f"⚠️ Metrics router not available: {e}")
+
+try:
+    from .api.routes.standards_mock import router as standards_mock_router
+    app.include_router(standards_mock_router)
+    logger.info("✅ Mock standards router loaded")
+except ImportError as e:
+    logger.warning(f"⚠️ Mock standards router not available: {e}")
+
 app.include_router(integrations_router)
 app.include_router(proprietary_router)
 app.include_router(billing_router)

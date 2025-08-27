@@ -336,12 +336,16 @@
         // Load accreditors on page load
         async function loadAccreditors() {
             try {
-                const response = await fetch('/api/v1/accreditors');
+                const response = await fetch('/api/standards/accreditors');
                 const data = await response.json();
                 
-                accreditors = data.accreditors;
-                populateAccreditorSelect();
-                showAccreditorSelection();
+                if (data.success) {
+                    accreditors = data.data.accreditors;
+                    populateAccreditorSelect();
+                    showAccreditorSelection();
+                } else {
+                    throw new Error('Failed to load accreditors');
+                }
             } catch (error) {
                 console.error('Error loading accreditors:', error);
                 document.getElementById('contentArea').innerHTML = `
@@ -388,16 +392,26 @@
             `;
 
             try {
-                let url = `/api/v1/accreditors/${accreditorId}/standards`;
+                let url = `/api/standards?accreditor=${accreditorId.toUpperCase()}`;
                 if (institutionType) {
-                    url += `?institution_type=${institutionType}`;
+                    url += `&institution_type=${institutionType}`;
                 }
 
                 const response = await fetch(url);
                 const data = await response.json();
                 
-                currentStandards = data.standards;
-                displayStandards(data);
+                if (data.success) {
+                    currentStandards = data.data.standards;
+                    displayStandards({
+                        accreditor: { 
+                            name: "Southern Association of Colleges and Schools Commission on Colleges", 
+                            acronym: accreditorId.toUpperCase() 
+                        },
+                        standards: data.data.standards
+                    });
+                } else {
+                    throw new Error('Failed to load standards');
+                }
             } catch (error) {
                 console.error('Error loading standards:', error);
                 document.getElementById('contentArea').innerHTML = `
@@ -434,14 +448,15 @@
                     html += `
                         <div class="standard-card">
                             <div class="standard-header">
-                                <div class="standard-id">${standard.id}</div>
+                                <div class="standard-id">${standard.code || standard.id}</div>
                             </div>
                             <h3 class="standard-title">${standard.title}</h3>
                             <p class="standard-description">${standard.description}</p>
                             <div class="standard-meta">
-                                ${standard.sub_standards_count > 0 ? `<span>${standard.sub_standards_count} sub-standards</span>` : ''}
-                                <span>Weight: ${standard.weight}</span>
-                                <span>Types: ${standard.applicable_institution_types.join(', ')}</span>
+                                <span>Category: ${standard.category}</span>
+                                <span>Weight: ${standard.weight || 100}</span>
+                                ${standard.is_required ? '<span style="color: #dc2626;">Required</span>' : ''}
+                                ${standard.evidence_requirements ? `<span>Evidence: ${standard.evidence_requirements.length} items</span>` : ''}
                             </div>
                         </div>
                     `;

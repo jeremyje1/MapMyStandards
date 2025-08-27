@@ -5,9 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - A³E | MapMyStandards.ai</title>
     
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
     <!-- Tailwind (built) -->
     <link rel="stylesheet" href="/web/static/css/tailwind.css">
     
@@ -15,7 +12,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
             background: #f3f4f6;
             color: #333;
         }
@@ -245,19 +242,19 @@
         <!-- Stats Grid -->
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-value">0</div>
+                <div class="stat-value" id="documentsAnalyzed">0</div>
                 <div class="stat-label">Documents Analyzed</div>
             </div>
             <div class="stat-card">
-                <div class="stat-value">0</div>
+                <div class="stat-value" id="standardsMapped">0</div>
                 <div class="stat-label">Standards Mapped</div>
             </div>
             <div class="stat-card">
-                <div class="stat-value">0</div>
+                <div class="stat-value" id="reportsGenerated">0</div>
                 <div class="stat-label">Reports Generated</div>
             </div>
             <div class="stat-card">
-                <div class="stat-value">7</div>
+                <div class="stat-value" id="trialDaysRemaining">14</div>
                 <div class="stat-label">Trial Days Remaining</div>
             </div>
         </div>
@@ -297,13 +294,75 @@
             window.location.href = '/login';
         }
 
-        // Load user email if available
+        // Load dashboard metrics
+        async function loadDashboardMetrics() {
+            try {
+                // Check if user has token
+                const token = localStorage.getItem('authToken') || 'demo-token';
+                
+                const response = await fetch('/api/metrics/dashboard', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    const data = result.data;
+                    
+                    // Update metrics in UI
+                    document.getElementById('documentsAnalyzed').textContent = 
+                        data.core_metrics.documents_analyzed;
+                    document.getElementById('standardsMapped').textContent = 
+                        `${data.core_metrics.standards_mapped}/${data.core_metrics.total_standards}`;
+                    document.getElementById('reportsGenerated').textContent = 
+                        data.core_metrics.reports_generated;
+                    document.getElementById('trialDaysRemaining').textContent = 
+                        data.account_info.trial_days_remaining;
+                    
+                    // Update welcome message with real data
+                    if (data.core_metrics.documents_analyzed > 0) {
+                        const welcomeText = document.querySelector('.welcome-text');
+                        welcomeText.innerHTML = `Great progress! You've analyzed <strong>${data.core_metrics.documents_analyzed}</strong> documents and mapped <strong>${data.core_metrics.standards_mapped}</strong> standards. Your compliance score is <strong>${data.performance_metrics.compliance_score}%</strong>.`;
+                    }
+                    
+                    console.log('Dashboard metrics loaded:', data);
+                } else {
+                    console.warn('Failed to load metrics, using defaults');
+                }
+            } catch (error) {
+                console.error('Error loading dashboard metrics:', error);
+                // Keep default values if API fails
+            }
+        }
+
+        // Add loading indicator
+        function showLoadingState() {
+            const statValues = document.querySelectorAll('.stat-value');
+            statValues.forEach(el => {
+                if (el.textContent === '0') {
+                    el.innerHTML = '<span style="opacity: 0.5;">...</span>';
+                }
+            });
+        }
+
+        // Initialize dashboard
         document.addEventListener('DOMContentLoaded', function() {
+            // Load user email if available
             const userEmail = localStorage.getItem('userEmail');
             const userEmailElement = document.getElementById('userEmail');
             if (userEmail && userEmailElement) {
                 userEmailElement.textContent = userEmail;
             }
+            
+            // Show loading state and load metrics
+            showLoadingState();
+            loadDashboardMetrics();
+            
+            // Refresh metrics every 30 seconds
+            setInterval(loadDashboardMetrics, 30000);
         });
     </script>
 </body>
