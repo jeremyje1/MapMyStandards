@@ -118,6 +118,11 @@ class DatabaseManager:
         try:
             logger.info("Initializing default data...")
             
+            # Skip data initialization if already initialized to avoid recursion
+            if hasattr(self, '_data_initialized') and self._data_initialized:
+                logger.info("Default data already initialized")
+                return
+            
             async with self.get_session() as session:
                 # Check if SACSCOC already exists
                 result = await session.execute(
@@ -131,6 +136,7 @@ class DatabaseManager:
                 else:
                     logger.info("SACSCOC data already exists")
             
+            self._data_initialized = True
             logger.info("✅ Default data initialized")
             
         except Exception as e:
