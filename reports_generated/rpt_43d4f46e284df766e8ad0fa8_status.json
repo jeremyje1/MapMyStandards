@@ -1,0 +1,13 @@
+{
+  "report_id": "rpt_43d4f46e284df766e8ad0fa8",
+  "user_id": "user_demo-tok",
+  "type": "evidence_mapping_summary",
+  "status": "completed",
+  "progress": 100,
+  "message": "Report generated successfully",
+  "created_at": "2025-08-27T20:08:22.229341",
+  "updated_at": "2025-08-27T20:08:25.231402",
+  "pdf_filename": "rpt_43d4f46e284df766e8ad0fa8_evidence_mapping_summary.pdf",
+  "pdf_path": "reports_generated/rpt_43d4f46e284df766e8ad0fa8_evidence_mapping_summary.pdf",
+  "download_url": "/api/reports/rpt_43d4f46e284df766e8ad0fa8/download"
+}

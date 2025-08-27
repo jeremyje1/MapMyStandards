@@ -1,0 +1,38 @@
+{
+  "job_id": "job_fc85205fcf40488cb4960573",
+  "file_id": "file_6d90bcc334b44b1b",
+  "user_id": "user_demo-tok",
+  "filename": "test_file.txt",
+  "safe_filename": "20250827_200626_d59e1b532a074b58.txt",
+  "file_size": 53,
+  "title": "Test Document",
+  "status": "completed",
+  "progress": 100,
+  "description": "Analysis complete",
+  "created_at": "2025-08-27T20:06:26.599509",
+  "updated_at": "2025-08-27T20:06:36.609557",
+  "results": {
+    "standards_matched": 8,
+    "total_standards": 12,
+    "confidence_score": 0.87,
+    "gaps_identified": 4,
+    "coverage_percentage": 67,
+    "mapped_standards": [
+      {
+        "standard_id": "SACSCOC_1_1",
+        "title": "Mission",
+        "confidence": 0.92
+      },
+      {
+        "standard_id": "SACSCOC_2_1",
+        "title": "Degree Standards",
+        "confidence": 0.85
+      },
+      {
+        "standard_id": "SACSCOC_8_1",
+        "title": "Faculty",
+        "confidence": 0.78
+      }
+    ]
+  }
+}

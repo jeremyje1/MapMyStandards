@@ -176,9 +176,21 @@ async def lifespan(app: FastAPI):
     
     # Initialize services
     try:
-        db_service = DatabaseService(settings.database_url)
-        await db_service.initialize()
-        logger.info("✅ Database service initialized")
+        # Initialize production database
+        try:
+            from .database.connection import db_manager
+            await db_manager.initialize()
+            logger.info("✅ Production database initialized")
+        except Exception as e:
+            logger.warning(f"⚠️ Production database init failed: {e}")
+            # Fallback to legacy database service
+            try:
+                db_service = DatabaseService(settings.database_url)
+                await db_service.initialize()
+                logger.info("✅ Legacy database service initialized (fallback)")
+            except Exception as e2:
+                logger.error(f"❌ All database initialization failed: {e2}")
+                db_service = None
         
         try:
             if VECTOR_SERVICE_AVAILABLE:
@@ -253,6 +265,16 @@ async def lifespan(app: FastAPI):
     
     # Cleanup
     logger.info("🛑 Shutting down A3E Application...")
+    
+    # Close production database
+    try:
+        from .database.connection import db_manager
+        await db_manager.close()
+        logger.info("✅ Production database closed")
+    except Exception as e:
+        logger.error(f"❌ Production database cleanup error: {e}")
+    
+    # Close legacy services
     if vector_service:
         await vector_service.close()
     if db_service:
@@ -433,34 +455,62 @@ if upload_router_available:
 else:
     logger.warning("⚠️ Upload router not available")
 
-# Include new enhanced routers
+# Include database-powered routers (production-ready)
 try:
-    from .api.routes.uploads_fixed import router as uploads_fixed_router
-    app.include_router(uploads_fixed_router)
-    logger.info("✅ Enhanced uploads router loaded")
+    from .api.routes.uploads_db import router as uploads_db_router
+    app.include_router(uploads_db_router)
+    logger.info("✅ Database uploads router loaded")
 except ImportError as e:
-    logger.warning(f"⚠️ Enhanced uploads router not available: {e}")
+    logger.warning(f"⚠️ Database uploads router not available: {e}")
+    # Fallback to file-based
+    try:
+        from .api.routes.uploads_fixed import router as uploads_fixed_router
+        app.include_router(uploads_fixed_router)
+        logger.info("✅ File-based uploads router loaded (fallback)")
+    except ImportError as e2:
+        logger.error(f"❌ No uploads router available: {e2}")
 
 try:
-    from .api.routes.reports import router as reports_router
-    app.include_router(reports_router)
-    logger.info("✅ Reports router loaded")
+    from .api.routes.reports_db import router as reports_db_router
+    app.include_router(reports_db_router)
+    logger.info("✅ Database reports router loaded")
 except ImportError as e:
-    logger.warning(f"⚠️ Reports router not available: {e}")
+    logger.warning(f"⚠️ Database reports router not available: {e}")
+    # Fallback to file-based
+    try:
+        from .api.routes.reports import router as reports_router
+        app.include_router(reports_router)
+        logger.info("✅ File-based reports router loaded (fallback)")
+    except ImportError as e2:
+        logger.error(f"❌ No reports router available: {e2}")
 
 try:
-    from .api.routes.metrics import router as metrics_router
-    app.include_router(metrics_router)
-    logger.info("✅ Metrics router loaded")
+    from .api.routes.metrics_db import router as metrics_db_router
+    app.include_router(metrics_db_router)
+    logger.info("✅ Database metrics router loaded")
 except ImportError as e:
-    logger.warning(f"⚠️ Metrics router not available: {e}")
+    logger.warning(f"⚠️ Database metrics router not available: {e}")
+    # Fallback to file-based
+    try:
+        from .api.routes.metrics import router as metrics_router
+        app.include_router(metrics_router)
+        logger.info("✅ File-based metrics router loaded (fallback)")
+    except ImportError as e2:
+        logger.error(f"❌ No metrics router available: {e2}")
 
 try:
-    from .api.routes.standards_mock import router as standards_mock_router
-    app.include_router(standards_mock_router)
-    logger.info("✅ Mock standards router loaded")
+    from .api.routes.standards_db import router as standards_db_router
+    app.include_router(standards_db_router)
+    logger.info("✅ Database standards router loaded")
 except ImportError as e:
-    logger.warning(f"⚠️ Mock standards router not available: {e}")
+    logger.warning(f"⚠️ Database standards router not available: {e}")
+    # Fallback to mock
+    try:
+        from .api.routes.standards_mock import router as standards_mock_router
+        app.include_router(standards_mock_router)
+        logger.info("✅ Mock standards router loaded (fallback)")
+    except ImportError as e2:
+        logger.error(f"❌ No standards router available: {e2}")
 
 app.include_router(integrations_router)
 app.include_router(proprietary_router)
