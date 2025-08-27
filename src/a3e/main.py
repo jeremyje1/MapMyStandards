@@ -419,6 +419,21 @@ if trial_router_available:
 else:
     logger.warning("⚠️ Trial router not available")
 
+# Include customer experience routers
+try:
+    from .api.routes.sample_data import router as sample_data_router
+    app.include_router(sample_data_router)
+    logger.info("✅ Sample data router loaded")
+except ImportError as e:
+    logger.warning(f"⚠️ Sample data router not available: {e}")
+
+try:
+    from .api.routes.nurturing import router as nurturing_router
+    app.include_router(nurturing_router)
+    logger.info("✅ Email nurturing router loaded")
+except ImportError as e:
+    logger.warning(f"⚠️ Email nurturing router not available: {e}")
+
 if auth_impl_router_available:
     app.include_router(auth_impl_router)
     logger.info("✅ Auth implementation router loaded")
@@ -1158,6 +1173,16 @@ if WEB_DIR.exists():
     @app.get("/homepage", response_class=FileResponse, include_in_schema=False)
     async def homepage():  # noqa: D401
         return FileResponse(str(WEB_DIR / "homepage.html"))
+    
+    @app.get("/quick-wins-dashboard", response_class=FileResponse, include_in_schema=False)
+    async def quick_wins_dashboard():  # noqa: D401
+        """Serve quick wins dashboard for trial users."""
+        return FileResponse(str(WEB_DIR / "quick-wins-dashboard.html"))
+    
+    @app.get("/roi-calculator", response_class=FileResponse, include_in_schema=False)
+    async def roi_calculator():  # noqa: D401
+        """Serve ROI calculator tool."""
+        return FileResponse(str(WEB_DIR / "roi-calculator.html"))
 
     @app.get("/onboarding", response_class=FileResponse, include_in_schema=False)
     @app.get("/onboarding.html", response_class=FileResponse, include_in_schema=False)

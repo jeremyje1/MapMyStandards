@@ -60,7 +60,9 @@ class DatabaseManager:
             sync_url, async_url = self._get_database_url()
             
             logger.info("Initializing database connections...")
-            logger.info(f"Database host: {sync_url.split('@')[1].split('/')[0] if '@' in sync_url else 'unknown'}")
+            # Reduced logging - only show host info in development
+            if os.getenv('DEBUG') == 'true':
+                logger.info(f"Database host: {sync_url.split('@')[1].split('/')[0] if '@' in sync_url else 'unknown'}")
             
             # Synchronous engine for migrations and admin tasks
             self.engine = create_engine(
@@ -102,12 +104,16 @@ class DatabaseManager:
     async def _create_tables(self):
         """Create database tables"""
         try:
-            logger.info("Creating database tables...")
+            # Reduced logging - only log in debug mode or on first creation
+            if os.getenv('DEBUG') == 'true' or not hasattr(self, '_tables_created'):
+                logger.info("Creating database tables...")
             
             # Use sync engine for DDL operations
             Base.metadata.create_all(bind=self.engine)
             
-            logger.info("✅ Database tables created")
+            if os.getenv('DEBUG') == 'true' or not hasattr(self, '_tables_created'):
+                logger.info("✅ Database tables created")
+                self._tables_created = True
             
         except Exception as e:
             logger.error(f"❌ Table creation failed: {e}")
@@ -116,12 +122,13 @@ class DatabaseManager:
     async def _initialize_default_data(self):
         """Initialize default accreditors and standards"""
         try:
-            logger.info("Initializing default data...")
-            
             # Skip data initialization if already initialized to avoid recursion
             if hasattr(self, '_data_initialized') and self._data_initialized:
-                logger.info("Default data already initialized")
                 return
+            
+            # Only log in debug mode to reduce noise
+            if os.getenv('DEBUG') == 'true':
+                logger.info("Initializing default data...")
             
             async with self.get_session() as session:
                 # Check if SACSCOC already exists
@@ -131,13 +138,13 @@ class DatabaseManager:
                 count = result.scalar()
                 
                 if count == 0:
-                    logger.info("Seeding SACSCOC data...")
+                    if os.getenv('DEBUG') == 'true':
+                        logger.info("Seeding SACSCOC data...")
                     await self._seed_sacscoc_data(session)
-                else:
-                    logger.info("SACSCOC data already exists")
+                    if os.getenv('DEBUG') == 'true':
+                        logger.info("✅ SACSCOC data seeded")
             
             self._data_initialized = True
-            logger.info("✅ Default data initialized")
             
         except Exception as e:
             logger.error(f"❌ Default data initialization failed: {e}")
@@ -251,7 +258,9 @@ class DatabaseManager:
             session.add(standard)
         
         await session.commit()
-        logger.info(f"✅ Seeded {len(standards_data)} SACSCOC standards")
+        # Only log in debug mode to reduce noise
+        if os.getenv('DEBUG') == 'true':
+            logger.info(f"✅ Seeded {len(standards_data)} SACSCOC standards")
     
     @asynccontextmanager
     async def get_session(self) -> AsyncGenerator[AsyncSession, None]:
