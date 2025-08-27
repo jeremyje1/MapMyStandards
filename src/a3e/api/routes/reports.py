@@ -331,6 +331,62 @@ Contact: support@mapmystandards.ai
         logger.error(f"PDF generation failed: {e}")
         raise
 
+async def send_report_complete_notification(report_id: str, report_type: str, user_id: str):
+    """Send email notifications when report generation completes"""
+    try:
+        from ...services.postmark_service import postmark_service
+        from ...database.services import UserService
+        
+        # Get user details
+        user = await UserService.get_user(user_id)
+        if not user:
+            logger.warning(f"User not found for report notification: {user_id}")
+            return
+        
+        # Map report types to friendly names
+        report_type_names = {
+            "evidence_mapping_summary": "Evidence Mapping Summary",
+            "gap_analysis": "Gap Analysis",
+            "compliance_summary": "Compliance Summary", 
+            "qep_impact_assessment": "QEP Impact Assessment"
+        }
+        
+        friendly_report_type = report_type_names.get(report_type, report_type.replace('_', ' ').title())
+        
+        # Send customer notification
+        success = postmark_service.send_assessment_complete_notification(
+            user_email=user.email,
+            user_name=user.name,
+            assessment_type="report_generation",
+            document_name=f"{friendly_report_type} Report",
+            standards_mapped=0,  # Not applicable for reports
+            compliance_score=0   # Would need to calculate from report data
+        )
+        
+        if success:
+            logger.info(f"📧 Report complete notification sent to {user.email}")
+        else:
+            logger.warning(f"⚠️ Failed to send report notification to {user.email}")
+        
+        # Send admin notification
+        admin_success = postmark_service.send_admin_signup_notification(
+            email=user.email,
+            name=user.name,
+            institution=user.institution_name,
+            role=user.role,
+            trial=user.is_trial,
+            milestone_type="report_generated",
+            additional_info=f"Generated {friendly_report_type} report (ID: {report_id})"
+        )
+        
+        if admin_success:
+            logger.info(f"📧 Admin report notification sent for {user.email}")
+        else:
+            logger.warning(f"⚠️ Failed to send admin report notification for {user.email}")
+            
+    except Exception as e:
+        logger.error(f"❌ Error sending report complete notification: {e}")
+
 async def generate_report_background(report_id: str, report_type: str, params: Dict[str, Any], user_id: str):
     """Background task to generate report"""
     try:
@@ -364,6 +420,12 @@ async def generate_report_background(report_id: str, report_type: str, params: D
             "updated_at": datetime.utcnow().isoformat()
         })
         save_report_status(report_id, status_data)
+        
+        # Send milestone notification emails
+        try:
+            await send_report_complete_notification(report_id, report_type, user_id)
+        except Exception as e:
+            logger.warning(f"⚠️ Failed to send milestone notification: {e}")
         
         logger.info(f"Report generated successfully: {report_id}")
         

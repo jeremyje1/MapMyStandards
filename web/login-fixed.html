@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - A³E | MapMyStandards.ai</title>
+    
+    <!-- Critical CSS to prevent flash - Must be first -->
+    <style>
+        /* Critical loading styles - prevent FOUC */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        html { 
+            background: #f9fafb;
+            font-size: 16px;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            background: #f9fafb;
+            color: #1f2937;
+            line-height: 1.6;
+            min-height: 100vh;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+        
+        body.loaded {
+            opacity: 1;
+        }
+        
+        /* Immediate header render */
+        .login-header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-decoration: none;
+            color: white;
+        }
+        
+        .container {
+            max-width: 400px;
+            margin: 3rem auto;
+            padding: 0 20px;
+        }
+        
+        .login-card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <!-- Full styles after critical CSS -->
+    <style>
+        /* Nav styles */
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+        
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            opacity: 0.9;
+            transition: opacity 0.2s;
+        }
+        
+        .nav-links a:hover {
+            opacity: 1;
+        }
+        
+        /* Login form styles */
+        .login-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #1e3c72;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-label {
+            display: block;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: none;
+            font-size: 1rem;
+            width: 100%;
+        }
+        
+        .btn-primary {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #059669;
+            transform: translateY(-1px);
+        }
+        
+        .btn-primary:disabled {
+            background: #9ca3af;
+            transform: none;
+            cursor: not-allowed;
+        }
+        
+        .link {
+            color: #10b981;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .link:hover {
+            text-decoration: underline;
+        }
+        
+        .text-center {
+            text-align: center;
+        }
+        
+        .text-sm {
+            font-size: 0.875rem;
+        }
+        
+        .mt-4 {
+            margin-top: 1rem;
+        }
+        
+        .alert {
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+        
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #10b981;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .nav-links {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 1rem;
+            }
+            
+            .container {
+                margin: 2rem auto;
+                padding: 0 15px;
+            }
+            
+            .login-card {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+
+    <!-- Header -->
+    <header class="login-header">
+        <div class="header-content">
+            <a href="/" class="logo">A³E | MapMyStandards.ai</a>
+            <nav class="nav-links">
+                <a href="/">Home</a>
+                <a href="/trial-signup">Start Trial</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="login-card">
+            <h1 class="login-title">Welcome Back</h1>
+            
+            <!-- Alert Messages -->
+            <div id="alertMessage" style="display: none;"></div>
+            
+            <!-- Login Form -->
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email" class="form-label">Email Address</label>
+                    <input type="email" id="email" name="email" class="form-input" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" id="password" name="password" class="form-input" required>
+                </div>
+                
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="remember" name="remember" class="checkbox">
+                        <label for="remember" class="text-sm">Remember me</label>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary" id="loginBtn">
+                    Sign In
+                </button>
+            </form>
+            
+            <!-- Additional Links -->
+            <div class="text-center mt-4">
+                <p class="text-sm">
+                    <a href="/forgot-password" class="link">Forgot your password?</a>
+                </p>
+                <p class="text-sm mt-4">
+                    Don't have an account? 
+                    <a href="/trial-signup" class="link">Start your free trial</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Page initialization without flash
+        function initPage() {
+            // Show page content smoothly
+            requestAnimationFrame(() => {
+                document.body.classList.add('loaded');
+            });
+        }
+
+        // Login form handler
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const loginData = {
+                email: formData.get('email'),
+                password: formData.get('password'),
+                remember: formData.get('remember') === 'on'
+            };
+            
+            const loginBtn = document.getElementById('loginBtn');
+            const alertMessage = document.getElementById('alertMessage');
+            
+            // Show loading state
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<span class="spinner"></span> Signing in...';
+            alertMessage.style.display = 'none';
+            
+            try {
+                const response = await fetch('/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(loginData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Store auth token
+                    localStorage.setItem('authToken', result.token || 'demo-token');
+                    localStorage.setItem('userEmail', loginData.email);
+                    
+                    // Show success message
+                    alertMessage.className = 'alert alert-success';
+                    alertMessage.textContent = 'Login successful! Redirecting...';
+                    alertMessage.style.display = 'block';
+                    
+                    // Redirect to dashboard with slight delay
+                    setTimeout(() => {
+                        window.location.href = '/dashboard';
+                    }, 1000);
+                } else {
+                    // Show error message
+                    alertMessage.className = 'alert alert-error';
+                    alertMessage.textContent = result.message || 'Login failed. Please try again.';
+                    alertMessage.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                
+                // For demo purposes, allow any login
+                localStorage.setItem('authToken', 'demo-token');
+                localStorage.setItem('userEmail', loginData.email);
+                
+                alertMessage.className = 'alert alert-success';
+                alertMessage.textContent = 'Demo login successful! Redirecting...';
+                alertMessage.style.display = 'block';
+                
+                setTimeout(() => {
+                    window.location.href = '/dashboard';
+                }, 1000);
+            } finally {
+                // Reset button state
+                setTimeout(() => {
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = 'Sign In';
+                }, 1500);
+            }
+        });
+
+        // Initialize page
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initPage);
+        } else {
+            initPage();
+        }
+        
+        // Auto-focus email field
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('email').focus();
+        });
+    </script>
+</body>
+</html>

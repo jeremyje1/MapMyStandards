@@ -23,6 +23,66 @@ class JobProcessor:
     """Handles background analysis jobs with database persistence"""
     
     @staticmethod
+    async def send_analysis_complete_notification(job_id: str, mapped_standards: list):
+        """Send email notifications when analysis completes"""
+        try:
+            from ...services.postmark_service import postmark_service
+            
+            # Get job and file details
+            job = await JobService.get_job(job_id)
+            if not job:
+                logger.warning(f"Job not found for notification: {job_id}")
+                return
+                
+            file_record = await FileService.get_file(job.file_id)
+            if not file_record:
+                logger.warning(f"File not found for job: {job_id}")
+                return
+                
+            user = await UserService.get_user(job.user_id)
+            if not user:
+                logger.warning(f"User not found for job: {job_id}")
+                return
+            
+            # Calculate compliance score from mapped standards
+            avg_confidence = sum(s.get('confidence', 0) for s in mapped_standards) / len(mapped_standards) if mapped_standards else 0
+            compliance_score = avg_confidence * 100
+            
+            # Send milestone notification
+            success = postmark_service.send_assessment_complete_notification(
+                user_email=user.email,
+                user_name=user.name,
+                assessment_type="upload_analysis",
+                document_name=file_record.filename,
+                standards_mapped=len(mapped_standards),
+                compliance_score=compliance_score
+            )
+            
+            if success:
+                logger.info(f"📧 Analysis complete notification sent to {user.email}")
+            else:
+                logger.warning(f"⚠️ Failed to send analysis notification to {user.email}")
+            
+            # Send admin notification
+            admin_success = postmark_service.send_admin_signup_notification(
+                email=user.email,
+                name=user.name,
+                institution=user.institution_name,
+                role=user.role,
+                trial=user.is_trial,
+                milestone_type="analysis_complete",
+                additional_info=f"Analyzed '{file_record.filename}' - {len(mapped_standards)} standards mapped (ID: {job_id})"
+            )
+            
+            if admin_success:
+                logger.info(f"📧 Admin analysis notification sent for {user.email}")
+            else:
+                logger.warning(f"⚠️ Failed to send admin analysis notification for {user.email}")
+                
+        except Exception as e:
+            logger.error(f"❌ Error sending analysis notification: {e}")
+    
+    @staticmethod
     async def process_analysis_job(job_id: str):
         """Process analysis job with realistic steps and database updates"""
         try:
@@ -89,6 +149,12 @@ class JobProcessor:
             
             # Complete job with mappings
             await JobService.complete_job_with_mappings(job_id, mapped_standards)
+            
+            # Send milestone notification emails
+            try:
+                await JobProcessor.send_analysis_complete_notification(job_id, mapped_standards)
+            except Exception as e:
+                logger.warning(f"⚠️ Failed to send milestone notification: {e}")
             
             logger.info(f"✅ Completed analysis job: {job_id}")
             

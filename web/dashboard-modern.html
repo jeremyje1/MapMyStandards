@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - MapMyStandards AI</title>
+    <meta name="description" content="Your AI-powered accreditation dashboard. Track compliance, analyze documents, and generate reports.">
+    
+    <style>
+        /* Modern CSS Reset */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Design System Variables */
+        :root {
+            /* Colors */
+            --primary-blue: #1e40af;
+            --primary-blue-light: #3b82f6;
+            --primary-blue-dark: #1e3a8a;
+            --accent-green: #10b981;
+            --accent-green-light: #34d399;
+            --accent-orange: #f59e0b;
+            --accent-purple: #8b5cf6;
+            --accent-red: #ef4444;
+            
+            /* Neutrals */
+            --white: #ffffff;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            
+            /* Gradients */
+            --gradient-primary: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-light) 100%);
+            --gradient-success: linear-gradient(135deg, var(--accent-green) 0%, var(--accent-green-light) 100%);
+            --gradient-warning: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+            --gradient-hero: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            
+            /* Typography */
+            --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', 'Helvetica Neue', Arial, sans-serif;
+            --font-size-xs: 0.75rem;
+            --font-size-sm: 0.875rem;
+            --font-size-base: 1rem;
+            --font-size-lg: 1.125rem;
+            --font-size-xl: 1.25rem;
+            --font-size-2xl: 1.5rem;
+            --font-size-3xl: 1.875rem;
+            --font-size-4xl: 2.25rem;
+            
+            /* Spacing */
+            --space-1: 0.25rem;
+            --space-2: 0.5rem;
+            --space-3: 0.75rem;
+            --space-4: 1rem;
+            --space-5: 1.25rem;
+            --space-6: 1.5rem;
+            --space-8: 2rem;
+            --space-10: 2.5rem;
+            --space-12: 3rem;
+            --space-16: 4rem;
+            --space-20: 5rem;
+            
+            /* Borders & Radius */
+            --border-radius-sm: 0.375rem;
+            --border-radius: 0.5rem;
+            --border-radius-lg: 0.75rem;
+            --border-radius-xl: 1rem;
+            --border-radius-2xl: 1.5rem;
+            
+            /* Shadows */
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            
+            /* Animations */
+            --transition: all 0.2s ease-in-out;
+            --transition-slow: all 0.3s ease-in-out;
+        }
+
+        /* Base Styles */
+        body {
+            font-family: var(--font-family);
+            background: var(--gray-50);
+            color: var(--gray-800);
+            line-height: 1.6;
+            font-size: var(--font-size-base);
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: var(--white);
+            border-bottom: 1px solid var(--gray-200);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            backdrop-filter: blur(12px);
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: var(--space-4) var(--space-6);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+        }
+
+        .logo {
+            font-size: var(--font-size-xl);
+            font-weight: 700;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-decoration: none;
+        }
+
+        .header-nav {
+            display: flex;
+            align-items: center;
+            gap: var(--space-8);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: var(--space-6);
+        }
+
+        .nav-links a {
+            color: var(--gray-600);
+            text-decoration: none;
+            font-weight: 500;
+            padding: var(--space-2) var(--space-3);
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--primary-blue);
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .nav-links a.active::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 6px;
+            height: 6px;
+            background: var(--primary-blue);
+            border-radius: 50%;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+        }
+
+        .trial-status {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            background: var(--gradient-success);
+            color: white;
+            padding: var(--space-2) var(--space-4);
+            border-radius: var(--border-radius-lg);
+            font-size: var(--font-size-sm);
+            font-weight: 600;
+        }
+
+        .user-menu {
+            position: relative;
+        }
+
+        .user-button {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            background: var(--gray-100);
+            border: none;
+            padding: var(--space-2) var(--space-3);
+            border-radius: var(--border-radius-lg);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .user-button:hover {
+            background: var(--gray-200);
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            background: var(--gradient-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: var(--font-size-sm);
+        }
+
+        /* Main Container */
+        .main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: var(--space-8) var(--space-6);
+        }
+
+        /* Welcome Section */
+        .welcome-section {
+            background: var(--gradient-hero);
+            color: white;
+            padding: var(--space-10);
+            border-radius: var(--border-radius-2xl);
+            margin-bottom: var(--space-8);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .welcome-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat;
+        }
+
+        .welcome-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .welcome-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: var(--space-6);
+            margin-bottom: var(--space-6);
+        }
+
+        .welcome-text {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .welcome-title {
+            font-size: var(--font-size-3xl);
+            font-weight: 800;
+            margin-bottom: var(--space-3);
+            line-height: 1.1;
+        }
+
+        .welcome-subtitle {
+            font-size: var(--font-size-lg);
+            opacity: 0.9;
+            line-height: 1.5;
+        }
+
+        .trial-info {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: var(--border-radius-xl);
+            padding: var(--space-6);
+            min-width: 280px;
+        }
+
+        .trial-days {
+            font-size: var(--font-size-4xl);
+            font-weight: 800;
+            margin-bottom: var(--space-2);
+        }
+
+        .trial-label {
+            opacity: 0.9;
+            font-size: var(--font-size-sm);
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: var(--space-4);
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: var(--space-3) var(--space-5);
+            border-radius: var(--border-radius-lg);
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .action-btn-primary {
+            background: white;
+            color: var(--primary-blue);
+            border-color: white;
+        }
+
+        .action-btn-primary:hover {
+            background: var(--gray-100);
+            color: var(--primary-blue-dark);
+        }
+
+        /* Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--space-6);
+            margin-bottom: var(--space-8);
+        }
+
+        .metric-card {
+            background: white;
+            border-radius: var(--border-radius-xl);
+            padding: var(--space-6);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--gray-200);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--gradient-primary);
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .metric-card.success::before {
+            background: var(--gradient-success);
+        }
+
+        .metric-card.warning::before {
+            background: var(--gradient-warning);
+        }
+
+        .metric-card.info::before {
+            background: var(--gradient-primary);
+        }
+
+        .metric-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: var(--space-4);
+        }
+
+        .metric-label {
+            font-size: var(--font-size-sm);
+            color: var(--gray-600);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--gray-100);
+            border-radius: var(--border-radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: var(--font-size-xl);
+        }
+
+        .metric-icon.success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--accent-green);
+        }
+
+        .metric-icon.warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--accent-orange);
+        }
+
+        .metric-icon.info {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--primary-blue);
+        }
+
+        .metric-value {
+            font-size: var(--font-size-3xl);
+            font-weight: 800;
+            color: var(--gray-900);
+            line-height: 1;
+            margin-bottom: var(--space-2);
+        }
+
+        .metric-description {
+            font-size: var(--font-size-sm);
+            color: var(--gray-600);
+            line-height: 1.4;
+        }
+
+        .metric-trend {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            margin-top: var(--space-3);
+            padding-top: var(--space-3);
+            border-top: 1px solid var(--gray-200);
+        }
+
+        .trend-indicator {
+            font-size: var(--font-size-sm);
+            font-weight: 600;
+        }
+
+        .trend-up {
+            color: var(--accent-green);
+        }
+
+        .trend-down {
+            color: var(--accent-red);
+        }
+
+        .trend-neutral {
+            color: var(--gray-500);
+        }
+
+        /* Content Grid */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: var(--space-8);
+            margin-bottom: var(--space-8);
+        }
+
+        /* Activity Section */
+        .activity-section {
+            background: white;
+            border-radius: var(--border-radius-xl);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--gray-200);
+            overflow: hidden;
+        }
+
+        .section-header {
+            padding: var(--space-6);
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section-title {
+            font-size: var(--font-size-xl);
+            font-weight: 700;
+            color: var(--gray-900);
+        }
+
+        .section-action {
+            color: var(--primary-blue);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: var(--font-size-sm);
+        }
+
+        .section-action:hover {
+            text-decoration: underline;
+        }
+
+        .activity-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: flex-start;
+            gap: var(--space-4);
+            padding: var(--space-4) var(--space-6);
+            border-bottom: 1px solid var(--gray-100);
+            transition: var(--transition);
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-item:hover {
+            background: var(--gray-50);
+        }
+
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: var(--font-size-lg);
+            flex-shrink: 0;
+            margin-top: var(--space-1);
+        }
+
+        .activity-icon.upload {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--primary-blue);
+        }
+
+        .activity-icon.analysis {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--accent-green);
+        }
+
+        .activity-icon.report {
+            background: rgba(139, 92, 246, 0.1);
+            color: var(--accent-purple);
+        }
+
+        .activity-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .activity-title {
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: var(--space-1);
+            line-height: 1.4;
+        }
+
+        .activity-description {
+            font-size: var(--font-size-sm);
+            color: var(--gray-600);
+            margin-bottom: var(--space-2);
+        }
+
+        .activity-meta {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+            font-size: var(--font-size-xs);
+            color: var(--gray-500);
+        }
+
+        /* Progress Section */
+        .progress-section {
+            background: white;
+            border-radius: var(--border-radius-xl);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--gray-200);
+            padding: var(--space-6);
+        }
+
+        .progress-item {
+            margin-bottom: var(--space-6);
+        }
+
+        .progress-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-3);
+        }
+
+        .progress-label {
+            font-weight: 600;
+            color: var(--gray-900);
+        }
+
+        .progress-value {
+            font-size: var(--font-size-sm);
+            font-weight: 600;
+            color: var(--primary-blue);
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: var(--gray-200);
+            border-radius: var(--border-radius-sm);
+            overflow: hidden;
+            margin-bottom: var(--space-2);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--gradient-primary);
+            border-radius: var(--border-radius-sm);
+            transition: width 0.6s ease-out;
+        }
+
+        .progress-fill.success {
+            background: var(--gradient-success);
+        }
+
+        .progress-fill.warning {
+            background: var(--gradient-warning);
+        }
+
+        .progress-description {
+            font-size: var(--font-size-sm);
+            color: var(--gray-600);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: var(--space-12) var(--space-6);
+            color: var(--gray-500);
+        }
+
+        .empty-icon {
+            font-size: var(--font-size-4xl);
+            margin-bottom: var(--space-4);
+            opacity: 0.5;
+        }
+
+        .empty-title {
+            font-size: var(--font-size-lg);
+            font-weight: 600;
+            margin-bottom: var(--space-2);
+            color: var(--gray-700);
+        }
+
+        .empty-description {
+            font-size: var(--font-size-base);
+            margin-bottom: var(--space-6);
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .empty-action {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+            background: var(--gradient-primary);
+            color: white;
+            padding: var(--space-3) var(--space-6);
+            border-radius: var(--border-radius-lg);
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .empty-action:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* Loading States */
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--gray-300);
+            border-radius: 50%;
+            border-top-color: var(--primary-blue);
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-100) 50%, var(--gray-200) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+                gap: var(--space-6);
+            }
+            
+            .metrics-grid {
+                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                padding: var(--space-3) var(--space-4);
+            }
+            
+            .nav-links {
+                display: none;
+            }
+            
+            .main {
+                padding: var(--space-6) var(--space-4);
+            }
+            
+            .welcome-header {
+                flex-direction: column;
+            }
+            
+            .trial-info {
+                min-width: auto;
+                width: 100%;
+            }
+            
+            .quick-actions {
+                width: 100%;
+            }
+            
+            .action-btn {
+                flex: 1;
+                justify-content: center;
+            }
+            
+            .metrics-grid {
+                grid-template-columns: 1fr;
+                gap: var(--space-4);
+            }
+            
+            .welcome-section {
+                padding: var(--space-8) var(--space-6);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header-actions {
+                gap: var(--space-2);
+            }
+            
+            .trial-status {
+                padding: var(--space-1) var(--space-3);
+                font-size: var(--font-size-xs);
+            }
+            
+            .welcome-title {
+                font-size: var(--font-size-2xl);
+            }
+            
+            .metric-card {
+                padding: var(--space-4);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo-container">
+                <a href="/" class="logo">MapMyStandards</a>
+            </div>
+            
+            <div class="header-nav">
+                <nav class="nav-links">
+                    <a href="/dashboard" class="active">Dashboard</a>
+                    <a href="/upload">Upload</a>
+                    <a href="/standards">Standards</a>
+                    <a href="/reports">Reports</a>
+                </nav>
+                
+                <div class="header-actions">
+                    <div class="trial-status">
+                        <span>✅</span>
+                        <span>Trial Active</span>
+                    </div>
+                    
+                    <div class="user-menu">
+                        <button class="user-button">
+                            <div class="user-avatar">JD</div>
+                            <span>John Doe</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <!-- Welcome Section -->
+        <section class="welcome-section">
+            <div class="welcome-content">
+                <div class="welcome-header">
+                    <div class="welcome-text">
+                        <h1 class="welcome-title">Welcome back, John! 👋</h1>
+                        <p class="welcome-subtitle">Your accreditation analysis is running smoothly. Here's your progress overview.</p>
+                    </div>
+                    
+                    <div class="trial-info">
+                        <div class="trial-days" id="trialDays">12</div>
+                        <div class="trial-label">days left in trial</div>
+                    </div>
+                </div>
+                
+                <div class="quick-actions">
+                    <a href="/upload" class="action-btn action-btn-primary">
+                        <span>📁</span>
+                        Upload Documents
+                    </a>
+                    <a href="/standards" class="action-btn">
+                        <span>📋</span>
+                        View Standards
+                    </a>
+                    <a href="/reports" class="action-btn">
+                        <span>📊</span>
+                        Generate Report
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Metrics Grid -->
+        <section class="metrics-grid" id="metricsGrid">
+            <!-- Metrics will be populated by JavaScript -->
+            <div class="metric-card success">
+                <div class="skeleton" style="height: 120px; border-radius: var(--border-radius-lg);"></div>
+            </div>
+            <div class="metric-card info">
+                <div class="skeleton" style="height: 120px; border-radius: var(--border-radius-lg);"></div>
+            </div>
+            <div class="metric-card warning">
+                <div class="skeleton" style="height: 120px; border-radius: var(--border-radius-lg);"></div>
+            </div>
+            <div class="metric-card success">
+                <div class="skeleton" style="height: 120px; border-radius: var(--border-radius-lg);"></div>
+            </div>
+        </section>
+
+        <!-- Content Grid -->
+        <div class="content-grid">
+            <!-- Recent Activity -->
+            <section class="activity-section">
+                <div class="section-header">
+                    <h2 class="section-title">Recent Activity</h2>
+                    <a href="/activity" class="section-action">View All</a>
+                </div>
+                
+                <div class="activity-list" id="activityList">
+                    <!-- Activity items will be populated by JavaScript -->
+                    <div class="empty-state">
+                        <div class="empty-icon">🔄</div>
+                        <div class="spinner"></div>
+                        <div class="empty-description">Loading your recent activity...</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Progress Overview -->
+            <section class="progress-section">
+                <div class="section-header" style="padding: 0; border: none; margin-bottom: var(--space-6);">
+                    <h2 class="section-title">Compliance Progress</h2>
+                </div>
+                
+                <div id="progressOverview">
+                    <!-- Progress items will be populated by JavaScript -->
+                    <div class="progress-item">
+                        <div class="skeleton" style="height: 60px; border-radius: var(--border-radius);"></div>
+                    </div>
+                    <div class="progress-item">
+                        <div class="skeleton" style="height: 60px; border-radius: var(--border-radius);"></div>
+                    </div>
+                    <div class="progress-item">
+                        <div class="skeleton" style="height: 60px; border-radius: var(--border-radius);"></div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        // Dashboard functionality
+        class Dashboard {
+            constructor() {
+                this.metricsEndpoint = '/api/metrics/dashboard';
+                this.init();
+            }
+
+            async init() {
+                await this.loadMetrics();
+                await this.loadActivity();
+                await this.loadProgress();
+                
+                // Auto-refresh every 30 seconds
+                setInterval(() => {
+                    this.loadMetrics();
+                }, 30000);
+            }
+
+            async loadMetrics() {
+                try {
+                    const response = await fetch(this.metricsEndpoint, {
+                        headers: {
+                            'Authorization': `Bearer ${this.getAuthToken()}`
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    this.renderMetrics(data.data);
+                } catch (error) {
+                    console.error('Failed to load metrics:', error);
+                    this.renderMetricsError();
+                }
+            }
+
+            renderMetrics(data) {
+                const metricsGrid = document.getElementById('metricsGrid');
+                const metrics = data.core_metrics;
+                const performance = data.performance_metrics;
+                const account = data.account_info;
+
+                metricsGrid.innerHTML = `
+                    <div class="metric-card success">
+                        <div class="metric-header">
+                            <div class="metric-label">Documents Analyzed</div>
+                            <div class="metric-icon success">📄</div>
+                        </div>
+                        <div class="metric-value">${metrics.documents_analyzed}</div>
+                        <div class="metric-description">Successfully processed and mapped to standards</div>
+                        <div class="metric-trend">
+                            <span class="trend-indicator trend-up">↗ ${metrics.documents_processing} in progress</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card info">
+                        <div class="metric-header">
+                            <div class="metric-label">Standards Mapped</div>
+                            <div class="metric-icon info">🎯</div>
+                        </div>
+                        <div class="metric-value">${metrics.standards_mapped}/${metrics.total_standards}</div>
+                        <div class="metric-description">SACSCOC standards coverage achieved</div>
+                        <div class="metric-trend">
+                            <span class="trend-indicator trend-${performance.coverage_percentage >= 75 ? 'up' : 'neutral'}">
+                                ${performance.coverage_percentage}% coverage
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card warning">
+                        <div class="metric-header">
+                            <div class="metric-label">Compliance Score</div>
+                            <div class="metric-icon warning">⚡</div>
+                        </div>
+                        <div class="metric-value">${performance.compliance_score}%</div>
+                        <div class="metric-description">Overall accreditation readiness</div>
+                        <div class="metric-trend">
+                            <span class="trend-indicator trend-${performance.compliance_score >= 75 ? 'up' : 'neutral'}">
+                                ${performance.compliance_score >= 75 ? 'Strong' : 'Needs improvement'}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card success">
+                        <div class="metric-header">
+                            <div class="metric-label">Reports Generated</div>
+                            <div class="metric-icon success">📊</div>
+                        </div>
+                        <div class="metric-value">${metrics.reports_generated}</div>
+                        <div class="metric-description">Professional compliance reports ready</div>
+                        <div class="metric-trend">
+                            <span class="trend-indicator trend-${metrics.reports_pending > 0 ? 'up' : 'neutral'}">
+                                ${metrics.reports_pending > 0 ? `${metrics.reports_pending} generating` : 'All up to date'}
+                            </span>
+                        </div>
+                    </div>
+                `;
+
+                // Update trial days
+                if (account.trial_days_remaining !== undefined) {
+                    document.getElementById('trialDays').textContent = account.trial_days_remaining;
+                }
+            }
+
+            renderMetricsError() {
+                const metricsGrid = document.getElementById('metricsGrid');
+                metricsGrid.innerHTML = `
+                    <div class="metric-card">
+                        <div class="empty-state">
+                            <div class="empty-icon">⚠️</div>
+                            <div class="empty-title">Unable to load metrics</div>
+                            <div class="empty-description">Please refresh the page to try again.</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            async loadActivity() {
+                const activityList = document.getElementById('activityList');
+                
+                // Simulate activity data
+                const activities = [
+                    {
+                        type: 'upload',
+                        title: 'Document uploaded successfully',
+                        description: 'Faculty_Handbook_2024.pdf processed and analyzed',
+                        time: '2 minutes ago',
+                        status: 'completed'
+                    },
+                    {
+                        type: 'analysis',
+                        title: 'Standards mapping completed',
+                        description: '8 SACSCOC standards mapped with 92% confidence',
+                        time: '5 minutes ago',
+                        status: 'completed'
+                    },
+                    {
+                        type: 'report',
+                        title: 'Evidence mapping report generated',
+                        description: 'Compliance summary ready for download',
+                        time: '1 hour ago',
+                        status: 'completed'
+                    },
+                    {
+                        type: 'upload',
+                        title: 'Bulk document processing',
+                        description: '15 policy documents queued for analysis',
+                        time: '2 hours ago',
+                        status: 'processing'
+                    }
+                ];
+
+                activityList.innerHTML = activities.map(activity => `
+                    <div class="activity-item">
+                        <div class="activity-icon ${activity.type}">
+                            ${activity.type === 'upload' ? '📁' : activity.type === 'analysis' ? '🔍' : '📊'}
+                        </div>
+                        <div class="activity-content">
+                            <div class="activity-title">${activity.title}</div>
+                            <div class="activity-description">${activity.description}</div>
+                            <div class="activity-meta">
+                                <span>${activity.time}</span>
+                                <span>•</span>
+                                <span style="color: ${activity.status === 'completed' ? 'var(--accent-green)' : 'var(--accent-orange)'}">${activity.status}</span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            async loadProgress() {
+                const progressOverview = document.getElementById('progressOverview');
+                
+                // Simulate progress data
+                const progressItems = [
+                    {
+                        label: 'Document Analysis',
+                        value: 85,
+                        description: '17 of 20 documents processed',
+                        type: 'success'
+                    },
+                    {
+                        label: 'Standards Coverage',
+                        value: 67,
+                        description: '8 of 12 SACSCOC standards mapped',
+                        type: 'info'
+                    },
+                    {
+                        label: 'Compliance Readiness',
+                        value: 42,
+                        description: 'Evidence gaps identified in 7 areas',
+                        type: 'warning'
+                    }
+                ];
+
+                progressOverview.innerHTML = progressItems.map(item => `
+                    <div class="progress-item">
+                        <div class="progress-header">
+                            <div class="progress-label">${item.label}</div>
+                            <div class="progress-value">${item.value}%</div>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill ${item.type}" style="width: ${item.value}%"></div>
+                        </div>
+                        <div class="progress-description">${item.description}</div>
+                    </div>
+                `).join('');
+            }
+
+            getAuthToken() {
+                // Try multiple sources for auth token
+                return localStorage.getItem('a3e_api_key') || 
+                       sessionStorage.getItem('a3e_api_key') || 
+                       'demo-token';
+            }
+        }
+
+        // Initialize dashboard when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            new Dashboard();
+        });
+
+        // Service worker registration for offline support
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js').catch(console.error);
+        }
+    </script>
+</body>
+</html>

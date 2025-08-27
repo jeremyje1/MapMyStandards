@@ -105,6 +105,13 @@ class Settings(BaseSettings):
     PUBLIC_APP_URL: str = Field(default="https://platform.mapmystandards.ai", env="PUBLIC_APP_URL")
     PUBLIC_API_URL: str = Field(default="https://api.mapmystandards.ai", env="PUBLIC_API_URL")
     
+    # Email Configuration (Postmark)
+    POSTMARK_SERVER_TOKEN: Optional[str] = Field(default=None, env="POSTMARK_SERVER_TOKEN")
+    POSTMARK_API_KEY: Optional[str] = Field(default=None, env="POSTMARK_API_KEY")  # Alternative name
+    EMAIL_FROM: str = Field(default="support@mapmystandards.ai", env="EMAIL_FROM")
+    EMAIL_FROM_NAME: str = Field(default="MapMyStandards A³E", env="EMAIL_FROM_NAME")
+    ADMIN_NOTIFICATION_EMAIL: str = Field(default="admin@mapmystandards.ai", env="ADMIN_NOTIFICATION_EMAIL")
+    
     # Payment Configuration (Stripe)
     STRIPE_SECRET_KEY: str = Field(default="", env="STRIPE_SECRET_KEY")
     STRIPE_PUBLISHABLE_KEY: str = Field(default="", env="STRIPE_PUBLISHABLE_KEY")

@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Standards Browser - A³E | MapMyStandards.ai</title>
+    
+    <style>
+        :root {
+            --primary-blue: #1e40af;
+            --primary-blue-light: #3b82f6;
+            --primary-blue-dark: #1e3a8a;
+            --accent-green: #10b981;
+            --accent-green-light: #34d399;
+            --accent-green-dark: #059669;
+            --accent-purple: #8b5cf6;
+            --accent-purple-light: #a78bfa;
+            --gradient-primary: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-light) 100%);
+            --gradient-accent: linear-gradient(135deg, var(--accent-green) 0%, var(--accent-green-light) 100%);
+            --gradient-purple: linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-purple-light) 100%);
+            --text-dark: #1f2937;
+            --text-medium: #6b7280;
+            --text-light: #9ca3af;
+            --bg-light: #f8fafc;
+            --bg-white: #ffffff;
+            --border-light: #e2e8f0;
+            --border-medium: #cbd5e1;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+            --border-radius: 0.75rem;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-light);
+            color: var(--text-dark);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: var(--gradient-primary);
+            color: white;
+            padding: 1.25rem 0;
+            box-shadow: var(--shadow-lg);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.75rem;
+            font-weight: 800;
+            text-decoration: none;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo::before {
+            content: "🎯";
+            font-size: 2rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2.5rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            opacity: 0.9;
+            transition: all 0.3s ease;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            opacity: 1;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Page Header */
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .page-title {
+            font-size: 3rem;
+            font-weight: 800;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+        }
+
+        .page-subtitle {
+            font-size: 1.25rem;
+            color: var(--text-medium);
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        /* Filters Section */
+        .filters-section {
+            background: var(--bg-white);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-xl);
+            overflow: hidden;
+            margin-bottom: 3rem;
+        }
+
+        .filters-header {
+            background: var(--gradient-purple);
+            color: white;
+            padding: 1.5rem 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .filters-header h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .filters-content {
+            padding: 2rem;
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .filter-label {
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .filter-select,
+        .filter-input {
+            padding: 0.875rem;
+            border: 2px solid var(--border-light);
+            border-radius: 0.5rem;
+            background: var(--bg-white);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .filter-select:focus,
+        .filter-input:focus {
+            outline: none;
+            border-color: var(--accent-green);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        .search-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.875rem 2rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+            font-size: 1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: var(--gradient-accent);
+            color: white;
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-secondary {
+            background: var(--bg-white);
+            color: var(--text-medium);
+            border: 2px solid var(--border-medium);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-light);
+            border-color: var(--accent-green);
+            color: var(--text-dark);
+        }
+
+        /* Content Area */
+        .content-section {
+            min-height: 400px;
+        }
+
+        .loading-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem 2rem;
+            background: var(--bg-white);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-md);
+        }
+
+        .spinner {
+            width: 3rem;
+            height: 3rem;
+            border: 4px solid var(--border-light);
+            border-top-color: var(--accent-green);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: var(--text-medium);
+            font-size: 1.125rem;
+        }
+
+        /* Accreditor Selection */
+        .accreditor-selection {
+            background: var(--bg-white);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-xl);
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+
+        .selection-icon {
+            font-size: 4rem;
+            margin-bottom: 2rem;
+            display: block;
+        }
+
+        .selection-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 1rem;
+        }
+
+        .selection-subtitle {
+            color: var(--text-medium);
+            font-size: 1.125rem;
+            margin-bottom: 2rem;
+        }
+
+        .available-accreditors {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 1.5rem;
+        }
+
+        .accreditor-badge {
+            background: var(--gradient-primary);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        /* Standards Display */
+        .accreditor-info {
+            background: var(--gradient-accent);
+            color: white;
+            padding: 2.5rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 2rem;
+            text-align: center;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .accreditor-name {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+        }
+
+        .accreditor-details {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            opacity: 0.95;
+        }
+
+        .accreditor-stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+
+        /* Standards Grid */
+        .standards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .standard-card {
+            background: var(--bg-white);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+            transition: all 0.3s ease;
+            border: 1px solid var(--border-light);
+        }
+
+        .standard-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-xl);
+            border-color: var(--accent-green);
+        }
+
+        .standard-header {
+            background: var(--bg-light);
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .standard-id {
+            display: inline-block;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.875rem;
+            background: var(--gradient-primary);
+            color: white;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .standard-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            line-height: 1.4;
+        }
+
+        .standard-content {
+            padding: 1.5rem;
+        }
+
+        .standard-description {
+            color: var(--text-medium);
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .standard-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+            font-size: 0.875rem;
+            color: var(--text-medium);
+        }
+
+        .meta-icon {
+            font-size: 1rem;
+        }
+
+        .required-badge {
+            background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .category-badge {
+            background: var(--gradient-purple);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        /* Error State */
+        .error-state {
+            background: var(--bg-white);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-md);
+            padding: 3rem;
+            text-align: center;
+        }
+
+        .error-icon {
+            font-size: 3rem;
+            color: #ef4444;
+            margin-bottom: 1rem;
+        }
+
+        .error-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #ef4444;
+            margin-bottom: 0.5rem;
+        }
+
+        .error-message {
+            color: var(--text-medium);
+        }
+
+        /* Empty State */
+        .empty-state {
+            background: var(--bg-white);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-md);
+            padding: 3rem;
+            text-align: center;
+        }
+
+        .empty-icon {
+            font-size: 3rem;
+            color: var(--text-light);
+            margin-bottom: 1rem;
+        }
+
+        .empty-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-medium);
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-message {
+            color: var(--text-medium);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+                padding: 0 1rem;
+            }
+
+            .nav-links {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 1rem;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+
+            .page-title {
+                font-size: 2rem;
+            }
+
+            .filters-content {
+                padding: 1.5rem;
+            }
+
+            .filters-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .search-controls {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .standards-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .accreditor-details {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .standard-meta {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="logo">A³E</a>
+            <nav class="nav-links">
+                <a href="/dashboard">Dashboard</a>
+                <a href="/upload">Upload</a>
+                <a href="/standards" class="active">Standards</a>
+                <a href="/reports">Reports</a>
+                <a href="#" onclick="logout()">Logout</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">Standards Browser</h1>
+            <p class="page-subtitle">Explore comprehensive accreditation standards from multiple accreditors to understand requirements and plan your evidence collection strategy</p>
+        </div>
+
+        <!-- Filters Section -->
+        <div class="filters-section">
+            <div class="filters-header">
+                <span>🔍</span>
+                <h2>Search & Filter Standards</h2>
+            </div>
+            <div class="filters-content">
+                <div class="filters-grid">
+                    <div class="filter-group">
+                        <label class="filter-label">Accreditor</label>
+                        <select id="accreditorSelect" class="filter-select">
+                            <option value="">Loading accreditors...</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Institution Type</label>
+                        <select id="institutionTypeSelect" class="filter-select">
+                            <option value="">All Types</option>
+                            <option value="college">College</option>
+                            <option value="university">University</option>
+                            <option value="community_college">Community College</option>
+                            <option value="graduate_school">Graduate School</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Search Standards</label>
+                        <input type="text" id="searchInput" class="filter-input" placeholder="Search by title, description, or code...">
+                    </div>
+                </div>
+                <div class="search-controls">
+                    <button class="btn btn-primary" onclick="applyFilters()">
+                        🔍 Search Standards
+                    </button>
+                    <button class="btn btn-secondary" onclick="clearFilters()">
+                        🔄 Clear Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Area -->
+        <div class="content-section" id="contentArea">
+            <div class="loading-state">
+                <div class="spinner"></div>
+                <div class="loading-text">Loading accreditors...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let accreditors = [];
+        let currentStandards = [];
+        let filteredStandards = [];
+
+        // Logout function
+        function logout() {
+            localStorage.clear();
+            window.location.href = '/login';
+        }
+
+        // Load accreditors on page load
+        async function loadAccreditors() {
+            try {
+                const response = await fetch('/api/standards/accreditors');
+                const data = await response.json();
+                
+                if (data.success) {
+                    accreditors = data.data.accreditors;
+                    populateAccreditorSelect();
+                    showAccreditorSelection();
+                } else {
+                    throw new Error('Failed to load accreditors');
+                }
+            } catch (error) {
+                console.error('Error loading accreditors:', error);
+                showErrorState('Error loading accreditors', 'Please try refreshing the page.');
+            }
+        }
+
+        function populateAccreditorSelect() {
+            const select = document.getElementById('accreditorSelect');
+            select.innerHTML = '<option value="">Select an accreditor</option>';
+            
+            accreditors.forEach(acc => {
+                const option = document.createElement('option');
+                option.value = acc.id;
+                option.textContent = `${acc.name} (${acc.acronym})`;
+                select.appendChild(option);
+            });
+        }
+
+        function showAccreditorSelection() {
+            document.getElementById('contentArea').innerHTML = `
+                <div class="accreditor-selection">
+                    <span class="selection-icon">📚</span>
+                    <h2 class="selection-title">Choose Your Accreditor</h2>
+                    <p class="selection-subtitle">Select an accreditor from the dropdown above to explore their standards and requirements</p>
+                    <div class="available-accreditors">
+                        ${accreditors.map(acc => `<span class="accreditor-badge">${acc.acronym}</span>`).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function showLoadingState(message = 'Loading...') {
+            document.getElementById('contentArea').innerHTML = `
+                <div class="loading-state">
+                    <div class="spinner"></div>
+                    <div class="loading-text">${message}</div>
+                </div>
+            `;
+        }
+
+        function showErrorState(title, message) {
+            document.getElementById('contentArea').innerHTML = `
+                <div class="error-state">
+                    <div class="error-icon">⚠️</div>
+                    <h3 class="error-title">${title}</h3>
+                    <p class="error-message">${message}</p>
+                </div>
+            `;
+        }
+
+        function showEmptyState(title, message) {
+            document.getElementById('contentArea').innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">📄</div>
+                    <h3 class="empty-title">${title}</h3>
+                    <p class="empty-message">${message}</p>
+                </div>
+            `;
+        }
+
+        async function loadStandards(accreditorId, institutionType = null) {
+            if (!accreditorId) {
+                showAccreditorSelection();
+                return;
+            }
+
+            showLoadingState('Loading standards...');
+
+            try {
+                let url = `/api/standards?accreditor=${accreditorId.toUpperCase()}`;
+                if (institutionType) {
+                    url += `&institution_type=${institutionType}`;
+                }
+
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentStandards = data.data.standards;
+                    filteredStandards = [...currentStandards];
+                    
+                    const accreditor = accreditors.find(acc => acc.id === accreditorId) || { 
+                        name: "Southern Association of Colleges and Schools Commission on Colleges", 
+                        acronym: accreditorId.toUpperCase() 
+                    };
+                    
+                    displayStandards(accreditor, currentStandards);
+                } else {
+                    throw new Error('Failed to load standards');
+                }
+            } catch (error) {
+                console.error('Error loading standards:', error);
+                showErrorState('Error loading standards', 'Please try again or select a different accreditor.');
+            }
+        }
+
+        function displayStandards(accreditor, standards) {
+            if (standards.length === 0) {
+                showEmptyState('No standards found', 'Try selecting a different institution type or accreditor.');
+                return;
+            }
+
+            const requiredCount = standards.filter(s => s.is_required).length;
+            const categoriesCount = [...new Set(standards.map(s => s.category))].length;
+
+            let html = `
+                <div class="accreditor-info">
+                    <h2 class="accreditor-name">${accreditor.name}</h2>
+                    <div class="accreditor-details">
+                        <div class="accreditor-stat">
+                            <div class="stat-value">${standards.length}</div>
+                            <div class="stat-label">Total Standards</div>
+                        </div>
+                        <div class="accreditor-stat">
+                            <div class="stat-value">${requiredCount}</div>
+                            <div class="stat-label">Required</div>
+                        </div>
+                        <div class="accreditor-stat">
+                            <div class="stat-value">${categoriesCount}</div>
+                            <div class="stat-label">Categories</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="standards-grid">
+            `;
+            
+            standards.forEach(standard => {
+                const evidenceCount = standard.evidence_requirements ? standard.evidence_requirements.length : 0;
+                
+                html += `
+                    <div class="standard-card">
+                        <div class="standard-header">
+                            <div class="standard-id">${standard.code || standard.id}</div>
+                            <h3 class="standard-title">${standard.title}</h3>
+                        </div>
+                        <div class="standard-content">
+                            <p class="standard-description">${standard.description}</p>
+                            <div class="standard-meta">
+                                <div class="meta-item">
+                                    <span class="meta-icon">📂</span>
+                                    <span class="category-badge">${standard.category}</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-icon">⚖️</span>
+                                    <span>Weight: ${standard.weight || 100}</span>
+                                </div>
+                                ${standard.is_required ? '<span class="required-badge">Required</span>' : ''}
+                                ${evidenceCount > 0 ? `
+                                <div class="meta-item">
+                                    <span class="meta-icon">📋</span>
+                                    <span>${evidenceCount} Evidence Items</span>
+                                </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            document.getElementById('contentArea').innerHTML = html;
+        }
+
+        function applyFilters() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+            
+            if (!currentStandards.length) {
+                return;
+            }
+
+            let filtered = [...currentStandards];
+
+            // Apply search filter
+            if (searchTerm) {
+                filtered = filtered.filter(standard => {
+                    return standard.title.toLowerCase().includes(searchTerm) ||
+                           standard.description.toLowerCase().includes(searchTerm) ||
+                           (standard.code && standard.code.toLowerCase().includes(searchTerm)) ||
+                           standard.category.toLowerCase().includes(searchTerm);
+                });
+            }
+
+            filteredStandards = filtered;
+            
+            const accreditorId = document.getElementById('accreditorSelect').value;
+            const accreditor = accreditors.find(acc => acc.id === accreditorId) || { 
+                name: "Accreditor", 
+                acronym: accreditorId 
+            };
+            
+            displayStandards(accreditor, filteredStandards);
+        }
+
+        function clearFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('institutionTypeSelect').value = '';
+            
+            const accreditorId = document.getElementById('accreditorSelect').value;
+            if (accreditorId) {
+                filteredStandards = [...currentStandards];
+                const accreditor = accreditors.find(acc => acc.id === accreditorId);
+                displayStandards(accreditor, currentStandards);
+            }
+        }
+
+        // Event listeners
+        document.getElementById('accreditorSelect').addEventListener('change', function() {
+            const accreditorId = this.value;
+            const institutionType = document.getElementById('institutionTypeSelect').value;
+            loadStandards(accreditorId, institutionType);
+        });
+
+        document.getElementById('institutionTypeSelect').addEventListener('change', function() {
+            const accreditorId = document.getElementById('accreditorSelect').value;
+            const institutionType = this.value;
+            loadStandards(accreditorId, institutionType);
+        });
+
+        document.getElementById('searchInput').addEventListener('keyup', function(e) {
+            if (e.key === 'Enter') {
+                applyFilters();
+            }
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAccreditors();
+        });
+    </script>
+</body>
+</html>

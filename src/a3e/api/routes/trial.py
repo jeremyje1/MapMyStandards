@@ -54,29 +54,31 @@ def generate_api_key() -> str:
 async def send_welcome_email(email: str, name: str, api_key: str):
     """Send welcome email to new trial user"""
     try:
-        from ...services.email_service import email_service
+        from ...services.postmark_service import postmark_service
         
-        # The existing send_welcome_email method doesn't take api_key
-        # We'll need to enhance it or use a custom email for now
-        success = email_service.send_welcome_email(email, name)
+        success = postmark_service.send_welcome_email(email, name, api_key)
         
         if success:
-            print(f"Welcome email sent to {email}")
+            print(f"✅ Welcome email sent to {email}")
         else:
-            print(f"Failed to send welcome email to {email}")
+            print(f"❌ Failed to send welcome email to {email}")
             
-        # TODO: Update email template to include API key and trial info
-        
     except Exception as e:
-        print(f"Failed to send welcome email: {e}")
+        print(f"❌ Failed to send welcome email: {e}")
 
-async def notify_admin_new_signup(email: str, name: str, institution: Optional[str]):
+async def notify_admin_new_signup(email: str, name: str, institution: Optional[str], role: Optional[str] = None):
     """Send admin notification about new signup."""
     try:
-        from ...services.email_service import email_service
-        email_service.send_admin_new_signup_notification(email, name, institution, trial=True)
+        from ...services.postmark_service import postmark_service
+        success = postmark_service.send_admin_signup_notification(email, name, institution, role, trial=True)
+        
+        if success:
+            print(f"✅ Admin signup notification sent for {email}")
+        else:
+            print(f"❌ Failed to send admin signup notification for {email}")
+            
     except Exception as e:
-        print(f"Failed to send admin signup notification: {e}")
+        print(f"❌ Failed to send admin signup notification: {e}")
 
 @router.post("/signup", response_model=TrialSignupResponse)
 async def signup_trial(
@@ -142,7 +144,7 @@ async def signup_trial(
 
         # Send welcome + admin notification emails in background
         background_tasks.add_task(send_welcome_email, request.email, request.name, api_key)
-        background_tasks.add_task(notify_admin_new_signup, request.email, request.name, request.institution_name)
+        background_tasks.add_task(notify_admin_new_signup, request.email, request.name, request.institution_name, request.role)
 
         logger.info(f"Trial account created for {request.email}")
 
