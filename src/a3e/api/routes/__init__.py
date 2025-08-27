@@ -12,6 +12,9 @@ from .workflows import router as workflows_router
 from .integrations import router as integrations_router
 from .proprietary import router as proprietary_router
 from .auth import router as auth_router
+from .onboarding import router as onboarding_router
+from .sample_data import router as sample_data_router
+from .nurturing import router as nurturing_router
 
 # Create main API router
 api_router = APIRouter()
@@ -45,6 +48,11 @@ api_router.include_router(
     integrations_router,
     tags=["integrations"]
 )
+
+# Include new customer experience routes
+api_router.include_router(onboarding_router)
+api_router.include_router(sample_data_router)  
+api_router.include_router(nurturing_router)
 
 # Configuration router not yet implemented
 

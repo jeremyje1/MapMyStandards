@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROI Calculator - MapMyStandards A³E</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #f1f5f9;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+        
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 16px;
+            letter-spacing: -0.02em;
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            color: #94a3b8;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        
+        .calculator-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 48px;
+        }
+        
+        .input-section {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid #334155;
+            border-radius: 20px;
+            padding: 32px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #f8fafc;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .input-group {
+            margin-bottom: 24px;
+        }
+        
+        .input-label {
+            display: block;
+            color: #cbd5e1;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+        
+        .input-field {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.8);
+            border: 2px solid #334155;
+            border-radius: 12px;
+            padding: 14px 16px;
+            color: #f8fafc;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .input-field:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+        
+        .select-field {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 12px center;
+            background-repeat: no-repeat;
+            background-size: 16px;
+            padding-right: 40px;
+        }
+        
+        .slider-group {
+            margin: 24px 0;
+        }
+        
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #334155;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+        
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+        
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 0.8rem;
+            color: #94a3b8;
+        }
+        
+        .results-section {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            border-radius: 20px;
+            padding: 32px;
+        }
+        
+        .results-grid {
+            display: grid;
+            gap: 20px;
+        }
+        
+        .result-item {
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .result-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        .result-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+        
+        .result-positive { color: #22c55e; }
+        .result-savings { color: #3b82f6; }
+        .result-roi { color: #8b5cf6; }
+        .result-time { color: #f59e0b; }
+        
+        .result-label {
+            color: #94a3b8;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+        
+        .result-description {
+            color: #cbd5e1;
+            font-size: 0.85rem;
+            margin-top: 8px;
+            line-height: 1.4;
+        }
+        
+        .comparison-section {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid #334155;
+            border-radius: 20px;
+            padding: 32px;
+            margin-top: 40px;
+        }
+        
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-top: 24px;
+        }
+        
+        .comparison-item {
+            text-align: center;
+            padding: 24px;
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 12px;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .comparison-item.recommended {
+            border-color: #6366f1;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+        }
+        
+        .comparison-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #f8fafc;
+            margin-bottom: 8px;
+        }
+        
+        .comparison-cost {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin: 16px 0;
+        }
+        
+        .cost-traditional { color: #ef4444; }
+        .cost-consultant { color: #f59e0b; }
+        .cost-a3e { color: #22c55e; }
+        
+        .comparison-features {
+            list-style: none;
+            text-align: left;
+            font-size: 0.85rem;
+            color: #cbd5e1;
+        }
+        
+        .comparison-features li {
+            margin: 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .feature-check { color: #22c55e; }
+        .feature-x { color: #ef4444; }
+        .feature-partial { color: #f59e0b; }
+        
+        .cta-section {
+            text-align: center;
+            margin-top: 48px;
+            padding: 40px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+            border-radius: 20px;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+        }
+        
+        .cta-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #f8fafc;
+            margin-bottom: 16px;
+        }
+        
+        .cta-subtitle {
+            color: #94a3b8;
+            margin-bottom: 32px;
+            font-size: 1.1rem;
+        }
+        
+        .cta-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            padding: 16px 32px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px -10px rgba(99, 102, 241, 0.5);
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px -10px rgba(99, 102, 241, 0.6);
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            color: #94a3b8;
+            padding: 16px 32px;
+            border: 2px solid #334155;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-secondary:hover {
+            color: #f1f5f9;
+            border-color: #6366f1;
+        }
+        
+        @media (max-width: 768px) {
+            .container { padding: 20px 15px; }
+            .header h1 { font-size: 2rem; }
+            .calculator-grid { 
+                grid-template-columns: 1fr; 
+                gap: 24px; 
+            }
+            .comparison-grid { 
+                grid-template-columns: 1fr; 
+                gap: 16px; 
+            }
+            .cta-buttons { flex-direction: column; }
+        }
+        
+        .tooltip {
+            position: relative;
+            cursor: help;
+        }
+        
+        .tooltip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💰 ROI Calculator</h1>
+            <p>Calculate your return on investment with MapMyStandards A³E. See how much time and money you'll save compared to traditional accreditation methods.</p>
+        </div>
+
+        <div class="calculator-grid">
+            <!-- Input Section -->
+            <div class="input-section">
+                <h2 class="section-title">🏫 Your Institution</h2>
+                
+                <div class="input-group">
+                    <label class="input-label">Institution Type</label>
+                    <select class="input-field select-field" id="institutionType">
+                        <option value="community_college">Community College</option>
+                        <option value="public_university">Public University</option>
+                        <option value="private_college">Private College</option>
+                        <option value="specialized">Specialized Institution</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">Student Enrollment</label>
+                    <select class="input-field select-field" id="enrollmentSize">
+                        <option value="under_1000">Under 1,000</option>
+                        <option value="1k_5k">1,000 - 5,000</option>
+                        <option value="5k_15k" selected>5,000 - 15,000</option>
+                        <option value="15k_plus">15,000+</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">Primary Accreditor</label>
+                    <select class="input-field select-field" id="accreditor">
+                        <option value="HLC">Higher Learning Commission (HLC)</option>
+                        <option value="SACSCOC">SACSCOC</option>
+                        <option value="MSCHE">Middle States Commission</option>
+                        <option value="NWCCU">Northwest Commission</option>
+                        <option value="WSCUC">WASC Senior College</option>
+                        <option value="ACCJC">ACCJC (Community Colleges)</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <div class="slider-group">
+                    <label class="input-label">
+                        Staff Hours/Month on Accreditation: 
+                        <span id="staffHoursValue">40</span>
+                        <span class="tooltip" data-tooltip="Estimated hours your team spends monthly on accreditation-related work">ℹ️</span>
+                    </label>
+                    <input type="range" min="20" max="120" value="40" class="slider" id="staffHours">
+                    <div class="slider-labels">
+                        <span>20h</span>
+                        <span>70h</span>
+                        <span>120h</span>
+                    </div>
+                </div>
+
+                <div class="slider-group">
+                    <label class="input-label">
+                        Average Staff Hourly Rate: $<span id="hourlyRateValue">75</span>
+                        <span class="tooltip" data-tooltip="Blended rate for staff working on accreditation (administrators, faculty, support staff)">ℹ️</span>
+                    </label>
+                    <input type="range" min="50" max="150" value="75" class="slider" id="hourlyRate">
+                    <div class="slider-labels">
+                        <span>$50</span>
+                        <span>$100</span>
+                        <span>$150</span>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">
+                        Consultant Usage
+                        <span class="tooltip" data-tooltip="How often you currently use external accreditation consultants">ℹ️</span>
+                    </label>
+                    <select class="input-field select-field" id="consultantUsage">
+                        <option value="none">None</option>
+                        <option value="occasional">Occasional (5-10 hours/month)</option>
+                        <option value="regular">Regular (15-25 hours/month)</option>
+                        <option value="heavy">Heavy (30+ hours/month)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div class="results-section">
+                <h2 class="section-title">📊 Your ROI Results</h2>
+                
+                <div class="results-grid" id="resultsGrid">
+                    <div class="result-item">
+                        <div class="result-value result-time" id="timeSaved">40h</div>
+                        <div class="result-label">Time Saved Monthly</div>
+                        <div class="result-description">Hours freed up for strategic work</div>
+                    </div>
+
+                    <div class="result-item">
+                        <div class="result-value result-savings" id="monthlySavings">$3,000</div>
+                        <div class="result-label">Monthly Cost Savings</div>
+                        <div class="result-description">Staff time + consultant reduction</div>
+                    </div>
+
+                    <div class="result-item">
+                        <div class="result-value result-positive" id="annualValue">$36,000</div>
+                        <div class="result-label">Annual Value Created</div>
+                        <div class="result-description">Total yearly impact</div>
+                    </div>
+
+                    <div class="result-item">
+                        <div class="result-value result-roi" id="roiMultiplier">16.8x</div>
+                        <div class="result-label">ROI Multiplier</div>
+                        <div class="result-description">Return vs A³E subscription cost</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Comparison Section -->
+        <div class="comparison-section">
+            <h2 class="section-title">⚖️ Cost Comparison</h2>
+            <div class="comparison-grid">
+                <div class="comparison-item">
+                    <div class="comparison-title">Traditional Method</div>
+                    <div class="comparison-cost cost-traditional" id="traditionalCost">$5,200</div>
+                    <div style="color: #94a3b8; margin-bottom: 16px;">Monthly Cost</div>
+                    <ul class="comparison-features">
+                        <li><span class="feature-x">❌</span> Manual standards mapping</li>
+                        <li><span class="feature-x">❌</span> Time-intensive documentation</li>
+                        <li><span class="feature-x">❌</span> Risk of missing requirements</li>
+                        <li><span class="feature-partial">⚠️</span> Basic reporting</li>
+                        <li><span class="feature-x">❌</span> No automation</li>
+                    </ul>
+                </div>
+
+                <div class="comparison-item">
+                    <div class="comparison-title">External Consultants</div>
+                    <div class="comparison-cost cost-consultant" id="consultantCost">$3,500</div>
+                    <div style="color: #94a3b8; margin-bottom: 16px;">Monthly Cost</div>
+                    <ul class="comparison-features">
+                        <li><span class="feature-check">✅</span> Expert knowledge</li>
+                        <li><span class="feature-partial">⚠️</span> Limited availability</li>
+                        <li><span class="feature-x">❌</span> High hourly rates</li>
+                        <li><span class="feature-partial">⚠️</span> Project-based work</li>
+                        <li><span class="feature-x">❌</span> External dependency</li>
+                    </ul>
+                </div>
+
+                <div class="comparison-item recommended">
+                    <div class="comparison-title">MapMyStandards A³E</div>
+                    <div class="comparison-cost cost-a3e">$297</div>
+                    <div style="color: #94a3b8; margin-bottom: 16px;">Monthly Cost</div>
+                    <ul class="comparison-features">
+                        <li><span class="feature-check">✅</span> AI-powered automation</li>
+                        <li><span class="feature-check">✅</span> 24/7 availability</li>
+                        <li><span class="feature-check">✅</span> Real-time compliance tracking</li>
+                        <li><span class="feature-check">✅</span> Professional reporting</li>
+                        <li><span class="feature-check">✅</span> Continuous improvement</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Call to Action -->
+        <div class="cta-section">
+            <h2 class="cta-title">Ready to Transform Your Accreditation Process?</h2>
+            <p class="cta-subtitle">Start your 14-day free trial and see these results for yourself</p>
+            <div class="cta-buttons">
+                <a href="/signup" class="btn-primary">🚀 Start Free Trial</a>
+                <a href="/demo" class="btn-secondary">📋 Schedule Demo</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class ROICalculator {
+            constructor() {
+                this.elements = {
+                    institutionType: document.getElementById('institutionType'),
+                    enrollmentSize: document.getElementById('enrollmentSize'),
+                    accreditor: document.getElementById('accreditor'),
+                    staffHours: document.getElementById('staffHours'),
+                    staffHoursValue: document.getElementById('staffHoursValue'),
+                    hourlyRate: document.getElementById('hourlyRate'),
+                    hourlyRateValue: document.getElementById('hourlyRateValue'),
+                    consultantUsage: document.getElementById('consultantUsage'),
+                    
+                    // Results
+                    timeSaved: document.getElementById('timeSaved'),
+                    monthlySavings: document.getElementById('monthlySavings'),
+                    annualValue: document.getElementById('annualValue'),
+                    roiMultiplier: document.getElementById('roiMultiplier'),
+                    traditionalCost: document.getElementById('traditionalCost'),
+                    consultantCost: document.getElementById('consultantCost')
+                };
+
+                this.subscriptionCost = 297;
+                this.init();
+            }
+
+            init() {
+                // Add event listeners
+                Object.values(this.elements).forEach(element => {
+                    if (element && element.addEventListener) {
+                        element.addEventListener('input', () => this.calculate());
+                        element.addEventListener('change', () => this.calculate());
+                    }
+                });
+
+                // Update slider displays
+                this.elements.staffHours.addEventListener('input', (e) => {
+                    this.elements.staffHoursValue.textContent = e.target.value;
+                });
+
+                this.elements.hourlyRate.addEventListener('input', (e) => {
+                    this.elements.hourlyRateValue.textContent = e.target.value;
+                });
+
+                // Initial calculation
+                this.calculate();
+                
+                // Load user data if available
+                this.loadUserData();
+            }
+
+            loadUserData() {
+                // Try to get institution data from onboarding
+                const onboardingData = sessionStorage.getItem('a3e_onboarding_data');
+                if (onboardingData) {
+                    try {
+                        const data = JSON.parse(onboardingData);
+                        if (data.institution_size) {
+                            this.elements.enrollmentSize.value = data.institution_size;
+                        }
+                        if (data.primary_accreditor) {
+                            // Map common accreditor names
+                            const accreditorMap = {
+                                'SACSCOC': 'SACSCOC',
+                                'HLC': 'HLC',
+                                'MSCHE': 'MSCHE',
+                                'NWCCU': 'NWCCU'
+                            };
+                            const mapped = accreditorMap[data.primary_accreditor] || 'other';
+                            this.elements.accreditor.value = mapped;
+                        }
+                        this.calculate();
+                    } catch (e) {
+                        console.warn('Could not load onboarding data:', e);
+                    }
+                }
+            }
+
+            calculate() {
+                const staffHours = parseInt(this.elements.staffHours.value);
+                const hourlyRate = parseInt(this.elements.hourlyRate.value);
+                const enrollmentSize = this.elements.enrollmentSize.value;
+                const consultantUsage = this.elements.consultantUsage.value;
+
+                // Calculate efficiency multipliers based on enrollment
+                const enrollmentMultipliers = {
+                    'under_1000': 0.7,
+                    '1k_5k': 0.85,
+                    '5k_15k': 1.0,
+                    '15k_plus': 1.3
+                };
+
+                const multiplier = enrollmentMultipliers[enrollmentSize] || 1.0;
+
+                // Calculate time savings (A³E typically saves 60-80% of manual work)
+                const timeSavedPercent = 0.7;
+                const timeSaved = Math.round(staffHours * timeSavedPercent * multiplier);
+
+                // Calculate cost savings from staff time
+                const staffCostSavings = timeSaved * hourlyRate;
+
+                // Calculate consultant savings
+                const consultantHours = this.getConsultantHours(consultantUsage);
+                const consultantRate = 200; // Average consultant rate
+                const consultantSavings = consultantHours * consultantRate * multiplier;
+
+                // Total monthly savings
+                const totalMonthlySavings = staffCostSavings + consultantSavings;
+
+                // Annual value
+                const annualValue = totalMonthlySavings * 12;
+
+                // ROI calculation
+                const roiMultiplier = totalMonthlySavings / this.subscriptionCost;
+
+                // Traditional cost (current method)
+                const traditionalCost = staffHours * hourlyRate + consultantSavings;
+
+                // Update display
+                this.updateDisplay({
+                    timeSaved: timeSaved,
+                    monthlySavings: totalMonthlySavings,
+                    annualValue: annualValue,
+                    roiMultiplier: roiMultiplier,
+                    traditionalCost: traditionalCost,
+                    consultantCost: Math.round(consultantSavings + (staffHours * 0.5 * hourlyRate)) // Partial staff time with consultants
+                });
+            }
+
+            getConsultantHours(usage) {
+                const hourMap = {
+                    'none': 0,
+                    'occasional': 8,
+                    'regular': 20,
+                    'heavy': 35
+                };
+                return hourMap[usage] || 0;
+            }
+
+            updateDisplay(results) {
+                this.elements.timeSaved.textContent = `${results.timeSaved}h`;
+                this.elements.monthlySavings.textContent = `$${results.monthlySavings.toLocaleString()}`;
+                this.elements.annualValue.textContent = `$${results.annualValue.toLocaleString()}`;
+                this.elements.roiMultiplier.textContent = `${results.roiMultiplier.toFixed(1)}x`;
+                this.elements.traditionalCost.textContent = `$${results.traditionalCost.toLocaleString()}`;
+                this.elements.consultantCost.textContent = `$${results.consultantCost.toLocaleString()}`;
+
+                // Add visual feedback for exceptional ROI
+                if (results.roiMultiplier > 15) {
+                    this.elements.roiMultiplier.style.color = '#10b981';
+                } else if (results.roiMultiplier > 10) {
+                    this.elements.roiMultiplier.style.color = '#3b82f6';
+                } else {
+                    this.elements.roiMultiplier.style.color = '#8b5cf6';
+                }
+
+                // Update CTA based on results
+                this.updateCTA(results);
+            }
+
+            updateCTA(results) {
+                const ctaTitle = document.querySelector('.cta-title');
+                const ctaSubtitle = document.querySelector('.cta-subtitle');
+
+                if (results.roiMultiplier > 15) {
+                    ctaTitle.innerHTML = `🎯 Save $${results.monthlySavings.toLocaleString()}/month Starting Today`;
+                    ctaSubtitle.innerHTML = `Exceptional ${results.roiMultiplier.toFixed(1)}x ROI - Join institutions saving thousands monthly`;
+                } else if (results.roiMultiplier > 10) {
+                    ctaTitle.innerHTML = `💰 ${results.roiMultiplier.toFixed(1)}x Return on Your Investment`;
+                    ctaSubtitle.innerHTML = `Strong ROI case - Start your free trial and see these savings immediately`;
+                } else {
+                    ctaTitle.innerHTML = `⚡ Transform Your Accreditation Process`;
+                    ctaSubtitle.innerHTML = `Save ${results.timeSaved} hours monthly and reduce costs by $${results.monthlySavings.toLocaleString()}`;
+                }
+            }
+        }
+
+        // Initialize calculator when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new ROICalculator();
+        });
+
+        // Add entrance animations
+        document.addEventListener('DOMContentLoaded', () => {
+            const elements = document.querySelectorAll('.input-section, .results-section, .comparison-section');
+            elements.forEach((el, index) => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(30px)';
+                el.style.transition = 'all 0.8s ease';
+                el.style.transitionDelay = `${index * 0.2}s`;
+                
+                setTimeout(() => {
+                    el.style.opacity = '1';
+                    el.style.transform = 'translateY(0)';
+                }, 100);
+            });
+        });
+    </script>
+</body>
+</html>

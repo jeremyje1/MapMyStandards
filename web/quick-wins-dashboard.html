@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Wins Dashboard - MapMyStandards A³E</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #f1f5f9;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 12px;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            color: #94a3b8;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .wins-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+        
+        .win-card {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid #334155;
+            border-radius: 16px;
+            padding: 28px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .win-card:hover {
+            transform: translateY(-4px);
+            border-color: #6366f1;
+            box-shadow: 0 20px 40px -10px rgba(99, 102, 241, 0.3);
+        }
+        
+        .win-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #6366f1, #8b5cf6);
+        }
+        
+        .win-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+        
+        .win-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #f8fafc;
+            margin-bottom: 8px;
+        }
+        
+        .priority-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+        
+        .priority-high {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        
+        .priority-completed {
+            background: rgba(34, 197, 94, 0.2);
+            color: #86efac;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+        
+        .priority-positive {
+            background: rgba(59, 130, 246, 0.2);
+            color: #93c5fd;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+        
+        .win-description {
+            color: #cbd5e1;
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+        
+        .win-action {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-top: 16px;
+        }
+        
+        .action-text {
+            color: #e2e8f0;
+            font-weight: 500;
+        }
+        
+        .time-saved {
+            color: #22c55e;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .roi-section {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 20px;
+            padding: 32px;
+            margin: 40px 0;
+            text-align: center;
+        }
+        
+        .roi-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #f8fafc;
+            margin-bottom: 16px;
+        }
+        
+        .roi-subtitle {
+            color: #94a3b8;
+            margin-bottom: 32px;
+            font-size: 1.1rem;
+        }
+        
+        .roi-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 24px;
+        }
+        
+        .roi-metric {
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+        }
+        
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #22c55e;
+            margin-bottom: 8px;
+        }
+        
+        .metric-label {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .cta-section {
+            text-align: center;
+            margin-top: 48px;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            padding: 16px 32px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px -10px rgba(99, 102, 241, 0.5);
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px -10px rgba(99, 102, 241, 0.6);
+        }
+        
+        .secondary-cta {
+            display: inline-block;
+            color: #94a3b8;
+            text-decoration: none;
+            margin-left: 24px;
+            font-weight: 500;
+            border-bottom: 1px solid transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .secondary-cta:hover {
+            color: #f1f5f9;
+            border-bottom-color: #94a3b8;
+        }
+        
+        .loading-skeleton {
+            background: linear-gradient(90deg, #334155 25%, #475569 50%, #334155 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: 8px;
+            height: 20px;
+            margin: 8px 0;
+        }
+        
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        @media (max-width: 768px) {
+            .container { padding: 15px; }
+            .wins-grid { grid-template-columns: 1fr; }
+            .roi-metrics { grid-template-columns: 1fr; }
+            .header h1 { font-size: 2rem; }
+            .cta-section .secondary-cta { 
+                display: block; 
+                margin: 16px 0 0 0; 
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🎯 Your Quick Wins Dashboard</h1>
+            <p>See immediate value from A³E's AI-powered accreditation intelligence platform</p>
+        </div>
+
+        <!-- Quick Wins Grid -->
+        <div class="wins-grid" id="winsGrid">
+            <!-- Loading state -->
+            <div class="win-card">
+                <div class="loading-skeleton"></div>
+                <div class="loading-skeleton" style="width: 60%;"></div>
+                <div class="loading-skeleton" style="width: 80%; margin-top: 16px;"></div>
+            </div>
+        </div>
+
+        <!-- ROI Section -->
+        <div class="roi-section">
+            <h2 class="roi-title">Your Return on Investment</h2>
+            <p class="roi-subtitle">See how A³E delivers exceptional value compared to traditional methods</p>
+            
+            <div class="roi-metrics" id="roiMetrics">
+                <!-- Loading state -->
+                <div class="roi-metric">
+                    <div class="loading-skeleton" style="height: 40px;"></div>
+                    <div class="loading-skeleton" style="width: 60%; margin-top: 8px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Call to Action -->
+        <div class="cta-section">
+            <a href="/upload" class="cta-button">🚀 Start Your First Analysis</a>
+            <a href="/dashboard" class="secondary-cta">Go to Main Dashboard</a>
+        </div>
+    </div>
+
+    <script>
+        // Sample data service integration
+        class QuickWinsDashboard {
+            constructor() {
+                this.apiKey = localStorage.getItem('a3e_api_key') || sessionStorage.getItem('a3e_pending_api_key');
+                this.userEmail = localStorage.getItem('a3e_user_email') || sessionStorage.getItem('a3e_pending_email');
+                this.init();
+            }
+
+            async init() {
+                await this.loadQuickWins();
+                await this.loadROIMetrics();
+                this.startPeriodicRefresh();
+            }
+
+            async loadQuickWins() {
+                try {
+                    const response = await this.apiCall('/api/v1/sample-data/quick-wins');
+                    if (response && response.quick_wins) {
+                        this.renderQuickWins(response.quick_wins);
+                    } else {
+                        this.renderSampleQuickWins();
+                    }
+                } catch (error) {
+                    console.warn('Failed to load quick wins, using samples:', error);
+                    this.renderSampleQuickWins();
+                }
+            }
+
+            async loadROIMetrics() {
+                try {
+                    const institutionSize = this.getInstitutionSize();
+                    const response = await this.apiCall(`/api/v1/sample-data/roi-calculator?size=${institutionSize}`);
+                    if (response && response.roi_data) {
+                        this.renderROIMetrics(response.roi_data);
+                    } else {
+                        this.renderSampleROI();
+                    }
+                } catch (error) {
+                    console.warn('Failed to load ROI metrics, using samples:', error);
+                    this.renderSampleROI();
+                }
+            }
+
+            getInstitutionSize() {
+                // Try to get from onboarding data or default
+                const onboardingData = sessionStorage.getItem('a3e_onboarding_data');
+                if (onboardingData) {
+                    try {
+                        const data = JSON.parse(onboardingData);
+                        return data.institution_size || '5k_15k';
+                    } catch (e) {
+                        return '5k_15k';
+                    }
+                }
+                return '5k_15k';
+            }
+
+            async apiCall(endpoint) {
+                const headers = { 'Content-Type': 'application/json' };
+                if (this.apiKey) headers['X-API-Key'] = this.apiKey;
+                
+                const response = await fetch(endpoint, { headers });
+                return response.ok ? await response.json() : null;
+            }
+
+            renderQuickWins(wins) {
+                const grid = document.getElementById('winsGrid');
+                grid.innerHTML = wins.map(win => this.createWinCard(win)).join('');
+            }
+
+            renderSampleQuickWins() {
+                const sampleWins = [
+                    {
+                        type: "gap_identified",
+                        title: "Missing Evidence Detected",
+                        description: "AI identified 3 potential gaps in student learning outcomes documentation for Standards 8.2.a-c",
+                        priority: "high",
+                        action: "Upload SLO assessment reports",
+                        time_saved: "4 hours"
+                    },
+                    {
+                        type: "auto_mapping", 
+                        title: "Strategic Plan Auto-Mapped",
+                        description: "Automatically mapped 23 accreditation standards across 4 categories with 94% confidence",
+                        priority: "completed",
+                        action: "Review and validate mappings",
+                        time_saved: "12 hours"
+                    },
+                    {
+                        type: "compliance_boost",
+                        title: "Compliance Score: 87%",
+                        description: "Above industry average of 73% - your institution is in strong position for accreditation",
+                        priority: "positive", 
+                        action: "Focus on remaining 13% for excellence",
+                        time_saved: "N/A"
+                    }
+                ];
+                this.renderQuickWins(sampleWins);
+            }
+
+            createWinCard(win) {
+                const priorityClass = `priority-${win.priority}`;
+                const iconMap = {
+                    gap_identified: "⚠️",
+                    auto_mapping: "🎯", 
+                    compliance_boost: "📈"
+                };
+                
+                return `
+                    <div class="win-card">
+                        <div class="win-header">
+                            <div>
+                                <div class="win-title">${iconMap[win.type] || "✨"} ${win.title}</div>
+                                <span class="priority-badge ${priorityClass}">${win.priority}</span>
+                            </div>
+                        </div>
+                        <p class="win-description">${win.description}</p>
+                        <div class="win-action">
+                            <span class="action-text">${win.action}</span>
+                            ${win.time_saved !== "N/A" ? `<span class="time-saved">⚡ ${win.time_saved} saved</span>` : ''}
+                        </div>
+                    </div>
+                `;
+            }
+
+            renderROIMetrics(roiData) {
+                const metrics = [
+                    { value: `${roiData.monthly_time_saved}h`, label: 'Hours Saved Monthly' },
+                    { value: `$${roiData.total_monthly_value.toLocaleString()}`, label: 'Monthly Value Created' },
+                    { value: `${roiData.roi_multiplier}x`, label: 'Return on Investment' },
+                    { value: `$${roiData.subscription_cost}`, label: 'Monthly Investment' }
+                ];
+                
+                const metricsHTML = metrics.map(metric => `
+                    <div class="roi-metric">
+                        <div class="metric-value">${metric.value}</div>
+                        <div class="metric-label">${metric.label}</div>
+                    </div>
+                `).join('');
+                
+                document.getElementById('roiMetrics').innerHTML = metricsHTML;
+            }
+
+            renderSampleROI() {
+                const sampleROI = {
+                    monthly_time_saved: 40,
+                    total_monthly_value: 5000,
+                    roi_multiplier: 16.8,
+                    subscription_cost: 297
+                };
+                this.renderROIMetrics(sampleROI);
+            }
+
+            startPeriodicRefresh() {
+                // Refresh quick wins every 5 minutes to show dynamic updates
+                setInterval(() => {
+                    this.loadQuickWins();
+                }, 300000);
+            }
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new QuickWinsDashboard();
+        });
+
+        // Add smooth scrolling and animations
+        document.addEventListener('DOMContentLoaded', () => {
+            // Animate cards on scroll
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, observerOptions);
+
+            // Initially hide cards for animation
+            setTimeout(() => {
+                document.querySelectorAll('.win-card').forEach((card, index) => {
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateY(20px)';
+                    card.style.transition = 'all 0.6s ease';
+                    card.style.transitionDelay = `${index * 0.1}s`;
+                    observer.observe(card);
+                });
+            }, 100);
+        });
+    </script>
+</body>
+</html>

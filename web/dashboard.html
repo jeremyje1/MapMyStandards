@@ -221,9 +221,15 @@
     <div class="container">
         <!-- Welcome Section -->
         <div class="welcome-section">
-            <h1 class="welcome-title">🎯 Welcome to Your A³E Command Center</h1>
-            <p class="welcome-text">Transform your institution into an accreditation powerhouse with AI-powered analytics that become more valuable every day. Your journey to operational excellence starts here.</p>
-            <div class="action-buttons">
+            <h1 class="welcome-title" id="welcomeTitle">🎯 Welcome to Your A³E Command Center</h1>
+            <p class="welcome-text" id="welcomeText">Transform your institution into an accreditation powerhouse with AI-powered analytics that become more valuable every day. Your journey to operational excellence starts here.</p>
+            <div class="action-buttons" id="actionButtons">
+                <a href="/quick-wins-dashboard" class="action-btn">
+                    ⚡ See Quick Wins
+                </a>
+                <a href="/roi-calculator" class="action-btn">
+                    💰 Calculate ROI
+                </a>
                 <a href="/upload" class="action-btn">
                     📤 Start Analysis
                 </a>
@@ -232,9 +238,6 @@
                 </a>
                 <a href="/reports" class="action-btn">
                     📈 Generate Reports
-                </a>
-                <a href="/docs" class="action-btn">
-                    📖 API Documentation
                 </a>
             </div>
         </div>
@@ -294,9 +297,12 @@
             window.location.href = '/login';
         }
 
-        // Load dashboard metrics
+        // Load dashboard metrics with sample data integration
         async function loadDashboardMetrics() {
             try {
+                // Try to load personalized welcome dashboard data
+                await loadPersonalizedDashboard();
+                
                 // Check if user has token
                 const token = localStorage.getItem('authToken') || 'demo-token';
                 
@@ -330,12 +336,98 @@
                     
                     console.log('Dashboard metrics loaded:', data);
                 } else {
-                    console.warn('Failed to load metrics, using defaults');
+                    console.warn('Failed to load real metrics, using sample data');
+                    loadSampleMetrics();
                 }
             } catch (error) {
                 console.error('Error loading dashboard metrics:', error);
-                // Keep default values if API fails
+                loadSampleMetrics();
             }
+        }
+
+        // Load personalized dashboard based on onboarding data
+        async function loadPersonalizedDashboard() {
+            try {
+                // Get onboarding data
+                const onboardingData = sessionStorage.getItem('a3e_onboarding_data');
+                if (!onboardingData) return;
+
+                const data = JSON.parse(onboardingData);
+                const goals = data.goals ? data.goals.join(',') : '';
+                
+                // Build query parameters
+                const params = new URLSearchParams({
+                    goals: goals,
+                    institution_name: data.institution_name || '',
+                    institution_size: data.institution_size || '5k_15k',
+                    primary_accreditor: data.primary_accreditor || ''
+                });
+
+                const response = await fetch(`/api/v1/sample-data/welcome-dashboard?${params}`);
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    const dashboard = result.dashboard_data;
+                    
+                    // Personalize welcome section
+                    if (dashboard.personalization) {
+                        const welcomeTitle = document.getElementById('welcomeTitle');
+                        const welcomeText = document.getElementById('welcomeText');
+                        
+                        if (dashboard.personalization.institution_name !== 'Your Institution') {
+                            welcomeTitle.innerHTML = `🎯 Welcome ${dashboard.personalization.institution_name}!`;
+                        }
+                        
+                        const primaryGoal = dashboard.personalization.primary_goals[0] || 'accreditation excellence';
+                        welcomeText.innerHTML = `Ready to achieve ${primaryGoal}? Your AI-powered accreditation platform is configured and ready to deliver exceptional results for ${dashboard.personalization.accreditor || 'your accreditor'}.`;
+                    }
+                    
+                    // Update sample metrics if available
+                    if (dashboard.sample_metrics) {
+                        updateSampleMetrics(dashboard.sample_metrics);
+                    }
+                }
+            } catch (error) {
+                console.warn('Could not load personalized dashboard:', error);
+            }
+        }
+
+        // Load sample metrics for trial accounts
+        function loadSampleMetrics() {
+            const institutionSize = getInstitutionSizeFromOnboarding();
+            
+            fetch(`/api/v1/sample-data/success-metrics/${institutionSize}`)
+                .then(response => response.ok ? response.json() : null)
+                .then(result => {
+                    if (result && result.metrics) {
+                        updateSampleMetrics(result.metrics);
+                        
+                        // Update welcome message with sample context
+                        const welcomeText = document.getElementById('welcomeText');
+                        welcomeText.innerHTML = `See how institutions like yours achieve success! Similar ${result.institution_profile.type}s average <strong>${result.metrics.documents_analyzed}</strong> documents analyzed and <strong>${result.metrics.compliance_score}%</strong> compliance scores.`;
+                    }
+                })
+                .catch(error => console.warn('Sample metrics not available:', error));
+        }
+
+        function updateSampleMetrics(metrics) {
+            document.getElementById('documentsAnalyzed').textContent = metrics.documents_analyzed;
+            document.getElementById('standardsMapped').textContent = `${metrics.standards_mapped}/89`;
+            document.getElementById('reportsGenerated').textContent = metrics.reports_generated;
+            // Keep trial days as is
+        }
+
+        function getInstitutionSizeFromOnboarding() {
+            try {
+                const onboardingData = sessionStorage.getItem('a3e_onboarding_data');
+                if (onboardingData) {
+                    const data = JSON.parse(onboardingData);
+                    return data.institution_size || '5k_15k';
+                }
+            } catch (e) {
+                // Ignore parsing errors
+            }
+            return '5k_15k';
         }
 
         // Add loading indicator

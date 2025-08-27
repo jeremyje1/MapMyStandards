@@ -442,6 +442,9 @@
       } else if(state.step === 4){
         state.data.success_definition = document.getElementById('success_definition').value.trim();
       }
+      
+      // Save to sessionStorage for dashboard integration
+      sessionStorage.setItem('a3e_onboarding_data', JSON.stringify(state.data));
     }
 
     async function persist(partial=false){
