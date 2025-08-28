@@ -106,7 +106,7 @@ def upload():
 
 @app.get("/health")
 def health():
-    return {"status": "emergency_mode", "service": "a3e"}
+    return {"status": "emergency_mode", "service": "a3e", "version": "1.1", "routes": ["trial-signup", "dashboard", "upload"]}
 
 if __name__ == "__main__":
     import uvicorn
