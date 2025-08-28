@@ -96,6 +96,15 @@ async def trial_success_page():
     """Trial success page"""
     return serve_html_file("trial-success.html", fallback="landing.html")
 
+@router.get("/trial-success.html", response_class=HTMLResponse, include_in_schema=False)
+async def trial_success_html_redirect(request: Request):
+    """Redirect /trial-success.html to /trial-success preserving query parameters"""
+    query_string = str(request.url.query) if request.url.query else ""
+    redirect_url = "/trial-success"
+    if query_string:
+        redirect_url += f"?{query_string}"
+    return RedirectResponse(url=redirect_url, status_code=301)
+
 @router.get("/pricing", response_class=HTMLResponse, include_in_schema=False)
 async def pricing_page():
     """Pricing page"""
