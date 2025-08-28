@@ -125,8 +125,8 @@
             <p>✅ Your account is ready! The A³E platform is operational and available for use.</p>
         </div>
         
-        <a href="/trial-signup" class="manual-link" id="manualLink">
-            🚀 Start Using A³E Platform →
+        <a href="/login" class="manual-link" id="manualLink">
+            🔐 Access Your Dashboard →
         </a>
     </div>
 
@@ -138,9 +138,37 @@
         // Success page - no automatic redirects to prevent 404 chains
         console.log('✅ Dashboard success page loaded - subscription activated');
         
-        // Show success message without redirects
+        // Check if user has existing credentials
         document.addEventListener('DOMContentLoaded', function() {
             console.log('✅ Checkout completed successfully - A³E Platform ready');
+            
+            // Check for existing authentication
+            const apiKey = localStorage.getItem('a3e_api_key');
+            const trialId = localStorage.getItem('a3e_trial_id');
+            const userEmail = localStorage.getItem('a3e_user_email');
+            
+            if (apiKey || trialId) {
+                // User has credentials - update button to go to actual dashboard
+                const button = document.getElementById('manualLink');
+                if (button) {
+                    if (trialId) {
+                        button.href = `/dashboard?trial_id=${trialId}`;
+                        button.textContent = '🏠 Go to Your Dashboard →';
+                    } else {
+                        button.href = '/dashboard';
+                        button.textContent = '🏠 Access Dashboard →';
+                    }
+                }
+                
+                // Update message for returning users
+                const redirectInfo = document.querySelector('.redirect-info p');
+                if (redirectInfo && userEmail) {
+                    redirectInfo.innerHTML = `✅ Welcome back! Your A³E account (${userEmail}) is ready to use.`;
+                }
+            } else {
+                // New user - button already points to login
+                console.log('New user - will redirect to login form');
+            }
         });
     </script>
 </body>

@@ -1235,13 +1235,39 @@ if WEB_DIR.exists():
         return FileResponse(str(WEB_DIR / "login.html"))
 
     @app.get("/dashboard", response_class=HTMLResponse, include_in_schema=False)
-    async def dashboard_page():  # noqa: D401
-        """Serve the primary dashboard HTML (no longer redirect)."""
-        dashboard_file = WEB_DIR / "dashboard.html"
-        if dashboard_file.exists():
-            return FileResponse(str(dashboard_file))
-        # Fallback (keep legacy redirect behaviour if file missing)
-        return HTMLResponse("<html><head><meta http-equiv='refresh' content='0; url=/upload'></head><body>Redirecting to upload (dashboard missing)...</body></html>")
+    async def dashboard_page(request: Request):  # noqa: D401
+        """Smart dashboard route - checks authentication and redirects appropriately."""
+        
+        # Check if user is authenticated (check for session token/cookie)
+        auth_token = request.cookies.get("auth_token") or request.headers.get("Authorization")
+        trial_id = request.cookies.get("a3e_trial_id") or request.headers.get("X-Trial-ID")
+        
+        # If user has authentication, serve the actual dashboard
+        if auth_token or trial_id:
+            # Try to serve dashboard-fixed.html (the actual dashboard) first
+            dashboard_fixed_file = WEB_DIR / "dashboard-fixed.html"
+            if dashboard_fixed_file.exists():
+                return FileResponse(str(dashboard_fixed_file))
+            
+            # Fallback to regular dashboard
+            dashboard_file = WEB_DIR / "dashboard.html"
+            if dashboard_file.exists():
+                return FileResponse(str(dashboard_file))
+        
+        # If no authentication, redirect to login page
+        return HTMLResponse("""
+        <!DOCTYPE html>
+        <html><head><title>A³E Platform - Authentication Required</title>
+        <meta http-equiv="refresh" content="2; url=/login"></head>
+        <body style="font-family: -apple-system, sans-serif; text-align: center; padding: 3rem; background: #f8fafc;">
+            <div style="width: 60px; height: 60px; background: #3b82f6; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 2rem;">
+                <span style="color: white; font-size: 1.5rem;">🔐</span>
+            </div>
+            <h1 style="color: #1e293b; margin-bottom: 1rem;">Authentication Required</h1>
+            <p style="color: #64748b; margin-bottom: 2rem;">Please sign in to access your A³E dashboard.</p>
+            <p><a href="/login" style="display: inline-block; background: #1e40af; color: white; text-decoration: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600;">Sign In →</a></p>
+        </body></html>
+        """)
 
     @app.get("/dashboard.html", response_class=HTMLResponse, include_in_schema=False)
     async def dashboard_html_page():  # noqa: D401
