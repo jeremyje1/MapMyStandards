@@ -159,6 +159,12 @@
             border-color: #10b981;
         }
         
+        .form-hint {
+            font-size: 0.875rem;
+            color: #64748b;
+            margin-top: 0.25rem;
+        }
+        
         .form-select {
             background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
             background-position: right 0.75rem center;
@@ -543,13 +549,20 @@
                 <div class="form-group">
                     <label for="password" class="form-label">Create Password</label>
                     <input type="password" id="password" name="password" class="form-input" required minlength="8">
+                    <div class="form-hint">Minimum 8 characters</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirmPassword" class="form-label">Confirm Password</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" class="form-input" required minlength="8">
+                    <div id="passwordMatch" class="form-hint" style="color: #dc2626; display: none;">Passwords do not match</div>
                 </div>
             </div>
 
             <!-- Step 2: Payment Information -->
             <div class="form-section" data-section="2">
                 <div class="step-header">
-                    <div class="step-number">Step 2 of 4</div>
+                    <div class="step-number">Step 2 of 3</div>
                     <h1 class="step-title">Payment Information</h1>
                     <p class="step-subtitle">We'll collect payment after your free trial ends</p>
                 </div>
@@ -595,7 +608,7 @@
             <!-- Step 3: Plan Selection -->
             <div class="form-section" data-section="3">
                 <div class="step-header">
-                    <div class="step-number">Step 3 of 4</div>
+                    <div class="step-number">Step 3 of 3</div>
                     <h1 class="step-title">Choose Your Plan</h1>
                     <p class="step-subtitle">Select the plan that fits your institution</p>
                 </div>
@@ -642,31 +655,11 @@
                 </div>
             </div>
 
-            <!-- Step 3: Payment Method -->
-            <div class="form-section" data-section="3">
-                <div class="step-header">
-                    <div class="step-number">Step 3 of 4</div>
-                    <h1 class="step-title">Payment Method</h1>
-                    <p class="step-subtitle">Add a payment method for after your free trial</p>
-                </div>
-                
-                <div class="alert" style="background: #eff6ff; color: #1e40af; border: 1px solid #3b82f6;">
-                    <strong>No charges for 7 days!</strong> We need a payment method to continue your service after your free trial ends.
-                </div>
-                
-                <div class="form-group">
-                    <label for="card-element" class="form-label">Card Information</label>
-                    <div id="card-element" style="padding: 1rem; border: 2px solid #e2e8f0; border-radius: 8px; background: white;">
-                        <!-- Stripe Elements will create form elements here -->
-                    </div>
-                    <div id="card-errors" role="alert" style="color: #dc2626; font-size: 0.875rem; margin-top: 0.5rem;"></div>
-                </div>
-            </div>
 
             <!-- Step 4: Confirmation -->
             <div class="form-section" data-section="4">
                 <div class="step-header">
-                    <div class="step-number">Step 4 of 4</div>
+                    <div class="step-number">Final Step</div>
                     <h1 class="step-title">Confirm Details</h1>
                     <p class="step-subtitle">Review and start your free trial</p>
                 </div>
@@ -701,7 +694,7 @@
 
     <script>
         let currentStep = 1;
-        const totalSteps = 4;
+        const totalSteps = 3;
         let stripe, elements, cardElement, paymentMethodId;
         
         // Elements
@@ -847,6 +840,20 @@
                 if (!email.includes('@')) {
                     showAlert('Please enter a valid email address.', 'error');
                     return false;
+                }
+                
+                // Validate password confirmation
+                const password = document.getElementById('password').value;
+                const confirmPassword = document.getElementById('confirmPassword').value;
+                const passwordMatch = document.getElementById('passwordMatch');
+                
+                if (password !== confirmPassword) {
+                    passwordMatch.style.display = 'block';
+                    document.getElementById('confirmPassword').focus();
+                    showAlert('Passwords do not match.', 'error');
+                    return false;
+                } else {
+                    passwordMatch.style.display = 'none';
                 }
             }
             
@@ -1017,6 +1024,41 @@
             }
         });
         
+        // Real-time password confirmation validation
+        document.getElementById('confirmPassword').addEventListener('input', function() {
+            const password = document.getElementById('password').value;
+            const confirmPassword = this.value;
+            const passwordMatch = document.getElementById('passwordMatch');
+            
+            if (confirmPassword.length > 0) {
+                if (password !== confirmPassword) {
+                    passwordMatch.style.display = 'block';
+                    this.style.borderColor = '#dc2626';
+                } else {
+                    passwordMatch.style.display = 'none';
+                    this.style.borderColor = '#10b981';
+                }
+            } else {
+                passwordMatch.style.display = 'none';
+                this.style.borderColor = '';
+            }
+        });
+        
+        document.getElementById('password').addEventListener('input', function() {
+            const confirmPassword = document.getElementById('confirmPassword');
+            const passwordMatch = document.getElementById('passwordMatch');
+            
+            if (confirmPassword.value.length > 0) {
+                if (this.value !== confirmPassword.value) {
+                    passwordMatch.style.display = 'block';
+                    confirmPassword.style.borderColor = '#dc2626';
+                } else {
+                    passwordMatch.style.display = 'none';
+                    confirmPassword.style.borderColor = '#10b981';
+                }
+            }
+        });
+
         // Initialize
         updateStep(1);
     </script>
