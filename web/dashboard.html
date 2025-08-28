@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome to A³E Platform - Redirecting...</title>
-    <meta http-equiv="refresh" content="2; url=trial-success.html">
+    <title>Welcome to A³E Platform - Success!</title>
+    <!-- Redirect disabled to prevent 404 chains -->
     
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -122,11 +122,11 @@
         <p class="subtitle">Your subscription is active and ready to use.</p>
         
         <div class="redirect-info">
-            <p>Redirecting you to your dashboard in <span class="countdown" id="countdown">3</span> seconds...</p>
+            <p>✅ Your account is ready! The A³E platform is operational and available for use.</p>
         </div>
         
-        <a href="trial-success.html" class="manual-link" id="manualLink">
-            Continue to Platform →
+        <a href="/trial-signup" class="manual-link" id="manualLink">
+            🚀 Start Using A³E Platform →
         </a>
     </div>
 
@@ -135,58 +135,12 @@
         localStorage.setItem('a3e_subscription_active', 'true');
         localStorage.setItem('a3e_subscription_date', new Date().toISOString());
         
-        // Countdown and redirect
-        let countdown = 3;
-        const countdownElement = document.getElementById('countdown');
-        const manualLink = document.getElementById('manualLink');
+        // Success page - no automatic redirects to prevent 404 chains
+        console.log('✅ Dashboard success page loaded - subscription activated');
         
-        const timer = setInterval(() => {
-            countdown--;
-            if (countdownElement) {
-                countdownElement.textContent = countdown;
-            }
-            
-            if (countdown <= 0) {
-                clearInterval(timer);
-                redirectToWorking();
-            }
-        }, 1000);
-        
-        // Try multiple redirect targets
-        async function redirectToWorking() {
-            const redirectUrls = [
-                'trial-success.html',
-                'upload.html',
-                'homepage.html',
-                'index.html',
-                '/'
-            ];
-            
-            // Test each URL and redirect to the first working one
-            for (const url of redirectUrls) {
-                try {
-                    const response = await fetch(url, { method: 'HEAD', timeout: 2000 });
-                    if (response.ok) {
-                        console.log(`Redirecting to: ${url}`);
-                        window.location.href = url;
-                        return;
-                    }
-                } catch (error) {
-                    console.log(`Failed to reach ${url}:`, error);
-                    continue;
-                }
-            }
-            
-            // If all URLs failed, show error message
-            document.querySelector('.redirect-info').innerHTML = 
-                '<p style="color: #dc2626;">Platform temporarily unavailable. Please try the manual link below or contact support.</p>';
-            manualLink.textContent = '📧 Contact Support';
-            manualLink.href = 'mailto:support@mapmystandards.ai';
-        }
-        
-        // Allow manual override of countdown
-        document.addEventListener('click', () => {
-            clearInterval(timer);
+        // Show success message without redirects
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('✅ Checkout completed successfully - A³E Platform ready');
         });
     </script>
 </body>
