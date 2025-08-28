@@ -358,7 +358,7 @@
                         const end = data.trial_end ? new Date(data.trial_end) : new Date(Date.now()+7*86400000);
                         setTrialDates(start, end);
                         localStorage.setItem('a3e_trial_id', trialId);
-                        document.querySelectorAll('a[href="dashboard.html"]').forEach(a=>a.href=`dashboard.html?trial_id=${trialId}`);
+                        document.querySelectorAll('a[href="dashboard.html"]').forEach(a=>a.href=`/dashboard?trial_id=${trialId}`);
                     } catch(e){
                         console.warn('Trial fetch failed; fallback', e);
                         const now = new Date();
@@ -397,7 +397,7 @@
                 async function redirectToDashboard() {
                     const redirectUrls = [
                         '/dashboard',
-                        '/dashboard.html',
+                        '/dashboard',
                         '/upload',
                         '/upload.html',
                         '/onboarding',
