@@ -1,0 +1,17 @@
+#!/bin/bash
+
+echo "Setting Stripe Price IDs in Railway..."
+
+# Set each variable individually
+railway variable set STRIPE_PRICE_COLLEGE_MONTHLY=price_1RyVEORMpSG47vNmYL4DWCYF
+railway variable set STRIPE_PRICE_COLLEGE_YEARLY=price_1RyVEWRMpSG47vNmiQjLhvqt
+railway variable set STRIPE_PRICE_MULTI_CAMPUS_MONTHLY=price_1RyVElRMpSG47vNmWNWcxCEB
+railway variable set STRIPE_PRICE_MULTI_CAMPUS_YEARLY=price_1RyVEtRMpSG47vNmyZDQcjUm
+
+# Also set the legacy names for compatibility
+railway variable set STRIPE_PRICE_ID_PROFESSIONAL_MONTHLY=price_1RyVEORMpSG47vNmYL4DWCYF
+railway variable set STRIPE_PRICE_ID_PROFESSIONAL_ANNUAL=price_1RyVEWRMpSG47vNmiQjLhvqt
+railway variable set STRIPE_PRICE_ID_INSTITUTION_MONTHLY=price_1RyVElRMpSG47vNmWNWcxCEB
+railway variable set STRIPE_PRICE_ID_INSTITUTION_ANNUAL=price_1RyVEtRMpSG47vNmyZDQcjUm
+
+echo "✅ Variables set! Deployment will restart automatically."

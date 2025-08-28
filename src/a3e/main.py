@@ -261,6 +261,18 @@ async def lifespan(app: FastAPI):
                 logger.error(f"❌ All database initialization failed: {e2}")
                 db_service = None
         
+        # Ensure database schema is created (especially for SQLite)
+        try:
+            from sqlalchemy import create_engine
+            from .models import Base
+            
+            engine = create_engine(settings.database_url)
+            Base.metadata.create_all(engine)
+            engine.dispose()
+            logger.info("✅ Database schema verified/created")
+        except Exception as e:
+            logger.warning(f"⚠️ Database schema creation failed: {e}")
+        
         try:
             if VECTOR_SERVICE_AVAILABLE:
                 vector_service = VectorService(

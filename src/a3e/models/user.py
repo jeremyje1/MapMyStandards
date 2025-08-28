@@ -3,20 +3,30 @@ User and authentication models for A3E platform
 """
 
 from sqlalchemy import Column, String, DateTime, Boolean, Integer, Float, JSON, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from datetime import datetime
 import uuid
 from typing import Optional
+import os
 
 from . import Base
 
+# SQLite-compatible ID column
+def get_id_column():
+    """Get appropriate ID column type based on database"""
+    database_url = os.getenv('DATABASE_URL', '')
+    if 'postgresql' in database_url:
+        from sqlalchemy.dialects.postgresql import UUID
+        return Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    else:
+        # SQLite fallback - use string UUIDs
+        return Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
 
 class User(Base):
     """User account model"""
     __tablename__ = 'users'
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = get_id_column()
     email = Column(String(255), unique=True, nullable=False, index=True)
     name = Column(String(255), nullable=False)
     password_hash = Column(String(255), nullable=False)
