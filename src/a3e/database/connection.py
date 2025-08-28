@@ -130,19 +130,26 @@ class DatabaseManager:
             if os.getenv('DEBUG') == 'true':
                 logger.info("Initializing default data...")
             
-            async with self.get_session() as session:
-                # Check if SACSCOC already exists
-                result = await session.execute(
-                    text("SELECT COUNT(*) FROM accreditors WHERE accreditor_id = 'sacscoc'")
-                )
-                count = result.scalar()
-                
-                if count == 0:
-                    if os.getenv('DEBUG') == 'true':
-                        logger.info("Seeding SACSCOC data...")
-                    await self._seed_sacscoc_data(session)
-                    if os.getenv('DEBUG') == 'true':
-                        logger.info("✅ SACSCOC data seeded")
+            # Use AsyncSessionLocal directly to avoid recursion
+            async with self.AsyncSessionLocal() as session:
+                try:
+                    # Check if SACSCOC already exists
+                    result = await session.execute(
+                        text("SELECT COUNT(*) FROM accreditors WHERE accreditor_id = 'sacscoc'")
+                    )
+                    count = result.scalar()
+                    
+                    if count == 0:
+                        if os.getenv('DEBUG') == 'true':
+                            logger.info("Seeding SACSCOC data...")
+                        await self._seed_sacscoc_data(session)
+                        if os.getenv('DEBUG') == 'true':
+                            logger.info("✅ SACSCOC data seeded")
+                except Exception:
+                    await session.rollback()
+                    raise
+                finally:
+                    await session.close()
             
             self._data_initialized = True
             
@@ -266,7 +273,7 @@ class DatabaseManager:
     async def get_session(self) -> AsyncGenerator[AsyncSession, None]:
         """Get async database session with proper cleanup"""
         if not self._initialized:
-            await self.initialize()
+            raise RuntimeError("Database not initialized. Call initialize() first.")
         
         async with self.AsyncSessionLocal() as session:
             try:
