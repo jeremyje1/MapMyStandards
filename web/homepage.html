@@ -46,13 +46,14 @@
         "offers": {
             "@type": "AggregateOffer",
             "lowPrice": "299",
-            "highPrice": "2999",
+            "highPrice": "5999",
             "priceCurrency": "USD",
-            "offerCount": "2",
+            "offerCount": "4",
             "offers": [
                 {
                     "@type": "Offer",
                     "name": "Professional Monthly",
+                    "description": "Perfect for smaller institutions and departments",
                     "price": "299",
                     "priceCurrency": "USD",
                     "priceValidUntil": "2025-12-31"
@@ -60,7 +61,24 @@
                 {
                     "@type": "Offer",
                     "name": "Professional Annual",
+                    "description": "Best value for committed institutions",
                     "price": "2999",
+                    "priceCurrency": "USD",
+                    "priceValidUntil": "2025-12-31"
+                },
+                {
+                    "@type": "Offer",
+                    "name": "Institution Monthly",
+                    "description": "Enterprise-grade features for large universities",
+                    "price": "599",
+                    "priceCurrency": "USD",
+                    "priceValidUntil": "2025-12-31"
+                },
+                {
+                    "@type": "Offer",
+                    "name": "Institution Annual", 
+                    "description": "Complete enterprise solution with premium support",
+                    "price": "5999",
                     "priceCurrency": "USD",
                     "priceValidUntil": "2025-12-31"
                 }
@@ -464,8 +482,35 @@
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 2rem;
-            max-width: 900px;
+            max-width: 1200px;
             margin: 0 auto;
+        }
+        
+        .pricing-tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 3rem;
+            gap: 1rem;
+        }
+        
+        .pricing-tab {
+            padding: 0.75rem 1.5rem;
+            border: 2px solid var(--light);
+            border-radius: 8px;
+            background: var(--white);
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+        
+        .pricing-tab.active {
+            background: var(--primary);
+            color: var(--white);
+            border-color: var(--primary);
+        }
+        
+        .pricing-tab:hover:not(.active) {
+            border-color: var(--primary);
         }
         
         .pricing-card {
@@ -624,6 +669,15 @@
             
             .pricing-card.featured {
                 transform: none;
+            }
+            
+            .pricing-tabs {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .pricing-tab {
+                text-align: center;
             }
         }
     </style>
@@ -873,25 +927,39 @@
         <div class="container">
             <div class="section-header">
                 <h2>Simple, Transparent Pricing</h2>
-                <p>Start with a 7-day free trial. No credit card required.</p>
+                <p>Choose the plan that fits your institution size and needs. Start with a 7-day free trial. No credit card required.</p>
             </div>
-            <div class="pricing-grid">
+            
+            <!-- Pricing Tabs -->
+            <div class="pricing-tabs">
+                <div class="pricing-tab active" onclick="showPricingTier('professional')">
+                    Professional Plans
+                </div>
+                <div class="pricing-tab" onclick="showPricingTier('institution')">
+                    Institution Plans
+                </div>
+            </div>
+
+            <!-- Professional Plans -->
+            <div id="professional-plans" class="pricing-grid">
                 <div class="pricing-card">
                     <h3>Professional Monthly</h3>
                     <div class="price">
                         $299<span class="price-period">/month</span>
                     </div>
-                    <p style="color: var(--gray); margin-bottom: 2rem;">Perfect for single campus institutions</p>
+                    <p style="color: var(--gray); margin-bottom: 1rem; font-weight: 600;">For smaller institutions and departments</p>
+                    <p style="color: var(--gray); margin-bottom: 2rem; font-size: 0.9rem;">Perfect for community colleges, small universities, or single-department compliance needs</p>
                     <ul class="pricing-features">
-                        <li>Unlimited document uploads</li>
-                        <li>AI evidence mapping</li>
-                        <li>Gap analysis dashboard</li>
-                        <li>Up to 3 departments</li>
-                        <li>Standard reports</li>
-                        <li>Email support</li>
+                        <li>Up to 1,000 documents per month</li>
+                        <li>AI evidence mapping for core standards</li>
+                        <li>Basic gap analysis dashboard</li>
+                        <li>Up to 5 user accounts</li>
+                        <li>Standard compliance reports</li>
+                        <li>Email support (48h response)</li>
                         <li>Canvas LMS integration</li>
+                        <li>Single accreditor support (SACSCOC, HLC, or WASC)</li>
                     </ul>
-                    <button onclick="startCheckout('monthly', this)" class="btn btn-secondary" style="width: 100%;">Start Free Trial</button>
+                    <button onclick="startCheckout('professional_monthly', this)" class="btn btn-secondary" style="width: 100%;">Start Free Trial</button>
                 </div>
                 <div class="pricing-card featured">
                     <span class="badge">SAVE $588/year</span>
@@ -899,18 +967,86 @@
                     <div class="price">
                         $2,999<span class="price-period">/year</span>
                     </div>
-                    <p style="color: var(--gray); margin-bottom: 2rem;">Best value for committed institutions</p>
+                    <p style="color: var(--gray); margin-bottom: 1rem; font-weight: 600;">Best value for committed institutions</p>
+                    <p style="color: var(--gray); margin-bottom: 2rem; font-size: 0.9rem;">Everything in monthly plus enhanced features for continuous compliance monitoring</p>
                     <ul class="pricing-features">
-                        <li>Everything in Monthly, plus:</li>
-                        <li>Unlimited departments</li>
-                        <li>Advanced AI analytics</li>
-                        <li>Custom report templates</li>
-                        <li>Priority support</li>
-                        <li>Dedicated success manager</li>
-                        <li>API access</li>
-                        <li>White-label options</li>
+                        <li>Everything in Professional Monthly, plus:</li>
+                        <li>Unlimited documents and storage</li>
+                        <li>Advanced AI analytics and trend analysis</li>
+                        <li>Up to 15 user accounts</li>
+                        <li>Custom report templates and branding</li>
+                        <li>Priority support (24h response)</li>
+                        <li>Quarterly strategy calls</li>
+                        <li>Multi-accreditor support</li>
+                        <li>API access for integrations</li>
                     </ul>
-                    <button onclick="startCheckout('annual', this)" class="btn btn-primary" style="width: 100%;">Start Free Trial</button>
+                    <button onclick="startCheckout('professional_annual', this)" class="btn btn-primary" style="width: 100%;">Start Free Trial</button>
+                </div>
+            </div>
+
+            <!-- Institution Plans -->
+            <div id="institution-plans" class="pricing-grid" style="display: none;">
+                <div class="pricing-card">
+                    <h3>Institution Monthly</h3>
+                    <div class="price">
+                        $599<span class="price-period">/month</span>
+                    </div>
+                    <p style="color: var(--gray); margin-bottom: 1rem; font-weight: 600;">For large universities and multi-campus systems</p>
+                    <p style="color: var(--gray); margin-bottom: 2rem; font-size: 0.9rem;">Enterprise-grade features for complex institutional compliance needs</p>
+                    <ul class="pricing-features">
+                        <li>Unlimited documents and users</li>
+                        <li>Advanced AI with predictive analytics</li>
+                        <li>Multi-campus coordination tools</li>
+                        <li>Custom workflow automation</li>
+                        <li>White-label platform options</li>
+                        <li>Dedicated success manager</li>
+                        <li>24/7 priority support</li>
+                        <li>All accreditor standards included</li>
+                        <li>Advanced integrations (SIS, ERP)</li>
+                        <li>Custom training and onboarding</li>
+                    </ul>
+                    <button onclick="startCheckout('institution_monthly', this)" class="btn btn-secondary" style="width: 100%;">Start Free Trial</button>
+                </div>
+                <div class="pricing-card featured">
+                    <span class="badge">SAVE $1,188/year</span>
+                    <h3>Institution Annual</h3>
+                    <div class="price">
+                        $5,999<span class="price-period">/year</span>
+                    </div>
+                    <p style="color: var(--gray); margin-bottom: 1rem; font-weight: 600;">Maximum value for enterprise institutions</p>
+                    <p style="color: var(--gray); margin-bottom: 2rem; font-size: 0.9rem;">Complete enterprise solution with premium support and customization</p>
+                    <ul class="pricing-features">
+                        <li>Everything in Institution Monthly, plus:</li>
+                        <li>Custom AI model training</li>
+                        <li>Dedicated cloud infrastructure</li>
+                        <li>Advanced compliance automation</li>
+                        <li>Executive dashboard and reporting</li>
+                        <li>On-site implementation support</li>
+                        <li>Quarterly business reviews</li>
+                        <li>Beta access to new features</li>
+                        <li>Compliance consulting hours included</li>
+                        <li>SLA guarantees (99.9% uptime)</li>
+                    </ul>
+                    <button onclick="startCheckout('institution_annual', this)" class="btn btn-primary" style="width: 100%;">Start Free Trial</button>
+                </div>
+            </div>
+
+            <!-- Value Proposition -->
+            <div style="margin-top: 3rem; text-align: center; max-width: 800px; margin-left: auto; margin-right: auto;">
+                <h3 style="margin-bottom: 1rem;">Why Choose MapMyStandards?</h3>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; margin-top: 2rem;">
+                    <div>
+                        <h4 style="color: var(--primary); margin-bottom: 0.5rem;">ROI Guarantee</h4>
+                        <p style="color: var(--gray); font-size: 0.9rem;">Save 80% of compliance preparation time or get your money back</p>
+                    </div>
+                    <div>
+                        <h4 style="color: var(--primary); margin-bottom: 0.5rem;">No Lock-in</h4>
+                        <p style="color: var(--gray); font-size: 0.9rem;">Cancel anytime with full data export. Your evidence stays yours.</p>
+                    </div>
+                    <div>
+                        <h4 style="color: var(--primary); margin-bottom: 0.5rem;">Expert Support</h4>
+                        <p style="color: var(--gray); font-size: 0.9rem;">Our team includes former accreditation officers and compliance experts</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1136,7 +1272,7 @@
 
     <!-- Trial Signup JavaScript -->
     <script>
-        let currentPlan = 'monthly';
+        let currentPlan = 'professional_monthly';
         
         function startCheckout(planType, buttonElement) {
             currentPlan = planType;
@@ -1144,19 +1280,42 @@
             const planDesc = document.getElementById('planDescription');
             
             // Update modal content based on plan
-            if (planType === 'annual') {
-                planDesc.textContent = 'Professional Annual Plan - $2,999/year (Save $588!) with 7-day free trial.';
-            } else {
-                planDesc.textContent = 'Professional Monthly Plan - $299/month with 7-day free trial.';
-            }
+            const planDescriptions = {
+                'professional_monthly': 'Professional Monthly Plan - $299/month with 7-day free trial. Perfect for smaller institutions.',
+                'professional_annual': 'Professional Annual Plan - $2,999/year (Save $588!) with 7-day free trial. Best value for committed institutions.',
+                'institution_monthly': 'Institution Monthly Plan - $599/month with 7-day free trial. Enterprise features for large universities.',
+                'institution_annual': 'Institution Annual Plan - $5,999/year (Save $1,188!) with 7-day free trial. Maximum value for enterprise institutions.'
+            };
+            
+            planDesc.textContent = planDescriptions[planType] || 'Professional Monthly Plan - $299/month with 7-day free trial.';
             
             // Show modal
             modal.style.display = 'block';
             
             // Focus first input
             setTimeout(() => {
-                document.getElementById('name').focus();
+                document.getElementById('email').focus();
             }, 100);
+        }
+        
+        function showPricingTier(tierType) {
+            // Update tab states
+            document.querySelectorAll('.pricing-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Show/hide pricing grids
+            const professionalPlans = document.getElementById('professional-plans');
+            const institutionPlans = document.getElementById('institution-plans');
+            
+            if (tierType === 'professional') {
+                professionalPlans.style.display = 'grid';
+                institutionPlans.style.display = 'none';
+            } else {
+                professionalPlans.style.display = 'none';
+                institutionPlans.style.display = 'grid';
+            }
         }
         
         // Modal functionality
@@ -1189,7 +1348,16 @@
                 const formData = new FormData(form);
                 // Just redirect to trial signup with email pre-filled
                 const email = formData.get('email');
-                const plan = currentPlan === 'annual' ? 'professional_yearly' : 'professional_monthly';
+                
+                // Map plan names to backend format
+                const planMapping = {
+                    'professional_monthly': 'professional_monthly',
+                    'professional_annual': 'professional_yearly', 
+                    'institution_monthly': 'institution_monthly',
+                    'institution_annual': 'institution_yearly'
+                };
+                
+                const plan = planMapping[currentPlan] || 'professional_monthly';
                 
                 // Redirect to trial signup page with pre-filled email
                 const params = new URLSearchParams({
