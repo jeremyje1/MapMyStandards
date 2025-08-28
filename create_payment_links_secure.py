@@ -22,9 +22,13 @@ def create_payment_links():
         print("❌ Error: STRIPE_SECRET_KEY not found in environment variables")
         return None
 
-    # Get price IDs from environment
-    monthly_price_id = os.getenv('STRIPE_MONTHLY_PRICE_ID')
-    yearly_price_id = os.getenv('STRIPE_YEARLY_PRICE_ID')
+    # Get price IDs from environment (try multiple variable names)
+    monthly_price_id = (os.getenv('STRIPE_MONTHLY_PRICE_ID') or 
+                       os.getenv('STRIPE_PRICE_ID_STARTER_MONTHLY') or
+                       os.getenv('STRIPE_PRICE_ID_PROFESSIONAL_MONTHLY'))
+    yearly_price_id = (os.getenv('STRIPE_YEARLY_PRICE_ID') or 
+                      os.getenv('STRIPE_PRICE_ID_STARTER_ANNUAL') or
+                      os.getenv('STRIPE_PRICE_ID_PROFESSIONAL_ANNUAL'))
 
     if not monthly_price_id or not yearly_price_id:
         print("❌ Error: Price IDs not found in environment variables")
