@@ -18,7 +18,7 @@ uvicorn==0.30.0
 python-multipart==0.0.9
 pydantic==2.8.0
 pydantic-settings==2.4.0
-requests==2.32.3
+requests>=2.31.0,<3.0.0  # Flexible version to resolve conflicts
 
 # --- Database dependencies ---
 sqlalchemy==2.0.31
@@ -44,7 +44,7 @@ numpy==1.26.4  # Required by pandas
 
 # --- Email Service ---
 postmarker==1.0.0  # Postmark email service
-resend==0.7.0  # Alternative email service
+# resend==0.7.0  # Removed due to strict dependency conflict
 
 # --- Vector Database & AI ---
 # pymilvus==2.3.7  # Uncomment when Milvus is available
