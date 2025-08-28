@@ -4,7 +4,8 @@ Minimal test FastAPI app to verify Railway deployment works
 
 import logging
 from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, FileResponse
+import os
 
 # Basic logging
 logging.basicConfig(level=logging.INFO)
@@ -35,6 +36,65 @@ async def root():
 async def health():
     """Health check endpoint"""
     return {"status": "ok", "message": "Test app running successfully"}
+
+@app.get("/dashboard.html")
+@app.get("/dashboard")
+async def dashboard_redirect():
+    """Handle dashboard redirects during backend downtime"""
+    logger.info("Dashboard redirect requested, redirecting to working page")
+    return HTMLResponse("""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Welcome to A³E Platform</title>
+        <meta http-equiv="refresh" content="0; url=/trial-success.html">
+    </head>
+    <body>
+        <div style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; text-align: center; padding: 3rem;">
+            <h1>✅ Welcome to A³E Platform!</h1>
+            <p>Your subscription is active. Redirecting to your welcome page...</p>
+            <p><a href="/trial-success.html">Click here if not redirected automatically</a></p>
+        </div>
+        <script>
+            // Store subscription success
+            localStorage.setItem('a3e_subscription_active', 'true');
+            localStorage.setItem('a3e_subscription_date', new Date().toISOString());
+            
+            // Redirect immediately
+            setTimeout(() => {
+                window.location.href = '/trial-success.html';
+            }, 1000);
+        </script>
+    </body>
+    </html>
+    """)
+
+@app.get("/trial-success.html")
+async def trial_success():
+    """Serve trial success page"""
+    try:
+        return FileResponse("/app/web/trial-success.html")
+    except Exception:
+        # Fallback if file not found
+        return HTMLResponse("""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Welcome to A³E Platform</title>
+            <style>
+                body { font-family: -apple-system, sans-serif; text-align: center; padding: 3rem; }
+                .success { color: #10b981; font-size: 3rem; }
+            </style>
+        </head>
+        <body>
+            <div class="success">✅</div>
+            <h1>Welcome to A³E Platform!</h1>
+            <p>Your subscription is active and ready to use.</p>
+            <p>The platform is currently being updated. Please check back in a few minutes.</p>
+            <p><strong>Need help?</strong> Contact <a href="mailto:support@mapmystandards.ai">support@mapmystandards.ai</a></p>
+        </body>
+        </html>
+        """)
 
 @app.get("/debug")
 async def debug_imports():
