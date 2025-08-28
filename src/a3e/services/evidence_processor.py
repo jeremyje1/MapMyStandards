@@ -49,8 +49,11 @@ class EvidenceProcessor:
         self.settings = settings
         self.openai_client = None
         
-        if OPENAI_AVAILABLE and settings.openai_api_key:
-            self.openai_client = openai.AsyncOpenAI(api_key=settings.openai_api_key)
+        # Try to get OpenAI key from settings or environment
+        api_key = settings.openai_api_key or os.environ.get('OPENAI_KEY') or os.environ.get('OPENAI_API_KEY')
+        
+        if OPENAI_AVAILABLE and api_key:
+            self.openai_client = openai.AsyncOpenAI(api_key=api_key)
             logger.info("✅ OpenAI client initialized for evidence processing")
         else:
             logger.warning("⚠️ OpenAI not configured - using fallback processing")

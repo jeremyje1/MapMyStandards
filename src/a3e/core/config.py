@@ -61,7 +61,7 @@ class Settings(BaseSettings):
     bedrock_model_id: str = Field(default="anthropic.claude-3-sonnet-20240229-v1:0", env="BEDROCK_MODEL_ID")
     bedrock_max_tokens: int = Field(default=4096, env="BEDROCK_MAX_TOKENS")
     
-    # LLM Configuration
+    # LLM Configuration  
     openai_api_key: Optional[str] = Field(default=None, env="OPENAI_API_KEY")
     anthropic_api_key: Optional[str] = Field(default=None, env="ANTHROPIC_API_KEY")
     
