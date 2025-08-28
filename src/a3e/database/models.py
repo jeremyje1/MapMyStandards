@@ -69,8 +69,8 @@ class Standard(Base):
     
     # Relationships
     accreditor = relationship("Accreditor", back_populates="standards")
-    parent = relationship("Standard", remote_side=[standard_id], post_update=True)
-    children = relationship("Standard", remote_side=[parent_id])
+    parent = relationship("Standard", remote_side=[standard_id], post_update=True, foreign_keys=[parent_id])
+    children = relationship("Standard", foreign_keys=[parent_id])
     mappings = relationship("StandardMapping", back_populates="standard", cascade="all, delete-orphan")
     
     # Indexes for performance
