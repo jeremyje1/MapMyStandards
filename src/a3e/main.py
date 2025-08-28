@@ -178,6 +178,13 @@ except ImportError as e:
     analytics_router_available = False
     _analytics_import_exception = e
 
+try:
+    from .api.routes.email_test import router as email_test_router
+    email_test_router_available = True
+except ImportError as e:
+    email_test_router_available = False
+    _email_test_import_exception = e
+
 # Logging already configured at top of file
 
 # Optional strict asset enforcement (set STRICT_FRONTEND_ASSETS=1 to fail startup if missing)
@@ -538,6 +545,12 @@ if analytics_router_available:
     logger.info("✅ Analytics router loaded")
 else:
     logger.warning("⚠️ Analytics router not available")
+
+if email_test_router_available:
+    app.include_router(email_test_router)
+    logger.info("✅ Email test router loaded")
+else:
+    logger.warning("⚠️ Email test router not available")
 
 # Include database-powered routers (production-ready)
 try:
