@@ -148,10 +148,15 @@ async def manual_page():
     return serve_html_file("manual.html")
 
 
-# Catch-all for missing pages
+# Catch-all for missing pages (excluding API routes and health endpoints)
 @router.get("/{path:path}", response_class=HTMLResponse, include_in_schema=False)
 async def catch_all(path: str):
     """Catch-all route for undefined pages"""
+    # Don't handle API routes, health checks, or other system endpoints
+    if path.startswith(('api/', 'health', 'docs', 'redoc', 'openapi')):
+        # Let these fall through to be handled by other routes
+        raise HTTPException(status_code=404, detail=f"Not found: {path}")
+    
     # Try to find an HTML file with that name
     try:
         return serve_html_file(f"{path}.html")
