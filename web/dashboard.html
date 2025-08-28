@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | MapMyStandards A³E</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <h1 class="text-xl font-semibold text-gray-900">MapMyStandards A³E</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm text-gray-600" id="userEmail">Welcome!</span>
+                    <a href="/onboarding" class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700">
+                        Complete Setup
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <!-- Welcome Banner -->
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <svg class="h-8 w-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <h2 class="text-lg font-medium text-blue-900">Welcome to your A³E Dashboard!</h2>
+                    <p class="text-blue-700">Your 7-day free trial is active. Complete the onboarding to get started with accreditation management.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-lg shadow">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <svg class="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-medium text-gray-900">Complete Onboarding</h3>
+                        <p class="text-gray-600 text-sm">Set up your institution and preferences</p>
+                        <a href="/onboarding" class="text-blue-600 hover:text-blue-800 text-sm font-medium">Get Started ’</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <svg class="h-8 w-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-medium text-gray-900">Upload Documents</h3>
+                        <p class="text-gray-600 text-sm">Start mapping your evidence to standards</p>
+                        <a href="/upload" class="text-blue-600 hover:text-blue-800 text-sm font-medium">Upload ’</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <svg class="h-8 w-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H9a2 2 0 00-2 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2V9a2 2 0 012-2h2a2 2 0 012 2v10"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-medium text-gray-900">View Reports</h3>
+                        <p class="text-gray-600 text-sm">Analyze compliance and gaps</p>
+                        <a href="/reports" class="text-blue-600 hover:text-blue-800 text-sm font-medium">View ’</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trial Info -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Trial Status</h3>
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-600">Free trial active</p>
+                    <p class="text-xs text-gray-500" id="trialInfo">7 days remaining</p>
+                </div>
+                <div>
+                    <a href="/billing" class="bg-green-600 text-white px-4 py-2 rounded-md text-sm hover:bg-green-700">
+                        Upgrade Plan
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Load user info from localStorage
+        const userEmail = localStorage.getItem('a3e_user_email');
+        if (userEmail) {
+            document.getElementById('userEmail').textContent = userEmail;
+        }
+
+        // Check if trial data exists
+        const trialData = localStorage.getItem('a3e_trial_data');
+        if (trialData) {
+            try {
+                const trial = JSON.parse(trialData);
+                const expires = new Date(trial.trial_expires_at);
+                const now = new Date();
+                const daysLeft = Math.ceil((expires - now) / (1000 * 60 * 60 * 24));
+                
+                if (daysLeft > 0) {
+                    document.getElementById('trialInfo').textContent = `${daysLeft} days remaining`;
+                } else {
+                    document.getElementById('trialInfo').textContent = 'Trial expired';
+                }
+            } catch (e) {
+                console.log('Error parsing trial data:', e);
+            }
+        }
+
+        console.log('MapMyStandards A³E Dashboard loaded');
+    </script>
+</body>
+</html>
