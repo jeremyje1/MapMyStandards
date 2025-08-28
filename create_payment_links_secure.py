@@ -45,7 +45,7 @@ def create_payment_links():
                 "type": "redirect",
                 "redirect": {
                     "url": ("https://platform.mapmystandards.ai/"
-                            "dashboard.html?plan=monthly&success=true")
+                            "dashboard?plan=monthly&success=true")
                 }
             }
         )
@@ -62,7 +62,7 @@ def create_payment_links():
                 "type": "redirect",
                 "redirect": {
                     "url": ("https://platform.mapmystandards.ai/"
-                            "dashboard.html?plan=yearly&success=true")
+                            "dashboard?plan=yearly&success=true")
                 }
             }
         )
