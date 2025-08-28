@@ -721,37 +721,18 @@ async def health_check():
             }
         )
 
-# TEMPORARY: Debug endpoint to check payment service errors v2
-@app.get("/debug/payment-errors")
-async def get_payment_debug():
-    """TEMPORARY endpoint to debug payment service errors v2"""
-    try:
-        from .services.payment_service import PaymentService
-        import os
-        payment_service = PaymentService()
-        
-        # Get the plan mappings to see what price IDs are actually being used
-        plan_mappings = {
-            "professional_monthly": payment_service.settings.STRIPE_PRICE_COLLEGE_MONTHLY or os.getenv('STRIPE_PRICE_ID_PROFESSIONAL_MONTHLY', ''),
-            "professional_yearly": payment_service.settings.STRIPE_PRICE_COLLEGE_YEARLY or os.getenv('STRIPE_PRICE_ID_PROFESSIONAL_ANNUAL', '')
-        }
-        
-        return {
-            "last_trial_failure": payment_service.last_trial_failure,
-            "stripe_key_configured": bool(payment_service.settings.STRIPE_SECRET_KEY),
-            "stripe_key_ends_with": payment_service.settings.STRIPE_SECRET_KEY[-4:] if payment_service.settings.STRIPE_SECRET_KEY else None,
-            "settings_price_ids": {
-                "professional_monthly": payment_service.settings.STRIPE_PRICE_COLLEGE_MONTHLY,
-                "professional_annual": payment_service.settings.STRIPE_PRICE_COLLEGE_YEARLY
-            },
-            "env_price_ids": {
-                "professional_monthly": os.getenv('STRIPE_PRICE_ID_PROFESSIONAL_MONTHLY'),
-                "professional_annual": os.getenv('STRIPE_PRICE_ID_PROFESSIONAL_ANNUAL')
-            },
-            "final_mappings": plan_mappings
-        }
-    except Exception as e:
-        return {"error": f"Debug endpoint failed: {str(e)}"}
+# TEMPORARY: Test price ID loading directly
+@app.get("/test-prices")
+async def test_price_loading():
+    """Test price ID loading directly"""
+    import os
+    return {
+        "env_vars": {
+            "professional_monthly": os.getenv('STRIPE_PRICE_ID_PROFESSIONAL_MONTHLY'),
+            "professional_annual": os.getenv('STRIPE_PRICE_ID_PROFESSIONAL_ANNUAL')
+        },
+        "direct_test": "price_1RyVQ4K8PKpLCKDZON0IMe3F"
+    }
 
 try:
     from .routes.customer_pages import router as customer_pages_router
