@@ -1,4 +1,8 @@
-# Vercel Deployment Ignore File
+# DISABLE VERCEL DEPLOYMENT - Using Railway for platform.mapmystandards.ai
+# This prevents conflicts with the FastAPI backend
+
+# Ignore everything to disable deployment
+*
 
 # Virtual environments - these are too large for deployment
 venv/

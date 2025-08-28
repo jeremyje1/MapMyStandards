@@ -1,0 +1,35 @@
+{
+  "version": 2,
+  "name": "mapmystandards-web",
+  "headers": [
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "source": "/(.*\\.css)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=86400" },
+        { "key": "Content-Type", "value": "text/css" }
+      ]
+    }
+  ],
+  "redirects": [
+    { "source": "/login", "destination": "https://platform.mapmystandards.ai/login", "permanent": false },
+    { "source": "/dashboard", "destination": "https://platform.mapmystandards.ai/dashboard", "permanent": false },
+    { "source": "/trial-signup", "destination": "https://platform.mapmystandards.ai/trial-signup", "permanent": false },
+    { "source": "/app", "destination": "https://platform.mapmystandards.ai/", "permanent": false }
+  ],
+  "rewrites": [
+    { "source": "/", "destination": "/web/CUSTOMER-HOMEPAGE.html" },
+    { "source": "/pricing", "destination": "/pricing_clean.html" },
+    { "source": "/signup", "destination": "/web/trial-signup.html" },
+    { "source": "/trial", "destination": "/web/trial-signup.html" },
+    { "source": "/contact", "destination": "/contact.html" },
+    { "source": "/trial-success", "destination": "/trial-success.html" },
+    { "source": "/status", "destination": "/status.html" }
+  ],
+  "cleanUrls": true
+}
