@@ -5,7 +5,8 @@ next.config.js
 tsconfig.json
 tailwind.config.js
 postcss.config.js
-src/
+# NOTE: Don't ignore src/ - it contains our Python backend code!
+# src/
 public/
 .next/
 node_modules/
