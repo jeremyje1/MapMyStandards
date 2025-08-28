@@ -1390,9 +1390,6 @@ else:
         async def checkout_page_alt():  # noqa: D401 - alt name to avoid redefinition
             return FileResponse(os.path.join(alt_web_directory, "checkout.html"))
 
-        @app.get("/dashboard", response_class=FileResponse, include_in_schema=False)
-        async def dashboard_page():  # noqa: D401
-            return FileResponse(os.path.join(alt_web_directory, "dashboard.html"))
 
         @app.get("/homepage", response_class=FileResponse, include_in_schema=False)
         async def homepage():  # noqa: D401
