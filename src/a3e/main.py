@@ -21,9 +21,17 @@ import os.path
 from pathlib import Path
 from datetime import datetime
 
+# Configure basic logging first before any imports that might use it  
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 # Temporarily comment out problematic imports for debugging
 try:
     from .core.config import settings
+    # Reconfigure logging with proper settings after config is loaded
+    logging.basicConfig(level=getattr(logging, settings.log_level), format=settings.log_format)
+    logger = logging.getLogger(__name__)
     logger.info("✅ Config imported successfully")
 except Exception as e:
     logger.error(f"❌ Config import failed: {e}")
@@ -156,16 +164,7 @@ except ImportError as e:
     upload_router_available = False
     _upload_import_exception = e
 
-# Configure logging with fallback
-try:
-    logging.basicConfig(level=getattr(logging, settings.log_level), format=settings.log_format)
-    logger = logging.getLogger(__name__)
-    logger.info("✅ Logging configured successfully")
-except Exception as e:
-    # Fallback basic logging
-    logging.basicConfig(level=logging.INFO)
-    logger = logging.getLogger(__name__)
-    logger.error(f"❌ Advanced logging config failed, using basic: {e}")
+# Logging already configured at top of file
 
 # Optional strict asset enforcement (set STRICT_FRONTEND_ASSETS=1 to fail startup if missing)
 STRICT_FRONTEND_ASSETS = os.getenv("STRICT_FRONTEND_ASSETS", "0").lower() in ("1", "true", "yes")
@@ -220,10 +219,9 @@ async def lifespan(app: FastAPI):
     try:
         # Initialize production database
         try:
-            logger.info("⚠️ Database initialization temporarily disabled for debugging")
-            # from .database.connection import db_manager
-            # await db_manager.initialize()
-            # logger.info("✅ Production database initialized")
+            from .database.connection import db_manager
+            await db_manager.initialize()
+            logger.info("✅ Production database initialized")
         except Exception as e:
             logger.warning(f"⚠️ Production database init failed: {e}")
             # Fallback to legacy database service
