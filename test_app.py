@@ -36,6 +36,40 @@ async def health():
     """Health check endpoint"""
     return {"status": "ok", "message": "Test app running successfully"}
 
+@app.get("/debug")
+async def debug_imports():
+    """Run import debugging and return results"""
+    import subprocess
+    import sys
+    
+    try:
+        result = subprocess.run([sys.executable, "debug_imports.py"], 
+                              capture_output=True, text=True, timeout=30)
+        
+        return HTMLResponse(f"""
+        <html>
+        <head><title>Import Debug Results</title></head>
+        <body>
+            <h1>Import Debug Results</h1>
+            <h2>STDOUT:</h2>
+            <pre>{result.stdout}</pre>
+            <h2>STDERR:</h2>
+            <pre>{result.stderr}</pre>
+            <h2>Return Code:</h2>
+            <p>{result.returncode}</p>
+        </body>
+        </html>
+        """)
+    except Exception as e:
+        return HTMLResponse(f"""
+        <html>
+        <body>
+            <h1>Debug Error</h1>
+            <p>Failed to run debug script: {str(e)}</p>
+        </body>
+        </html>
+        """)
+
 if __name__ == "__main__":
     import uvicorn
     logger.info("Starting test FastAPI application...")
