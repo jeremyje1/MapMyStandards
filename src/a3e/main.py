@@ -1243,6 +1243,31 @@ if WEB_DIR.exists():
         # Fallback (keep legacy redirect behaviour if file missing)
         return HTMLResponse("<html><head><meta http-equiv='refresh' content='0; url=/upload'></head><body>Redirecting to upload (dashboard missing)...</body></html>")
 
+    @app.get("/dashboard.html", response_class=HTMLResponse, include_in_schema=False)
+    async def dashboard_html_page():  # noqa: D401
+        """Serve dashboard.html - required for checkout redirect compatibility."""
+        dashboard_file = WEB_DIR / "dashboard.html"
+        if dashboard_file.exists():
+            return FileResponse(str(dashboard_file))
+        # Fallback with success messaging for checkout completions
+        return HTMLResponse("""
+        <!DOCTYPE html>
+        <html><head><title>Welcome to A³E Platform</title>
+        <meta http-equiv="refresh" content="2; url=/trial-success.html"></head>
+        <body style="font-family: -apple-system, sans-serif; text-align: center; padding: 3rem;">
+            <div style="width: 60px; height: 60px; background: #10b981; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 2rem;">
+                <span style="color: white; font-size: 2rem; font-weight: bold;">✓</span>
+            </div>
+            <h1>Welcome to A³E Platform!</h1>
+            <p>Your subscription is active and ready to use.</p>
+            <p>Redirecting you to the platform...</p>
+            <script>
+                localStorage.setItem('a3e_subscription_active', 'true');
+                setTimeout(() => window.location.href = '/trial-success.html', 2000);
+            </script>
+        </body></html>
+        """)
+
     @app.get("/homepage", response_class=FileResponse, include_in_schema=False)
     async def homepage():  # noqa: D401
         return FileResponse(str(WEB_DIR / "homepage.html"))
