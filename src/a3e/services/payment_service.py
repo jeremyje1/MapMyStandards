@@ -399,17 +399,17 @@ class PaymentService:
         import stripe as _stripe
         is_live_mode = _stripe.api_key and str(_stripe.api_key).startswith('sk_live')
         
-        # Try environment variables first
+        # Try environment variables first (check for both None and empty string)
         env_price_ids = {
-            "college": self.settings.STRIPE_PRICE_COLLEGE_MONTHLY or os.getenv('STRIPE_PRICE_ID_PROFESSIONAL_MONTHLY', ''),
-            "multicampus": self.settings.STRIPE_PRICE_MULTI_CAMPUS_MONTHLY or os.getenv('STRIPE_PRICE_ID_INSTITUTION_MONTHLY', ''),
-            "college_monthly": self.settings.STRIPE_PRICE_COLLEGE_MONTHLY or os.getenv('STRIPE_PRICE_ID_PROFESSIONAL_MONTHLY', ''),
-            "college_yearly": self.settings.STRIPE_PRICE_COLLEGE_YEARLY or os.getenv('STRIPE_PRICE_ID_PROFESSIONAL_ANNUAL', ''),
-            "multicampus_monthly": self.settings.STRIPE_PRICE_MULTI_CAMPUS_MONTHLY or os.getenv('STRIPE_PRICE_ID_INSTITUTION_MONTHLY', ''), 
-            "multicampus_yearly": self.settings.STRIPE_PRICE_MULTI_CAMPUS_YEARLY or os.getenv('STRIPE_PRICE_ID_INSTITUTION_ANNUAL', ''),
+            "college": self.settings.STRIPE_PRICE_COLLEGE_MONTHLY if self.settings.STRIPE_PRICE_COLLEGE_MONTHLY else os.getenv('STRIPE_PRICE_ID_PROFESSIONAL_MONTHLY', ''),
+            "multicampus": self.settings.STRIPE_PRICE_MULTI_CAMPUS_MONTHLY if self.settings.STRIPE_PRICE_MULTI_CAMPUS_MONTHLY else os.getenv('STRIPE_PRICE_ID_INSTITUTION_MONTHLY', ''),
+            "college_monthly": self.settings.STRIPE_PRICE_COLLEGE_MONTHLY if self.settings.STRIPE_PRICE_COLLEGE_MONTHLY else os.getenv('STRIPE_PRICE_ID_PROFESSIONAL_MONTHLY', ''),
+            "college_yearly": self.settings.STRIPE_PRICE_COLLEGE_YEARLY if self.settings.STRIPE_PRICE_COLLEGE_YEARLY else os.getenv('STRIPE_PRICE_ID_PROFESSIONAL_ANNUAL', ''),
+            "multicampus_monthly": self.settings.STRIPE_PRICE_MULTI_CAMPUS_MONTHLY if self.settings.STRIPE_PRICE_MULTI_CAMPUS_MONTHLY else os.getenv('STRIPE_PRICE_ID_INSTITUTION_MONTHLY', ''), 
+            "multicampus_yearly": self.settings.STRIPE_PRICE_MULTI_CAMPUS_YEARLY if self.settings.STRIPE_PRICE_MULTI_CAMPUS_YEARLY else os.getenv('STRIPE_PRICE_ID_INSTITUTION_ANNUAL', ''),
             # Add professional plan mappings (frontend sends these)
-            "professional_monthly": self.settings.STRIPE_PRICE_COLLEGE_MONTHLY or os.getenv('STRIPE_PRICE_ID_PROFESSIONAL_MONTHLY', ''),
-            "professional_yearly": self.settings.STRIPE_PRICE_COLLEGE_YEARLY or os.getenv('STRIPE_PRICE_ID_PROFESSIONAL_ANNUAL', '')
+            "professional_monthly": self.settings.STRIPE_PRICE_COLLEGE_MONTHLY if self.settings.STRIPE_PRICE_COLLEGE_MONTHLY else os.getenv('STRIPE_PRICE_ID_PROFESSIONAL_MONTHLY', ''),
+            "professional_yearly": self.settings.STRIPE_PRICE_COLLEGE_YEARLY if self.settings.STRIPE_PRICE_COLLEGE_YEARLY else os.getenv('STRIPE_PRICE_ID_PROFESSIONAL_ANNUAL', '')
         }
         
         price_id = env_price_ids.get(plan, '')
