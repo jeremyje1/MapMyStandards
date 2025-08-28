@@ -1089,8 +1089,60 @@
             }
         });
 
+        // Pre-fill form from URL parameters
+        function prefillFromURLParams() {
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            // Map URL parameters to form fields
+            const fieldMappings = {
+                'name': 'name',
+                'email': 'email', 
+                'institution_name': 'institution_name',
+                'institution_type': 'institution_type',
+                'role': 'role',
+                'plan': 'plan'
+            };
+            
+            // Pre-fill form fields
+            Object.entries(fieldMappings).forEach(([param, fieldId]) => {
+                const value = urlParams.get(param);
+                if (value) {
+                    const field = document.getElementById(fieldId);
+                    if (field) {
+                        field.value = decodeURIComponent(value);
+                        
+                        // If it's a select field, make sure the option exists
+                        if (field.tagName === 'SELECT') {
+                            const option = field.querySelector(`option[value="${decodeURIComponent(value)}"]`);
+                            if (option) {
+                                field.value = decodeURIComponent(value);
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Handle plan selection specifically
+            const planParam = urlParams.get('plan');
+            if (planParam) {
+                const planCard = document.querySelector(`[data-plan="${decodeURIComponent(planParam)}"]`);
+                if (planCard) {
+                    setTimeout(() => {
+                        planCard.click();
+                    }, 100);
+                }
+            }
+            
+            console.log('Form pre-filled from URL parameters:', Object.fromEntries(urlParams.entries()));
+        }
+
         // Initialize
         updateStep(1);
+        
+        // Pre-fill form if URL parameters are present
+        if (window.location.search) {
+            prefillFromURLParams();
+        }
     </script>
 </body>
 </html>

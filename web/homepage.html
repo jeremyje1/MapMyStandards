@@ -1289,12 +1289,32 @@
                         window.location.href = 'https://platform.mapmystandards.ai/dashboard?trial_started=true';
                         return;
                     } else {
-                        const msg = (result && (result.detail || result.message)) || 'Signup failed';
-                        alert(msg);
+                        console.log('API signup failed, using fallback redirect');
+                        // Fallback: redirect to trial signup page with pre-filled data
+                        const params = new URLSearchParams({
+                            name: payload.name,
+                            email: payload.email,
+                            institution_name: payload.institution_name,
+                            institution_type: payload.institution_type || '',
+                            role: payload.role,
+                            plan: payload.plan
+                        });
+                        window.location.href = `trial-signup.html?${params.toString()}`;
+                        return;
                     }
                 } catch (err) {
                     console.error('Lite trial signup error', err);
-                    alert('Network error creating trial. Please try again.');
+                    // Fallback: redirect to trial signup page with pre-filled data
+                    const params = new URLSearchParams({
+                        name: payload.name,
+                        email: payload.email,
+                        institution_name: payload.institution_name,
+                        institution_type: payload.institution_type || '',
+                        role: payload.role,
+                        plan: payload.plan
+                    });
+                    window.location.href = `trial-signup.html?${params.toString()}`;
+                    return;
                 }
 
                 // Reset button if we reach here
