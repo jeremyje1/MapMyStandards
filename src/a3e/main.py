@@ -1238,6 +1238,118 @@ if WEB_DIR.exists():
     async def dashboard_page(request: Request):  # noqa: D401
         """Smart dashboard route - checks authentication and redirects appropriately."""
         
+        # Check for successful checkout parameters
+        plan = request.query_params.get("plan")
+        success = request.query_params.get("success")
+        
+        # If coming from successful checkout, show welcome page and guide to login/signup
+        if success == "true" and plan:
+            return HTMLResponse(f"""
+            <!DOCTYPE html>
+            <html><head><title>Payment Successful - Welcome to A³E Platform</title>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <style>
+                body {{
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    min-height: 100vh;
+                    margin: 0;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: #fff;
+                }}
+                .success-container {{
+                    text-align: center;
+                    padding: 3rem 2rem;
+                    max-width: 500px;
+                    background: rgba(255, 255, 255, 0.1);
+                    border-radius: 20px;
+                    backdrop-filter: blur(10px);
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                }}
+                .success-icon {{
+                    width: 80px;
+                    height: 80px;
+                    background: #10b981;
+                    border-radius: 50%;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    margin-bottom: 2rem;
+                    font-size: 2.5rem;
+                }}
+                h1 {{ margin-bottom: 1rem; font-size: 2rem; }}
+                p {{ margin-bottom: 1.5rem; font-size: 1.1rem; opacity: 0.9; }}
+                .plan-info {{ 
+                    background: rgba(255, 255, 255, 0.1); 
+                    padding: 1rem; 
+                    border-radius: 10px; 
+                    margin: 2rem 0;
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                }}
+                .cta-buttons {{ margin-top: 2rem; }}
+                .btn {{
+                    display: inline-block;
+                    padding: 0.875rem 2rem;
+                    margin: 0.5rem;
+                    text-decoration: none;
+                    border-radius: 10px;
+                    font-weight: 600;
+                    font-size: 1rem;
+                    transition: all 0.3s ease;
+                }}
+                .btn-primary {{
+                    background: #10b981;
+                    color: white;
+                }}
+                .btn-primary:hover {{
+                    background: #059669;
+                    transform: translateY(-2px);
+                }}
+                .btn-secondary {{
+                    background: rgba(255, 255, 255, 0.2);
+                    color: white;
+                    border: 1px solid rgba(255, 255, 255, 0.3);
+                }}
+                .btn-secondary:hover {{
+                    background: rgba(255, 255, 255, 0.3);
+                    transform: translateY(-2px);
+                }}
+            </style>
+            </head>
+            <body>
+                <div class="success-container">
+                    <div class="success-icon">🎉</div>
+                    <h1>Payment Successful!</h1>
+                    <p>Welcome to A³E MapMyStandards Platform</p>
+                    
+                    <div class="plan-info">
+                        <strong>Your {plan.title()} Plan is Active</strong>
+                        <br>You now have full access to our platform features
+                    </div>
+                    
+                    <p>To access your personalized dashboard and start using the platform:</p>
+                    
+                    <div class="cta-buttons">
+                        <a href="/trial-signup" class="btn btn-primary">Create Your Account →</a>
+                        <a href="/login" class="btn btn-secondary">Sign In</a>
+                    </div>
+                    
+                    <p style="font-size: 0.9rem; margin-top: 2rem; opacity: 0.7;">
+                        Need help? <a href="/contact" style="color: #10b981;">Contact Support</a>
+                    </p>
+                </div>
+                
+                <script>
+                    // Store plan info for account creation
+                    localStorage.setItem('a3e_subscription_plan', '{plan}');
+                    localStorage.setItem('a3e_subscription_active', 'true');
+                    localStorage.setItem('a3e_payment_success', Date.now().toString());
+                </script>
+            </body></html>
+            """)
+        
         # Check if user is authenticated (check for session token/cookie)
         auth_token = request.cookies.get("auth_token") or request.headers.get("Authorization")
         trial_id = request.cookies.get("a3e_trial_id") or request.headers.get("X-Trial-ID")
