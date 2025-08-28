@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Welcome to A³E Platform - Redirecting...</title>
-    <meta http-equiv="refresh" content="2; url=trial-success.html">
+    <meta http-equiv="refresh" content="2; url=/trial-success">
     
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -125,7 +125,7 @@
             <p>Redirecting you to your dashboard in <span class="countdown" id="countdown">3</span> seconds...</p>
         </div>
         
-        <a href="trial-success.html" class="manual-link" id="manualLink">
+        <a href="/trial-success" class="manual-link" id="manualLink">
             Continue to Platform →
         </a>
     </div>
@@ -155,7 +155,7 @@
         // Try multiple redirect targets
         async function redirectToWorking() {
             const redirectUrls = [
-                'trial-success.html',
+                '/trial-success',
                 'upload.html',
                 'homepage.html',
                 'index.html',

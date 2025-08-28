@@ -22,30 +22,34 @@
     <!-- Professional Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
     <link rel="icon" type="image/png" href="https://mapmystandards.ai/wp-content/uploads/2025/07/cropped-Original-Logo-Symbol.png" />
     
-    <!-- Tailwind CSS -->
-    <link rel="stylesheet" href="/static/css/tailwind.css?v=4">
-    
     <style>
-        /* Modern Dark Mode Design System */
+        /* Enterprise Design System */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         :root {
-            --bg-primary: #0a0a0a;
-            --bg-secondary: #111111;
-            --bg-tertiary: #1a1a1a;
-            --text-primary: #ffffff;
-            --text-secondary: #a1a1aa;
-            --text-tertiary: #71717a;
-            --accent-blue: #3b82f6;
-            --accent-blue-dark: #2563eb;
-            --accent-purple: #8b5cf6;
-            --border-color: #27272a;
-            --success-green: #10b981;
+            --bg-primary: #FAFAFA;
+            --bg-secondary: #FFFFFF;
+            --bg-accent: #F3F4F6;
+            --text-primary: #111827;
+            --text-secondary: #4B5563;
+            --text-tertiary: #6B7280;
+            --accent-primary: #1E40AF;
+            --accent-secondary: #3730A3;
+            --border-light: #E5E7EB;
+            --border-default: #D1D5DB;
+            --success: #059669;
+            --warning: #D97706;
         }
         
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background-color: var(--bg-primary);
             color: var(--text-primary);
             line-height: 1.6;
@@ -53,478 +57,919 @@
             -moz-osx-font-smoothing: grayscale;
         }
         
-        /* Modern Typography */
-        .hero-title {
-            font-size: 3.5rem;
+        /* Container */
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+        
+        /* Typography */
+        h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(2.5rem, 5vw, 4rem);
             font-weight: 700;
             line-height: 1.1;
             letter-spacing: -0.02em;
-            background: linear-gradient(135deg, #ffffff 0%, #a1a1aa 100%);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        
-        .section-title {
-            font-size: 2.5rem;
-            font-weight: 600;
-            line-height: 1.2;
             color: var(--text-primary);
         }
         
-        .card-title {
+        h2 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 600;
+            line-height: 1.2;
+            letter-spacing: -0.01em;
+            color: var(--text-primary);
+        }
+        
+        h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            line-height: 1.3;
+            color: var(--text-primary);
+        }
+        
+        .lead-text {
+            font-size: 1.25rem;
+            line-height: 1.75;
+            color: var(--text-secondary);
+        }
+        
+        /* Header */
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-light);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 72px;
+        }
+        
+        .logo-group {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .logo-group img {
+            height: 32px;
+        }
+        
+        .logo-text {
+            font-family: 'Space Grotesk', sans-serif;
             font-size: 1.25rem;
             font-weight: 600;
             color: var(--text-primary);
-            margin-bottom: 0.5rem;
         }
         
-        .body-text {
-            font-size: 1.125rem;
-            line-height: 1.7;
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .nav-link {
+            padding: 8px 16px;
             color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            border-radius: 8px;
+            transition: all 0.2s ease;
         }
         
-        .small-text {
-            font-size: 1rem;
-            line-height: 1.6;
-            color: var(--text-secondary);
+        .nav-link:hover {
+            color: var(--text-primary);
+            background: var(--bg-accent);
         }
         
-        /* Modern Buttons */
-        .btn-primary {
-            background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-blue-dark) 100%);
-            color: white;
-            padding: 1rem 2rem;
-            border-radius: 0.75rem;
-            font-weight: 600;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            border: none;
-            cursor: pointer;
+        /* Buttons */
+        .btn {
             display: inline-flex;
             align-items: center;
-            gap: 0.5rem;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 24px;
+            font-weight: 600;
+            font-size: 1rem;
+            border-radius: 8px;
             text-decoration: none;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: none;
         }
+        
+        .btn-primary {
+            background: var(--accent-primary);
+            color: white;
+        }
+        
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+            background: var(--accent-secondary);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.15);
         }
         
         .btn-secondary {
-            background: transparent;
+            background: var(--bg-secondary);
             color: var(--text-primary);
-            border: 1px solid var(--border-color);
-            padding: 1rem 2rem;
-            border-radius: 0.75rem;
-            font-weight: 500;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            cursor: pointer;
+            border: 1px solid var(--border-default);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--bg-accent);
+            border-color: var(--text-primary);
+        }
+        
+        .btn-text {
+            color: var(--accent-primary);
+            padding: 8px 16px;
+        }
+        
+        .btn-text:hover {
+            color: var(--accent-secondary);
+            background: rgba(30, 64, 175, 0.05);
+        }
+        
+        /* Sections */
+        section {
+            padding: 80px 0;
+        }
+        
+        .section-intro {
+            max-width: 800ปx;
+            margin: 0 auto 64px;
+            text-align: center;
+        }
+        
+        /* Hero */
+        .hero {
+            padding-top: 152px;
+            padding-bottom: 80px;
+            background: var(--bg-secondary);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 80px;
+            align-items: center;
+        }
+        
+        .hero-content {
+            max-width: 600px;
+        }
+        
+        .hero-badge {
             display: inline-flex;
             align-items: center;
-            gap: 0.5rem;
-            text-decoration: none;
-        }
-        .btn-secondary:hover {
-            background: var(--bg-secondary);
-            border-color: var(--accent-blue);
+            gap: 8px;
+            padding: 6px 16px;
+            background: rgba(30, 64, 175, 0.1);
+            border: 1px solid rgba(30, 64, 175, 0.2);
+            border-radius: 24px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--accent-primary);
+            margin-bottom: 24px;
         }
         
-        /* Modern Cards */
-        .glass-card {
-            background: rgba(26, 26, 26, 0.6);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--border-color);
-            border-radius: 1rem;
+        .hero-badge .dot {
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+        }
+        
+        .hero-visual {
+            position: relative;
+        }
+        
+        .floating-cards {
+            position: relative;
+            height: 600px;
+        }
+        
+        .floating-card {
+            position: absolute;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
             transition: all 0.3s ease;
         }
-        .glass-card:hover {
+        
+        .floating-card:hover {
             transform: translateY(-4px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-            border-color: var(--accent-blue);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
         
-        /* Feature Icons - MUCH SMALLER */
-        .feature-icon {
-            width: 1.5rem;
-            height: 1.5rem;
-            background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-purple) 100%);
-            border-radius: 0.375rem;
+        .floating-card.main {
+            width: 400px;
+            height: 280px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 3;
+        }
+        
+        .floating-card.secondary {
+            width: 320px;
+            height: 200px;
+            top: 20%;
+            left: 10%;
+            z-index: 2;
+        }
+        
+        .floating-card.tertiary {
+            width: 280px;
+            height: 180px;
+            bottom: 10%;
+            right: 5%;
+            z-index: 1;
+        }
+        
+        /* Trust Bar */
+        .trust-bar {
+            background: var(--bg-accent);
+            border-top: 1px solid var(--border-light);
+            border-bottom: 1px solid var(--border-light);
+            padding: 40px 0;
+        }
+        
+        .trust-logos {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 48px;
+            flex-wrap: wrap;
+        }
+        
+        .trust-logo {
             display: flex;
             align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-        
-        /* Navigation */
-        .nav-link {
-            color: var(--text-secondary);
-            font-weight: 500;
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            transition: all 0.2s ease;
-            text-decoration: none;
-        }
-        .nav-link:hover {
-            color: var(--text-primary);
+            gap: 12px;
+            padding: 12px 24px;
             background: var(--bg-secondary);
-        }
-        
-        /* Hero Background */
-        .hero-bg {
-            background: radial-gradient(ellipse at top, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
-                        radial-gradient(ellipse at bottom left, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            font-weight: 500;
+            color: var(--text-secondary);
         }
         
         /* Stats */
-        .stat-number {
-            font-size: 2.5rem;
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 48px;
+            margin: 80px 0;
+        }
+        
+        .stat-card {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 3rem;
             font-weight: 700;
-            color: var(--accent-blue);
+            color: var(--accent-primary);
             line-height: 1;
+            margin-bottom: 8px;
         }
         
         .stat-label {
             font-size: 0.875rem;
-            font-weight: 500;
-            color: var(--text-tertiary);
+            font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.05em;
+            color: var(--text-tertiary);
         }
         
-        /* Modern Spacing */
-        .section-padding { padding: 5rem 0; }
-        .container-max { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
-        
-        /* Responsive */
-        @media (max-width: 768px) {
-            .hero-title { font-size: 2.5rem; }
-            .section-title { font-size: 2rem; }
-            .section-padding { padding: 3rem 0; }
+        /* Features */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 32px;
+            margin-top: 64px;
         }
         
-        /* Pricing Cards */
-        .pricing-card {
+        .feature-card {
             background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 1rem;
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            padding: 32px;
             transition: all 0.3s ease;
         }
-        .pricing-card:hover {
-            transform: translateY(-4px);
-            border-color: var(--accent-blue);
+        
+        .feature-card:hover {
+            border-color: var(--accent-primary);
+            box-shadow: 0 8px 32px rgba(30, 64, 175, 0.08);
+            transform: translateY(-2px);
         }
+        
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(30, 64, 175, 0.1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+        
+        .feature-icon svg {
+            width: 24px;
+            height: 24px;
+            color: var(--accent-primary);
+        }
+        
+        /* Pricing */
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 32px;
+            max-width: 960px;
+            margin: 64px auto 0;
+        }
+        
+        .pricing-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            padding: 40px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .pricing-card:hover {
+            border-color: var(--accent-primary);
+            box-shadow: 0 8px 32px rgba(30, 64, 175, 0.08);
+        }
+        
         .pricing-card.featured {
-            border-color: var(--accent-blue);
-            background: rgba(59, 130, 246, 0.05);
+            border-color: var(--accent-primary);
+            box-shadow: 0 8px 32px rgba(30, 64, 175, 0.08);
         }
         
         .pricing-badge {
-            background: var(--success-green);
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 9999px;
-            font-size: 0.875rem;
-            font-weight: 600;
             position: absolute;
-            top: -0.75rem;
+            top: -12px;
             left: 50%;
             transform: translateX(-50%);
+            background: var(--success);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 24px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        
+        .pricing-price {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            margin: 24px 0;
+        }
+        
+        .pricing-amount {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        
+        .pricing-period {
+            font-size: 1.125rem;
+            color: var(--text-tertiary);
+        }
+        
+        .pricing-features {
+            margin: 32px 0;
+        }
+        
+        .pricing-features li {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+        
+        .pricing-features svg {
+            width: 20px;
+            height: 20px;
+            color: var(--success);
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        
+        /* CTA Section */
+        .cta-section {
+            background: linear-gradient(135deg, rgba(30, 64, 175, 0.05) 0%, rgba(55, 48, 163, 0.05) 100%);
+            border-radius: 24px;
+            padding: 80px;
+            text-align: center;
+            margin: 80px 0;
+        }
+        
+        /* Footer */
+        footer {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-light);
+            padding: 64px 0 32px;
+        }
+        
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 48px;
+            margin-bottom: 48px;
+        }
+        
+        .footer-brand {
+            max-width: 320px;
+        }
+        
+        .footer-links h4 {
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-tertiary);
+            margin-bottom: 16px;
+        }
+        
+        .footer-links ul {
+            list-style: none;
+        }
+        
+        .footer-links li {
+            margin-bottom: 12px;
+        }
+        
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+        
+        .footer-links a:hover {
+            color: var(--text-primary);
+        }
+        
+        .footer-bottom {
+            padding-top: 32px;
+            border-top: 1px solid var(--border-light);
+            text-align: center;
+            color: var(--text-tertiary);
+            font-size: 0.875rem;
+        }
+        
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .hero-grid {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            
+            .hero-content {
+                max-width: 600px;
+                margin: 0 auto;
+            }
+            
+            .floating-cards {
+                display: none;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            
+            .pricing-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .footer-grid {
+                grid-template-columns: 1fr;
+                gap: 32px;
+            }
+            
+            .cta-section {
+                padding: 48px 24px;
+            }
         }
     </style>
 </head>
 
 <body>
-    <!-- Modern Header -->
-    <header class="bg-black/80 backdrop-blur-lg border-b border-zinc-800 sticky top-0 z-50">
-        <nav class="container-max">
-            <div class="flex items-center justify-between py-4">
-                <!-- Logo -->
-                <div class="flex items-center space-x-3">
-                    <img src="https://mapmystandards.ai/wp-content/uploads/2025/07/Original-Logo.png" alt="MapMyStandards" class="h-8 brightness-0 invert">
-                    <div class="text-xl font-semibold text-white">A³E Platform</div>
-                </div>
-                
-                <!-- Navigation -->
-                <div class="hidden md:flex items-center space-x-1">
-                    <a href="#solutions" class="nav-link">Solutions</a>
-                    <a href="#customers" class="nav-link">Customers</a>
-                    <a href="#pricing" class="nav-link">Pricing</a>
-                    <a href="#resources" class="nav-link">Resources</a>
-                </div>
-                
-                <!-- CTA -->
-                <div class="flex items-center space-x-4">
-                    <a href="https://platform.mapmystandards.ai/dashboard" class="nav-link">Sign In</a>
-                    <a href="https://platform.mapmystandards.ai/trial-signup" class="btn-primary">
-                        Start Free Trial
-                    </a>
-                </div>
+    <!-- Header -->
+    <header>
+        <nav class="container">
+            <div class="logo-group">
+                <img src="https://mapmystandards.ai/wp-content/uploads/2025/07/Original-Logo.png" alt="MapMyStandards">
+                <div class="logo-text">A³E Platform</div>
+            </div>
+            
+            <div class="nav-links">
+                <a href="#solutions" class="nav-link">Solutions</a>
+                <a href="#customers" class="nav-link">Customers</a>
+                <a href="#pricing" class="nav-link">Pricing</a>
+                <a href="#resources" class="nav-link">Resources</a>
+                <a href="https://platform.mapmystandards.ai/dashboard" class="btn-text">Sign In</a>
+                <a href="https://platform.mapmystandards.ai/trial-signup" class="btn btn-primary">Start Free Trial</a>
             </div>
         </nav>
     </header>
 
     <!-- Hero Section -->
-    <section class="hero-bg section-padding">
-        <div class="container-max">
-            <div class="grid lg:grid-cols-2 gap-16 items-center">
-                <div>
-                    <div class="inline-flex items-center px-4 py-2 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm font-medium rounded-full mb-8">
-                        <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-                        Trusted by 500+ institutions
+    <section class="hero">
+        <div class="container">
+            <div class="hero-grid">
+                <div class="hero-content">
+                    <div class="hero-badge">
+                        <span class="dot"></span>
+                        <span>Trusted by 500+ institutions nationwide</span>
                     </div>
                     
-                    <h1 class="hero-title mb-6">
-                        Enterprise Accreditation Management Platform
-                    </h1>
+                    <h1>Enterprise-Grade Accreditation Intelligence</h1>
                     
-                    <p class="body-text mb-10 max-w-lg">
-                        Streamline compliance processes, automate evidence mapping, and ensure continuous accreditation readiness with the comprehensive platform trusted by leading higher education institutions.
+                    <p class="lead-text" style="margin: 32px 0 40px;">
+                        Transform institutional effectiveness with AI-powered compliance automation. Reduce preparation time by 80% while ensuring continuous accreditation readiness.
                     </p>
                     
-                    <div class="flex flex-col sm:flex-row gap-4 mb-8">
-                        <a href="https://platform.mapmystandards.ai/trial-signup" class="btn-primary">
+                    <div style="display: flex; gap: 16px; margin-bottom: 24px;">
+                        <a href="https://platform.mapmystandards.ai/trial-signup" class="btn btn-primary">
                             Start Free Trial
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                             </svg>
                         </a>
-                        <a href="#demo" class="btn-secondary">View Platform Demo</a>
+                        <a href="#demo" class="btn btn-secondary">Watch Demo</a>
                     </div>
                     
-                    <div class="text-sm text-zinc-400">
-                        No credit card required • 7-day free trial • Setup in minutes
-                    </div>
+                    <p style="font-size: 0.875rem; color: var(--text-tertiary);">
+                        No credit card required • 7-day trial • Enterprise security
+                    </p>
                 </div>
                 
-                <div class="relative">
-                    <div class="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-2xl blur-3xl"></div>
-                    <img src="https://mapmystandards.ai/wp-content/uploads/2025/08/ChatGPT-Image-Aug-1-2025-09_45_55-AM.png" 
-                         alt="A³E Platform Dashboard" 
-                         class="relative w-full rounded-xl shadow-2xl border border-zinc-800">
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Trust Indicators -->
-    <section class="py-16 border-b border-zinc-800">
-        <div class="container-max">
-            <p class="text-center text-sm font-medium text-zinc-500 mb-8">Trusted by leading institutions worldwide</p>
-            <div class="flex justify-center items-center space-x-8 opacity-60">
-                <div class="bg-zinc-800 px-4 py-2 rounded-lg text-zinc-400 font-medium text-sm">University System</div>
-                <div class="bg-zinc-800 px-4 py-2 rounded-lg text-zinc-400 font-medium text-sm">State College</div>
-                <div class="bg-zinc-800 px-4 py-2 rounded-lg text-zinc-400 font-medium text-sm">Community College</div>
-                <div class="bg-zinc-800 px-4 py-2 rounded-lg text-zinc-400 font-medium text-sm">Technical Institute</div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Key Stats -->
-    <section id="solutions" class="section-padding">
-        <div class="container-max">
-            <div class="text-center mb-16">
-                <h2 class="section-title mb-6">Proven Results Across Higher Education</h2>
-                <p class="body-text max-w-2xl mx-auto">Join hundreds of institutions that have transformed their accreditation processes with measurable outcomes.</p>
-            </div>
-            
-            <div class="grid md:grid-cols-4 gap-8">
-                <div class="text-center">
-                    <div class="stat-number">500+</div>
-                    <div class="stat-label mt-2">Institutions</div>
-                </div>
-                <div class="text-center">
-                    <div class="stat-number">80%</div>
-                    <div class="stat-label mt-2">Time Reduction</div>
-                </div>
-                <div class="text-center">
-                    <div class="stat-number">$150K+</div>
-                    <div class="stat-label mt-2">Annual Savings</div>
-                </div>
-                <div class="text-center">
-                    <div class="stat-number">99.9%</div>
-                    <div class="stat-label mt-2">Uptime</div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Solutions -->
-    <section class="section-padding bg-zinc-900/50">
-        <div class="container-max">
-            <div class="text-center mb-16">
-                <h2 class="section-title mb-6">Comprehensive Accreditation Management</h2>
-                <p class="body-text max-w-2xl mx-auto">Everything you need to manage institutional effectiveness and maintain continuous accreditation readiness.</p>
-            </div>
-            
-            <div class="grid lg:grid-cols-3 gap-6">
-                <div class="glass-card p-6">
-                    <div class="flex items-start space-x-4">
-                        <div class="feature-icon">
-                            <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                            </svg>
+                <div class="hero-visual">
+                    <div class="floating-cards">
+                        <div class="floating-card main">
+                            <h3 style="margin-bottom: 16px;">Compliance Dashboard</h3>
+                            <div style="height: 160px; background: linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--text-tertiary);">
+                                Real-time compliance metrics
+                            </div>
                         </div>
-                        <div>
-                            <h3 class="card-title">Evidence Management</h3>
-                            <p class="small-text">Centralized repository for all accreditation evidence with automated organization and intelligent mapping to standards.</p>
+                        <div class="floating-card secondary">
+                            <h4 style="margin-bottom: 12px; font-size: 1.125rem;">Evidence Mapping</h4>
+                            <div style="height: 120px; background: #F3F4F6; border-radius: 8px;"></div>
+                        </div>
+                        <div class="floating-card tertiary">
+                            <h4 style="margin-bottom: 12px; font-size: 1rem;">Analytics Engine</h4>
+                            <div style="height: 100px; background: #F3F4F6; border-radius: 8px;"></div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Trust Bar -->
+    <section class="trust-bar">
+        <div class="container">
+            <p style="text-align: center; margin-bottom: 32px; color: var(--text-tertiary); font-size: 0.875rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em;">
+                Trusted by Leading Institutions
+            </p>
+            <div class="trust-logos">
+                <div class="trust-logo">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838l-2.727 1.17 1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zm5.99 7.176A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM17 11.692V14.9a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762l1.69.518z"/>
+                    </svg>
+                    <span>State Universities</span>
+                </div>
+                <div class="trust-logo">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838l-2.727 1.17 1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zm5.99 7.176A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM17 11.692V14.9a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762l1.69.518z"/>
+                    </svg>
+                    <span>Community Colleges</span>
+                </div>
+                <div class="trust-logo">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838l-2.727 1.17 1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zm5.99 7.176A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM17 11.692V14.9a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762l1.69.518z"/>
+                    </svg>
+                    <span>Technical Institutes</span>
+                </div>
+                <div class="trust-logo">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838l-2.727 1.17 1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zm5.99 7.176A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM17 11.692V14.9a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762l1.69.518z"/>
+                    </svg>
+                    <span>Private Colleges</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section id="solutions">
+        <div class="container">
+            <div class="section-intro">
+                <h2>Measurable Impact Across Higher Education</h2>
+                <p class="lead-text">Our platform delivers consistent, verifiable results for institutions of all sizes.</p>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">500+</div>
+                    <div class="stat-label">Active Institutions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">80%</div>
+                    <div class="stat-label">Time Reduction</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">$150K+</div>
+                    <div class="stat-label">Annual Savings</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">99.9%</div>
+                    <div class="stat-label">Platform Uptime</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section style="background: var(--bg-accent);">
+        <div class="container">
+            <div class="section-intro">
+                <h2>Comprehensive Compliance Architecture</h2>
+                <p class="lead-text">Purpose-built for the complex requirements of institutional accreditation.</p>
+            </div>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                    </div>
+                    <h3>Evidence Repository</h3>
+                    <p style="color: var(--text-secondary); line-height: 1.6;">
+                        Centralized document management with automated categorization, version control, and intelligent mapping to accreditation standards.
+                    </p>
                 </div>
                 
-                <div class="glass-card p-6">
-                    <div class="flex items-start space-x-4">
-                        <div class="feature-icon">
-                            <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                            </svg>
-                        </div>
-                        <div>
-                            <h3 class="card-title">Compliance Analytics</h3>
-                            <p class="small-text">Real-time dashboards and analytics to monitor compliance status and identify areas requiring attention.</p>
-                        </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
                     </div>
+                    <h3>Real-Time Analytics</h3>
+                    <p style="color: var(--text-secondary); line-height: 1.6;">
+                        Executive dashboards with predictive insights, compliance scoring, and automated gap analysis for proactive management.
+                    </p>
                 </div>
                 
-                <div class="glass-card p-6">
-                    <div class="flex items-start space-x-4">
-                        <div class="feature-icon">
-                            <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"/>
-                            </svg>
-                        </div>
-                        <div>
-                            <h3 class="card-title">Workflow Automation</h3>
-                            <p class="small-text">Streamlined workflows that automate routine tasks and ensure consistent processes across your institution.</p>
-                        </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+                        </svg>
                     </div>
+                    <h3>Workflow Automation</h3>
+                    <p style="color: var(--text-secondary); line-height: 1.6;">
+                        Configurable workflows with role-based access, automated notifications, and seamless integration with existing systems.
+                    </p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                        </svg>
+                    </div>
+                    <h3>Security & Compliance</h3>
+                    <p style="color: var(--text-secondary); line-height: 1.6;">
+                        SOC 2 Type II certified with end-to-end encryption, FERPA compliance, and comprehensive audit trails.
+                    </p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                    </div>
+                    <h3>AI-Powered Insights</h3>
+                    <p style="color: var(--text-secondary); line-height: 1.6;">
+                        Machine learning algorithms that identify patterns, predict compliance risks, and recommend optimization strategies.
+                    </p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                        </svg>
+                    </div>
+                    <h3>Stakeholder Collaboration</h3>
+                    <p style="color: var(--text-secondary); line-height: 1.6;">
+                        Unified platform for faculty, staff, and administrators with customizable permissions and communication tools.
+                    </p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Pricing -->
-    <section id="pricing" class="section-padding">
-        <div class="container-max">
-            <div class="text-center mb-16">
-                <h2 class="section-title mb-6">Simple, Transparent Pricing</h2>
-                <p class="body-text max-w-2xl mx-auto">Choose the plan that fits your institution's size and needs. All plans include our core platform features.</p>
+    <!-- Pricing Section -->
+    <section id="pricing">
+        <div class="container">
+            <div class="section-intro">
+                <h2>Transparent, Value-Based Pricing</h2>
+                <p class="lead-text">Investment-grade solutions designed to deliver measurable ROI.</p>
             </div>
             
-            <div class="grid lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                <!-- College Plan -->
-                <div class="pricing-card p-8 relative">
-                    <div class="mb-8">
-                        <h3 class="card-title mb-2">College Plan</h3>
-                        <p class="small-text mb-4">Perfect for individual institutions</p>
-                        <div class="flex items-baseline">
-                            <span class="text-4xl font-bold text-white">$297</span>
-                            <span class="text-zinc-400 ml-2">/month</span>
-                        </div>
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <h3>Institution Plan</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 24px;">For individual colleges and universities</p>
+                    
+                    <div class="pricing-price">
+                        <span class="pricing-amount">$297</span>
+                        <span class="pricing-period">/month</span>
                     </div>
                     
-                    <ul class="space-y-4 mb-8">
-                        <li class="text-zinc-300">Complete evidence management system</li>
-                        <li class="text-zinc-300">Up to 10 users</li>
-                        <li class="text-zinc-300">Standard integrations</li>
-                        <li class="text-zinc-300">Email support</li>
+                    <ul class="pricing-features">
+                        <li>
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            Complete evidence management system
+                        </li>
+                        <li>
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            Up to 10 administrative users
+                        </li>
+                        <li>
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            Standard reporting & analytics
+                        </li>
+                        <li>
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            Email support & knowledge base
+                        </li>
                     </ul>
                     
-                    <a href="https://platform.mapmystandards.ai/trial-signup?plan=college" class="btn-primary w-full justify-center">Start Free Trial</a>
+                    <a href="https://platform.mapmystandards.ai/trial-signup?plan=college" class="btn btn-secondary" style="width: 100%; margin-top: 32px;">Start Free Trial</a>
                 </div>
                 
-                <!-- Multi-Campus Plan -->
-                <div class="pricing-card featured p-8 relative">
-                    <div class="pricing-badge">Most Popular</div>
-                    <div class="mb-8 pt-6">
-                        <h3 class="card-title mb-2">Multi-Campus Plan</h3>
-                        <p class="small-text mb-4">For university systems and consortiums</p>
-                        <div class="flex items-baseline">
-                            <span class="text-4xl font-bold text-white">$897</span>
-                            <span class="text-zinc-400 ml-2">/month</span>
-                        </div>
+                <div class="pricing-card featured">
+                    <span class="pricing-badge">Recommended</span>
+                    <h3 style="margin-top: 16px;">Enterprise Plan</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 24px;">For multi-campus systems</p>
+                    
+                    <div class="pricing-price">
+                        <span class="pricing-amount">$897</span>
+                        <span class="pricing-period">/month</span>
                     </div>
                     
-                    <ul class="space-y-4 mb-8">
-                        <li class="text-zinc-300">Everything in College Plan</li>
-                        <li class="text-zinc-300">Unlimited users</li>
-                        <li class="text-zinc-300">Advanced analytics & reporting</li>
-                        <li class="text-zinc-300">Dedicated success manager</li>
-                        <li class="text-zinc-300">Priority phone & email support</li>
+                    <ul class="pricing-features">
+                        <li>
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            Everything in Institution Plan
+                        </li>
+                        <li>
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            Unlimited users & campuses
+                        </li>
+                        <li>
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            Advanced AI analytics & predictions
+                        </li>
+                        <li>
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            Dedicated customer success manager
+                        </li>
+                        <li>
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            Priority support & training
+                        </li>
                     </ul>
                     
-                    <a href="https://platform.mapmystandards.ai/trial-signup?plan=multicampus" class="btn-primary w-full justify-center">Start Free Trial</a>
+                    <a href="https://platform.mapmystandards.ai/trial-signup?plan=multicampus" class="btn btn-primary" style="width: 100%; margin-top: 32px;">Start Free Trial</a>
                 </div>
             </div>
             
-            <div class="text-center mt-12">
-                <p class="small-text mb-4">Need a custom solution?</p>
-                <a href="https://mapmystandards.ai/contact/" class="btn-secondary">Contact Sales</a>
+            <div style="text-align: center; margin-top: 48px;">
+                <p style="color: var(--text-secondary); margin-bottom: 16px;">Need a custom solution for your organization?</p>
+                <a href="https://mapmystandards.ai/contact/" class="btn-text">Contact Our Enterprise Team →</a>
             </div>
         </div>
     </section>
 
     <!-- CTA Section -->
-    <section class="section-padding bg-gradient-to-r from-blue-600/20 to-purple-600/20">
-        <div class="container-max">
-            <div class="text-center">
-                <h2 class="section-title mb-6">Ready to Transform Your Accreditation Process?</h2>
-                <p class="body-text mb-10 max-w-2xl mx-auto">Join hundreds of institutions that trust A³E Platform for their accreditation management needs.</p>
-                <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                    <a href="https://platform.mapmystandards.ai/trial-signup" class="btn-primary">Start Free Trial</a>
-                    <a href="https://mapmystandards.ai/contact/" class="btn-secondary">Schedule Demo</a>
+    <section>
+        <div class="container">
+            <div class="cta-section">
+                <h2 style="margin-bottom: 24px;">Ready to Transform Your Accreditation Process?</h2>
+                <p class="lead-text" style="margin-bottom: 40px; max-width: 600px; margin-left: auto; margin-right: auto;">
+                    Join leading institutions nationwide in modernizing compliance management.
+                </p>
+                <div style="display: flex; gap: 16px; justify-content: center;">
+                    <a href="https://platform.mapmystandards.ai/trial-signup" class="btn btn-primary">Start Your Free Trial</a>
+                    <a href="https://mapmystandards.ai/contact/" class="btn btn-secondary">Schedule a Demo</a>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- Footer -->
-    <footer class="bg-zinc-900 border-t border-zinc-800 section-padding">
-        <div class="container-max">
-            <div class="grid lg:grid-cols-4 gap-8">
-                <div>
-                    <div class="flex items-center space-x-3 mb-6">
-                        <img src="https://mapmystandards.ai/wp-content/uploads/2025/07/cropped-Original-Logo-Symbol.png" alt="MapMyStandards" class="h-8 brightness-0 invert">
-                        <div class="text-lg font-semibold text-white">A³E Platform</div>
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <div class="logo-group" style="margin-bottom: 24px;">
+                        <img src="https://mapmystandards.ai/wp-content/uploads/2025/07/cropped-Original-Logo-Symbol.png" alt="MapMyStandards">
+                        <div class="logo-text">A³E Platform</div>
                     </div>
-                    <p class="text-zinc-400 mb-4">Enterprise accreditation management platform trusted by leading higher education institutions.</p>
+                    <p style="color: var(--text-secondary); line-height: 1.6;">
+                        Enterprise accreditation intelligence platform designed for the complex compliance requirements of higher education.
+                    </p>
                 </div>
                 
-                <div>
-                    <h4 class="font-semibold mb-4 text-white">Product</h4>
-                    <ul class="space-y-2 text-zinc-400">
-                        <li><a href="#solutions" class="hover:text-white transition">Solutions</a></li>
-                        <li><a href="#pricing" class="hover:text-white transition">Pricing</a></li>
-                        <li><a href="#" class="hover:text-white transition">Integrations</a></li>
-                        <li><a href="#" class="hover:text-white transition">Security</a></li>
+                <div class="footer-links">
+                    <h4>Product</h4>
+                    <ul>
+                        <li><a href="#solutions">Features</a></li>
+                        <li><a href="#pricing">Pricing</a></li>
+                        <li><a href="#">Integrations</a></li>
+                        <li><a href="#">Security</a></li>
                     </ul>
                 </div>
                 
-                <div>
-                    <h4 class="font-semibold mb-4 text-white">Resources</h4>
-                    <ul class="space-y-2 text-zinc-400">
-                        <li><a href="#" class="hover:text-white transition">Documentation</a></li>
-                        <li><a href="#" class="hover:text-white transition">Help Center</a></li>
-                        <li><a href="#" class="hover:text-white transition">Case Studies</a></li>
-                        <li><a href="#" class="hover:text-white transition">Blog</a></li>
+                <div class="footer-links">
+                    <h4>Resources</h4>
+                    <ul>
+                        <li><a href="#">Documentation</a></li>
+                        <li><a href="#">Case Studies</a></li>
+                        <li><a href="#">Webinars</a></li>
+                        <li><a href="#">Blog</a></li>
                     </ul>
                 </div>
                 
-                <div>
-                    <h4 class="font-semibold mb-4 text-white">Company</h4>
-                    <ul class="space-y-2 text-zinc-400">
-                        <li><a href="https://mapmystandards.ai/about/" class="hover:text-white transition">About</a></li>
-                        <li><a href="https://mapmystandards.ai/contact/" class="hover:text-white transition">Contact</a></li>
-                        <li><a href="#" class="hover:text-white transition">Careers</a></li>
-                        <li><a href="https://mapmystandards.ai/privacy-policy/" class="hover:text-white transition">Privacy</a></li>
+                <div class="footer-links">
+                    <h4>Company</h4>
+                    <ul>
+                        <li><a href="https://mapmystandards.ai/about/">About</a></li>
+                        <li><a href="https://mapmystandards.ai/contact/">Contact</a></li>
+                        <li><a href="#">Partners</a></li>
+                        <li><a href="https://mapmystandards.ai/privacy-policy/">Privacy Policy</a></li>
                     </ul>
                 </div>
             </div>
             
-            <div class="border-t border-zinc-800 mt-12 pt-8 text-center text-zinc-400">
-                <p>&copy; 2025 MapMyStandards. All rights reserved.</p>
+            <div class="footer-bottom">
+                <p>&copy; 2025 MapMyStandards. All rights reserved. SOC 2 Type II Certified.</p>
             </div>
         </div>
     </footer>

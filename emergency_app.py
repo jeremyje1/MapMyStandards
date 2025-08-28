@@ -26,7 +26,7 @@ def dashboard():
     return HTMLResponse("""
     <!DOCTYPE html>
     <html><head><title>Welcome to A³E Platform</title>
-    <meta http-equiv="refresh" content="2; url=trial-success.html"></head>
+    <meta http-equiv="refresh" content="2; url=/trial-success"></head>
     <body style="font-family: -apple-system, sans-serif; text-align: center; padding: 3rem;">
         <div style="width: 60px; height: 60px; background: #10b981; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 2rem;">
             <span style="color: white; font-size: 2rem; font-weight: bold;">✓</span>
@@ -34,10 +34,10 @@ def dashboard():
         <h1>Welcome to A³E Platform!</h1>
         <p>Your subscription is active and ready to use.</p>
         <p>Redirecting you to the platform...</p>
-        <p><a href="trial-success.html">Click here if not redirected</a></p>
+        <p><a href="/trial-success">Click here if not redirected</a></p>
         <script>
             localStorage.setItem('a3e_subscription_active', 'true');
-            setTimeout(() => window.location.href = 'trial-success.html', 2000);
+            setTimeout(() => window.location.href = '/trial-success', 2000);
         </script>
     </body></html>
     """)
@@ -51,7 +51,7 @@ def trial_signup(plan: str = "college"):
     return HTMLResponse(f"""
     <!DOCTYPE html>
     <html><head><title>Trial Signup - A³E Platform | {plan_name} Plan</title>
-    <meta http-equiv="refresh" content="5; url=trial-success.html"></head>
+    <meta http-equiv="refresh" content="5; url=/trial-success"></head>
     <body style="font-family: -apple-system, sans-serif; text-align: center; padding: 3rem; background: #f8fafc;">
         <div style="width: 80px; height: 80px; background: #3b82f6; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 2rem;">
             <span style="color: white; font-size: 2rem;">🚀</span>
@@ -63,10 +63,10 @@ def trial_signup(plan: str = "college"):
             <p style="color: #475569;">Platform restoration in progress...</p>
         </div>
         <p style="color: #64748b;">Redirecting you to trial information page...</p>
-        <p><a href="trial-success.html" style="display: inline-block; background: #1e40af; color: white; text-decoration: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600;">Continue to Trial Info →</a></p>
+        <p><a href="/trial-success" style="display: inline-block; background: #1e40af; color: white; text-decoration: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600;">Continue to Trial Info →</a></p>
         <script>
             localStorage.setItem('selected_plan', '{plan}');
-            setTimeout(() => window.location.href = 'trial-success.html', 5000);
+            setTimeout(() => window.location.href = '/trial-success', 5000);
         </script>
     </body></html>
     """)

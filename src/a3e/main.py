@@ -1253,7 +1253,7 @@ if WEB_DIR.exists():
         return HTMLResponse("""
         <!DOCTYPE html>
         <html><head><title>Welcome to A³E Platform</title>
-        <meta http-equiv="refresh" content="2; url=/trial-success.html"></head>
+        <meta http-equiv="refresh" content="2; url=/trial-success"></head>
         <body style="font-family: -apple-system, sans-serif; text-align: center; padding: 3rem;">
             <div style="width: 60px; height: 60px; background: #10b981; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 2rem;">
                 <span style="color: white; font-size: 2rem; font-weight: bold;">✓</span>
@@ -1263,7 +1263,7 @@ if WEB_DIR.exists():
             <p>Redirecting you to the platform...</p>
             <script>
                 localStorage.setItem('a3e_subscription_active', 'true');
-                setTimeout(() => window.location.href = '/trial-success.html', 2000);
+                setTimeout(() => window.location.href = '/trial-success', 2000);
             </script>
         </body></html>
         """)
