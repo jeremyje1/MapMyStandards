@@ -13,13 +13,21 @@ fi
 
 echo "Starting server on port: $PORT"
 
-# Emergency startup - try simplest apps first
-echo "EMERGENCY MODE: Starting simplest possible app..."
+# Multi-tier startup strategy - try main app first, then fallbacks
+echo "STARTUP: Attempting main application..."
 
-# Emergency app has no dependencies
-if python -c "import emergency_app" 2>/dev/null; then
-    echo "✅ Emergency app starting..."
-    exec uvicorn emergency_app:app --host 0.0.0.0 --port "$PORT"
+# Try main app first (full platform functionality)
+if python3 -c "import src.a3e.main; print('✅ Main app ready')" 2>/dev/null; then
+    echo "✅ Starting full A³E platform with all features..."
+    exec python3 -m uvicorn src.a3e.main:app --host 0.0.0.0 --port "$PORT"
+fi
+
+echo "⚠️ Main app failed, falling back to emergency mode..."
+
+# Emergency app fallback has no dependencies
+if python3 -c "import emergency_app" 2>/dev/null; then
+    echo "✅ Emergency app starting (limited functionality)..."
+    exec python3 -m uvicorn emergency_app:app --host 0.0.0.0 --port "$PORT"
 fi
 
 echo "❌ All apps failed - this should not happen"
