@@ -721,18 +721,6 @@ async def health_check():
             }
         )
 
-# TEMPORARY: Test price ID loading directly
-@app.get("/test-prices")
-async def test_price_loading():
-    """Test price ID loading directly"""
-    import os
-    return {
-        "env_vars": {
-            "professional_monthly": os.getenv('STRIPE_PRICE_ID_PROFESSIONAL_MONTHLY'),
-            "professional_annual": os.getenv('STRIPE_PRICE_ID_PROFESSIONAL_ANNUAL')
-        },
-        "direct_test": "price_1RyVQ4K8PKpLCKDZON0IMe3F"
-    }
 
 try:
     from .routes.customer_pages import router as customer_pages_router
