@@ -13,6 +13,8 @@ from pathlib import Path
 
 from ...core.config import settings
 from ..dependencies import get_current_user
+from ...services.evidence_processor import get_evidence_processor
+import asyncio
 
 logger = logging.getLogger(__name__)
 
@@ -100,14 +102,43 @@ async def upload_evidence(
             "analysis_progress": 0
         }
         
-        # Simulate processing start
-        logger.info(f"Evidence uploaded: {evidence_id} - {file.filename}")
+        # Start async processing
+        processor = get_evidence_processor(settings)
+        
+        # Process document in background
+        async def process_in_background():
+            try:
+                metadata = {
+                    'id': evidence_id,
+                    'filename': file.filename,
+                    'user_id': current_user.get("user_id"),
+                    'institution_name': current_user.get("institution_name", "Unknown"),
+                    'accreditor': accreditor or 'SACSCOC'
+                }
+                
+                result = await processor.process_document(file_path, metadata)
+                
+                # Update evidence record with results
+                evidence_record['status'] = result.get('status', 'completed')
+                evidence_record['analysis'] = result.get('analysis', {})
+                evidence_record['standard_mappings'] = result.get('standard_mappings', [])
+                evidence_record['metrics'] = result.get('metrics', {})
+                
+                logger.info(f"Evidence processing completed: {evidence_id}")
+            except Exception as e:
+                logger.error(f"Background processing failed for {evidence_id}: {e}")
+                evidence_record['status'] = 'failed'
+        
+        # Start background processing
+        asyncio.create_task(process_in_background())
+        
+        logger.info(f"Evidence uploaded and processing started: {evidence_id} - {file.filename}")
         
         return JSONResponse(
             status_code=201,
             content={
                 "success": True,
-                "message": "Evidence uploaded successfully. Analysis in progress.",
+                "message": "Evidence uploaded successfully. AI analysis in progress.",
                 "data": evidence_record
             }
         )

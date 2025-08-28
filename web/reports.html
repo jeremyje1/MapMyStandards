@@ -390,12 +390,27 @@
         async function loadDashboardMetrics() {
             try {
                 const apiKey = localStorage.getItem('a3e_api_key');
-                const response = await fetch('/api/dashboard/overview', {
+                
+                // Try real analytics API first
+                const response = await fetch('/api/v1/analytics/dashboard/metrics', {
                     headers: apiKey ? { 'X-API-Key': apiKey } : {}
                 });
                 
                 if (response.ok) {
-                    dashboardData = await response.json();
+                    const result = await response.json();
+                    if (result.success && result.data) {
+                        displayRealMetrics(result.data);
+                        return;
+                    }
+                }
+                
+                // Fallback to old dashboard API
+                const oldResponse = await fetch('/api/dashboard/overview', {
+                    headers: apiKey ? { 'X-API-Key': apiKey } : {}
+                });
+                
+                if (oldResponse.ok) {
+                    dashboardData = await oldResponse.json();
                     displayDashboardMetrics(dashboardData);
                 } else {
                     // Fallback to mock data if API not available
@@ -405,6 +420,37 @@
                 console.error('Error loading dashboard data:', error);
                 displayMockMetrics();
             }
+        }
+        
+        function displayRealMetrics(metrics) {
+            const html = `
+                <div class="metric-card">
+                    <div class="metric-value">${Math.round(metrics.compliance_score || 0)}%</div>
+                    <div class="metric-label">Compliance Score</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">${metrics.documents_analyzed || 0}</div>
+                    <div class="metric-label">Documents Analyzed</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">${metrics.reports_generated || 0}</div>
+                    <div class="metric-label">Reports Generated</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">${metrics.gaps_identified || 0}</div>
+                    <div class="metric-label">Gaps Identified</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">${metrics.time_saved?.hours || 0}h</div>
+                    <div class="metric-label">Time Saved</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">${metrics.time_saved?.value || '$0'}</div>
+                    <div class="metric-label">Value Generated</div>
+                </div>
+            `;
+            
+            document.getElementById('dashboardMetrics').innerHTML = html;
         }
 
         function displayDashboardMetrics(data) {

@@ -738,6 +738,14 @@ try:
 except ImportError as e:
     logger.warning(f"⚠️ Reports implementation router not available: {e}")
 
+# Import and include analytics router
+try:
+    from .api.routes.analytics import router as analytics_router
+    app.include_router(analytics_router)
+    logger.info("✅ Analytics router loaded")
+except ImportError as e:
+    logger.warning(f"⚠️ Analytics router not available: {e}")
+
 # Import and include tier router
 try:
     from src.a3e.api.routes.tier import router as tier_router
