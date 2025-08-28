@@ -178,9 +178,10 @@ async def lifespan(app: FastAPI):
     try:
         # Initialize production database
         try:
-            from .database.connection import db_manager
-            await db_manager.initialize()
-            logger.info("✅ Production database initialized")
+            logger.info("⚠️ Database initialization temporarily disabled for debugging")
+            # from .database.connection import db_manager
+            # await db_manager.initialize()
+            # logger.info("✅ Production database initialized")
         except Exception as e:
             logger.warning(f"⚠️ Production database init failed: {e}")
             # Fallback to legacy database service
