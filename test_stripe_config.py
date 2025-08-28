@@ -1,5 +1,10 @@
 """Test script to verify Stripe configuration"""
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
 from src.a3e.core.config import get_settings
 
 # Get settings
@@ -8,6 +13,16 @@ settings = get_settings()
 print("=== Stripe Configuration Test ===")
 print(f"STRIPE_SECRET_KEY exists: {bool(settings.STRIPE_SECRET_KEY)}")
 print(f"STRIPE_SECRET_KEY length: {len(settings.STRIPE_SECRET_KEY) if settings.STRIPE_SECRET_KEY else 0}")
+
+# Determine if we're in test or live mode
+if settings.STRIPE_SECRET_KEY:
+    if settings.STRIPE_SECRET_KEY.startswith('sk_test'):
+        print("Mode: TEST MODE ⚠️")
+    elif settings.STRIPE_SECRET_KEY.startswith('sk_live'):
+        print("Mode: LIVE MODE 🔴 (Real charges will occur!)")
+    else:
+        print("Mode: Unknown")
+
 print(f"STRIPE_PUBLISHABLE_KEY exists: {bool(settings.STRIPE_PUBLISHABLE_KEY)}")
 print(f"STRIPE_PUBLISHABLE_KEY starts with: {settings.STRIPE_PUBLISHABLE_KEY[:10] if settings.STRIPE_PUBLISHABLE_KEY else 'None'}")
 
