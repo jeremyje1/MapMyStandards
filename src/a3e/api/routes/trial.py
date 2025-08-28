@@ -182,6 +182,76 @@ async def signup_trial(
             detail="Failed to create trial account with payment setup"
         )
 
+@router.post("/signup-lite", response_model=TrialSignupResponse)
+async def signup_trial_lite(
+    request: TrialSignupRequest,  # reuse model; we will ignore payment_method_id requirement below
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_db)
+):
+    """Create a new trial account WITHOUT requiring a payment method (no-card trial).
+
+    This supports frictionless onboarding from the marketing site. If a user upgrades later,
+    they'll attach a payment method via the billing flow.
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+    from sqlalchemy import select
+    try:
+        # Check duplicate
+        stmt = select(User).where(User.email == request.email)
+        result = await db.execute(stmt)
+        existing_user = result.scalar_one_or_none()
+        if existing_user:
+            raise HTTPException(status_code=400, detail="An account with this email already exists")
+
+        password_hash = hash_password(request.password)
+        trial_expires = datetime.utcnow() + timedelta(days=7)
+
+        # Generate standalone API key (not Stripe managed)
+        api_key = generate_api_key()
+
+        # Normalize plan names coming from marketing (professional_* -> map to existing tiers if needed)
+        plan = request.plan or "professional_monthly"
+
+        new_user = User(
+            email=request.email,
+            name=request.name,
+            institution_name=request.institution_name,
+            institution_type=request.institution_type,
+            role=request.role,
+            password_hash=password_hash,
+            api_key=api_key,
+            api_key_created_at=datetime.utcnow(),
+            trial_started_at=datetime.utcnow(),
+            trial_ends_at=trial_expires,
+            is_trial=True,
+            subscription_tier=plan,
+            stripe_customer_id=None,
+            stripe_subscription_id=None
+        )
+        db.add(new_user)
+        await db.commit()
+        await db.refresh(new_user)
+
+        # Fire off emails (welcome + admin) similar to paid path
+        background_tasks.add_task(send_welcome_email, request.email, request.name, api_key)
+        background_tasks.add_task(notify_admin_new_signup, request.email, request.name, request.institution_name, request.role)
+
+        logger.info(f"✅ Lite (no-card) trial account created for {request.email}")
+        return TrialSignupResponse(
+            success=True,
+            message="7-day free trial started (no credit card required)",
+            trial_id=str(uuid.uuid4()),
+            api_key=api_key,
+            expires_at=trial_expires.isoformat()
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        await db.rollback()
+        logger.error(f"Error creating lite trial: {e}")
+        raise HTTPException(status_code=500, detail="Failed to create lite trial account")
+
 @router.get("/status/{email}")
 async def get_trial_status(email: EmailStr, db: AsyncSession = Depends(get_db)):
     """Get trial account status"""

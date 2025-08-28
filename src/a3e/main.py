@@ -375,6 +375,8 @@ except Exception:
 for required_origin in [
     "https://platform.mapmystandards.ai",
     "https://api.mapmystandards.ai",
+    "https://mapmystandards.ai",
+    "https://www.mapmystandards.ai",
     "http://localhost:8000",
     "http://localhost:3000",
 ]:

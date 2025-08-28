@@ -1256,45 +1256,50 @@
                 
                 // Show loading state
                 submitBtn.disabled = true;
-                submitBtn.innerHTML = 'Creating Your Trial...';
-                
-                // Create a hidden form to submit to the platform (avoids CORS)
-                const hiddenForm = document.createElement('form');
-                hiddenForm.method = 'POST';
-                hiddenForm.action = 'https://platform.mapmystandards.ai/trial-signup';
-                hiddenForm.target = '_self';
-                hiddenForm.style.display = 'none';
-                
-                // Add form fields
+                submitBtn.innerHTML = 'Creating Account...';
+
                 const formData = new FormData(form);
-                const fields = {
+                const payload = {
                     name: formData.get('name'),
-                    email: formData.get('email'),
                     institution_name: formData.get('institution'),
-                    institution_type: formData.get('institutionType') || '',
-                    role: formData.get('role'),
+                    institution_type: formData.get('institutionType') || null,
+                    email: formData.get('email'),
                     password: formData.get('password'),
-                    phone: formData.get('phone') || '',
-                    newsletter_opt_in: formData.get('newsletter') === 'on' ? 'true' : 'false',
+                    role: formData.get('role'),
                     plan: currentPlan === 'annual' ? 'professional_yearly' : 'professional_monthly',
-                    redirect_success: 'https://platform.mapmystandards.ai/dashboard?trial_started=true',
-                    redirect_error: 'https://mapmystandards.ai/homepage?signup_error=true'
+                    phone: formData.get('phone') || null,
+                    newsletter_opt_in: formData.get('newsletter') === 'on',
+                    // placeholder required by model; backend lite endpoint ignores stripe call
+                    payment_method_id: 'pm_lite_nocard'
                 };
-                
-                // Create hidden inputs for each field
-                Object.keys(fields).forEach(key => {
-                    const input = document.createElement('input');
-                    input.type = 'hidden';
-                    input.name = key;
-                    input.value = fields[key];
-                    hiddenForm.appendChild(input);
-                });
-                
-                // Add form to page and submit
-                document.body.appendChild(hiddenForm);
-                hiddenForm.submit();
-                
-                // Note: The page will redirect, so we don't need to reset the button
+
+                try {
+                    const response = await fetch('https://platform.mapmystandards.ai/api/trial/signup-lite', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload),
+                    });
+                    const result = await response.json().catch(() => ({}));
+
+                    if (response.ok && result.success) {
+                        // Store key + expiry
+                        if (result.api_key) localStorage.setItem('mms_api_key', result.api_key);
+                        if (result.expires_at) localStorage.setItem('mms_trial_expires', result.expires_at);
+                        // Redirect to dashboard
+                        window.location.href = 'https://platform.mapmystandards.ai/dashboard?trial_started=true';
+                        return;
+                    } else {
+                        const msg = (result && (result.detail || result.message)) || 'Signup failed';
+                        alert(msg);
+                    }
+                } catch (err) {
+                    console.error('Lite trial signup error', err);
+                    alert('Network error creating trial. Please try again.');
+                }
+
+                // Reset button if we reach here
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Start Free Trial';
             });
             
             // Add hover effects to buttons
