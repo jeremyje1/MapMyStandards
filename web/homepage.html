@@ -642,7 +642,7 @@
                 <li><a href="#pricing">Pricing</a></li>
                 <li><a href="https://platform.mapmystandards.ai/docs">API Docs</a></li>
                 <li><a href="mailto:support@mapmystandards.ai?subject=Account%20Access%20Request" class="btn btn-secondary">Sign In</a></li>
-                <li><a href="https://buy.stripe.com/test_8x214pcwk68AdeJ4Cc3Je00" class="btn btn-primary">Start Free Trial</a></li>
+                <li><button onclick="startCheckout('monthly')" class="btn btn-primary">Start Free Trial</button></li>
             </ul>
         </nav>
     </header>
@@ -655,7 +655,7 @@
                     <h1>Transform Accreditation Compliance with AI</h1>
                     <p>Reduce preparation time by 80%, automate evidence mapping, and ensure continuous compliance readiness with our AI-powered platform trusted by 500+ institutions.</p>
                     <div class="hero-buttons">
-                        <a href="https://buy.stripe.com/test_8x214pcwk68AdeJ4Cc3Je00" class="btn btn-primary">Start 7-Day Free Trial</a>
+                        <button onclick="startCheckout('monthly')" class="btn btn-primary">Start 7-Day Free Trial</button>
                         <a href="#demo" class="btn btn-secondary">Watch 3-Min Demo</a>
                     </div>
                     <div class="trust-badges">
@@ -891,7 +891,7 @@
                         <li>Email support</li>
                         <li>Canvas LMS integration</li>
                     </ul>
-                    <a href="https://buy.stripe.com/test_8x214pcwk68AdeJ4Cc3Je00" class="btn btn-secondary" style="width: 100%;">Start Free Trial</a>
+                    <button onclick="startCheckout('monthly')" class="btn btn-secondary" style="width: 100%;">Start Free Trial</button>
                 </div>
                 <div class="pricing-card featured">
                     <span class="badge">SAVE $588/year</span>
@@ -910,7 +910,7 @@
                         <li>API access</li>
                         <li>White-label options</li>
                     </ul>
-                    <a href="https://buy.stripe.com/test_fZu4gB8g468AeiN4Cc3Je01" class="btn btn-primary" style="width: 100%;">Start Free Trial</a>
+                    <button onclick="startCheckout('annual')" class="btn btn-primary" style="width: 100%;">Start Free Trial</button>
                 </div>
             </div>
         </div>
@@ -922,7 +922,7 @@
             <h2>Ready to Transform Your Accreditation Process?</h2>
             <p>Join 500+ institutions already saving time and money with MapMyStandards</p>
             <div class="hero-buttons" style="justify-content: center;">
-                <a href="https://buy.stripe.com/test_8x214pcwk68AdeJ4Cc3Je00" class="btn btn-primary" style="background: white; color: var(--primary);">Start Your 7-Day Free Trial</a>
+                <button onclick="startCheckout('monthly')" class="btn btn-primary" style="background: white; color: var(--primary);">Start Your 7-Day Free Trial</button>
                 <a href="https://mapmystandards.ai/contact" class="btn btn-secondary" style="border-color: white; color: white;">Schedule a Demo</a>
             </div>
         </div>
@@ -972,5 +972,64 @@
             </div>
         </div>
     </footer>
+
+    <!-- Trial Signup JavaScript -->
+    <script>
+        function startCheckout(planType) {
+            // Show loading state
+            event.target.disabled = true;
+            event.target.innerHTML = 'Connecting...';
+            
+            // Redirect to contact form for manual processing with professional messaging
+            const planDisplay = planType === 'annual' ? 'Professional Annual Plan ($2,999/year - Save $588)' : 'Professional Monthly Plan ($299/month)';
+            const subject = encodeURIComponent(`7-Day Free Trial Request - ${planDisplay}`);
+            const body = encodeURIComponent(`Hello MapMyStandards Team,
+
+I'm interested in starting a 7-day free trial for the ${planDisplay}.
+
+Please send me:
+- Trial access information  
+- Platform setup instructions
+- Any next steps to get started
+
+My details:
+- Institution/Organization: [Please fill in]
+- Email: [Please fill in]  
+- Phone: [Optional]
+- Best time to contact: [Please fill in]
+
+Thank you for your assistance!`);
+            
+            // Open email client
+            window.location.href = `mailto:support@mapmystandards.ai?subject=${subject}&body=${body}`;
+            
+            // Reset button after a delay
+            setTimeout(() => {
+                event.target.disabled = false;
+                event.target.innerHTML = event.target.innerHTML.replace('Connecting...', 'Start Free Trial');
+            }, 2000);
+        }
+
+        // Add helpful user feedback
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('MapMyStandards homepage loaded - Ready for trial signups');
+            
+            // Check for URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('canceled') === 'true') {
+                alert('No problem! Contact support@mapmystandards.ai if you need assistance getting started.');
+            }
+            
+            // Add hover effects to buttons
+            document.querySelectorAll('button[onclick*="startCheckout"]').forEach(button => {
+                button.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-2px)';
+                });
+                button.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0px)';
+                });
+            });
+        });
+    </script>
 </body>
 </html>
