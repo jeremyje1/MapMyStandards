@@ -7,9 +7,9 @@
     <meta name="description" content="Your A³E trial is now active. Start transforming your accreditation process today.">
     
         <!-- Tailwind (built) -->
-        <link rel="stylesheet" href="/web/static/css/tailwind.css?v=1" id="tailwindStylesheet">
-        <!-- Backup static path -->
-        <link rel="stylesheet" href="/static/css/tailwind.css?v=1" id="tailwindStylesheetBackup">
+        <link rel="stylesheet" href="/static/css/tailwind.css?v=1" id="tailwindStylesheet">
+        <!-- Backup CDN fallback -->
+        <script src="https://cdn.tailwindcss.com"></script>
             <script>
                 // Tailwind load check with user-friendly fallback
                 window.addEventListener('load', () => {
@@ -397,34 +397,15 @@
                 async function redirectToDashboard() {
                     const redirectUrls = [
                         '/dashboard',
-                        '/dashboard',
                         '/upload',
-                        '/upload.html',
                         '/onboarding',
-                        '/onboarding.html',
                         '/'
                     ];
                     
-                    // Try each URL until we find one that works
-                    for (const url of redirectUrls) {
-                        try {
-                            const response = await fetch(url, { method: 'HEAD' });
-                            if (response.ok || response.status === 200) {
-                                console.log(`Redirecting to: ${url}`);
-                                window.location.href = url;
-                                return;
-                            }
-                        } catch (error) {
-                            console.log(`Failed to reach ${url}:`, error);
-                            continue;
-                        }
-                    }
-                    
-                    // If all URLs failed, stay on current page and show message
-                    console.warn('All redirect URLs failed, staying on success page');
-                    if (countdownElement) {
-                        countdownElement.parentElement.innerHTML = '<p class="text-blue-100 text-sm">Dashboard temporarily unavailable. Please use the links below to continue.</p>';
-                    }
+                    // Skip the connectivity check and go directly to dashboard
+                    // The platform is working, just redirect
+                    console.log('Redirecting to dashboard...');
+                    window.location.href = '/dashboard';
                 }
 
                 // API Key copy helper if stored
