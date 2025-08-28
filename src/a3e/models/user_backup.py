@@ -1,5 +1,5 @@
 """
-User and authentication models for A3E platform - SQLite Compatible
+User and authentication models for A3E platform
 """
 
 from sqlalchemy import Column, String, DateTime, Boolean, Integer, Float, JSON, ForeignKey
@@ -11,12 +11,22 @@ import os
 
 from . import Base
 
+# SQLite-compatible ID column
+def get_id_column():
+    """Get appropriate ID column type based on database"""
+    database_url = os.getenv('DATABASE_URL', '')
+    if 'postgresql' in database_url:
+        from sqlalchemy.dialects.postgresql import UUID
+        return Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    else:
+        # SQLite fallback - use string UUIDs
+        return Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+
 class User(Base):
     """User account model"""
     __tablename__ = 'users'
     
-    # Use String(36) for UUIDs to ensure SQLite compatibility
-    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    id = get_id_column()
     email = Column(String(255), unique=True, nullable=False, index=True)
     name = Column(String(255), nullable=False)
     password_hash = Column(String(255), nullable=False)
@@ -57,18 +67,20 @@ class User(Base):
     usage_events = relationship("UsageEvent", back_populates="user", cascade="all, delete-orphan")
     
     def __repr__(self):
-        return f"<User(id='{self.id}', email='{self.email}', institution='{self.institution_name}')>"
+        return f"<User(email='{self.email}', name='{self.name}', institution='{self.institution_name}')>"
     
     @property
     def is_trial_active(self) -> bool:
-        """Check if user is in active trial period"""
-        if not self.is_trial or not self.trial_ends_at:
+        """Check if trial is still active"""
+        if not self.is_trial:
             return False
+        if not self.trial_ends_at:
+            return True
         return datetime.utcnow() < self.trial_ends_at
     
     @property
     def days_remaining_in_trial(self) -> int:
-        """Get days remaining in trial"""
+        """Calculate days remaining in trial"""
         if not self.is_trial or not self.trial_ends_at:
             return 0
         delta = self.trial_ends_at - datetime.utcnow()
@@ -79,7 +91,7 @@ class UserSession(Base):
     """User session tracking for JWT tokens"""
     __tablename__ = 'user_sessions'
     
-    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    id = get_id_column()
     user_id = Column(String(36), ForeignKey('users.id'), nullable=False)
     
     token_jti = Column(String(255), unique=True, nullable=False, index=True)  # JWT ID
@@ -103,16 +115,21 @@ class UserSession(Base):
 
 
 class PasswordReset(Base):
-    """Password reset token tracking"""
+    """Password reset request tracking"""
     __tablename__ = 'password_resets'
     
-    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    id = get_id_column()
     user_id = Column(String(36), ForeignKey('users.id'), nullable=False)
     
-    token = Column(String(255), unique=True, nullable=False, index=True)
+    reset_token = Column(String(255), unique=True, nullable=False, index=True)
+    reset_code = Column(String(10), nullable=False)  # 6-digit code for email
+    
+    ip_address = Column(String(45))
+    user_agent = Column(String(500))
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
     expires_at = Column(DateTime, nullable=False)
     used_at = Column(DateTime)
-    created_at = Column(DateTime, default=datetime.utcnow)
     
     # Relationship
     user = relationship("User", back_populates="password_resets")
@@ -126,20 +143,25 @@ class PasswordReset(Base):
 
 
 class UsageEvent(Base):
-    """Track user activity and feature usage"""
+    """Track user activity and usage for analytics"""
     __tablename__ = 'usage_events'
     
-    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    id = get_id_column()
     user_id = Column(String(36), ForeignKey('users.id'), nullable=False)
     
-    event_type = Column(String(50), nullable=False)  # document_upload, report_generation, etc.
-    event_data = Column(JSON)  # Additional event-specific data
-    ip_address = Column(String(45))
-    user_agent = Column(String(500))
-    created_at = Column(DateTime, default=datetime.utcnow)
+    event_type = Column(String(100), nullable=False)  # document_upload, report_generated, etc.
+    event_category = Column(String(50))  # analysis, compliance, reporting, etc.
+    event_value = Column(Float)  # For tracking metrics like time saved, documents processed
+    event_metadata = Column(JSON)  # Additional event-specific data
+    
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
     
     # Relationship
     user = relationship("User", back_populates="usage_events")
     
     def __repr__(self):
-        return f"<UsageEvent(id='{self.id}', type='{self.event_type}', user='{self.user_id}')>"
+        return f"<UsageEvent(user_id='{self.user_id}', type='{self.event_type}', created_at='{self.created_at}')>"
+
+
+# Export models
+__all__ = ['User', 'UserSession', 'PasswordReset', 'UsageEvent']
