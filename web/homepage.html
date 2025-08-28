@@ -1258,87 +1258,43 @@
                 submitBtn.disabled = true;
                 submitBtn.innerHTML = 'Creating Your Trial...';
                 
-                try {
-                    const formData = new FormData(form);
-                    
-                    const trialData = {
-                        name: formData.get('name'),
-                        email: formData.get('email'),
-                        institution_name: formData.get('institution'),
-                        institution_type: formData.get('institutionType') || null,
-                        role: formData.get('role'),
-                        password: formData.get('password'),
-                        phone: formData.get('phone') || null,
-                        newsletter_opt_in: formData.get('newsletter') === 'on',
-                        plan: currentPlan === 'annual' ? 'professional_yearly' : 'professional_monthly',
-                        payment_method_id: 'pm_card_visa' // Temporary for trial - will be replaced with actual payment collection
-                    };
-                    
-                    // Try platform API first (avoiding CORS issues)
-                    let response;
-                    let result;
-                    
-                    try {
-                        // Use relative path to avoid CORS issues
-                        response = await fetch('/api/trial/signup', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify(trialData)
-                        });
-                        
-                        if (response.ok) {
-                            result = await response.json();
-                        } else {
-                            throw new Error('API response not OK');
-                        }
-                    } catch (apiError) {
-                        console.log('Relative API failed, trying full URL:', apiError);
-                        
-                        // Fallback to full URL
-                        response = await fetch('https://platform.mapmystandards.ai/api/trial/signup', {
-                            method: 'POST',
-                            mode: 'cors',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify(trialData)
-                        });
-                        
-                        result = await response.json();
-                    }
-                    
-                    if (response.ok && result.success) {
-                        // Success! Show success message and redirect
-                        alert('🎉 Trial account created successfully! Redirecting to your dashboard...');
-                        
-                        // Store trial info
-                        localStorage.setItem('mms_trial_key', result.api_key);
-                        localStorage.setItem('mms_trial_expires', result.expires_at);
-                        
-                        // Redirect to dashboard
-                        window.location.href = `https://platform.mapmystandards.ai/dashboard?trial_started=true&expires=${encodeURIComponent(result.expires_at)}`;
-                    } else {
-                        // Show error
-                        const errorMsg = result.detail || result.message || 'Please try again or contact support@mapmystandards.ai';
-                        alert('Signup failed: ' + errorMsg);
-                        
-                        // Reset button
-                        submitBtn.disabled = false;
-                        submitBtn.innerHTML = 'Start Free Trial';
-                    }
-                    
-                } catch (error) {
-                    console.error('Trial signup error:', error);
-                    
-                    // Show helpful error message
-                    alert('Unable to create trial account. Please contact support@mapmystandards.ai for assistance or try again later.');
-                    
-                    // Reset button
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = 'Start Free Trial';
-                }
+                // Create a hidden form to submit to the platform (avoids CORS)
+                const hiddenForm = document.createElement('form');
+                hiddenForm.method = 'POST';
+                hiddenForm.action = 'https://platform.mapmystandards.ai/trial-signup';
+                hiddenForm.target = '_self';
+                hiddenForm.style.display = 'none';
+                
+                // Add form fields
+                const formData = new FormData(form);
+                const fields = {
+                    name: formData.get('name'),
+                    email: formData.get('email'),
+                    institution_name: formData.get('institution'),
+                    institution_type: formData.get('institutionType') || '',
+                    role: formData.get('role'),
+                    password: formData.get('password'),
+                    phone: formData.get('phone') || '',
+                    newsletter_opt_in: formData.get('newsletter') === 'on' ? 'true' : 'false',
+                    plan: currentPlan === 'annual' ? 'professional_yearly' : 'professional_monthly',
+                    redirect_success: 'https://platform.mapmystandards.ai/dashboard?trial_started=true',
+                    redirect_error: 'https://mapmystandards.ai/homepage?signup_error=true'
+                };
+                
+                // Create hidden inputs for each field
+                Object.keys(fields).forEach(key => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = key;
+                    input.value = fields[key];
+                    hiddenForm.appendChild(input);
+                });
+                
+                // Add form to page and submit
+                document.body.appendChild(hiddenForm);
+                hiddenForm.submit();
+                
+                // Note: The page will redirect, so we don't need to reset the button
             });
             
             // Add hover effects to buttons
@@ -1378,6 +1334,14 @@
             
             passwordInput.addEventListener('input', validatePasswordMatch);
             confirmPasswordInput.addEventListener('input', validatePasswordMatch);
+            
+            // Check for signup error on page load
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('signup_error') === 'true') {
+                alert('There was an issue creating your trial account. Please try again or contact support@mapmystandards.ai for assistance.');
+                // Clean up URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
             
             console.log('MapMyStandards homepage loaded - Ready for trial signups');
         });
