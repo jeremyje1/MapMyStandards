@@ -559,10 +559,77 @@
                 </div>
             </div>
 
-            <!-- Step 2: Payment Information -->
+            <!-- Step 2: Plan Selection -->
             <div class="form-section" data-section="2">
                 <div class="step-header">
                     <div class="step-number">Step 2 of 3</div>
+                    <h1 class="step-title">Choose Your Plan</h1>
+                    <p class="step-subtitle">Select the plan that fits your institution</p>
+                </div>
+                
+                <div class="plan-grid">
+                    <div class="plan-card popular" data-plan="college_monthly">
+                        <div class="plan-name">College Plan</div>
+                        <div class="plan-price">$297</div>
+                        <div class="plan-period">per month</div>
+                        <div class="plan-description">For individual colleges and universities</div>
+                        <input type="radio" name="plan" value="college_monthly" style="display: none;">
+                    </div>
+                    <div class="plan-card" data-plan="college_yearly">
+                        <div class="plan-name">College Annual</div>
+                        <div class="plan-price">$2,970</div>
+                        <div class="plan-period">per year</div>
+                        <div class="plan-description">Save $594 with annual billing</div>
+                        <input type="radio" name="plan" value="college_yearly" style="display: none;">
+                    </div>
+                </div>
+                
+                <div class="plan-grid" style="margin-top: 1rem;">
+                    <div class="plan-card" data-plan="multicampus_monthly">
+                        <div class="plan-name">Multi-Campus Plan</div>
+                        <div class="plan-price">$897</div>
+                        <div class="plan-period">per month</div>
+                        <div class="plan-description">For multi-campus systems and large institutions</div>
+                        <input type="radio" name="plan" value="multicampus_monthly" style="display: none;">
+                    </div>
+                    <div class="plan-card" data-plan="multicampus_yearly">
+                        <div class="plan-name">Multi-Campus Annual</div>
+                        <div class="plan-price">$8,073</div>
+                        <div class="plan-period">per year</div>
+                        <div class="plan-description">Save $1,691 with annual billing</div>
+                        <input type="radio" name="plan" value="multicampus_yearly" style="display: none;">
+                    </div>
+                </div>
+                
+                <div class="benefits">
+                    <div class="benefits-title">What's Included</div>
+                    <div class="benefit-item">
+                        <div class="benefit-icon"></div>
+                        <span>7-day free trial</span>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="benefit-icon"></div>
+                        <span>AI-powered accreditation mapping</span>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="benefit-icon"></div>
+                        <span>Evidence collection tools</span>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="benefit-icon"></div>
+                        <span>Compliance tracking</span>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="benefit-icon"></div>
+                        <span>24/7 support</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Payment Information -->
+            <div class="form-section" data-section="3">
+                <div class="step-header">
+                    <div class="step-number">Step 3 of 3</div>
                     <h1 class="step-title">Payment Information</h1>
                     <p class="step-subtitle">We'll collect payment after your free trial ends</p>
                 </div>
@@ -601,56 +668,6 @@
                     <div class="form-group">
                         <label for="billing_zip" class="form-label">Billing ZIP</label>
                         <input type="text" id="billing_zip" name="billing_zip" class="form-input" required>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Step 3: Plan Selection -->
-            <div class="form-section" data-section="3">
-                <div class="step-header">
-                    <div class="step-number">Step 3 of 3</div>
-                    <h1 class="step-title">Choose Your Plan</h1>
-                    <p class="step-subtitle">Select the plan that fits your institution</p>
-                </div>
-                
-                <div class="plan-grid">
-                    <div class="plan-card popular" data-plan="professional_monthly">
-                        <div class="plan-name">Professional Plan</div>
-                        <div class="plan-price">$299</div>
-                        <div class="plan-period">per month</div>
-                        <div class="plan-description">For individual schools, colleges, and universities</div>
-                        <input type="radio" name="plan" value="professional_monthly" style="display: none;">
-                    </div>
-                    <div class="plan-card" data-plan="professional_yearly">
-                        <div class="plan-name">Professional Annual</div>
-                        <div class="plan-price">$2,999</div>
-                        <div class="plan-period">per year</div>
-                        <div class="plan-description">Save $588 with annual billing</div>
-                        <input type="radio" name="plan" value="professional_yearly" style="display: none;">
-                    </div>
-                </div>
-                
-                <div class="benefits">
-                    <div class="benefits-title">What's Included</div>
-                    <div class="benefit-item">
-                        <div class="benefit-icon"></div>
-                        <span>7-day free trial</span>
-                    </div>
-                    <div class="benefit-item">
-                        <div class="benefit-icon"></div>
-                        <span>AI-powered accreditation mapping</span>
-                    </div>
-                    <div class="benefit-item">
-                        <div class="benefit-icon"></div>
-                        <span>Evidence collection tools</span>
-                    </div>
-                    <div class="benefit-item">
-                        <div class="benefit-icon"></div>
-                        <span>Compliance tracking</span>
-                    </div>
-                    <div class="benefit-item">
-                        <div class="benefit-icon"></div>
-                        <span>24/7 support</span>
                     </div>
                 </div>
             </div>
@@ -858,17 +875,16 @@
             }
             
             if (step === 2) {
-                // Validate payment information and create payment method
-                try {
-                    paymentMethodId = await createPaymentMethod();
-                } catch (error) {
-                    showAlert(error.message || 'Please check your payment information.', 'error');
+                // Validate plan selection
+                const selectedPlan = document.querySelector('input[name="plan"]:checked');
+                if (!selectedPlan) {
+                    showAlert('Please select a plan.', 'error');
                     return false;
                 }
             }
             
             if (step === 3) {
-                // Validate payment method and create it
+                // Validate payment information and create payment method
                 try {
                     nextBtn.disabled = true;
                     nextBtn.innerHTML = '<span class="spinner"></span>Validating card...';
@@ -883,14 +899,6 @@
                     showAlert(error.message || 'Please check your card information.', 'error');
                     nextBtn.disabled = false;
                     nextBtn.innerHTML = 'Continue';
-                    return false;
-                }
-            }
-            
-            if (step === 3) {
-                const selectedPlan = document.querySelector('input[name="plan"]:checked');
-                if (!selectedPlan) {
-                    showAlert('Please select a plan.', 'error');
                     return false;
                 }
             }
@@ -989,6 +997,14 @@
                     ...data,
                     payment_method_id: paymentMethodId.substring(0, 10) + '...'
                 });
+                
+                // Ensure we have all required fields
+                if (!data.name || !data.email || !data.institution_name || !data.role || !data.plan) {
+                    showAlert('Please fill in all required fields.', 'error');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                    return;
+                }
                 
                 try {
                     const response = await fetch('/api/trial/signup', {
