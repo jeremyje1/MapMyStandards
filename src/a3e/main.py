@@ -721,6 +721,25 @@ async def health_check():
             }
         )
 
+# TEMPORARY: Debug endpoint to check payment service errors
+@app.get("/debug/payment-errors")
+async def get_payment_debug():
+    """TEMPORARY endpoint to debug payment service errors"""
+    try:
+        from .services.payment_service import PaymentService
+        payment_service = PaymentService()
+        
+        return {
+            "last_trial_failure": payment_service.last_trial_failure,
+            "stripe_key_configured": bool(payment_service.settings.STRIPE_SECRET_KEY),
+            "stripe_key_ends_with": payment_service.settings.STRIPE_SECRET_KEY[-4:] if payment_service.settings.STRIPE_SECRET_KEY else None,
+            "price_ids": {
+                "professional_monthly": payment_service.settings.STRIPE_PRICE_COLLEGE_MONTHLY,
+                "professional_annual": payment_service.settings.STRIPE_PRICE_COLLEGE_YEARLY
+            }
+        }
+    except Exception as e:
+        return {"error": f"Debug endpoint failed: {str(e)}"}
 
 try:
     from .routes.customer_pages import router as customer_pages_router
