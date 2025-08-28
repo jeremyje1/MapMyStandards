@@ -991,7 +991,7 @@
                 });
                 
                 try {
-                    const response = await fetch('/api/v1/billing/trial/signup', {
+                    const response = await fetch('/api/trial/signup', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -1010,6 +1010,20 @@
                             if (result.api_key) {
                                 localStorage.setItem('a3e_api_key', result.api_key);
                             }
+                            
+                            // Store email for onboarding page
+                            localStorage.setItem('a3e_user_email', data.email);
+                            sessionStorage.setItem('a3e_pending_email', data.email);
+                            
+                            // Store signup data for onboarding pre-population
+                            sessionStorage.setItem('a3e_signup_data', JSON.stringify({
+                                institution_name: data.institution_name,
+                                email: data.email,
+                                name: data.name,
+                                role: data.role,
+                                plan: data.plan
+                            }));
+                            
                             window.location.href = '/dashboard';
                         }, 2000);
                         return;
@@ -1039,6 +1053,19 @@
                 
                 localStorage.setItem('a3e_trial_data', JSON.stringify(trialData));
                 localStorage.setItem('a3e_trial_started', 'true');
+                
+                // Store email for onboarding page
+                localStorage.setItem('a3e_user_email', data.email);
+                sessionStorage.setItem('a3e_pending_email', data.email);
+                
+                // Store signup data for onboarding pre-population
+                sessionStorage.setItem('a3e_signup_data', JSON.stringify({
+                    institution_name: data.institution_name,
+                    email: data.email,
+                    name: data.name,
+                    role: data.role,
+                    plan: data.plan
+                }));
                 
                 // Show success and redirect to trial success page
                 showAlert('✅ Trial account created successfully! Redirecting to your welcome page...', 'success');
