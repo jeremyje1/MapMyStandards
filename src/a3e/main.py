@@ -185,6 +185,13 @@ except ImportError as e:
     email_test_router_available = False
     _email_test_import_exception = e
 
+try:
+    from .api.routes.ai_status import router as ai_status_router
+    ai_status_router_available = True
+except ImportError as e:
+    ai_status_router_available = False
+    _ai_status_import_exception = e
+
 # Logging already configured at top of file
 
 # Optional strict asset enforcement (set STRICT_FRONTEND_ASSETS=1 to fail startup if missing)
@@ -551,6 +558,12 @@ if email_test_router_available:
     logger.info("✅ Email test router loaded")
 else:
     logger.warning("⚠️ Email test router not available")
+
+if ai_status_router_available:
+    app.include_router(ai_status_router)
+    logger.info("✅ AI status router loaded")
+else:
+    logger.warning("⚠️ AI status router not available")
 
 # Include database-powered routers (production-ready)
 try:

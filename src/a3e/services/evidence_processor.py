@@ -38,6 +38,7 @@ except ImportError:
 from ..core.config import Settings
 from ..models.database import get_async_session
 from sqlalchemy import text
+from .ai_service import get_ai_service
 
 logger = logging.getLogger(__name__)
 
@@ -47,16 +48,14 @@ class EvidenceProcessor:
     
     def __init__(self, settings: Settings):
         self.settings = settings
-        self.openai_client = None
+        self.ai_service = get_ai_service()
         
-        # Try to get OpenAI key from settings or environment
-        api_key = settings.openai_api_key or os.environ.get('OPENAI_KEY') or os.environ.get('OPENAI_API_KEY')
-        
-        if OPENAI_AVAILABLE and api_key:
-            self.openai_client = openai.AsyncOpenAI(api_key=api_key)
-            logger.info("✅ OpenAI client initialized for evidence processing")
+        # Log AI service status
+        status = self.ai_service.get_status()
+        if status['ai_enabled']:
+            logger.info(f"✅ AI service initialized - Primary: {status['primary_provider']}, Fallback: {status['fallback_provider']}")
         else:
-            logger.warning("⚠️ OpenAI not configured - using fallback processing")
+            logger.warning("⚠️ No AI provider configured - using fallback processing")
     
     async def process_document(self, file_path: Path, metadata: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -83,11 +82,8 @@ class EvidenceProcessor:
             # Generate document fingerprint
             doc_hash = hashlib.sha256(text_content.encode()).hexdigest()[:16]
             
-            # Analyze document with AI if available
-            if self.openai_client:
-                analysis = await self.analyze_with_ai(text_content, metadata)
-            else:
-                analysis = self.fallback_analysis(text_content, metadata)
+            # Analyze document with AI service
+            analysis = await self.ai_service.analyze_document(text_content, metadata)
             
             # Map to standards
             standard_mappings = await self.map_to_standards(
@@ -249,48 +245,8 @@ Provide a JSON response with:
         # Get standards for the accreditor
         standards = await self.get_standards_for_accreditor(accreditor)
         
-        mappings = []
-        
-        if self.openai_client and standards:
-            # Use AI for intelligent mapping
-            try:
-                prompt = f"""Map this document analysis to specific {accreditor} standards.
-
-Analysis Summary:
-- Document Type: {analysis.get('document_type', 'Unknown')}
-- Key Topics: {', '.join(analysis.get('key_topics', []))}
-- Evidence Elements: {', '.join(analysis.get('evidence_elements', [])[:5])}
-
-Available Standards (sample):
-{json.dumps(standards[:10], indent=2)}
-
-Return a JSON array of mappings, each with:
-- standard_id: The standard identifier
-- standard_title: The standard title
-- relevance_score: 0-100 how relevant the evidence is
-- evidence_summary: Brief description of how document addresses this standard
-- mapping_confidence: "high", "medium", or "low"
-"""
-
-                response = await self.openai_client.chat.completions.create(
-                    model="gpt-4o-mini",
-                    messages=[
-                        {"role": "system", "content": f"You are an expert in {accreditor} accreditation standards. Map evidence to specific standards accurately."},
-                        {"role": "user", "content": prompt}
-                    ],
-                    response_format={"type": "json_object"},
-                    temperature=0.2,
-                    max_tokens=1000
-                )
-                
-                result = json.loads(response.choices[0].message.content)
-                mappings = result.get('mappings', []) if 'mappings' in result else [result] if isinstance(result, dict) else result
-                
-            except Exception as e:
-                logger.error(f"AI standard mapping failed: {e}")
-                mappings = self.fallback_standard_mapping(analysis, standards)
-        else:
-            mappings = self.fallback_standard_mapping(analysis, standards)
+        # Use AI service for mapping
+        mappings = await self.ai_service.map_to_standards(text, analysis, standards, accreditor)
         
         return mappings
     
