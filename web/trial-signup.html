@@ -541,12 +541,12 @@
                         <div class="plan-description">For individual schools, colleges, and universities</div>
                         <input type="radio" name="plan" value="college_monthly" style="display: none;">
                     </div>
-                    <div class="plan-card" data-plan="university_monthly">
+                    <div class="plan-card" data-plan="multicampus_monthly">
                         <div class="plan-name">Multi-Campus Plan</div>
                         <div class="plan-price">$897</div>
                         <div class="plan-period">per month</div>
                         <div class="plan-description">For university systems and multi-location institutions</div>
-                        <input type="radio" name="plan" value="university_monthly" style="display: none;">
+                        <input type="radio" name="plan" value="multicampus_monthly" style="display: none;">
                     </div>
                 </div>
                 
@@ -575,10 +575,31 @@
                 </div>
             </div>
 
-            <!-- Step 3: Confirmation -->
+            <!-- Step 3: Payment Method -->
             <div class="form-section" data-section="3">
                 <div class="step-header">
-                    <div class="step-number">Step 3 of 3</div>
+                    <div class="step-number">Step 3 of 4</div>
+                    <h1 class="step-title">Payment Method</h1>
+                    <p class="step-subtitle">Add a payment method for after your free trial</p>
+                </div>
+                
+                <div class="alert" style="background: #eff6ff; color: #1e40af; border: 1px solid #3b82f6;">
+                    <strong>No charges for 7 days!</strong> We need a payment method to continue your service after your free trial ends.
+                </div>
+                
+                <div class="form-group">
+                    <label for="card-element" class="form-label">Card Information</label>
+                    <div id="card-element" style="padding: 1rem; border: 2px solid #e2e8f0; border-radius: 8px; background: white;">
+                        <!-- Stripe Elements will create form elements here -->
+                    </div>
+                    <div id="card-errors" role="alert" style="color: #dc2626; font-size: 0.875rem; margin-top: 0.5rem;"></div>
+                </div>
+            </div>
+
+            <!-- Step 4: Confirmation -->
+            <div class="form-section" data-section="4">
+                <div class="step-header">
+                    <div class="step-number">Step 4 of 4</div>
                     <h1 class="step-title">Confirm Details</h1>
                     <p class="step-subtitle">Review and start your free trial</p>
                 </div>
@@ -613,7 +634,8 @@
 
     <script>
         let currentStep = 1;
-        const totalSteps = 3;
+        const totalSteps = 4;
+        let stripe, elements, cardElement, paymentMethodId;
         
         // Elements
         const form = document.getElementById('trialForm');
@@ -633,10 +655,79 @@
             });
         });
         
+        // Initialize Stripe and payment elements
+        async function initializeStripe() {
+            try {
+                // Get Stripe publishable key from backend
+                const keyResponse = await fetch('/api/v1/billing/config/stripe-key');
+                const keyData = await keyResponse.json();
+                
+                // Initialize Stripe
+                stripe = Stripe(keyData.publishable_key);
+                elements = stripe.elements();
+                
+                // Create card element
+                cardElement = elements.create('card', {
+                    style: {
+                        base: {
+                            fontSize: '16px',
+                            color: '#1e293b',
+                            '::placeholder': {
+                                color: '#64748b',
+                            },
+                        },
+                    },
+                });
+                
+                // Mount card element
+                cardElement.mount('#card-element');
+                
+                // Handle real-time validation errors from the card Element
+                cardElement.on('change', ({error}) => {
+                    const displayError = document.getElementById('card-errors');
+                    if (error) {
+                        displayError.textContent = error.message;
+                    } else {
+                        displayError.textContent = '';
+                    }
+                });
+                
+                console.log('Stripe initialized successfully');
+            } catch (error) {
+                console.error('Failed to initialize Stripe:', error);
+                showAlert('Payment system initialization failed. Please refresh the page.', 'error');
+            }
+        }
+
+        // Create payment method
+        async function createPaymentMethod() {
+            if (!stripe || !cardElement) {
+                throw new Error('Stripe not initialized');
+            }
+            
+            const {error, paymentMethod} = await stripe.createPaymentMethod({
+                type: 'card',
+                card: cardElement,
+                billing_details: {
+                    email: document.getElementById('email').value,
+                    name: document.getElementById('name').value,
+                },
+            });
+            
+            if (error) {
+                throw error;
+            }
+            
+            return paymentMethod.id;
+        }
+
         // Select first plan by default
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
             const firstPlan = document.querySelector('.plan-card');
             if (firstPlan) firstPlan.click();
+            
+            // Initialize Stripe
+            await initializeStripe();
         });
         
         // Step navigation
@@ -665,7 +756,7 @@
         }
         
         // Form validation
-        function validateStep(step) {
+        async function validateStep(step) {
             const section = document.querySelector(`[data-section="${step}"]`);
             const requiredFields = section.querySelectorAll('[required]');
             
@@ -689,6 +780,26 @@
                 const selectedPlan = document.querySelector('input[name="plan"]:checked');
                 if (!selectedPlan) {
                     showAlert('Please select a plan.', 'error');
+                    return false;
+                }
+            }
+            
+            if (step === 3) {
+                // Validate payment method and create it
+                try {
+                    nextBtn.disabled = true;
+                    nextBtn.innerHTML = '<span class="spinner"></span>Validating card...';
+                    
+                    paymentMethodId = await createPaymentMethod();
+                    console.log('Payment method created:', paymentMethodId);
+                    
+                    nextBtn.disabled = false;
+                    nextBtn.innerHTML = 'Continue';
+                } catch (error) {
+                    console.error('Payment method creation failed:', error);
+                    showAlert(error.message || 'Please check your card information.', 'error');
+                    nextBtn.disabled = false;
+                    nextBtn.innerHTML = 'Continue';
                     return false;
                 }
             }
@@ -744,8 +855,8 @@
         }
         
         // Event listeners
-        nextBtn.addEventListener('click', () => {
-            if (validateStep(currentStep)) {
+        nextBtn.addEventListener('click', async () => {
+            if (await validateStep(currentStep)) {
                 updateStep(currentStep + 1);
             }
         });
@@ -758,8 +869,16 @@
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
             
+            if (!paymentMethodId) {
+                showAlert('Payment method not set up. Please go back and complete the payment step.', 'error');
+                return;
+            }
+            
             const formData = new FormData(this);
             const data = Object.fromEntries(formData);
+            
+            // Add payment method ID to submission
+            data.payment_method_id = paymentMethodId;
             
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<span class="spinner"></span>Creating your trial...';
@@ -776,14 +895,21 @@
                 });
                 
                 const result = await response.json();
+                console.log('Trial signup response:', result);
                 
                 if (response.ok && result.success) {
-                    showAlert('Trial account created successfully! Redirecting to success page...', 'success');
+                    showAlert('✅ Trial account created successfully! Redirecting to your dashboard...', 'success');
                     setTimeout(() => {
-                        window.location.href = '/trial-success';
+                        // Store API key for dashboard access
+                        if (result.api_key) {
+                            localStorage.setItem('a3e_api_key', result.api_key);
+                        }
+                        window.location.href = '/dashboard.html';
                     }, 2000);
                 } else {
-                    showAlert(result.message || result.detail || 'Failed to create trial account. Please try again.', 'error');
+                    const errorMsg = result.detail?.error || result.message || result.detail || 'Failed to create trial account. Please try again.';
+                    showAlert(errorMsg, 'error');
+                    console.error('Trial signup failed:', result);
                 }
             } catch (error) {
                 console.error('Trial signup error:', error);
