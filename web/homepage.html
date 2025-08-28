@@ -1029,18 +1029,6 @@
                     </div>
                 </div>
                 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="password">Create Password *</label>
-                        <input type="password" id="password" name="password" required minlength="8">
-                        <small>Minimum 8 characters</small>
-                    </div>
-                    <div class="form-group">
-                        <label for="confirmPassword">Confirm Password *</label>
-                        <input type="password" id="confirmPassword" name="confirmPassword" required minlength="8">
-                        <small>Must match password</small>
-                    </div>
-                </div>
                 
                 <div class="form-group checkbox-group">
                     <label>
@@ -1244,15 +1232,6 @@
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 
-                // Validate password confirmation
-                const password = document.getElementById('password').value;
-                const confirmPassword = document.getElementById('confirmPassword').value;
-                
-                if (password !== confirmPassword) {
-                    alert('Passwords do not match. Please check and try again.');
-                    document.getElementById('confirmPassword').focus();
-                    return;
-                }
                 
                 // Show loading state
                 submitBtn.disabled = true;
@@ -1264,7 +1243,6 @@
                     institution_name: formData.get('institution'),
                     institution_type: formData.get('institutionType') || null,
                     email: formData.get('email'),
-                    password: formData.get('password'),
                     role: formData.get('role'),
                     plan: currentPlan === 'annual' ? 'professional_yearly' : 'professional_monthly',
                     phone: formData.get('phone') || null,
@@ -1335,30 +1313,6 @@
                 });
             });
             
-            // Real-time password confirmation validation
-            const passwordInput = document.getElementById('password');
-            const confirmPasswordInput = document.getElementById('confirmPassword');
-            
-            function validatePasswordMatch() {
-                const password = passwordInput.value;
-                const confirmPassword = confirmPasswordInput.value;
-                
-                if (confirmPassword.length > 0) {
-                    if (password === confirmPassword) {
-                        confirmPasswordInput.style.borderColor = '#10b981';
-                        confirmPasswordInput.style.backgroundColor = '#f0fdf4';
-                    } else {
-                        confirmPasswordInput.style.borderColor = '#ef4444';
-                        confirmPasswordInput.style.backgroundColor = '#fef2f2';
-                    }
-                } else {
-                    confirmPasswordInput.style.borderColor = '';
-                    confirmPasswordInput.style.backgroundColor = '';
-                }
-            }
-            
-            passwordInput.addEventListener('input', validatePasswordMatch);
-            confirmPasswordInput.addEventListener('input', validatePasswordMatch);
             
             // Check for signup error on page load
             const urlParams = new URLSearchParams(window.location.search);
