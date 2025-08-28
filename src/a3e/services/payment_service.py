@@ -59,7 +59,7 @@ class PaymentService:
 
             # Normalize simple plan codes to explicit interval-specific keys
             original_plan = plan
-            if plan in ("college", "multicampus"):
+            if plan in ("college", "multicampus", "professional"):
                 plan = f"{plan}_monthly"
                 logger.info("[trial] Normalized plan '%s' -> '%s'", original_plan, plan)
             elif plan.endswith("_annual"):
@@ -406,7 +406,10 @@ class PaymentService:
             "college_monthly": self.settings.STRIPE_PRICE_COLLEGE_MONTHLY or os.getenv('STRIPE_PRICE_ID_PROFESSIONAL_MONTHLY', ''),
             "college_yearly": self.settings.STRIPE_PRICE_COLLEGE_YEARLY or os.getenv('STRIPE_PRICE_ID_PROFESSIONAL_ANNUAL', ''),
             "multicampus_monthly": self.settings.STRIPE_PRICE_MULTI_CAMPUS_MONTHLY or os.getenv('STRIPE_PRICE_ID_INSTITUTION_MONTHLY', ''), 
-            "multicampus_yearly": self.settings.STRIPE_PRICE_MULTI_CAMPUS_YEARLY or os.getenv('STRIPE_PRICE_ID_INSTITUTION_ANNUAL', '')
+            "multicampus_yearly": self.settings.STRIPE_PRICE_MULTI_CAMPUS_YEARLY or os.getenv('STRIPE_PRICE_ID_INSTITUTION_ANNUAL', ''),
+            # Add professional plan mappings (frontend sends these)
+            "professional_monthly": self.settings.STRIPE_PRICE_COLLEGE_MONTHLY or os.getenv('STRIPE_PRICE_ID_PROFESSIONAL_MONTHLY', ''),
+            "professional_yearly": self.settings.STRIPE_PRICE_COLLEGE_YEARLY or os.getenv('STRIPE_PRICE_ID_PROFESSIONAL_ANNUAL', '')
         }
         
         price_id = env_price_ids.get(plan, '')
