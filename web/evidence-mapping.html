@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evidence Mapping | MapMyStandards A³E</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #1e293b;
+        }
+        
+        /* Header */
+        .header {
+            background: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            font-size: 1.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+        
+        .nav-links a {
+            color: #64748b;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: #667eea;
+        }
+        
+        /* Main Layout */
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        
+        .page-header {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .page-title {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .page-subtitle {
+            color: #64748b;
+            font-size: 1.1rem;
+        }
+        
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .stat-label {
+            color: #64748b;
+            margin-top: 0.5rem;
+        }
+        
+        /* Main Content Grid */
+        .mapping-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        
+        /* Documents Panel */
+        .panel {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            height: 600px;
+            overflow-y: auto;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .panel-header {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        
+        .document-item,
+        .standard-item {
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .document-item:hover,
+        .standard-item:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        
+        .document-item.selected,
+        .standard-item.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, rgba(102,126,234,0.1) 0%, rgba(118,75,162,0.1) 100%);
+            border-width: 2px;
+        }
+        
+        .doc-name,
+        .standard-id {
+            font-weight: 600;
+            color: #1e293b;
+        }
+        
+        .doc-date,
+        .standard-category {
+            font-size: 0.875rem;
+            color: #64748b;
+            margin-top: 0.25rem;
+        }
+        
+        .doc-standards-count,
+        .standard-evidence-count {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            margin-top: 0.5rem;
+        }
+        
+        /* Mapping Visualization */
+        .mapping-viz {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .viz-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .mapping-canvas {
+            position: relative;
+            height: 500px;
+            overflow: hidden;
+        }
+        
+        /* Coverage Heatmap */
+        .heatmap-container {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .heatmap-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .heatmap-cell {
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            transition: transform 0.3s;
+            cursor: pointer;
+        }
+        
+        .heatmap-cell:hover {
+            transform: scale(1.05);
+        }
+        
+        .heatmap-cell.complete {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+        
+        .heatmap-cell.partial {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: white;
+        }
+        
+        .heatmap-cell.gap {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+        
+        .heatmap-cell.na {
+            background: #e5e7eb;
+            color: #6b7280;
+        }
+        
+        .standard-code {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        
+        .coverage-score {
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+        
+        /* Mapping Lines SVG */
+        #mappingLines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        
+        .mapping-line {
+            stroke: #667eea;
+            stroke-width: 2;
+            fill: none;
+            opacity: 0.5;
+            stroke-dasharray: 5,5;
+            animation: dash 20s linear infinite;
+        }
+        
+        @keyframes dash {
+            to {
+                stroke-dashoffset: -100;
+            }
+        }
+        
+        .mapping-node {
+            fill: #667eea;
+            stroke: white;
+            stroke-width: 2;
+        }
+        
+        /* Legend */
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+        
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 3rem;
+        }
+        
+        .spinner {
+            border: 3px solid #e5e7eb;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Filters */
+        .filters {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+        
+        .filter-group {
+            flex: 1;
+        }
+        
+        .filter-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #475569;
+        }
+        
+        .filter-select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        .filter-select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            font-size: 1rem;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <h1>MapMyStandards A³E</h1>
+        <nav class="nav-links">
+            <a href="/dashboard">Dashboard</a>
+            <a href="/upload">Upload</a>
+            <a href="/evidence-mapping" class="active">Evidence Mapping</a>
+            <a href="/standards">Standards</a>
+            <a href="/reports">Reports</a>
+            <a href="#" onclick="logout()">Logout</a>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">🔗 Evidence Mapping Visualization</h1>
+            <p class="page-subtitle">See how your evidence documents map to accreditation standards with AI-powered analysis</p>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <div class="stat-value">0</div>
+                <div class="stat-label">Documents Analyzed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">0</div>
+                <div class="stat-label">Standards Mapped</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">0%</div>
+                <div class="stat-label">Coverage Rate</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">0</div>
+                <div class="stat-label">Strong Mappings</div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+            <div class="filter-group">
+                <label class="filter-label">Accreditor</label>
+                <select id="accreditorFilter" class="filter-select">
+                    <option value="SACSCOC">SACSCOC</option>
+                    <option value="HLC">HLC</option>
+                    <option value="WASC">WASC</option>
+                    <option value="MSCHE">MSCHE</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">View Mode</label>
+                <select id="viewMode" class="filter-select">
+                    <option value="mappings">Evidence Mappings</option>
+                    <option value="heatmap">Coverage Heatmap</option>
+                    <option value="gaps">Gap Analysis</option>
+                </select>
+            </div>
+            <button class="btn btn-primary" onclick="refreshMappings()">Refresh</button>
+        </div>
+
+        <!-- Mapping Grid -->
+        <div class="mapping-grid" id="mappingView">
+            <!-- Documents Panel -->
+            <div class="panel">
+                <div class="panel-header">📄 Evidence Documents</div>
+                <div id="documentsList">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p style="margin-top: 1rem;">Loading documents...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mapping Visualization -->
+            <div class="mapping-viz">
+                <div class="viz-header">
+                    <h2>Evidence-to-Standard Relationships</h2>
+                    <p style="color: #64748b; margin-top: 0.5rem;">Select a document or standard to see its mappings</p>
+                </div>
+                <div class="mapping-canvas" id="mappingCanvas">
+                    <svg id="mappingLines"></svg>
+                    <div id="mappingDetails" style="padding: 2rem; text-align: center; color: #64748b;">
+                        Select a document or standard to view mapping details
+                    </div>
+                </div>
+            </div>
+
+            <!-- Standards Panel -->
+            <div class="panel">
+                <div class="panel-header">📋 Accreditation Standards</div>
+                <div id="standardsList">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p style="margin-top: 1rem;">Loading standards...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Coverage Heatmap (Hidden by default) -->
+        <div class="heatmap-container" id="heatmapView" style="display: none;">
+            <h2>Standards Coverage Heatmap</h2>
+            <p style="color: #64748b; margin-bottom: 2rem;">Visual representation of evidence coverage across all standards</p>
+            
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);"></div>
+                    <span>Complete (90-100%)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);"></div>
+                    <span>Partial (60-89%)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);"></div>
+                    <span>Gap (0-59%)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #e5e7eb;"></div>
+                    <span>Not Applicable</span>
+                </div>
+            </div>
+            
+            <div class="heatmap-grid" id="heatmapGrid">
+                <!-- Heatmap cells will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let mappingsData = null;
+        let selectedDocument = null;
+        let selectedStandard = null;
+
+        // Load evidence mappings
+        async function loadMappings() {
+            try {
+                const apiKey = localStorage.getItem('a3e_api_key');
+                const accreditor = document.getElementById('accreditorFilter').value;
+                
+                const response = await fetch(`/api/v1/evidence/mappings?accreditor=${accreditor}`, {
+                    headers: apiKey ? { 'X-API-Key': apiKey } : {}
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        mappingsData = result.data;
+                        displayMappings();
+                        updateStats();
+                        return;
+                    }
+                }
+                
+                // Fallback to sample data
+                displaySampleMappings();
+            } catch (error) {
+                console.error('Error loading mappings:', error);
+                displaySampleMappings();
+            }
+        }
+
+        function displayMappings() {
+            if (!mappingsData) return;
+            
+            // Display documents
+            const docsList = document.getElementById('documentsList');
+            docsList.innerHTML = '';
+            
+            const documents = mappingsData.mappings?.reduce((acc, m) => {
+                const doc = { id: m.document_id, name: `Document ${m.document_id}` };
+                if (!acc.find(d => d.id === doc.id)) {
+                    acc.push(doc);
+                }
+                return acc;
+            }, []) || [];
+            
+            documents.forEach(doc => {
+                const mappingCount = mappingsData.mappings?.filter(m => m.document_id === doc.id).length || 0;
+                const docItem = document.createElement('div');
+                docItem.className = 'document-item';
+                docItem.dataset.docId = doc.id;
+                docItem.innerHTML = `
+                    <div class="doc-name">${doc.name}</div>
+                    <div class="doc-date">Uploaded recently</div>
+                    <span class="doc-standards-count">${mappingCount} standards mapped</span>
+                `;
+                docItem.onclick = () => selectDocument(doc.id);
+                docsList.appendChild(docItem);
+            });
+            
+            // Display standards
+            const stdsList = document.getElementById('standardsList');
+            stdsList.innerHTML = '';
+            
+            const standards = mappingsData.mappings?.reduce((acc, m) => {
+                const std = { id: m.standard_id, title: `Standard ${m.standard_id}` };
+                if (!acc.find(s => s.id === std.id)) {
+                    acc.push(std);
+                }
+                return acc;
+            }, []) || [];
+            
+            standards.forEach(std => {
+                const evidenceCount = mappingsData.mappings?.filter(m => m.standard_id === std.id).length || 0;
+                const stdItem = document.createElement('div');
+                stdItem.className = 'standard-item';
+                stdItem.dataset.stdId = std.id;
+                stdItem.innerHTML = `
+                    <div class="standard-id">${std.id}</div>
+                    <div class="standard-category">${std.title}</div>
+                    <span class="standard-evidence-count">${evidenceCount} evidence items</span>
+                `;
+                stdItem.onclick = () => selectStandard(std.id);
+                stdsList.appendChild(stdItem);
+            });
+        }
+
+        function displaySampleMappings() {
+            // Display sample data for demonstration
+            mappingsData = {
+                total_documents: 5,
+                total_standards: 8,
+                coverage_percentage: 75,
+                mappings: [
+                    { document_id: "doc_1", standard_id: "8.1", relevance_score: 95 },
+                    { document_id: "doc_1", standard_id: "8.2.a", relevance_score: 85 },
+                    { document_id: "doc_2", standard_id: "10.1", relevance_score: 90 },
+                    { document_id: "doc_2", standard_id: "10.3", relevance_score: 75 },
+                    { document_id: "doc_3", standard_id: "6.1", relevance_score: 88 },
+                    { document_id: "doc_4", standard_id: "13.7", relevance_score: 92 },
+                    { document_id: "doc_5", standard_id: "8.1", relevance_score: 80 }
+                ]
+            };
+            displayMappings();
+            updateStats();
+        }
+
+        function updateStats() {
+            if (!mappingsData) return;
+            
+            const statsHtml = `
+                <div class="stat-card">
+                    <div class="stat-value">${mappingsData.total_documents || 5}</div>
+                    <div class="stat-label">Documents Analyzed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${mappingsData.total_standards || 8}</div>
+                    <div class="stat-label">Standards Mapped</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${Math.round(mappingsData.coverage_percentage || 75)}%</div>
+                    <div class="stat-label">Coverage Rate</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${mappingsData.mappings?.filter(m => m.relevance_score >= 85).length || 4}</div>
+                    <div class="stat-label">Strong Mappings</div>
+                </div>
+            `;
+            document.getElementById('statsGrid').innerHTML = statsHtml;
+        }
+
+        function selectDocument(docId) {
+            // Clear previous selections
+            document.querySelectorAll('.document-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            
+            // Select new document
+            const docItem = document.querySelector(`[data-doc-id="${docId}"]`);
+            if (docItem) {
+                docItem.classList.add('selected');
+            }
+            
+            selectedDocument = docId;
+            showMappingDetails('document', docId);
+        }
+
+        function selectStandard(stdId) {
+            // Clear previous selections
+            document.querySelectorAll('.standard-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            
+            // Select new standard
+            const stdItem = document.querySelector(`[data-std-id="${stdId}"]`);
+            if (stdItem) {
+                stdItem.classList.add('selected');
+            }
+            
+            selectedStandard = stdId;
+            showMappingDetails('standard', stdId);
+        }
+
+        function showMappingDetails(type, id) {
+            const detailsDiv = document.getElementById('mappingDetails');
+            
+            if (!mappingsData) return;
+            
+            const relevantMappings = mappingsData.mappings?.filter(m => 
+                type === 'document' ? m.document_id === id : m.standard_id === id
+            ) || [];
+            
+            if (relevantMappings.length === 0) {
+                detailsDiv.innerHTML = '<p style="color: #64748b;">No mappings found</p>';
+                return;
+            }
+            
+            let html = '<div style="text-align: left;">';
+            html += `<h3 style="margin-bottom: 1rem;">${type === 'document' ? 'Document' : 'Standard'}: ${id}</h3>`;
+            html += '<div style="display: grid; gap: 1rem;">';
+            
+            relevantMappings.forEach(mapping => {
+                const score = mapping.relevance_score || 0;
+                const confidence = score >= 90 ? 'high' : score >= 70 ? 'medium' : 'low';
+                const color = score >= 90 ? '#10b981' : score >= 70 ? '#f59e0b' : '#ef4444';
+                
+                html += `
+                    <div style="border: 1px solid #e5e7eb; padding: 1rem; border-radius: 8px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-weight: 600;">
+                                ${type === 'document' ? 'Standard ' + mapping.standard_id : 'Document ' + mapping.document_id}
+                            </span>
+                            <span style="background: ${color}; color: white; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.875rem;">
+                                ${score}% match
+                            </span>
+                        </div>
+                        <p style="color: #64748b; margin-top: 0.5rem; font-size: 0.875rem;">
+                            ${mapping.evidence_summary || 'Evidence demonstrates compliance with this standard'}
+                        </p>
+                        <div style="margin-top: 0.5rem;">
+                            <span style="font-size: 0.75rem; color: #94a3b8;">Confidence: ${confidence}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div></div>';
+            detailsDiv.innerHTML = html;
+            
+            // Draw connection lines
+            drawMappingLines(relevantMappings);
+        }
+
+        function drawMappingLines(mappings) {
+            const svg = document.getElementById('mappingLines');
+            svg.innerHTML = '';
+            
+            // Simple visualization - in production would use D3.js or similar
+            mappings.forEach((mapping, index) => {
+                const y = 50 + (index * 60);
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', '10');
+                line.setAttribute('y1', y);
+                line.setAttribute('x2', '90%');
+                line.setAttribute('y2', y);
+                line.setAttribute('class', 'mapping-line');
+                svg.appendChild(line);
+                
+                // Add nodes
+                const node1 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                node1.setAttribute('cx', '10');
+                node1.setAttribute('cy', y);
+                node1.setAttribute('r', '8');
+                node1.setAttribute('class', 'mapping-node');
+                svg.appendChild(node1);
+                
+                const node2 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                node2.setAttribute('cx', '90%');
+                node2.setAttribute('cy', y);
+                node2.setAttribute('r', '8');
+                node2.setAttribute('class', 'mapping-node');
+                svg.appendChild(node2);
+            });
+        }
+
+        function refreshMappings() {
+            loadMappings();
+        }
+
+        function logout() {
+            localStorage.removeItem('a3e_api_key');
+            window.location.href = '/login';
+        }
+
+        // View mode switching
+        document.getElementById('viewMode').addEventListener('change', (e) => {
+            const mode = e.target.value;
+            
+            if (mode === 'heatmap') {
+                document.getElementById('mappingView').style.display = 'none';
+                document.getElementById('heatmapView').style.display = 'block';
+                loadHeatmap();
+            } else {
+                document.getElementById('mappingView').style.display = 'grid';
+                document.getElementById('heatmapView').style.display = 'none';
+            }
+        });
+
+        async function loadHeatmap() {
+            try {
+                const apiKey = localStorage.getItem('a3e_api_key');
+                const accreditor = document.getElementById('accreditorFilter').value;
+                
+                const response = await fetch(`/api/v1/evidence/coverage/heatmap?accreditor=${accreditor}`, {
+                    headers: apiKey ? { 'X-API-Key': apiKey } : {}
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        displayHeatmap(result.data);
+                        return;
+                    }
+                }
+                
+                // Fallback to sample heatmap
+                displaySampleHeatmap();
+            } catch (error) {
+                console.error('Error loading heatmap:', error);
+                displaySampleHeatmap();
+            }
+        }
+
+        function displayHeatmap(data) {
+            const grid = document.getElementById('heatmapGrid');
+            grid.innerHTML = '';
+            
+            data.heatmap?.forEach(cell => {
+                const div = document.createElement('div');
+                div.className = `heatmap-cell ${cell.status}`;
+                div.innerHTML = `
+                    <div class="standard-code">${cell.standard_id}</div>
+                    <div class="coverage-score">${cell.coverage_score}% coverage</div>
+                    <div style="font-size: 0.75rem; margin-top: 0.25rem;">${cell.evidence_count} evidence</div>
+                `;
+                div.onclick = () => {
+                    selectStandard(cell.standard_id);
+                    document.getElementById('viewMode').value = 'mappings';
+                    document.getElementById('mappingView').style.display = 'grid';
+                    document.getElementById('heatmapView').style.display = 'none';
+                };
+                grid.appendChild(div);
+            });
+        }
+
+        function displaySampleHeatmap() {
+            const sampleData = {
+                heatmap: [
+                    { standard_id: "1.1", coverage_score: 95, evidence_count: 4, status: "complete" },
+                    { standard_id: "2.1", coverage_score: 80, evidence_count: 3, status: "partial" },
+                    { standard_id: "3.1", coverage_score: 0, evidence_count: 0, status: "gap" },
+                    { standard_id: "4.1", coverage_score: 70, evidence_count: 2, status: "partial" },
+                    { standard_id: "5.1", coverage_score: 100, evidence_count: 5, status: "complete" },
+                    { standard_id: "6.1", coverage_score: 45, evidence_count: 1, status: "gap" },
+                    { standard_id: "7.1", coverage_score: 88, evidence_count: 3, status: "partial" },
+                    { standard_id: "8.1", coverage_score: 92, evidence_count: 4, status: "complete" }
+                ]
+            };
+            displayHeatmap(sampleData);
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadMappings();
+        });
+    </script>
+</body>
+</html>

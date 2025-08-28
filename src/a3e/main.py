@@ -164,6 +164,20 @@ except ImportError as e:
     upload_router_available = False
     _upload_import_exception = e
 
+try:
+    from .api.routes.evidence_mappings import router as evidence_mappings_router
+    evidence_mappings_router_available = True
+except ImportError as e:
+    evidence_mappings_router_available = False
+    _evidence_mappings_import_exception = e
+
+try:
+    from .api.routes.analytics import router as analytics_router
+    analytics_router_available = True
+except ImportError as e:
+    analytics_router_available = False
+    _analytics_import_exception = e
+
 # Logging already configured at top of file
 
 # Optional strict asset enforcement (set STRICT_FRONTEND_ASSETS=1 to fail startup if missing)
@@ -512,6 +526,18 @@ if upload_router_available:
     logger.info("✅ Upload router loaded")
 else:
     logger.warning("⚠️ Upload router not available")
+
+if evidence_mappings_router_available:
+    app.include_router(evidence_mappings_router)
+    logger.info("✅ Evidence mappings router loaded")
+else:
+    logger.warning("⚠️ Evidence mappings router not available")
+
+if analytics_router_available:
+    app.include_router(analytics_router)
+    logger.info("✅ Analytics router loaded")
+else:
+    logger.warning("⚠️ Analytics router not available")
 
 # Include database-powered routers (production-ready)
 try:

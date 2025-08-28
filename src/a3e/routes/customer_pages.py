@@ -155,6 +155,11 @@ async def reports_page():
     """Reports page"""
     return serve_html_file("reports.html")
 
+@router.get("/evidence-mapping", response_class=HTMLResponse, include_in_schema=False)
+async def evidence_mapping_page():
+    """Evidence mapping visualization page"""
+    return serve_html_file("evidence-mapping.html")
+
 @router.get("/services", response_class=HTMLResponse, include_in_schema=False) 
 async def services_page():
     """Services page"""
