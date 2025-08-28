@@ -721,6 +721,37 @@ async def health_check():
             }
         )
 
+# TEMPORARY: Admin endpoint to clear users (REMOVE AFTER USE)
+@app.post("/admin/clear-users")
+async def clear_users_admin(confirm: str = ""):
+    """TEMPORARY endpoint to clear all users from database"""
+    if confirm != "DELETE_ALL_USERS":
+        return {"error": "Must provide confirm='DELETE_ALL_USERS' parameter"}
+    
+    try:
+        if db_service:
+            # Use the database service to clear users
+            from .database.connection import db_manager
+            async with db_manager.get_session() as session:
+                # Get count first
+                from sqlalchemy import text
+                result = await session.execute(text("SELECT COUNT(*) FROM users"))
+                count = result.scalar()
+                
+                # Delete all users
+                await session.execute(text("DELETE FROM users"))
+                await session.commit()
+                
+                return {
+                    "success": True,
+                    "message": f"Deleted {count} users",
+                    "warning": "REMEMBER TO REMOVE THIS ENDPOINT"
+                }
+        else:
+            return {"error": "Database service not available"}
+    except Exception as e:
+        return {"error": f"Failed to clear users: {str(e)}"}
+
 try:
     from .routes.customer_pages import router as customer_pages_router
     app.include_router(customer_pages_router)
