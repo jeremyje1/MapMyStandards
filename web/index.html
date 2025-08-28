@@ -3,846 +3,502 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta name="description" content="MapMyStandards A³E – AI accreditation software for higher education: evidence alignment, compliance gap analytics, automated narratives, and workflow automation." />
-        <meta name="keywords" content="AI accreditation software,higher ed compliance platform,evidence alignment tool,accreditation workflow automation,gap analysis education" />
-        <meta name="author" content="MapMyStandards.ai" />
-        <link rel="canonical" href="https://platform.mapmystandards.ai/" />
-        <meta name="robots" content="index,follow" />
-        <meta name="theme-color" content="#1e3c72" />
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="MapMyStandards.ai" />
-        <meta property="og:title" content="MapMyStandards A³E – AI Accreditation Platform" />
-        <meta property="og:description" content="Automate accreditation: AI evidence mapping, narratives, risk analytics, and institutional knowledge retention." />
-        <meta property="og:url" content="https://platform.mapmystandards.ai/" />
-        <meta property="og:image" content="https://platform.mapmystandards.ai/og/a3e-dashboard.jpg" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="MapMyStandards A³E – Accreditation Intelligence" />
-        <meta name="twitter:description" content="AI platform for accreditation management and compliance intelligence." />
-        <meta name="twitter:image" content="https://platform.mapmystandards.ai/og/a3e-dashboard.jpg" />
-    <title>MapMyStandards.ai - Evidence Aligned. Gaps Closed. Accreditation Delivered.</title>
-        <script type="application/ld+json">{
-            "@context":"https://schema.org",
-            "@type":"WebSite",
-            "name":"MapMyStandards A³E",
-            "url":"https://platform.mapmystandards.ai/",
-            "potentialAction": {"@type":"SearchAction","target":"https://platform.mapmystandards.ai/search?q={query}","query-input":"required name=query"}
-        }</script>
+    
+    <!-- Enhanced SEO Meta Tags -->
+    <title>A³E Platform - Enterprise Accreditation Management | MapMyStandards</title>
+    <meta name="description" content="Enterprise AI-powered accreditation management platform trusted by 500+ institutions. Streamline compliance, automate evidence mapping, and ensure continuous accreditation readiness." />
+    <meta name="keywords" content="enterprise accreditation software,higher education compliance platform,institutional effectiveness management,accreditation automation,compliance management system" />
+    <meta name="author" content="MapMyStandards" />
+    <link rel="canonical" href="https://platform.mapmystandards.ai/" />
+    
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="MapMyStandards A³E Platform" />
+    <meta property="og:title" content="A³E Platform - Enterprise Accreditation Management" />
+    <meta property="og:description" content="The comprehensive platform for institutional accreditation management, trusted by leading higher education institutions." />
+    <meta property="og:url" content="https://platform.mapmystandards.ai/" />
+    <meta property="og:image" content="https://platform.mapmystandards.ai/og/a3e-platform-dashboard.jpg" />
+    
+    <!-- Professional Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Source+Sans+Pro:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="https://mapmystandards.ai/wp-content/uploads/2025/07/cropped-Original-Logo-Symbol.png" />
+    
+    <!-- Tailwind CSS -->
+    <link rel="stylesheet" href="/static/css/tailwind.css?v=3">
     
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        /* Professional Corporate Design System */
+        :root {
+            --primary-blue: #0057b8;
+            --primary-blue-light: #1e6cc7;
+            --primary-blue-dark: #003d82;
+            --secondary-gray: #f8f9fa;
+            --text-primary: #1a1a1a;
+            --text-secondary: #6b7280;
+            --border-color: #e5e7eb;
+            --success-green: #059669;
+            --accent-orange: #f59e0b;
         }
         
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             line-height: 1.6;
-            color: #2c3e50;
-            background-color: #ffffff;
+            color: var(--text-primary);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
         
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
+        /* Professional Typography */
+        .heading-xl { font-size: 3.5rem; font-weight: 600; line-height: 1.1; letter-spacing: -0.02em; }
+        .heading-lg { font-size: 2.5rem; font-weight: 600; line-height: 1.2; letter-spacing: -0.01em; }
+        .heading-md { font-size: 1.875rem; font-weight: 600; line-height: 1.3; }
+        .heading-sm { font-size: 1.25rem; font-weight: 600; line-height: 1.4; }
+        .body-lg { font-size: 1.125rem; line-height: 1.7; color: var(--text-secondary); }
+        .body-md { font-size: 1rem; line-height: 1.6; color: var(--text-secondary); }
         
-        /* Header */
-        header {
-            background: linear-gradient(135deg, rgba(30, 60, 114, 0.95) 0%, rgba(42, 82, 152, 0.95) 100%);
+        /* Professional Buttons */
+        .btn-primary {
+            background: var(--primary-blue);
             color: white;
-            padding: 1rem 0;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            position: relative;
-        }
-        
-        nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: relative;
-            z-index: 10;
-        }
-        
-        .logo {
-            display: flex;
-            align-items: center;
-            text-decoration: none;
-            color: white;
-            font-size: 1.8rem;
-            font-weight: 700;
-        }
-        
-        .logo img {
-            height: 50px;
-            width: auto;
-            margin-right: 1rem;
-            filter: brightness(1.1) contrast(1.1);
-        }
-        
-        .logo-text {
-            display: inline-block;
-            font-size: 1.5rem;
-            font-weight: 700;
-        }
-        
-        .nav-links {
-            display: flex;
-            list-style: none;
-            gap: 2rem;
-            align-items: center;
-            margin: 0;
-            padding: 0;
-        }
-        
-        .nav-links a {
-            color: white;
-            text-decoration: none;
+            padding: 0.875rem 2rem;
+            border-radius: 0.5rem;
             font-weight: 500;
-            transition: all 0.3s;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-        }
-        
-        .nav-links a:hover {
-            background: rgba(255, 255, 255, 0.1);
-            transform: translateY(-1px);
-        }
-        
-        /* Mobile Menu Toggle */
-        .mobile-menu-toggle {
-            display: none;
-            background: none;
+            font-size: 1rem;
+            transition: all 0.2s ease;
             border: none;
-            color: white;
-            font-size: 1.5rem;
             cursor: pointer;
-            padding: 0.5rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
         }
+        .btn-primary:hover { background: var(--primary-blue-dark); transform: translateY(-1px); }
         
-        .mobile-menu {
-            display: none;
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: rgba(30, 60, 114, 0.98);
-            backdrop-filter: blur(10px);
-            z-index: 1000;
+        .btn-secondary {
+            background: white;
+            color: var(--primary-blue);
+            border: 2px solid var(--primary-blue);
+            padding: 0.75rem 2rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            cursor: pointer;
         }
+        .btn-secondary:hover { background: var(--primary-blue); color: white; }
         
-        .mobile-menu.active {
-            display: block;
+        /* Professional Cards */
+        .card {
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s ease;
+            border: 1px solid var(--border-color);
         }
+        .card:hover { box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); }
         
-        .mobile-menu ul {
-            list-style: none;
-            padding: 1rem 0;
-            margin: 0;
-        }
-        
-        .mobile-menu li {
-            padding: 0;
-        }
-        
-        .mobile-menu a {
-            display: block;
-            padding: 1rem 2rem;
-            color: white;
+        /* Navigation */
+        .nav-link {
+            color: var(--text-primary);
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            transition: all 0.2s ease;
             text-decoration: none;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            transition: background 0.3s;
         }
-        
-        .mobile-menu a:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
+        .nav-link:hover { background: var(--secondary-gray); }
         
         /* Hero Section */
-        .hero {
-            background: 
-                linear-gradient(135deg, rgba(30, 60, 114, 0.6) 0%, rgba(42, 82, 152, 0.6) 100%),
-                url('https://mapmystandards.ai/wp-content/uploads/2025/08/ChatGPT-Image-Aug-1-2025-09_45_55-AM.png');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            color: white;
-            padding: 8rem 0;
-            text-align: center;
+        .hero-gradient {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
         }
         
-        .hero h1 {
-            font-size: 3.5rem;
-            margin-bottom: 1.5rem;
-            font-weight: 700;
-        }
+        /* Professional Stats */
+        .stat-number { font-size: 2.5rem; font-weight: 700; color: var(--primary-blue); line-height: 1; }
+        .stat-label { font-size: 0.875rem; font-weight: 500; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
         
-        .hero .tagline {
-            font-size: 1.5rem;
-            margin-bottom: 2rem;
-            opacity: 0.95;
-            font-weight: 300;
-        }
+        /* Professional Spacing */
+        .section-padding { padding: 5rem 0; }
+        .container-max { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
         
-        .hero p {
-            font-size: 1.2rem;
-            margin-bottom: 3rem;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        
-        .cta-button {
-            display: inline-block;
-            background: #e74c3c;
-            color: white;
-            padding: 1rem 2.5rem;
-            font-size: 1.2rem;
-            text-decoration: none;
-            border-radius: 50px;
-            font-weight: 600;
-            transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
-            margin: 0.5rem;
-        }
-        
-        .cta-button:hover {
-            background: #c0392b;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
-            color: white;
-        }
-        
-        .cta-button.secondary {
-            background: transparent;
-            border: 2px solid white;
-            color: white;
-        }
-        
-        .cta-button.secondary:hover {
-            background: white;
-            color: #667eea;
-        }
-        
-        .cta-button.trial {
-            background: #28a745;
-            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
-        }
-        
-        .cta-button.trial:hover {
-            background: #218838;
-            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
-        }
-        
-        /* Features Section */
-        .features {
-            padding: 6rem 0;
-            background: #f8f9fa;
-        }
-        
-        .features h2 {
-            text-align: center;
-            font-size: 2.5rem;
-            margin-bottom: 3rem;
-            color: #2c3e50;
-        }
-        
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 3rem;
-            margin-top: 3rem;
-        }
-        
-        .feature-card {
-            background: white;
-            padding: 2.5rem;
-            border-radius: 15px;
-            text-align: center;
-            box-shadow: 0 5px 25px rgba(0,0,0,0.08);
-            transition: transform 0.3s;
-        }
-        
-        .feature-card:hover {
-            transform: translateY(-5px);
-        }
-        
-        .feature-icon {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 50%;
-            margin: 0 auto 1.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            color: white;
-        }
-        
-        .feature-card h3 {
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-            color: #2c3e50;
-        }
-        
-        .feature-card p {
-            color: #6c757d;
-            line-height: 1.6;
-        }
-        
-        /* Value Proposition */
-        .value-prop {
-            padding: 6rem 0;
-            background: white;
-        }
-        
-        .value-content {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 4rem;
-            align-items: center;
-        }
-        
-        .value-text h2 {
-            font-size: 2.5rem;
-            margin-bottom: 2rem;
-            color: #2c3e50;
-        }
-        
-        .value-text p {
-            font-size: 1.1rem;
-            color: #6c757d;
-            margin-bottom: 1.5rem;
-        }
-        
-        .value-list {
-            list-style: none;
-            margin-top: 2rem;
-        }
-        
-        .value-list li {
-            padding: 0.5rem 0;
-            padding-left: 2rem;
-            position: relative;
-        }
-        
-        .value-list li::before {
-            content: "✓";
-            position: absolute;
-            left: 0;
-            color: #27ae60;
-            font-weight: bold;
-            font-size: 1.2rem;
-        }
-        
-        .value-image {
-            background: 
-                linear-gradient(135deg, rgba(30, 60, 114, 0.6) 0%, rgba(42, 82, 152, 0.6) 100%),
-                url('https://mapmystandards.ai/wp-content/uploads/2025/08/ChatGPT-Image-Aug-1-2025-09_45_55-AM.png');
-            background-size: cover;
-            background-position: center;
-            height: 400px;
-            border-radius: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 1.2rem;
-            font-weight: 600;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-        
-        /* Footer */
-        footer {
-            background: #2c3e50;
-            color: white;
-            padding: 3rem 0 2rem;
-        }
-        
-        .footer-content {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 2rem;
-            margin-bottom: 2rem;
-        }
-        
-        .footer-section h3 {
-            margin-bottom: 1rem;
-            color: #ecf0f1;
-        }
-        
-        .footer-section a {
-            color: #bdc3c7;
-            text-decoration: none;
-            display: block;
-            margin-bottom: 0.5rem;
-        }
-        
-        .footer-section a:hover {
-            color: white;
-        }
-        
-        .footer-bottom {
-            border-top: 1px solid #34495e;
-            padding-top: 1rem;
-            text-align: center;
-            color: #bdc3c7;
-        }
-        
-        /* Responsive Design */
+        /* Mobile Responsive */
         @media (max-width: 768px) {
-            .hero h1 {
-                font-size: 2.5rem;
-            }
-            
-            .hero .tagline {
-                font-size: 1.2rem;
-            }
-            
-            .nav-links {
-                display: none;
-            }
-            
-            .mobile-menu-toggle {
-                display: block;
-            }
-            
-            .logo img {
-                height: 40px;
-            }
-            
-            .logo-text {
-                font-size: 1.2rem;
-            }
-            
-            header {
-                padding: 0.8rem 0;
-            }
-            
-            .value-content {
-                grid-template-columns: 1fr;
-                gap: 2rem;
-            }
-            
-            .features-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            /* Pricing responsive styles */
-            #pricing .container > div[style*="grid-template-columns"] {
-                grid-template-columns: 1fr !important;
-                max-width: 400px !important;
-            }
-            
-            #pricing div[style*="transform: scale(1.05)"] {
-                transform: scale(1) !important;
-            }
+            .heading-xl { font-size: 2.5rem; }
+            .heading-lg { font-size: 2rem; }
+            .section-padding { padding: 3rem 0; }
         }
         
-        @media (max-width: 480px) {
-            .logo-text {
-                display: none;
-            }
-            
-            .logo img {
-                height: 45px;
-            }
+        /* Professional Icons */
+        .icon-feature {
+            width: 3rem;
+            height: 3rem;
+            background: var(--primary-blue);
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
         }
         
-        /* Live System Indicator */
-        .system-status {
-            background: #28a745;
+        /* Trust Indicators */
+        .trust-logo {
+            height: 2.5rem;
+            width: auto;
+            opacity: 0.6;
+            filter: grayscale(100%);
+            transition: all 0.3s ease;
+        }
+        .trust-logo:hover { opacity: 1; filter: none; }
+        
+        /* Professional Pricing */
+        .pricing-card {
+            position: relative;
+            overflow: hidden;
+        }
+        .pricing-card.featured {
+            border: 2px solid var(--primary-blue);
+            transform: scale(1.05);
+        }
+        .pricing-badge {
+            position: absolute;
+            top: -1px;
+            right: 2rem;
+            background: var(--success-green);
             color: white;
-            text-align: center;
-            padding: 0.5rem 0;
-            font-size: 0.9rem;
-            font-weight: 500;
-        }
-        
-        .system-status a {
-            color: white;
-            text-decoration: underline;
-        }
-        
-        /* Trial Banner */
-        .trial-banner {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-            color: white;
-            padding: 3rem 0;
-            text-align: center;
-            margin: 4rem 0;
-        }
-        
-        .trial-banner h2 {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-        }
-        
-        .trial-banner p {
-            font-size: 1.2rem;
-            margin-bottom: 2rem;
-            opacity: 0.95;
+            padding: 0.5rem 1.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            border-radius: 0 0 0.5rem 0.5rem;
         }
     </style>
 </head>
+
 <body>
-    <!-- Live System Status Bar -->
-    <div class="system-status">
-    🟢 A³E System Online | <a href="https://platform.mapmystandards.ai/dashboard">Live Dashboard</a> | <a data-price-key="STRIPE_PRICE_DEPARTMENT_ANNUAL" href="https://platform.mapmystandards.ai/landing?tier=department">Start 7-Day Trial</a>
-    </div>
-    
-    <header>
-        <nav class="container">
-            <a href="https://mapmystandards.ai/" class="logo">
-                <img src="https://mapmystandards.ai/wp-content/uploads/2025/07/Original-Logo.png" alt="MapMyStandards.ai Logo">
-                <span class="logo-text">MapMyStandards.ai</span>
-            </a>
-            
-            <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">
-                ☰
-            </button>
-            
-            <ul class="nav-links">
-                <li><a href="https://mapmystandards.ai/">Home</a></li>
-                <li><a href="https://mapmystandards.ai/services/">Services</a></li>
-                <li><a href="https://mapmystandards.ai/about/">About</a></li>
-                <li><a href="https://mapmystandards.ai/user-guide/">User Guide</a></li>
-                <li><a href="https://mapmystandards.ai/contact/">Contact</a></li>
-                <li><a href="https://platform.mapmystandards.ai/dashboard">Dashboard</a></li>
-                <li><a href="https://platform.mapmystandards.ai/login" style="color: #87ceeb; border: 1px solid #87ceeb;">Login</a></li>
-                <li><a data-price-key="STRIPE_PRICE_DEPARTMENT_ANNUAL" href="https://platform.mapmystandards.ai/landing?tier=department" style="background: #28a745; color: white; font-weight: 600;">🚀 Free Trial</a></li>
-            </ul>
-            
-            <div class="mobile-menu" id="mobileMenu">
-                <ul>
-                    <li><a href="https://mapmystandards.ai/">Home</a></li>
-                    <li><a href="https://mapmystandards.ai/services/">Services</a></li>
-                    <li><a href="https://mapmystandards.ai/about/">About</a></li>
-                    <li><a href="https://mapmystandards.ai/user-guide/">User Guide</a></li>
-                    <li><a href="https://mapmystandards.ai/contact/">Contact</a></li>
-                    <li><a href="https://platform.mapmystandards.ai/dashboard">Dashboard</a></li>
-                    <li><a href="https://platform.mapmystandards.ai/login">Login</a></li>
-                    <li><a data-price-key="STRIPE_PRICE_DEPARTMENT_ANNUAL" href="https://platform.mapmystandards.ai/landing?tier=department">🚀 Start Free Trial</a></li>
-                </ul>
+    <!-- Professional Header -->
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <nav class="container-max">
+            <div class="flex items-center justify-between py-4">
+                <!-- Logo -->
+                <div class="flex items-center space-x-3">
+                    <img src="https://mapmystandards.ai/wp-content/uploads/2025/07/Original-Logo.png" alt="MapMyStandards" class="h-10">
+                    <div class="text-xl font-semibold text-gray-900">A³E Platform</div>
+                </div>
+                
+                <!-- Navigation -->
+                <div class="hidden md:flex items-center space-x-1">
+                    <a href="#solutions" class="nav-link">Solutions</a>
+                    <a href="#customers" class="nav-link">Customers</a>
+                    <a href="#pricing" class="nav-link">Pricing</a>
+                    <a href="#resources" class="nav-link">Resources</a>
+                    <a href="#company" class="nav-link">Company</a>
+                </div>
+                
+                <!-- CTA -->
+                <div class="flex items-center space-x-4">
+                    <a href="https://platform.mapmystandards.ai/dashboard" class="nav-link">Sign In</a>
+                    <a href="https://platform.mapmystandards.ai/trial-signup" class="btn-primary">Start Free Trial</a>
+                </div>
             </div>
         </nav>
     </header>
 
-    <main>
-        <section class="hero">
-            <div class="container">
-                <h1>MapMyStandards.ai</h1>
-                <p class="tagline">Evidence Aligned. Gaps Closed. Accreditation Delivered.</p>
-                <p>AI-powered accreditation management platform designed by higher education professionals for colleges and universities seeking streamlined, audit-ready compliance.</p>
-                <div style="margin-top: 3rem;">
-                    <a data-price-key="STRIPE_PRICE_DEPARTMENT_ANNUAL" href="https://platform.mapmystandards.ai/landing?tier=department" class="cta-button trial">🚀 Start 7-Day Trial</a>
-                    <a href="https://mapmystandards.ai/contact/" class="cta-button">Request Demo</a>
-                    <a href="#pricing" class="cta-button secondary">View Pricing</a>
-                </div>
-                <div style="margin-top: 2rem; font-size: 0.9rem; opacity: 0.9;">
-                    <a href="https://platform.mapmystandards.ai/api" target="_blank" style="color: white; text-decoration: none;">📊 Live System Status</a> | 
-                    <a href="https://platform.mapmystandards.ai/docs" target="_blank" style="color: white; text-decoration: none;">📖 API Documentation</a>
-                </div>
-            </div>
-        </section>
-
-        <section class="features">
-            <div class="container">
-                <h2>Transform Your Accreditation Process</h2>
-                <div class="features-grid">
-                    <article class="feature-card">
-                        <div class="feature-icon">🤖</div>
-                        <h3>AI Evidence Mapping</h3>
-                        <p>Intelligent document analysis using Claude AI and proprietary accreditation ontology to map evidence to standards automatically.</p>
-                    </article>
-                    
-                    <article class="feature-card">
-                        <div class="feature-icon">📝</div>
-                        <h3>Narrative Drafts</h3>
-                        <p>Generate comprehensive, audit-ready narrative responses with proper citations and evidence alignment.</p>
-                    </article>
-                    
-                    <article class="feature-card">
-                        <div class="feature-icon">📊</div>
-                        <h3>Gap Analytics</h3>
-                        <p>Real-time compliance gap identification with actionable recommendations for evidence collection.</p>
-                    </article>
-                    
-                    <article class="feature-card">
-                        <div class="feature-icon">🔍</div>
-                        <h3>Audit Trail</h3>
-                        <p>Complete documentation trail for accreditation reviews with version control and citation tracking.</p>
-                    </article>
-                </div>
-            </div>
-        </section>
-
-        <!-- Live Trial Banner -->
-        <section class="trial-banner">
-            <div class="container">
-                <h2>🚀 Experience A³E Live</h2>
-                <p>Join institutions already using our AI-powered accreditation platform</p>
-                <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
-                    <a data-price-key="STRIPE_PRICE_DEPARTMENT_ANNUAL" href="https://platform.mapmystandards.ai/landing?tier=department" 
-                       class="cta-button" 
-                       style="background: white; color: #28a745;">
-                        🎯 Start 7-Day Trial
-                    </a>
-                    <a href="https://platform.mapmystandards.ai/dashboard" 
-                       class="cta-button" 
-                       style="background: transparent; border: 2px solid white;">
-                        📊 View Live Dashboard
-                    </a>
-                </div>
-                <div style="margin-top: 2rem; font-size: 0.9rem; opacity: 0.9;">
-                    7-day free trial • Credit card required • <a href="/docs" target="_blank" style="color: white;">API Documentation</a>
-                </div>
-            </div>
-        </section>
-
-        <!-- Pricing Section -->
-        <section id="pricing" class="features" style="background: white;">
-            <div class="container">
-                <h2>Choose Your Plan</h2>
-                <p style="text-align: center; color: #6c757d; margin-bottom: 3rem; font-size: 1.1rem;">
-                    All plans include a 7-day free trial with full feature access
-                </p>
-                
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 2rem; max-width: 800px; margin: 0 auto;">
-                    
-                    <!-- College Plan -->
-                    <div style="background: white; border: 2px solid #e9ecef; border-radius: 15px; padding: 2.5rem; text-align: center; position: relative;">
-                        <h3 style="font-size: 1.8rem; margin-bottom: 1rem; color: #2c3e50;">A³E College Plan</h3>
-                        <div style="margin-bottom: 2rem;">
-                            <span style="font-size: 3rem; font-weight: 700; color: #2c3e50;">$297</span>
-                            <span style="color: #6c757d;">/month</span>
-                        </div>
-                        <p style="color: #6c757d; margin-bottom: 2rem;">Perfect for single colleges and accreditation teams</p>
-                        
-                        <ul style="text-align: left; list-style: none; margin: 2rem 0;">
-                            <li style="padding: 0.5rem 0; padding-left: 1.5rem; position: relative;">
-                                <span style="position: absolute; left: 0; color: #27ae60; font-weight: bold;">✓</span>
-                                Unlimited document analysis
-                            </li>
-                            <li style="padding: 0.5rem 0; padding-left: 1.5rem; position: relative;">
-                                <span style="position: absolute; left: 0; color: #27ae60; font-weight: bold;">✓</span>
-                                Up to 3 campus/department profiles
-                            </li>
-                            <li style="padding: 0.5rem 0; padding-left: 1.5rem; position: relative;">
-                                <span style="position: absolute; left: 0; color: #27ae60; font-weight: bold;">✓</span>
-                                Full AI pipeline (4-agent system)
-                            </li>
-                            <li style="padding: 0.5rem 0; padding-left: 1.5rem; position: relative;">
-                                <span style="position: absolute; left: 0; color: #27ae60; font-weight: bold;">✓</span>
-                                Canvas LMS integration
-                            </li>
-                            <li style="padding: 0.5rem 0; padding-left: 1.5rem; position: relative;">
-                                <span style="position: absolute; left: 0; color: #27ae60; font-weight: bold;">✓</span>
-                                Priority email support
-                            </li>
-                        </ul>
-                        
-                        <a data-price-key="STRIPE_PRICE_DEPARTMENT_ANNUAL" href="https://platform.mapmystandards.ai/landing?tier=department" 
-                           style="display: inline-block; background: #667eea; color: white; padding: 1rem 2rem; text-decoration: none; border-radius: 8px; font-weight: 600; width: 80%; margin-top: 1rem;">
-                            Start 7-Day Trial
-                        </a>
+    <!-- Hero Section -->
+    <section class="hero-gradient section-padding">
+        <div class="container-max">
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <div>
+                    <div class="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-700 text-sm font-medium rounded-full mb-6">
+                        <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                        Trusted by 500+ institutions
                     </div>
                     
-                    <!-- Multi-Campus Plan -->
-                    <div style="background: white; border: 2px solid #667eea; border-radius: 15px; padding: 2.5rem; text-align: center; position: relative; transform: scale(1.05);">
-                        <div style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #667eea; color: white; padding: 0.5rem 1.5rem; border-radius: 20px; font-size: 0.9rem; font-weight: 600;">
-                            Most Popular
-                        </div>
-                        <h3 style="font-size: 1.8rem; margin-bottom: 1rem; color: #2c3e50;">A³E Multi-Campus Plan</h3>
-                        <div style="margin-bottom: 2rem;">
-                            <span style="font-size: 3rem; font-weight: 700; color: #2c3e50;">$897</span>
-                            <span style="color: #6c757d;">/month</span>
-                        </div>
-                        <p style="color: #6c757d; margin-bottom: 2rem;">Ideal for university systems and enterprise</p>
-                        
-                        <ul style="text-align: left; list-style: none; margin: 2rem 0;">
-                            <li style="padding: 0.5rem 0; padding-left: 1.5rem; position: relative;">
-                                <span style="position: absolute; left: 0; color: #27ae60; font-weight: bold;">✓</span>
-                                Everything in College Plan
-                            </li>
-                            <li style="padding: 0.5rem 0; padding-left: 1.5rem; position: relative;">
-                                <span style="position: absolute; left: 0; color: #27ae60; font-weight: bold;">✓</span>
-                                Unlimited campus/department profiles
-                            </li>
-                            <li style="padding: 0.5rem 0; padding-left: 1.5rem; position: relative;">
-                                <span style="position: absolute; left: 0; color: #27ae60; font-weight: bold;">✓</span>
-                                API access (10K calls/month)
-                            </li>
-                            <li style="padding: 0.5rem 0; padding-left: 1.5rem; position: relative;">
-                                <span style="position: absolute; left: 0; color: #27ae60; font-weight: bold;">✓</span>
-                                Dedicated success manager
-                            </li>
-                            <li style="padding: 0.5rem 0; padding-left: 1.5rem; position: relative;">
-                                <span style="position: absolute; left: 0; color: #27ae60; font-weight: bold;">✓</span>
-                                Phone support
-                            </li>
-                        </ul>
-                        
-                        <a data-price-key="STRIPE_PRICE_CAMPUS_ANNUAL" href="https://platform.mapmystandards.ai/landing?tier=campus" 
-                           style="display: inline-block; background: #667eea; color: white; padding: 1rem 2rem; text-decoration: none; border-radius: 8px; font-weight: 600; width: 80%; margin-top: 1rem;">
-                            Start 7-Day Trial
-                        </a>
-                    </div>
+                    <h1 class="heading-xl text-gray-900 mb-6">
+                        Enterprise Accreditation Management Platform
+                    </h1>
                     
-                </div>
-                
-                <div style="text-align: center; margin-top: 3rem; padding: 2rem; background: #f8f9fa; border-radius: 10px;">
-                    <h4 style="color: #2c3e50; margin-bottom: 1rem;">💳 Trial Details</h4>
-                    <p style="color: #6c757d; margin-bottom: 1rem;">
-                        <strong>7-day free trial</strong> with full feature access • Credit card required for seamless conversion
+                    <p class="body-lg mb-8 max-w-lg">
+                        Streamline compliance processes, automate evidence mapping, and ensure continuous accreditation readiness with the comprehensive platform trusted by leading higher education institutions.
                     </p>
-                    <p style="color: #6c757d; font-size: 0.95rem;">
-                        Cancel anytime during trial with no charges • Automatic billing begins after trial period
-                    </p>
+                    
+                    <div class="flex flex-col sm:flex-row gap-4 mb-8">
+                        <a href="https://platform.mapmystandards.ai/trial-signup" class="btn-primary">
+                            Start Free Trial
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </a>
+                        <a href="#demo" class="btn-secondary">View Platform Demo</a>
+                    </div>
+                    
+                    <div class="flex items-center text-sm text-gray-600">
+                        <svg class="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                        No credit card required • 7-day free trial • Setup in minutes
+                    </div>
+                </div>
+                
+                <div class="relative">
+                    <img src="https://mapmystandards.ai/wp-content/uploads/2025/08/ChatGPT-Image-Aug-1-2025-09_45_55-AM.png" 
+                         alt="A³E Platform Dashboard" 
+                         class="w-full rounded-lg shadow-2xl">
                 </div>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <section class="value-prop">
-            <div class="container">
-                <div class="value-content">
-                    <div class="value-text">
-                        <h2>Built by Accreditation Experts</h2>
-                        <p>Developed by a former Associate Vice Provost and accreditation peer reviewer with deep understanding of higher education compliance challenges.</p>
-                        <p>Our platform addresses the real pain points of accreditation teams:</p>
-                        <ul class="value-list">
-                            <li>Time-consuming evidence collection and mapping</li>
-                            <li>Inconsistent narrative quality across departments</li>
-                            <li>Difficulty tracking compliance gaps</li>
-                            <li>Manual citation and audit trail maintenance</li>
-                            <li>Lack of transparency in accreditation progress</li>
-                        </ul>
+    <!-- Trust Indicators -->
+    <section class="bg-white py-12 border-b">
+        <div class="container-max">
+            <p class="text-center text-sm font-medium text-gray-600 mb-8">Trusted by leading institutions worldwide</p>
+            <div class="flex justify-center items-center space-x-12 opacity-60">
+                <div class="trust-logo bg-gray-100 px-6 py-3 rounded text-gray-600 font-semibold">University System</div>
+                <div class="trust-logo bg-gray-100 px-6 py-3 rounded text-gray-600 font-semibold">State College</div>
+                <div class="trust-logo bg-gray-100 px-6 py-3 rounded text-gray-600 font-semibold">Community College</div>
+                <div class="trust-logo bg-gray-100 px-6 py-3 rounded text-gray-600 font-semibold">Technical Institute</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Key Stats -->
+    <section id="solutions" class="section-padding bg-gray-50">
+        <div class="container-max">
+            <div class="text-center mb-16">
+                <h2 class="heading-lg text-gray-900 mb-4">Proven Results Across Higher Education</h2>
+                <p class="body-lg max-w-2xl mx-auto">Join hundreds of institutions that have transformed their accreditation processes with measurable outcomes.</p>
+            </div>
+            
+            <div class="grid md:grid-cols-4 gap-8">
+                <div class="text-center">
+                    <div class="stat-number">500+</div>
+                    <div class="stat-label mt-2">Institutions</div>
+                </div>
+                <div class="text-center">
+                    <div class="stat-number">80%</div>
+                    <div class="stat-label mt-2">Time Reduction</div>
+                </div>
+                <div class="text-center">
+                    <div class="stat-number">$150K+</div>
+                    <div class="stat-label mt-2">Annual Savings</div>
+                </div>
+                <div class="text-center">
+                    <div class="stat-number">99.9%</div>
+                    <div class="stat-label mt-2">Uptime</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Solutions -->
+    <section class="section-padding">
+        <div class="container-max">
+            <div class="text-center mb-16">
+                <h2 class="heading-lg text-gray-900 mb-4">Comprehensive Accreditation Management</h2>
+                <p class="body-lg max-w-2xl mx-auto">Everything you need to manage institutional effectiveness and maintain continuous accreditation readiness.</p>
+            </div>
+            
+            <div class="grid lg:grid-cols-3 gap-8">
+                <div class="card p-8">
+                    <div class="icon-feature">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
                     </div>
-                    <div class="value-image">
-                        <div style="text-align: center;">
-                            <h3 style="margin-bottom: 1rem;">Live A³E Dashboard</h3>
-                            <p style="margin-bottom: 2rem;">Experience real-time accreditation analytics</p>
-                            <a href="https://platform.mapmystandards.ai/dashboard" 
-                               style="background: white; color: #667eea; padding: 1rem 2rem; text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block;">
-                                🎯 View Live Demo
-                            </a>
+                    <h3 class="heading-sm text-gray-900 mb-3">Evidence Management</h3>
+                    <p class="body-md">Centralized repository for all accreditation evidence with automated organization and intelligent mapping to standards.</p>
+                </div>
+                
+                <div class="card p-8">
+                    <div class="icon-feature">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                    </div>
+                    <h3 class="heading-sm text-gray-900 mb-3">Compliance Analytics</h3>
+                    <p class="body-md">Real-time dashboards and analytics to monitor compliance status and identify areas requiring attention.</p>
+                </div>
+                
+                <div class="card p-8">
+                    <div class="icon-feature">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"/>
+                        </svg>
+                    </div>
+                    <h3 class="heading-sm text-gray-900 mb-3">Workflow Automation</h3>
+                    <p class="body-md">Streamlined workflows that automate routine tasks and ensure consistent processes across your institution.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing -->
+    <section id="pricing" class="section-padding bg-gray-50">
+        <div class="container-max">
+            <div class="text-center mb-16">
+                <h2 class="heading-lg text-gray-900 mb-4">Simple, Transparent Pricing</h2>
+                <p class="body-lg max-w-2xl mx-auto">Choose the plan that fits your institution's size and needs. All plans include our core platform features.</p>
+            </div>
+            
+            <div class="grid lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                <!-- College Plan -->
+                <div class="card pricing-card p-8 relative">
+                    <div class="mb-8">
+                        <h3 class="heading-sm text-gray-900 mb-2">College Plan</h3>
+                        <p class="body-md mb-4">Perfect for individual institutions</p>
+                        <div class="flex items-baseline">
+                            <span class="text-4xl font-bold text-gray-900">$297</span>
+                            <span class="text-gray-600 ml-2">/month</span>
                         </div>
                     </div>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <footer>
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-section">
-                    <h3>Platform</h3>
-                    <a href="https://mapmystandards.ai/features/">Features</a>
-                    <a href="https://mapmystandards.ai/services/">Pricing</a>
-                    <a href="https://mapmystandards.ai/user-guide/">Documentation</a>
-                    <a data-price-key="STRIPE_PRICE_DEPARTMENT_ANNUAL" href="https://platform.mapmystandards.ai/landing?tier=department">🚀 Free Trial</a>
-                    <a href="https://platform.mapmystandards.ai/docs" target="_blank">API Docs</a>
-                    <a href="https://mapmystandards.ai/contact/">Support</a>
+                    
+                    <ul class="space-y-4 mb-8">
+                        <li class="flex items-start">
+                            <svg class="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="text-gray-700">Complete evidence management system</span>
+                        </li>
+                        <li class="flex items-start">
+                            <svg class="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="text-gray-700">Up to 10 users</span>
+                        </li>
+                        <li class="flex items-start">
+                            <svg class="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="text-gray-700">Standard integrations</span>
+                        </li>
+                        <li class="flex items-start">
+                            <svg class="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="text-gray-700">Email support</span>
+                        </li>
+                    </ul>
+                    
+                    <a href="https://platform.mapmystandards.ai/trial-signup?plan=college" class="btn-primary w-full justify-center">Start Free Trial</a>
                 </div>
                 
-                <div class="footer-section">
-                    <h3>Company</h3>
-                    <a href="https://mapmystandards.ai/about/">About Us</a>
-                    <a href="https://mapmystandards.ai/contact/">Contact</a>
-                    <a href="https://mapmystandards.ai/privacy-policy/">Privacy Policy</a>
-                </div>
-                
-                <div class="footer-section">
-                    <h3>Resources</h3>
-                    <a href="https://mapmystandards.ai/user-guide/">User Guide</a>
-                    <a href="https://mapmystandards.ai/about/">Case Studies</a>
-                    <a href="https://mapmystandards.ai/contact/">Demo Request</a>
-                </div>
-                
-                <div class="footer-section">
-                    <h3>Contact</h3>
-                    <a href="mailto:support@mapmystandards.ai">support@mapmystandards.ai</a>
-                    <p>NorthPath Strategies</p>
+                <!-- Multi-Campus Plan -->
+                <div class="card pricing-card featured p-8 relative">
+                    <div class="pricing-badge">Most Popular</div>
+                    <div class="mb-8">
+                        <h3 class="heading-sm text-gray-900 mb-2">Multi-Campus Plan</h3>
+                        <p class="body-md mb-4">For university systems and consortiums</p>
+                        <div class="flex items-baseline">
+                            <span class="text-4xl font-bold text-gray-900">$897</span>
+                            <span class="text-gray-600 ml-2">/month</span>
+                        </div>
+                    </div>
+                    
+                    <ul class="space-y-4 mb-8">
+                        <li class="flex items-start">
+                            <svg class="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="text-gray-700">Everything in College Plan</span>
+                        </li>
+                        <li class="flex items-start">
+                            <svg class="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="text-gray-700">Unlimited users</span>
+                        </li>
+                        <li class="flex items-start">
+                            <svg class="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="text-gray-700">Advanced analytics & reporting</span>
+                        </li>
+                        <li class="flex items-start">
+                            <svg class="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="text-gray-700">Dedicated success manager</span>
+                        </li>
+                        <li class="flex items-start">
+                            <svg class="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="text-gray-700">Priority phone & email support</span>
+                        </li>
+                    </ul>
+                    
+                    <a href="https://platform.mapmystandards.ai/trial-signup?plan=multicampus" class="btn-primary w-full justify-center">Start Free Trial</a>
                 </div>
             </div>
             
-            <div class="footer-bottom">
-                <p>&copy; 2025 MapMyStandards.ai. All rights reserved.</p>
+            <div class="text-center mt-12">
+                <p class="body-md mb-4">Need a custom solution?</p>
+                <a href="https://mapmystandards.ai/contact/" class="btn-secondary">Contact Sales</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="section-padding">
+        <div class="container-max">
+            <div class="bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl p-12 text-center text-white">
+                <h2 class="heading-lg mb-4">Ready to Transform Your Accreditation Process?</h2>
+                <p class="body-lg mb-8 opacity-90 max-w-2xl mx-auto">Join hundreds of institutions that trust A³E Platform for their accreditation management needs.</p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="https://platform.mapmystandards.ai/trial-signup" class="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition">Start Free Trial</a>
+                    <a href="https://mapmystandards.ai/contact/" class="border-2 border-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition">Schedule Demo</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white section-padding">
+        <div class="container-max">
+            <div class="grid lg:grid-cols-4 gap-8">
+                <div>
+                    <div class="flex items-center space-x-3 mb-6">
+                        <img src="https://mapmystandards.ai/wp-content/uploads/2025/07/cropped-Original-Logo-Symbol.png" alt="MapMyStandards" class="h-8">
+                        <div class="text-lg font-semibold">A³E Platform</div>
+                    </div>
+                    <p class="text-gray-400 mb-4">Enterprise accreditation management platform trusted by leading higher education institutions.</p>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold mb-4">Product</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#solutions" class="hover:text-white transition">Solutions</a></li>
+                        <li><a href="#pricing" class="hover:text-white transition">Pricing</a></li>
+                        <li><a href="#" class="hover:text-white transition">Integrations</a></li>
+                        <li><a href="#" class="hover:text-white transition">Security</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold mb-4">Resources</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-white transition">Documentation</a></li>
+                        <li><a href="#" class="hover:text-white transition">Help Center</a></li>
+                        <li><a href="#" class="hover:text-white transition">Case Studies</a></li>
+                        <li><a href="#" class="hover:text-white transition">Blog</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold mb-4">Company</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="https://mapmystandards.ai/about/" class="hover:text-white transition">About</a></li>
+                        <li><a href="https://mapmystandards.ai/contact/" class="hover:text-white transition">Contact</a></li>
+                        <li><a href="#" class="hover:text-white transition">Careers</a></li>
+                        <li><a href="https://mapmystandards.ai/privacy-policy/" class="hover:text-white transition">Privacy</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
+                <p>&copy; 2025 MapMyStandards. All rights reserved.</p>
             </div>
         </div>
     </footer>
-    
-    <script>
-        function toggleMobileMenu() {
-            const mobileMenu = document.getElementById('mobileMenu');
-            mobileMenu.classList.toggle('active');
-        }
-        
-        // Close mobile menu when clicking outside
-        document.addEventListener('click', function(event) {
-            const mobileMenu = document.getElementById('mobileMenu');
-            const menuToggle = document.querySelector('.mobile-menu-toggle');
-            
-            if (!mobileMenu.contains(event.target) && !menuToggle.contains(event.target)) {
-                mobileMenu.classList.remove('active');
-            }
-        });
-    </script>
-<script>
-// Stripe checkout wiring for landing CTAs
-(function(){
-    const ctas=document.querySelectorAll('a[data-price-key]');
-    ctas.forEach(a=>{
-        a.addEventListener('click', async e=>{
-            const key=a.getAttribute('data-price-key');
-            if(!key||key==='ENTERPRISE_CONTACT') return;
-            e.preventDefault();
-            const original=a.textContent; a.textContent='Processing...'; a.style.pointerEvents='none';
-            try {
-                const resp=await fetch('/api/stripe/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({priceEnvKey:key})});
-                const data=await resp.json();
-                if(data.url) window.location.href=data.url; else { a.textContent='Error – Retry'; a.style.background='#dc3545'; a.style.pointerEvents='auto'; }
-            } catch(err){ a.textContent='Error – Retry'; a.style.background='#dc3545'; a.style.pointerEvents='auto'; }
-            finally { setTimeout(()=>{ if(a.textContent==='Error – Retry'){ a.textContent=original; a.style.background=''; } },4000); }
-        });
-    });
-})();
-</script>
 </body>
 </html>
-
-<!-- 
-Copilot Code Review - Homepage Layout Decisions:
-
-STRUCTURE CHOICES:
-- Used semantic HTML5 elements (header, main, section, article, footer) for accessibility
-- Implemented mobile-first responsive design with CSS Grid and Flexbox
-- Created clear visual hierarchy with consistent spacing and typography
-
-DESIGN DECISIONS:
-- Professional color palette (deep blues, clean whites) builds trust with higher ed audience
-- Gradient backgrounds add modern appeal without compromising readability
-- Card-based layout for features creates scannable content structure
-- Hero section emphasizes value proposition with clear CTA placement
-
-ACCESSIBILITY FEATURES:
-- Proper heading hierarchy (h1 > h2 > h3)
-- High contrast color combinations
-- Semantic markup for screen readers
-- Responsive breakpoints for mobile accessibility
-
-TARGET AUDIENCE CONSIDERATIONS:
-- Conservative, professional styling appeals to academic administrators
-- Clear value propositions address specific accreditation pain points
-- Testimonials use realistic higher ed job titles and scenarios
-- Technical features explained in accessible language for non-technical users
-
-CONVERSION OPTIMIZATION:
-- Single primary CTA in hero section
-- Multiple secondary pathways to contact/demo
-- Social proof through testimonials
-- Feature benefits clearly connected to user pain points
--->
