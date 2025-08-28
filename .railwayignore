@@ -14,10 +14,6 @@ pages/
 styles/
 
 dockerfiles_backup/
-*.dockerfile
-Dockerfile*
-docker-compose*
-.dockerignore
 
 # Ignore other API files to ensure only saas_api_safe.py is used
 railway_test_api.py
