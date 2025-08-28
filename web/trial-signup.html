@@ -431,6 +431,27 @@
             gap: 1rem;
         }
         
+        /* Stripe Elements */
+        .stripe-element {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
+            transition: all 0.2s;
+        }
+        
+        .stripe-element:focus-within {
+            border-color: #1e40af;
+            box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+        }
+        
+        .stripe-error {
+            color: #ef4444;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
+        
         /* Hide on mobile by default, show on desktop if needed */
         @media (min-width: 640px) {
             .container {
@@ -525,10 +546,56 @@
                 </div>
             </div>
 
-            <!-- Step 2: Plan Selection -->
+            <!-- Step 2: Payment Information -->
             <div class="form-section" data-section="2">
                 <div class="step-header">
-                    <div class="step-number">Step 2 of 3</div>
+                    <div class="step-number">Step 2 of 4</div>
+                    <h1 class="step-title">Payment Information</h1>
+                    <p class="step-subtitle">We'll collect payment after your free trial ends</p>
+                </div>
+                
+                <div class="benefits">
+                    <div class="benefits-title">Free Trial Benefits</div>
+                    <div class="benefit-item">
+                        <div class="benefit-icon"></div>
+                        <span>7 days completely free</span>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="benefit-icon"></div>
+                        <span>No charges until trial ends</span>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="benefit-icon"></div>
+                        <span>Cancel anytime during trial</span>
+                    </div>
+                </div>
+                
+                <!-- Stripe Elements Form -->
+                <div class="form-group">
+                    <label for="card-element" class="form-label">Card Information</label>
+                    <div id="card-element" class="stripe-element">
+                        <!-- A Stripe Element will be inserted here. -->
+                    </div>
+                    <!-- Used to display form errors. -->
+                    <div id="card-errors" role="alert" class="stripe-error"></div>
+                </div>
+                
+                <div class="form-grid form-grid-2">
+                    <div class="form-group">
+                        <label for="cardholder_name" class="form-label">Cardholder Name</label>
+                        <input type="text" id="cardholder_name" name="cardholder_name" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="billing_zip" class="form-label">Billing ZIP</label>
+                        <input type="text" id="billing_zip" name="billing_zip" class="form-input" required>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Plan Selection -->
+            <div class="form-section" data-section="3">
+                <div class="step-header">
+                    <div class="step-number">Step 3 of 4</div>
                     <h1 class="step-title">Choose Your Plan</h1>
                     <p class="step-subtitle">Select the plan that fits your institution</p>
                 </div>
@@ -705,12 +772,19 @@
                 throw new Error('Stripe not initialized');
             }
             
+            const cardholderName = document.getElementById('cardholder_name').value;
+            const billingZip = document.getElementById('billing_zip').value;
+            const email = document.getElementById('email').value;
+            
             const {error, paymentMethod} = await stripe.createPaymentMethod({
                 type: 'card',
                 card: cardElement,
                 billing_details: {
-                    email: document.getElementById('email').value,
-                    name: document.getElementById('name').value,
+                    email: email,
+                    name: cardholderName,
+                    address: {
+                        postal_code: billingZip
+                    }
                 },
             });
             
@@ -777,9 +851,11 @@
             }
             
             if (step === 2) {
-                const selectedPlan = document.querySelector('input[name="plan"]:checked');
-                if (!selectedPlan) {
-                    showAlert('Please select a plan.', 'error');
+                // Validate payment information and create payment method
+                try {
+                    paymentMethodId = await createPaymentMethod();
+                } catch (error) {
+                    showAlert(error.message || 'Please check your payment information.', 'error');
                     return false;
                 }
             }
@@ -800,6 +876,14 @@
                     showAlert(error.message || 'Please check your card information.', 'error');
                     nextBtn.disabled = false;
                     nextBtn.innerHTML = 'Continue';
+                    return false;
+                }
+            }
+            
+            if (step === 3) {
+                const selectedPlan = document.querySelector('input[name="plan"]:checked');
+                if (!selectedPlan) {
+                    showAlert('Please select a plan.', 'error');
                     return false;
                 }
             }
@@ -884,9 +968,22 @@
             submitBtn.innerHTML = '<span class="spinner"></span>Creating your trial...';
             
             try {
-                console.log('Submitting trial signup with data:', data);
+                // Add payment method ID to submission data
+                if (!paymentMethodId) {
+                    showAlert('Payment method not configured. Please go back and verify your payment information.', 'error');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = 'Start Free Trial';
+                    return;
+                }
                 
-                const response = await fetch('/api/trial/signup', {
+                data.payment_method_id = paymentMethodId;
+                
+                console.log('Submitting trial signup with data:', {
+                    ...data,
+                    payment_method_id: paymentMethodId.substring(0, 10) + '...'
+                });
+                
+                const response = await fetch('/api/v1/billing/trial/signup', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
