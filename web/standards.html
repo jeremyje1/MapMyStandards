@@ -336,11 +336,16 @@
         // Load accreditors on page load
         async function loadAccreditors() {
             try {
-                const response = await fetch('/api/standards/accreditors');
+                const response = await fetch('/api/v1/standards/accreditors');
                 const data = await response.json();
                 
-                if (data.success) {
-                    accreditors = data.data.accreditors;
+                // The API returns an array directly, not wrapped in success/data
+                if (Array.isArray(data)) {
+                    accreditors = data;
+                    populateAccreditorSelect();
+                    showAccreditorSelection();
+                } else if (data.success) {
+                    accreditors = data.data.accreditors || data.data || [];
                     populateAccreditorSelect();
                     showAccreditorSelection();
                 } else {
@@ -363,8 +368,11 @@
             
             accreditors.forEach(acc => {
                 const option = document.createElement('option');
-                option.value = acc.id;
-                option.textContent = `${acc.name} (${acc.acronym})`;
+                // Handle different possible field names from API
+                option.value = acc.accreditor_id || acc.id || acc.acronym;
+                const name = acc.accreditor_name || acc.name || 'Unknown';
+                const acronym = acc.accreditor_acronym || acc.acronym || '';
+                option.textContent = acronym ? `${name} (${acronym})` : name;
                 select.appendChild(option);
             });
         }

@@ -730,6 +730,14 @@ try:
 except ImportError as e:
     logger.warning(f"⚠️ Customer pages router not available: {e}")
 
+# Import and include reports implementation router
+try:
+    from .api.routes.reports_impl import router as reports_impl_router
+    app.include_router(reports_impl_router)
+    logger.info("✅ Reports implementation router loaded")
+except ImportError as e:
+    logger.warning(f"⚠️ Reports implementation router not available: {e}")
+
 # Import and include tier router
 try:
     from src.a3e.api.routes.tier import router as tier_router
