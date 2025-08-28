@@ -721,10 +721,10 @@ async def health_check():
             }
         )
 
-# TEMPORARY: Debug endpoint to check payment service errors
+# TEMPORARY: Debug endpoint to check payment service errors v2
 @app.get("/debug/payment-errors")
 async def get_payment_debug():
-    """TEMPORARY endpoint to debug payment service errors"""
+    """TEMPORARY endpoint to debug payment service errors v2"""
     try:
         from .services.payment_service import PaymentService
         import os
