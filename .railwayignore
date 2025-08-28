@@ -1,3 +1,18 @@
+# Ignore Next.js frontend files - Railway should deploy FastAPI backend only
+package.json
+package-lock.json
+next.config.js
+tsconfig.json
+tailwind.config.js
+postcss.config.js
+src/
+public/
+.next/
+node_modules/
+components/
+pages/
+styles/
+
 dockerfiles_backup/
 *.dockerfile
 Dockerfile*
