@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Stripe Integration</title>
+    <script src="https://js.stripe.com/v3/"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .form-group { margin: 20px 0; }
+        .form-input, .stripe-element { 
+            padding: 10px; 
+            border: 1px solid #ccc; 
+            border-radius: 4px; 
+            width: 300px;
+        }
+        .btn { 
+            background: #1e40af; 
+            color: white; 
+            padding: 12px 20px; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+        }
+        .btn:disabled { background: #ccc; }
+        .result { 
+            margin: 20px 0; 
+            padding: 15px; 
+            border-radius: 4px; 
+            white-space: pre-wrap;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>Stripe Integration Debug Tool</h1>
+    
+    <div class="form-group">
+        <label>Email:</label>
+        <input type="email" id="email" class="form-input" value="debug@example.com">
+    </div>
+    
+    <div class="form-group">
+        <label>Card Information:</label>
+        <div id="card-element" class="stripe-element"></div>
+        <div id="card-errors" style="color: red; margin-top: 5px;"></div>
+    </div>
+    
+    <div class="form-group">
+        <button id="test-payment-method" class="btn">1. Test Create Payment Method</button>
+        <button id="test-trial-signup" class="btn" disabled>2. Test Trial Signup</button>
+    </div>
+    
+    <div id="results"></div>
+
+    <script>
+        let stripe;
+        let elements;
+        let cardElement;
+        let paymentMethodId = null;
+        
+        async function initStripe() {
+            try {
+                // Get publishable key from API
+                const response = await fetch('https://api.mapmystandards.ai/api/v1/billing/config/stripe-key');
+                const data = await response.json();
+                
+                if (data.publishable_key) {
+                    stripe = Stripe(data.publishable_key);
+                    elements = stripe.elements();
+                    
+                    cardElement = elements.create('card', {
+                        style: {
+                            base: {
+                                fontSize: '16px',
+                                color: '#1e293b',
+                                '::placeholder': { color: '#94a3b8' }
+                            }
+                        }
+                    });
+                    
+                    cardElement.mount('#card-element');
+                    
+                    cardElement.addEventListener('change', ({error}) => {
+                        const displayError = document.getElementById('card-errors');
+                        if (error) {
+                            displayError.textContent = error.message;
+                        } else {
+                            displayError.textContent = '';
+                        }
+                    });
+                    
+                    log('✅ Stripe initialized with key: ' + data.publishable_key.substring(0, 20) + '...', 'success');
+                } else {
+                    throw new Error('No publishable key received');
+                }
+            } catch (error) {
+                log('❌ Failed to initialize Stripe: ' + error.message, 'error');
+            }
+        }
+        
+        async function testPaymentMethod() {
+            if (!stripe || !cardElement) {
+                log('❌ Stripe not initialized', 'error');
+                return;
+            }
+            
+            log('Creating payment method...', '');
+            
+            try {
+                const {error, paymentMethod} = await stripe.createPaymentMethod({
+                    type: 'card',
+                    card: cardElement,
+                    billing_details: {
+                        email: document.getElementById('email').value
+                    }
+                });
+                
+                if (error) {
+                    log('❌ Payment method creation failed: ' + error.message, 'error');
+                } else {
+                    paymentMethodId = paymentMethod.id;
+                    log('✅ Payment method created: ' + paymentMethod.id, 'success');
+                    log('Payment method details: ' + JSON.stringify(paymentMethod, null, 2), '');
+                    document.getElementById('test-trial-signup').disabled = false;
+                }
+            } catch (error) {
+                log('❌ Error: ' + error.message, 'error');
+            }
+        }
+        
+        async function testTrialSignup() {
+            if (!paymentMethodId) {
+                log('❌ No payment method ID available', 'error');
+                return;
+            }
+            
+            log('Testing trial signup API...', '');
+            
+            const testData = {
+                name: "Debug Test User",
+                institution_name: "Debug University",
+                email: document.getElementById('email').value,
+                password: "debugpass123",
+                role: "administrator", 
+                plan: "college_monthly",
+                payment_method_id: paymentMethodId,
+                phone: "555-123-4567",
+                newsletter_opt_in: false
+            };
+            
+            try {
+                const response = await fetch('https://api.mapmystandards.ai/api/trial/signup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(testData)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    log('✅ Trial signup successful!', 'success');
+                    log('Response: ' + JSON.stringify(result, null, 2), 'success');
+                } else {
+                    log('❌ Trial signup failed (' + response.status + '): ' + JSON.stringify(result, null, 2), 'error');
+                }
+            } catch (error) {
+                log('❌ Network error: ' + error.message, 'error');
+            }
+        }
+        
+        function log(message, type) {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = 'result ' + (type || '');
+            div.textContent = new Date().toLocaleTimeString() + ' - ' + message;
+            results.appendChild(div);
+            results.scrollTop = results.scrollHeight;
+        }
+        
+        // Event listeners
+        document.getElementById('test-payment-method').addEventListener('click', testPaymentMethod);
+        document.getElementById('test-trial-signup').addEventListener('click', testTrialSignup);
+        
+        // Initialize on load
+        initStripe();
+    </script>
+</body>
+</html>
