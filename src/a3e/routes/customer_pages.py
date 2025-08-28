@@ -153,7 +153,7 @@ async def manual_page():
 async def catch_all(path: str):
     """Catch-all route for undefined pages"""
     # Don't handle API routes, health checks, or other system endpoints
-    if path.startswith(('api/', 'health', 'docs', 'redoc', 'openapi')):
+    if path.startswith(('api/', 'docs', 'redoc', 'openapi')) or path in ('health', 'health/frontend'):
         # Let these fall through to be handled by other routes
         raise HTTPException(status_code=404, detail=f"Not found: {path}")
     
