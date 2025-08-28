@@ -21,12 +21,47 @@ import os.path
 from pathlib import Path
 from datetime import datetime
 
-from .core.config import settings
-from .core.accreditation_registry import ALL_ACCREDITORS, get_accreditors_by_institution_type, get_accreditors_by_state
-from .models import Institution, Evidence, Standard, AgentWorkflow, GapAnalysis
-from .services.database_service import DatabaseService
-from .api import api_router
-from .api.routes.billing import router as billing_router
+# Temporarily comment out problematic imports for debugging
+try:
+    from .core.config import settings
+    logger.info("✅ Config imported successfully")
+except Exception as e:
+    logger.error(f"❌ Config import failed: {e}")
+    raise
+
+try:
+    from .core.accreditation_registry import ALL_ACCREDITORS, get_accreditors_by_institution_type, get_accreditors_by_state
+    logger.info("✅ Accreditation registry imported successfully")
+except Exception as e:
+    logger.error(f"❌ Accreditation registry import failed: {e}")
+    ALL_ACCREDITORS = {}
+
+try:
+    from .models import Institution, Evidence, Standard, AgentWorkflow, GapAnalysis
+    logger.info("✅ Models imported successfully")
+except Exception as e:
+    logger.error(f"❌ Models import failed: {e}")
+
+try:
+    from .services.database_service import DatabaseService
+    logger.info("✅ Database service imported successfully")
+except Exception as e:
+    logger.error(f"❌ Database service import failed: {e}")
+    DatabaseService = None
+
+try:
+    from .api import api_router
+    logger.info("✅ API router imported successfully")
+except Exception as e:
+    logger.error(f"❌ API router import failed: {e}")
+    api_router = None
+
+try:
+    from .api.routes.billing import router as billing_router
+    logger.info("✅ Billing router imported successfully")
+except Exception as e:
+    logger.error(f"❌ Billing router import failed: {e}")
+    billing_router = None
 from pydantic import BaseModel, EmailStr
 try:
     from .api.routes.onboarding import router as onboarding_router
@@ -121,9 +156,16 @@ except ImportError as e:
     upload_router_available = False
     _upload_import_exception = e
 
-# Configure logging
-logging.basicConfig(level=getattr(logging, settings.log_level), format=settings.log_format)
-logger = logging.getLogger(__name__)
+# Configure logging with fallback
+try:
+    logging.basicConfig(level=getattr(logging, settings.log_level), format=settings.log_format)
+    logger = logging.getLogger(__name__)
+    logger.info("✅ Logging configured successfully")
+except Exception as e:
+    # Fallback basic logging
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger(__name__)
+    logger.error(f"❌ Advanced logging config failed, using basic: {e}")
 
 # Optional strict asset enforcement (set STRICT_FRONTEND_ASSETS=1 to fail startup if missing)
 STRICT_FRONTEND_ASSETS = os.getenv("STRICT_FRONTEND_ASSETS", "0").lower() in ("1", "true", "yes")
@@ -528,14 +570,46 @@ except ImportError as e:
     except ImportError as e2:
         logger.error(f"❌ No standards router available: {e2}")
 
-app.include_router(integrations_router)
-app.include_router(proprietary_router)
-app.include_router(billing_router)
+# Include routers with error handling
+try:
+    app.include_router(integrations_router)
+    logger.info("✅ Integrations router included")
+except Exception as e:
+    logger.error(f"❌ Integrations router failed: {e}")
+
+try:
+    app.include_router(proprietary_router)  
+    logger.info("✅ Proprietary router included")
+except Exception as e:
+    logger.error(f"❌ Proprietary router failed: {e}")
+
+if billing_router:
+    try:
+        app.include_router(billing_router)
+        logger.info("✅ Billing router included")
+    except Exception as e:
+        logger.error(f"❌ Billing router failed: {e}")
+
 if _billing_legacy_available:
-    app.include_router(billing_legacy_router)
+    try:
+        app.include_router(billing_legacy_router)
+        logger.info("✅ Billing legacy router included")
+    except Exception as e:
+        logger.error(f"❌ Billing legacy router failed: {e}")
+
 if _onboarding_available:
-    app.include_router(onboarding_router)
-app.include_router(api_router, prefix=settings.api_prefix)
+    try:
+        app.include_router(onboarding_router)
+        logger.info("✅ Onboarding router included")
+    except Exception as e:
+        logger.error(f"❌ Onboarding router failed: {e}")
+
+if api_router:
+    try:
+        app.include_router(api_router, prefix=settings.api_prefix)
+        logger.info("✅ API router included")
+    except Exception as e:
+        logger.error(f"❌ API router failed: {e}")
 
 # Import and include customer pages router
 try:
