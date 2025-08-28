@@ -13,18 +13,14 @@ fi
 
 echo "Starting server on port: $PORT"
 
-# Try launching apps in order of preference
-echo "Attempting to launch main app..."
-if timeout 5s python -c "import src.a3e.main; print('Main app ready')" 2>/dev/null; then
-    echo "✅ Main app imports successfully"
-    exec uvicorn src.a3e.main:app --host 0.0.0.0 --port "$PORT"
-else
-    echo "❌ Main app failed, trying test app..."
-    if python -c "import test_app" 2>/dev/null; then
-        echo "✅ Test app available"
-        exec uvicorn test_app:app --host 0.0.0.0 --port "$PORT"
-    else
-        echo "❌ Test app failed, using minimal recovery app"
-        exec uvicorn minimal_app:app --host 0.0.0.0 --port "$PORT"
-    fi
+# Emergency startup - try simplest apps first
+echo "EMERGENCY MODE: Starting simplest possible app..."
+
+# Emergency app has no dependencies
+if python -c "import emergency_app" 2>/dev/null; then
+    echo "✅ Emergency app starting..."
+    exec uvicorn emergency_app:app --host 0.0.0.0 --port "$PORT"
 fi
+
+echo "❌ All apps failed - this should not happen"
+exit 1
