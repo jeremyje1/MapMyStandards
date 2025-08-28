@@ -121,7 +121,7 @@
                     </div>
                     <h3 class="text-xl font-semibold mb-3">Access Your Dashboard</h3>
                     <p class="text-gray-600 mb-4">Log into your A³E dashboard and explore the interface. Your account is ready to use.</p>
-                    <a href="/dashboard" class="text-blue-600 hover:text-blue-800 font-medium">
+                    <a href="#" onclick="redirectToDashboard(); return false;" class="text-blue-600 hover:text-blue-800 font-medium">
                         Go to Dashboard →
                     </a>
                 </div>
@@ -380,7 +380,8 @@
             
             if (countdown <= 0) {
                 clearInterval(timer);
-                window.location.href = '/onboarding';
+                // Try multiple redirect options in order of preference
+                redirectToDashboard();
             }
         }, 1000);
         
@@ -391,6 +392,40 @@
                                 countdownElement.parentElement.style.display = 'none';
                         }
                 });
+                
+                // Robust redirect function
+                async function redirectToDashboard() {
+                    const redirectUrls = [
+                        '/dashboard',
+                        '/dashboard.html',
+                        '/upload',
+                        '/upload.html',
+                        '/onboarding',
+                        '/onboarding.html',
+                        '/'
+                    ];
+                    
+                    // Try each URL until we find one that works
+                    for (const url of redirectUrls) {
+                        try {
+                            const response = await fetch(url, { method: 'HEAD' });
+                            if (response.ok || response.status === 200) {
+                                console.log(`Redirecting to: ${url}`);
+                                window.location.href = url;
+                                return;
+                            }
+                        } catch (error) {
+                            console.log(`Failed to reach ${url}:`, error);
+                            continue;
+                        }
+                    }
+                    
+                    // If all URLs failed, stay on current page and show message
+                    console.warn('All redirect URLs failed, staying on success page');
+                    if (countdownElement) {
+                        countdownElement.parentElement.innerHTML = '<p class="text-blue-100 text-sm">Dashboard temporarily unavailable. Please use the links below to continue.</p>';
+                    }
+                }
 
                 // API Key copy helper if stored
                 (function addCopyKey(){
