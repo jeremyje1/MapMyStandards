@@ -619,81 +619,7 @@ try:
 except Exception as e:
     logger.warning(f"⚠️ Could not load lightweight upload_api router: {e}")
 
-try:
-    from .routes.customer_pages import router as customer_pages_router
-    app.include_router(customer_pages_router)
-    logger.info("✅ Customer pages router loaded")
-except ImportError as e:
-    logger.warning(f"⚠️ Customer pages router not available: {e}")
-
-# Import and include tier router
-try:
-    from src.a3e.api.routes.tier import router as tier_router
-    app.include_router(tier_router)
-    logger.info("✅ Tier management router loaded")
-except ImportError:
-    logger.warning("⚠️ Tier router not available")
-
-# Root endpoints
-@app.get("/", response_class=HTMLResponse, include_in_schema=False)
-async def root_page(request: Request):
-    """Root marketing page.
-
-    Always try to serve /web/index.html (committed static marketing page).
-    Previously this attempted customer_homepage.html first then a Jinja template
-    which does not exist in templates/, leading to 404s in production. We remove
-    the template dependency to make the root deterministic.
-    """
-    index_file = WEB_DIR / "index.html"
-    if index_file.exists():
-        logger.info("[root] Serving index.html from web directory (%s)", index_file)
-        return FileResponse(str(index_file))
-    # As a last resort, redirect users to the trial signup page
-    logger.warning("[root] index.html missing at %s - redirecting to /trial-signup", index_file)
-    return HTMLResponse("<html><head><meta http-equiv='refresh' content='0; url=/trial-signup'></head><body>Redirecting...</body></html>")
-
-# Lightweight debug endpoint to confirm static asset presence (not in schema)
-@app.get("/debug/static", response_class=JSONResponse, include_in_schema=False)
-async def debug_static():
-    css_path = WEB_DIR / "static" / "css" / "tailwind.css"
-    return {
-        "tailwind_exists": css_path.exists(),
-        "tailwind_size": css_path.stat().st_size if css_path.exists() else None,
-        "web_dir": str(WEB_DIR),
-        "listed_files_sample": sorted([p.name for p in WEB_DIR.glob("*.html")])[:20]
-    }
-
-@app.get("/api", include_in_schema=False)
-async def root_api():
-    """API root endpoint with JSON system overview."""
-    return {
-        "message": "A³E - Autonomous Accreditation & Audit Engine",
-        "version": settings.version,
-        "environment": settings.environment,
-        "proprietary_features": [
-            "Accreditation ontology + embeddings schema",
-            "Vector-weighted standards-matching algorithm", 
-            "Multi-agent LLM pipeline (Mapper → GapFinder → Narrator → Verifier)",
-            "Audit-ready traceability system from LLM output to evidentiary source"
-        ],
-        "supported_accreditors": len(ALL_ACCREDITORS),
-        "endpoints": {
-            "proprietary_analysis": "/api/v1/proprietary/analyze/complete",
-            "evidence_analysis": "/api/v1/proprietary/analyze/evidence",
-            "ontology_insights": "/api/v1/proprietary/ontology/insights",
-            "traceability": "/api/v1/proprietary/traceability/{session_id}",
-            "capabilities": "/api/v1/proprietary/capabilities",
-            "integrations": "/api/v1/integrations/"
-        },
-        "docs_url": "/docs" if settings.is_development else "Documentation available upon request",
-        "status": "operational"
-    }
-
-@app.get("/docs", response_class=HTMLResponse, include_in_schema=False)
-async def custom_swagger_ui_html(request: Request):
-    """Custom Swagger UI with enhanced styling."""
-    return templates.TemplateResponse("docs.html", {"request": request})
-
+# Define health endpoint BEFORE customer_pages router to avoid catch-all interference
 @app.get("/health")
 async def health_check():
     """Comprehensive health/status endpoint with per-service diagnostics.
@@ -794,6 +720,81 @@ async def health_check():
                 "timestamp": datetime.utcnow().isoformat()
             }
         )
+
+try:
+    from .routes.customer_pages import router as customer_pages_router
+    app.include_router(customer_pages_router)
+    logger.info("✅ Customer pages router loaded")
+except ImportError as e:
+    logger.warning(f"⚠️ Customer pages router not available: {e}")
+
+# Import and include tier router
+try:
+    from src.a3e.api.routes.tier import router as tier_router
+    app.include_router(tier_router)
+    logger.info("✅ Tier management router loaded")
+except ImportError:
+    logger.warning("⚠️ Tier router not available")
+
+# Root endpoints
+@app.get("/", response_class=HTMLResponse, include_in_schema=False)
+async def root_page(request: Request):
+    """Root marketing page.
+
+    Always try to serve /web/index.html (committed static marketing page).
+    Previously this attempted customer_homepage.html first then a Jinja template
+    which does not exist in templates/, leading to 404s in production. We remove
+    the template dependency to make the root deterministic.
+    """
+    index_file = WEB_DIR / "index.html"
+    if index_file.exists():
+        logger.info("[root] Serving index.html from web directory (%s)", index_file)
+        return FileResponse(str(index_file))
+    # As a last resort, redirect users to the trial signup page
+    logger.warning("[root] index.html missing at %s - redirecting to /trial-signup", index_file)
+    return HTMLResponse("<html><head><meta http-equiv='refresh' content='0; url=/trial-signup'></head><body>Redirecting...</body></html>")
+
+# Lightweight debug endpoint to confirm static asset presence (not in schema)
+@app.get("/debug/static", response_class=JSONResponse, include_in_schema=False)
+async def debug_static():
+    css_path = WEB_DIR / "static" / "css" / "tailwind.css"
+    return {
+        "tailwind_exists": css_path.exists(),
+        "tailwind_size": css_path.stat().st_size if css_path.exists() else None,
+        "web_dir": str(WEB_DIR),
+        "listed_files_sample": sorted([p.name for p in WEB_DIR.glob("*.html")])[:20]
+    }
+
+@app.get("/api", include_in_schema=False)
+async def root_api():
+    """API root endpoint with JSON system overview."""
+    return {
+        "message": "A³E - Autonomous Accreditation & Audit Engine",
+        "version": settings.version,
+        "environment": settings.environment,
+        "proprietary_features": [
+            "Accreditation ontology + embeddings schema",
+            "Vector-weighted standards-matching algorithm", 
+            "Multi-agent LLM pipeline (Mapper → GapFinder → Narrator → Verifier)",
+            "Audit-ready traceability system from LLM output to evidentiary source"
+        ],
+        "supported_accreditors": len(ALL_ACCREDITORS),
+        "endpoints": {
+            "proprietary_analysis": "/api/v1/proprietary/analyze/complete",
+            "evidence_analysis": "/api/v1/proprietary/analyze/evidence",
+            "ontology_insights": "/api/v1/proprietary/ontology/insights",
+            "traceability": "/api/v1/proprietary/traceability/{session_id}",
+            "capabilities": "/api/v1/proprietary/capabilities",
+            "integrations": "/api/v1/integrations/"
+        },
+        "docs_url": "/docs" if settings.is_development else "Documentation available upon request",
+        "status": "operational"
+    }
+
+@app.get("/docs", response_class=HTMLResponse, include_in_schema=False)
+async def custom_swagger_ui_html(request: Request):
+    """Custom Swagger UI with enhanced styling."""
+    return templates.TemplateResponse("docs.html", {"request": request})
 
 @app.get("/health/frontend")
 async def frontend_health():
