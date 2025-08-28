@@ -44,20 +44,30 @@ def dashboard():
 
 @app.get("/trial-signup")
 @app.get("/trial-signup.html")
-def trial_signup():
-    return HTMLResponse("""
+def trial_signup(plan: str = "college"):
+    plan_name = "Enterprise" if plan == "multicampus" else "Institution"
+    plan_price = "$897/month" if plan == "multicampus" else "$297/month"
+    
+    return HTMLResponse(f"""
     <!DOCTYPE html>
-    <html><head><title>Trial Signup - A³E Platform</title>
-    <meta http-equiv="refresh" content="3; url=trial-success.html"></head>
-    <body style="font-family: -apple-system, sans-serif; text-align: center; padding: 3rem;">
-        <div style="width: 60px; height: 60px; background: #3b82f6; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 2rem;">
-            <span style="color: white; font-size: 1.5rem;">📝</span>
+    <html><head><title>Trial Signup - A³E Platform | {plan_name} Plan</title>
+    <meta http-equiv="refresh" content="5; url=trial-success.html"></head>
+    <body style="font-family: -apple-system, sans-serif; text-align: center; padding: 3rem; background: #f8fafc;">
+        <div style="width: 80px; height: 80px; background: #3b82f6; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 2rem;">
+            <span style="color: white; font-size: 2rem;">🚀</span>
         </div>
-        <h1>A³E Platform Trial Signup</h1>
-        <p>Platform temporarily in maintenance mode.</p>
-        <p>Redirecting you to trial information page...</p>
-        <p><a href="trial-success.html">Continue to Trial Info →</a></p>
-        <script>setTimeout(() => window.location.href = 'trial-success.html', 3000);</script>
+        <h1>A³E Platform - {plan_name} Plan Trial</h1>
+        <div style="background: white; border-radius: 12px; padding: 2rem; max-width: 500px; margin: 2rem auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <h3 style="color: #1e293b; margin-bottom: 1rem;">Selected Plan: {plan_name}</h3>
+            <p style="color: #059669; font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem;">{plan_price}</p>
+            <p style="color: #475569;">Platform restoration in progress...</p>
+        </div>
+        <p style="color: #64748b;">Redirecting you to trial information page...</p>
+        <p><a href="trial-success.html" style="display: inline-block; background: #1e40af; color: white; text-decoration: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600;">Continue to Trial Info →</a></p>
+        <script>
+            localStorage.setItem('selected_plan', '{plan}');
+            setTimeout(() => window.location.href = 'trial-success.html', 5000);
+        </script>
     </body></html>
     """)
 
@@ -106,7 +116,14 @@ def upload():
 
 @app.get("/health")
 def health():
-    return {"status": "emergency_mode", "service": "a3e", "version": "1.1", "routes": ["trial-signup", "dashboard", "upload"]}
+    return {
+        "status": "emergency_mode", 
+        "service": "a3e", 
+        "version": "1.2",
+        "message": "Emergency mode active - platform restoration in progress", 
+        "routes": ["trial-signup", "dashboard", "upload", "trial-success"],
+        "timestamp": "2025-08-28T13:00:00Z"
+    }
 
 if __name__ == "__main__":
     import uvicorn
