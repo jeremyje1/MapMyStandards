@@ -13,14 +13,14 @@ fi
 
 echo "Starting server on port: $PORT"
 
-# Test main app import, fallback to test app if still failing
-echo "Testing main app import..."
-if python -c "import src.a3e.main" 2>/dev/null; then
-    echo "✅ Main app imports successfully, launching main app"
-    echo "Launching: uvicorn src.a3e.main:app --host 0.0.0.0 --port $PORT"
-    exec uvicorn src.a3e.main:app --host 0.0.0.0 --port "$PORT"
+# Try to launch main app first
+echo "Attempting to launch main app directly..."
+if timeout 10s python -c "import src.a3e.main; print('Main app imports OK')" 2>/dev/null; then
+    echo "✅ Main app imports successfully"
+    echo "Launching: uvicorn src.a3e.main:app --host 0.0.0.0 --port $PORT --timeout-keep-alive 5"
+    exec uvicorn src.a3e.main:app --host 0.0.0.0 --port "$PORT" --timeout-keep-alive 5
 else
-    echo "❌ Main app still has import issues, using test app for debugging"
+    echo "❌ Main app import failed or timed out, using test app"
     echo "Launching: uvicorn test_app:app --host 0.0.0.0 --port $PORT"
     exec uvicorn test_app:app --host 0.0.0.0 --port "$PORT"
 fi

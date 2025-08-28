@@ -4,8 +4,7 @@ Minimal test FastAPI app to verify Railway deployment works
 
 import logging
 from fastapi import FastAPI
-from fastapi.responses import HTMLResponse, FileResponse
-import os
+from fastapi.responses import HTMLResponse
 
 # Basic logging
 logging.basicConfig(level=logging.INFO)
@@ -69,32 +68,6 @@ async def dashboard_redirect():
     </html>
     """)
 
-@app.get("/trial-success.html")
-async def trial_success():
-    """Serve trial success page"""
-    try:
-        return FileResponse("/app/web/trial-success.html")
-    except Exception:
-        # Fallback if file not found
-        return HTMLResponse("""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Welcome to A³E Platform</title>
-            <style>
-                body { font-family: -apple-system, sans-serif; text-align: center; padding: 3rem; }
-                .success { color: #10b981; font-size: 3rem; }
-            </style>
-        </head>
-        <body>
-            <div class="success">✅</div>
-            <h1>Welcome to A³E Platform!</h1>
-            <p>Your subscription is active and ready to use.</p>
-            <p>The platform is currently being updated. Please check back in a few minutes.</p>
-            <p><strong>Need help?</strong> Contact <a href="mailto:support@mapmystandards.ai">support@mapmystandards.ai</a></p>
-        </body>
-        </html>
-        """)
 
 @app.get("/debug")
 async def debug_imports():
