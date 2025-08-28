@@ -30,7 +30,7 @@ out/
 test_*email*
 test_*smtp*
 test_*auth*
-*email_test*
+# *email_test*  # Commented out - we need email_test.py
 *smtp_test*
 mailersend.env
 RAILWAY_EMAIL_ENV_VARS.txt
