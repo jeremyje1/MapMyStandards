@@ -548,7 +548,6 @@ async def create_checkout_session(request: CheckoutSessionRequest):
             'success_url': request.success_url,
             'cancel_url': request.cancel_url,
             'billing_address_collection': 'required',
-            'customer_creation': 'always',
             'allow_promotion_codes': True,
         }
         
