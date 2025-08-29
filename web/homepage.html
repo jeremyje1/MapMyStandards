@@ -1078,7 +1078,7 @@
                 <div class="footer-links">
                     <h4>Platform</h4>
                     <ul>
-                        <li><a href="https://buy.stripe.com/test_8x214pcwk68AdeJ4Cc3Je00">Start Free Trial</a></li>
+                        <li><a href="javascript:void(0)" onclick="startCheckout('college_monthly', this)">Start Free Trial</a></li>
                         <li><a href="https://platform.mapmystandards.ai/login">Account Access</a></li>
                         <li><a href="https://platform.mapmystandards.ai/user-guide">User Guide</a></li>
                         <li><a href="mailto:support@mapmystandards.ai">Technical Support</a></li>
@@ -1365,12 +1365,13 @@
                 
                 const plan = planMapping[currentPlan] || 'professional_monthly';
                 
-                // Redirect to trial signup page with pre-filled email
+                // Redirect to professional Stripe checkout
                 const params = new URLSearchParams({
                     email: email,
-                    plan: plan
+                    plan: plan,
+                    institution_name: document.querySelector('input[name="institution_name"]')?.value || ''
                 });
-                window.location.href = `https://platform.mapmystandards.ai/trial-signup.html?${params.toString()}`;
+                window.location.href = `https://platform.mapmystandards.ai/stripe-checkout-redirect.html?${params.toString()}`;
                 return;
             });
             

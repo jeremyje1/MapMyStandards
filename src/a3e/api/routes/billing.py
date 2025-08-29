@@ -56,6 +56,14 @@ class SubscriptionRequest(BaseModel):
     plan: str
     payment_method_id: str
 
+class CheckoutSessionRequest(BaseModel):
+    price_id: str
+    customer_email: Optional[str] = None
+    metadata: Optional[Dict[str, str]] = None
+    trial_period_days: Optional[int] = 7
+    success_url: str
+    cancel_url: str
+
 class PaymentResponse(BaseModel):
     status: str
     message: str
@@ -516,6 +524,58 @@ async def _handle_subscription_cancelled(subscription):
     # Update account status
     logger.info(f"Subscription cancelled for customer {customer_id}")
 
+
+@router.post("/create-checkout-session")
+async def create_checkout_session(request: CheckoutSessionRequest):
+    """Create a Stripe Checkout session for professional checkout experience"""
+    try:
+        import stripe
+        
+        # Build checkout session parameters
+        session_params = {
+            'payment_method_types': ['card'],
+            'line_items': [{
+                'price': request.price_id,
+                'quantity': 1,
+            }],
+            'mode': 'subscription',
+            'success_url': request.success_url,
+            'cancel_url': request.cancel_url,
+            'billing_address_collection': 'required',
+            'customer_creation': 'always',
+            'allow_promotion_codes': True,
+        }
+        
+        # Add trial period if specified
+        if request.trial_period_days and request.trial_period_days > 0:
+            session_params['subscription_data'] = {
+                'trial_period_days': request.trial_period_days
+            }
+        
+        # Add customer email if provided
+        if request.customer_email:
+            session_params['customer_email'] = request.customer_email
+        
+        # Add metadata if provided
+        if request.metadata:
+            session_params.setdefault('subscription_data', {})['metadata'] = request.metadata
+        
+        # Create the checkout session
+        session = stripe.checkout.Session.create(**session_params)
+        
+        logger.info(f"Created checkout session {session.id} for price {request.price_id}")
+        
+        return {
+            "id": session.id,
+            "url": session.url
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to create checkout session: {e}")
+        raise HTTPException(
+            status_code=400,
+            detail={"error": f"Failed to create checkout session: {str(e)}"}
+        )
 
 @router.get("/config/stripe-key", include_in_schema=False)
 async def get_stripe_publishable_key():

@@ -1135,7 +1135,7 @@
 
         // Pre-fill form from URL parameters
         function prefillFromURLParams() {
-            const urlParams = new URLSearchParams(window.location.search);
+            const urlParams = new URLSearchParams(window.location.search);\n            \n            // Handle legacy plan names for backward compatibility\n            let planParam = urlParams.get('plan');\n            if (planParam === 'professional_monthly') planParam = 'college_monthly';\n            if (planParam === 'professional_annual') planParam = 'college_yearly';\n            if (planParam === 'institution_monthly') planParam = 'multicampus_monthly';\n            if (planParam === 'institution_annual') planParam = 'multicampus_yearly';
             
             // Map URL parameters to form fields
             const fieldMappings = {

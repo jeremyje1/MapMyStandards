@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Your Subscription - MapMyStandards</title>
+    <script src="https://js.stripe.com/v3/"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #1a202c;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: #f7fafc;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin: 2rem 0;
+        }
+        .plan-summary {
+            background: #e6fffa;
+            border: 1px solid #38b2ac;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+        .plan-name { font-size: 1.25rem; font-weight: bold; color: #2d3748; }
+        .plan-price { font-size: 2rem; font-weight: bold; color: #38b2ac; margin: 0.5rem 0; }
+        .plan-features { margin: 1rem 0; }
+        .plan-features li { margin: 0.25rem 0; color: #4a5568; }
+        .btn {
+            display: inline-block;
+            background: #3182ce;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .btn:hover { background: #2c5282; }
+        .btn:disabled { background: #a0aec0; cursor: not-allowed; }
+        .loading { display: none; }
+        .error { color: #e53e3e; background: #fed7d7; padding: 1rem; border-radius: 6px; margin: 1rem 0; }
+        .info { color: #2d3748; background: #e2e8f0; padding: 1rem; border-radius: 6px; margin: 1rem 0; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Complete Your Subscription</h1>
+        <p>You're about to start your 7-day free trial. You'll be redirected to Stripe's secure checkout page.</p>
+        
+        <div class="plan-summary" id="planSummary">
+            <div class="plan-name">Loading plan details...</div>
+        </div>
+        
+        <div class="info">
+            <strong>What happens next:</strong>
+            <ol>
+                <li>Secure checkout via Stripe</li>
+                <li>7-day free trial starts immediately</li>
+                <li>Full billing address collected</li>
+                <li>No charges until trial ends</li>
+                <li>Cancel anytime during trial</li>
+            </ol>
+        </div>
+        
+        <button id="checkout-button" class="btn" disabled>
+            <span class="loading">Creating checkout session...</span>
+            <span class="ready">Continue to Stripe Checkout</span>
+        </button>
+        
+        <div id="error-message" class="error" style="display: none;"></div>
+        
+        <p><small>By continuing, you agree to our <a href="/terms">Terms of Service</a> and <a href="/privacy">Privacy Policy</a>.</small></p>
+    </div>
+
+    <script>
+        let stripe;
+        let checkoutButton = document.getElementById('checkout-button');
+        let errorDiv = document.getElementById('error-message');
+        
+        // Plan configurations
+        const planConfigs = {
+            'college_monthly': {
+                name: 'College Monthly',
+                price: '$297',
+                period: 'per month',
+                description: 'Perfect for individual colleges and universities',
+                priceId: 'price_1RyVEORMpSG47vNmYL4DWCYF'
+            },
+            'college_yearly': {
+                name: 'College Annual', 
+                price: '$2,970',
+                period: 'per year',
+                description: 'Save $594 with annual billing',
+                priceId: 'price_1RyVEWRMpSG47vNmiQjLhvqt'
+            },
+            'multicampus_monthly': {
+                name: 'Multi-Campus Monthly',
+                price: '$897', 
+                period: 'per month',
+                description: 'For multi-campus systems and large institutions',
+                priceId: 'price_1RyVElRMpSG47vNmWNWcxCEB'
+            },
+            'multicampus_yearly': {
+                name: 'Multi-Campus Annual',
+                price: '$8,073',
+                period: 'per year', 
+                description: 'Save $1,691 with annual billing',
+                priceId: 'price_1RyVEtRMpSG47vNmyZDQcjUm'
+            },
+            // Legacy plan names for backward compatibility
+            'professional_monthly': {
+                name: 'College Monthly',
+                price: '$297',
+                period: 'per month',
+                description: 'Perfect for individual colleges and universities',
+                priceId: 'price_1RyVEORMpSG47vNmYL4DWCYF'
+            },
+            'professional_annual': {
+                name: 'College Annual',
+                price: '$2,970', 
+                period: 'per year',
+                description: 'Save $594 with annual billing',
+                priceId: 'price_1RyVEWRMpSG47vNmiQjLhvqt'
+            }
+        };
+        
+        async function initialize() {
+            // Get URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const plan = urlParams.get('plan') || 'college_monthly';
+            const email = urlParams.get('email') || '';
+            const institutionName = urlParams.get('institution_name') || '';
+            
+            // Display plan summary
+            const planConfig = planConfigs[plan];
+            if (!planConfig) {
+                showError('Invalid plan selected. Please go back and try again.');
+                return;
+            }
+            
+            document.getElementById('planSummary').innerHTML = `
+                <div class="plan-name">${planConfig.name}</div>
+                <div class="plan-price">${planConfig.price} <small>${planConfig.period}</small></div>
+                <div style="margin-top: 1rem;">${planConfig.description}</div>
+                <ul class="plan-features">
+                    <li>7-day free trial</li>
+                    <li>AI-powered accreditation mapping</li>
+                    <li>Evidence collection tools</li>
+                    <li>Compliance tracking dashboard</li>
+                    <li>24/7 customer support</li>
+                </ul>
+            `;
+            
+            // Initialize Stripe
+            try {
+                const response = await fetch('/api/v1/billing/config/stripe-key');
+                const data = await response.json();
+                
+                if (!data.publishable_key) {
+                    throw new Error('Unable to load payment system');
+                }
+                
+                stripe = Stripe(data.publishable_key);
+                
+                // Enable checkout button
+                checkoutButton.disabled = false;
+                checkoutButton.querySelector('.loading').style.display = 'none';
+                checkoutButton.querySelector('.ready').style.display = 'inline';
+                
+            } catch (error) {
+                showError('Payment system unavailable. Please try again later.');
+                console.error('Stripe initialization error:', error);
+            }
+        }
+        
+        checkoutButton.addEventListener('click', async function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const plan = urlParams.get('plan') || 'college_monthly';
+            const email = urlParams.get('email') || '';
+            const institutionName = urlParams.get('institution_name') || '';
+            
+            const planConfig = planConfigs[plan];
+            if (!planConfig) {
+                showError('Invalid plan selected.');
+                return;
+            }
+            
+            checkoutButton.disabled = true;
+            checkoutButton.querySelector('.loading').style.display = 'inline';
+            checkoutButton.querySelector('.ready').style.display = 'none';
+            
+            try {
+                // Create checkout session
+                const response = await fetch('/api/v1/billing/create-checkout-session', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        price_id: planConfig.priceId,
+                        customer_email: email,
+                        metadata: {
+                            institution_name: institutionName,
+                            plan: plan
+                        },
+                        trial_period_days: 7,
+                        success_url: window.location.origin + '/trial-success?session_id={CHECKOUT_SESSION_ID}',
+                        cancel_url: window.location.href
+                    })
+                });
+                
+                const session = await response.json();
+                
+                if (response.ok && session.url) {
+                    // Redirect to Stripe Checkout
+                    window.location = session.url;
+                } else {
+                    throw new Error(session.error || 'Failed to create checkout session');
+                }
+                
+            } catch (error) {
+                console.error('Checkout error:', error);
+                showError('Unable to start checkout. Please try again.');
+                
+                checkoutButton.disabled = false;
+                checkoutButton.querySelector('.loading').style.display = 'none';  
+                checkoutButton.querySelector('.ready').style.display = 'inline';
+            }
+        });
+        
+        function showError(message) {
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+        
+        // Initialize on page load
+        initialize();
+    </script>
+</body>
+</html>
