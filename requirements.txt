@@ -57,3 +57,10 @@ pytest-cov==4.1.0
 # Production Dependencies
 redis==5.0.1
 celery==5.3.4
+
+# Vector Database & Embeddings
+pinecone==7.3.0
+sentence-transformers==2.2.2
+
+# Agent Orchestrator (Optional)
+# pyautogen==0.2.0  # Uncomment when ready to use agents
