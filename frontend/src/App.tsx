@@ -1,5 +1,5 @@
 import React from 'react';
-// Trigger Railway deployment - nixpacks fix
+// Trigger Railway deployment - npm package fix
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import Login from './components/auth/Login';
