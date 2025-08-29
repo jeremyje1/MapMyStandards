@@ -832,8 +832,15 @@ async def root_page(request: Request):
     if index_file.exists():
         logger.info("[root] Serving index.html from web directory (%s)", index_file)
         return FileResponse(str(index_file))
+    
+    # Try homepage.html as fallback
+    homepage_file = WEB_DIR / "homepage.html"
+    if homepage_file.exists():
+        logger.info("[root] Fallback to homepage.html from web directory (%s)", homepage_file)
+        return FileResponse(str(homepage_file))
+    
     # As a last resort, redirect users to the trial signup page
-    logger.warning("[root] index.html missing at %s - redirecting to /trial-signup", index_file)
+    logger.warning("[root] Both index.html (%s) and homepage.html missing - redirecting to /trial-signup", index_file)
     return HTMLResponse("<html><head><meta http-equiv='refresh' content='0; url=/trial-signup'></head><body>Redirecting...</body></html>")
 
 # Lightweight debug endpoint to confirm static asset presence (not in schema)
