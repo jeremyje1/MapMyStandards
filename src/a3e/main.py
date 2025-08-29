@@ -683,6 +683,22 @@ try:
 except Exception as e:
     logger.warning(f"⚠️ Could not load lightweight upload_api router: {e}")
 
+# Real document processing with AI
+try:
+    from .api.routes.document_processing import router as document_processing_router
+    app.include_router(document_processing_router)
+    logger.info("✅ Document processing router loaded (AI-powered)")
+except Exception as e:
+    logger.warning(f"⚠️ Could not load document processing router: {e}")
+
+# Real report generation
+try:
+    from .api.routes.report_generation import router as report_generation_router
+    app.include_router(report_generation_router)
+    logger.info("✅ Report generation router loaded (real reports)")
+except Exception as e:
+    logger.warning(f"⚠️ Could not load report generation router: {e}")
+
 # Define health endpoint BEFORE customer_pages router to avoid catch-all interference
 @app.get("/health")
 async def health_check():
