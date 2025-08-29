@@ -15,7 +15,7 @@ const StripeCheckout: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const email = searchParams.get('email');
+  // const email = searchParams.get('email'); // Reserved for future use
   const plan = searchParams.get('plan') || 'professional';
   // const trial = searchParams.get('trial') === 'true'; // Reserved for future use
 
