@@ -46,15 +46,25 @@ const StripeCheckout: React.FC = () => {
 
       // Create checkout session via API
       const response = await api.billing.createCheckoutSession(priceId);
-      const { sessionId } = response.data;
+      console.log('Checkout session response:', response.data);
+      const { id: sessionId, url } = response.data;
+
+      if (!sessionId && !url) {
+        throw new Error('Invalid checkout session response - missing session ID and URL');
+      }
 
       // Redirect to Stripe Checkout
-      const { error } = await stripe.redirectToCheckout({
-        sessionId,
-      });
-
-      if (error) {
-        throw error;
+      // Use the session URL if available (newer approach) or sessionId (legacy)
+      if (url) {
+        window.location.href = url;
+      } else {
+        const { error } = await stripe.redirectToCheckout({
+          sessionId,
+        });
+        
+        if (error) {
+          throw error;
+        }
       }
     } catch (err: any) {
       console.error('Checkout error:', err);
