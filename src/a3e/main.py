@@ -127,6 +127,12 @@ try:
     auth_impl_router_available = True
 except ImportError as e:
     auth_impl_router_available = False
+
+try:
+    from .api.routes.narrative_generation import router as narrative_router
+    narrative_router_available = True
+except ImportError as e:
+    narrative_router_available = False
     _auth_impl_import_exception = e
 
 try:
@@ -546,6 +552,12 @@ if auth_complete_router_available:
     logger.info("✅ Auth complete router loaded")
 else:
     logger.warning("⚠️ Auth complete router not available")
+
+if narrative_router_available:
+    app.include_router(narrative_router)
+    logger.info("✅ Narrative generation router loaded")
+else:
+    logger.warning("⚠️ Narrative generation router not available")
 
 if upload_router_available:
     app.include_router(upload_router)
