@@ -1189,8 +1189,17 @@ async def _execute_workflow_background(
 # Web / Marketing Pages
 #############################################
 
-# Resolve absolute path to /web directory (three levels up from this file: src/a3e/main.py -> repo root /web)
-WEB_DIR = (Path(__file__).resolve().parent.parent.parent / "web").resolve()
+# Resolve absolute path to /web directory
+# In Docker/Railway, we're at /app, so web is at /app/web
+# In local dev, we're at src/a3e/main.py, so web is three levels up
+import os
+if os.path.exists("/app/web"):
+    # Production environment (Docker/Railway)
+    WEB_DIR = Path("/app/web").resolve()
+else:
+    # Development environment
+    WEB_DIR = (Path(__file__).resolve().parent.parent.parent / "web").resolve()
+
 logger.info(f"Web directory resolved to: {WEB_DIR}")
 logger.info(f"Web directory exists: {WEB_DIR.exists()}")
 if WEB_DIR.exists():
