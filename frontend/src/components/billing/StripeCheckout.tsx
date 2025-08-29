@@ -19,12 +19,12 @@ const StripeCheckout: React.FC = () => {
   const planName = searchParams.get('plan') || 'professional';
   // const trial = searchParams.get('trial') === 'true'; // Reserved for future use
   
-  // Map plan names to Stripe price IDs
+  // Map plan names to Stripe LIVE price IDs
   const priceMap: { [key: string]: string } = {
-    'professional': 'price_1RyVEORMpSG47vNmYL4DWCYF', // College Monthly $299
-    'professional_annual': 'price_1RyVEWRMpSG47vNmiQjLhvqt', // College Yearly $2999
-    'institution': 'price_1RyVElRMpSG47vNmWNWcxCEB', // Multi-Campus Monthly $599
-    'institution_annual': 'price_1RyVEtRMpSG47vNmyZDQcjUm', // Multi-Campus Yearly $5999
+    'professional': 'price_1RxbFkRMpSG47vNmLp4LCRHZ', // Monthly $995
+    'professional_annual': 'price_1RxbGlRMpSG47vNmWEOu1otZ', // Annual $10,000
+    'institution': 'price_1RxbFkRMpSG47vNmLp4LCRHZ', // Monthly $995 (same as professional for now)
+    'institution_annual': 'price_1RxbGlRMpSG47vNmWEOu1otZ', // Annual $10,000 (same as professional for now)
   };
   
   const priceId = priceMap[planName] || priceMap['professional'];
