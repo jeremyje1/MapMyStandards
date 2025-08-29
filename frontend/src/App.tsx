@@ -1,5 +1,5 @@
 import React from 'react';
-// Deploy with railway.json build fix
+// Deploy with API v1 endpoint fixes
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import Login from './components/auth/Login';
