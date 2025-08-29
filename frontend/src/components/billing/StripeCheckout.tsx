@@ -16,8 +16,18 @@ const StripeCheckout: React.FC = () => {
   const [error, setError] = useState('');
 
   // const email = searchParams.get('email'); // Reserved for future use
-  const plan = searchParams.get('plan') || 'professional';
+  const planName = searchParams.get('plan') || 'professional';
   // const trial = searchParams.get('trial') === 'true'; // Reserved for future use
+  
+  // Map plan names to Stripe price IDs
+  const priceMap: { [key: string]: string } = {
+    'professional': 'price_1RyVEORMpSG47vNmYL4DWCYF', // College Monthly $299
+    'professional_annual': 'price_1RyVEWRMpSG47vNmiQjLhvqt', // College Yearly $2999
+    'institution': 'price_1RyVElRMpSG47vNmWNWcxCEB', // Multi-Campus Monthly $599
+    'institution_annual': 'price_1RyVEtRMpSG47vNmyZDQcjUm', // Multi-Campus Yearly $5999
+  };
+  
+  const priceId = priceMap[planName] || priceMap['professional'];
 
   useEffect(() => {
     handleCheckout();
@@ -33,7 +43,7 @@ const StripeCheckout: React.FC = () => {
       }
 
       // Create checkout session via API
-      const response = await api.billing.createCheckoutSession(plan);
+      const response = await api.billing.createCheckoutSession(priceId);
       const { sessionId } = response.data;
 
       // Redirect to Stripe Checkout

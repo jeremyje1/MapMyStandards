@@ -203,7 +203,14 @@ const apiService = {
       api.get('/api/v1/billing/subscription'),
     
     createCheckoutSession: (planId: string) =>
-      api.post('/api/v1/billing/create-checkout-session', { planId }),
+      api.post('/api/v1/billing/create-checkout-session', {
+        price_id: planId,
+        success_url: `${window.location.origin}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${window.location.origin}/pricing`,
+        customer_email: null,
+        metadata: {},
+        trial_period_days: 7
+      }),
     
     cancelSubscription: () =>
       api.post('/api/v1/billing/cancel-subscription'),
