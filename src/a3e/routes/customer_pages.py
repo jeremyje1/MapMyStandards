@@ -175,10 +175,18 @@ async def manual_page():
 @router.get("/{path:path}", response_class=HTMLResponse, include_in_schema=False)
 async def catch_all(path: str):
     """Catch-all route for undefined pages"""
+    # Skip empty path (root) - let main.py handle it
+    if not path:
+        raise HTTPException(status_code=404, detail="Let main.py handle root")
+    
     # Don't handle API routes, health checks, or other system endpoints
     if path.startswith(('api/', 'docs', 'redoc', 'openapi')) or path in ('health', 'health/frontend'):
         # Let these fall through to be handled by other routes
         raise HTTPException(status_code=404, detail=f"Not found: {path}")
+    
+    # Don't handle stripe-checkout-redirect.html - let main.py handle it
+    if path == "stripe-checkout-redirect.html":
+        raise HTTPException(status_code=404, detail="Let main.py handle stripe checkout redirect")
     
     # Try to find an HTML file with that name
     try:
