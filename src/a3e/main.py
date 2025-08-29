@@ -1493,6 +1493,15 @@ if WEB_DIR.exists():
         # Redirect to non-.html version
         return HTMLResponse("<html><head><meta http-equiv='refresh' content='0; url=/trial-signup'></head><body>Redirecting...</body></html>")
 
+    @app.get("/stripe-checkout-redirect.html", response_class=HTMLResponse, include_in_schema=False)
+    async def stripe_checkout_redirect_html():  # noqa: D401
+        """Serve stripe-checkout-redirect.html - required for professional checkout flow."""
+        checkout_file = WEB_DIR / "stripe-checkout-redirect.html"
+        if checkout_file.exists():
+            return FileResponse(str(checkout_file))
+        # Fallback redirect to homepage
+        return HTMLResponse("<html><head><meta http-equiv='refresh' content='0; url=/'></head><body>Redirecting to homepage...</body></html>")
+    
     @app.get("/trial-success.html", response_class=HTMLResponse, include_in_schema=False)
     async def trial_success_html():  # noqa: D401
         """Serve trial-success.html - required for redirect compatibility."""
