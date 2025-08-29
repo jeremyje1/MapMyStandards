@@ -245,39 +245,65 @@ class LLMService:
         """Generate response using Anthropic direct API"""
         
         try:
-            response = await self.anthropic_client.messages.create(
-                model=model,
-                max_tokens=max_tokens,
-                temperature=temperature,
-                messages=[
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
-                ]
-            )
-            
-            content = response.content[0].text
-            usage = response.usage
-            
-            # Estimate cost for Anthropic models
-            cost_estimate = self._calculate_anthropic_cost(
-                model,
-                usage.input_tokens,
-                usage.output_tokens
-            )
-            
-            return LLMResponse(
-                content=content,
-                model=model,
-                usage={
-                    'prompt_tokens': usage.input_tokens,
-                    'completion_tokens': usage.output_tokens,
-                    'total_tokens': usage.input_tokens + usage.output_tokens
-                },
-                finish_reason=response.stop_reason,
-                cost_estimate=cost_estimate
-            )
+            # Handle both old and new anthropic SDK versions
+            if hasattr(self.anthropic_client, 'messages'):
+                # New SDK (0.39.0+)
+                response = await self.anthropic_client.messages.create(
+                    model=model.replace("anthropic.", "").replace(":0", ""),  # Clean up model name
+                    max_tokens=max_tokens,
+                    temperature=temperature,
+                    messages=[
+                        {
+                            "role": "user",
+                            "content": prompt
+                        }
+                    ]
+                )
+                
+                content = response.content[0].text
+                usage = response.usage
+                
+                # Estimate cost for Anthropic models
+                cost_estimate = self._calculate_anthropic_cost(
+                    model,
+                    usage.input_tokens,
+                    usage.output_tokens
+                )
+                
+                return LLMResponse(
+                    content=content,
+                    model=model,
+                    usage={
+                        'prompt_tokens': usage.input_tokens,
+                        'completion_tokens': usage.output_tokens,
+                        'total_tokens': usage.input_tokens + usage.output_tokens
+                    },
+                    finish_reason=response.stop_reason,
+                    cost_estimate=cost_estimate
+                )
+            else:
+                # Old SDK (0.8.1) - uses completions API
+                response = await self.anthropic_client.completions.create(
+                    model=model.replace("anthropic.", "").replace(":0", ""),
+                    max_tokens_to_sample=max_tokens,
+                    temperature=temperature,
+                    prompt=f"\n\nHuman: {prompt}\n\nAssistant:"
+                )
+                
+                content = response.completion
+                
+                # Old SDK doesn't provide token usage
+                return LLMResponse(
+                    content=content,
+                    model=model,
+                    usage={
+                        'prompt_tokens': 0,
+                        'completion_tokens': 0,
+                        'total_tokens': 0
+                    },
+                    finish_reason='stop',
+                    cost_estimate=0.0
+                )
             
         except Exception as e:
             logger.error(f"Anthropic error: {e}")

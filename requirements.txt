@@ -39,7 +39,7 @@ aiohttp==3.9.1
 
 # AI/ML Services (Optional - loaded on demand)
 openai==1.6.1
-anthropic==0.8.1
+anthropic==0.39.0
 
 # Data Processing
 pandas==2.0.3
