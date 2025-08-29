@@ -19,12 +19,14 @@ const StripeCheckout: React.FC = () => {
   const planName = searchParams.get('plan') || 'professional';
   // const trial = searchParams.get('trial') === 'true'; // Reserved for future use
   
-  // Map plan names to Stripe LIVE price IDs
+  // Map plan names to Stripe LIVE price IDs (MapMyStandards account)
   const priceMap: { [key: string]: string } = {
-    'professional': 'price_1RxbFkRMpSG47vNmLp4LCRHZ', // Monthly $995
-    'professional_annual': 'price_1RxbGlRMpSG47vNmWEOu1otZ', // Annual $10,000
-    'institution': 'price_1RxbFkRMpSG47vNmLp4LCRHZ', // Monthly $995 (same as professional for now)
-    'institution_annual': 'price_1RxbGlRMpSG47vNmWEOu1otZ', // Annual $10,000 (same as professional for now)
+    'professional': 'price_1S1PIaK8PKpLCKDZxRRzTP59', // Professional Monthly $299
+    'professional_annual': 'price_1S1PIkK8PKpLCKDZqxmtxUeG', // Professional Annual $2,999
+    'institution': 'price_1RyVQgK8PKpLCKDZTais3Tyx', // Institution Monthly $599
+    'institution_annual': 'price_1RyVQrK8PKpLCKDZUshqaOvZ', // Institution Annual $5,999
+    'starter': 'price_1RyVPPK8PKpLCKDZFbwkFdqq', // Starter Monthly $99
+    'starter_annual': 'price_1RyVPgK8PKpLCKDZe8nu4ium', // Starter Annual $999
   };
   
   const priceId = priceMap[planName] || priceMap['professional'];
