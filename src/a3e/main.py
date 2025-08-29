@@ -83,10 +83,18 @@ except Exception:
     _billing_legacy_available = False
 # Optional services - will gracefully degrade if dependencies missing
 try:
-    from .services.vector_service import VectorService
-    VECTOR_SERVICE_AVAILABLE = True
+    # Check if we should use Pinecone or Milvus
+    if os.environ.get("VECTOR_DB_PROVIDER") == "pinecone":
+        from .services.pinecone_service import PineconeVectorService as VectorService
+        VECTOR_SERVICE_AVAILABLE = True
+        USING_PINECONE = True
+    else:
+        from .services.vector_service import VectorService
+        VECTOR_SERVICE_AVAILABLE = True
+        USING_PINECONE = False
 except ImportError:
     VECTOR_SERVICE_AVAILABLE = False
+    USING_PINECONE = False
     # logger not yet configured; will log after config
     _vector_import_error = True
 
@@ -281,17 +289,27 @@ async def lifespan(app: FastAPI):
         
         try:
             if VECTOR_SERVICE_AVAILABLE:
-                vector_service = VectorService(
-                    host=settings.milvus_host,
-                    port=settings.milvus_port
-                )
-                await vector_service.initialize()
-                logger.info("✅ Vector service initialized")
+                if USING_PINECONE:
+                    # Initialize Pinecone service
+                    vector_service = VectorService()  # PineconeVectorService takes no args
+                    if await vector_service.initialize():
+                        logger.info("✅ Pinecone vector service initialized")
+                    else:
+                        logger.warning("⚠️ Pinecone initialization failed - check API key")
+                        vector_service = None
+                else:
+                    # Initialize Milvus service
+                    vector_service = VectorService(
+                        host=settings.milvus_host,
+                        port=settings.milvus_port
+                    )
+                    await vector_service.initialize()
+                    logger.info("✅ Milvus vector service initialized")
             else:
-                log_warning_once("⚠️ Vector service unavailable - missing dependencies (numpy, pymilvus, sentence-transformers)")
+                log_warning_once("⚠️ Vector service unavailable - missing dependencies")
                 vector_service = None
         except Exception as e:
-            log_warning_once(f"⚠️ Vector service unavailable (development mode): {str(e)}")
+            log_warning_once(f"⚠️ Vector service unavailable: {str(e)}")
             vector_service = None
         
         llm_service = LLMService(settings)
