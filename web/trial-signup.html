@@ -889,7 +889,7 @@
                     nextBtn.disabled = true;
                     nextBtn.innerHTML = '<span class="spinner"></span>Validating card...';
                     
-                    paymentMethodId = await createPaymentMethod();
+                    paymentMethodId = await createPaymentMethod();\n                    console.log('Payment method created:', paymentMethodId);\n                    \n                    // Visual confirmation that payment method is set up\n                    if (paymentMethodId) {\n                        showAlert('Payment method validated successfully!', 'success');\n                    }
                     console.log('Payment method created:', paymentMethodId);
                     
                     nextBtn.disabled = false;
@@ -968,8 +968,9 @@
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
             
+            console.log('Form submission - paymentMethodId:', paymentMethodId);
             if (!paymentMethodId) {
-                showAlert('Payment method not set up. Please go back and complete the payment step.', 'error');
+                showAlert('Payment method not set up. Please go back and complete step 3 (Payment Information).', 'error');
                 return;
             }
             
