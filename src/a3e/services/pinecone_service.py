@@ -4,6 +4,7 @@ Pinecone Vector Service for A3E
 
 import os
 import logging
+import json
 from typing import List, Dict, Any, Optional
 from pinecone import Pinecone, ServerlessSpec
 
@@ -117,6 +118,55 @@ class PineconeVectorService:
         except Exception as e:
             logger.error(f"Failed to index documents: {e}")
             raise
+    
+    async def index_standards(self, standards: List[Any], batch_size: int = 100):
+        """Index accreditation standards for semantic search"""
+        if not self.initialized:
+            logger.warning("Pinecone not initialized - skipping standards indexing")
+            return
+        
+        try:
+            vectors = []
+            for standard in standards:
+                # Create text for embedding from standard object
+                text = f"{standard.title} {standard.description}"
+                if hasattr(standard, 'full_text') and standard.full_text:
+                    text += f" {standard.full_text}"
+                
+                # Generate embedding
+                embedding = self.embedding_model.encode(text).tolist()
+                
+                # Prepare vector data
+                metadata = {
+                    "title": standard.title[:500],
+                    "type": "standard",
+                    "accreditor": getattr(standard, 'accreditor_id', 'unknown'),
+                    "description": standard.description[:1000] if standard.description else "",
+                    "weight": getattr(standard, 'weight', 1.0)
+                }
+                
+                # Add evidence requirements if available
+                if hasattr(standard, 'evidence_requirements'):
+                    metadata["requirements"] = json.dumps(standard.evidence_requirements)[:1000]
+                
+                vectors.append({
+                    "id": str(standard.id),
+                    "values": embedding,
+                    "metadata": metadata
+                })
+            
+            # Upsert in batches
+            for i in range(0, len(vectors), batch_size):
+                batch = vectors[i:i+batch_size]
+                self.index.upsert(vectors=batch)
+                logger.info(f"Indexed batch {i//batch_size + 1}: {len(batch)} standards")
+            
+            logger.info(f"✅ Successfully indexed {len(vectors)} standards")
+            
+        except Exception as e:
+            logger.error(f"Failed to index standards: {e}")
+            # Don't raise - allow app to continue without vector indexing
+            pass
     
     async def semantic_search(
         self, 
