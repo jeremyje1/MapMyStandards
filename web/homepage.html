@@ -695,7 +695,7 @@
                 <li><a href="#solution">Solutions</a></li>
                 <li><a href="#pricing">Pricing</a></li>
                 <li><a href="https://api.mapmystandards.ai/docs">API Docs</a></li>
-                <li><a href="https://mapmystandards-prod-production.up.railway.app/login" class="btn btn-secondary">Sign In</a></li>
+                <li><a href="https://platform.mapmystandards.ai/login" class="btn btn-secondary">Sign In</a></li>
                 <li><button onclick="startCheckout('college_monthly', this)" class="btn btn-primary">Start Free Trial</button></li>
             </ul>
         </nav>
@@ -1079,8 +1079,8 @@
                     <h4>Platform</h4>
                     <ul>
                         <li><a href="javascript:void(0)" onclick="startCheckout('college_monthly', this)">Start Free Trial</a></li>
-                        <li><a href="https://mapmystandards-prod-production.up.railway.app/login">Account Access</a></li>
-                        <li><a href="https://mapmystandards-prod-production.up.railway.app/user-guide">User Guide</a></li>
+                        <li><a href="https://platform.mapmystandards.ai/login">Account Access</a></li>
+                        <li><a href="https://platform.mapmystandards.ai/user-guide">User Guide</a></li>
                         <li><a href="mailto:support@mapmystandards.ai">Technical Support</a></li>
                     </ul>
                 </div>
@@ -1088,7 +1088,7 @@
                     <h4>Resources</h4>
                     <ul>
                         <li><a href="https://api.mapmystandards.ai/docs">Documentation</a></li>
-                        <li><a href="https://mapmystandards-prod-production.up.railway.app/services">Case Studies</a></li>
+                        <li><a href="https://platform.mapmystandards.ai/services">Case Studies</a></li>
                         <li><a href="mailto:support@mapmystandards.ai?subject=Demo%20Request">Request Demo</a></li>
                         <li><a href="mailto:support@mapmystandards.ai">Support Center</a></li>
                     </ul>
@@ -1096,10 +1096,10 @@
                 <div class="footer-links">
                     <h4>Company</h4>
                     <ul>
-                        <li><a href="https://mapmystandards-prod-production.up.railway.app/about">About Us</a></li>
-                        <li><a href="https://mapmystandards-prod-production.up.railway.app/contact">Contact</a></li>
-                        <li><a href="https://mapmystandards-prod-production.up.railway.app/privacy">Privacy Policy</a></li>
-                        <li><a href="https://mapmystandards-prod-production.up.railway.app/terms">Terms of Service</a></li>
+                        <li><a href="https://platform.mapmystandards.ai/about">About Us</a></li>
+                        <li><a href="https://platform.mapmystandards.ai/contact">Contact</a></li>
+                        <li><a href="https://platform.mapmystandards.ai/privacy">Privacy Policy</a></li>
+                        <li><a href="https://platform.mapmystandards.ai/terms">Terms of Service</a></li>
                     </ul>
                 </div>
             </div>
@@ -1128,8 +1128,8 @@
                 </button>
                 
                 <p class="trial-terms">
-                    By starting your trial, you agree to our <a href="https://mapmystandards-prod-production.up.railway.app/terms" target="_blank">Terms of Service</a> 
-                    and <a href="https://mapmystandards-prod-production.up.railway.app/privacy" target="_blank">Privacy Policy</a>
+                    By starting your trial, you agree to our <a href="https://platform.mapmystandards.ai/terms" target="_blank">Terms of Service</a> 
+                    and <a href="https://platform.mapmystandards.ai/privacy" target="_blank">Privacy Policy</a>
                 </p>
             </form>
         </div>
@@ -1371,7 +1371,7 @@
                     plan: plan,
                     institution_name: document.querySelector('input[name="institution_name"]')?.value || ''
                 });
-                window.location.href = `https://mapmystandards-prod-production.up.railway.app/checkout?${params.toString()}`;
+                window.location.href = `https://platform.mapmystandards.ai/checkout?${params.toString()}`;
                 return;
             });
             
