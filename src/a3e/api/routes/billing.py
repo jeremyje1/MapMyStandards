@@ -471,6 +471,41 @@ async def stripe_webhook(request: Request):
             if customer_email:
                 # Log successful subscription
                 logger.info(f"✅ New subscription: {customer_email}")
+                
+                # Send welcome email to customer
+                try:
+                    from ...services.postmark_service import PostmarkEmailService
+                    email_service = PostmarkEmailService()
+                    
+                    # Extract customer name if available
+                    customer_name = session.get("customer_details", {}).get("name", "Valued Customer")
+                    
+                    # Send welcome email
+                    email_sent = email_service.send_welcome_email(
+                        user_email=customer_email,
+                        user_name=customer_name
+                    )
+                    
+                    if email_sent:
+                        logger.info(f"✅ Welcome email sent to {customer_email}")
+                    else:
+                        logger.warning(f"⚠️ Failed to send welcome email to {customer_email}")
+                    
+                    # Send admin notification
+                    admin_notification = email_service.send_admin_signup_notification(
+                        user_email=customer_email,
+                        user_name=customer_name,
+                        institution=session.get("metadata", {}).get("institution_name", "Not specified"),
+                        plan=session.get("metadata", {}).get("plan", "Professional"),
+                        trial_mode=session.get("mode") == "subscription"
+                    )
+                    
+                    if admin_notification:
+                        logger.info(f"✅ Admin notification sent for new subscription: {customer_email}")
+                    
+                except Exception as e:
+                    logger.error(f"Error sending emails for checkout completion: {e}")
+                
                 # TODO: Update user subscription status in database
                 
         elif event_type == "payment_intent.succeeded":
