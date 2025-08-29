@@ -197,22 +197,22 @@ const apiService = {
   // Billing endpoints
   billing: {
     getPlans: () =>
-      api.get('/billing/plans'),
+      api.get('/api/v1/billing/plans'),
     
     getCurrentSubscription: () =>
-      api.get('/billing/subscription'),
+      api.get('/api/v1/billing/subscription'),
     
     createCheckoutSession: (planId: string) =>
-      api.post('/billing/create-checkout-session', { planId }),
+      api.post('/api/v1/billing/create-checkout-session', { planId }),
     
     cancelSubscription: () =>
-      api.post('/billing/cancel-subscription'),
+      api.post('/api/v1/billing/cancel-subscription'),
     
     getBillingHistory: () =>
-      api.get('/billing/history'),
+      api.get('/api/v1/billing/history'),
     
     updatePaymentMethod: (paymentMethodId: string) =>
-      api.post('/billing/update-payment-method', { paymentMethodId }),
+      api.post('/api/v1/billing/update-payment-method', { paymentMethodId }),
   },
   
   // Dashboard endpoints
