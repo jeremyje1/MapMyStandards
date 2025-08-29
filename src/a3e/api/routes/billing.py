@@ -530,7 +530,6 @@ async def create_checkout_session(request: CheckoutSessionRequest):
     """Create a Stripe Checkout session for professional checkout experience"""
     try:
         import stripe
-        from ...config import get_settings
         
         # Initialize Stripe API key
         settings = get_settings()
