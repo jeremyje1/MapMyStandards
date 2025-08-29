@@ -21,6 +21,7 @@ const StripeCheckout: React.FC = () => {
 
   useEffect(() => {
     handleCheckout();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleCheckout = async () => {
