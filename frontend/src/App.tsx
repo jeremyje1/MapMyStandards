@@ -1,5 +1,5 @@
 import React from 'react';
-// Deploy with updated package-lock.json
+// Deploy with cache fix
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import Login from './components/auth/Login';

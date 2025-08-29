@@ -5,7 +5,7 @@ nixPkgs = ['nodejs_20']
 cmds = ['npm ci --legacy-peer-deps']
 
 [phases.build]
-cmds = ['npm run build']
+cmds = ['rm -rf node_modules/.cache && npm run build']
 
 [start]
 cmd = 'npm run serve'
