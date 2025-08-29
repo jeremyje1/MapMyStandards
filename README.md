@@ -10,3 +10,4 @@ The stack is polyglot‑friendly but defaults to **Python 3.12**, **Postgres + M
 
 > **Live demo** – coming soon at https://api.YOURDOMAIN.ai/docs
 # Trigger deployment
+# Force redeploy to MapMyStandards service
