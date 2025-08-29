@@ -64,6 +64,19 @@ def serve_html_file(filename: str, fallback: str = None):
             return FileResponse(str(fallback_path))
     raise HTTPException(status_code=404, detail=f"Page not found: {filename}")
 
+@router.get("/", response_class=HTMLResponse, include_in_schema=False)
+async def root_page():
+    """Root homepage"""
+    # Try index.html first, then homepage.html as fallback
+    try:
+        return serve_html_file("index.html")
+    except:
+        try:
+            return serve_html_file("homepage.html")
+        except:
+            # Redirect to trial signup as last resort
+            return RedirectResponse(url="/trial-signup")
+
 @router.get("/login", response_class=HTMLResponse, include_in_schema=False)
 async def login_page():
     """Login page"""
@@ -81,6 +94,11 @@ async def dashboard_page():
 async def trial_signup_page():
     """Trial signup page"""
     return serve_html_file("trial-signup.html", fallback="landing.html")
+
+@router.get("/stripe-checkout-redirect.html", response_class=HTMLResponse, include_in_schema=False)
+async def stripe_checkout_redirect():
+    """Stripe checkout redirect page"""
+    return serve_html_file("stripe-checkout-redirect.html")
 
 @router.get("/trial-signup.html", response_class=HTMLResponse, include_in_schema=False)
 async def trial_signup_html_redirect(request: Request):
@@ -172,13 +190,10 @@ async def manual_page():
 
 
 # Catch-all for missing pages (excluding API routes and health endpoints)
+# NOTE: This won't catch root "/" because FastAPI doesn't match empty path with {path:path}
 @router.get("/{path:path}", response_class=HTMLResponse, include_in_schema=False)
 async def catch_all(path: str):
     """Catch-all route for undefined pages"""
-    # Skip empty path (root) - let main.py handle it
-    if not path:
-        raise HTTPException(status_code=404, detail="Let main.py handle root")
-    
     # Don't handle API routes, health checks, or other system endpoints
     if path.startswith(('api/', 'docs', 'redoc', 'openapi')) or path in ('health', 'health/frontend'):
         # Let these fall through to be handled by other routes
@@ -186,7 +201,11 @@ async def catch_all(path: str):
     
     # Don't handle stripe-checkout-redirect.html - let main.py handle it
     if path == "stripe-checkout-redirect.html":
-        raise HTTPException(status_code=404, detail="Let main.py handle stripe checkout redirect")
+        # Return the actual stripe checkout page from web directory
+        try:
+            return serve_html_file("stripe-checkout-redirect.html")
+        except:
+            pass  # Fall through to 404
     
     # Try to find an HTML file with that name
     try:
