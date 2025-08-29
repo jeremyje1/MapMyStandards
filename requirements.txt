@@ -1,56 +1,59 @@
-flask==3.1.1
-flask-cors==6.0.1
-stripe==12.4.0
-gunicorn==21.2.0
-aiofiles==23.2.1
-aiohttp==3.9.1
-sendgrid==6.11.0
-openai==1.6.1
-anthropic==0.8.1
-PyJWT==2.8.0
-bcrypt==4.1.2
-passlib[bcrypt]==1.7.4
-# Optional AI/ML dependencies removed for deployment stability
+# MapMyStandards Platform Requirements
+# Python 3.9+ Required
 
-# --- Added for FastAPI application runtime ---
+# Core Web Framework
 fastapi==0.111.0
-uvicorn==0.30.0
+uvicorn[standard]==0.30.0
+gunicorn==21.2.0
+
+# API Dependencies  
 python-multipart==0.0.9
 pydantic==2.8.0
 pydantic-settings==2.4.0
-requests>=2.31.0,<3.0.0  # Flexible version to resolve conflicts
+python-dotenv==1.0.0
+jinja2==3.1.2
+aiofiles==23.2.1
 
-# --- Database dependencies ---
-sqlalchemy==2.0.31
-alembic==1.13.1
+# Database
+sqlalchemy==2.0.23
+alembic==1.12.1
+psycopg2-binary==2.9.7
 asyncpg==0.29.0
-psycopg2-binary==2.9.9
-aiosqlite==0.20.0
-greenlet==3.0.3  # Required for SQLAlchemy async context switching
 
-# --- Additional FastAPI dependencies ---
-python-jose[cryptography]==3.3.0
+# Authentication & Security
+PyJWT==2.8.0
+bcrypt==4.1.2
 passlib[bcrypt]==1.7.4
-python-dateutil==2.9.0
-jinja2==3.1.4
+email-validator==2.1.0
 
-# --- Document Processing ---
-PyPDF2==3.0.1
-python-docx==1.1.0
-pandas==2.2.2
-openpyxl==3.1.2  # For Excel file processing
-xlrd==2.0.1  # For older Excel files
-numpy==1.26.4  # Required by pandas
+# Payment Processing
+stripe==12.4.0
 
-# --- Email Service ---
-postmarker==1.0.0  # Postmark email service
-# resend==0.7.0  # Removed due to strict dependency conflict
+# Email Services (Using Postmark as primary)
+aiosmtplib==3.0.1
+postmark==1.0.0
 
-# --- Vector Database & AI ---
-# pymilvus==2.3.7  # Uncomment when Milvus is available
-# sentence-transformers==2.7.0  # Uncomment for embeddings
-# tiktoken==0.5.2  # For token counting
+# HTTP Client
+httpx==0.25.2
+aiohttp==3.9.1
 
-# --- Testing & tooling ---
-httpx==0.27.0
-pytest==8.2.2
+# AI/ML Services (Optional - loaded on demand)
+openai==1.6.1
+anthropic==0.8.1
+
+# Data Processing
+pandas==2.0.3
+numpy==1.24.3
+pyyaml==6.0.2
+
+# CORS Support
+flask-cors==6.0.1
+
+# Development & Testing
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
+
+# Production Dependencies
+redis==5.0.1
+celery==5.3.4

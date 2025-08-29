@@ -28,5 +28,9 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD curl -fsS http://127.0.0.1:${PORT:-8000}/health || exit 1
 
-# Start the FastAPI application
-CMD ["python", "main.py"]
+# Copy startup script
+COPY start_production.sh /app/start_production.sh
+RUN chmod +x /app/start_production.sh
+
+# Start the application with migrations
+CMD ["/app/start_production.sh"]

@@ -84,7 +84,7 @@ class Settings(BaseSettings):
     )
     
     # Security
-    secret_key: str = Field(default="dev-secret-key-change-in-production", env="SECRET_KEY")
+    secret_key: str = Field(env="SECRET_KEY")  # Required - no default
     jwt_algorithm: str = Field(default="HS256", env="JWT_ALGORITHM")
     jwt_expiration_hours: int = Field(default=24, env="JWT_EXPIRATION_HOURS")
     

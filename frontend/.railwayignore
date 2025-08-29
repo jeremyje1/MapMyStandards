@@ -1,0 +1,10 @@
+# Ignore backend files
+../src/
+../migrations/
+../alembic.ini
+../requirements.txt
+../*.py
+../Dockerfile
+../scripts/
+../.env*
+../web/

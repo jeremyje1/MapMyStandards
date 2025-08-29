@@ -423,8 +423,10 @@ for required_origin in [
     "https://api.mapmystandards.ai",
     "https://mapmystandards.ai",
     "https://www.mapmystandards.ai",
+    "https://app.mapmystandards.ai",  # React app on Railway
     "http://localhost:8000",
-    "http://localhost:3000",
+    "http://localhost:3000",  # React dev server
+    "http://localhost:3001",  # Alternative React port
 ]:
     if required_origin not in _cors_origins:
         _cors_origins.append(required_origin)
