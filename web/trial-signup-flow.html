@@ -430,6 +430,41 @@
             setupBillingToggle();
             setupNavigation();
             setupFormValidation();
+            
+            // Pre-fill from URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const email = urlParams.get('email');
+            const plan = urlParams.get('plan');
+            
+            // Pre-fill email if provided
+            if (email) {
+                document.getElementById('email').value = email;
+            }
+            
+            // Pre-select plan if provided
+            if (plan) {
+                // Map legacy plan names to new format
+                const planMapping = {
+                    'professional_monthly': 'professional',
+                    'professional_yearly': 'professional',
+                    'institution_monthly': 'institution',
+                    'institution_yearly': 'institution',
+                    'starter_monthly': 'starter',
+                    'starter_yearly': 'starter'
+                };
+                
+                const mappedPlan = planMapping[plan] || plan;
+                const planCard = document.querySelector(`[data-plan="${mappedPlan}"]`);
+                
+                if (planCard) {
+                    planCard.click();
+                }
+                
+                // Set billing period if it's yearly
+                if (plan.includes('yearly') || plan.includes('annual')) {
+                    document.querySelector('[data-billing="yearly"]').click();
+                }
+            }
         });
 
         function setupPlanSelection() {
