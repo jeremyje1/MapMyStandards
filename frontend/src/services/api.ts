@@ -84,6 +84,9 @@ const apiService = {
     register: (data: { email: string; password: string; name: string; institutionName?: string }) =>
       api.post('/auth/register', data),
     
+    completeRegistration: (data: { session_id: string; email: string; password: string }) =>
+      api.post('/auth/complete-registration', data),
+    
     logout: () => {
       setAuthToken(null);
       localStorage.removeItem('refreshToken');
@@ -202,15 +205,18 @@ const apiService = {
     getCurrentSubscription: () =>
       api.get('/api/v1/billing/subscription'),
     
-    createCheckoutSession: (planId: string) =>
+    createCheckoutSession: (priceId: string) =>
       api.post('/api/v1/billing/create-checkout-session', {
-        price_id: planId,
-        success_url: `${window.location.origin}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
+        price_id: priceId,
+        success_url: `${window.location.origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${window.location.origin}/pricing`,
         customer_email: null,
         metadata: {},
-        trial_period_days: 7
+        trial_period_days: 14
       }),
+    
+    verifyCheckoutSession: (sessionId: string) =>
+      api.get(`/api/v1/billing/verify-session/${sessionId}`),
     
     cancelSubscription: () =>
       api.post('/api/v1/billing/cancel-subscription'),
