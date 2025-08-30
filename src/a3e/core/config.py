@@ -58,7 +58,7 @@ class Settings(BaseSettings):
     
     # AWS Bedrock Configuration
     bedrock_region: str = Field(default="us-east-1", env="BEDROCK_REGION")
-    bedrock_model_id: str = Field(default="anthropic.claude-3-sonnet-20240229-v1:0", env="BEDROCK_MODEL_ID")
+    bedrock_model_id: str = Field(default="anthropic.claude-3-5-sonnet-20241022", env="BEDROCK_MODEL_ID")
     bedrock_max_tokens: int = Field(default=4096, env="BEDROCK_MAX_TOKENS")
     
     # LLM Configuration  
