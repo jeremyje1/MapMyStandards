@@ -59,18 +59,8 @@
 
     <script>
         function redirect() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const plan = urlParams.get('plan') || 'college_monthly';
-            const email = urlParams.get('email') || '';
-            const institutionName = urlParams.get('institution_name') || '';
-            
-            const params = new URLSearchParams({
-                plan: plan,
-                email: email,
-                institution_name: institutionName
-            });
-            
-            window.location.href = `stripe-checkout-redirect.html?${params.toString()}`;
+            // Redirect to the new comprehensive trial signup flow
+            window.location.href = 'trial-signup-flow.html' + window.location.search;
         }
         
         // Redirect immediately
