@@ -48,6 +48,11 @@ const CheckoutSuccess: React.FC = () => {
       return;
     }
 
+    if (!sessionId) {
+      setError('Invalid session. Please try again.');
+      return;
+    }
+
     setLoading(true);
     setError('');
 
