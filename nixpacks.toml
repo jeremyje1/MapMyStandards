@@ -1,14 +1,8 @@
 [phases.setup]
-nixPkgs = ["python39", "postgresql", "gcc"]
+nixPkgs = ["python39", "postgresql", "gcc", "libpq"]
 
 [phases.install]
-cmds = [
-    "python -m venv --copies /opt/venv",
-    ". /opt/venv/bin/activate && pip install -r requirements.txt"
-]
-
-[phases.build]
-cmds = []
+cmds = ["pip install --upgrade pip", "pip install -r requirements.txt"]
 
 [start]
-cmd = "python main.py"
+cmd = "python -m uvicorn src.a3e.main:app --host 0.0.0.0 --port ${PORT:-8000}"
