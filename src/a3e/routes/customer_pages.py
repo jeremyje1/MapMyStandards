@@ -95,6 +95,11 @@ async def trial_signup_page():
     """Trial signup page"""
     return serve_html_file("trial-signup.html", fallback="landing.html")
 
+@router.get("/trial-signup-flow.html", response_class=HTMLResponse, include_in_schema=False)
+async def trial_signup_flow():
+    """New comprehensive trial signup flow"""
+    return serve_html_file("trial-signup-flow.html")
+
 @router.get("/stripe-checkout-redirect.html", response_class=HTMLResponse, include_in_schema=False)
 async def stripe_checkout_redirect():
     """Stripe checkout redirect page"""
