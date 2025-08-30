@@ -6,6 +6,8 @@ import Login from './components/auth/Login';
 import Register from './components/auth/Register';
 import Dashboard from './components/Dashboard';
 import StripeCheckout from './components/billing/StripeCheckout';
+import CheckoutSuccess from './components/CheckoutSuccess';
+import PricingPage from './components/PricingPage';
 import Trial from './components/Trial';
 import PrivateRoute from './components/PrivateRoute';
 
@@ -17,8 +19,10 @@ function App() {
           {/* Public routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/pricing" element={<PricingPage />} />
           <Route path="/trial" element={<Trial />} />
           <Route path="/checkout" element={<StripeCheckout />} />
+          <Route path="/checkout/success" element={<CheckoutSuccess />} />
 
           {/* Protected routes */}
           <Route path="/dashboard" element={

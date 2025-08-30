@@ -242,71 +242,162 @@ Sent from MapMyStandards.ai contact form
             html_body=html_body
         )
     
-    def send_welcome_email(self, user_email: str, user_name: str) -> bool:
-        """Send welcome email to new users."""
-        subject = "Welcome to MapMyStandards.ai!"
+    def send_welcome_email(self, user_email: str, user_name: str, plan_name: str = "Professional") -> bool:
+        """Send welcome email to new subscription customers."""
+        subject = "Welcome to MapMyStandards - Your Account is Ready"
         body = (
             f"Dear {user_name},\n\n"
-            "Welcome to MapMyStandards.ai! We're excited to help you streamline your accreditation process.\n\n"
-            "Your account has been successfully created. Here's what you can do next:\n\n"
-            "1. Complete your institutional profile\n"
-            "2. Upload your first accreditation documents\n"
-            "3. Start using our A³E Engine for intelligent analysis\n\n"
-            "If you have any questions, please don't hesitate to reach out to our support team.\n\n"
-            "Best regards,\nThe MapMyStandards.ai Team\n\n"
-            "--\n"
-            "support@mapmystandards.ai\n"
-            "NorthPath Strategies"
+            f"Thank you for subscribing to MapMyStandards {plan_name} plan. Your account has been successfully created.\n\n"
+            "Getting Started:\n"
+            "1. Upload Documents: Start by uploading your institutional documents for analysis\n"
+            "2. Select Standards: Choose your accrediting body (SACSCOC, HLC, etc.)\n"
+            "3. Review Mappings: See how your documents align with accreditation standards\n"
+            "4. Generate Reports: Create compliance reports for your review\n\n"
+            "Need Help?\n"
+            "Email: support@mapmystandards.com\n"
+            "Documentation: https://docs.mapmystandards.com\n\n"
+            "Best regards,\n"
+            "The MapMyStandards Team"
         )
         html_body = f"""
         <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
-            <h2 style="color:#1e3c72;margin-top:0;">Welcome to MapMyStandards.ai!</h2>
-            <p>Dear {user_name},</p>
-            <p>Welcome to MapMyStandards.ai! We're excited to help you streamline your accreditation process.</p>
-            <p>Your account has been successfully created. Here's what you can do next:</p>
-            <ol>
-                <li>Complete your institutional profile</li>
-                <li>Upload your first accreditation documents</li>
-                <li>Start using our A³E Engine for intelligent analysis</li>
-            </ol>
-            <p>If you have any questions, please don't hesitate to reach out to our support team.</p>
-            <p>Best regards,<br>The MapMyStandards.ai Team</p>
-            <hr style="border:1px solid #eee;">
-            <p style="color:#6c757d;font-size:12px;">
-                <a href="mailto:support@mapmystandards.ai">support@mapmystandards.ai</a><br>
-                NorthPath Strategies · <a href="{build_unsubscribe_link()}">Unsubscribe</a>
-            </p>
+            <div style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;padding:30px;border-radius:10px 10px 0 0;text-align:center;">
+                <h1 style="margin:0;">Welcome to MapMyStandards</h1>
+            </div>
+            <div style="background:white;padding:30px;border:1px solid #e5e7eb;border-radius:0 0 10px 10px;">
+                <h2 style="color:#1f2937;">Hello {user_name},</h2>
+                <p style="color:#4b5563;">Thank you for subscribing to MapMyStandards <strong>{plan_name}</strong> plan. Your account has been successfully created and you're ready to streamline your accreditation compliance process.</p>
+                
+                <div style="background:#f9fafb;padding:15px;border-radius:5px;margin:15px 0;">
+                    <p style="margin:5px 0;"><strong>Your Account Details:</strong></p>
+                    <p style="margin:5px 0;">Email: {user_email}</p>
+                    <p style="margin:5px 0;">Plan: {plan_name}</p>
+                    <p style="margin:5px 0;">Status: Active</p>
+                </div>
+                
+                <div style="text-align:center;margin:30px 0;">
+                    <a href="https://app.mapmystandards.com/dashboard" style="display:inline-block;padding:12px 30px;background:#3b82f6;color:white;text-decoration:none;border-radius:5px;">Access Your Dashboard</a>
+                </div>
+                
+                <h3 style="color:#1f2937;">Getting Started:</h3>
+                <ol style="color:#4b5563;">
+                    <li><strong>Upload Documents:</strong> Start by uploading your institutional documents for analysis</li>
+                    <li><strong>Select Standards:</strong> Choose your accrediting body (SACSCOC, HLC, etc.)</li>
+                    <li><strong>Review Mappings:</strong> See how your documents align with accreditation standards</li>
+                    <li><strong>Generate Reports:</strong> Create compliance reports for your review</li>
+                </ol>
+                
+                <h3 style="color:#1f2937;">Need Help?</h3>
+                <p style="color:#4b5563;">Our support team is here to assist you:</p>
+                <ul style="color:#4b5563;">
+                    <li>Email: <a href="mailto:support@mapmystandards.com">support@mapmystandards.com</a></li>
+                    <li>Documentation: <a href="https://docs.mapmystandards.com">docs.mapmystandards.com</a></li>
+                    <li>Schedule a demo: <a href="https://calendly.com/mapmystandards">Book a call</a></li>
+                </ul>
+            </div>
+            <div style="text-align:center;color:#6b7280;font-size:14px;margin-top:30px;">
+                <p>This email was sent to {user_email}<br>
+                MapMyStandards - Simplifying Accreditation Compliance<br>
+                © 2025 MapMyStandards. All rights reserved.</p>
+            </div>
         </div>
         """
         return self.send_email([user_email], subject, body, html_body=html_body)
 
-    def send_admin_new_signup_notification(self, user_email: str, user_name: str, institution: str | None = None, trial: bool = True) -> bool:
-        """Notify internal admin address of a new signup."""
+    def send_admin_new_signup_notification(
+        self, 
+        user_email: str, 
+        user_name: str, 
+        institution: str | None = None, 
+        trial: bool = False,
+        plan_name: str | None = None,
+        amount: float | None = None,
+        stripe_customer_id: str | None = None,
+        subscription_id: str | None = None
+    ) -> bool:
+        """Notify internal admin address of a new signup or subscription."""
         admin_recipient = os.getenv("ADMIN_NOTIFICATION_EMAIL", "info@northpathstrategies.org")
-        subject = f"New {'Trial ' if trial else ''}Signup: {user_name} <{user_email}>"
+        
+        if plan_name and amount:
+            subject = f"New Customer: {user_name} - {plan_name} Plan (${amount:.2f})"
+        else:
+            subject = f"New {'Trial ' if trial else ''}Signup: {user_name} <{user_email}>"
+        
         institution_line = f"Institution: {institution}" if institution else "Institution: (not provided)"
-        body = (
-            f"New user signup on MapMyStandards.ai\n\n"
-            f"Name: {user_name}\n"
-            f"Email: {user_email}\n"
-            f"{institution_line}\n"
-            f"Trial: {'Yes' if trial else 'No'}\n"
-            f"Timestamp (UTC): {datetime.utcnow().isoformat()}\n"
-        )
+        
+        body_lines = [
+            f"New {'subscription' if plan_name else 'signup'} on MapMyStandards",
+            f"",
+            f"Name: {user_name}",
+            f"Email: {user_email}",
+            f"{institution_line}",
+        ]
+        
+        if plan_name:
+            body_lines.extend([
+                f"Plan: {plan_name}",
+                f"Amount: ${amount:.2f}" if amount else "Amount: N/A",
+            ])
+        
+        if stripe_customer_id:
+            body_lines.append(f"Stripe Customer: {stripe_customer_id}")
+        
+        if subscription_id:
+            body_lines.append(f"Subscription ID: {subscription_id}")
+        
+        body_lines.append(f"Timestamp (UTC): {datetime.utcnow().isoformat()}")
+        
+        body = "\n".join(body_lines)
+        
         html_body = f"""
         <div style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto;'>
-            <h2 style='color:#1e3c72;margin:0 0 10px;'>New {'Trial ' if trial else ''}Signup</h2>
-            <table style='width:100%;border-collapse:collapse;'>
-                <tr><td style='padding:4px 0;font-weight:600;'>Name:</td><td>{user_name}</td></tr>
-                <tr><td style='padding:4px 0;font-weight:600;'>Email:</td><td><a href='mailto:{user_email}'>{user_email}</a></td></tr>
-                <tr><td style='padding:4px 0;font-weight:600;'>Institution:</td><td>{institution or '(not provided)'}</td></tr>
-                <tr><td style='padding:4px 0;font-weight:600;'>Trial:</td><td>{'Yes' if trial else 'No'}</td></tr>
-                <tr><td style='padding:4px 0;font-weight:600;'>Timestamp (UTC):</td><td>{datetime.utcnow().isoformat()}</td></tr>
-            </table>
-            <hr style='border:1px solid #eee;margin:16px 0;'>
-            <p style='font-size:12px;color:#888;'>Automated notification • MapMyStandards.ai</p>
+            <div style='background:#10b981;color:white;padding:20px;border-radius:10px 10px 0 0;'>
+                <h2 style='margin:0;'>{'New Customer Subscription' if plan_name else 'New Signup'}</h2>
+            </div>
+            <div style='background:white;padding:20px;border:1px solid #e5e7eb;border-radius:0 0 10px 10px;'>
+                <table style='width:100%;border-collapse:collapse;'>
+                    <tr><td style='padding:8px 0;font-weight:600;width:150px;'>Name:</td><td>{user_name}</td></tr>
+                    <tr><td style='padding:8px 0;font-weight:600;'>Email:</td><td><a href='mailto:{user_email}'>{user_email}</a></td></tr>
+                    <tr><td style='padding:8px 0;font-weight:600;'>Institution:</td><td>{institution or '(not provided)'}</td></tr>
+        """
+        
+        if plan_name:
+            html_body += f"""
+                    <tr><td style='padding:8px 0;font-weight:600;'>Plan:</td><td>{plan_name}</td></tr>
+                    <tr><td style='padding:8px 0;font-weight:600;'>Amount:</td><td>${amount:.2f if amount else 'N/A'}</td></tr>
+            """
+        
+        if stripe_customer_id:
+            html_body += f"""
+                    <tr><td style='padding:8px 0;font-weight:600;'>Stripe Customer:</td><td>{stripe_customer_id}</td></tr>
+            """
+        
+        if subscription_id:
+            html_body += f"""
+                    <tr><td style='padding:8px 0;font-weight:600;'>Subscription ID:</td><td>{subscription_id}</td></tr>
+            """
+        
+        html_body += f"""
+                    <tr><td style='padding:8px 0;font-weight:600;'>Timestamp (UTC):</td><td>{datetime.utcnow().isoformat()}</td></tr>
+                </table>
+        """
+        
+        if stripe_customer_id:
+            html_body += f"""
+                <p style='margin-top:20px;'>
+                    <a href='https://dashboard.stripe.com/customers/{stripe_customer_id}' 
+                       style='background:#5469d4;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;display:inline-block;'>
+                        View in Stripe Dashboard
+                    </a>
+                </p>
+            """
+        
+        html_body += """
+            </div>
+            <p style='font-size:12px;color:#888;text-align:center;margin-top:20px;'>Automated notification • MapMyStandards</p>
         </div>
         """
+        
         return self.send_email([admin_recipient], subject, body, html_body=html_body)
 
     def send_password_setup_email(self, user_email: str, user_name: str, setup_link: str, expires_hours: int = 48) -> bool:

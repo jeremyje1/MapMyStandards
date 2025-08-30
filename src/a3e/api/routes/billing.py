@@ -468,14 +468,22 @@ async def stripe_webhook(request: Request):
         if event_type == "checkout.session.completed":
             session = event["data"]["object"]
             customer_email = session.get("customer_details", {}).get("email")
+            customer_name = session.get("customer_details", {}).get("name", "Customer")
+            stripe_customer_id = session.get("customer")
+            subscription_id = session.get("subscription")
+            amount_total = session.get("amount_total", 0) / 100  # Convert cents to dollars
+            
+            # Determine plan name from metadata or line items
+            metadata = session.get("metadata", {})
+            plan_name = metadata.get("plan_name", "Professional")
+            
             if customer_email:
                 # Log successful subscription
-                logger.info(f"✅ New subscription: {customer_email}")
+                logger.info(f"✅ New subscription: {customer_email} - {plan_name} Plan")
                 
                 # Send welcome email to customer
                 try:
-                    from ...services.postmark_service import PostmarkEmailService
-                    email_service = PostmarkEmailService()
+                    from ...services.email_service import email_service
                     
                     # Extract customer name if available
                     customer_name = session.get("customer_details", {}).get("name", "Valued Customer")
@@ -483,7 +491,8 @@ async def stripe_webhook(request: Request):
                     # Send welcome email
                     email_sent = email_service.send_welcome_email(
                         user_email=customer_email,
-                        user_name=customer_name
+                        user_name=customer_name,
+                        plan_name=plan_name
                     )
                     
                     if email_sent:
@@ -492,12 +501,15 @@ async def stripe_webhook(request: Request):
                         logger.warning(f"⚠️ Failed to send welcome email to {customer_email}")
                     
                     # Send admin notification
-                    admin_notification = email_service.send_admin_signup_notification(
+                    admin_notification = email_service.send_admin_new_signup_notification(
                         user_email=customer_email,
                         user_name=customer_name,
-                        institution=session.get("metadata", {}).get("institution_name", "Not specified"),
-                        plan=session.get("metadata", {}).get("plan", "Professional"),
-                        trial_mode=session.get("mode") == "subscription"
+                        institution=metadata.get("institution_name"),
+                        trial=False,
+                        plan_name=plan_name,
+                        amount=amount_total,
+                        stripe_customer_id=stripe_customer_id,
+                        subscription_id=subscription_id
                     )
                     
                     if admin_notification:
