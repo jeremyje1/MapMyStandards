@@ -16,24 +16,24 @@ const CheckoutSuccess: React.FC = () => {
   const email = searchParams.get('email') || '';
 
   useEffect(() => {
+    const verifySession = async () => {
+      if (!sessionId) return;
+      
+      try {
+        const response = await api.billing.verifyCheckoutSession(sessionId);
+        if (response.data.email) {
+          // Session verified successfully
+        }
+      } catch (err) {
+        console.error('Failed to verify session:', err);
+      }
+    };
+
     // Verify the checkout session
     if (sessionId) {
       verifySession();
     }
   }, [sessionId]);
-
-  const verifySession = async () => {
-    if (!sessionId) return;
-    
-    try {
-      const response = await api.billing.verifyCheckoutSession(sessionId);
-      if (response.data.email) {
-        // Session verified successfully
-      }
-    } catch (err) {
-      console.error('Failed to verify session:', err);
-    }
-  };
 
   const handlePasswordSetup = async (e: React.FormEvent) => {
     e.preventDefault();
