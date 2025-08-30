@@ -23,6 +23,8 @@ const CheckoutSuccess: React.FC = () => {
   }, [sessionId]);
 
   const verifySession = async () => {
+    if (!sessionId) return;
+    
     try {
       const response = await api.billing.verifyCheckoutSession(sessionId);
       if (response.data.email) {
