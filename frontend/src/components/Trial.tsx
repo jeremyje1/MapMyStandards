@@ -19,7 +19,7 @@ const plans = [
   {
     id: 'professional',
     name: 'Professional',
-    price: '$297',
+    price: '$299',
     period: 'month',
     popular: true,
     features: [
