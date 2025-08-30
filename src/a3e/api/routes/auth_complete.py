@@ -38,11 +38,14 @@ class LoginRequest(BaseModel):
     remember: bool = False
 
 class RegisterRequest(BaseModel):
-    name: str
+    first_name: str
+    last_name: str
     email: EmailStr
     password: str
-    institution_name: Optional[str] = None
-    plan: str = "trial"
+    institution_name: str
+    plan: str = "professional"  # starter, professional, institution
+    billing_period: str = "monthly"  # monthly or yearly
+    is_trial: bool = True
     newsletter_opt_in: bool = False
 
 class PasswordResetRequest(BaseModel):
@@ -179,9 +182,10 @@ async def register(request: RegisterRequest, db: AsyncSession = Depends(get_db))
         password_hash = bcrypt.hashpw(request.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
         
         # Create new user
+        full_name = f"{request.first_name} {request.last_name}"
         new_user = User(
             email=request.email,
-            name=request.name,
+            name=full_name,
             password_hash=password_hash,
             api_key=api_key,
             subscription_tier=request.plan,
@@ -202,15 +206,23 @@ async def register(request: RegisterRequest, db: AsyncSession = Depends(get_db))
         
         return AuthResponse(
             success=True,
-            message="Registration successful! Check your email to verify your account.",
+            message="Registration successful! Your 7-day trial has started.",
             data={
                 "access_token": token,
                 "token_type": "bearer",
                 "api_key": api_key,
-                "user_id": str(new_user.id),
-                "email": new_user.email,
-                "name": new_user.name,
-                "plan": request.plan,
+                "user": {
+                    "id": str(new_user.id),
+                    "email": new_user.email,
+                    "name": new_user.name,
+                    "first_name": request.first_name,
+                    "last_name": request.last_name,
+                    "institution_name": request.institution_name,
+                    "plan": request.plan,
+                    "billing_period": request.billing_period,
+                    "is_trial": request.is_trial,
+                    "trial_end": (datetime.utcnow() + timedelta(days=7)).isoformat()
+                },
                 "customer_id": f"cus_{secrets.token_hex(8)}",
                 "subscription_id": None  # No subscription yet for trial
             }
