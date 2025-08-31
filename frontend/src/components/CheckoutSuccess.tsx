@@ -6,33 +6,40 @@ import api from '../services/api';
 const CheckoutSuccess: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [sessionLoading, setSessionLoading] = useState(true);
   const [error, setError] = useState('');
   const [accountCreated, setAccountCreated] = useState(false);
   
   const sessionId = searchParams.get('session_id');
-  const email = searchParams.get('email') || '';
 
   useEffect(() => {
     const verifySession = async () => {
-      if (!sessionId) return;
+      if (!sessionId) {
+        setError('No session ID found. Please try again.');
+        setSessionLoading(false);
+        return;
+      }
       
       try {
         const response = await api.billing.verifyCheckoutSession(sessionId);
-        if (response.data.email) {
-          // Session verified successfully
+        if (response.data.customer_email) {
+          setEmail(response.data.customer_email);
+        } else {
+          setError('Unable to retrieve your email. Please contact support.');
         }
       } catch (err) {
         console.error('Failed to verify session:', err);
+        setError('Failed to verify your checkout session. Please contact support.');
+      } finally {
+        setSessionLoading(false);
       }
     };
 
-    // Verify the checkout session
-    if (sessionId) {
-      verifySession();
-    }
+    verifySession();
   }, [sessionId]);
 
   const handlePasswordSetup = async (e: React.FormEvent) => {
@@ -75,6 +82,52 @@ const CheckoutSuccess: React.FC = () => {
       setLoading(false);
     }
   };
+
+  if (sessionLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="max-w-md w-full">
+          <div className="bg-white rounded-lg shadow-lg p-8 text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              Verifying Your Session
+            </h2>
+            <p className="text-gray-600">
+              Please wait while we verify your checkout...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && !email) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="max-w-md w-full">
+          <div className="bg-white rounded-lg shadow-lg p-8 text-center">
+            <div className="text-red-500 mb-4">
+              <svg className="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 19.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              Session Verification Failed
+            </h2>
+            <p className="text-gray-600 mb-4">
+              {error}
+            </p>
+            <button
+              onClick={() => navigate('/pricing')}
+              className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (accountCreated) {
     return (
