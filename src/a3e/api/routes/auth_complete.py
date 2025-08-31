@@ -62,6 +62,11 @@ class PasswordSetupComplete(BaseModel):
     token: str
     password: str
 
+class CompleteRegistrationRequest(BaseModel):
+    session_id: str
+    email: EmailStr
+    password: str
+
 class AuthResponse(BaseModel):
     success: bool
     message: str
@@ -387,6 +392,87 @@ async def logout(credentials: HTTPAuthorizationCredentials = Depends(security)):
         message="Logged out successfully",
         data={}
     )
+
+@router.post("/complete-registration", response_model=AuthResponse)
+async def complete_registration(request: CompleteRegistrationRequest, db: AsyncSession = Depends(get_db)):
+    """Complete user registration after successful Stripe checkout"""
+    try:
+        # Import Stripe here to avoid circular imports
+        import stripe
+        stripe.api_key = settings.stripe_secret_key
+        
+        # Verify the Stripe session
+        try:
+            session = stripe.checkout.Session.retrieve(request.session_id)
+            if session.payment_status != 'paid':
+                raise HTTPException(status_code=400, detail="Payment not completed")
+            
+            # Get customer email from Stripe session
+            customer_id = session.customer
+            customer = stripe.Customer.retrieve(customer_id) if customer_id else None
+            stripe_email = customer.email if customer else None
+            
+            # Verify email matches
+            if stripe_email and stripe_email.lower() != request.email.lower():
+                raise HTTPException(status_code=400, detail="Email mismatch with payment session")
+                
+        except stripe.error.StripeError as e:
+            logger.error(f"Stripe session verification failed: {e}")
+            raise HTTPException(status_code=400, detail="Failed to verify payment session")
+        
+        # Check if user already exists
+        result = await db.execute(select(User).where(User.email == request.email.lower()))
+        existing_user = result.scalar_one_or_none()
+        
+        if existing_user:
+            # Update existing user with password
+            existing_user.password_hash = hash_password(request.password)
+            existing_user.is_active = True
+            existing_user.email_verified = True
+            existing_user.stripe_customer_id = customer_id
+            await db.commit()
+            user = existing_user
+        else:
+            # Create new user
+            hashed_password = hash_password(request.password)
+            user = User(
+                email=request.email.lower(),
+                password_hash=hashed_password,
+                first_name="",  # Will be updated later
+                last_name="",   # Will be updated later
+                is_active=True,
+                email_verified=True,
+                stripe_customer_id=customer_id,
+                created_at=datetime.utcnow()
+            )
+            db.add(user)
+            await db.commit()
+            await db.refresh(user)
+        
+        # Create access token
+        access_token = create_access_token(
+            data={"sub": str(user.id), "email": user.email}
+        )
+        
+        logger.info(f"User registration completed successfully for {request.email}")
+        
+        return AuthResponse(
+            success=True,
+            message="Registration completed successfully",
+            data={
+                "access_token": access_token,
+                "token_type": "bearer",
+                "user_id": user.id,
+                "email": user.email
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Registration completion failed for {request.email}: {e}")
+        await db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to complete registration")
 
 # Health check for auth service
 @router.get("/health")
