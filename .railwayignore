@@ -1,31 +1,40 @@
-# Ignore Next.js frontend files - Railway should deploy FastAPI backend only
-package.json
-package-lock.json
+# RAILWAY SHOULD DEPLOY PYTHON BACKEND ONLY
+# Ignore ALL frontend and Node.js files
+
+# Frontend files moved to backup
+frontend-backup/
+frontend/
+node_modules/
+.next/
+.vercel/
+public/
+components/
+pages/
+styles/
+app/
+lib/
+
+# Node.js files (should be in frontend-backup now)
+package*.json
 next.config.js
 tsconfig.json
 tailwind.config.js
 postcss.config.js
 next-env.d.ts
-.next/
-node_modules/
-components/
-pages/
-styles/
-frontend/
 
-# Ignore other development files
-.vercel/
-.vscode/
+# Development files
 .env.local
 .env.vercel*
-*.log
+.vscode/
+.git/
 logs/
+*.log
 
-# Ignore backup and test files
-dockerfiles_backup/
-docker-configs-backup/
-backups/
+# Test and backup files
 test_*.py
 **/test_*.py
 **/tests/
 **/__pycache__/
+dockerfiles_backup/
+docker-configs-backup/
+backups/
