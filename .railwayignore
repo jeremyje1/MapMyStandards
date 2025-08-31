@@ -5,25 +5,26 @@ next.config.js
 tsconfig.json
 tailwind.config.js
 postcss.config.js
-# NOTE: Don't ignore src/ - it contains our Python backend code!
-# src/
-public/
+next-env.d.ts
 .next/
 node_modules/
 components/
 pages/
 styles/
+frontend/
 
+# Ignore other development files
+.vercel/
+.vscode/
+.env.local
+.env.vercel*
+*.log
+logs/
+
+# Ignore backup and test files
 dockerfiles_backup/
-
-# Ignore other API files to ensure only saas_api_safe.py is used
-railway_test_api.py
-simple_trial_api*.py
-minimal_test_api.py
-ultra_minimal_api.py
-working_saas_api.py
-debug_api.py
-platform_demo.py
+docker-configs-backup/
+backups/
 test_*.py
 **/test_*.py
 **/tests/
