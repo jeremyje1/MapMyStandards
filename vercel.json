@@ -1,9 +1,11 @@
 {
-  "buildCommand": "cd frontend && npm run build",
+  "version": 2,
+  "buildCommand": "cd frontend && npm ci && npm run build",
   "outputDirectory": "frontend/build",
-  "installCommand": "cd frontend && npm install",
+  "installCommand": "cd frontend && npm ci",
   "devCommand": "cd frontend && npm start",
-  "framework": "create-react-app",
+  "framework": null,
+  "functions": {},
   "rewrites": [
     {
       "source": "/(.*)",
