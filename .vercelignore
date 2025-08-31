@@ -1,85 +1,5 @@
-# DISABLE VERCEL DEPLOYMENT - Using Railway for platform.mapmystandards.ai
-# This prevents conflicts with the FastAPI backend
-
-# Ignore everything to disable deployment
-*
-
-# Virtual environments - these are too large for deployment
-venv/
-stripe_venv/
-env/
-ENV/
-.venv/
-myenv/
-env.bak/
-venv.bak/
-
-# Python cache
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-
-# Development files
-.git/
-.gitignore
-README.md
-*.md
-LICENSE*
-
-# IDE files
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# Test files
-test_*.py
-*_test.py
-tests/
-
-# Documentation
-docs/
-
-# Scripts (deployment scripts not needed)
-scripts/
-
-# Logs
-*.log
-logs/
-
-# Database files (not needed for serverless)
-*.db
-*.sqlite3
-data/audit/
-
-# Backup files
-backups/
-*.backup
-*.bak
-
-# Docker files (not needed for Vercel)
-Dockerfile*
-docker-compose*.yml
-
-# Deployment files (not needed in build)
-deploy*.sh
-*.sh
-
-# Large config files
-config/standards_config.yaml
-
-# Temporary files
-tmp/
-temp/
-.tmp/
-
-# Large Python applications (not needed for Next.js deployment)
+# Backend Python files and directories
+src/
 *.py
 a3e_*.py
 run_app.py
@@ -90,21 +10,78 @@ debug_*.py
 create_*.py
 check_*.py
 complete_*.py
+admin_*.py
+clear_*.py
+contact_form_handler.py
 
-# Large environment directories
-a3e_enhanced_env/
+# Python environments and cache
+venv/
 stripe_venv/
+env/
+ENV/
+.venv/
+myenv/
+env.bak/
+venv.bak/
+a3e_enhanced_env/
 *_env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
 
-# Large log files
+# Database files
+*.db
+*.sqlite3
+data/
+
+# Backend configuration
+alembic.ini
+nixpacks.toml
+.railway/
+
+# Logs and temporary files
 *.log
+logs/
+tmp/
+temp/
+.tmp/
 a3e_production.log
 deployment_log.txt
+
+# Backup and deployment files
+backups/
+*.backup
+*.bak
+deploy*.sh
+*.sh
+
+# Docker files
+Dockerfile*
+docker-compose*.yml
+
+# Test files and documentation
+test_*.py
+*_test.py
+tests/
+*.md
+docs/
+
+# IDE and OS files
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Large config files
+config/standards_config.yaml
 
 # Production data and reports
 production_reports/
 reports/
-data/
 uploads/
 
 # JSON test files
