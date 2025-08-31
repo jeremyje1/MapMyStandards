@@ -1,88 +1,45 @@
-# Backend Python files and directories
+# Backend Python files and directories (ignore these)
 src/
 *.py
 a3e_*.py
-run_app.py
-app.py
-auth.py
-diagnostic_*.py
-debug_*.py
-create_*.py
-check_*.py
-complete_*.py
-admin_*.py
-clear_*.py
-contact_form_handler.py
 
 # Python environments and cache
 venv/
-stripe_venv/
 env/
-ENV/
 .venv/
-myenv/
-env.bak/
-venv.bak/
-a3e_enhanced_env/
-*_env/
 __pycache__/
 *.pyc
-*.pyo
-*.pyd
-.Python
 
-# Database files
+# Database and config files
 *.db
 *.sqlite3
-data/
-
-# Backend configuration
 alembic.ini
 nixpacks.toml
+
+# Backend deployment files
 .railway/
+Dockerfile*
+docker-compose*.yml
 
 # Logs and temporary files
 *.log
 logs/
 tmp/
-temp/
-.tmp/
-a3e_production.log
-deployment_log.txt
 
-# Backup and deployment files
-backups/
-*.backup
-*.bak
-deploy*.sh
+# Scripts and documentation
 *.sh
-
-# Docker files
-Dockerfile*
-docker-compose*.yml
-
-# Test files and documentation
-test_*.py
-*_test.py
-tests/
 *.md
 docs/
 
-# IDE and OS files
-.vscode/
-.idea/
-*.swp
-*.swo
-.DS_Store
-Thumbs.db
+# Test files
+test_*.py
+*_test.py
 
-# Large config files
-config/standards_config.yaml
+# Large directories
+node_modules/ (in root)
+.git/
+backups/
 
-# Production data and reports
-production_reports/
-reports/
-uploads/
-
-# JSON test files
-complete_*.json
+# Allow frontend files explicitly
+!frontend/
+!frontend/**
