@@ -17,5 +17,5 @@ COPY . .
 # Expose the port
 EXPOSE 8000
 
-# Command to run the application
-CMD ["uvicorn", "src.a3e.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Command to run the application - use shell form to expand env vars
+CMD uvicorn src.a3e.main:app --host 0.0.0.0 --port ${PORT:-8000}
