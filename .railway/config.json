@@ -1,6 +1,6 @@
 {
   "projectId": "prolific-fulfillment",
   "build": {
-    "builder": "PAKETO"
+    "builder": "DOCKERFILE"
   }
 }
