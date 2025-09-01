@@ -629,6 +629,29 @@ async def create_checkout_session(request: CheckoutSessionRequest):
             detail={"error": f"Failed to create checkout session: {str(e)}"}
         )
 
+@router.get("/verify-session/{session_id}")
+async def verify_checkout_session(session_id: str):
+    """Verify a Stripe checkout session and return customer details"""
+    try:
+        import stripe
+        settings = get_settings()
+        stripe.api_key = settings.STRIPE_SECRET_KEY
+        
+        # Retrieve the checkout session from Stripe
+        session = stripe.checkout.Session.retrieve(session_id)
+        
+        return {
+            "success": True,
+            "customer_email": session.customer_details.email if session.customer_details else None,
+            "customer_id": session.customer,
+            "subscription_id": session.subscription,
+            "payment_status": session.payment_status
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to verify checkout session {session_id}: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
 @router.get("/config/stripe-key", include_in_schema=False)
 async def get_stripe_publishable_key():
     """Get Stripe publishable key for client-side initialization"""
