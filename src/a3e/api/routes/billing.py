@@ -753,8 +753,30 @@ async def debug_database_schema():
         if institutions_exists:
             institution_count = await conn.fetchval("SELECT COUNT(*) FROM institutions;")
         
-        await conn.close()
+        # Check standards table
+        standards_count = 0
+        sample_standards = []
+        try:
+            standards_count = await conn.fetchval("SELECT COUNT(*) FROM accreditation_standards")
+            
+            if standards_count > 0:
+                sample_result = await conn.fetch("""
+                    SELECT standard_id, accreditor_id, title 
+                    FROM accreditation_standards 
+                    LIMIT 5
+                """)
+                sample_standards = [
+                    {
+                        "standard_id": row['standard_id'],
+                        "accreditor_id": row['accreditor_id'],
+                        "title": row['title']
+                    } for row in sample_result
+                ]
+        except Exception as e:
+            logger.error(f"Error checking standards: {e}")
         
+        await conn.close()
+
         return {
             "database_url_configured": bool(database_url),
             "database_url_start": database_url[:30] if database_url else None,
@@ -764,7 +786,9 @@ async def debug_database_schema():
             "users_schema": users_schema,
             "user_count": user_count,
             "institutions_table_exists": institutions_exists,
-            "institution_count": institution_count
+            "institution_count": institution_count,
+            "standards_count": standards_count,
+            "sample_standards": sample_standards
         }
         
     except Exception as e:
