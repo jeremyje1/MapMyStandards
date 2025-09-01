@@ -1391,6 +1391,43 @@ async def seed_standards_simple():
         logger.error(f"Simple standards seeding error: {e}")
         return {"success": False, "error": str(e), "error_type": type(e).__name__}
 
+@router.post("/debug/force-seed-now", include_in_schema=False)
+async def force_seed_now():
+    """Direct standards seeding - no conditions, just insert data"""
+    try:
+        import asyncpg
+        import os
+        from datetime import datetime
+        
+        database_url = os.environ.get('DATABASE_URL')
+        conn = await asyncpg.connect(database_url)
+        
+        # Clear existing
+        await conn.execute("DELETE FROM accreditation_standards")
+        
+        # Insert exactly 9 core standards
+        await conn.execute("""
+            INSERT INTO accreditation_standards (id, standard_id, accreditor_id, title, description, category, subcategory, version, effective_date, is_required, evidence_requirements, created_at)
+            VALUES 
+            (gen_random_uuid()::text, 'SACSCOC_1_1', 'sacscoc', 'Mission', 'The institution has a clearly defined mission statement.', 'Mission', 'Institutional Mission', '2024', '2024-01-01'::date, true, ARRAY['Mission Statement', 'Board Approval'], NOW()),
+            (gen_random_uuid()::text, 'SACSCOC_QEP', 'sacscoc', 'Quality Enhancement Plan', 'Institution develops and implements a QEP.', 'Quality Enhancement', 'QEP Implementation', '2024', '2024-01-01'::date, true, ARRAY['QEP Document', 'Implementation Plan'], NOW()),
+            (gen_random_uuid()::text, 'NECHE_1', 'neche', 'Mission and Purposes', 'Institution mission is appropriate to higher education.', 'Mission', 'Institutional Mission', '2024', '2024-01-01'::date, true, ARRAY['Mission Statement'], NOW()),
+            (gen_random_uuid()::text, 'MSCHE_I', 'msche', 'Mission and Goals', 'Institution mission defines its purpose.', 'Mission', 'Institutional Mission', '2024', '2024-01-01'::date, true, ARRAY['Mission Statement'], NOW()),
+            (gen_random_uuid()::text, 'WASC_1', 'wasc', 'Institutional Mission', 'Institution demonstrates commitment to mission.', 'Mission', 'Institutional Mission', '2024', '2024-01-01'::date, true, ARRAY['Mission Statement'], NOW()),
+            (gen_random_uuid()::text, 'HLC_1', 'hlc', 'Mission', 'Institution mission is clear and public.', 'Mission', 'Institutional Mission', '2024', '2024-01-01'::date, true, ARRAY['Mission Statement'], NOW()),
+            (gen_random_uuid()::text, 'NWCCU_1', 'nwccu', 'Mission and Core Themes', 'Institution defines mission and themes.', 'Mission', 'Institutional Mission', '2024', '2024-01-01'::date, true, ARRAY['Mission Statement'], NOW()),
+            (gen_random_uuid()::text, 'QEP_GENERAL', 'regional', 'QEP Requirements', 'Institutions must implement a QEP.', 'Quality Enhancement', 'QEP Implementation', '2024', '2024-01-01'::date, true, ARRAY['QEP Document'], NOW()),
+            (gen_random_uuid()::text, 'FEDERAL_COMPLIANCE', 'federal', 'Federal Compliance', 'Institution demonstrates federal compliance.', 'Compliance', 'Regulatory Compliance', '2024', '2024-01-01'::date, true, ARRAY['Compliance Records'], NOW())
+        """)
+        
+        count = await conn.fetchval("SELECT COUNT(*) FROM accreditation_standards")
+        await conn.close()
+        
+        return {"success": True, "message": f"Force seeded {count} standards directly", "standards_count": count}
+        
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
 @router.get("/debug/standards-count", include_in_schema=False)
 async def get_standards_count():
     """Quick check of standards table status"""
