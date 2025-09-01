@@ -849,11 +849,60 @@ async def migrate_users_table():
             ORDER BY ordinal_position;
         """)
         
+        # ALSO SEED STANDARDS if they don't exist
+        standards_seeded = 0
+        existing_standards_count = await conn.fetchval("SELECT COUNT(*) FROM accreditation_standards")
+        
+        if existing_standards_count == 0:
+            from datetime import datetime
+            
+            core_standards = [
+                ("SACSCOC_1_1", "sacscoc", "Mission", "The institution has a clearly defined mission statement.", "Mission", "Institutional Mission", True),
+                ("SACSCOC_QEP", "sacscoc", "Quality Enhancement Plan", "Institution develops and implements a QEP.", "Quality Enhancement", "QEP Implementation", True),
+                ("NECHE_1", "neche", "Mission and Purposes", "Institution's mission is appropriate to higher education.", "Mission", "Institutional Mission", True),
+                ("MSCHE_I", "msche", "Mission and Goals", "Institution's mission defines its purpose.", "Mission", "Institutional Mission", True),
+                ("WASC_1", "wasc", "Institutional Mission", "Institution demonstrates strong commitment to mission.", "Mission", "Institutional Mission", True),
+                ("HLC_1", "hlc", "Mission", "Institution's mission is clear and articulated publicly.", "Mission", "Institutional Mission", True),
+                ("NWCCU_1", "nwccu", "Mission and Core Themes", "Institution defines mission and core themes.", "Mission", "Institutional Mission", True),
+                ("QEP_GENERAL", "regional", "QEP Requirements", "Institutions must develop and implement a QEP.", "Quality Enhancement", "QEP Implementation", True),
+                ("FEDERAL_COMPLIANCE", "federal", "Federal Compliance", "Institution demonstrates federal compliance.", "Compliance", "Regulatory Compliance", True),
+            ]
+            
+            for standard_data in core_standards:
+                try:
+                    await conn.execute("""
+                        INSERT INTO accreditation_standards (
+                            id, standard_id, accreditor_id, title, description, 
+                            category, subcategory, version, effective_date, 
+                            is_required, evidence_requirements, created_at
+                        ) VALUES (
+                            gen_random_uuid()::text, $1, $2, $3, $4, $5, $6, '2024', $7, $8, 
+                            ARRAY['Documentation Required'], $9
+                        )
+                    """, 
+                        standard_data[0],  # standard_id
+                        standard_data[1],  # accreditor_id
+                        standard_data[2],  # title
+                        standard_data[3],  # description
+                        standard_data[4],  # category
+                        standard_data[5],  # subcategory
+                        datetime.fromisoformat("2024-01-01"),  # effective_date
+                        standard_data[6],  # is_required
+                        datetime.utcnow()   # created_at
+                    )
+                    standards_seeded += 1
+                    
+                except Exception as e:
+                    logger.error(f"Failed to create standard {standard_data[0]}: {e}")
+        
+        # Get final standards count
+        final_standards_count = await conn.fetchval("SELECT COUNT(*) FROM accreditation_standards")
+        
         await conn.close()
         
         return {
             "success": True,
-            "message": "Migration completed successfully",
+            "message": f"Migration completed successfully. Standards seeded: {standards_seeded}, Total standards: {final_standards_count}",
             "columns_after_migration": [
                 {
                     "column": c['column_name'],
@@ -861,7 +910,9 @@ async def migrate_users_table():
                     "nullable": c['is_nullable'] == 'YES',
                     "default": c['column_default']
                 } for c in columns_after
-            ]
+            ],
+            "standards_seeded": standards_seeded,
+            "total_standards": final_standards_count
         }
         
     except Exception as e:
