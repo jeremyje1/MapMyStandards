@@ -683,3 +683,90 @@ async def debug_stripe_config():
             "multicampus_yearly": settings.STRIPE_PRICE_MULTI_CAMPUS_YEARLY or "Not set"
         }
     }
+
+@router.get("/debug/database", include_in_schema=False)
+async def debug_database_schema():
+    """Debug endpoint to check database schema and tables"""
+    try:
+        import asyncpg
+        import os
+        
+        database_url = os.environ.get('DATABASE_URL')
+        if not database_url:
+            return {"error": "DATABASE_URL not found"}
+            
+        # Connect to database
+        conn = await asyncpg.connect(database_url)
+        
+        # List all tables
+        tables = await conn.fetch("""
+            SELECT table_name, table_type 
+            FROM information_schema.tables 
+            WHERE table_schema = 'public'
+            ORDER BY table_name;
+        """)
+        
+        table_list = [{"name": t['table_name'], "type": t['table_type']} for t in tables]
+        
+        # Check users table schema if it exists
+        users_schema = None
+        user_count = 0
+        
+        users_exists = await conn.fetchval("""
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables 
+                WHERE table_schema = 'public' 
+                AND table_name = 'users'
+            );
+        """)
+        
+        if users_exists:
+            columns = await conn.fetch("""
+                SELECT column_name, data_type, is_nullable, column_default
+                FROM information_schema.columns
+                WHERE table_schema = 'public' 
+                AND table_name = 'users'
+                ORDER BY ordinal_position;
+            """)
+            
+            users_schema = [
+                {
+                    "column": c['column_name'],
+                    "type": c['data_type'],
+                    "nullable": c['is_nullable'] == 'YES',
+                    "default": c['column_default']
+                } for c in columns
+            ]
+            
+            user_count = await conn.fetchval("SELECT COUNT(*) FROM users;")
+        
+        # Check institutions table
+        institutions_exists = await conn.fetchval("""
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables 
+                WHERE table_schema = 'public' 
+                AND table_name = 'institutions'
+            );
+        """)
+        
+        institution_count = 0
+        if institutions_exists:
+            institution_count = await conn.fetchval("SELECT COUNT(*) FROM institutions;")
+        
+        await conn.close()
+        
+        return {
+            "database_url_configured": bool(database_url),
+            "database_url_start": database_url[:30] if database_url else None,
+            "total_tables": len(table_list),
+            "tables": table_list,
+            "users_table_exists": users_exists,
+            "users_schema": users_schema,
+            "user_count": user_count,
+            "institutions_table_exists": institutions_exists,
+            "institution_count": institution_count
+        }
+        
+    except Exception as e:
+        logger.error(f"Database debug error: {e}")
+        return {"error": str(e), "error_type": type(e).__name__}
