@@ -867,3 +867,175 @@ async def migrate_users_table():
     except Exception as e:
         logger.error(f"Migration error: {e}")
         return {"success": False, "error": str(e), "error_type": type(e).__name__}
+
+@router.post("/debug/seed-standards", include_in_schema=False)
+async def seed_standards():
+    """Seed the database with SACSCOC standards data"""
+    try:
+        import asyncpg
+        import os
+        from datetime import datetime
+        
+        database_url = os.environ.get('DATABASE_URL')
+        if not database_url:
+            return {"error": "DATABASE_URL not found"}
+            
+        # Connect to database
+        conn = await asyncpg.connect(database_url)
+        
+        # SACSCOC Core Standards
+        standards_data = [
+            {
+                "standard_id": "SACSCOC_1_1",
+                "accreditor_id": "sacscoc",
+                "title": "Mission",
+                "description": "The institution has a clearly defined mission statement that articulates the institution's purpose, student population served, and commitment to student learning and student achievement.",
+                "category": "Institutional Mission and Effectiveness",
+                "subcategory": "Mission Statement",
+                "version": "2024",
+                "effective_date": "2024-01-01",
+                "is_required": True,
+                "evidence_requirements": ["Mission Statement", "Board Approval Documentation", "Strategic Plan"]
+            },
+            {
+                "standard_id": "SACSCOC_2_1", 
+                "accreditor_id": "sacscoc",
+                "title": "Degree Standards",
+                "description": "The institution offers one or more degree programs based on at least 60 semester credit hours or the equivalent at the baccalaureate level; at least 30 semester credit hours or the equivalent at the master's level.",
+                "category": "Academic and Student Affairs",
+                "subcategory": "Degree Requirements",
+                "version": "2024",
+                "effective_date": "2024-01-01", 
+                "is_required": True,
+                "evidence_requirements": ["Degree Program Documentation", "Credit Hour Requirements", "Catalog Pages"]
+            },
+            {
+                "standard_id": "SACSCOC_8_1",
+                "accreditor_id": "sacscoc",
+                "title": "Faculty",
+                "description": "The institution employs a sufficient number of qualified faculty to support the mission of the institution and the goals of the degree programs.",
+                "category": "Faculty",
+                "subcategory": "Faculty Qualifications",
+                "version": "2024",
+                "effective_date": "2024-01-01",
+                "is_required": True,
+                "evidence_requirements": ["Faculty CVs", "Qualification Matrix", "Teaching Load Documentation"]
+            },
+            {
+                "standard_id": "SACSCOC_8_2_A", 
+                "accreditor_id": "sacscoc",
+                "title": "Faculty Evaluation",
+                "description": "The institution regularly evaluates the effectiveness of each faculty member in accord with published criteria, regardless of contractual or employment terms.",
+                "category": "Faculty",
+                "subcategory": "Faculty Development",
+                "version": "2024",
+                "effective_date": "2024-01-01",
+                "is_required": True,
+                "evidence_requirements": ["Faculty Evaluation Process", "Evaluation Criteria", "Performance Reviews"]
+            },
+            {
+                "standard_id": "SACSCOC_9_1",
+                "accreditor_id": "sacscoc", 
+                "title": "Academic Support Services",
+                "description": "The institution provides appropriate academic support services.",
+                "category": "Academic and Student Affairs",
+                "subcategory": "Student Support",
+                "version": "2024",
+                "effective_date": "2024-01-01",
+                "is_required": True,
+                "evidence_requirements": ["Academic Support Services Documentation", "Tutoring Programs", "Advising Services"]
+            },
+            {
+                "standard_id": "SACSCOC_10_1",
+                "accreditor_id": "sacscoc",
+                "title": "Financial Resources",  
+                "description": "The institution's recent financial history demonstrates financial stability with the capacity to support its programs and services.",
+                "category": "Financial Resources",
+                "subcategory": "Financial Stability",
+                "version": "2024", 
+                "effective_date": "2024-01-01",
+                "is_required": True,
+                "evidence_requirements": ["Audited Financial Statements", "Budget Documentation", "Revenue Analysis"]
+            },
+            {
+                "standard_id": "SACSCOC_11_1",
+                "accreditor_id": "sacscoc",
+                "title": "Physical Resources",
+                "description": "The institution's physical resources support student learning and the effective delivery of programs and services.",
+                "category": "Physical Resources", 
+                "subcategory": "Facilities",
+                "version": "2024",
+                "effective_date": "2024-01-01",
+                "is_required": True,
+                "evidence_requirements": ["Facilities Master Plan", "Campus Maps", "Safety Documentation"]
+            },
+            {
+                "standard_id": "SACSCOC_12_1",
+                "accreditor_id": "sacscoc",
+                "title": "Resource Development",
+                "description": "The institution has a sound financial base and demonstrated financial stability to support the mission of the institution and the scope of its programs and services.",
+                "category": "Financial Resources",
+                "subcategory": "Resource Development", 
+                "version": "2024",
+                "effective_date": "2024-01-01",
+                "is_required": True,
+                "evidence_requirements": ["Fundraising Documentation", "Grant Records", "Endowment Reports"]
+            }
+        ]
+        
+        standards_created = 0
+        for standard in standards_data:
+            try:
+                # Check if standard already exists
+                existing = await conn.fetchrow(
+                    "SELECT id FROM accreditation_standards WHERE standard_id = $1",
+                    standard["standard_id"]
+                )
+                
+                if existing:
+                    continue
+                
+                # Insert new standard
+                await conn.execute("""
+                    INSERT INTO accreditation_standards (
+                        id, standard_id, accreditor_id, title, description, 
+                        category, subcategory, version, effective_date, 
+                        is_required, evidence_requirements, created_at
+                    ) VALUES (
+                        gen_random_uuid()::text, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11
+                    )
+                """, 
+                    standard["standard_id"],
+                    standard["accreditor_id"],
+                    standard["title"],
+                    standard["description"],
+                    standard["category"],
+                    standard["subcategory"],
+                    standard["version"],
+                    datetime.fromisoformat(standard["effective_date"]),
+                    standard["is_required"],
+                    standard["evidence_requirements"],
+                    datetime.utcnow()
+                )
+                standards_created += 1
+                
+            except Exception as e:
+                logger.error(f"Failed to create standard {standard['standard_id']}: {e}")
+        
+        # Get total count
+        total_standards = await conn.fetchval(
+            "SELECT COUNT(*) FROM accreditation_standards WHERE accreditor_id = 'sacscoc'"
+        )
+        
+        await conn.close()
+        
+        return {
+            "success": True,
+            "message": f"Seeding complete! Created {standards_created} new standards",
+            "standards_created": standards_created,
+            "total_sacscoc_standards": total_standards
+        }
+        
+    except Exception as e:
+        logger.error(f"Standards seeding error: {e}")
+        return {"success": False, "error": str(e), "error_type": type(e).__name__}
