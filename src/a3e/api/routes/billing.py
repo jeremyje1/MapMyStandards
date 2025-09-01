@@ -1359,3 +1359,52 @@ async def seed_standards_simple():
     except Exception as e:
         logger.error(f"Simple standards seeding error: {e}")
         return {"success": False, "error": str(e), "error_type": type(e).__name__}
+
+@router.get("/debug/standards-count", include_in_schema=False)
+async def get_standards_count():
+    """Quick check of standards table status"""
+    try:
+        import asyncpg
+        import os
+        
+        database_url = os.environ.get('DATABASE_URL')
+        if not database_url:
+            return {"error": "DATABASE_URL not found"}
+            
+        conn = await asyncpg.connect(database_url)
+        
+        total_count = await conn.fetchval("SELECT COUNT(*) FROM accreditation_standards")
+        
+        # Get sample standards
+        sample_standards = await conn.fetch("""
+            SELECT standard_id, accreditor_id, title 
+            FROM accreditation_standards 
+            LIMIT 10
+        """)
+        
+        # Get counts by accreditor
+        accreditor_counts = await conn.fetch("""
+            SELECT accreditor_id, COUNT(*) as count 
+            FROM accreditation_standards 
+            GROUP BY accreditor_id 
+            ORDER BY count DESC
+        """)
+        
+        await conn.close()
+        
+        return {
+            "success": True,
+            "total_standards": total_count,
+            "accreditor_breakdown": {row['accreditor_id']: row['count'] for row in accreditor_counts},
+            "sample_standards": [
+                {
+                    "standard_id": row['standard_id'],
+                    "accreditor_id": row['accreditor_id'], 
+                    "title": row['title']
+                } for row in sample_standards
+            ]
+        }
+        
+    except Exception as e:
+        logger.error(f"Standards count error: {e}")
+        return {"success": False, "error": str(e), "error_type": type(e).__name__}
