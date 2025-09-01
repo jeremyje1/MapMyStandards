@@ -1229,3 +1229,82 @@ async def seed_comprehensive_standards():
     except Exception as e:
         logger.error(f"Standards seeding error: {e}")
         return {"success": False, "error": str(e), "error_type": type(e).__name__}
+
+@router.post("/debug/seed-standards-simple", include_in_schema=False)
+async def seed_standards_simple():
+    """Simple standards seeding endpoint that uses the same approach as migrate-users"""
+    try:
+        import asyncpg
+        import os
+        from datetime import datetime
+        
+        database_url = os.environ.get('DATABASE_URL')
+        if not database_url:
+            return {"error": "DATABASE_URL not found"}
+            
+        conn = await asyncpg.connect(database_url)
+        
+        # Check if standards already exist
+        existing_count = await conn.fetchval("SELECT COUNT(*) FROM accreditation_standards")
+        if existing_count > 0:
+            await conn.close()
+            return {
+                "success": True,
+                "message": f"Standards already exist ({existing_count} found). Skipping seeding.",
+                "existing_standards": existing_count
+            }
+        
+        # Simple set of core standards for immediate functionality
+        core_standards = [
+            ("SACSCOC_1_1", "sacscoc", "Mission", "The institution has a clearly defined mission statement.", "Mission", "Institutional Mission", True),
+            ("SACSCOC_QEP", "sacscoc", "Quality Enhancement Plan", "Institution develops and implements a QEP.", "Quality Enhancement", "QEP Implementation", True),
+            ("NECHE_1", "neche", "Mission and Purposes", "Institution's mission is appropriate to higher education.", "Mission", "Institutional Mission", True),
+            ("MSCHE_I", "msche", "Mission and Goals", "Institution's mission defines its purpose.", "Mission", "Institutional Mission", True),
+            ("WASC_1", "wasc", "Institutional Mission", "Institution demonstrates strong commitment to mission.", "Mission", "Institutional Mission", True),
+            ("HLC_1", "hlc", "Mission", "Institution's mission is clear and articulated publicly.", "Mission", "Institutional Mission", True),
+            ("NWCCU_1", "nwccu", "Mission and Core Themes", "Institution defines mission and core themes.", "Mission", "Institutional Mission", True),
+            ("QEP_GENERAL", "regional", "QEP Requirements", "Institutions must develop and implement a QEP.", "Quality Enhancement", "QEP Implementation", True),
+            ("FEDERAL_COMPLIANCE", "federal", "Federal Compliance", "Institution demonstrates federal compliance.", "Compliance", "Regulatory Compliance", True),
+        ]
+        
+        standards_created = 0
+        for standard_data in core_standards:
+            try:
+                await conn.execute("""
+                    INSERT INTO accreditation_standards (
+                        id, standard_id, accreditor_id, title, description, 
+                        category, subcategory, version, effective_date, 
+                        is_required, evidence_requirements, created_at
+                    ) VALUES (
+                        gen_random_uuid()::text, $1, $2, $3, $4, $5, $6, '2024', $7, $8, 
+                        ARRAY['Documentation Required'], $9
+                    )
+                """, 
+                    standard_data[0],  # standard_id
+                    standard_data[1],  # accreditor_id
+                    standard_data[2],  # title
+                    standard_data[3],  # description
+                    standard_data[4],  # category
+                    standard_data[5],  # subcategory
+                    datetime.fromisoformat("2024-01-01"),  # effective_date
+                    standard_data[6],  # is_required
+                    datetime.utcnow()   # created_at
+                )
+                standards_created += 1
+                
+            except Exception as e:
+                logger.error(f"Failed to create standard {standard_data[0]}: {e}")
+        
+        total_standards = await conn.fetchval("SELECT COUNT(*) FROM accreditation_standards")
+        await conn.close()
+        
+        return {
+            "success": True,
+            "message": f"Core accreditation standards seeded! Created {standards_created} standards",
+            "standards_created": standards_created,
+            "total_standards": total_standards
+        }
+        
+    except Exception as e:
+        logger.error(f"Simple standards seeding error: {e}")
+        return {"success": False, "error": str(e), "error_type": type(e).__name__}
