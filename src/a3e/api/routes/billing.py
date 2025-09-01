@@ -868,9 +868,9 @@ async def migrate_users_table():
         logger.error(f"Migration error: {e}")
         return {"success": False, "error": str(e), "error_type": type(e).__name__}
 
-@router.post("/debug/seed-standards", include_in_schema=False)
-async def seed_standards():
-    """Seed the database with SACSCOC standards data"""
+@router.post("/debug/seed-comprehensive-standards", include_in_schema=False)
+async def seed_comprehensive_standards():
+    """Seed the database with comprehensive US accreditation standards"""
     try:
         import asyncpg
         import os
@@ -883,8 +883,9 @@ async def seed_standards():
         # Connect to database
         conn = await asyncpg.connect(database_url)
         
-        # SACSCOC Core Standards
+        # Comprehensive US Accreditation Standards
         standards_data = [
+            # ===== SACSCOC STANDARDS (Southern) =====
             {
                 "standard_id": "SACSCOC_1_1",
                 "accreditor_id": "sacscoc",
@@ -922,64 +923,232 @@ async def seed_standards():
                 "evidence_requirements": ["Faculty CVs", "Qualification Matrix", "Teaching Load Documentation"]
             },
             {
-                "standard_id": "SACSCOC_8_2_A", 
+                "standard_id": "SACSCOC_QEP",
                 "accreditor_id": "sacscoc",
-                "title": "Faculty Evaluation",
-                "description": "The institution regularly evaluates the effectiveness of each faculty member in accord with published criteria, regardless of contractual or employment terms.",
-                "category": "Faculty",
-                "subcategory": "Faculty Development",
+                "title": "Quality Enhancement Plan (QEP)",
+                "description": "The institution develops and implements a Quality Enhancement Plan (QEP) that demonstrates institutional capability for the initiation, implementation, and completion of the QEP.",
+                "category": "Quality Enhancement",
+                "subcategory": "QEP Implementation",
                 "version": "2024",
                 "effective_date": "2024-01-01",
                 "is_required": True,
-                "evidence_requirements": ["Faculty Evaluation Process", "Evaluation Criteria", "Performance Reviews"]
+                "evidence_requirements": ["QEP Document", "Implementation Timeline", "Assessment Plan", "Resource Allocation"]
             },
             {
-                "standard_id": "SACSCOC_9_1",
-                "accreditor_id": "sacscoc", 
-                "title": "Academic Support Services",
-                "description": "The institution provides appropriate academic support services.",
-                "category": "Academic and Student Affairs",
-                "subcategory": "Student Support",
+                "standard_id": "SACSCOC_SUBST_CHANGE",
+                "accreditor_id": "sacscoc",
+                "title": "Substantive Change",
+                "description": "The institution reports substantive changes to SACSCOC in accordance with the substantive change policy and, when required, obtains approval prior to implementation.",
+                "category": "Compliance",
+                "subcategory": "Substantive Change",
                 "version": "2024",
                 "effective_date": "2024-01-01",
                 "is_required": True,
-                "evidence_requirements": ["Academic Support Services Documentation", "Tutoring Programs", "Advising Services"]
+                "evidence_requirements": ["Substantive Change Notifications", "Approval Documentation", "Implementation Plans"]
             },
+            
+            # ===== NECHE STANDARDS (New England) =====
             {
-                "standard_id": "SACSCOC_10_1",
-                "accreditor_id": "sacscoc",
-                "title": "Financial Resources",  
-                "description": "The institution's recent financial history demonstrates financial stability with the capacity to support its programs and services.",
-                "category": "Financial Resources",
-                "subcategory": "Financial Stability",
-                "version": "2024", 
-                "effective_date": "2024-01-01",
-                "is_required": True,
-                "evidence_requirements": ["Audited Financial Statements", "Budget Documentation", "Revenue Analysis"]
-            },
-            {
-                "standard_id": "SACSCOC_11_1",
-                "accreditor_id": "sacscoc",
-                "title": "Physical Resources",
-                "description": "The institution's physical resources support student learning and the effective delivery of programs and services.",
-                "category": "Physical Resources", 
-                "subcategory": "Facilities",
+                "standard_id": "NECHE_1",
+                "accreditor_id": "neche",
+                "title": "Mission and Purposes",
+                "description": "The institution's mission and purposes are appropriate to higher education, clearly stated, and consistently implemented throughout the institution.",
+                "category": "Mission and Purposes",
+                "subcategory": "Institutional Mission",
                 "version": "2024",
                 "effective_date": "2024-01-01",
                 "is_required": True,
-                "evidence_requirements": ["Facilities Master Plan", "Campus Maps", "Safety Documentation"]
+                "evidence_requirements": ["Mission Statement", "Strategic Planning Documents", "Board Minutes"]
             },
             {
-                "standard_id": "SACSCOC_12_1",
-                "accreditor_id": "sacscoc",
-                "title": "Resource Development",
-                "description": "The institution has a sound financial base and demonstrated financial stability to support the mission of the institution and the scope of its programs and services.",
-                "category": "Financial Resources",
-                "subcategory": "Resource Development", 
+                "standard_id": "NECHE_2",
+                "accreditor_id": "neche",
+                "title": "Planning and Evaluation",
+                "description": "The institution undertakes planning and evaluation to accomplish and improve the achievement of its mission and purposes.",
+                "category": "Planning and Evaluation",
+                "subcategory": "Strategic Planning",
                 "version": "2024",
                 "effective_date": "2024-01-01",
                 "is_required": True,
-                "evidence_requirements": ["Fundraising Documentation", "Grant Records", "Endowment Reports"]
+                "evidence_requirements": ["Strategic Plan", "Assessment Reports", "Planning Process Documentation"]
+            },
+            {
+                "standard_id": "NECHE_4",
+                "accreditor_id": "neche",
+                "title": "Academic Program",
+                "description": "The institution's academic programs are appropriate to higher education, support the institution's mission, and are characterized by rigor and coherence.",
+                "category": "Academic Programs",
+                "subcategory": "Program Quality",
+                "version": "2024",
+                "effective_date": "2024-01-01",
+                "is_required": True,
+                "evidence_requirements": ["Program Descriptions", "Curriculum Maps", "Learning Outcomes Assessment"]
+            },
+            
+            # ===== MSCHE STANDARDS (Middle States) =====
+            {
+                "standard_id": "MSCHE_I",
+                "accreditor_id": "msche",
+                "title": "Mission and Goals",
+                "description": "The institution's mission defines its purpose within the context of higher education, the students it serves, and what it intends to accomplish.",
+                "category": "Mission and Goals",
+                "subcategory": "Institutional Identity",
+                "version": "2024",
+                "effective_date": "2024-01-01",
+                "is_required": True,
+                "evidence_requirements": ["Mission Statement", "Goals Documentation", "Assessment Evidence"]
+            },
+            {
+                "standard_id": "MSCHE_II",
+                "accreditor_id": "msche",
+                "title": "Ethics and Integrity",
+                "description": "Ethics and integrity are central, indispensable, and defining hallmarks of effective higher education institutions.",
+                "category": "Ethics and Integrity",
+                "subcategory": "Institutional Ethics",
+                "version": "2024",
+                "effective_date": "2024-01-01",
+                "is_required": True,
+                "evidence_requirements": ["Ethics Policies", "Integrity Documentation", "Compliance Records"]
+            },
+            {
+                "standard_id": "MSCHE_III",
+                "accreditor_id": "msche",
+                "title": "Design and Delivery of the Student Learning Experience",
+                "description": "The institution provides students with learning experiences that are characterized by rigor and coherence at all program, certificate, and degree levels.",
+                "category": "Student Learning",
+                "subcategory": "Learning Experience Design",
+                "version": "2024",
+                "effective_date": "2024-01-01",
+                "is_required": True,
+                "evidence_requirements": ["Curriculum Design", "Learning Assessment", "Program Reviews"]
+            },
+            
+            # ===== WASC STANDARDS (Western) =====
+            {
+                "standard_id": "WASC_1",
+                "accreditor_id": "wasc",
+                "title": "Institutional Mission and Institutional Capacity",
+                "description": "The institution demonstrates strong commitment to a mission that emphasizes student learning and student achievement.",
+                "category": "Mission and Capacity",
+                "subcategory": "Institutional Mission",
+                "version": "2024",
+                "effective_date": "2024-01-01",
+                "is_required": True,
+                "evidence_requirements": ["Mission Statement", "Capacity Documentation", "Achievement Evidence"]
+            },
+            {
+                "standard_id": "WASC_2",
+                "accreditor_id": "wasc",
+                "title": "Educational Effectiveness and Assessment",
+                "description": "The institution demonstrates that student learning is the core theme of the institution's work and uses the results of its assessment of student learning to inform academic and learning-support planning.",
+                "category": "Educational Effectiveness",
+                "subcategory": "Student Learning Assessment",
+                "version": "2024",
+                "effective_date": "2024-01-01",
+                "is_required": True,
+                "evidence_requirements": ["Assessment Plan", "Learning Outcomes", "Assessment Results", "Improvement Plans"]
+            },
+            
+            # ===== HLC STANDARDS (North Central) =====
+            {
+                "standard_id": "HLC_1",
+                "accreditor_id": "hlc",
+                "title": "Mission",
+                "description": "The institution's mission is clear and articulated publicly; it guides the institution's operations.",
+                "category": "Mission",
+                "subcategory": "Institutional Mission",
+                "version": "2024",
+                "effective_date": "2024-01-01",
+                "is_required": True,
+                "evidence_requirements": ["Mission Statement", "Public Communications", "Operational Alignment"]
+            },
+            {
+                "standard_id": "HLC_3",
+                "accreditor_id": "hlc",
+                "title": "Teaching and Learning: Quality, Resources, and Support",
+                "description": "The institution provides high quality education, wherever and however its offerings are delivered.",
+                "category": "Teaching and Learning",
+                "subcategory": "Educational Quality",
+                "version": "2024",
+                "effective_date": "2024-01-01",
+                "is_required": True,
+                "evidence_requirements": ["Academic Programs", "Faculty Qualifications", "Learning Resources", "Student Support"]
+            },
+            {
+                "standard_id": "HLC_4",
+                "accreditor_id": "hlc",
+                "title": "Teaching and Learning: Evaluation and Improvement",
+                "description": "The institution demonstrates responsibility for the quality of its educational programs, learning environments, and support services.",
+                "category": "Evaluation and Improvement",
+                "subcategory": "Quality Assurance",
+                "version": "2024",
+                "effective_date": "2024-01-01",
+                "is_required": True,
+                "evidence_requirements": ["Program Assessment", "Improvement Plans", "Quality Measures", "Systematic Evaluation"]
+            },
+            
+            # ===== NWCCU STANDARDS (Northwest) =====
+            {
+                "standard_id": "NWCCU_1",
+                "accreditor_id": "nwccu",
+                "title": "Mission, Core Themes, and Expectations",
+                "description": "The institution defines mission, core themes, and expectations of achievement and uses these to guide planning and resource allocation.",
+                "category": "Mission and Core Themes",
+                "subcategory": "Institutional Mission",
+                "version": "2024",
+                "effective_date": "2024-01-01",
+                "is_required": True,
+                "evidence_requirements": ["Mission Statement", "Core Theme Identification", "Planning Documents"]
+            },
+            {
+                "standard_id": "NWCCU_2",
+                "accreditor_id": "nwccu",
+                "title": "Resources and Capacity",
+                "description": "The institution has adequate and appropriate human, financial, physical, and information resources to achieve its mission and core themes.",
+                "category": "Resources and Capacity",
+                "subcategory": "Institutional Resources",
+                "version": "2024",
+                "effective_date": "2024-01-01",
+                "is_required": True,
+                "evidence_requirements": ["Resource Documentation", "Financial Records", "Capacity Assessment", "Infrastructure Plans"]
+            },
+            
+            # ===== SPECIAL REQUIREMENTS =====
+            {
+                "standard_id": "QEP_GENERAL",
+                "accreditor_id": "regional",
+                "title": "Quality Enhancement Plan Requirements",
+                "description": "Institutions must develop, implement, and assess a Quality Enhancement Plan that focuses on improving student learning outcomes.",
+                "category": "Quality Enhancement",
+                "subcategory": "QEP Implementation",
+                "version": "2024",
+                "effective_date": "2024-01-01",
+                "is_required": True,
+                "evidence_requirements": ["QEP Document", "Implementation Plan", "Assessment Design", "Resource Allocation", "Timeline", "Outcome Measures"]
+            },
+            {
+                "standard_id": "TITLE_IV_COMPLIANCE",
+                "accreditor_id": "federal",
+                "title": "Federal Compliance Requirements",
+                "description": "The institution demonstrates compliance with federal regulations including Title IV financial aid requirements, student right-to-know, and other federal mandates.",
+                "category": "Federal Compliance",
+                "subcategory": "Regulatory Compliance",
+                "version": "2024",
+                "effective_date": "2024-01-01",
+                "is_required": True,
+                "evidence_requirements": ["Title IV Documentation", "Financial Aid Records", "Student Right-to-Know Reports", "Compliance Audits"]
+            },
+            {
+                "standard_id": "DISTANCE_ED_COMPLIANCE",
+                "accreditor_id": "regional",
+                "title": "Distance Education Standards",
+                "description": "Institutions offering distance education must demonstrate that programs maintain the same academic rigor and student support as traditional programs.",
+                "category": "Distance Education",
+                "subcategory": "Online Program Quality",
+                "version": "2024",
+                "effective_date": "2024-01-01",
+                "is_required": False,
+                "evidence_requirements": ["Distance Ed Policies", "Technology Infrastructure", "Student Authentication", "Academic Integrity Measures", "Student Support Services"]
             }
         ]
         
@@ -1022,18 +1191,39 @@ async def seed_standards():
             except Exception as e:
                 logger.error(f"Failed to create standard {standard['standard_id']}: {e}")
         
-        # Get total count
-        total_standards = await conn.fetchval(
-            "SELECT COUNT(*) FROM accreditation_standards WHERE accreditor_id = 'sacscoc'"
-        )
+        # Get counts by accreditor
+        accreditor_counts = {}
+        accreditors = ['sacscoc', 'neche', 'msche', 'wasc', 'hlc', 'nwccu', 'regional', 'federal']
+        
+        for accreditor in accreditors:
+            count = await conn.fetchval(
+                "SELECT COUNT(*) FROM accreditation_standards WHERE accreditor_id = $1", 
+                accreditor
+            )
+            if count > 0:
+                accreditor_counts[accreditor] = count
+        
+        total_standards = await conn.fetchval("SELECT COUNT(*) FROM accreditation_standards")
         
         await conn.close()
         
         return {
             "success": True,
-            "message": f"Seeding complete! Created {standards_created} new standards",
+            "message": f"Comprehensive US accreditation standards seeding complete! Created {standards_created} new standards",
             "standards_created": standards_created,
-            "total_sacscoc_standards": total_standards
+            "total_standards": total_standards,
+            "accreditor_breakdown": accreditor_counts,
+            "accreditors_included": [
+                "SACSCOC (Southern Association of Colleges and Schools)",
+                "NECHE (New England Commission of Higher Education)", 
+                "MSCHE (Middle States Commission on Higher Education)",
+                "WASC (Western Association of Schools and Colleges)",
+                "HLC (Higher Learning Commission - North Central)",
+                "NWCCU (Northwest Commission on Colleges and Universities)",
+                "QEP (Quality Enhancement Plan) Requirements",
+                "Federal Compliance Requirements",
+                "Distance Education Standards"
+            ]
         }
         
     except Exception as e:
