@@ -399,7 +399,7 @@ async def complete_registration(request: CompleteRegistrationRequest, db: AsyncS
     try:
         # Import Stripe here to avoid circular imports
         import stripe
-        stripe.api_key = settings.stripe_secret_key
+        stripe.api_key = settings.STRIPE_SECRET_KEY
         
         # Verify the Stripe session
         try:
