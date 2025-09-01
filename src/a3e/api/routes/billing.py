@@ -770,3 +770,100 @@ async def debug_database_schema():
     except Exception as e:
         logger.error(f"Database debug error: {e}")
         return {"error": str(e), "error_type": type(e).__name__}
+
+@router.post("/debug/migrate-users", include_in_schema=False)
+async def migrate_users_table():
+    """Migration endpoint to add authentication fields to users table"""
+    try:
+        import asyncpg
+        import os
+        
+        database_url = os.environ.get('DATABASE_URL')
+        if not database_url:
+            return {"error": "DATABASE_URL not found"}
+            
+        # Connect to database
+        conn = await asyncpg.connect(database_url)
+        
+        migration_sql = """
+        BEGIN;
+
+        -- Add authentication fields
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255);
+
+        -- Add organization info fields  
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS institution_name VARCHAR(255);
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS institution_type VARCHAR(50);
+
+        -- Add trial and subscription info
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS is_trial BOOLEAN DEFAULT TRUE;
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS trial_started_at TIMESTAMP;
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS trial_ends_at TIMESTAMP;
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_tier VARCHAR(50);
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id VARCHAR(255);
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_subscription_id VARCHAR(255);
+
+        -- Add API access fields
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS api_key VARCHAR(255);
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS api_key_created_at TIMESTAMP;
+
+        -- Add additional account status fields
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT FALSE;
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified_at TIMESTAMP;
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMP;
+
+        -- Add usage tracking fields
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS documents_analyzed INTEGER DEFAULT 0;
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS reports_generated INTEGER DEFAULT 0;
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS compliance_checks_run INTEGER DEFAULT 0;
+
+        COMMIT;
+        """
+        
+        # Execute migration in a transaction
+        await conn.execute(migration_sql)
+        
+        # Create unique indexes separately (not in transaction to avoid conflicts)
+        try:
+            await conn.execute("""
+                CREATE UNIQUE INDEX IF NOT EXISTS idx_users_stripe_customer_id 
+                ON users(stripe_customer_id) WHERE stripe_customer_id IS NOT NULL;
+            """)
+            await conn.execute("""
+                CREATE UNIQUE INDEX IF NOT EXISTS idx_users_stripe_subscription_id 
+                ON users(stripe_subscription_id) WHERE stripe_subscription_id IS NOT NULL;
+            """)
+            await conn.execute("""
+                CREATE UNIQUE INDEX IF NOT EXISTS idx_users_api_key 
+                ON users(api_key) WHERE api_key IS NOT NULL;
+            """)
+        except Exception as idx_error:
+            logger.warning(f"Index creation warning (may already exist): {idx_error}")
+        
+        # Verify migration by checking new columns
+        columns_after = await conn.fetch("""
+            SELECT column_name, data_type, is_nullable, column_default
+            FROM information_schema.columns
+            WHERE table_schema = 'public' 
+            AND table_name = 'users'
+            ORDER BY ordinal_position;
+        """)
+        
+        await conn.close()
+        
+        return {
+            "success": True,
+            "message": "Migration completed successfully",
+            "columns_after_migration": [
+                {
+                    "column": c['column_name'],
+                    "type": c['data_type'],
+                    "nullable": c['is_nullable'] == 'YES',
+                    "default": c['column_default']
+                } for c in columns_after
+            ]
+        }
+        
+    except Exception as e:
+        logger.error(f"Migration error: {e}")
+        return {"success": False, "error": str(e), "error_type": type(e).__name__}
