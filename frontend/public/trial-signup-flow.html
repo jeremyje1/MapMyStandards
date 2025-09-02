@@ -6,7 +6,7 @@
     <title>Start Your Free Trial | MapMyStandards A³E</title>
     <meta name="description" content="Start your 7-day free trial of MapMyStandards A³E. Choose your plan and get instant access.">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="tailwind.min.css">
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -723,50 +723,65 @@
 
                     const signupData = await signupResponse.json();
                     
-                    // Store auth token
-                    if (signupData.access_token) {
-                        localStorage.setItem('token', signupData.access_token);
-                        localStorage.setItem('user', JSON.stringify(signupData.user));
-                    }
-
-                    // Create checkout session for payment method (for after trial)
-                    const planKey = `${selectedPlan}_${billingPeriod}`;
-                    const plan = planConfigs[planKey];
-                    
-                    const checkoutResponse = await fetch(`${apiBaseUrl}/billing/create-checkout-session`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${signupData.access_token}`
-                        },
-                        body: JSON.stringify({
-                            price_id: plan.priceId,
-                            success_url: 'https://platform.mapmystandards.ai/dashboard?trial=started',
-                            cancel_url: window.location.href,
-                            trial_period_days: 7,
-                            metadata: {
-                                user_id: signupData.user.id,
-                                plan: selectedPlan,
-                                billing_period: billingPeriod
+                    // Check if registration was successful
+                    if (signupData.success && signupData.data) {
+                        const userData = signupData.data;
+                        
+                        // Store auth token and user data
+                        if (userData.access_token) {
+                            localStorage.setItem('token', userData.access_token);
+                            localStorage.setItem('user', JSON.stringify(userData.user));
+                        }
+                        
+                        // Create Stripe checkout session for trial (collects payment method)
+                        submitBtn.querySelector('.submit-text').textContent = 'Setting up payment...';
+                        
+                        const planKey = `${selectedPlan}_${billingPeriod}`;
+                        const plan = planConfigs[planKey];
+                        
+                        // Create Stripe checkout session
+                        const checkoutResponse = await fetch(`${apiBaseUrl}/api/v1/billing/create-checkout-session`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${userData.access_token}`
+                            },
+                            body: JSON.stringify({
+                                price_id: plan.priceId,
+                                mode: 'subscription',
+                                success_url: 'https://platform.mapmystandards.ai/dashboard.html?trial=started&session_id={CHECKOUT_SESSION_ID}',
+                                cancel_url: window.location.href,
+                                customer_email: userData.user.email,
+                                subscription_data: {
+                                    trial_period_days: 7,
+                                    metadata: {
+                                        user_id: userData.user.id,
+                                        plan: selectedPlan,
+                                        billing_period: billingPeriod
+                                    }
+                                },
+                                metadata: {
+                                    user_id: userData.user.id
+                                }
+                            })
+                        });
+                        
+                        if (checkoutResponse.ok) {
+                            const checkoutData = await checkoutResponse.json();
+                            
+                            if (checkoutData.url || checkoutData.data?.url) {
+                                // Redirect to Stripe checkout
+                                submitBtn.querySelector('.submit-text').textContent = 'Redirecting to secure payment...';
+                                window.location.href = checkoutData.url || checkoutData.data.url;
+                            } else {
+                                throw new Error('Failed to create checkout session');
                             }
-                        })
-                    });
-
-                    if (!checkoutResponse.ok) {
-                        // If checkout fails, still let them access dashboard (trial started)
-                        console.error('Checkout session creation failed, proceeding to dashboard');
-                        window.location.href = 'https://platform.mapmystandards.ai/dashboard?trial=started&setup=payment-pending';
-                        return;
-                    }
-
-                    const checkoutData = await checkoutResponse.json();
-                    
-                    // Redirect to Stripe checkout to collect payment method for after trial
-                    if (checkoutData.url) {
-                        window.location.href = checkoutData.url;
+                        } else {
+                            const error = await checkoutResponse.json();
+                            throw new Error(error.detail || 'Failed to setup payment');
+                        }
                     } else {
-                        // Fallback to dashboard if no checkout URL
-                        window.location.href = 'https://platform.mapmystandards.ai/dashboard?trial=started';
+                        throw new Error(signupData.message || 'Registration failed');
                     }
                     
                 } catch (error) {
