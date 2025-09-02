@@ -220,6 +220,14 @@ except ImportError as e:
     db_init_router_available = False
     _db_init_import_exception = e
 
+# Compliance Intelligence Router
+try:
+    from .api.routes.compliance_intelligence import router as intelligence_router
+    intelligence_router_available = True
+except ImportError as e:
+    intelligence_router_available = False
+    _intelligence_import_exception = e
+
 # Logging already configured at top of file
 
 # Optional strict asset enforcement (set STRICT_FRONTEND_ASSETS=1 to fail startup if missing)
@@ -695,6 +703,13 @@ except ImportError as e:
         logger.info("✅ Mock standards router loaded (fallback)")
     except ImportError as e2:
         logger.error(f"❌ No standards router available: {e2}")
+
+# Include Compliance Intelligence router
+if intelligence_router_available:
+    app.include_router(intelligence_router)
+    logger.info("✅ Compliance Intelligence router loaded")
+else:
+    logger.warning(f"⚠️ Compliance Intelligence router not available")
 
 # Include routers with error handling
 try:
