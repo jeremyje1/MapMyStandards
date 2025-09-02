@@ -1365,13 +1365,13 @@
                 
                 const plan = planMapping[currentPlan] || 'professional_monthly';
                 
-                // Redirect to professional Stripe checkout
+                // Redirect to the simple React register page with pre-filled email
                 const params = new URLSearchParams({
                     email: email,
                     plan: plan,
                     institution_name: document.querySelector('input[name="institution_name"]')?.value || ''
                 });
-                window.location.href = `https://platform.mapmystandards.ai/trial-signup-flow.html?${params.toString()}`;
+                window.location.href = `https://platform.mapmystandards.ai/register?${params.toString()}`;
                 return;
             });
             
