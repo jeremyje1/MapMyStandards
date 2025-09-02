@@ -694,7 +694,7 @@
                 submitBtn.querySelector('.loading-spinner').style.display = 'inline-block';
                 
                 try {
-                    // Create account using the actual API endpoint
+                    // Create account using the actual backend endpoint
                     const signupResponse = await fetch('https://api.mapmystandards.ai/api/trial/signup-lite', {
                         method: 'POST',
                         headers: {
@@ -719,9 +719,8 @@
 
                     const signupData = await signupResponse.json();
                     
-                    // Store auth token and user data
+                    // Store auth token - the API returns api_key, not access_token
                     if (signupData.success && signupData.api_key) {
-                        // Create a simple token from the API key for now
                         localStorage.setItem('token', signupData.api_key);
                         localStorage.setItem('user', JSON.stringify({
                             email: formData.email,
@@ -732,12 +731,7 @@
                         }));
                     }
 
-                    // For now, skip Stripe checkout and go directly to dashboard
-                    // Payment can be collected later when trial ends
-                    window.location.href = 'https://platform.mapmystandards.ai/dashboard-advanced.html?trial=started';
-                    return;
-                    
-                    /* Stripe checkout disabled for now
+                    // Create checkout session for payment method (for after trial)
                     const planKey = `${selectedPlan}_${billingPeriod}`;
                     const plan = planConfigs[planKey];
                     
@@ -776,7 +770,6 @@
                         // Fallback to dashboard if no checkout URL
                         window.location.href = '/dashboard?trial=started';
                     }
-                    */
                     
                 } catch (error) {
                     console.error('Signup error:', error);
