@@ -228,6 +228,14 @@ except ImportError as e:
     intelligence_router_available = False
     _intelligence_import_exception = e
 
+# Password Reset Router
+try:
+    from .api.routes.password_reset import router as password_reset_router
+    password_reset_router_available = True
+except ImportError as e:
+    password_reset_router_available = False
+    _password_reset_import_exception = e
+
 # Logging already configured at top of file
 
 # Optional strict asset enforcement (set STRICT_FRONTEND_ASSETS=1 to fail startup if missing)
@@ -710,6 +718,13 @@ if intelligence_router_available:
     logger.info("✅ Compliance Intelligence router loaded")
 else:
     logger.warning(f"⚠️ Compliance Intelligence router not available")
+
+# Include Password Reset router
+if password_reset_router_available:
+    app.include_router(password_reset_router)
+    logger.info("✅ Password Reset router loaded")
+else:
+    logger.warning(f"⚠️ Password Reset router not available")
 
 # Include routers with error handling
 try:
