@@ -102,7 +102,16 @@ const apiService = {
       return response;
     },
     
-    register: (data: { email: string; password: string; name: string; institutionName?: string }) =>
+    register: (data: { 
+      email: string; 
+      password: string; 
+      first_name: string; 
+      last_name: string; 
+      institution_name: string;
+      plan: string;
+      billing_period: string;
+      is_trial: boolean;
+    }) =>
       api.post('/auth/register', data),
     
     completeRegistration: (data: { session_id: string; email: string; password: string }) =>

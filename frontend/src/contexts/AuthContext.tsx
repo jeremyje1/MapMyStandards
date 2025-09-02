@@ -14,7 +14,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, name: string, institutionName?: string) => Promise<void>;
+  register: (email: string, password: string, firstName: string, lastName: string, institutionName?: string) => Promise<void>;
   logout: () => void;
   sendMagicLink: (email: string) => Promise<void>;
   verifyMagicLink: (token: string) => Promise<void>;
@@ -72,9 +72,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const register = async (email: string, password: string, name: string, institutionName?: string) => {
+  const register = async (email: string, password: string, firstName: string, lastName: string, institutionName?: string) => {
     try {
-      const response = await api.auth.register({ email, password, name, institutionName });
+      const response = await api.auth.register({ 
+        email, 
+        password, 
+        first_name: firstName,
+        last_name: lastName,
+        institution_name: institutionName || '',
+        plan: 'professional',
+        billing_period: 'monthly',
+        is_trial: true
+      });
       const { token, user, refreshToken } = response.data;
       
       setAuthToken(token);
