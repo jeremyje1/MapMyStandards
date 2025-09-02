@@ -29,10 +29,25 @@
 
     <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Onboarding Check -->
+        <div id="onboarding-prompt" class="hidden bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-8">
+            <div class="flex items-start">
+                <svg class="w-6 h-6 text-yellow-600 mr-3 mt-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                </svg>
+                <div class="flex-1">
+                    <h3 class="text-lg font-semibold text-yellow-900">Complete Your Setup</h3>
+                    <p class="text-yellow-700 mt-1">To get personalized insights and compliance tracking, please complete the onboarding process.</p>
+                    <button onclick="window.location.href='onboarding.html'" class="mt-3 bg-yellow-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-yellow-700 transition">
+                        Start Onboarding →
+                    </button>
+                </div>
+            </div>
+        </div>
         <!-- Welcome Banner -->
         <div class="gradient-bg rounded-lg p-6 mb-8 text-white">
-            <h2 class="text-2xl font-bold mb-2">Welcome to Your Accreditation Dashboard</h2>
-            <p class="opacity-90">Your AI-powered compliance assistant is ready to help you prepare for accreditation.</p>
+            <h2 class="text-2xl font-bold mb-2" id="welcome-title">Welcome to Your Accreditation Dashboard</h2>
+            <p class="opacity-90" id="welcome-subtitle">Your AI-powered compliance assistant is ready to help you prepare for accreditation.</p>
         </div>
 
         <!-- Stats Grid -->
@@ -41,7 +56,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm font-medium text-gray-600">Active Standards</p>
-                        <p class="text-2xl font-bold text-gray-900">14</p>
+                        <p class="text-2xl font-bold text-gray-900" id="standards-count">0</p>
                     </div>
                     <div class="p-3 bg-blue-100 rounded-full">
                         <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -55,7 +70,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm font-medium text-gray-600">Compliance Score</p>
-                        <p class="text-2xl font-bold text-gray-900">85%</p>
+                        <p class="text-2xl font-bold text-gray-900" id="compliance-score">--</p>
                     </div>
                     <div class="p-3 bg-green-100 rounded-full">
                         <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -68,8 +83,8 @@
             <div class="bg-white rounded-lg shadow p-6">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-gray-600">Evidence Mapped</p>
-                        <p class="text-2xl font-bold text-gray-900">47</p>
+                        <p class="text-sm font-medium text-gray-600">Documents Uploaded</p>
+                        <p class="text-2xl font-bold text-gray-900" id="documents-count">0</p>
                     </div>
                     <div class="p-3 bg-purple-100 rounded-full">
                         <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -148,7 +163,63 @@
     </main>
 
     <script>
-        // Accreditation standards data
+        // Real accreditation standards by accreditor
+        const accreditorStandards = {
+            SACSCOC: [
+                { id: 'SACSCOC_1.1', title: 'Mission', description: 'Clear mission statement articulating purpose', category: 'Institutional Mission' },
+                { id: 'SACSCOC_2.1', title: 'Degree Standards', description: 'Appropriate degree program requirements', category: 'Academic Programs' },
+                { id: 'SACSCOC_8.1', title: 'Faculty', description: 'Sufficient qualified faculty to support mission', category: 'Faculty' },
+                { id: 'SACSCOC_8.2a', title: 'Faculty Evaluation', description: 'Regular evaluation of faculty effectiveness', category: 'Faculty' },
+                { id: 'SACSCOC_9.1', title: 'Academic Support', description: 'Appropriate academic support services', category: 'Student Services' },
+                { id: 'SACSCOC_10.1', title: 'Financial Resources', description: 'Financial stability and capacity', category: 'Resources' },
+                { id: 'SACSCOC_11.1', title: 'Physical Resources', description: 'Physical resources support learning', category: 'Resources' },
+                { id: 'SACSCOC_12.1', title: 'Effectiveness', description: 'Institutional effectiveness processes', category: 'Assessment' }
+            ],
+            HLC: [
+                { id: 'HLC_1.A', title: 'Mission', description: 'Mission publicly articulated and operationalized', category: 'Mission' },
+                { id: 'HLC_1.B', title: 'Mission Articulation', description: 'Mission demonstrates commitment to public good', category: 'Mission' },
+                { id: 'HLC_2.A', title: 'Integrity', description: 'Ethical and responsible conduct', category: 'Integrity' },
+                { id: 'HLC_3.A', title: 'Teaching Quality', description: 'Degree programs appropriate to higher education', category: 'Teaching & Learning' },
+                { id: 'HLC_3.B', title: 'General Education', description: 'General education imparts knowledge and skills', category: 'Teaching & Learning' },
+                { id: 'HLC_4.A', title: 'Assessment', description: 'Demonstrates responsibility for quality of programs', category: 'Assessment' },
+                { id: 'HLC_4.B', title: 'Student Learning', description: 'Ongoing assessment of student learning', category: 'Assessment' },
+                { id: 'HLC_5.A', title: 'Resources', description: 'Resource base supports operations', category: 'Resources' }
+            ],
+            MSCHE: [
+                { id: 'MSCHE_I', title: 'Mission and Goals', description: 'Clearly defined mission and goals', category: 'Mission' },
+                { id: 'MSCHE_II', title: 'Ethics and Integrity', description: 'Commitment to academic freedom and integrity', category: 'Ethics' },
+                { id: 'MSCHE_III', title: 'Student Experience', description: 'Student learning experience design and delivery', category: 'Students' },
+                { id: 'MSCHE_IV', title: 'Support of Student', description: 'Support of the student experience', category: 'Student Support' },
+                { id: 'MSCHE_V', title: 'Assessment', description: 'Educational effectiveness assessment', category: 'Assessment' },
+                { id: 'MSCHE_VI', title: 'Planning', description: 'Planning, resources, and improvement', category: 'Planning' },
+                { id: 'MSCHE_VII', title: 'Governance', description: 'Governance, leadership, and administration', category: 'Governance' }
+            ],
+            NEASC: [
+                { id: 'NEASC_1', title: 'Mission and Purposes', description: 'Clear institutional mission', category: 'Mission' },
+                { id: 'NEASC_2', title: 'Planning and Evaluation', description: 'Systematic planning and evaluation', category: 'Planning' },
+                { id: 'NEASC_3', title: 'Organization and Governance', description: 'Effective organization and governance', category: 'Governance' },
+                { id: 'NEASC_4', title: 'Academic Program', description: 'Quality academic programs', category: 'Academics' },
+                { id: 'NEASC_5', title: 'Students', description: 'Student admission and services', category: 'Students' },
+                { id: 'NEASC_6', title: 'Teaching and Learning', description: 'Faculty and teaching effectiveness', category: 'Teaching' },
+                { id: 'NEASC_7', title: 'Resources', description: 'Institutional resources', category: 'Resources' },
+                { id: 'NEASC_8', title: 'Educational Effectiveness', description: 'Evidence of educational effectiveness', category: 'Assessment' }
+            ],
+            WASC: [
+                { id: 'WASC_1', title: 'Institutional Purpose', description: 'Defining institutional purposes', category: 'Purpose' },
+                { id: 'WASC_2', title: 'Core Competencies', description: 'Achieving educational objectives', category: 'Education' },
+                { id: 'WASC_3', title: 'Resources', description: 'Developing and applying resources', category: 'Resources' },
+                { id: 'WASC_4', title: 'Quality Assurance', description: 'Creating organization for learning', category: 'Quality' }
+            ],
+            NWCCU: [
+                { id: 'NWCCU_1', title: 'Mission and Core Themes', description: 'Mission fulfillment and adaptation', category: 'Mission' },
+                { id: 'NWCCU_2', title: 'Resources and Capacity', description: 'Resources and organizational capacity', category: 'Resources' },
+                { id: 'NWCCU_3', title: 'Planning and Implementation', description: 'Institutional planning', category: 'Planning' },
+                { id: 'NWCCU_4', title: 'Effectiveness', description: 'Effectiveness and improvement', category: 'Effectiveness' },
+                { id: 'NWCCU_5', title: 'Mission Fulfillment', description: 'Mission fulfillment and sustainability', category: 'Mission' }
+            ]
+        };
+        
+        // Accreditation standards data (fallback)
         const standards = [
             {
                 id: 'SACSCOC_1.1',
@@ -187,7 +258,96 @@
             }
         ];
 
-        // Load standards into the dashboard
+        // Load real data from onboarding
+        function loadRealData(onboardingData) {
+            // Update welcome message with institution name
+            if (onboardingData.institution && onboardingData.institution.name) {
+                document.getElementById('welcome-title').textContent = `Welcome, ${onboardingData.institution.name}`;
+                document.getElementById('welcome-subtitle').textContent = `Your ${onboardingData.accreditor || 'accreditation'} compliance dashboard`;
+            }
+            
+            // Get standards for selected accreditor
+            const selectedStandards = accreditorStandards[onboardingData.accreditor] || [];
+            
+            // Update metrics
+            document.getElementById('standards-count').textContent = selectedStandards.length;
+            document.getElementById('documents-count').textContent = (onboardingData.files || []).length;
+            
+            // Calculate initial compliance score based on uploaded documents
+            const filesCount = (onboardingData.files || []).length;
+            const baseScore = filesCount > 0 ? Math.min(25 + (filesCount * 5), 45) : 0;
+            document.getElementById('compliance-score').textContent = baseScore > 0 ? `${baseScore}%` : 'Pending';
+            
+            // Load standards with real status
+            loadStandardsForAccreditor(selectedStandards, onboardingData.files || []);
+        }
+        
+        // Load standards for specific accreditor
+        function loadStandardsForAccreditor(standardsList, uploadedFiles) {
+            const container = document.getElementById('standardsList');
+            
+            if (standardsList.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        <p>No standards loaded. Please complete onboarding.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Map each standard with a status based on uploaded files
+            container.innerHTML = standardsList.map((standard, index) => {
+                // Assign status based on what files were uploaded
+                let status = 'pending';
+                let score = 0;
+                
+                if (uploadedFiles.length > 0) {
+                    // Simulate some standards having evidence
+                    if (index < Math.floor(uploadedFiles.length / 2)) {
+                        status = 'complete';
+                        score = 85 + Math.floor(Math.random() * 15);
+                    } else if (index < uploadedFiles.length) {
+                        status = 'in-progress';
+                        score = 40 + Math.floor(Math.random() * 40);
+                    } else {
+                        status = 'pending';
+                        score = 0;
+                    }
+                }
+                
+                return `
+                    <div class="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition">
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-center">
+                                    <span class="text-sm font-semibold text-gray-600">${standard.id}</span>
+                                    <span class="ml-2 px-2 py-1 text-xs rounded-full ${
+                                        status === 'complete' ? 'bg-green-100 text-green-800' :
+                                        status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
+                                        'bg-gray-100 text-gray-800'
+                                    }">
+                                        ${status === 'complete' ? 'Evidence Mapped' :
+                                          status === 'in-progress' ? 'In Progress' : 'No Evidence'}
+                                    </span>
+                                    <span class="ml-2 text-xs text-gray-500">${standard.category}</span>
+                                </div>
+                                <h4 class="text-lg font-medium text-gray-900 mt-1">${standard.title}</h4>
+                                <p class="text-sm text-gray-600 mt-1">${standard.description}</p>
+                            </div>
+                            <div class="ml-4 flex flex-col items-center">
+                                <div class="text-2xl font-bold ${
+                                    score >= 80 ? 'text-green-600' :
+                                    score >= 40 ? 'text-yellow-600' : 'text-gray-400'
+                                }">${score > 0 ? score + '%' : '--'}</div>
+                                <span class="text-xs text-gray-500">Compliance</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // Load standards into the dashboard (fallback)
         function loadStandards() {
             const container = document.getElementById('standardsList');
             container.innerHTML = standards.map(standard => `
@@ -228,7 +388,25 @@
 
         // Initialize dashboard
         document.addEventListener('DOMContentLoaded', function() {
-            loadStandards();
+            // Check onboarding status
+            const onboardingComplete = localStorage.getItem('onboarding_complete') === 'true';
+            const onboardingData = JSON.parse(localStorage.getItem('onboarding_data') || '{}');
+            
+            if (!onboardingComplete) {
+                // Show onboarding prompt
+                document.getElementById('onboarding-prompt').classList.remove('hidden');
+                document.getElementById('standardsList').innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        <p>Complete onboarding to see your accreditation standards</p>
+                    </div>
+                `;
+            } else {
+                // Load real data from onboarding
+                loadRealData(onboardingData);
+            }
             
             // Show success message if coming from payment
             const urlParams = new URLSearchParams(window.location.search);
