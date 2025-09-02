@@ -79,7 +79,7 @@ const apiService = {
   // Auth endpoints
   auth: {
     login: async (email: string, password: string) => {
-      const response = await api.post('/auth/login', { email, password });
+      const response = await api.post('/auth-simple/login', { email, password });
       // Transform backend response to match frontend expectations
       if (response.data.success && response.data.data) {
         const backendData = response.data.data;
