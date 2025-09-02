@@ -112,108 +112,38 @@
         <!-- Main Form Container -->
         <div class="glass-card rounded-2xl max-w-5xl mx-auto p-8">
             <form id="trialForm">
-                <!-- Step 1: Choose Plan -->
+                <!-- Step 1: Confirm Plan -->
                 <div class="step active" id="step1">
-                    <h2 class="text-2xl font-bold mb-6 text-gray-900">Choose Your Plan</h2>
-                    <div class="grid md:grid-cols-3 gap-6 mb-8">
-                        <!-- Starter Plan -->
-                        <div class="plan-card rounded-lg border border-gray-200 p-6" data-plan="starter">
-                            <h3 class="text-xl font-bold mb-2">Starter</h3>
-                            <div class="mb-4">
-                                <span class="text-3xl font-bold">$99</span>
-                                <span class="text-gray-600">/month</span>
-                            </div>
-                            <ul class="space-y-2 mb-6">
-                                <li class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                                    </svg>
-                                    <span>Up to 100 documents</span>
-                                </li>
-                                <li class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                                    </svg>
-                                    <span>Basic compliance tracking</span>
-                                </li>
-                                <li class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                                    </svg>
-                                    <span>Email support</span>
-                                </li>
-                                <li class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                                    </svg>
-                                    <span>1 user account</span>
-                                </li>
-                            </ul>
-                            <button type="button" class="w-full py-2 px-4 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium">
-                                Select Plan
-                            </button>
-                        </div>
-
-                        <!-- Professional Plan -->
-                        <div class="plan-card rounded-lg border-2 border-blue-500 p-6 selected" data-plan="professional">
+                    <h2 class="text-2xl font-bold mb-6 text-gray-900">Your Plan</h2>
+                    <div class="max-w-md mx-auto">
+                        <div class="plan-card rounded-lg border-2 border-blue-500 p-6 selected" data-plan="standard">
                             <div class="bg-blue-500 text-white text-sm font-semibold px-3 py-1 rounded-full inline-block mb-3">
-                                MOST POPULAR
+                                7-DAY FREE TRIAL
                             </div>
-                            <h3 class="text-xl font-bold mb-2">Professional</h3>
+                            <h3 class="text-xl font-bold mb-2">MapMyStandards AI Platform</h3>
                             <div class="mb-4">
-                                <span class="text-3xl font-bold">$299</span>
+                                <span class="text-3xl font-bold">$199</span>
                                 <span class="text-gray-600">/month</span>
                             </div>
+                            <p class="text-gray-600 mb-4">Everything you need for accreditation compliance</p>
                             <ul class="space-y-2 mb-6">
                                 <li class="flex items-start">
                                     <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                                     </svg>
-                                    <span>Unlimited documents</span>
+                                    <span>Unlimited document analysis</span>
                                 </li>
                                 <li class="flex items-start">
                                     <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                                     </svg>
-                                    <span>Advanced compliance tracking</span>
+                                    <span>AI-powered evidence mapping</span>
                                 </li>
                                 <li class="flex items-start">
                                     <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                                     </svg>
-                                    <span>Priority support</span>
-                                </li>
-                                <li class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                                    </svg>
-                                    <span>Up to 10 user accounts</span>
-                                </li>
-                                <li class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                                    </svg>
-                                    <span>API access</span>
-                                </li>
-                            </ul>
-                            <button type="button" class="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
-                                Selected
-                            </button>
-                        </div>
-
-                        <!-- Institution Plan -->
-                        <div class="plan-card rounded-lg border border-gray-200 p-6" data-plan="institution">
-                            <h3 class="text-xl font-bold mb-2">Institution</h3>
-                            <div class="mb-4">
-                                <span class="text-3xl font-bold">$599</span>
-                                <span class="text-gray-600">/month</span>
-                            </div>
-                            <ul class="space-y-2 mb-6">
-                                <li class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                                    </svg>
-                                    <span>Everything in Professional</span>
+                                    <span>Real-time compliance dashboard</span>
                                 </li>
                                 <li class="flex items-start">
                                     <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
@@ -225,40 +155,19 @@
                                     <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                                     </svg>
-                                    <span>White-label options</span>
+                                    <span>All accreditors supported</span>
                                 </li>
                                 <li class="flex items-start">
                                     <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                                     </svg>
-                                    <span>Dedicated account manager</span>
-                                </li>
-                                <li class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                                    </svg>
-                                    <span>SLA guarantee</span>
+                                    <span>API access included</span>
                                 </li>
                             </ul>
-                            <button type="button" class="w-full py-2 px-4 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium">
-                                Select Plan
-                            </button>
                         </div>
                     </div>
 
-                    <!-- Billing Period Toggle -->
-                    <div class="text-center mb-8">
-                        <div class="inline-flex items-center bg-gray-100 rounded-lg p-1">
-                            <button type="button" class="billing-toggle px-4 py-2 rounded-md bg-white font-medium" data-billing="monthly">
-                                Monthly
-                            </button>
-                            <button type="button" class="billing-toggle px-4 py-2 rounded-md font-medium text-gray-600" data-billing="yearly">
-                                Yearly (Save 20%)
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="flex justify-end">
+                    <div class="flex justify-center mt-8">
                         <button type="button" class="next-btn px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
                             Continue →
                         </button>
@@ -377,50 +286,17 @@
     <script>
         // State management
         let currentStep = 1;
-        let selectedPlan = 'professional';
+        let selectedPlan = 'standard';
         let billingPeriod = 'monthly';
         let formData = {};
 
-        // Plan configurations with correct price IDs
+        // Plan configuration with Stripe price ID
         const planConfigs = {
-            starter_monthly: {
-                name: 'Starter Monthly',
-                price: '$99',
+            standard_monthly: {
+                name: 'MapMyStandards AI Platform',
+                price: '$199',
                 period: 'per month',
-                priceId: 'price_1RyVPPK8PKpLCKDZFbwkFdqq'
-            },
-            starter_yearly: {
-                name: 'Starter Annual',
-                price: '$999',
-                period: 'per year',
-                priceId: 'price_1RyVPgK8PKpLCKDZe8nu4ium',
-                savings: 'Save $189'
-            },
-            professional_monthly: {
-                name: 'Professional Monthly',
-                price: '$299',
-                period: 'per month',
-                priceId: 'price_1S1PIaK8PKpLCKDZxRRzTP59'
-            },
-            professional_yearly: {
-                name: 'Professional Annual',
-                price: '$2,999',
-                period: 'per year',
-                priceId: 'price_1S1PIkK8PKpLCKDZqxmtxUeG',
-                savings: 'Save $589'
-            },
-            institution_monthly: {
-                name: 'Institution Monthly',
-                price: '$599',
-                period: 'per month',
-                priceId: 'price_1RyVQgK8PKpLCKDZTais3Tyx'
-            },
-            institution_yearly: {
-                name: 'Institution Annual',
-                price: '$5,999',
-                period: 'per year',
-                priceId: 'price_1RyVQrK8PKpLCKDZUshqaOvZ',
-                savings: 'Save $1,189'
+                priceId: 'price_1S2yOCK8PKpLCKDZnm4wHuzw' // Your new Stripe price ID
             }
         };
 
@@ -468,74 +344,17 @@
         });
 
         function setupPlanSelection() {
-            document.querySelectorAll('.plan-card').forEach(card => {
-                card.addEventListener('click', function() {
-                    // Remove selected class from all cards
-                    document.querySelectorAll('.plan-card').forEach(c => {
-                        c.classList.remove('selected');
-                        c.querySelector('button').textContent = 'Select Plan';
-                        c.querySelector('button').classList.remove('bg-blue-600', 'text-white');
-                        c.querySelector('button').classList.add('bg-gray-100', 'text-gray-700');
-                    });
-                    
-                    // Add selected class to clicked card
-                    this.classList.add('selected');
-                    this.querySelector('button').textContent = 'Selected';
-                    this.querySelector('button').classList.remove('bg-gray-100', 'text-gray-700');
-                    this.querySelector('button').classList.add('bg-blue-600', 'text-white');
-                    
-                    selectedPlan = this.dataset.plan;
-                });
-            });
+            // Only one plan now, no selection needed
+            selectedPlan = 'standard';
         }
 
         function setupBillingToggle() {
-            document.querySelectorAll('.billing-toggle').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    // Update toggle appearance
-                    document.querySelectorAll('.billing-toggle').forEach(b => {
-                        b.classList.remove('bg-white');
-                        b.classList.add('text-gray-600');
-                    });
-                    this.classList.add('bg-white');
-                    this.classList.remove('text-gray-600');
-                    
-                    billingPeriod = this.dataset.billing;
-                    updatePlanPrices();
-                });
-            });
+            // Only monthly billing now
+            billingPeriod = 'monthly';
         }
 
         function updatePlanPrices() {
-            // Update starter plan
-            const starterCard = document.querySelector('[data-plan="starter"]');
-            if (billingPeriod === 'yearly') {
-                starterCard.querySelector('.text-3xl').textContent = '$999';
-                starterCard.querySelector('.text-gray-600').textContent = '/year';
-            } else {
-                starterCard.querySelector('.text-3xl').textContent = '$99';
-                starterCard.querySelector('.text-gray-600').textContent = '/month';
-            }
-
-            // Update professional plan
-            const professionalCard = document.querySelector('[data-plan="professional"]');
-            if (billingPeriod === 'yearly') {
-                professionalCard.querySelector('.text-3xl').textContent = '$2,999';
-                professionalCard.querySelector('.text-gray-600').textContent = '/year';
-            } else {
-                professionalCard.querySelector('.text-3xl').textContent = '$299';
-                professionalCard.querySelector('.text-gray-600').textContent = '/month';
-            }
-
-            // Update institution plan
-            const institutionCard = document.querySelector('[data-plan="institution"]');
-            if (billingPeriod === 'yearly') {
-                institutionCard.querySelector('.text-3xl').textContent = '$5,999';
-                institutionCard.querySelector('.text-gray-600').textContent = '/year';
-            } else {
-                institutionCard.querySelector('.text-3xl').textContent = '$599';
-                institutionCard.querySelector('.text-gray-600').textContent = '/month';
-            }
+            // No price updates needed - single $199/month plan
         }
 
         function setupNavigation() {
