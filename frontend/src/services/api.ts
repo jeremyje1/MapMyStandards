@@ -78,8 +78,29 @@ api.interceptors.response.use(
 const apiService = {
   // Auth endpoints
   auth: {
-    login: (email: string, password: string) =>
-      api.post('/auth/login', { email, password }),
+    login: async (email: string, password: string) => {
+      const response = await api.post('/auth/login', { email, password });
+      // Transform backend response to match frontend expectations
+      if (response.data.success && response.data.data) {
+        const backendData = response.data.data;
+        return {
+          data: {
+            token: backendData.access_token,
+            user: {
+              id: backendData.user_id,
+              email: backendData.email,
+              name: backendData.name,
+              role: 'user',
+              plan: backendData.plan,
+              customerId: backendData.customer_id,
+              subscriptionId: backendData.subscription_id
+            },
+            refreshToken: null // Backend doesn't provide refresh token
+          }
+        };
+      }
+      return response;
+    },
     
     register: (data: { email: string; password: string; name: string; institutionName?: string }) =>
       api.post('/auth/register', data),
@@ -94,7 +115,7 @@ const apiService = {
     },
     
     getCurrentUser: () =>
-      api.get('/auth/me'),
+      api.get('/auth/verify-token'),
     
     sendMagicLink: (email: string) =>
       api.post('/auth/magic-link', { email }),
@@ -231,16 +252,16 @@ const apiService = {
   // Dashboard endpoints
   dashboard: {
     getOverview: () =>
-      api.get('/dashboard/overview'),
+      api.get('/api/dashboard/overview'),
     
     getMetrics: () =>
-      api.get('/dashboard/metrics'),
+      api.get('/api/metrics/dashboard'),
     
     getRecentActivity: () =>
-      api.get('/dashboard/activity'),
+      api.get('/api/dashboard/notifications'),
     
     getComplianceStatus: () =>
-      api.get('/dashboard/compliance'),
+      api.get('/api/dashboard/analytics'),
   },
   
   // Health check

@@ -172,6 +172,13 @@ except ImportError as e:
     _auth_complete_import_exception = e
 
 try:
+    from .api.routes.auth_simple import router as auth_simple_router
+    auth_simple_router_available = True
+except ImportError as e:
+    auth_simple_router_available = False
+    _auth_simple_import_exception = e
+
+try:
     from .api.routes.upload import router as upload_router
     upload_router_available = True
 except ImportError as e:
@@ -515,11 +522,12 @@ class AuthResponse(BaseModel):
     data: Optional[dict] = None
 
 # Include authentication routers
-if auth_router_available:
-    app.include_router(auth_router)
-    logger.info("✅ Auth router loaded")
-else:
-    logger.warning("⚠️ Auth router not available - authentication disabled")
+# Commented out conflicting auth routers - using auth_simple instead
+# if auth_router_available:
+#     app.include_router(auth_router)
+#     logger.info("✅ Auth router loaded")
+# else:
+#     logger.warning("⚠️ Auth router not available - authentication disabled")
 
 # Include new routers
 if trial_router_available:
@@ -543,11 +551,12 @@ try:
 except ImportError as e:
     logger.warning(f"⚠️ Email nurturing router not available: {e}")
 
-if auth_impl_router_available:
-    app.include_router(auth_impl_router)
-    logger.info("✅ Auth implementation router loaded")
-else:
-    logger.warning("⚠️ Auth implementation router not available")
+# Commented out - using auth_simple instead
+# if auth_impl_router_available:
+#     app.include_router(auth_impl_router)
+#     logger.info("✅ Auth implementation router loaded")
+# else:
+#     logger.warning("⚠️ Auth implementation router not available")
 
 if documents_router_available:
     app.include_router(documents_router)
@@ -567,11 +576,19 @@ if compliance_router_available:
 else:
     logger.warning("⚠️ Compliance router not available")
 
+# Use auth_complete for registration endpoints but rename to avoid conflicts
 if auth_complete_router_available:
     app.include_router(auth_complete_router)
     logger.info("✅ Auth complete router loaded")
 else:
     logger.warning("⚠️ Auth complete router not available")
+
+# Add the simple auth router that actually works
+if auth_simple_router_available:
+    app.include_router(auth_simple_router)
+    logger.info("✅ Simple auth router loaded")
+else:
+    logger.warning("⚠️ Simple auth router not available")
 
 if narrative_router_available:
     app.include_router(narrative_router)

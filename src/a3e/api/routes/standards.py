@@ -141,10 +141,10 @@ async def list_standards(
                 category=std.category,
                 subcategory=std.subcategory,
                 version=std.version,
-                effective_date=std.effective_date.isoformat(),
+                effective_date=std.effective_date.isoformat() if hasattr(std.effective_date, 'isoformat') else str(std.effective_date),
                 is_required=std.is_required,
                 is_active=std.is_active,
-                evidence_requirements=std.evidence_requirements
+                evidence_requirements=std.evidence_requirements if isinstance(std.evidence_requirements, list) else []
             )
             for std in standards
         ]
@@ -178,12 +178,12 @@ async def get_standard(
             category=standard.category,
             subcategory=standard.subcategory,
             version=standard.version,
-            effective_date=standard.effective_date.isoformat(),
+            effective_date=standard.effective_date.isoformat() if hasattr(standard.effective_date, 'isoformat') else str(standard.effective_date),
             is_required=standard.is_required,
             is_active=standard.is_active,
-            evidence_requirements=standard.evidence_requirements,
-            created_at=standard.created_at.isoformat(),
-            updated_at=standard.updated_at.isoformat(),
+            evidence_requirements=standard.evidence_requirements if isinstance(standard.evidence_requirements, list) else [],
+            created_at=standard.created_at.isoformat() if hasattr(standard.created_at, 'isoformat') else str(standard.created_at),
+            updated_at=standard.updated_at.isoformat() if hasattr(standard.updated_at, 'isoformat') else str(standard.updated_at),
             accreditor_name=accreditor.name if accreditor else None,
             accreditor_acronym=accreditor.acronym if accreditor else None
         )
@@ -221,12 +221,12 @@ async def create_standard(
             category=standard.category,
             subcategory=standard.subcategory,
             version=standard.version,
-            effective_date=standard.effective_date.isoformat(),
+            effective_date=standard.effective_date.isoformat() if hasattr(standard.effective_date, 'isoformat') else str(standard.effective_date),
             is_required=standard.is_required,
             is_active=standard.is_active,
-            evidence_requirements=standard.evidence_requirements,
-            created_at=standard.created_at.isoformat(),
-            updated_at=standard.updated_at.isoformat(),
+            evidence_requirements=standard.evidence_requirements if isinstance(standard.evidence_requirements, list) else [],
+            created_at=standard.created_at.isoformat() if hasattr(standard.created_at, 'isoformat') else str(standard.created_at),
+            updated_at=standard.updated_at.isoformat() if hasattr(standard.updated_at, 'isoformat') else str(standard.updated_at),
             accreditor_name=accreditor.name,
             accreditor_acronym=accreditor.acronym
         )
@@ -279,7 +279,7 @@ async def list_accreditors_with_standards(
                 accreditor_id=accreditor.id,
                 accreditor_name=accreditor.name,
                 accreditor_acronym=accreditor.acronym,
-                total_standards=standards_stats.get("total", len(accreditor.standards)),
+                total_standards=standards_stats.get("total", 0),
                 required_standards=standards_stats.get("required", 0),
                 optional_standards=standards_stats.get("optional", 0),
                 categories=standards_stats.get("categories", [])
@@ -330,10 +330,10 @@ async def get_accreditor_standards(
                 category=std.category,
                 subcategory=std.subcategory,
                 version=std.version,
-                effective_date=std.effective_date.isoformat(),
+                effective_date=std.effective_date.isoformat() if hasattr(std.effective_date, 'isoformat') else str(std.effective_date),
                 is_required=std.is_required,
                 is_active=std.is_active,
-                evidence_requirements=std.evidence_requirements
+                evidence_requirements=std.evidence_requirements if isinstance(std.evidence_requirements, list) else []
             )
             for std in standards
         ]

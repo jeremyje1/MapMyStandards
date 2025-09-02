@@ -19,11 +19,40 @@ class User(Base):
     """User model for trial accounts"""
     __tablename__ = "users"
     
-    user_id = Column(String, primary_key=True, default=lambda: f"user_{uuid.uuid4().hex[:12]}")
+    # Primary key and identity
+    id = Column(String, primary_key=True, default=lambda: f"user_{uuid.uuid4().hex[:12]}")
+    user_id = Column(String, unique=True, nullable=False, index=True, default=lambda: f"user_{uuid.uuid4().hex[:12]}")
     email = Column(String, unique=True, nullable=False, index=True)
+    
+    # User information
     name = Column(String, nullable=True)
+    first_name = Column(String, nullable=True)
+    last_name = Column(String, nullable=True)
+    institution_name = Column(String, nullable=True)
+    phone = Column(String, nullable=True)
+    role = Column(String, default="user")
+    
+    # Authentication
+    password_hash = Column(String, nullable=False)
+    api_key = Column(String, unique=True, nullable=True)
+    
+    # Account status
+    is_active = Column(Boolean, default=True)
+    is_trial = Column(Boolean, default=True)
+    newsletter_opt_in = Column(Boolean, default=False)
+    
+    # Subscription information
     subscription_tier = Column(String, default="trial")
+    plan = Column(String, default="professional_monthly")
+    billing_period = Column(String, default="monthly")
+    customer_id = Column(String, nullable=True)  # Stripe customer ID
+    subscription_id = Column(String, nullable=True)  # Stripe subscription ID
+    
+    # Trial information
     trial_expires_at = Column(DateTime, nullable=True)
+    trial_end = Column(DateTime, nullable=True)
+    
+    # Timestamps
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
     
@@ -31,6 +60,23 @@ class User(Base):
     files = relationship("File", back_populates="user", cascade="all, delete-orphan")
     jobs = relationship("Job", back_populates="user", cascade="all, delete-orphan")
     reports = relationship("Report", back_populates="user", cascade="all, delete-orphan")
+    
+    @property
+    def is_trial_active(self):
+        """Check if trial is still active"""
+        if not self.is_trial:
+            return False
+        if not self.trial_end:
+            return True
+        return datetime.utcnow() < self.trial_end
+    
+    @property
+    def days_remaining_in_trial(self):
+        """Calculate days remaining in trial"""
+        if not self.is_trial or not self.trial_end:
+            return 0
+        delta = self.trial_end - datetime.utcnow()
+        return max(0, delta.days)
 
 class Accreditor(Base):
     """Accreditor organizations (SACSCOC, HLC, etc.)"""
