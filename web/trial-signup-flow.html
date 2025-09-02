@@ -694,21 +694,21 @@
                 submitBtn.querySelector('.loading-spinner').style.display = 'inline-block';
                 
                 try {
-                    // Create account
-                    const signupResponse = await fetch('/api/v1/auth/register', {
+                    // Create account using the actual API endpoint
+                    const signupResponse = await fetch('https://api.mapmystandards.ai/api/trial/signup-lite', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({
+                            name: `${formData.firstName} ${formData.lastName}`,
                             email: formData.email,
                             password: formData.password,
-                            first_name: formData.firstName,
-                            last_name: formData.lastName,
                             institution_name: formData.institutionName,
-                            plan: selectedPlan,
-                            billing_period: billingPeriod,
-                            is_trial: true
+                            institution_type: 'college',
+                            role: formData.role || 'Administrator',
+                            plan: `${selectedPlan}_${billingPeriod}`,
+                            newsletter_opt_in: false
                         })
                     });
 
@@ -719,13 +719,25 @@
 
                     const signupData = await signupResponse.json();
                     
-                    // Store auth token
-                    if (signupData.access_token) {
-                        localStorage.setItem('token', signupData.access_token);
-                        localStorage.setItem('user', JSON.stringify(signupData.user));
+                    // Store auth token and user data
+                    if (signupData.success && signupData.api_key) {
+                        // Create a simple token from the API key for now
+                        localStorage.setItem('token', signupData.api_key);
+                        localStorage.setItem('user', JSON.stringify({
+                            email: formData.email,
+                            name: `${formData.firstName} ${formData.lastName}`,
+                            institution: formData.institutionName,
+                            trial_id: signupData.trial_id,
+                            expires_at: signupData.expires_at
+                        }));
                     }
 
-                    // Create checkout session for payment method (for after trial)
+                    // For now, skip Stripe checkout and go directly to dashboard
+                    // Payment can be collected later when trial ends
+                    window.location.href = 'https://platform.mapmystandards.ai/dashboard-advanced.html?trial=started';
+                    return;
+                    
+                    /* Stripe checkout disabled for now
                     const planKey = `${selectedPlan}_${billingPeriod}`;
                     const plan = planConfigs[planKey];
                     
@@ -764,6 +776,7 @@
                         // Fallback to dashboard if no checkout URL
                         window.location.href = '/dashboard?trial=started';
                     }
+                    */
                     
                 } catch (error) {
                     console.error('Signup error:', error);
