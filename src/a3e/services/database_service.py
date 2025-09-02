@@ -120,31 +120,65 @@ class DatabaseService:
         search: Optional[str] = None,
         limit: int = 100,
         offset: int = 0
-    ) -> List[Standard]:
-        """List standards with filters"""
+    ) -> List[Any]:
+        """List standards with filters - using raw SQL due to table mismatch"""
         try:
-            query = select(Standard).where(Standard.is_active)
+            # Ensure database is initialized
+            if not self.async_session:
+                await self.initialize()
+            if not self.async_session:
+                logger.error("Database session factory unavailable")
+                return []
+            
+            # Build raw SQL query for accreditation_standards table
+            sql_parts = ["SELECT * FROM accreditation_standards WHERE 1=1"]
+            params = {}
             
             if accreditor_id:
-                query = query.where(Standard.accreditor_id == accreditor_id)
+                sql_parts.append("AND accreditor = :accreditor_id")
+                params["accreditor_id"] = accreditor_id
             
             if category:
-                query = query.where(Standard.category == category)
+                sql_parts.append("AND category = :category")
+                params["category"] = category
             
             if is_required is not None:
-                query = query.where(Standard.is_required == is_required)
+                sql_parts.append("AND is_required = :is_required")
+                params["is_required"] = is_required
             
             if search:
-                query = query.where(
-                    or_(
-                        Standard.title.ilike(f"%{search}%"),
-                        Standard.description.ilike(f"%{search}%")
-                    )
-                )
+                sql_parts.append("AND (standard_title ILIKE :search OR description ILIKE :search)")
+                params["search"] = f"%{search}%"
             
-            query = query.offset(offset).limit(limit)
-            result = await self.session.execute(query)
-            return result.scalars().all()
+            sql_parts.append(f"LIMIT {limit} OFFSET {offset}")
+            sql = " ".join(sql_parts)
+            
+            async with self.async_session() as session:
+                result = await session.execute(text(sql), params)
+                rows = result.fetchall()
+                
+                # Convert rows to objects with expected attributes
+                standards = []
+                for row in rows:
+                    # Create a simple object that mimics Standard model
+                    class StandardResult:
+                        def __init__(self, row):
+                            self.id = row.id
+                            self.standard_id = row.standard_id
+                            self.accreditor_id = row.accreditor  # Map accreditor to accreditor_id
+                            self.title = row.standard_title  # Map standard_title to title
+                            self.description = row.description
+                            self.category = row.category
+                            self.subcategory = None  # Not in our table
+                            self.version = row.version or "1.0"
+                            self.effective_date = row.effective_date or datetime(2024, 1, 1)
+                            self.is_required = row.is_required if row.is_required is not None else True
+                            self.is_active = True  # Default to true since column doesn't exist
+                            self.evidence_requirements = row.evidence_requirements or []
+                    
+                    standards.append(StandardResult(row))
+                
+                return standards
             
         except Exception as e:
             logger.error(f"Error listing standards: {e}")
@@ -167,24 +201,35 @@ class DatabaseService:
     async def get_accreditor_standards_stats(self, accreditor_id: str) -> Dict[str, Any]:
         """Get statistics for an accreditor's standards"""
         try:
-            query = select(Standard).where(
-                Standard.accreditor_id == accreditor_id,
-                Standard.is_active
-            )
-            result = await self.session.execute(query)
-            standards = result.scalars().all()
+            # Ensure database is initialized
+            if not self.async_session:
+                await self.initialize()
+            if not self.async_session:
+                logger.error("Database session factory unavailable")
+                return {"total": 0, "required": 0, "optional": 0, "categories": []}
             
-            total = len(standards)
-            required = len([s for s in standards if s.is_required])
-            optional = total - required
-            categories = list(set(s.category for s in standards))
-            
-            return {
-                "total": total,
-                "required": required,
-                "optional": optional,
-                "categories": categories
-            }
+            async with self.async_session() as session:
+                # Get total count
+                total_sql = "SELECT COUNT(*) FROM accreditation_standards WHERE accreditor = :accreditor_id"
+                total_result = await session.execute(text(total_sql), {"accreditor_id": accreditor_id})
+                total = total_result.scalar() or 0
+                
+                # Get required count
+                req_sql = "SELECT COUNT(*) FROM accreditation_standards WHERE accreditor = :accreditor_id AND is_required = true"
+                req_result = await session.execute(text(req_sql), {"accreditor_id": accreditor_id})
+                required = req_result.scalar() or 0
+                
+                # Get categories
+                cat_sql = "SELECT DISTINCT category FROM accreditation_standards WHERE accreditor = :accreditor_id AND category IS NOT NULL"
+                cat_result = await session.execute(text(cat_sql), {"accreditor_id": accreditor_id})
+                categories = [row[0] for row in cat_result.fetchall()]
+                
+                return {
+                    "total": total,
+                    "required": required,
+                    "optional": total - required,
+                    "categories": categories
+                }
             
         except Exception as e:
             logger.error(f"Error getting accreditor standards stats: {e}")
@@ -193,14 +238,22 @@ class DatabaseService:
     async def get_standard_categories(self, accreditor_id: Optional[str] = None) -> List[str]:
         """Get list of all standard categories"""
         try:
-            query = select(Standard.category).distinct()
+            # Ensure database is initialized
+            if not self.async_session:
+                await self.initialize()
+            if not self.async_session:
+                logger.error("Database session factory unavailable")
+                return []
             
-            if accreditor_id:
-                query = query.where(Standard.accreditor_id == accreditor_id)
-            
-            query = query.where(Standard.is_active)
-            result = await self.session.execute(query)
-            return [row[0] for row in result.all()]
+            async with self.async_session() as session:
+                if accreditor_id:
+                    sql = "SELECT DISTINCT category FROM accreditation_standards WHERE accreditor = :accreditor_id AND category IS NOT NULL"
+                    result = await session.execute(text(sql), {"accreditor_id": accreditor_id})
+                else:
+                    sql = "SELECT DISTINCT category FROM accreditation_standards WHERE category IS NOT NULL"
+                    result = await session.execute(text(sql))
+                
+                return [row[0] for row in result.fetchall()]
             
         except Exception as e:
             logger.error(f"Error getting standard categories: {e}")
@@ -212,26 +265,58 @@ class DatabaseService:
         accreditor_id: Optional[str] = None,
         category: Optional[str] = None,
         limit: int = 50
-    ) -> List[Standard]:
+    ) -> List[Any]:
         """Search standards using full-text search"""
         try:
-            search_query = select(Standard).where(
-                Standard.is_active,
-                or_(
-                    Standard.title.ilike(f"%{query}%"),
-                    Standard.description.ilike(f"%{query}%")
-                )
-            )
+            # Ensure database is initialized
+            if not self.async_session:
+                await self.initialize()
+            if not self.async_session:
+                logger.error("Database session factory unavailable")
+                return []
             
-            if accreditor_id:
-                search_query = search_query.where(Standard.accreditor_id == accreditor_id)
-            
-            if category:
-                search_query = search_query.where(Standard.category == category)
-            
-            search_query = search_query.limit(limit)
-            result = await self.session.execute(search_query)
-            return result.scalars().all()
+            async with self.async_session() as session:
+                sql_parts = [
+                    "SELECT * FROM accreditation_standards",
+                    "WHERE (standard_title ILIKE :search OR description ILIKE :search)"
+                ]
+                params = {"search": f"%{query}%"}
+                
+                if accreditor_id:
+                    sql_parts.append("AND accreditor = :accreditor_id")
+                    params["accreditor_id"] = accreditor_id
+                
+                if category:
+                    sql_parts.append("AND category = :category")
+                    params["category"] = category
+                
+                sql_parts.append(f"LIMIT {limit}")
+                sql = " ".join(sql_parts)
+                
+                result = await session.execute(text(sql), params)
+                rows = result.fetchall()
+                
+                standards = []
+                for row in rows:
+                    class StandardResult:
+                        def __init__(self, row):
+                            self.id = row.id
+                            self.standard_id = row.standard_id
+                            self.accreditor_id = row.accreditor
+                            self.title = row.standard_title
+                            self.description = row.description
+                            self.category = row.category
+                            self.subcategory = None
+                            self.version = row.version or "1.0"
+                            self.effective_date = row.effective_date or datetime(2024, 1, 1)
+                            self.is_required = row.is_required if row.is_required is not None else True
+                            self.is_active = True
+                            self.evidence_requirements = row.evidence_requirements or []
+                            self.relevance_score = None
+                    
+                    standards.append(StandardResult(row))
+                
+                return standards
             
         except Exception as e:
             logger.error(f"Error searching standards: {e}")
@@ -672,16 +757,42 @@ class DatabaseService:
             logger.error(f"Failed to get accreditor standards: {e}")
             return []
     
-    async def get_standard(self, standard_id: str) -> Optional[Standard]:
-        """Get standard by ID"""
+    async def get_standard(self, standard_id: str) -> Optional[Any]:
+        """Get standard by ID - using raw SQL due to table mismatch"""
         try:
+            # Ensure database is initialized
+            if not self.async_session:
+                await self.initialize()
+            if not self.async_session:
+                logger.error("Database session factory unavailable")
+                return None
+            
             async with self.async_session() as session:
-                result = await session.execute(
-                    select(Standard)
-                    .where(Standard.id == standard_id)
-                    .options(selectinload(Standard.accreditor))
-                )
-                return result.scalar_one_or_none()
+                sql = "SELECT * FROM accreditation_standards WHERE standard_id = :standard_id OR id = :standard_id"
+                result = await session.execute(text(sql), {"standard_id": standard_id})
+                row = result.fetchone()
+                
+                if row:
+                    # Create a simple object that mimics Standard model
+                    class StandardResult:
+                        def __init__(self, row):
+                            self.id = row.id
+                            self.standard_id = row.standard_id
+                            self.accreditor_id = row.accreditor  # Map accreditor to accreditor_id
+                            self.title = row.standard_title  # Map standard_title to title
+                            self.description = row.description
+                            self.category = row.category
+                            self.subcategory = None  # Not in our table
+                            self.version = row.version or "1.0"
+                            self.effective_date = row.effective_date or datetime(2024, 1, 1)
+                            self.is_required = row.is_required if row.is_required is not None else True
+                            self.is_active = True  # Default to true since column doesn't exist
+                            self.evidence_requirements = row.evidence_requirements or []
+                            self.created_at = row.created_at or datetime.utcnow()
+                            self.updated_at = row.updated_at or datetime.utcnow()
+                    
+                    return StandardResult(row)
+                return None
         except Exception as e:
             logger.error(f"Failed to get standard: {e}")
             return None

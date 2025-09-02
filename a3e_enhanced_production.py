@@ -9,6 +9,7 @@ from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, Request, 
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import List, Optional, Dict, Any
 import uvicorn
 import logging
@@ -22,6 +23,9 @@ import json
 import sqlite3
 from contextlib import asynccontextmanager
 import time
+import jwt
+import bcrypt
+import secrets
 
 # Configure logging
 logging.basicConfig(
@@ -34,11 +38,48 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Authentication configuration
+JWT_SECRET = os.getenv("JWT_SECRET", "your-super-secret-key-change-this-in-production")
+JWT_ALGORITHM = "HS256"
+JWT_EXPIRATION_MINUTES = 60 * 24  # 24 hours
+
+# Security
+security = HTTPBearer()
+
 # Database setup
 def init_database():
     """Initialize SQLite database for production data storage"""
     conn = sqlite3.connect('a3e_production.db')
     cursor = conn.cursor()
+    
+    # Create users table for authentication
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id TEXT PRIMARY KEY,
+            user_id TEXT UNIQUE NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            full_name TEXT,
+            first_name TEXT,
+            last_name TEXT,
+            institution TEXT,
+            phone TEXT DEFAULT '',
+            role TEXT DEFAULT 'user',
+            password_hash TEXT NOT NULL,
+            api_key TEXT UNIQUE,
+            is_active INTEGER DEFAULT 1,
+            is_trial INTEGER DEFAULT 1,
+            is_premium INTEGER DEFAULT 0,
+            subscription_tier TEXT DEFAULT 'trial',
+            subscription_plan TEXT DEFAULT 'professional_monthly',
+            billing_cycle TEXT DEFAULT 'monthly',
+            stripe_customer_id TEXT,
+            stripe_subscription_id TEXT,
+            trial_end_date TEXT,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            last_login TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
     
     # Create tables for real data storage
     cursor.execute('''
@@ -86,6 +127,73 @@ def init_database():
 # Initialize database on startup
 init_database()
 
+# Authentication utility functions
+def hash_password(password: str) -> str:
+    """Hash password using bcrypt"""
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
+
+def verify_password(password: str, hashed: str) -> bool:
+    """Verify password against hash - supports both bcrypt and PBKDF2"""
+    if hashed.startswith('$2b$'):
+        # bcrypt format
+        return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
+    elif ':' in hashed:
+        # PBKDF2 format (salt:hash)
+        salt_hex, hash_hex = hashed.split(':')
+        salt = bytes.fromhex(salt_hex)
+        expected_hash = hashlib.pbkdf2_hmac('sha256', password.encode(), salt, 100000)
+        return expected_hash.hex() == hash_hex
+    else:
+        return False
+
+def create_jwt_token(user_data: dict) -> str:
+    """Create JWT token for user"""
+    payload = {
+        "sub": user_data["user_id"],
+        "email": user_data["email"],
+        "exp": datetime.utcnow() + timedelta(minutes=JWT_EXPIRATION_MINUTES),
+        "iat": datetime.utcnow()
+    }
+    return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
+def get_user_from_db(email: str) -> Optional[dict]:
+    """Get user from database by email"""
+    conn = sqlite3.connect('a3e_production.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
+    user = cursor.fetchone()
+    conn.close()
+    
+    if user:
+        columns = ['id', 'user_id', 'email', 'full_name', 'first_name', 'last_name', 
+                  'institution', 'phone', 'role', 'password_hash', 'api_key', 
+                  'is_active', 'is_trial', 'is_premium', 'subscription_tier', 
+                  'subscription_plan', 'billing_cycle', 'stripe_customer_id', 
+                  'stripe_subscription_id', 'trial_end_date', 'created_at', 
+                  'updated_at', 'last_login']
+        return dict(zip(columns, user))
+    return None
+
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
+    """Get current authenticated user from JWT token"""
+    try:
+        token = credentials.credentials
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        email = payload.get("email")
+        if not email:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        
+        user = get_user_from_db(email)
+        if not user or not user.get('is_active'):
+            raise HTTPException(status_code=401, detail="User not found or inactive")
+        
+        return user
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
 # Create FastAPI app with enhanced configuration
 app = FastAPI(
     title="A³E Enhanced - Autonomous Accreditation & Audit Engine",
@@ -108,6 +216,129 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=["*"],
 )
+
+# Authentication endpoints
+@app.post("/auth/register")
+async def register_user(request: Request):
+    """Register a new user"""
+    try:
+        data = await request.json()
+        email = data.get("email")
+        password = data.get("password")
+        full_name = data.get("fullName", "")
+        
+        if not email or not password:
+            raise HTTPException(status_code=400, detail="Email and password are required")
+        
+        # Check if user already exists
+        if get_user_from_db(email):
+            raise HTTPException(status_code=400, detail="User already exists")
+        
+        # Create new user
+        user_id = f"user_{secrets.token_hex(8)}"
+        api_key = secrets.token_urlsafe(32)
+        password_hash = hash_password(password)
+        
+        conn = sqlite3.connect('a3e_production.db')
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO users (id, user_id, email, full_name, password_hash, api_key, trial_end_date)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (
+            user_id, user_id, email, full_name, password_hash, api_key,
+            (datetime.now() + timedelta(days=7)).isoformat()
+        ))
+        conn.commit()
+        conn.close()
+        
+        # Create JWT token
+        user_data = {"user_id": user_id, "email": email}
+        token = create_jwt_token(user_data)
+        
+        return {
+            "message": "User registered successfully",
+            "token": token,
+            "user": {
+                "id": user_id,
+                "email": email,
+                "full_name": full_name,
+                "subscription_tier": "trial"
+            }
+        }
+    except Exception as e:
+        logger.error(f"Registration error: {e}")
+        raise HTTPException(status_code=500, detail="Registration failed")
+
+@app.post("/auth/login")
+async def login_user(request: Request):
+    """Login user and return JWT token"""
+    try:
+        data = await request.json()
+        email = data.get("email")
+        password = data.get("password")
+        
+        if not email or not password:
+            raise HTTPException(status_code=400, detail="Email and password are required")
+        
+        # Get user from database
+        user = get_user_from_db(email)
+        if not user:
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+        
+        # Verify password
+        if not verify_password(password, user["password_hash"]):
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+        
+        # Update last login
+        conn = sqlite3.connect('a3e_production.db')
+        cursor = conn.cursor()
+        cursor.execute("UPDATE users SET last_login = ? WHERE email = ?", 
+                      (datetime.now().isoformat(), email))
+        conn.commit()
+        conn.close()
+        
+        # Create JWT token
+        token = create_jwt_token(user)
+        
+        return {
+            "message": "Login successful",
+            "token": token,
+            "user": {
+                "id": user["user_id"],
+                "email": user["email"],
+                "full_name": user["full_name"],
+                "subscription_tier": user["subscription_tier"],
+                "is_trial": bool(user["is_trial"])
+            }
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Login error: {e}")
+        raise HTTPException(status_code=500, detail="Login failed")
+
+@app.get("/api/dashboard/overview")
+async def get_dashboard_overview(current_user: dict = Depends(get_current_user)):
+    """Get dashboard overview for authenticated user"""
+    return {
+        "user": {
+            "id": current_user["user_id"],
+            "email": current_user["email"],
+            "full_name": current_user["full_name"],
+            "subscription_tier": current_user["subscription_tier"],
+            "is_trial": bool(current_user["is_trial"])
+        },
+        "dashboard_data": {
+            "documents_processed": 0,
+            "compliance_score": 0,
+            "recent_analyses": []
+        },
+        "subscription": {
+            "tier": current_user["subscription_tier"],
+            "is_trial": bool(current_user["is_trial"]),
+            "trial_end_date": current_user.get("trial_end_date")
+        }
+    }
 
 # Create directories for enhanced data storage
 UPLOAD_DIR = Path("production_uploads")
