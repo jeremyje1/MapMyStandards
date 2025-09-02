@@ -236,16 +236,21 @@
             <div class="links">
                 <a href="/trial-signup-flow.html">Start Free Trial</a>
                 <span class="separator">•</span>
-                <a href="/forgot-password">Forgot Password?</a>
+                <a href="/forgot-password.html">Forgot Password?</a>
             </div>
         </div>
     </div>
     
     <script>
-        // Check if coming from registration
+        // Check if coming from registration or password reset
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('registered') === 'true') {
             document.getElementById('successMessage').classList.add('show');
+        }
+        if (urlParams.get('reset') === 'success') {
+            const successMsg = document.getElementById('successMessage');
+            successMsg.textContent = 'Password reset successfully! Please sign in with your new password.';
+            successMsg.classList.add('show');
         }
         
         // Handle form submission
