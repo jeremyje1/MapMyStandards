@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browse Standards - MapMyStandards</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <h1 class="text-2xl font-bold text-gray-900">MapMyStandards</h1>
+                </div>
+                <nav class="flex items-center space-x-8">
+                    <a href="dashboard.html" class="text-gray-600 hover:text-gray-900">Dashboard</a>
+                    <a href="upload.html" class="text-gray-600 hover:text-gray-900">Upload</a>
+                    <a href="reports.html" class="text-gray-600 hover:text-gray-900">Reports</a>
+                    <a href="standards.html" class="text-gray-900 font-medium">Standards</a>
+                    <button onclick="handleLogout()" class="text-sm text-gray-600 hover:text-gray-900">Logout</button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Page Header -->
+        <div class="gradient-bg rounded-lg p-8 mb-8 text-white">
+            <h2 class="text-3xl font-bold mb-3">Accreditation Standards Library</h2>
+            <p class="opacity-90 text-lg">Browse and search comprehensive standards from all major accreditors</p>
+        </div>
+
+        <!-- Search and Filter Bar -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Search Standards</label>
+                    <input type="text" id="searchInput" placeholder="Search by title, ID, or keyword..." 
+                           class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Accreditor</label>
+                    <select id="accreditorFilter" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
+                        <option value="all">All Accreditors</option>
+                        <option value="SACSCOC">SACSCOC</option>
+                        <option value="HLC">HLC</option>
+                        <option value="MSCHE">MSCHE</option>
+                        <option value="NEASC">NEASC</option>
+                        <option value="WASC">WASC</option>
+                        <option value="NWCCU">NWCCU</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                    <select id="categoryFilter" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500">
+                        <option value="all">All Categories</option>
+                        <option value="Mission">Mission & Purpose</option>
+                        <option value="Governance">Governance</option>
+                        <option value="Academic">Academic Programs</option>
+                        <option value="Faculty">Faculty</option>
+                        <option value="Students">Student Services</option>
+                        <option value="Resources">Resources</option>
+                        <option value="Assessment">Assessment</option>
+                        <option value="Integrity">Ethics & Integrity</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Accreditor Tabs -->
+        <div class="bg-white rounded-lg shadow-sm mb-8">
+            <div class="border-b">
+                <nav class="flex space-x-8 px-6" id="accreditorTabs">
+                    <button class="py-4 px-1 border-b-2 border-purple-500 font-medium text-purple-600" data-accreditor="all">
+                        All Standards
+                    </button>
+                    <button class="py-4 px-1 border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-700" data-accreditor="SACSCOC">
+                        SACSCOC
+                    </button>
+                    <button class="py-4 px-1 border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-700" data-accreditor="HLC">
+                        HLC
+                    </button>
+                    <button class="py-4 px-1 border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-700" data-accreditor="MSCHE">
+                        MSCHE
+                    </button>
+                    <button class="py-4 px-1 border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-700" data-accreditor="NEASC">
+                        NEASC
+                    </button>
+                    <button class="py-4 px-1 border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-700" data-accreditor="WASC">
+                        WASC
+                    </button>
+                    <button class="py-4 px-1 border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-700" data-accreditor="NWCCU">
+                        NWCCU
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Standards List -->
+            <div class="p-6">
+                <div class="mb-4 flex justify-between items-center">
+                    <p class="text-sm text-gray-600">
+                        Showing <span id="resultCount">40</span> standards
+                    </p>
+                    <button onclick="exportStandards()" class="text-sm text-purple-600 hover:text-purple-700 font-medium">
+                        Export to CSV
+                    </button>
+                </div>
+
+                <div id="standardsList" class="space-y-4">
+                    <!-- Standards will be loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Standard Detail Modal -->
+        <div id="standardModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-lg bg-white">
+                <div class="mt-3">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 id="modalTitle" class="text-2xl font-bold text-gray-900"></h3>
+                            <p id="modalId" class="text-sm text-gray-600 mt-1"></p>
+                        </div>
+                        <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <h4 class="font-semibold text-gray-700">Description</h4>
+                            <p id="modalDescription" class="text-gray-600 mt-1"></p>
+                        </div>
+                        
+                        <div>
+                            <h4 class="font-semibold text-gray-700">Category</h4>
+                            <p id="modalCategory" class="text-gray-600 mt-1"></p>
+                        </div>
+                        
+                        <div>
+                            <h4 class="font-semibold text-gray-700">Accreditor</h4>
+                            <p id="modalAccreditor" class="text-gray-600 mt-1"></p>
+                        </div>
+                        
+                        <div>
+                            <h4 class="font-semibold text-gray-700">Evidence Requirements</h4>
+                            <ul id="modalEvidence" class="list-disc list-inside text-gray-600 mt-1">
+                                <li>Policy documentation</li>
+                                <li>Implementation records</li>
+                                <li>Assessment data</li>
+                                <li>Review committee minutes</li>
+                            </ul>
+                        </div>
+                        
+                        <div>
+                            <h4 class="font-semibold text-gray-700">Your Compliance Status</h4>
+                            <div class="flex items-center mt-2">
+                                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                    <div id="modalProgress" class="bg-green-600 h-2.5 rounded-full" style="width: 0%"></div>
+                                </div>
+                                <span id="modalProgressText" class="ml-3 text-sm font-medium text-gray-700">Not Started</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 flex justify-end space-x-3">
+                        <button onclick="closeModal()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">
+                            Close
+                        </button>
+                        <button onclick="mapEvidence()" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                            Map Evidence
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Comprehensive standards data
+        const allStandards = [
+            // SACSCOC Standards
+            {id: "SACSCOC_1.1", title: "Mission", description: "The institution has a clearly defined mission statement", category: "Mission", accreditor: "SACSCOC"},
+            {id: "SACSCOC_2.1", title: "Degree Standards", description: "Degree programs based on appropriate credit hours", category: "Academic", accreditor: "SACSCOC"},
+            {id: "SACSCOC_8.1", title: "Faculty", description: "Sufficient qualified faculty to support the mission", category: "Faculty", accreditor: "SACSCOC"},
+            {id: "SACSCOC_8.2a", title: "Faculty Evaluation", description: "Regular evaluation of faculty effectiveness", category: "Faculty", accreditor: "SACSCOC"},
+            {id: "SACSCOC_9.1", title: "Academic Support Services", description: "Appropriate academic support services", category: "Students", accreditor: "SACSCOC"},
+            {id: "SACSCOC_10.1", title: "Financial Resources", description: "Financial stability with capacity to support programs", category: "Resources", accreditor: "SACSCOC"},
+            {id: "SACSCOC_11.1", title: "Physical Resources", description: "Physical resources support student learning", category: "Resources", accreditor: "SACSCOC"},
+            {id: "SACSCOC_12.1", title: "Institutional Effectiveness", description: "Engages in ongoing evaluation and assessment", category: "Assessment", accreditor: "SACSCOC"},
+            
+            // HLC Standards
+            {id: "HLC_1.A", title: "Mission", description: "Mission is publicly articulated and operationalized", category: "Mission", accreditor: "HLC"},
+            {id: "HLC_1.B", title: "Mission Articulation", description: "Mission demonstrates commitment to public good", category: "Mission", accreditor: "HLC"},
+            {id: "HLC_2.A", title: "Integrity", description: "Operates with integrity in all relationships", category: "Integrity", accreditor: "HLC"},
+            {id: "HLC_3.A", title: "Teaching and Learning Quality", description: "Degree programs appropriate to higher education", category: "Academic", accreditor: "HLC"},
+            {id: "HLC_3.B", title: "General Education", description: "General education imparts essential knowledge", category: "Academic", accreditor: "HLC"},
+            {id: "HLC_4.A", title: "Educational Quality", description: "Demonstrates responsibility for quality of programs", category: "Assessment", accreditor: "HLC"},
+            {id: "HLC_4.B", title: "Assessment of Student Learning", description: "Ongoing assessment to improve student learning", category: "Assessment", accreditor: "HLC"},
+            {id: "HLC_5.A", title: "Resources", description: "Resource base supports educational programs", category: "Resources", accreditor: "HLC"},
+            
+            // MSCHE Standards
+            {id: "MSCHE_I", title: "Mission and Goals", description: "Clearly defined mission and goals", category: "Mission", accreditor: "MSCHE"},
+            {id: "MSCHE_II", title: "Ethics and Integrity", description: "Commitment to academic freedom and integrity", category: "Integrity", accreditor: "MSCHE"},
+            {id: "MSCHE_III", title: "Student Learning Experience", description: "Design and delivery of student experience", category: "Students", accreditor: "MSCHE"},
+            {id: "MSCHE_IV", title: "Support of Student Experience", description: "Support of the student experience", category: "Students", accreditor: "MSCHE"},
+            {id: "MSCHE_V", title: "Educational Effectiveness", description: "Assessment of educational effectiveness", category: "Assessment", accreditor: "MSCHE"},
+            {id: "MSCHE_VI", title: "Planning and Resources", description: "Planning, resources, and institutional improvement", category: "Resources", accreditor: "MSCHE"},
+            {id: "MSCHE_VII", title: "Governance", description: "Governance, leadership, and administration", category: "Governance", accreditor: "MSCHE"},
+            
+            // NEASC Standards
+            {id: "NEASC_1", title: "Mission and Purposes", description: "Clear institutional mission", category: "Mission", accreditor: "NEASC"},
+            {id: "NEASC_2", title: "Planning and Evaluation", description: "Systematic planning and evaluation", category: "Assessment", accreditor: "NEASC"},
+            {id: "NEASC_3", title: "Organization and Governance", description: "Effective organizational structure", category: "Governance", accreditor: "NEASC"},
+            {id: "NEASC_4", title: "Academic Program", description: "Quality academic programs", category: "Academic", accreditor: "NEASC"},
+            {id: "NEASC_5", title: "Students", description: "Student admission and services", category: "Students", accreditor: "NEASC"},
+            {id: "NEASC_6", title: "Teaching and Learning", description: "Faculty and teaching effectiveness", category: "Faculty", accreditor: "NEASC"},
+            {id: "NEASC_7", title: "Institutional Resources", description: "Human, financial, and physical resources", category: "Resources", accreditor: "NEASC"},
+            {id: "NEASC_8", title: "Educational Effectiveness", description: "Evidence of student learning", category: "Assessment", accreditor: "NEASC"},
+            
+            // WASC Standards
+            {id: "WASC_1", title: "Institutional Purpose", description: "Defining institutional purposes", category: "Mission", accreditor: "WASC"},
+            {id: "WASC_2", title: "Core Competencies", description: "Achieving educational objectives", category: "Academic", accreditor: "WASC"},
+            {id: "WASC_3", title: "Resources and Structures", description: "Developing and applying resources", category: "Resources", accreditor: "WASC"},
+            {id: "WASC_4", title: "Quality Assurance", description: "Creating organization committed to quality", category: "Assessment", accreditor: "WASC"},
+            
+            // NWCCU Standards
+            {id: "NWCCU_1", title: "Mission and Core Themes", description: "Mission fulfillment and adaptation", category: "Mission", accreditor: "NWCCU"},
+            {id: "NWCCU_2", title: "Resources and Capacity", description: "Resources and organizational capacity", category: "Resources", accreditor: "NWCCU"},
+            {id: "NWCCU_3", title: "Planning and Implementation", description: "Institutional planning", category: "Governance", accreditor: "NWCCU"},
+            {id: "NWCCU_4", title: "Effectiveness and Improvement", description: "Effectiveness and improvement", category: "Assessment", accreditor: "NWCCU"},
+            {id: "NWCCU_5", title: "Mission Fulfillment", description: "Mission fulfillment and sustainability", category: "Mission", accreditor: "NWCCU"}
+        ];
+
+        let filteredStandards = [...allStandards];
+        let currentStandard = null;
+
+        // Initialize page
+        function init() {
+            renderStandards();
+            setupEventListeners();
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Search input
+            document.getElementById('searchInput').addEventListener('input', filterStandards);
+            
+            // Filter dropdowns
+            document.getElementById('accreditorFilter').addEventListener('change', filterStandards);
+            document.getElementById('categoryFilter').addEventListener('change', filterStandards);
+            
+            // Tab buttons
+            document.querySelectorAll('#accreditorTabs button').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // Update active tab
+                    document.querySelectorAll('#accreditorTabs button').forEach(b => {
+                        b.classList.remove('border-purple-500', 'text-purple-600');
+                        b.classList.add('border-transparent', 'text-gray-500');
+                    });
+                    this.classList.remove('border-transparent', 'text-gray-500');
+                    this.classList.add('border-purple-500', 'text-purple-600');
+                    
+                    // Update filter
+                    document.getElementById('accreditorFilter').value = this.dataset.accreditor;
+                    filterStandards();
+                });
+            });
+        }
+
+        // Filter standards based on search and filters
+        function filterStandards() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const accreditor = document.getElementById('accreditorFilter').value;
+            const category = document.getElementById('categoryFilter').value;
+            
+            filteredStandards = allStandards.filter(standard => {
+                const matchesSearch = !searchTerm || 
+                    standard.title.toLowerCase().includes(searchTerm) ||
+                    standard.description.toLowerCase().includes(searchTerm) ||
+                    standard.id.toLowerCase().includes(searchTerm);
+                
+                const matchesAccreditor = accreditor === 'all' || standard.accreditor === accreditor;
+                const matchesCategory = category === 'all' || standard.category === category;
+                
+                return matchesSearch && matchesAccreditor && matchesCategory;
+            });
+            
+            renderStandards();
+        }
+
+        // Render standards list
+        function renderStandards() {
+            const container = document.getElementById('standardsList');
+            document.getElementById('resultCount').textContent = filteredStandards.length;
+            
+            if (filteredStandards.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <h3 class="mt-2 text-sm font-medium text-gray-900">No standards found</h3>
+                        <p class="mt-1 text-sm text-gray-500">Try adjusting your search or filters</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = filteredStandards.map(standard => `
+                <div class="border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer" onclick="showStandardDetail('${standard.id}')">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-2 mb-2">
+                                <span class="text-sm font-semibold text-gray-600">${standard.id}</span>
+                                <span class="px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-800">${standard.accreditor}</span>
+                                <span class="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800">${standard.category}</span>
+                            </div>
+                            <h4 class="text-lg font-medium text-gray-900">${standard.title}</h4>
+                            <p class="text-sm text-gray-600 mt-1">${standard.description}</p>
+                        </div>
+                        <svg class="w-5 h-5 text-gray-400 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Show standard detail modal
+        function showStandardDetail(standardId) {
+            const standard = allStandards.find(s => s.id === standardId);
+            if (!standard) return;
+            
+            currentStandard = standard;
+            
+            // Populate modal
+            document.getElementById('modalTitle').textContent = standard.title;
+            document.getElementById('modalId').textContent = standard.id;
+            document.getElementById('modalDescription').textContent = standard.description;
+            document.getElementById('modalCategory').textContent = standard.category;
+            document.getElementById('modalAccreditor').textContent = standard.accreditor;
+            
+            // Set random progress for demo
+            const progress = Math.floor(Math.random() * 100);
+            document.getElementById('modalProgress').style.width = progress + '%';
+            document.getElementById('modalProgressText').textContent = 
+                progress === 0 ? 'Not Started' :
+                progress < 50 ? `${progress}% - In Progress` :
+                progress < 100 ? `${progress}% - Nearly Complete` :
+                '100% - Complete';
+            
+            // Show modal
+            document.getElementById('standardModal').classList.remove('hidden');
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('standardModal').classList.add('hidden');
+            currentStandard = null;
+        }
+
+        // Map evidence to standard
+        function mapEvidence() {
+            if (currentStandard) {
+                window.location.href = `upload.html?standard=${currentStandard.id}`;
+            }
+        }
+
+        // Export standards to CSV
+        function exportStandards() {
+            const csv = [
+                ['Standard ID', 'Title', 'Description', 'Category', 'Accreditor'],
+                ...filteredStandards.map(s => [s.id, s.title, s.description, s.category, s.accreditor])
+            ].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'accreditation-standards.csv';
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        // Handle logout
+        function handleLogout() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userProfile');
+            window.location.href = 'login.html';
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

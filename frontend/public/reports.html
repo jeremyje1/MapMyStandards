@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports - MapMyStandards</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <h1 class="text-2xl font-bold text-gray-900">MapMyStandards</h1>
+                    <nav class="ml-8">
+                        <a href="dashboard.html" class="text-gray-600 hover:text-gray-900 px-3">Dashboard</a>
+                        <a href="upload.html" class="text-gray-600 hover:text-gray-900 px-3">Upload</a>
+                        <a href="reports.html" class="text-purple-600 font-medium px-3">Reports</a>
+                        <a href="standards.html" class="text-gray-600 hover:text-gray-900 px-3">Standards</a>
+                    </nav>
+                </div>
+                <button onclick="handleLogout()" class="text-sm text-gray-600 hover:text-gray-900">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Page Header -->
+        <div class="mb-8">
+            <h2 class="text-3xl font-bold text-gray-900 mb-2">Compliance Reports</h2>
+            <p class="text-gray-600">Generate comprehensive accreditation reports with gap analysis and recommendations.</p>
+        </div>
+
+        <!-- Report Generation -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h3 class="text-xl font-semibold text-gray-900 mb-4">Generate New Report</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Report Type</label>
+                    <select id="reportType" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600">
+                        <option value="compliance">Full Compliance Report</option>
+                        <option value="gap">Gap Analysis Report</option>
+                        <option value="evidence">Evidence Mapping Report</option>
+                        <option value="executive">Executive Summary</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Standards Set</label>
+                    <select id="standardsSet" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600">
+                        <option value="all">All Standards</option>
+                        <option value="core">Core Requirements Only</option>
+                        <option value="missing">Standards with Gaps</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Format</label>
+                    <select id="reportFormat" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600">
+                        <option value="pdf">PDF Document</option>
+                        <option value="word">Word Document</option>
+                        <option value="excel">Excel Spreadsheet</option>
+                    </select>
+                </div>
+            </div>
+            
+            <button onclick="generateReport()" class="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition">
+                Generate Report
+            </button>
+        </div>
+
+        <!-- Compliance Overview -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <!-- Compliance Chart -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">Compliance by Category</h3>
+                <canvas id="complianceChart"></canvas>
+            </div>
+            
+            <!-- Progress Chart -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">Progress Over Time</h3>
+                <canvas id="progressChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Recent Reports -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h3 class="text-xl font-semibold text-gray-900 mb-4">Recent Reports</h3>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="border-b">
+                            <th class="text-left py-3 px-4">Report Name</th>
+                            <th class="text-left py-3 px-4">Type</th>
+                            <th class="text-left py-3 px-4">Generated</th>
+                            <th class="text-left py-3 px-4">Status</th>
+                            <th class="text-left py-3 px-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reportsTable">
+                        <!-- Will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Report Preview Modal -->
+    <div id="reportModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-auto m-4">
+            <div class="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
+                <h3 class="text-xl font-semibold">Report Preview</h3>
+                <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div id="reportContent" class="p-6">
+                <!-- Report content will be inserted here -->
+            </div>
+            <div class="sticky bottom-0 bg-gray-50 px-6 py-4 flex justify-end gap-3 border-t">
+                <button onclick="closeModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
+                    Close
+                </button>
+                <button onclick="downloadReport()" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                    Download Report
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadRecentReports();
+            initializeCharts();
+        });
+
+        // Load recent reports
+        function loadRecentReports() {
+            const reports = getStoredReports();
+            const tbody = document.getElementById('reportsTable');
+            
+            if (reports.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="text-center py-8 text-gray-500">
+                            No reports generated yet. Create your first report above.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = reports.map(report => `
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="py-3 px-4">
+                        <div class="font-medium">${report.name}</div>
+                        <div class="text-sm text-gray-500">${report.accreditor} Standards</div>
+                    </td>
+                    <td class="py-3 px-4">
+                        <span class="px-2 py-1 text-xs rounded-full ${
+                            report.type === 'compliance' ? 'bg-blue-100 text-blue-800' :
+                            report.type === 'gap' ? 'bg-yellow-100 text-yellow-800' :
+                            report.type === 'evidence' ? 'bg-green-100 text-green-800' :
+                            'bg-gray-100 text-gray-800'
+                        }">
+                            ${report.type}
+                        </span>
+                    </td>
+                    <td class="py-3 px-4 text-sm text-gray-600">
+                        ${new Date(report.generatedAt).toLocaleDateString()}
+                    </td>
+                    <td class="py-3 px-4">
+                        <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
+                            Complete
+                        </span>
+                    </td>
+                    <td class="py-3 px-4">
+                        <button onclick="viewReport('${report.id}')" class="text-purple-600 hover:text-purple-800 mr-3">
+                            View
+                        </button>
+                        <button onclick="downloadReport('${report.id}')" class="text-blue-600 hover:text-blue-800">
+                            Download
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Generate new report
+        async function generateReport() {
+            const type = document.getElementById('reportType').value;
+            const standardsSet = document.getElementById('standardsSet').value;
+            const format = document.getElementById('reportFormat').value;
+            
+            // Show loading state
+            showNotification('Generating report...', 'info');
+            
+            // Simulate report generation
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            // Get user data
+            const onboardingData = JSON.parse(localStorage.getItem('onboarding_data') || '{}');
+            const institution = onboardingData.institution || {};
+            const accreditor = onboardingData.accreditor || 'SACSCOC';
+            
+            // Create report
+            const report = {
+                id: Date.now().toString(),
+                name: `${type.charAt(0).toUpperCase() + type.slice(1)} Report - ${new Date().toLocaleDateString()}`,
+                type: type,
+                accreditor: accreditor,
+                institution: institution.name || 'Your Institution',
+                generatedAt: new Date().toISOString(),
+                format: format,
+                standardsSet: standardsSet
+            };
+            
+            // Store report
+            const reports = getStoredReports();
+            reports.unshift(report);
+            localStorage.setItem('reports', JSON.stringify(reports.slice(0, 20))); // Keep last 20
+            
+            // Refresh list
+            loadRecentReports();
+            
+            // Show success and open preview
+            showNotification('Report generated successfully!', 'success');
+            viewReport(report.id);
+        }
+
+        // View report
+        function viewReport(reportId) {
+            const reports = getStoredReports();
+            const report = reports.find(r => r.id === reportId);
+            
+            if (!report) return;
+            
+            const modal = document.getElementById('reportModal');
+            const content = document.getElementById('reportContent');
+            
+            // Generate report content based on type
+            let reportHTML = '';
+            
+            if (report.type === 'compliance') {
+                reportHTML = generateComplianceReport(report);
+            } else if (report.type === 'gap') {
+                reportHTML = generateGapReport(report);
+            } else if (report.type === 'evidence') {
+                reportHTML = generateEvidenceReport(report);
+            } else {
+                reportHTML = generateExecutiveReport(report);
+            }
+            
+            content.innerHTML = reportHTML;
+            modal.classList.remove('hidden');
+        }
+
+        // Generate compliance report HTML
+        function generateComplianceReport(report) {
+            const uploadedFiles = JSON.parse(localStorage.getItem('uploadedFiles') || '[]');
+            
+            return `
+                <div class="prose max-w-none">
+                    <h1 class="text-3xl font-bold mb-4">Compliance Report</h1>
+                    <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+                        <p><strong>Institution:</strong> ${report.institution}</p>
+                        <p><strong>Accreditor:</strong> ${report.accreditor}</p>
+                        <p><strong>Generated:</strong> ${new Date(report.generatedAt).toLocaleString()}</p>
+                    </div>
+                    
+                    <h2 class="text-2xl font-semibold mt-8 mb-4">Executive Summary</h2>
+                    <p>Overall compliance score: <strong>87%</strong></p>
+                    <p>Standards met: <strong>35 of 40</strong></p>
+                    <p>Critical gaps identified: <strong>2</strong></p>
+                    
+                    <h2 class="text-2xl font-semibold mt-8 mb-4">Compliance by Category</h2>
+                    <table class="w-full border-collapse">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="border p-2 text-left">Category</th>
+                                <th class="border p-2 text-center">Standards</th>
+                                <th class="border p-2 text-center">Compliance</th>
+                                <th class="border p-2 text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="border p-2">Mission & Purpose</td>
+                                <td class="border p-2 text-center">5</td>
+                                <td class="border p-2 text-center">100%</td>
+                                <td class="border p-2 text-center">✅ Complete</td>
+                            </tr>
+                            <tr>
+                                <td class="border p-2">Faculty</td>
+                                <td class="border p-2 text-center">8</td>
+                                <td class="border p-2 text-center">88%</td>
+                                <td class="border p-2 text-center">🔶 In Progress</td>
+                            </tr>
+                            <tr>
+                                <td class="border p-2">Resources</td>
+                                <td class="border p-2 text-center">6</td>
+                                <td class="border p-2 text-center">83%</td>
+                                <td class="border p-2 text-center">🔶 In Progress</td>
+                            </tr>
+                            <tr>
+                                <td class="border p-2">Assessment</td>
+                                <td class="border p-2 text-center">7</td>
+                                <td class="border p-2 text-center">71%</td>
+                                <td class="border p-2 text-center">⚠️ Needs Attention</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <h2 class="text-2xl font-semibold mt-8 mb-4">Documents Analyzed</h2>
+                    <p>Total documents: <strong>${uploadedFiles.length}</strong></p>
+                    <ul class="list-disc pl-6 mt-2">
+                        ${uploadedFiles.slice(0, 5).map(f => `<li>${f.name}</li>`).join('')}
+                        ${uploadedFiles.length > 5 ? `<li>... and ${uploadedFiles.length - 5} more</li>` : ''}
+                    </ul>
+                    
+                    <h2 class="text-2xl font-semibold mt-8 mb-4">Recommendations</h2>
+                    <ol class="list-decimal pl-6">
+                        <li>Upload faculty credential documentation to improve Faculty category compliance</li>
+                        <li>Provide recent assessment reports for all academic programs</li>
+                        <li>Document resource allocation processes and budgets</li>
+                        <li>Update institutional effectiveness measures</li>
+                    </ol>
+                </div>
+            `;
+        }
+
+        // Generate gap analysis report
+        function generateGapReport(report) {
+            return `
+                <div class="prose max-w-none">
+                    <h1 class="text-3xl font-bold mb-4">Gap Analysis Report</h1>
+                    <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+                        <p><strong>Institution:</strong> ${report.institution}</p>
+                        <p><strong>Accreditor:</strong> ${report.accreditor}</p>
+                        <p><strong>Generated:</strong> ${new Date(report.generatedAt).toLocaleString()}</p>
+                    </div>
+                    
+                    <h2 class="text-2xl font-semibold mt-8 mb-4">Critical Gaps</h2>
+                    <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
+                        <h3 class="font-semibold text-red-900">Standard 8.2a - Faculty Evaluation</h3>
+                        <p class="text-red-700">Missing: Annual faculty evaluation process documentation</p>
+                        <p class="text-sm mt-2">Priority: High | Timeline: 30 days</p>
+                    </div>
+                    
+                    <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
+                        <h3 class="font-semibold text-red-900">Standard 10.1 - Financial Resources</h3>
+                        <p class="text-red-700">Missing: Three-year financial audit reports</p>
+                        <p class="text-sm mt-2">Priority: High | Timeline: 45 days</p>
+                    </div>
+                    
+                    <h2 class="text-2xl font-semibold mt-8 mb-4">Moderate Gaps</h2>
+                    <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-4">
+                        <h3 class="font-semibold text-yellow-900">Standard 3.B - General Education</h3>
+                        <p class="text-yellow-700">Incomplete: Student learning outcomes assessment data</p>
+                        <p class="text-sm mt-2">Priority: Medium | Timeline: 60 days</p>
+                    </div>
+                    
+                    <h2 class="text-2xl font-semibold mt-8 mb-4">Action Plan</h2>
+                    <table class="w-full">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="border p-2 text-left">Action</th>
+                                <th class="border p-2">Responsible</th>
+                                <th class="border p-2">Due Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="border p-2">Compile faculty evaluation forms</td>
+                                <td class="border p-2 text-center">HR Department</td>
+                                <td class="border p-2 text-center">${new Date(Date.now() + 30*24*60*60*1000).toLocaleDateString()}</td>
+                            </tr>
+                            <tr>
+                                <td class="border p-2">Request financial audit reports</td>
+                                <td class="border p-2 text-center">CFO Office</td>
+                                <td class="border p-2 text-center">${new Date(Date.now() + 45*24*60*60*1000).toLocaleDateString()}</td>
+                            </tr>
+                            <tr>
+                                <td class="border p-2">Gather SLO assessment data</td>
+                                <td class="border p-2 text-center">Academic Affairs</td>
+                                <td class="border p-2 text-center">${new Date(Date.now() + 60*24*60*60*1000).toLocaleDateString()}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        // Generate evidence mapping report
+        function generateEvidenceReport(report) {
+            const uploadedFiles = JSON.parse(localStorage.getItem('uploadedFiles') || '[]');
+            
+            return `
+                <div class="prose max-w-none">
+                    <h1 class="text-3xl font-bold mb-4">Evidence Mapping Report</h1>
+                    <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+                        <p><strong>Institution:</strong> ${report.institution}</p>
+                        <p><strong>Accreditor:</strong> ${report.accreditor}</p>
+                        <p><strong>Documents Analyzed:</strong> ${uploadedFiles.length}</p>
+                    </div>
+                    
+                    <h2 class="text-2xl font-semibold mt-8 mb-4">Evidence Coverage</h2>
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <h3 class="font-semibold text-green-900">Well Documented</h3>
+                            <ul class="list-disc pl-5 mt-2 text-sm">
+                                <li>Mission Statement</li>
+                                <li>Strategic Plan</li>
+                                <li>Faculty Handbook</li>
+                            </ul>
+                        </div>
+                        <div class="bg-red-50 p-4 rounded-lg">
+                            <h3 class="font-semibold text-red-900">Needs Evidence</h3>
+                            <ul class="list-disc pl-5 mt-2 text-sm">
+                                <li>Assessment Reports</li>
+                                <li>Financial Audits</li>
+                                <li>Student Success Data</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <h2 class="text-2xl font-semibold mt-8 mb-4">Document-to-Standard Mapping</h2>
+                    <table class="w-full">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="border p-2 text-left">Document</th>
+                                <th class="border p-2 text-left">Mapped Standards</th>
+                                <th class="border p-2 text-center">Confidence</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${uploadedFiles.slice(0, 5).map(file => `
+                                <tr>
+                                    <td class="border p-2">${file.name}</td>
+                                    <td class="border p-2">${file.standardsMapped || 0} standards</td>
+                                    <td class="border p-2 text-center">${Math.floor(Math.random() * 20) + 80}%</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        // Generate executive summary
+        function generateExecutiveReport(report) {
+            return `
+                <div class="prose max-w-none">
+                    <h1 class="text-3xl font-bold mb-4">Executive Summary</h1>
+                    <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+                        <p><strong>Institution:</strong> ${report.institution}</p>
+                        <p><strong>Prepared for:</strong> Board of Trustees</p>
+                        <p><strong>Date:</strong> ${new Date(report.generatedAt).toLocaleDateString()}</p>
+                    </div>
+                    
+                    <h2 class="text-2xl font-semibold mt-8 mb-4">Accreditation Status</h2>
+                    <div class="bg-green-50 border-l-4 border-green-500 p-4 mb-4">
+                        <p class="text-green-900 font-semibold">Current Status: On Track for Reaffirmation</p>
+                        <p class="text-green-700">Overall compliance: 87% | Timeline: 6 months remaining</p>
+                    </div>
+                    
+                    <h2 class="text-2xl font-semibold mt-8 mb-4">Key Metrics</h2>
+                    <div class="grid grid-cols-3 gap-4 mb-6">
+                        <div class="text-center p-4 bg-blue-50 rounded-lg">
+                            <div class="text-3xl font-bold text-blue-600">87%</div>
+                            <div class="text-sm text-gray-600">Compliance Score</div>
+                        </div>
+                        <div class="text-center p-4 bg-green-50 rounded-lg">
+                            <div class="text-3xl font-bold text-green-600">35/40</div>
+                            <div class="text-sm text-gray-600">Standards Met</div>
+                        </div>
+                        <div class="text-center p-4 bg-yellow-50 rounded-lg">
+                            <div class="text-3xl font-bold text-yellow-600">5</div>
+                            <div class="text-sm text-gray-600">Action Items</div>
+                        </div>
+                    </div>
+                    
+                    <h2 class="text-2xl font-semibold mt-8 mb-4">Strategic Priorities</h2>
+                    <ol class="list-decimal pl-6">
+                        <li class="mb-2"><strong>Complete faculty credential audit</strong> - Due in 30 days</li>
+                        <li class="mb-2"><strong>Finalize assessment reports</strong> - Due in 45 days</li>
+                        <li class="mb-2"><strong>Update financial documentation</strong> - Due in 60 days</li>
+                    </ol>
+                    
+                    <h2 class="text-2xl font-semibold mt-8 mb-4">Risk Assessment</h2>
+                    <p>Low to moderate risk identified. All critical standards have been addressed or have action plans in place.</p>
+                    
+                    <div class="mt-8 p-4 bg-blue-50 rounded-lg">
+                        <p class="text-blue-900 font-semibold">Recommendation</p>
+                        <p class="text-blue-700">Continue current trajectory. Focus on completing identified gaps. Schedule mock review in 90 days.</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('reportModal').classList.add('hidden');
+        }
+
+        // Download report
+        function downloadReport(reportId) {
+            showNotification('Downloading report...', 'info');
+            
+            // In production, this would generate and download actual file
+            setTimeout(() => {
+                showNotification('Report downloaded successfully!', 'success');
+            }, 1000);
+        }
+
+        // Initialize charts
+        function initializeCharts() {
+            // Compliance by Category Chart
+            const ctx1 = document.getElementById('complianceChart').getContext('2d');
+            new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: ['Mission', 'Faculty', 'Resources', 'Assessment', 'Governance'],
+                    datasets: [{
+                        label: 'Compliance %',
+                        data: [100, 88, 83, 71, 92],
+                        backgroundColor: [
+                            'rgba(16, 185, 129, 0.8)',
+                            'rgba(59, 130, 246, 0.8)',
+                            'rgba(59, 130, 246, 0.8)',
+                            'rgba(245, 158, 11, 0.8)',
+                            'rgba(16, 185, 129, 0.8)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            });
+            
+            // Progress Over Time Chart
+            const ctx2 = document.getElementById('progressChart').getContext('2d');
+            new Chart(ctx2, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Compliance Score',
+                        data: [65, 68, 72, 78, 83, 87],
+                        borderColor: 'rgba(102, 126, 234, 1)',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            });
+        }
+
+        // Helper functions
+        function getStoredReports() {
+            return JSON.parse(localStorage.getItem('reports') || '[]');
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-green-600' : type === 'error' ? 'bg-red-600' : 'bg-blue-600';
+            notification.className = `fixed bottom-4 right-4 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg z-50`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('authToken');
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>
