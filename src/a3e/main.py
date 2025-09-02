@@ -213,6 +213,13 @@ except ImportError as e:
     ai_status_router_available = False
     _ai_status_import_exception = e
 
+try:
+    from .api.routes.db_init import router as db_init_router
+    db_init_router_available = True
+except ImportError as e:
+    db_init_router_available = False
+    _db_init_import_exception = e
+
 # Logging already configured at top of file
 
 # Optional strict asset enforcement (set STRICT_FRONTEND_ASSETS=1 to fail startup if missing)
@@ -625,6 +632,12 @@ if ai_status_router_available:
     logger.info("✅ AI status router loaded")
 else:
     logger.warning("⚠️ AI status router not available")
+
+if db_init_router_available:
+    app.include_router(db_init_router)
+    logger.info("✅ Database init router loaded")
+else:
+    logger.warning("⚠️ Database init router not available")
 
 # Include database-powered routers (production-ready)
 try:
