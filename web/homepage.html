@@ -696,7 +696,7 @@
                 <li><a href="#pricing">Pricing</a></li>
                 <li><a href="https://api.mapmystandards.ai/docs">API Docs</a></li>
                 <li><a href="https://platform.mapmystandards.ai/login.html" class="btn btn-secondary">Sign In</a></li>
-                <li><button onclick="startCheckout('college_monthly', this)" class="btn btn-primary">Start Free Trial</button></li>
+                <li><button onclick="startCheckout('standard', this)" class="btn btn-primary">Start Free Trial</button></li>
             </ul>
         </nav>
     </header>
@@ -709,7 +709,7 @@
                     <h1>Transform Accreditation Compliance with AI</h1>
                     <p>Reduce preparation time by 80%, automate evidence mapping, and ensure continuous compliance readiness with our AI-powered platform trusted by 500+ institutions.</p>
                     <div class="hero-buttons">
-                        <button onclick="startCheckout('college_monthly', this)" class="btn btn-primary">Start 7-Day Free Trial</button>
+                        <button onclick="startCheckout('standard', this)" class="btn btn-primary">Start 7-Day Free Trial</button>
                         <a href="#demo" class="btn btn-secondary">Watch 3-Min Demo</a>
                     </div>
                     <div class="trust-badges">
@@ -927,42 +927,34 @@
         <div class="container">
             <div class="section-header">
                 <h2>Simple, Transparent Pricing</h2>
-                <p>Choose the plan that fits your institution size and needs. Start with a 7-day free trial. No credit card required.</p>
-            </div>
-            
-            <!-- Pricing Tabs -->
-            <div class="pricing-tabs">
-                <div class="pricing-tab active" onclick="showPricingTier('professional')">
-                    Professional Plans
-                </div>
-                <div class="pricing-tab" onclick="showPricingTier('institution')">
-                    Institution Plans
-                </div>
+                <p>One plan. All features. Start with a 7-day free trial.</p>
             </div>
 
-            <!-- Professional Plans -->
-            <div id="professional-plans" class="pricing-grid">
-                <div class="pricing-card">
-                    <h3>Professional Monthly</h3>
-                    <div class="price">
-                        $299<span class="price-period">/month</span>
-                    </div>
-                    <p style="color: var(--gray); margin-bottom: 1rem; font-weight: 600;">For smaller institutions and departments</p>
-                    <p style="color: var(--gray); margin-bottom: 2rem; font-size: 0.9rem;">Perfect for community colleges, small universities, or single-department compliance needs</p>
-                    <ul class="pricing-features">
-                        <li>Up to 1,000 documents per month</li>
-                        <li>AI evidence mapping for core standards</li>
-                        <li>Basic gap analysis dashboard</li>
-                        <li>Up to 5 user accounts</li>
-                        <li>Standard compliance reports</li>
-                        <li>Email support (48h response)</li>
-                        <li>Canvas LMS integration</li>
-                        <li>Single accreditor support (SACSCOC, HLC, or WASC)</li>
-                    </ul>
-                    <button onclick="startCheckout('college_monthly', this)" class="btn btn-secondary" style="width: 100%;">Start Free Trial</button>
-                </div>
+            <!-- Single Pricing Plan -->
+            <div class="pricing-grid" style="max-width: 500px; margin: 0 auto;">
                 <div class="pricing-card featured">
-                    <span class="badge">SAVE $588/year</span>
+                    <span class="badge">7-DAY FREE TRIAL</span>
+                    <h3>MapMyStandards AI Platform</h3>
+                    <div class="price">
+                        $199<span class="price-period">/month</span>
+                    </div>
+                    <p style="color: var(--gray); margin-bottom: 1rem; font-weight: 600;">Everything you need for accreditation compliance</p>
+                    <p style="color: var(--gray); margin-bottom: 2rem; font-size: 0.9rem;">Perfect for colleges, universities, and multi-campus institutions</p>
+                    <ul class="pricing-features">
+                        <li>Unlimited document analysis</li>
+                        <li>AI-powered evidence mapping</li>
+                        <li>Real-time gap analysis dashboard</li>
+                        <li>Unlimited user accounts</li>
+                        <li>Automated compliance reports</li>
+                        <li>Priority email support</li>
+                        <li>Canvas LMS integration</li>
+                        <li>All accreditors supported (SACSCOC, HLC, WASC, etc.)</li>
+                        <li>API access included</li>
+                        <li>Custom report templates</li>
+                    </ul>
+                    <button onclick="startCheckout('standard', this)" class="btn btn-primary" style="width: 100%;">Start 7-Day Free Trial</button>
+                </div>
+            </div>
                     <h3>Professional Annual</h3>
                     <div class="price">
                         $2,970<span class="price-period">/year</span>
@@ -975,61 +967,6 @@
                         <li>Advanced AI analytics and trend analysis</li>
                         <li>Up to 15 user accounts</li>
                         <li>Custom report templates and branding</li>
-                        <li>Priority support (24h response)</li>
-                        <li>Quarterly strategy calls</li>
-                        <li>Multi-accreditor support</li>
-                        <li>API access for integrations</li>
-                    </ul>
-                    <button onclick="startCheckout('college_yearly', this)" class="btn btn-primary" style="width: 100%;">Start Free Trial</button>
-                </div>
-            </div>
-
-            <!-- Institution Plans -->
-            <div id="institution-plans" class="pricing-grid" style="display: none;">
-                <div class="pricing-card">
-                    <h3>Institution Monthly</h3>
-                    <div class="price">
-                        $897<span class="price-period">/month</span>
-                    </div>
-                    <p style="color: var(--gray); margin-bottom: 1rem; font-weight: 600;">For large universities and multi-campus systems</p>
-                    <p style="color: var(--gray); margin-bottom: 2rem; font-size: 0.9rem;">Enterprise-grade features for complex institutional compliance needs</p>
-                    <ul class="pricing-features">
-                        <li>Unlimited documents and users</li>
-                        <li>Advanced AI with predictive analytics</li>
-                        <li>Multi-campus coordination tools</li>
-                        <li>Custom workflow automation</li>
-                        <li>White-label platform options</li>
-                        <li>Dedicated success manager</li>
-                        <li>24/7 priority support</li>
-                        <li>All accreditor standards included</li>
-                        <li>Advanced integrations (SIS, ERP)</li>
-                        <li>Custom training and onboarding</li>
-                    </ul>
-                    <button onclick="startCheckout('multicampus_monthly', this)" class="btn btn-secondary" style="width: 100%;">Start Free Trial</button>
-                </div>
-                <div class="pricing-card featured">
-                    <span class="badge">SAVE $1,188/year</span>
-                    <h3>Institution Annual</h3>
-                    <div class="price">
-                        $8,073<span class="price-period">/year</span>
-                    </div>
-                    <p style="color: var(--gray); margin-bottom: 1rem; font-weight: 600;">Maximum value for enterprise institutions</p>
-                    <p style="color: var(--gray); margin-bottom: 2rem; font-size: 0.9rem;">Complete enterprise solution with premium support and customization</p>
-                    <ul class="pricing-features">
-                        <li>Everything in Institution Monthly, plus:</li>
-                        <li>Custom AI model training</li>
-                        <li>Dedicated cloud infrastructure</li>
-                        <li>Advanced compliance automation</li>
-                        <li>Executive dashboard and reporting</li>
-                        <li>On-site implementation support</li>
-                        <li>Quarterly business reviews</li>
-                        <li>Beta access to new features</li>
-                        <li>Compliance consulting hours included</li>
-                        <li>SLA guarantees (99.9% uptime)</li>
-                    </ul>
-                    <button onclick="startCheckout('multicampus_yearly', this)" class="btn btn-primary" style="width: 100%;">Start Free Trial</button>
-                </div>
-            </div>
 
             <!-- Value Proposition -->
             <div style="margin-top: 3rem; text-align: center; max-width: 800px; margin-left: auto; margin-right: auto;">
@@ -1058,7 +995,7 @@
             <h2>Ready to Transform Your Accreditation Process?</h2>
             <p>Join 500+ institutions already saving time and money with MapMyStandards</p>
             <div class="hero-buttons" style="justify-content: center;">
-                <button onclick="startCheckout('college_monthly', this)" class="btn btn-primary" style="background: white; color: var(--primary);">Start Your 7-Day Free Trial</button>
+                <button onclick="startCheckout('standard', this)" class="btn btn-primary" style="background: white; color: var(--primary);">Start Your 7-Day Free Trial</button>
                 <a href="https://mapmystandards.ai/contact" class="btn btn-secondary" style="border-color: white; color: white;">Schedule a Demo</a>
             </div>
         </div>
@@ -1293,7 +1230,7 @@
                 'monthly': 'College Monthly Plan - $299/month with 7-day free trial.'
             };
             
-            planDesc.textContent = planDescriptions[planType] || 'College Monthly Plan - $299/month with 7-day free trial.';
+            planDesc.textContent = 'MapMyStandards AI Platform - $199/month with 7-day free trial.';
             
             // Show modal
             modal.style.display = 'block';
@@ -1357,14 +1294,7 @@
                 
                 // Map plan names to backend format
                 const planMapping = {
-                    'college_monthly': 'professional_monthly',
-                    'college_yearly': 'professional_yearly',
-                    'multicampus_monthly': 'institution_monthly',
-                    'multicampus_yearly': 'institution_yearly',
-                    'professional_monthly': 'professional_monthly',
-                    'professional_annual': 'professional_yearly', 
-                    'institution_monthly': 'institution_monthly',
-                    'institution_annual': 'institution_yearly'
+                    'standard': 'standard_monthly'
                 };
                 
                 const plan = planMapping[currentPlan] || 'professional_monthly';
