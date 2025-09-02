@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MapMyStandards - Advanced Compliance Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .trust-high { background-color: #10b981; }
+        .trust-medium { background-color: #f59e0b; }
+        .trust-low { background-color: #ef4444; }
+        .risk-critical { background-color: #991b1b; }
+        .risk-high { background-color: #dc2626; }
+        .risk-medium { background-color: #f59e0b; }
+        .risk-low { background-color: #10b981; }
+        .risk-minimal { background-color: #059669; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <h1 class="text-2xl font-bold text-gray-900">MapMyStandards</h1>
+                    <span class="ml-3 px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded-full">Intelligence Mode</span>
+                </div>
+                <nav class="flex items-center space-x-6">
+                    <a href="dashboard.html" class="text-gray-600 hover:text-gray-900">Standard View</a>
+                    <a href="dashboard-advanced.html" class="text-gray-900 font-medium">Intelligence View</a>
+                    <a href="upload.html" class="text-gray-600 hover:text-gray-900">Upload</a>
+                    <a href="reports.html" class="text-gray-600 hover:text-gray-900">Reports</a>
+                    <button onclick="handleLogout()" class="text-sm text-gray-600 hover:text-gray-900">Logout</button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Compliance Delta Card -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold text-gray-900">Compliance Delta™ (This Week)</h2>
+                <span class="text-sm text-gray-500" id="lastUpdated">Updated: Just now</span>
+            </div>
+            <div class="grid grid-cols-4 gap-4">
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-green-600" id="coverageChange">+2.3%</div>
+                    <div class="text-sm text-gray-600">Coverage Improvement</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-blue-600" id="artifactsRefreshed">17</div>
+                    <div class="text-sm text-gray-600">Artifacts Refreshed</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-purple-600" id="riskReduction">-0.06</div>
+                    <div class="text-sm text-gray-600">Risk Reduction</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-indigo-600" id="hoursSaved">32 hrs</div>
+                    <div class="text-sm text-gray-600">Time Saved</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Risk Overview & Trust Distribution -->
+        <div class="grid grid-cols-2 gap-6 mb-6">
+            <!-- GapRisk Overview -->
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">GapRisk Predictor™</h3>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-600">Critical Risks</span>
+                        <span class="px-3 py-1 text-sm font-medium text-white risk-critical rounded-full" id="criticalRisks">2</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-600">High Risks</span>
+                        <span class="px-3 py-1 text-sm font-medium text-white risk-high rounded-full" id="highRisks">5</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-600">Medium Risks</span>
+                        <span class="px-3 py-1 text-sm font-medium text-white risk-medium rounded-full" id="mediumRisks">12</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-600">Low Risks</span>
+                        <span class="px-3 py-1 text-sm font-medium text-white risk-low rounded-full" id="lowRisks">28</span>
+                    </div>
+                </div>
+                <div class="mt-4 pt-4 border-t">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">Next Review</span>
+                        <span class="text-lg font-semibold text-gray-900" id="nextReview">47 days</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- EvidenceTrust Distribution -->
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">EvidenceTrust Score™</h3>
+                <canvas id="trustChart" width="400" height="200"></canvas>
+                <div class="mt-4 flex justify-around text-sm">
+                    <div class="text-center">
+                        <div class="text-lg font-bold text-green-600" id="highTrust">234</div>
+                        <div class="text-gray-600">High Trust</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-lg font-bold text-yellow-600" id="mediumTrust">89</div>
+                        <div class="text-gray-600">Medium</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-lg font-bold text-red-600" id="lowTrust">31</div>
+                        <div class="text-gray-600">Low Trust</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Standards Mapping & Crosswalk -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">StandardsGraph™ & EvidenceMapper™</h3>
+                <button onclick="runCrosswalk()" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                    Run CrosswalkX™
+                </button>
+            </div>
+            
+            <!-- Coverage by Accreditor -->
+            <div class="grid grid-cols-6 gap-4 mb-6">
+                <div class="text-center p-3 bg-gray-50 rounded-lg">
+                    <div class="text-xs text-gray-600 mb-1">SACSCOC</div>
+                    <div class="text-2xl font-bold text-gray-900" id="sacscoc-coverage">87%</div>
+                </div>
+                <div class="text-center p-3 bg-gray-50 rounded-lg">
+                    <div class="text-xs text-gray-600 mb-1">HLC</div>
+                    <div class="text-2xl font-bold text-gray-900" id="hlc-coverage">82%</div>
+                </div>
+                <div class="text-center p-3 bg-gray-50 rounded-lg">
+                    <div class="text-xs text-gray-600 mb-1">MSCHE</div>
+                    <div class="text-2xl font-bold text-gray-900" id="msche-coverage">79%</div>
+                </div>
+                <div class="text-center p-3 bg-gray-50 rounded-lg">
+                    <div class="text-xs text-gray-600 mb-1">WASC</div>
+                    <div class="text-2xl font-bold text-gray-400" id="wasc-coverage">--</div>
+                </div>
+                <div class="text-center p-3 bg-gray-50 rounded-lg">
+                    <div class="text-xs text-gray-600 mb-1">NWCCU</div>
+                    <div class="text-2xl font-bold text-gray-400" id="nwccu-coverage">--</div>
+                </div>
+                <div class="text-center p-3 bg-gray-50 rounded-lg">
+                    <div class="text-xs text-gray-600 mb-1">NEASC</div>
+                    <div class="text-2xl font-bold text-gray-400" id="neasc-coverage">--</div>
+                </div>
+            </div>
+
+            <!-- Recent Mappings -->
+            <div id="recentMappings" class="space-y-2">
+                <!-- Mappings will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Predictive Insights -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Predictive Insights</h3>
+            <div id="predictiveInsights" class="space-y-3">
+                <!-- Insights will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Action Items -->
+        <div class="grid grid-cols-3 gap-6">
+            <button onclick="analyzeDocument()" class="bg-white rounded-lg shadow-sm p-6 hover:shadow-lg transition-shadow text-left">
+                <div class="flex items-center mb-3">
+                    <div class="p-2 bg-blue-100 rounded">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+                    <h4 class="ml-3 text-lg font-semibold text-gray-900">Analyze Evidence</h4>
+                </div>
+                <p class="text-sm text-gray-600">Map documents with confidence scoring and trust analysis</p>
+            </button>
+            
+            <button onclick="predictGaps()" class="bg-white rounded-lg shadow-sm p-6 hover:shadow-lg transition-shadow text-left">
+                <div class="flex items-center mb-3">
+                    <div class="p-2 bg-green-100 rounded">
+                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                    </div>
+                    <h4 class="ml-3 text-lg font-semibold text-gray-900">Predict Gaps</h4>
+                </div>
+                <p class="text-sm text-gray-600">Forward-looking risk assessment before issues appear</p>
+            </button>
+            
+            <button onclick="generateCitedNarrative()" class="bg-white rounded-lg shadow-sm p-6 hover:shadow-lg transition-shadow text-left">
+                <div class="flex items-center mb-3">
+                    <div class="p-2 bg-purple-100 rounded">
+                        <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                        </svg>
+                    </div>
+                    <h4 class="ml-3 text-lg font-semibold text-gray-900">CiteGuard™ Narrative</h4>
+                </div>
+                <p class="text-sm text-gray-600">Generate narratives with mandatory evidence citations</p>
+            </button>
+        </div>
+    </main>
+
+    <!-- Crosswalk Modal -->
+    <div id="crosswalkModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 shadow-lg rounded-lg bg-white">
+            <div class="mt-3">
+                <h3 class="text-2xl font-bold text-gray-900 mb-4">CrosswalkX™ Multi-Accreditor Mapping</h3>
+                <div id="crosswalkContent">
+                    <!-- Crosswalk results will appear here -->
+                </div>
+                <div class="mt-6 flex justify-end">
+                    <button onclick="closeCrosswalk()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Fetch real metrics from API
+        async function loadDashboardMetrics() {
+            try {
+                const token = localStorage.getItem('authToken') || 'demo';
+                const response = await fetch('/api/intelligence/metrics/dashboard', {
+                    headers: {
+                        'X-API-Key': token
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    updateDashboardMetrics(data);
+                }
+            } catch (error) {
+                console.error('Error loading metrics:', error);
+                // Use demo data if API fails
+                loadDemoMetrics();
+            }
+        }
+
+        function updateDashboardMetrics(data) {
+            // Update Compliance Delta
+            if (data.compliance_delta) {
+                document.getElementById('coverageChange').textContent = `+${data.compliance_delta.weekly_change}%`;
+                document.getElementById('artifactsRefreshed').textContent = data.compliance_delta.artifacts_refreshed;
+                document.getElementById('riskReduction').textContent = `-${data.compliance_delta.risk_reduction}`;
+                document.getElementById('hoursSaved').textContent = `${data.time_savings.hours_saved_this_week} hrs`;
+            }
+
+            // Update Risk Overview
+            if (data.risk_overview) {
+                document.getElementById('criticalRisks').textContent = data.risk_overview.critical_risks;
+                document.getElementById('highRisks').textContent = data.risk_overview.high_risks;
+                document.getElementById('mediumRisks').textContent = data.risk_overview.medium_risks;
+                document.getElementById('lowRisks').textContent = data.risk_overview.low_risks;
+                document.getElementById('nextReview').textContent = `${data.risk_overview.next_review_days} days`;
+            }
+
+            // Update Trust Metrics
+            if (data.trust_metrics) {
+                document.getElementById('highTrust').textContent = data.trust_metrics.high_trust_evidence;
+                document.getElementById('mediumTrust').textContent = data.trust_metrics.medium_trust_evidence;
+                document.getElementById('lowTrust').textContent = data.trust_metrics.low_trust_evidence;
+                updateTrustChart(data.trust_metrics);
+            }
+
+            // Update Coverage by Accreditor
+            if (data.coverage_by_accreditor) {
+                for (const [accreditor, coverage] of Object.entries(data.coverage_by_accreditor)) {
+                    const elem = document.getElementById(`${accreditor.toLowerCase()}-coverage`);
+                    if (elem) {
+                        elem.textContent = coverage > 0 ? `${coverage}%` : '--';
+                        elem.className = coverage > 0 ? 'text-2xl font-bold text-gray-900' : 'text-2xl font-bold text-gray-400';
+                    }
+                }
+            }
+
+            // Update timestamp
+            document.getElementById('lastUpdated').textContent = `Updated: ${new Date().toLocaleTimeString()}`;
+        }
+
+        function updateTrustChart(trustData) {
+            const ctx = document.getElementById('trustChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['High Trust', 'Medium Trust', 'Low Trust', 'Needs Update'],
+                    datasets: [{
+                        data: [
+                            trustData.high_trust_evidence,
+                            trustData.medium_trust_evidence,
+                            trustData.low_trust_evidence,
+                            trustData.needs_update
+                        ],
+                        backgroundColor: ['#10b981', '#f59e0b', '#ef4444', '#6b7280']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        function loadDemoMetrics() {
+            const demoData = {
+                compliance_delta: {
+                    weekly_change: 2.3,
+                    artifacts_refreshed: 17,
+                    risk_reduction: 0.06
+                },
+                time_savings: {
+                    hours_saved_this_week: 32
+                },
+                risk_overview: {
+                    critical_risks: 2,
+                    high_risks: 5,
+                    medium_risks: 12,
+                    low_risks: 28,
+                    next_review_days: 47
+                },
+                trust_metrics: {
+                    high_trust_evidence: 234,
+                    medium_trust_evidence: 89,
+                    low_trust_evidence: 31,
+                    needs_update: 18
+                },
+                coverage_by_accreditor: {
+                    SACSCOC: 87,
+                    HLC: 82,
+                    MSCHE: 79,
+                    WASC: 0,
+                    NWCCU: 0,
+                    NEASC: 0
+                }
+            };
+            updateDashboardMetrics(demoData);
+        }
+
+        function loadRecentMappings() {
+            const mappings = [
+                {
+                    document: 'Faculty_Handbook_2024.pdf',
+                    standard: 'SACSCOC 8.1',
+                    confidence: 0.92,
+                    trust: 'high',
+                    match: 'strong'
+                },
+                {
+                    document: 'Assessment_Report_Spring.docx',
+                    standard: 'HLC 4.B',
+                    confidence: 0.78,
+                    trust: 'medium',
+                    match: 'partial'
+                },
+                {
+                    document: 'Mission_Statement_Rev.pdf',
+                    standard: 'MSCHE I',
+                    confidence: 0.95,
+                    trust: 'high',
+                    match: 'exact'
+                }
+            ];
+
+            const container = document.getElementById('recentMappings');
+            container.innerHTML = '<h4 class="text-sm font-medium text-gray-700 mb-2">Recent Evidence Mappings</h4>';
+            
+            mappings.forEach(mapping => {
+                const trustColor = mapping.trust === 'high' ? 'green' : mapping.trust === 'medium' ? 'yellow' : 'red';
+                const matchBadge = mapping.match === 'exact' ? 'bg-green-100 text-green-800' : 
+                                  mapping.match === 'strong' ? 'bg-blue-100 text-blue-800' : 
+                                  'bg-yellow-100 text-yellow-800';
+                
+                container.innerHTML += `
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-2 h-8 bg-${trustColor}-500 rounded"></div>
+                            <div>
+                                <div class="text-sm font-medium text-gray-900">${mapping.document}</div>
+                                <div class="text-xs text-gray-600">→ ${mapping.standard}</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-sm font-medium text-gray-700">${(mapping.confidence * 100).toFixed(0)}%</span>
+                            <span class="px-2 py-1 text-xs rounded-full ${matchBadge}">${mapping.match}</span>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function loadPredictiveInsights() {
+            const insights = [
+                {
+                    type: 'warning',
+                    title: 'Freshness Alert',
+                    message: 'SACSCOC 10.1 evidence will become stale in 14 days - schedule refresh',
+                    priority: 'high'
+                },
+                {
+                    type: 'opportunity',
+                    title: 'Crosswalk Opportunity',
+                    message: '87% of your SACSCOC evidence can satisfy HLC requirements',
+                    priority: 'medium'
+                },
+                {
+                    type: 'risk',
+                    title: 'Gap Risk Detected',
+                    message: 'MSCHE V showing 68% coverage - predicted HIGH risk at next review',
+                    priority: 'critical'
+                }
+            ];
+
+            const container = document.getElementById('predictiveInsights');
+            container.innerHTML = '';
+            
+            insights.forEach(insight => {
+                const bgColor = insight.type === 'warning' ? 'bg-yellow-50 border-yellow-200' :
+                               insight.type === 'opportunity' ? 'bg-green-50 border-green-200' :
+                               'bg-red-50 border-red-200';
+                
+                const iconColor = insight.type === 'warning' ? 'text-yellow-600' :
+                                 insight.type === 'opportunity' ? 'text-green-600' :
+                                 'text-red-600';
+                
+                container.innerHTML += `
+                    <div class="p-4 rounded-lg border ${bgColor}">
+                        <div class="flex items-start">
+                            <svg class="w-5 h-5 ${iconColor} mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                            </svg>
+                            <div class="ml-3 flex-1">
+                                <h4 class="text-sm font-medium text-gray-900">${insight.title}</h4>
+                                <p class="text-sm text-gray-600 mt-1">${insight.message}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        async function runCrosswalk() {
+            document.getElementById('crosswalkModal').classList.remove('hidden');
+            const content = document.getElementById('crosswalkContent');
+            content.innerHTML = '<div class="text-center py-8">Running CrosswalkX analysis...</div>';
+            
+            try {
+                const token = localStorage.getItem('authToken') || 'demo';
+                const response = await fetch('/api/intelligence/crosswalk/preview?from_accreditor=SACSCOC&to_accreditor=HLC', {
+                    headers: {
+                        'X-API-Key': token
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    displayCrosswalkResults(data);
+                } else {
+                    displayDemoCrosswalk();
+                }
+            } catch (error) {
+                displayDemoCrosswalk();
+            }
+        }
+
+        function displayCrosswalkResults(data) {
+            const content = document.getElementById('crosswalkContent');
+            content.innerHTML = `
+                <div class="space-y-4">
+                    <div class="bg-green-50 p-4 rounded-lg">
+                        <h4 class="font-semibold text-green-900">Crosswalk Analysis Complete</h4>
+                        <p class="text-green-700 mt-1">${data.potential_reuse}</p>
+                        <p class="text-2xl font-bold text-green-900 mt-2">${data.coverage_estimate}% Coverage Potential</p>
+                    </div>
+                    <div class="space-y-2">
+                        <h5 class="font-medium text-gray-700">Sample Mappings:</h5>
+                        ${data.mappings.map(m => `
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
+                                <div class="text-sm">
+                                    <div class="font-medium">${m.from.id}: ${m.from.title}</div>
+                                    <div class="text-gray-600">→ ${m.to.id}: ${m.to.title}</div>
+                                </div>
+                                <span class="px-2 py-1 text-xs rounded-full ${m.match_type === 'strong' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">
+                                    ${Math.round(m.similarity * 100)}% match
+                                </span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function displayDemoCrosswalk() {
+            const demoData = {
+                coverage_estimate: 73,
+                potential_reuse: "8 standards can potentially share evidence",
+                mappings: [
+                    {
+                        from: { id: 'SACSCOC_1.1', title: 'Mission Statement' },
+                        to: { id: 'HLC_1.A', title: 'Mission Articulation' },
+                        similarity: 0.89,
+                        match_type: 'strong'
+                    },
+                    {
+                        from: { id: 'SACSCOC_8.1', title: 'Faculty' },
+                        to: { id: 'HLC_3.C', title: 'Faculty Roles' },
+                        similarity: 0.72,
+                        match_type: 'partial'
+                    }
+                ]
+            };
+            displayCrosswalkResults(demoData);
+        }
+
+        function closeCrosswalk() {
+            document.getElementById('crosswalkModal').classList.add('hidden');
+        }
+
+        function analyzeDocument() {
+            window.location.href = 'upload.html?mode=intelligence';
+        }
+
+        function predictGaps() {
+            alert('Gap prediction analysis will open in the reports section');
+            window.location.href = 'reports.html?type=gap-analysis';
+        }
+
+        function generateCitedNarrative() {
+            alert('CiteGuard narrative generation will open in the reports section');
+            window.location.href = 'reports.html?type=narrative';
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('authToken');
+            window.location.href = 'login.html';
+        }
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDashboardMetrics();
+            loadRecentMappings();
+            loadPredictiveInsights();
+            
+            // Refresh metrics every 30 seconds
+            setInterval(loadDashboardMetrics, 30000);
+        });
+    </script>
+</body>
+</html>
