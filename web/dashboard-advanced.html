@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - MapMyStandards</title>
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            background: #f9fafb;
+            color: #1f2937;
+        }
+        
+        /* Header */
+        .header {
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .user-info {
+            text-align: right;
+            margin-right: 1rem;
+        }
+        
+        .user-name {
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .user-email {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+        
+        .btn-logout {
+            padding: 0.5rem 1rem;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        .btn-logout:hover {
+            background: #dc2626;
+        }
+        
+        /* Main Layout */
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 2rem;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            height: fit-content;
+        }
+        
+        .nav-item {
+            display: block;
+            padding: 0.75rem 1rem;
+            color: #4b5563;
+            text-decoration: none;
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+            transition: all 0.2s;
+        }
+        
+        .nav-item:hover {
+            background: #f3f4f6;
+            color: #1f2937;
+        }
+        
+        .nav-item.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        
+        /* Content Area */
+        .content {
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+        }
+        
+        .page-title {
+            font-size: 1.875rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+        
+        .page-subtitle {
+            color: #6b7280;
+            margin-bottom: 2rem;
+        }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+        
+        .stat-label {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1f2937;
+        }
+        
+        .stat-change {
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
+        
+        .stat-change.positive {
+            color: #10b981;
+        }
+        
+        .stat-change.negative {
+            color: #ef4444;
+        }
+        
+        /* Activity Feed */
+        .activity-feed {
+            margin-top: 2rem;
+        }
+        
+        .activity-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+        
+        .activity-item {
+            padding: 1rem;
+            border-left: 3px solid #667eea;
+            background: #f9fafb;
+            margin-bottom: 1rem;
+            border-radius: 0 6px 6px 0;
+        }
+        
+        .activity-time {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 0.25rem;
+        }
+        
+        .activity-description {
+            color: #1f2937;
+        }
+        
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #6b7280;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e5e7eb;
+            border-radius: 50%;
+            border-top-color: #667eea;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">MapMyStandards</div>
+            <div class="user-menu">
+                <div class="user-info">
+                    <div class="user-name" id="userName">Loading...</div>
+                    <div class="user-email" id="userEmail">...</div>
+                </div>
+                <button class="btn-logout" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <nav>
+                <a href="#overview" class="nav-item active">Overview</a>
+                <a href="#standards" class="nav-item">Standards</a>
+                <a href="#evidence" class="nav-item">Evidence</a>
+                <a href="#reports" class="nav-item">Reports</a>
+                <a href="#analytics" class="nav-item">Analytics</a>
+                <a href="#settings" class="nav-item">Settings</a>
+                <a href="#help" class="nav-item">Help & Support</a>
+            </nav>
+        </aside>
+        
+        <!-- Content -->
+        <main class="content">
+            <h1 class="page-title">Welcome Back!</h1>
+            <p class="page-subtitle">Institution: <span id="institutionName">Loading...</span></p>
+            
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Standards Mapped</div>
+                    <div class="stat-value">87%</div>
+                    <div class="stat-change positive">↑ 12% from last month</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Evidence Documents</div>
+                    <div class="stat-value">342</div>
+                    <div class="stat-change positive">↑ 28 new this week</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Compliance Score</div>
+                    <div class="stat-value">94.2%</div>
+                    <div class="stat-change positive">↑ 3.1% improvement</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Time Saved</div>
+                    <div class="stat-value">32 hrs</div>
+                    <div class="stat-change">This week</div>
+                </div>
+            </div>
+            
+            <!-- Activity Feed -->
+            <div class="activity-feed">
+                <h2 class="activity-title">Recent Activity</h2>
+                <div id="activityList">
+                    <div class="activity-item">
+                        <div class="activity-time">2 hours ago</div>
+                        <div class="activity-description">New evidence uploaded for Standard 8.2.a</div>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-time">5 hours ago</div>
+                        <div class="activity-description">Compliance report generated for Q4 2024</div>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-time">Yesterday</div>
+                        <div class="activity-description">StandardsGraph™ mapping completed for new requirements</div>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-time">2 days ago</div>
+                        <div class="activity-description">EvidenceMapper™ identified 15 new document connections</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script>
+        // Get user data from localStorage
+        const userData = JSON.parse(localStorage.getItem('user') || '{}');
+        const token = localStorage.getItem('token');
+        
+        // Check authentication
+        if (!token) {
+            window.location.href = 'https://platform.mapmystandards.ai/login.html';
+        }
+        
+        // Display user information
+        function displayUserInfo() {
+            const userName = userData.name || userData.email?.split('@')[0] || 'User';
+            const userEmail = userData.email || 'user@example.com';
+            const institution = userData.institution || userData.company || 'Your Institution';
+            
+            document.getElementById('userName').textContent = userName;
+            document.getElementById('userEmail').textContent = userEmail;
+            document.getElementById('institutionName').textContent = institution;
+        }
+        
+        // Initialize dashboard
+        function initDashboard() {
+            displayUserInfo();
+            
+            // Add navigation functionality
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // You can add page switching logic here
+                    const section = this.getAttribute('href').substring(1);
+                    console.log('Navigating to:', section);
+                });
+            });
+        }
+        
+        // Logout function
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'https://platform.mapmystandards.ai/login.html';
+        }
+        
+        // Load dashboard data from API
+        async function loadDashboardData() {
+            const apiUrl = 'https://api.mapmystandards.ai';
+            
+            try {
+                const response = await fetch(`${apiUrl}/api/dashboard/overview`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    // Update dashboard with real data
+                    console.log('Dashboard data:', data);
+                } else if (response.status === 401) {
+                    // Token expired or invalid
+                    logout();
+                }
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+                // Dashboard will show default/demo data if API fails
+            }
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initDashboard();
+            loadDashboardData();
+        });
+    </script>
+</body>
+</html>
