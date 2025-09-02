@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { EnvelopeIcon, LockClosedIcon, UserIcon, BuildingOfficeIcon } from '@heroicons/react/24/outline';
 
 const Register: React.FC = () => {
+  const [searchParams] = useSearchParams();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -16,6 +17,20 @@ const Register: React.FC = () => {
   
   const { register } = useAuth();
   const navigate = useNavigate();
+
+  // Pre-fill form with URL parameters
+  useEffect(() => {
+    const email = searchParams.get('email') || '';
+    const institutionName = searchParams.get('institution_name') || '';
+    
+    if (email || institutionName) {
+      setFormData(prev => ({
+        ...prev,
+        email,
+        institutionName
+      }));
+    }
+  }, [searchParams]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
