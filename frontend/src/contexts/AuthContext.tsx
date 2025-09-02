@@ -5,7 +5,8 @@ interface User {
   id: string;
   email: string;
   name: string;
-  role: string;
+  role?: string;
+  plan?: string;
   institutionId?: string;
   institutionName?: string;
 }
@@ -60,13 +61,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (email: string, password: string) => {
     try {
       const response = await api.auth.login(email, password);
-      const { token, user, refreshToken } = response.data;
       
-      setAuthToken(token);
-      if (refreshToken) {
-        localStorage.setItem('refreshToken', refreshToken);
-      }
-      setUser(user);
+      // auth-simple/login returns access_token directly in data
+      const { access_token, user_id, email: userEmail, name, plan } = response.data.data;
+      
+      setAuthToken(access_token);
+      setUser({
+        id: user_id,
+        email: userEmail,
+        name: name,
+        plan: plan
+      });
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Login failed');
     }
@@ -84,12 +89,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         billing_period: 'monthly',
         is_trial: true
       });
-      const { token, user, refreshToken } = response.data;
       
-      setAuthToken(token);
-      if (refreshToken) {
-        localStorage.setItem('refreshToken', refreshToken);
-      }
+      // Backend returns data.access_token, not data.token
+      const { access_token, user } = response.data.data;
+      
+      setAuthToken(access_token);
       setUser(user);
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Registration failed');
