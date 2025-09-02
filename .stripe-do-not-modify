@@ -1,0 +1,14 @@
+CRITICAL: DO NOT MODIFY STRIPE CHECKOUT
+
+The Stripe checkout is configured for a SINGLE $199/month price.
+Price ID: price_1S2yYNK8PKpLCKDZ6zgFu2ay
+
+This is HARDCODED in: /app/api/stripe/checkout/route.ts
+
+DO NOT:
+- Add multiple pricing tiers
+- Read price IDs from environment variables  
+- Modify the checkout logic
+- Trust old .env files or legacy code
+
+See STRIPE_PRICING_CONFIG.md for full details.
