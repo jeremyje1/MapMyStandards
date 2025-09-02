@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Evidence - MapMyStandards</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .upload-active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #667eea;
+        }
+        .file-uploading {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <h1 class="text-2xl font-bold text-gray-900">MapMyStandards</h1>
+                    <nav class="ml-8">
+                        <a href="dashboard.html" class="text-gray-600 hover:text-gray-900 px-3">Dashboard</a>
+                        <a href="upload.html" class="text-purple-600 font-medium px-3">Upload</a>
+                        <a href="reports.html" class="text-gray-600 hover:text-gray-900 px-3">Reports</a>
+                        <a href="standards.html" class="text-gray-600 hover:text-gray-900 px-3">Standards</a>
+                    </nav>
+                </div>
+                <button onclick="handleLogout()" class="text-sm text-gray-600 hover:text-gray-900">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Page Header -->
+        <div class="mb-8">
+            <h2 class="text-3xl font-bold text-gray-900 mb-2">Upload Evidence Documents</h2>
+            <p class="text-gray-600">Upload your institutional documents for AI-powered analysis and automatic mapping to accreditation standards.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Upload Area -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <!-- Drop Zone -->
+                    <div id="dropZone" class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-purple-500 transition-colors">
+                        <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                        </svg>
+                        <p class="text-gray-600 mb-2">Drag and drop files here, or click to browse</p>
+                        <p class="text-sm text-gray-500 mb-4">PDF, DOCX, XLSX, PPTX (Max 25MB each)</p>
+                        <input type="file" id="fileInput" multiple accept=".pdf,.docx,.doc,.xlsx,.xls,.pptx,.ppt" class="hidden">
+                        <button onclick="document.getElementById('fileInput').click()" class="bg-purple-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-purple-700 transition">
+                            Select Files
+                        </button>
+                    </div>
+
+                    <!-- Upload Queue -->
+                    <div id="uploadQueue" class="mt-6 hidden">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3">Upload Queue</h3>
+                        <div id="fileList" class="space-y-2"></div>
+                        
+                        <!-- Batch Actions -->
+                        <div class="mt-4 flex gap-3">
+                            <button onclick="uploadAll()" class="bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 transition">
+                                Upload All Files
+                            </button>
+                            <button onclick="clearQueue()" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-300 transition">
+                                Clear Queue
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Recent Uploads -->
+                    <div class="mt-8">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3">Recent Uploads</h3>
+                        <div id="recentUploads" class="space-y-2">
+                            <!-- Will be populated from localStorage -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="lg:col-span-1">
+                <!-- Upload Stats -->
+                <div class="bg-white rounded-lg shadow p-6 mb-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Your Upload Statistics</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Total Documents</span>
+                            <span class="font-semibold" id="totalDocs">0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Analyzed</span>
+                            <span class="font-semibold text-green-600" id="analyzedDocs">0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Standards Mapped</span>
+                            <span class="font-semibold text-blue-600" id="mappedStandards">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tips -->
+                <div class="bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">📚 Upload Tips</h3>
+                    <ul class="space-y-2 text-sm text-gray-700">
+                        <li class="flex items-start">
+                            <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            Upload your mission statement, strategic plan, and assessment reports first
+                        </li>
+                        <li class="flex items-start">
+                            <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            Include faculty credentials and qualification documents
+                        </li>
+                        <li class="flex items-start">
+                            <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            Our AI works best with complete documents rather than excerpts
+                        </li>
+                        <li class="flex items-start">
+                            <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            Batch upload related documents for better context analysis
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let uploadQueue = [];
+        let uploadedFiles = JSON.parse(localStorage.getItem('uploadedFiles') || '[]');
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateStats();
+            displayRecentUploads();
+            
+            // Setup drag and drop
+            const dropZone = document.getElementById('dropZone');
+            const fileInput = document.getElementById('fileInput');
+            
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('upload-active', 'text-white');
+            });
+            
+            dropZone.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('upload-active', 'text-white');
+            });
+            
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('upload-active', 'text-white');
+                handleFiles(e.dataTransfer.files);
+            });
+            
+            fileInput.addEventListener('change', (e) => {
+                handleFiles(e.target.files);
+            });
+        });
+
+        function handleFiles(files) {
+            for (let file of files) {
+                if (file.size > 25 * 1024 * 1024) {
+                    alert(`${file.name} is too large. Max size is 25MB.`);
+                    continue;
+                }
+                
+                // Add to queue
+                const fileObj = {
+                    id: Date.now() + Math.random(),
+                    name: file.name,
+                    size: file.size,
+                    type: file.type,
+                    status: 'pending',
+                    file: file
+                };
+                
+                uploadQueue.push(fileObj);
+            }
+            
+            displayUploadQueue();
+        }
+
+        function displayUploadQueue() {
+            const queueDiv = document.getElementById('uploadQueue');
+            const fileList = document.getElementById('fileList');
+            
+            if (uploadQueue.length === 0) {
+                queueDiv.classList.add('hidden');
+                return;
+            }
+            
+            queueDiv.classList.remove('hidden');
+            fileList.innerHTML = uploadQueue.map(file => `
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg ${file.status === 'uploading' ? 'file-uploading' : ''}">
+                    <div class="flex items-center flex-1">
+                        <svg class="w-8 h-8 text-gray-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/>
+                        </svg>
+                        <div>
+                            <div class="font-medium text-gray-900">${file.name}</div>
+                            <div class="text-sm text-gray-500">${(file.size / 1024 / 1024).toFixed(2)} MB</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        ${file.status === 'pending' ? `
+                            <button onclick="uploadFile('${file.id}')" class="text-purple-600 hover:text-purple-800">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                                </svg>
+                            </button>
+                        ` : file.status === 'uploading' ? `
+                            <div class="text-blue-600">Uploading...</div>
+                        ` : file.status === 'complete' ? `
+                            <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                        ` : ''}
+                        <button onclick="removeFromQueue('${file.id}')" class="text-red-600 hover:text-red-800">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function uploadFile(fileId) {
+            const file = uploadQueue.find(f => f.id == fileId);
+            if (!file) return;
+            
+            file.status = 'uploading';
+            displayUploadQueue();
+            
+            // Simulate upload (in production, this would call the API)
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            file.status = 'complete';
+            
+            // Add to uploaded files
+            uploadedFiles.push({
+                name: file.name,
+                size: file.size,
+                uploadedAt: new Date().toISOString(),
+                standardsMapped: Math.floor(Math.random() * 5) + 1
+            });
+            
+            localStorage.setItem('uploadedFiles', JSON.stringify(uploadedFiles));
+            
+            displayUploadQueue();
+            displayRecentUploads();
+            updateStats();
+            
+            // Show success message
+            showNotification(`${file.name} uploaded successfully!`);
+        }
+
+        async function uploadAll() {
+            for (let file of uploadQueue.filter(f => f.status === 'pending')) {
+                await uploadFile(file.id);
+            }
+        }
+
+        function removeFromQueue(fileId) {
+            uploadQueue = uploadQueue.filter(f => f.id != fileId);
+            displayUploadQueue();
+        }
+
+        function clearQueue() {
+            uploadQueue = [];
+            displayUploadQueue();
+        }
+
+        function displayRecentUploads() {
+            const recentDiv = document.getElementById('recentUploads');
+            const recent = uploadedFiles.slice(-5).reverse();
+            
+            if (recent.length === 0) {
+                recentDiv.innerHTML = '<p class="text-gray-500 text-sm">No uploads yet. Start by uploading your first document.</p>';
+                return;
+            }
+            
+            recentDiv.innerHTML = recent.map(file => `
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div class="flex items-center">
+                        <svg class="w-8 h-8 text-green-600 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <div>
+                            <div class="font-medium text-gray-900">${file.name}</div>
+                            <div class="text-sm text-gray-500">
+                                ${new Date(file.uploadedAt).toLocaleDateString()} • 
+                                ${file.standardsMapped} standards mapped
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateStats() {
+            const totalDocs = uploadedFiles.length;
+            const analyzedDocs = uploadedFiles.length;
+            const mappedStandards = uploadedFiles.reduce((sum, f) => sum + (f.standardsMapped || 0), 0);
+            
+            document.getElementById('totalDocs').textContent = totalDocs;
+            document.getElementById('analyzedDocs').textContent = analyzedDocs;
+            document.getElementById('mappedStandards').textContent = mappedStandards;
+        }
+
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'fixed bottom-4 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('authToken');
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>
