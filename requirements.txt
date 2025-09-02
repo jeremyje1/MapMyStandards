@@ -32,6 +32,8 @@ stripe==12.4.0
 # Email Services (Using Postmark as primary)
 aiosmtplib==3.0.1
 postmark==1.0.0
+postmarker==1.0  # Actual Postmark Python library
+sendgrid==6.11.0  # Backup email service
 
 # HTTP Client
 httpx==0.25.2
@@ -61,6 +63,11 @@ celery==5.3.4
 # Vector Database & Embeddings
 pinecone==7.3.0
 sentence-transformers==2.2.2
+
+# Document Processing
+PyPDF2==3.0.1
+python-docx==1.1.0
+openpyxl==3.1.2
 
 # Agent Orchestrator (Optional)
 # pyautogen==0.2.0  # Uncomment when ready to use agents
