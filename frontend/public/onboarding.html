@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MapMyStandards - Welcome Onboarding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .step-active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .step-complete { background: #10b981; }
+        .step-inactive { background: #e5e7eb; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <h1 class="text-2xl font-bold text-gray-900">MapMyStandards</h1>
+                <span class="text-sm text-gray-600">Welcome Setup</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Progress Bar -->
+    <div class="bg-white border-b">
+        <div class="max-w-4xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <div id="step1" class="w-10 h-10 rounded-full step-active flex items-center justify-center text-white font-bold">1</div>
+                    <span class="ml-3 text-sm font-medium">Institution Info</span>
+                </div>
+                <div class="flex-1 h-1 bg-gray-200 mx-4"></div>
+                <div class="flex items-center">
+                    <div id="step2" class="w-10 h-10 rounded-full step-inactive flex items-center justify-center text-white font-bold">2</div>
+                    <span class="ml-3 text-sm font-medium">Select Accreditor</span>
+                </div>
+                <div class="flex-1 h-1 bg-gray-200 mx-4"></div>
+                <div class="flex items-center">
+                    <div id="step3" class="w-10 h-10 rounded-full step-inactive flex items-center justify-center text-white font-bold">3</div>
+                    <span class="ml-3 text-sm font-medium">Upload Documents</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="max-w-4xl mx-auto px-4 py-8">
+        <!-- Step 1: Institution Information -->
+        <div id="step1-content" class="bg-white rounded-lg shadow-lg p-8">
+            <h2 class="text-2xl font-bold text-gray-900 mb-2">Let's get to know your institution</h2>
+            <p class="text-gray-600 mb-6">This information helps us tailor the platform to your specific needs.</p>
+            
+            <form id="institution-form" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Institution Name *</label>
+                    <input type="text" id="institution_name" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent" placeholder="e.g., State University">
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Institution Type *</label>
+                        <select id="institution_type" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600">
+                            <option value="">Select type...</option>
+                            <option value="university">University (4-year)</option>
+                            <option value="community_college">Community College (2-year)</option>
+                            <option value="technical">Technical/Vocational</option>
+                            <option value="graduate">Graduate Institution</option>
+                            <option value="specialized">Specialized Institution</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Student Enrollment *</label>
+                        <select id="enrollment_size" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600">
+                            <option value="">Select size...</option>
+                            <option value="small">Under 1,000</option>
+                            <option value="medium">1,000 - 5,000</option>
+                            <option value="large">5,000 - 15,000</option>
+                            <option value="xlarge">Over 15,000</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Your Role *</label>
+                    <select id="user_role" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600">
+                        <option value="">Select your role...</option>
+                        <option value="accreditation_liaison">Accreditation Liaison Officer</option>
+                        <option value="provost">Provost/Academic VP</option>
+                        <option value="president">President/Chancellor</option>
+                        <option value="dean">Dean</option>
+                        <option value="faculty">Faculty</option>
+                        <option value="staff">Staff</option>
+                        <option value="consultant">Consultant</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Next Accreditation Review</label>
+                    <input type="date" id="review_date" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600">
+                </div>
+                
+                <button type="submit" class="w-full bg-purple-600 text-white py-3 rounded-lg font-medium hover:bg-purple-700 transition">
+                    Continue to Accreditor Selection →
+                </button>
+            </form>
+        </div>
+
+        <!-- Step 2: Accreditor Selection -->
+        <div id="step2-content" class="bg-white rounded-lg shadow-lg p-8 hidden">
+            <h2 class="text-2xl font-bold text-gray-900 mb-2">Select your accreditor</h2>
+            <p class="text-gray-600 mb-6">Choose your regional or specialized accreditor. You can add more later.</p>
+            
+            <div class="space-y-4">
+                <h3 class="font-semibold text-gray-700">Regional Accreditors</h3>
+                <div class="grid grid-cols-1 gap-3">
+                    <label class="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-purple-500 transition">
+                        <input type="radio" name="accreditor" value="SACSCOC" class="mr-3">
+                        <div>
+                            <div class="font-semibold">SACSCOC</div>
+                            <div class="text-sm text-gray-600">Southern Association of Colleges and Schools Commission on Colleges</div>
+                        </div>
+                    </label>
+                    
+                    <label class="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-purple-500 transition">
+                        <input type="radio" name="accreditor" value="HLC" class="mr-3">
+                        <div>
+                            <div class="font-semibold">HLC</div>
+                            <div class="text-sm text-gray-600">Higher Learning Commission</div>
+                        </div>
+                    </label>
+                    
+                    <label class="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-purple-500 transition">
+                        <input type="radio" name="accreditor" value="MSCHE" class="mr-3">
+                        <div>
+                            <div class="font-semibold">MSCHE</div>
+                            <div class="text-sm text-gray-600">Middle States Commission on Higher Education</div>
+                        </div>
+                    </label>
+                    
+                    <label class="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-purple-500 transition">
+                        <input type="radio" name="accreditor" value="NEASC" class="mr-3">
+                        <div>
+                            <div class="font-semibold">NEASC</div>
+                            <div class="text-sm text-gray-600">New England Association of Schools and Colleges</div>
+                        </div>
+                    </label>
+                    
+                    <label class="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-purple-500 transition">
+                        <input type="radio" name="accreditor" value="WASC" class="mr-3">
+                        <div>
+                            <div class="font-semibold">WASC</div>
+                            <div class="text-sm text-gray-600">Western Association of Schools and Colleges</div>
+                        </div>
+                    </label>
+                    
+                    <label class="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-purple-500 transition">
+                        <input type="radio" name="accreditor" value="NWCCU" class="mr-3">
+                        <div>
+                            <div class="font-semibold">NWCCU</div>
+                            <div class="text-sm text-gray-600">Northwest Commission on Colleges and Universities</div>
+                        </div>
+                    </label>
+                </div>
+                
+                <div class="flex gap-4 mt-6">
+                    <button onclick="goToStep(1)" class="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-300 transition">
+                        ← Back
+                    </button>
+                    <button onclick="selectAccreditor()" class="flex-1 bg-purple-600 text-white py-3 rounded-lg font-medium hover:bg-purple-700 transition">
+                        Continue to Document Upload →
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3: Document Upload -->
+        <div id="step3-content" class="bg-white rounded-lg shadow-lg p-8 hidden">
+            <h2 class="text-2xl font-bold text-gray-900 mb-2">Upload your initial documents</h2>
+            <p class="text-gray-600 mb-6">Upload key documents to get started. Our AI will analyze them and map them to accreditation standards.</p>
+            
+            <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center" id="drop-zone">
+                <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                </svg>
+                <p class="text-gray-600 mb-2">Drag and drop files here, or click to browse</p>
+                <p class="text-sm text-gray-500 mb-4">Supported: PDF, DOCX, XLSX, PPT (Max 10MB each)</p>
+                <input type="file" id="file-input" multiple accept=".pdf,.docx,.doc,.xlsx,.xls,.pptx,.ppt" class="hidden">
+                <button onclick="document.getElementById('file-input').click()" class="bg-purple-100 text-purple-700 px-4 py-2 rounded-lg font-medium hover:bg-purple-200 transition">
+                    Select Files
+                </button>
+            </div>
+            
+            <div class="mt-6">
+                <h3 class="font-semibold text-gray-700 mb-3">Suggested Documents:</h3>
+                <ul class="space-y-2 text-sm text-gray-600">
+                    <li class="flex items-start">
+                        <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        Mission Statement & Strategic Plan
+                    </li>
+                    <li class="flex items-start">
+                        <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        Faculty Handbook or Credentials
+                    </li>
+                    <li class="flex items-start">
+                        <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        Recent Assessment Reports
+                    </li>
+                    <li class="flex items-start">
+                        <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        Previous Accreditation Reports
+                    </li>
+                </ul>
+            </div>
+            
+            <!-- Uploaded Files List -->
+            <div id="uploaded-files" class="mt-6 hidden">
+                <h3 class="font-semibold text-gray-700 mb-3">Uploaded Files:</h3>
+                <div id="files-list" class="space-y-2"></div>
+            </div>
+            
+            <div class="flex gap-4 mt-6">
+                <button onclick="goToStep(2)" class="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-300 transition">
+                    ← Back
+                </button>
+                <button onclick="completeOnboarding()" class="flex-1 bg-green-600 text-white py-3 rounded-lg font-medium hover:bg-green-700 transition">
+                    Complete Setup & Start Analysis →
+                </button>
+            </div>
+        </div>
+
+        <!-- Processing Screen -->
+        <div id="processing-content" class="bg-white rounded-lg shadow-lg p-8 hidden">
+            <div class="text-center py-12">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-purple-100 rounded-full mb-4">
+                    <svg class="animate-spin h-8 w-8 text-purple-600" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-900 mb-2">Setting up your workspace...</h2>
+                <p class="text-gray-600 mb-4">Our AI is analyzing your documents and preparing your personalized dashboard.</p>
+                <div class="max-w-md mx-auto">
+                    <div class="bg-gray-200 rounded-full h-2 overflow-hidden">
+                        <div class="bg-purple-600 h-full rounded-full transition-all duration-500" id="progress-bar" style="width: 0%"></div>
+                    </div>
+                </div>
+                <p class="text-sm text-gray-500 mt-4" id="progress-text">Initializing...</p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let currentStep = 1;
+        let institutionData = {};
+        let selectedAccreditor = null;
+        let uploadedFiles = [];
+
+        // Step navigation
+        function goToStep(step) {
+            // Hide all content
+            document.querySelectorAll('[id$="-content"]').forEach(el => el.classList.add('hidden'));
+            
+            // Show selected step
+            document.getElementById(`step${step}-content`).classList.remove('hidden');
+            
+            // Update progress indicators
+            for (let i = 1; i <= 3; i++) {
+                const stepEl = document.getElementById(`step${i}`);
+                if (i < step) {
+                    stepEl.className = 'w-10 h-10 rounded-full step-complete flex items-center justify-center text-white font-bold';
+                } else if (i === step) {
+                    stepEl.className = 'w-10 h-10 rounded-full step-active flex items-center justify-center text-white font-bold';
+                } else {
+                    stepEl.className = 'w-10 h-10 rounded-full step-inactive flex items-center justify-center text-white font-bold';
+                }
+            }
+            
+            currentStep = step;
+        }
+
+        // Institution form submission
+        document.getElementById('institution-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            institutionData = {
+                name: document.getElementById('institution_name').value,
+                type: document.getElementById('institution_type').value,
+                enrollment: document.getElementById('enrollment_size').value,
+                user_role: document.getElementById('user_role').value,
+                review_date: document.getElementById('review_date').value
+            };
+            
+            // Save to localStorage
+            localStorage.setItem('institution_data', JSON.stringify(institutionData));
+            
+            goToStep(2);
+        });
+
+        // Accreditor selection
+        function selectAccreditor() {
+            const selected = document.querySelector('input[name="accreditor"]:checked');
+            if (!selected) {
+                alert('Please select an accreditor');
+                return;
+            }
+            
+            selectedAccreditor = selected.value;
+            localStorage.setItem('selected_accreditor', selectedAccreditor);
+            
+            goToStep(3);
+        }
+
+        // File upload handling
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('bg-purple-50');
+        });
+
+        dropZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('bg-purple-50');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('bg-purple-50');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+
+        function handleFiles(files) {
+            for (let file of files) {
+                if (file.size > 10 * 1024 * 1024) {
+                    alert(`${file.name} is too large. Max size is 10MB.`);
+                    continue;
+                }
+                
+                uploadedFiles.push(file);
+                displayFile(file);
+            }
+            
+            if (uploadedFiles.length > 0) {
+                document.getElementById('uploaded-files').classList.remove('hidden');
+            }
+        }
+
+        function displayFile(file) {
+            const filesList = document.getElementById('files-list');
+            const fileDiv = document.createElement('div');
+            fileDiv.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-lg';
+            fileDiv.innerHTML = `
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 text-gray-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/>
+                    </svg>
+                    <div>
+                        <div class="font-medium text-gray-900">${file.name}</div>
+                        <div class="text-sm text-gray-500">${(file.size / 1024).toFixed(1)} KB</div>
+                    </div>
+                </div>
+                <button onclick="removeFile('${file.name}')" class="text-red-600 hover:text-red-800">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                    </svg>
+                </button>
+            `;
+            filesList.appendChild(fileDiv);
+        }
+
+        function removeFile(fileName) {
+            uploadedFiles = uploadedFiles.filter(f => f.name !== fileName);
+            // Rebuild the files list
+            document.getElementById('files-list').innerHTML = '';
+            uploadedFiles.forEach(file => displayFile(file));
+            
+            if (uploadedFiles.length === 0) {
+                document.getElementById('uploaded-files').classList.add('hidden');
+            }
+        }
+
+        // Complete onboarding
+        async function completeOnboarding() {
+            // Show processing screen
+            document.querySelectorAll('[id$="-content"]').forEach(el => el.classList.add('hidden'));
+            document.getElementById('processing-content').classList.remove('hidden');
+            
+            // Animate progress
+            const progressBar = document.getElementById('progress-bar');
+            const progressText = document.getElementById('progress-text');
+            
+            const steps = [
+                { width: '25%', text: 'Creating your workspace...' },
+                { width: '50%', text: 'Loading accreditation standards...' },
+                { width: '75%', text: 'Analyzing uploaded documents...' },
+                { width: '100%', text: 'Finalizing setup...' }
+            ];
+            
+            for (let i = 0; i < steps.length; i++) {
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                progressBar.style.width = steps[i].width;
+                progressText.textContent = steps[i].text;
+            }
+            
+            // Save onboarding completion
+            localStorage.setItem('onboarding_complete', 'true');
+            localStorage.setItem('onboarding_data', JSON.stringify({
+                institution: institutionData,
+                accreditor: selectedAccreditor,
+                files: uploadedFiles.map(f => f.name),
+                completedAt: new Date().toISOString()
+            }));
+            
+            // Redirect to dashboard
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            window.location.href = 'dashboard.html?onboarding=complete';
+        }
+
+        // Check if user is already onboarded
+        window.addEventListener('DOMContentLoaded', function() {
+            if (localStorage.getItem('onboarding_complete') === 'true') {
+                // User already completed onboarding
+                const skipOnboarding = confirm('You have already completed onboarding. Do you want to skip to the dashboard?');
+                if (skipOnboarding) {
+                    window.location.href = 'dashboard.html';
+                }
+            }
+        });
+    </script>
+</body>
+</html>
