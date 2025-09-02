@@ -18,8 +18,8 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["authentication"])
 security = HTTPBearer()
 
-# Your database connection
-DATABASE_URL = "postgresql://postgres:jOSLpQcnUAahNTkVPIAraoepMQxbqXGc@shinkansen.proxy.rlwy.net:28831/railway"
+# SECURITY FIX: Use environment variables for database connection
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./a3e.db")  # Fallback to SQLite for local dev
 SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-here-change-in-production")
 ALGORITHM = "HS256"
 
