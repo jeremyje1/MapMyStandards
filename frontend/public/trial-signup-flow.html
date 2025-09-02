@@ -3,37 +3,783 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Redirecting to Registration | MapMyStandards</title>
-    <meta http-equiv="refresh" content="0;url=/register">
+    <title>Start Your Free Trial | MapMyStandards A³E</title>
+    <meta name="description" content="Start your 7-day free trial of MapMyStandards A³E. Choose your plan and get instant access.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/tailwind.css">
     <style>
         body {
             font-family: 'Inter', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        .plan-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .plan-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+        }
+        .plan-card.selected {
+            border: 2px solid #667eea;
+            background: #f8f9ff;
+        }
+        .step {
+            display: none;
+        }
+        .step.active {
+            display: block;
+        }
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+        .step-dot {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e5e7eb;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
-            text-align: center;
+            margin: 0 1rem;
+            font-weight: 600;
+            color: #6b7280;
+            position: relative;
         }
-        .redirect-message {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 2rem;
-            border-radius: 12px;
-            backdrop-filter: blur(10px);
+        .step-dot.active {
+            background: #667eea;
+            color: white;
+        }
+        .step-dot.completed {
+            background: #10b981;
+            color: white;
+        }
+        .step-dot:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            width: 100px;
+            height: 2px;
+            background: #e5e7eb;
+            left: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        .step-dot.completed:not(:last-child)::after {
+            background: #10b981;
+        }
+        .error-message {
+            color: #ef4444;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
-    <div class="redirect-message">
-        <h1>Redirecting to Registration...</h1>
-        <p>If you are not redirected automatically, <a href="/register" style="color: #93c5fd; text-decoration: underline;">click here</a>.</p>
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-white mb-2">Start Your Free Trial</h1>
+            <p class="text-white/90">7-day free trial • No credit card required • Cancel anytime</p>
+        </div>
+
+        <!-- Step Indicators -->
+        <div class="step-indicator">
+            <div class="step-dot active" data-step="1">1</div>
+            <div class="step-dot" data-step="2">2</div>
+            <div class="step-dot" data-step="3">3</div>
+        </div>
+
+        <!-- Main Form Container -->
+        <div class="glass-card rounded-2xl max-w-5xl mx-auto p-8">
+            <form id="trialForm">
+                <!-- Step 1: Choose Plan -->
+                <div class="step active" id="step1">
+                    <h2 class="text-2xl font-bold mb-6 text-gray-900">Choose Your Plan</h2>
+                    <div class="grid md:grid-cols-3 gap-6 mb-8">
+                        <!-- Starter Plan -->
+                        <div class="plan-card rounded-lg border border-gray-200 p-6" data-plan="starter">
+                            <h3 class="text-xl font-bold mb-2">Starter</h3>
+                            <div class="mb-4">
+                                <span class="text-3xl font-bold">$99</span>
+                                <span class="text-gray-600">/month</span>
+                            </div>
+                            <ul class="space-y-2 mb-6">
+                                <li class="flex items-start">
+                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <span>Up to 100 documents</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <span>Basic compliance tracking</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <span>Email support</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <span>1 user account</span>
+                                </li>
+                            </ul>
+                            <button type="button" class="w-full py-2 px-4 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium">
+                                Select Plan
+                            </button>
+                        </div>
+
+                        <!-- Professional Plan -->
+                        <div class="plan-card rounded-lg border-2 border-blue-500 p-6 selected" data-plan="professional">
+                            <div class="bg-blue-500 text-white text-sm font-semibold px-3 py-1 rounded-full inline-block mb-3">
+                                MOST POPULAR
+                            </div>
+                            <h3 class="text-xl font-bold mb-2">Professional</h3>
+                            <div class="mb-4">
+                                <span class="text-3xl font-bold">$299</span>
+                                <span class="text-gray-600">/month</span>
+                            </div>
+                            <ul class="space-y-2 mb-6">
+                                <li class="flex items-start">
+                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <span>Unlimited documents</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <span>Advanced compliance tracking</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <span>Priority support</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <span>Up to 10 user accounts</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <span>API access</span>
+                                </li>
+                            </ul>
+                            <button type="button" class="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
+                                Selected
+                            </button>
+                        </div>
+
+                        <!-- Institution Plan -->
+                        <div class="plan-card rounded-lg border border-gray-200 p-6" data-plan="institution">
+                            <h3 class="text-xl font-bold mb-2">Institution</h3>
+                            <div class="mb-4">
+                                <span class="text-3xl font-bold">$599</span>
+                                <span class="text-gray-600">/month</span>
+                            </div>
+                            <ul class="space-y-2 mb-6">
+                                <li class="flex items-start">
+                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <span>Everything in Professional</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <span>Unlimited user accounts</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <span>White-label options</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <span>Dedicated account manager</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <span>SLA guarantee</span>
+                                </li>
+                            </ul>
+                            <button type="button" class="w-full py-2 px-4 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium">
+                                Select Plan
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Billing Period Toggle -->
+                    <div class="text-center mb-8">
+                        <div class="inline-flex items-center bg-gray-100 rounded-lg p-1">
+                            <button type="button" class="billing-toggle px-4 py-2 rounded-md bg-white font-medium" data-billing="monthly">
+                                Monthly
+                            </button>
+                            <button type="button" class="billing-toggle px-4 py-2 rounded-md font-medium text-gray-600" data-billing="yearly">
+                                Yearly (Save 20%)
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end">
+                        <button type="button" class="next-btn px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
+                            Continue →
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Account Information -->
+                <div class="step" id="step2">
+                    <h2 class="text-2xl font-bold mb-6 text-gray-900">Create Your Account</h2>
+                    
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">First Name</label>
+                            <input type="text" id="firstName" name="firstName" required
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <span class="error-message" id="firstNameError"></span>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
+                            <input type="text" id="lastName" name="lastName" required
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <span class="error-message" id="lastNameError"></span>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                            <input type="email" id="email" name="email" required
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <span class="error-message" id="emailError"></span>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Institution Name</label>
+                            <input type="text" id="institutionName" name="institutionName" required
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <span class="error-message" id="institutionNameError"></span>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                            <input type="password" id="password" name="password" required minlength="8"
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <span class="text-xs text-gray-500">At least 8 characters</span>
+                            <span class="error-message" id="passwordError"></span>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
+                            <input type="password" id="confirmPassword" name="confirmPassword" required
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <span class="error-message" id="confirmPasswordError"></span>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between mt-8">
+                        <button type="button" class="back-btn px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium">
+                            ← Back
+                        </button>
+                        <button type="button" class="next-btn px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
+                            Continue →
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Review & Start Trial -->
+                <div class="step" id="step3">
+                    <h2 class="text-2xl font-bold mb-6 text-gray-900">Review & Start Trial</h2>
+                    
+                    <div class="bg-gray-50 rounded-lg p-6 mb-6">
+                        <h3 class="font-semibold mb-4">Plan Summary</h3>
+                        <div id="planSummary" class="space-y-2">
+                            <!-- Plan details will be inserted here -->
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-50 rounded-lg p-6 mb-6">
+                        <h3 class="font-semibold mb-4">Account Information</h3>
+                        <div id="accountSummary" class="space-y-2">
+                            <!-- Account details will be inserted here -->
+                        </div>
+                    </div>
+
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                        <p class="text-sm text-blue-800">
+                            <strong>7-Day Free Trial:</strong> You won't be charged today. Your trial starts immediately upon signup.
+                            Cancel anytime before the trial ends to avoid any charges.
+                        </p>
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="flex items-start">
+                            <input type="checkbox" id="terms" name="terms" required class="mt-1 mr-3">
+                            <span class="text-sm text-gray-600">
+                                I agree to the <a href="/terms" target="_blank" class="text-blue-600 hover:underline">Terms of Service</a>
+                                and <a href="/privacy" target="_blank" class="text-blue-600 hover:underline">Privacy Policy</a>
+                            </span>
+                        </label>
+                        <span class="error-message" id="termsError"></span>
+                    </div>
+
+                    <div class="flex justify-between">
+                        <button type="button" class="back-btn px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium">
+                            ← Back
+                        </button>
+                        <button type="submit" id="submitBtn" class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                            <span class="submit-text">Start Free Trial</span>
+                            <span class="loading-spinner" style="display: none;"></span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
     </div>
-    
+
     <script>
-        // Immediate redirect with URL parameters preserved
-        const currentParams = window.location.search;
-        window.location.replace('/register' + currentParams);
+        // State management
+        let currentStep = 1;
+        let selectedPlan = 'professional';
+        let billingPeriod = 'monthly';
+        let formData = {};
+
+        // Plan configurations with correct price IDs
+        const planConfigs = {
+            starter_monthly: {
+                name: 'Starter Monthly',
+                price: '$99',
+                period: 'per month',
+                priceId: 'price_1RyVPPK8PKpLCKDZFbwkFdqq'
+            },
+            starter_yearly: {
+                name: 'Starter Annual',
+                price: '$999',
+                period: 'per year',
+                priceId: 'price_1RyVPgK8PKpLCKDZe8nu4ium',
+                savings: 'Save $189'
+            },
+            professional_monthly: {
+                name: 'Professional Monthly',
+                price: '$299',
+                period: 'per month',
+                priceId: 'price_1S1PIaK8PKpLCKDZxRRzTP59'
+            },
+            professional_yearly: {
+                name: 'Professional Annual',
+                price: '$2,999',
+                period: 'per year',
+                priceId: 'price_1S1PIkK8PKpLCKDZqxmtxUeG',
+                savings: 'Save $589'
+            },
+            institution_monthly: {
+                name: 'Institution Monthly',
+                price: '$599',
+                period: 'per month',
+                priceId: 'price_1RyVQgK8PKpLCKDZTais3Tyx'
+            },
+            institution_yearly: {
+                name: 'Institution Annual',
+                price: '$5,999',
+                period: 'per year',
+                priceId: 'price_1RyVQrK8PKpLCKDZUshqaOvZ',
+                savings: 'Save $1,189'
+            }
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            setupPlanSelection();
+            setupBillingToggle();
+            setupNavigation();
+            setupFormValidation();
+            
+            // Pre-fill from URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const email = urlParams.get('email');
+            const plan = urlParams.get('plan');
+            
+            // Pre-fill email if provided
+            if (email) {
+                document.getElementById('email').value = email;
+            }
+            
+            // Pre-select plan if provided
+            if (plan) {
+                // Map legacy plan names to new format
+                const planMapping = {
+                    'professional_monthly': 'professional',
+                    'professional_yearly': 'professional',
+                    'institution_monthly': 'institution',
+                    'institution_yearly': 'institution',
+                    'starter_monthly': 'starter',
+                    'starter_yearly': 'starter'
+                };
+                
+                const mappedPlan = planMapping[plan] || plan;
+                const planCard = document.querySelector(`[data-plan="${mappedPlan}"]`);
+                
+                if (planCard) {
+                    planCard.click();
+                }
+                
+                // Set billing period if it's yearly
+                if (plan.includes('yearly') || plan.includes('annual')) {
+                    document.querySelector('[data-billing="yearly"]').click();
+                }
+            }
+        });
+
+        function setupPlanSelection() {
+            document.querySelectorAll('.plan-card').forEach(card => {
+                card.addEventListener('click', function() {
+                    // Remove selected class from all cards
+                    document.querySelectorAll('.plan-card').forEach(c => {
+                        c.classList.remove('selected');
+                        c.querySelector('button').textContent = 'Select Plan';
+                        c.querySelector('button').classList.remove('bg-blue-600', 'text-white');
+                        c.querySelector('button').classList.add('bg-gray-100', 'text-gray-700');
+                    });
+                    
+                    // Add selected class to clicked card
+                    this.classList.add('selected');
+                    this.querySelector('button').textContent = 'Selected';
+                    this.querySelector('button').classList.remove('bg-gray-100', 'text-gray-700');
+                    this.querySelector('button').classList.add('bg-blue-600', 'text-white');
+                    
+                    selectedPlan = this.dataset.plan;
+                });
+            });
+        }
+
+        function setupBillingToggle() {
+            document.querySelectorAll('.billing-toggle').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // Update toggle appearance
+                    document.querySelectorAll('.billing-toggle').forEach(b => {
+                        b.classList.remove('bg-white');
+                        b.classList.add('text-gray-600');
+                    });
+                    this.classList.add('bg-white');
+                    this.classList.remove('text-gray-600');
+                    
+                    billingPeriod = this.dataset.billing;
+                    updatePlanPrices();
+                });
+            });
+        }
+
+        function updatePlanPrices() {
+            // Update starter plan
+            const starterCard = document.querySelector('[data-plan="starter"]');
+            if (billingPeriod === 'yearly') {
+                starterCard.querySelector('.text-3xl').textContent = '$999';
+                starterCard.querySelector('.text-gray-600').textContent = '/year';
+            } else {
+                starterCard.querySelector('.text-3xl').textContent = '$99';
+                starterCard.querySelector('.text-gray-600').textContent = '/month';
+            }
+
+            // Update professional plan
+            const professionalCard = document.querySelector('[data-plan="professional"]');
+            if (billingPeriod === 'yearly') {
+                professionalCard.querySelector('.text-3xl').textContent = '$2,999';
+                professionalCard.querySelector('.text-gray-600').textContent = '/year';
+            } else {
+                professionalCard.querySelector('.text-3xl').textContent = '$299';
+                professionalCard.querySelector('.text-gray-600').textContent = '/month';
+            }
+
+            // Update institution plan
+            const institutionCard = document.querySelector('[data-plan="institution"]');
+            if (billingPeriod === 'yearly') {
+                institutionCard.querySelector('.text-3xl').textContent = '$5,999';
+                institutionCard.querySelector('.text-gray-600').textContent = '/year';
+            } else {
+                institutionCard.querySelector('.text-3xl').textContent = '$599';
+                institutionCard.querySelector('.text-gray-600').textContent = '/month';
+            }
+        }
+
+        function setupNavigation() {
+            // Next buttons
+            document.querySelectorAll('.next-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    if (validateCurrentStep()) {
+                        if (currentStep < 3) {
+                            moveToStep(currentStep + 1);
+                        }
+                    }
+                });
+            });
+
+            // Back buttons
+            document.querySelectorAll('.back-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    if (currentStep > 1) {
+                        moveToStep(currentStep - 1);
+                    }
+                });
+            });
+        }
+
+        function moveToStep(step) {
+            // Hide current step
+            document.getElementById(`step${currentStep}`).classList.remove('active');
+            
+            // Update step indicators
+            document.querySelector(`[data-step="${currentStep}"]`).classList.remove('active');
+            if (step > currentStep) {
+                document.querySelector(`[data-step="${currentStep}"]`).classList.add('completed');
+            } else {
+                document.querySelector(`[data-step="${step + 1}"]`).classList.remove('completed');
+            }
+            
+            // Show new step
+            currentStep = step;
+            document.getElementById(`step${currentStep}`).classList.add('active');
+            document.querySelector(`[data-step="${currentStep}"]`).classList.add('active');
+            
+            // Update summary if moving to step 3
+            if (currentStep === 3) {
+                updateSummary();
+            }
+        }
+
+        function validateCurrentStep() {
+            let isValid = true;
+            
+            if (currentStep === 2) {
+                // Validate account information
+                const fields = ['firstName', 'lastName', 'email', 'institutionName', 'password', 'confirmPassword'];
+                
+                fields.forEach(field => {
+                    const input = document.getElementById(field);
+                    const error = document.getElementById(`${field}Error`);
+                    
+                    if (!input.value.trim()) {
+                        error.textContent = 'This field is required';
+                        isValid = false;
+                    } else {
+                        error.textContent = '';
+                    }
+                });
+                
+                // Validate email format
+                const email = document.getElementById('email').value;
+                if (email && !isValidEmail(email)) {
+                    document.getElementById('emailError').textContent = 'Please enter a valid email address';
+                    isValid = false;
+                }
+                
+                // Validate password match
+                const password = document.getElementById('password').value;
+                const confirmPassword = document.getElementById('confirmPassword').value;
+                
+                if (password && password.length < 8) {
+                    document.getElementById('passwordError').textContent = 'Password must be at least 8 characters';
+                    isValid = false;
+                }
+                
+                if (password && confirmPassword && password !== confirmPassword) {
+                    document.getElementById('confirmPasswordError').textContent = 'Passwords do not match';
+                    isValid = false;
+                }
+                
+                // Store form data if valid
+                if (isValid) {
+                    formData = {
+                        firstName: document.getElementById('firstName').value,
+                        lastName: document.getElementById('lastName').value,
+                        email: document.getElementById('email').value,
+                        institutionName: document.getElementById('institutionName').value,
+                        password: document.getElementById('password').value
+                    };
+                }
+            }
+            
+            return isValid;
+        }
+
+        function isValidEmail(email) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        }
+
+        function updateSummary() {
+            // Update plan summary
+            const planKey = `${selectedPlan}_${billingPeriod}`;
+            const plan = planConfigs[planKey];
+            
+            document.getElementById('planSummary').innerHTML = `
+                <div class="flex justify-between">
+                    <span>Plan:</span>
+                    <strong>${plan.name}</strong>
+                </div>
+                <div class="flex justify-between">
+                    <span>Price:</span>
+                    <strong>${plan.price} ${plan.period}</strong>
+                </div>
+                ${plan.savings ? `<div class="text-green-600 text-sm">${plan.savings}</div>` : ''}
+                <div class="text-sm text-gray-600 mt-2">7-day free trial included</div>
+            `;
+            
+            // Update account summary
+            document.getElementById('accountSummary').innerHTML = `
+                <div class="flex justify-between">
+                    <span>Name:</span>
+                    <strong>${formData.firstName} ${formData.lastName}</strong>
+                </div>
+                <div class="flex justify-between">
+                    <span>Email:</span>
+                    <strong>${formData.email}</strong>
+                </div>
+                <div class="flex justify-between">
+                    <span>Institution:</span>
+                    <strong>${formData.institutionName}</strong>
+                </div>
+            `;
+        }
+
+        function setupFormValidation() {
+            document.getElementById('trialForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                // Validate terms
+                if (!document.getElementById('terms').checked) {
+                    document.getElementById('termsError').textContent = 'You must agree to the terms';
+                    return;
+                }
+                
+                // Show loading state
+                const submitBtn = document.getElementById('submitBtn');
+                submitBtn.disabled = true;
+                submitBtn.querySelector('.submit-text').textContent = 'Creating account...';
+                submitBtn.querySelector('.loading-spinner').style.display = 'inline-block';
+                
+                try {
+                    // Create account - use correct API endpoint
+                    const apiBaseUrl = window.location.hostname === 'localhost' 
+                        ? 'http://localhost:8080'
+                        : 'https://api.mapmystandards.ai';
+                        
+                    const signupResponse = await fetch(`${apiBaseUrl}/api/v1/auth/register`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            email: formData.email,
+                            password: formData.password,
+                            first_name: formData.firstName,
+                            last_name: formData.lastName,
+                            institution_name: formData.institutionName,
+                            plan: selectedPlan,
+                            billing_period: billingPeriod,
+                            is_trial: true
+                        })
+                    });
+
+                    if (!signupResponse.ok) {
+                        const error = await signupResponse.json();
+                        throw new Error(error.detail || 'Failed to create account');
+                    }
+
+                    const signupData = await signupResponse.json();
+                    
+                    // Store auth token
+                    if (signupData.access_token) {
+                        localStorage.setItem('token', signupData.access_token);
+                        localStorage.setItem('user', JSON.stringify(signupData.user));
+                    }
+
+                    // Create checkout session for payment method (for after trial)
+                    const planKey = `${selectedPlan}_${billingPeriod}`;
+                    const plan = planConfigs[planKey];
+                    
+                    const checkoutResponse = await fetch(`${apiBaseUrl}/api/v1/billing/create-checkout-session`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${signupData.access_token}`
+                        },
+                        body: JSON.stringify({
+                            price_id: plan.priceId,
+                            success_url: 'https://platform.mapmystandards.ai/dashboard?trial=started',
+                            cancel_url: window.location.href,
+                            trial_period_days: 7,
+                            metadata: {
+                                user_id: signupData.user.id,
+                                plan: selectedPlan,
+                                billing_period: billingPeriod
+                            }
+                        })
+                    });
+
+                    if (!checkoutResponse.ok) {
+                        // If checkout fails, still let them access dashboard (trial started)
+                        console.error('Checkout session creation failed, proceeding to dashboard');
+                        window.location.href = 'https://platform.mapmystandards.ai/dashboard?trial=started&setup=payment-pending';
+                        return;
+                    }
+
+                    const checkoutData = await checkoutResponse.json();
+                    
+                    // Redirect to Stripe checkout to collect payment method for after trial
+                    if (checkoutData.url) {
+                        window.location.href = checkoutData.url;
+                    } else {
+                        // Fallback to dashboard if no checkout URL
+                        window.location.href = 'https://platform.mapmystandards.ai/dashboard?trial=started';
+                    }
+                    
+                } catch (error) {
+                    console.error('Signup error:', error);
+                    alert('Failed to create account: ' + error.message);
+                    
+                    // Reset button state
+                    submitBtn.disabled = false;
+                    submitBtn.querySelector('.submit-text').textContent = 'Start Free Trial';
+                    submitBtn.querySelector('.loading-spinner').style.display = 'none';
+                }
+            });
+        }
     </script>
 </body>
 </html>
