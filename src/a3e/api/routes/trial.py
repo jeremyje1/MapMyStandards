@@ -53,34 +53,50 @@ def generate_api_key() -> str:
     """Generate a secure API key"""
     return f"mms_{''.join(secrets.token_urlsafe(32))}"
 
-async def send_welcome_email(email: str, name: str, api_key: str):
-    """Send welcome email to new trial user"""
+async def send_welcome_email(email: str, name: str, institution: Optional[str] = None):
+    """Send professional welcome email to new trial user"""
     try:
-        from ...services.postmark_service import postmark_service
+        from ...services.professional_email_service import email_service
         
-        success = postmark_service.send_welcome_email(email, name, api_key)
+        success = email_service.send_customer_welcome_email(
+            email=email,
+            name=name,
+            institution=institution,
+            trial_days=14
+        )
         
         if success:
-            print(f"✅ Welcome email sent to {email}")
+            print(f"Welcome email sent successfully to {email}")
         else:
-            print(f"❌ Failed to send welcome email to {email}")
+            print(f"Failed to send welcome email to {email}")
             
     except Exception as e:
-        print(f"❌ Failed to send welcome email: {e}")
+        print(f"Error sending welcome email: {e}")
 
 async def notify_admin_new_signup(email: str, name: str, institution: Optional[str], role: Optional[str] = None):
-    """Send admin notification about new signup."""
+    """Send professional admin notification about new signup"""
     try:
-        from ...services.postmark_service import postmark_service
-        success = postmark_service.send_admin_signup_notification(email, name, institution, role, trial=True)
+        from ...services.professional_email_service import email_service
+        
+        additional_info = {}
+        if role:
+            additional_info["role"] = role
+            
+        success = email_service.send_admin_notification(
+            customer_email=email,
+            customer_name=name,
+            institution=institution,
+            signup_type="trial",
+            additional_info=additional_info
+        )
         
         if success:
-            print(f"✅ Admin signup notification sent for {email}")
+            print(f"Admin notification sent for new signup: {email}")
         else:
-            print(f"❌ Failed to send admin signup notification for {email}")
+            print(f"Failed to send admin notification for {email}")
             
     except Exception as e:
-        print(f"❌ Failed to send admin signup notification: {e}")
+        print(f"Error sending admin notification: {e}")
 
 @router.post("/signup", response_model=TrialSignupResponse)
 async def signup_trial(
@@ -159,7 +175,7 @@ async def signup_trial(
         await db.refresh(new_user)
 
         # Send welcome + admin notification emails in background
-        background_tasks.add_task(send_welcome_email, request.email, request.name, stripe_result['api_key'])
+        background_tasks.add_task(send_welcome_email, request.email, request.name, request.institution_name)
         background_tasks.add_task(notify_admin_new_signup, request.email, request.name, request.institution_name, request.role)
 
         logger.info(f"✅ Trial account with payment created for {request.email}")

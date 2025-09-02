@@ -3,7 +3,7 @@ Payment API Routes for A³E
 Handles trial signup, subscription management, and billing
 """
 
-from fastapi import APIRouter, HTTPException, Depends, status, Request
+from fastapi import APIRouter, HTTPException, Depends, status, Request, BackgroundTasks
 from fastapi.responses import JSONResponse
 from fastapi import APIRouter as _APIRouterAlias
 from pydantic import BaseModel, EmailStr
@@ -87,7 +87,7 @@ def get_payment_service() -> PaymentService:
     return _payment_service_instance
 
 @router.post("/trial/signup")
-async def trial_signup(request: TrialSignupRequest, payment_service: PaymentService = Depends(get_payment_service)):
+async def trial_signup(request: TrialSignupRequest, background_tasks: BackgroundTasks, payment_service: PaymentService = Depends(get_payment_service)):
     """
     Create a 7-day free trial subscription with automatic billing.
     Requires credit card for seamless conversion.
@@ -138,6 +138,38 @@ async def trial_signup(request: TrialSignupRequest, payment_service: PaymentServ
         if result['success']:
             elapsed_total = int((time.time() - started) * 1000)
             result.setdefault('timing_ms', elapsed_total)
+            
+            # Send email notifications for trial signup
+            from ...services.professional_email_service import email_service
+            
+            # Construct full name from first and last name
+            customer_name = f"{request.first_name} {request.last_name}".strip()
+            if not customer_name:
+                customer_name = request.email.split('@')[0]
+            
+            # Send customer welcome email
+            background_tasks.add_task(
+                email_service.send_customer_welcome_email,
+                email=request.email,
+                name=customer_name,
+                institution=request.institution_name,
+                trial_days=7
+            )
+            
+            # Send admin notification
+            background_tasks.add_task(
+                email_service.send_admin_notification,
+                customer_email=request.email,
+                customer_name=customer_name,
+                institution=request.institution_name,
+                signup_type="trial",
+                additional_info={
+                    "role": request.role,
+                    "plan": request.plan,
+                    "institution_type": request.institution_type
+                }
+            )
+            
             return {
                 "success": True,
                 "message": "7-day free trial started successfully",
@@ -270,6 +302,7 @@ async def trial_verify_prices(payment_service: PaymentService = Depends(get_paym
 @router.post("/subscription/create", response_model=PaymentResponse)
 async def create_subscription(
     request: SubscriptionRequest,
+    background_tasks: BackgroundTasks,
     payment_service: PaymentService = Depends(get_payment_service)
 ):
     """Create a paid subscription"""
@@ -279,6 +312,33 @@ async def create_subscription(
             plan=request.plan,
             payment_method_id=request.payment_method_id
         )
+        
+        # Send email notifications for paid subscription
+        from ...services.professional_email_service import email_service
+        
+        # Get customer email from result or request
+        customer_email = result.get('email', '')
+        customer_name = result.get('name', 'Customer')
+        
+        if customer_email:
+            # Send customer welcome email for paid subscription
+            background_tasks.add_task(
+                email_service.send_customer_welcome_email,
+                email=customer_email,
+                name=customer_name,
+                institution=None,
+                trial_days=0  # No trial for paid subscription
+            )
+            
+            # Send admin notification for paid subscription
+            background_tasks.add_task(
+                email_service.send_admin_notification,
+                customer_email=customer_email,
+                customer_name=customer_name,
+                institution=None,
+                signup_type="paid",
+                additional_info={"plan": request.plan}
+            )
         
         return PaymentResponse(
             status="success",
