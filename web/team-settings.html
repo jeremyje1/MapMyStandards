@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Settings - MapMyStandards</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .tab-button.active {
+            color: #3B82F6;
+            border-bottom: 2px solid #3B82F6;
+        }
+        .role-badge {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .role-owner { background-color: #FEE2E2; color: #DC2626; }
+        .role-admin { background-color: #DBEAFE; color: #2563EB; }
+        .role-manager { background-color: #D1FAE5; color: #059669; }
+        .role-viewer { background-color: #F3F4F6; color: #6B7280; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="/dashboard.html" class="text-xl font-bold text-gray-900">MapMyStandards</a>
+                    <span class="ml-8 text-gray-500">Team Settings</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button onclick="switchTeam()" class="text-gray-600 hover:text-gray-900">
+                        <i class="fas fa-users mr-2"></i>Switch Team
+                    </button>
+                    <a href="/dashboard.html" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                        Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Team Header -->
+        <div class="bg-white shadow rounded-lg p-6 mb-6">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900" id="teamName">Loading...</h1>
+                    <p class="text-gray-600 mt-1" id="teamDescription">Loading team information...</p>
+                    <div class="mt-4 flex items-center space-x-4 text-sm text-gray-500">
+                        <span><i class="fas fa-users mr-1"></i> <span id="memberCount">0</span> members</span>
+                        <span><i class="fas fa-calendar mr-1"></i> Created <span id="createdDate">-</span></span>
+                        <span class="role-badge" id="userRole">Loading...</span>
+                    </div>
+                </div>
+                <button onclick="editTeamDetails()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700" id="editTeamBtn" style="display: none;">
+                    <i class="fas fa-edit mr-2"></i>Edit Details
+                </button>
+            </div>
+        </div>
+
+        <!-- Success/Error Messages -->
+        <div id="successMessage" class="hidden bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4"></div>
+        <div id="errorMessage" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4"></div>
+
+        <!-- Tabs -->
+        <div class="bg-white shadow rounded-lg">
+            <div class="border-b border-gray-200">
+                <nav class="-mb-px flex">
+                    <button class="tab-button active py-4 px-6 text-sm font-medium text-gray-700 hover:text-gray-900 focus:outline-none" onclick="showTab('members')">
+                        <i class="fas fa-users mr-2"></i>Members
+                    </button>
+                    <button class="tab-button py-4 px-6 text-sm font-medium text-gray-700 hover:text-gray-900 focus:outline-none" onclick="showTab('invitations')">
+                        <i class="fas fa-envelope mr-2"></i>Invitations
+                    </button>
+                    <button class="tab-button py-4 px-6 text-sm font-medium text-gray-700 hover:text-gray-900 focus:outline-none" onclick="showTab('api-keys')">
+                        <i class="fas fa-key mr-2"></i>API Keys
+                    </button>
+                    <button class="tab-button py-4 px-6 text-sm font-medium text-gray-700 hover:text-gray-900 focus:outline-none" onclick="showTab('audit-logs')">
+                        <i class="fas fa-history mr-2"></i>Audit Logs
+                    </button>
+                    <button class="tab-button py-4 px-6 text-sm font-medium text-gray-700 hover:text-gray-900 focus:outline-none" onclick="showTab('settings')">
+                        <i class="fas fa-cog mr-2"></i>Settings
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Members Tab -->
+            <div id="members-tab" class="tab-content active p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-semibold">Team Members</h2>
+                    <button onclick="showInviteModal()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700" id="inviteMemberBtn" style="display: none;">
+                        <i class="fas fa-plus mr-2"></i>Invite Member
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Member</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Joined</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="membersTable" class="bg-white divide-y divide-gray-200">
+                            <tr>
+                                <td colspan="4" class="px-6 py-4 text-center text-gray-500">Loading members...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Invitations Tab -->
+            <div id="invitations-tab" class="tab-content p-6">
+                <h2 class="text-lg font-semibold mb-4">Pending Invitations</h2>
+                <div id="invitationsList" class="space-y-4">
+                    <p class="text-gray-500">Loading invitations...</p>
+                </div>
+            </div>
+
+            <!-- API Keys Tab -->
+            <div id="api-keys-tab" class="tab-content p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-semibold">API Keys</h2>
+                    <button onclick="createApiKey()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700" id="createApiKeyBtn" style="display: none;">
+                        <i class="fas fa-plus mr-2"></i>Create API Key
+                    </button>
+                </div>
+                <div id="apiKeysList" class="space-y-4">
+                    <p class="text-gray-500">Loading API keys...</p>
+                </div>
+            </div>
+
+            <!-- Audit Logs Tab -->
+            <div id="audit-logs-tab" class="tab-content p-6">
+                <h2 class="text-lg font-semibold mb-4">Recent Activity</h2>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Filter by Resource Type</label>
+                    <select id="auditLogFilter" onchange="loadAuditLogs()" class="w-full md:w-auto px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">All Resources</option>
+                        <option value="team">Team</option>
+                        <option value="team_member">Team Members</option>
+                        <option value="org_chart">Organization Charts</option>
+                        <option value="scenario">Scenarios</option>
+                    </select>
+                </div>
+                <div id="auditLogsList" class="space-y-2">
+                    <p class="text-gray-500">Loading audit logs...</p>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div id="settings-tab" class="tab-content p-6">
+                <h2 class="text-lg font-semibold mb-4">Team Settings</h2>
+                <div class="space-y-6">
+                    <div>
+                        <h3 class="text-md font-medium mb-2">Danger Zone</h3>
+                        <div class="border border-red-300 rounded-lg p-4">
+                            <p class="text-sm text-gray-600 mb-4">Once you delete a team, there is no going back. All data will be permanently deleted.</p>
+                            <button onclick="deleteTeam()" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700" id="deleteTeamBtn" style="display: none;">
+                                <i class="fas fa-trash mr-2"></i>Delete Team
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Invite Member Modal -->
+    <div id="inviteModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <h3 class="text-lg font-bold mb-4">Invite Team Member</h3>
+            <form onsubmit="inviteMember(event)">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                    <input type="email" id="inviteEmail" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Role</label>
+                    <select id="inviteRole" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        <option value="viewer">Viewer - Can view all content</option>
+                        <option value="manager">Manager - Can create and edit content</option>
+                        <option value="admin">Admin - Can manage team and content</option>
+                    </select>
+                </div>
+                <div class="flex justify-end space-x-2">
+                    <button type="button" onclick="closeInviteModal()" class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Send Invitation</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Create API Key Modal -->
+    <div id="apiKeyModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <h3 class="text-lg font-bold mb-4">Create API Key</h3>
+            <form onsubmit="submitCreateApiKey(event)">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Key Name</label>
+                    <input type="text" id="apiKeyName" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., Production API Key">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Scopes</label>
+                    <div class="space-y-2">
+                        <label class="flex items-center">
+                            <input type="checkbox" value="read" checked class="mr-2" name="scopes">
+                            <span class="text-sm">Read - View data</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" value="write" class="mr-2" name="scopes">
+                            <span class="text-sm">Write - Create and modify data</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" value="admin" class="mr-2" name="scopes">
+                            <span class="text-sm">Admin - Full access (dangerous)</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Expires In</label>
+                    <select id="apiKeyExpiry" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">Never</option>
+                        <option value="30">30 days</option>
+                        <option value="90">90 days</option>
+                        <option value="365">1 year</option>
+                    </select>
+                </div>
+                <div class="flex justify-end space-x-2">
+                    <button type="button" onclick="closeApiKeyModal()" class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Create Key</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- API Key Created Modal -->
+    <div id="apiKeyCreatedModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+        <div class="relative top-20 mx-auto p-5 border w-lg max-w-lg shadow-lg rounded-md bg-white">
+            <h3 class="text-lg font-bold mb-4 text-green-600">
+                <i class="fas fa-check-circle mr-2"></i>API Key Created
+            </h3>
+            <div class="mb-4">
+                <p class="text-sm text-gray-600 mb-2">Your API key has been created. Copy it now - you won't be able to see it again!</p>
+                <div class="bg-gray-100 p-3 rounded border">
+                    <code id="newApiKey" class="text-sm break-all">Loading...</code>
+                </div>
+            </div>
+            <div class="flex justify-end space-x-2">
+                <button onclick="copyApiKey()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                    <i class="fas fa-copy mr-2"></i>Copy Key
+                </button>
+                <button onclick="closeApiKeyCreatedModal()" class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/js/api-client.js"></script>
+    <script>
+        let currentTeam = null;
+        let currentUserRole = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const teamId = urlParams.get('team_id');
+            
+            if (!teamId) {
+                // Redirect to team selection
+                window.location.href = '/dashboard.html';
+                return;
+            }
+            
+            await loadTeamDetails(teamId);
+            await loadMembers();
+        });
+
+        async function loadTeamDetails(teamId) {
+            try {
+                const response = await fetch(`${window.mmsAPI.getBaseUrl()}/teams/${teamId}`, {
+                    headers: window.mmsAPI.getAuthHeaders()
+                });
+                
+                if (!response.ok) throw new Error('Failed to load team details');
+                
+                currentTeam = await response.json();
+                currentUserRole = currentTeam.user_role;
+                
+                // Update UI
+                document.getElementById('teamName').textContent = currentTeam.name;
+                document.getElementById('teamDescription').textContent = currentTeam.description || 'No description';
+                document.getElementById('memberCount').textContent = currentTeam.member_count;
+                document.getElementById('createdDate').textContent = new Date(currentTeam.created_at).toLocaleDateString();
+                
+                // Update role badge
+                const roleBadge = document.getElementById('userRole');
+                roleBadge.textContent = currentUserRole.charAt(0).toUpperCase() + currentUserRole.slice(1);
+                roleBadge.className = `role-badge role-${currentUserRole}`;
+                
+                // Show/hide admin controls
+                const canManage = ['owner', 'admin'].includes(currentUserRole);
+                document.getElementById('editTeamBtn').style.display = canManage ? 'block' : 'none';
+                document.getElementById('inviteMemberBtn').style.display = canManage ? 'block' : 'none';
+                document.getElementById('createApiKeyBtn').style.display = canManage ? 'block' : 'none';
+                document.getElementById('deleteTeamBtn').style.display = currentUserRole === 'owner' ? 'block' : 'none';
+                
+            } catch (error) {
+                showError('Failed to load team details: ' + error.message);
+            }
+        }
+
+        async function loadMembers() {
+            try {
+                const response = await fetch(`${window.mmsAPI.getBaseUrl()}/teams/${currentTeam.id}/members`, {
+                    headers: window.mmsAPI.getAuthHeaders()
+                });
+                
+                if (!response.ok) throw new Error('Failed to load members');
+                
+                const members = await response.json();
+                const tbody = document.getElementById('membersTable');
+                
+                if (members.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="px-6 py-4 text-center text-gray-500">No members found</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = members.map(member => `
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div>
+                                <div class="text-sm font-medium text-gray-900">${member.name || 'No name'}</div>
+                                <div class="text-sm text-gray-500">${member.email}</div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="role-badge role-${member.role}">${member.role.charAt(0).toUpperCase() + member.role.slice(1)}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            ${new Date(member.joined_at).toLocaleDateString()}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            ${getActionButtons(member)}
+                        </td>
+                    </tr>
+                `).join('');
+                
+            } catch (error) {
+                showError('Failed to load members: ' + error.message);
+            }
+        }
+
+        function getActionButtons(member) {
+            const canManage = ['owner', 'admin'].includes(currentUserRole);
+            if (!canManage || member.role === 'owner') return '-';
+            
+            return `
+                <button onclick="changeRole('${member.id}', '${member.role}')" class="text-blue-600 hover:text-blue-900 mr-2">
+                    <i class="fas fa-user-cog"></i>
+                </button>
+                <button onclick="removeMember('${member.id}', '${member.email}')" class="text-red-600 hover:text-red-900">
+                    <i class="fas fa-user-times"></i>
+                </button>
+            `;
+        }
+
+        async function loadAuditLogs() {
+            try {
+                const filter = document.getElementById('auditLogFilter').value;
+                let url = `${window.mmsAPI.getBaseUrl()}/audit-logs/teams/${currentTeam.id}/audit-logs?limit=50`;
+                if (filter) url += `&resource_type=${filter}`;
+                
+                const response = await fetch(url, {
+                    headers: window.mmsAPI.getAuthHeaders()
+                });
+                
+                if (!response.ok) throw new Error('Failed to load audit logs');
+                
+                const logs = await response.json();
+                const container = document.getElementById('auditLogsList');
+                
+                if (logs.length === 0) {
+                    container.innerHTML = '<p class="text-gray-500">No activity found</p>';
+                    return;
+                }
+                
+                container.innerHTML = logs.map(log => `
+                    <div class="border-l-4 border-gray-200 pl-4 py-2">
+                        <div class="flex justify-between">
+                            <div>
+                                <p class="text-sm font-medium">${log.description}</p>
+                                <p class="text-xs text-gray-500">by ${log.user_email} • ${new Date(log.created_at).toLocaleString()}</p>
+                            </div>
+                            ${log.ip_address ? `<span class="text-xs text-gray-400">IP: ${log.ip_address}</span>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                showError('Failed to load audit logs: ' + error.message);
+            }
+        }
+
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            event.target.classList.add('active');
+            
+            // Load tab-specific data
+            if (tabName === 'audit-logs') {
+                loadAuditLogs();
+            } else if (tabName === 'api-keys') {
+                loadApiKeys();
+            }
+        }
+
+        function showInviteModal() {
+            document.getElementById('inviteModal').classList.remove('hidden');
+        }
+
+        function closeInviteModal() {
+            document.getElementById('inviteModal').classList.add('hidden');
+            document.getElementById('inviteEmail').value = '';
+            document.getElementById('inviteRole').value = 'viewer';
+        }
+
+        async function inviteMember(event) {
+            event.preventDefault();
+            
+            try {
+                const response = await fetch(`${window.mmsAPI.getBaseUrl()}/teams/${currentTeam.id}/invite`, {
+                    method: 'POST',
+                    headers: {
+                        ...window.mmsAPI.getAuthHeaders(),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: document.getElementById('inviteEmail').value,
+                        role: document.getElementById('inviteRole').value
+                    })
+                });
+                
+                if (!response.ok) throw new Error('Failed to send invitation');
+                
+                const result = await response.json();
+                showSuccess(`Invitation sent to ${result.email}`);
+                closeInviteModal();
+                
+                // Copy invitation URL to clipboard
+                navigator.clipboard.writeText(result.invitation_url);
+                showSuccess('Invitation link copied to clipboard!');
+                
+            } catch (error) {
+                showError('Failed to send invitation: ' + error.message);
+            }
+        }
+
+        async function changeRole(userId, currentRole) {
+            const roles = ['viewer', 'manager', 'admin'];
+            const newRole = prompt(`Current role: ${currentRole}\nEnter new role (viewer, manager, admin):`);
+            
+            if (!newRole || !roles.includes(newRole)) return;
+            
+            try {
+                const response = await fetch(`${window.mmsAPI.getBaseUrl()}/teams/${currentTeam.id}/members/${userId}/role`, {
+                    method: 'PUT',
+                    headers: {
+                        ...window.mmsAPI.getAuthHeaders(),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ role: newRole })
+                });
+                
+                if (!response.ok) throw new Error('Failed to update role');
+                
+                showSuccess('Role updated successfully');
+                loadMembers();
+                
+            } catch (error) {
+                showError('Failed to update role: ' + error.message);
+            }
+        }
+
+        async function removeMember(userId, email) {
+            if (!confirm(`Are you sure you want to remove ${email} from the team?`)) return;
+            
+            try {
+                const response = await fetch(`${window.mmsAPI.getBaseUrl()}/teams/${currentTeam.id}/members/${userId}`, {
+                    method: 'DELETE',
+                    headers: window.mmsAPI.getAuthHeaders()
+                });
+                
+                if (!response.ok) throw new Error('Failed to remove member');
+                
+                showSuccess('Member removed successfully');
+                loadMembers();
+                
+            } catch (error) {
+                showError('Failed to remove member: ' + error.message);
+            }
+        }
+
+        async function loadApiKeys() {
+            try {
+                const response = await fetch(`${window.mmsAPI.getBaseUrl()}/teams/${currentTeam.id}/api-keys`, {
+                    headers: window.mmsAPI.getAuthHeaders()
+                });
+                
+                if (!response.ok) throw new Error('Failed to load API keys');
+                
+                const apiKeys = await response.json();
+                const container = document.getElementById('apiKeysList');
+                
+                if (apiKeys.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-8 text-gray-500">
+                            <i class="fas fa-key text-4xl mb-4"></i>
+                            <p>No API keys found</p>
+                            <p class="text-sm">Create an API key to access the platform programmatically</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = apiKeys.map(key => `
+                    <div class="border rounded-lg p-4">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="font-semibold">${key.name}</h3>
+                                <p class="text-sm text-gray-600">
+                                    ${key.prefix}••••••••••••••••••••••••••••••••
+                                </p>
+                                <div class="mt-2 flex items-center space-x-4 text-xs text-gray-500">
+                                    <span><i class="fas fa-shield-alt mr-1"></i> ${key.scopes.join(', ')}</span>
+                                    <span><i class="fas fa-calendar mr-1"></i> Created ${new Date(key.created_at).toLocaleDateString()}</span>
+                                    ${key.last_used_at ? `<span><i class="fas fa-clock mr-1"></i> Last used ${new Date(key.last_used_at).toLocaleDateString()}</span>` : '<span class="text-orange-500">Never used</span>'}
+                                    ${key.expires_at ? `<span class="text-red-500"><i class="fas fa-exclamation-triangle mr-1"></i> Expires ${new Date(key.expires_at).toLocaleDateString()}</span>` : ''}
+                                </div>
+                            </div>
+                            <div class="flex space-x-2">
+                                ${key.active ? 
+                                    `<button onclick="revokeApiKey('${key.id}')" class="text-red-600 hover:text-red-800 p-2" title="Revoke">
+                                        <i class="fas fa-times"></i>
+                                    </button>` : 
+                                    '<span class="text-gray-500 px-2 py-1 text-xs bg-gray-100 rounded">Revoked</span>'
+                                }
+                            </div>
+                        </div>
+                        <div class="mt-3 bg-gray-50 rounded p-2">
+                            <div class="text-xs text-gray-600">
+                                <div class="mb-1">Rate limit: ${key.rate_limit} requests/hour</div>
+                                <div>Usage this month: <span class="font-semibold">0</span> requests</div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                showError('Failed to load API keys: ' + error.message);
+            }
+        }
+
+        function createApiKey() {
+            document.getElementById('apiKeyModal').classList.remove('hidden');
+        }
+
+        function closeApiKeyModal() {
+            document.getElementById('apiKeyModal').classList.add('hidden');
+            document.getElementById('apiKeyName').value = '';
+            document.querySelectorAll('input[name="scopes"]').forEach(cb => {
+                cb.checked = cb.value === 'read';
+            });
+            document.getElementById('apiKeyExpiry').value = '';
+        }
+
+        async function submitCreateApiKey(event) {
+            event.preventDefault();
+            
+            try {
+                const name = document.getElementById('apiKeyName').value;
+                const scopes = Array.from(document.querySelectorAll('input[name="scopes"]:checked')).map(cb => cb.value);
+                const expiryDays = document.getElementById('apiKeyExpiry').value;
+                
+                if (scopes.length === 0) {
+                    showError('Please select at least one scope');
+                    return;
+                }
+                
+                const requestBody = {
+                    name: name,
+                    scopes: scopes
+                };
+                
+                if (expiryDays) {
+                    requestBody.expires_in_days = parseInt(expiryDays);
+                }
+                
+                const response = await fetch(`${window.mmsAPI.getBaseUrl()}/teams/${currentTeam.id}/api-keys`, {
+                    method: 'POST',
+                    headers: {
+                        ...window.mmsAPI.getAuthHeaders(),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+                
+                if (!response.ok) throw new Error('Failed to create API key');
+                
+                const result = await response.json();
+                
+                // Show the new API key
+                document.getElementById('newApiKey').textContent = result.api_key;
+                closeApiKeyModal();
+                document.getElementById('apiKeyCreatedModal').classList.remove('hidden');
+                
+                // Reload the API keys list
+                loadApiKeys();
+                
+            } catch (error) {
+                showError('Failed to create API key: ' + error.message);
+            }
+        }
+
+        function copyApiKey() {
+            const apiKey = document.getElementById('newApiKey').textContent;
+            navigator.clipboard.writeText(apiKey).then(() => {
+                showSuccess('API key copied to clipboard!');
+            });
+        }
+
+        function closeApiKeyCreatedModal() {
+            document.getElementById('apiKeyCreatedModal').classList.add('hidden');
+        }
+
+        async function revokeApiKey(keyId) {
+            if (!confirm('Are you sure you want to revoke this API key? This action cannot be undone.')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${window.mmsAPI.getBaseUrl()}/teams/${currentTeam.id}/api-keys/${keyId}/revoke`, {
+                    method: 'POST',
+                    headers: window.mmsAPI.getAuthHeaders()
+                });
+                
+                if (!response.ok) throw new Error('Failed to revoke API key');
+                
+                showSuccess('API key revoked successfully');
+                loadApiKeys();
+                
+            } catch (error) {
+                showError('Failed to revoke API key: ' + error.message);
+            }
+        }
+
+        function showSuccess(message) {
+            const elem = document.getElementById('successMessage');
+            elem.textContent = message;
+            elem.classList.remove('hidden');
+            setTimeout(() => elem.classList.add('hidden'), 5000);
+        }
+
+        function showError(message) {
+            const elem = document.getElementById('errorMessage');
+            elem.textContent = message;
+            elem.classList.remove('hidden');
+            setTimeout(() => elem.classList.add('hidden'), 5000);
+        }
+    </script>
+</body>
+</html>

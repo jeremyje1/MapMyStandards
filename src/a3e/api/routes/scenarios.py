@@ -4,18 +4,25 @@ Handles saving, retrieving, and calculating ROI scenarios
 """
 
 from datetime import datetime
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, AsyncGenerator
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from ...database import get_db
+from ...database.connection import db_manager
 from ..dependencies import get_current_user, has_active_subscription
 from ...models import User
 from ...database.models import Scenario
 from ...services.subscription_value_engine import SubscriptionValueEngine
 
 router = APIRouter()
+
+# Dependency for async database session
+async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
+    """Get async database session"""
+    await db_manager.initialize()
+    async with db_manager.get_session() as session:
+        yield session
 
 
 class ScenarioInputs(BaseModel):
@@ -165,7 +172,7 @@ async def create_scenario(
     scenario: ScenarioCreate,
     current_user: User = Depends(get_current_user),
     has_subscription: bool = Depends(has_active_subscription),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db_session)
 ):
     """
     Save a new ROI scenario
@@ -218,7 +225,7 @@ async def list_scenarios(
     include_templates: bool = True,
     current_user: User = Depends(get_current_user),
     has_subscription: bool = Depends(has_active_subscription),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db_session)
 ):
     """
     List all saved scenarios for the current user
@@ -318,7 +325,7 @@ async def get_scenario(
     scenario_id: str,
     current_user: User = Depends(get_current_user),
     has_subscription: bool = Depends(has_active_subscription),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db_session)
 ):
     """
     Get a specific saved scenario
@@ -359,7 +366,7 @@ async def delete_scenario(
     scenario_id: str,
     current_user: User = Depends(get_current_user),
     has_subscription: bool = Depends(has_active_subscription),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db_session)
 ):
     """
     Delete a saved scenario

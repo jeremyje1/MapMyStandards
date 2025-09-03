@@ -11,11 +11,12 @@ from typing import Dict, List, Any, Optional, Callable
 from dataclasses import dataclass, asdict
 import websockets
 from fastapi import WebSocket
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from typing import AsyncGenerator
 from sqlalchemy import func, and_, or_
 
 from ..database.models import User, OrgChart, Scenario, PowerBIConfig
-from ..database import get_db
+from ..database.connection import db_manager
 
 logger = logging.getLogger(__name__)
 

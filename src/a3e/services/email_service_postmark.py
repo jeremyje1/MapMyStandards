@@ -35,12 +35,12 @@ class EmailServiceEnhanced:
         self.client = None
         
         # Email settings
-        self.from_email = os.getenv('EMAIL_FROM', 'support@mapmystandards.ai')
+        self.from_email = os.getenv('FROM_EMAIL') or os.getenv('EMAIL_FROM', 'support@mapmystandards.ai')
         self.from_name = os.getenv('EMAIL_FROM_NAME', 'MapMyStandards A³E')
-        self.admin_email = os.getenv('ADMIN_NOTIFICATION_EMAIL', 'admin@mapmystandards.ai')
+        self.admin_email = os.getenv('ADMIN_EMAIL') or os.getenv('ADMIN_NOTIFICATION_EMAIL', 'admin@mapmystandards.ai')
         
         # Try Postmark first (preferred)
-        postmark_token = os.getenv('POSTMARK_SERVER_TOKEN')
+        postmark_token = os.getenv('POSTMARK_SERVER_TOKEN') or os.getenv('POSTMARK_API_TOKEN')
         if POSTMARK_AVAILABLE and postmark_token:
             try:
                 self.client = PostmarkClient(server_token=postmark_token)
@@ -167,65 +167,152 @@ class EmailServiceEnhanced:
         
         html_body = f"""
         <html>
-        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-                <h2 style="color: #1e3c72;">Welcome to MapMyStandards A³E, {user_name}!</h2>
-                
-                <p>Thank you for starting your 7-day free trial. You now have access to:</p>
-                
-                <ul style="color: #555;">
-                    <li>✨ AI-powered evidence mapping with 95% accuracy</li>
-                    <li>📊 Real-time compliance tracking and analytics</li>
-                    <li>📈 Comprehensive accreditation reports</li>
-                    <li>🎯 Gap analysis and recommendations</li>
-                </ul>
-                
-                <p><strong>Getting Started:</strong></p>
-                <ol>
-                    <li>Upload your first evidence document</li>
-                    <li>Select your accreditor and standards</li>
-                    <li>Let our AI map your evidence automatically</li>
-                    <li>Review your compliance dashboard</li>
-                </ol>
-                
-                <div style="margin: 30px 0;">
-                    <a href="https://platform.mapmystandards.ai/dashboard" 
-                       style="background: #10b981; color: white; padding: 12px 30px; 
-                              text-decoration: none; border-radius: 6px; display: inline-block;">
-                        Access Your Dashboard
-                    </a>
+        <head>
+            <style>
+                .container {{ max-width: 650px; margin: 0 auto; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }}
+                .header {{ background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; padding: 30px; text-align: center; }}
+                .content {{ padding: 30px; background: #ffffff; }}
+                .section {{ margin-bottom: 25px; }}
+                .step {{ background: #f8fafc; border-left: 4px solid #3b82f6; padding: 15px; margin: 10px 0; }}
+                .feature {{ background: #f0f9ff; padding: 15px; margin: 10px 0; border-radius: 6px; }}
+                .cta-button {{ background: #3b82f6; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: 600; }}
+                .footer {{ background: #f8fafc; padding: 20px; text-align: center; color: #64748b; font-size: 14px; }}
+                .resource-link {{ color: #3b82f6; text-decoration: none; font-weight: 500; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1 style="margin: 0; font-size: 28px;">Welcome to MapMyStandards</h1>
+                    <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">Your AI-Powered Accreditation Management Platform</p>
                 </div>
                 
-                <p style="color: #777; font-size: 14px;">
-                    Your trial expires in 7 days. Upgrade anytime to continue using all features.
-                </p>
+                <div class="content">
+                    <div class="section">
+                        <h2 style="color: #1e293b; margin-bottom: 15px;">Hello {user_name},</h2>
+                        <p style="color: #475569; line-height: 1.6;">Thank you for starting your 7-day free trial with MapMyStandards. You now have access to our comprehensive accreditation management platform designed to streamline your compliance process and maximize your institutional effectiveness.</p>
+                    </div>
+                    
+                    <div class="section">
+                        <h3 style="color: #1e293b; margin-bottom: 15px;">Your Platform Includes:</h3>
+                        <div class="feature">
+                            <strong>AI-Powered Evidence Mapping</strong><br>
+                            Advanced algorithms automatically map your documents to accreditation standards with 95% accuracy, saving hours of manual work.
+                        </div>
+                        <div class="feature">
+                            <strong>Real-Time Compliance Dashboard</strong><br>
+                            Monitor your accreditation readiness with live analytics, progress tracking, and comprehensive reporting tools.
+                        </div>
+                        <div class="feature">
+                            <strong>Gap Analysis & Recommendations</strong><br>
+                            Identify compliance gaps and receive actionable recommendations to strengthen your accreditation portfolio.
+                        </div>
+                        <div class="feature">
+                            <strong>Multi-Accreditor Support</strong><br>
+                            Work with multiple accrediting bodies simultaneously with standards from HLC, SACSCOC, MSCHE, and more.
+                        </div>
+                    </div>
+                    
+                    <div class="section">
+                        <h3 style="color: #1e293b; margin-bottom: 15px;">Getting Started - Your 4-Step Onboarding:</h3>
+                        <div class="step">
+                            <strong>Step 1: Complete Your Profile</strong><br>
+                            Set up your institution details and select your primary accrediting body to customize your experience.
+                        </div>
+                        <div class="step">
+                            <strong>Step 2: Upload Your First Documents</strong><br>
+                            Begin with key documents like strategic plans, assessment reports, or syllabi to see our AI in action.
+                        </div>
+                        <div class="step">
+                            <strong>Step 3: Review AI Mappings</strong><br>
+                            Examine how our system maps your evidence to standards and make any necessary adjustments.
+                        </div>
+                        <div class="step">
+                            <strong>Step 4: Explore Your Dashboard</strong><br>
+                            Familiarize yourself with compliance tracking, reporting tools, and analytics features.
+                        </div>
+                    </div>
+                    
+                    <div class="section" style="text-align: center; margin: 30px 0;">
+                        <a href="https://platform.mapmystandards.ai/dashboard" class="cta-button">Access Your Dashboard</a>
+                    </div>
+                    
+                    <div class="section">
+                        <h3 style="color: #1e293b; margin-bottom: 15px;">Resources to Maximize Your Success:</h3>
+                        <ul style="color: #475569; line-height: 1.8;">
+                            <li><a href="https://mapmystandards.ai/quick-start" class="resource-link">Quick Start Guide</a> - Get up and running in under 30 minutes</li>
+                            <li><a href="https://mapmystandards.ai/best-practices" class="resource-link">Best Practices</a> - Tips from successful accreditation teams</li>
+                            <li><a href="https://mapmystandards.ai/video-tutorials" class="resource-link">Video Tutorials</a> - Step-by-step walkthroughs of key features</li>
+                            <li><a href="https://mapmystandards.ai/support" class="resource-link">Help Center</a> - Comprehensive documentation and FAQs</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="section">
+                        <h3 style="color: #1e293b; margin-bottom: 15px;">Need Assistance?</h3>
+                        <p style="color: #475569; line-height: 1.6;">Our team is here to help you succeed. Feel free to reach out with any questions about using the platform, best practices for evidence organization, or guidance on accreditation processes.</p>
+                        <p style="color: #475569;"><strong>Support:</strong> <a href="mailto:support@northpathstrategies.org" class="resource-link">support@northpathstrategies.org</a></p>
+                    </div>
+                    
+                    <div class="section" style="background: #fef3c7; padding: 15px; border-radius: 6px; border-left: 4px solid #f59e0b;">
+                        <p style="margin: 0; color: #92400e;"><strong>Your Trial Details:</strong> Your 7-day free trial gives you full access to all platform features. You can upgrade to a paid plan at any time to continue using MapMyStandards beyond your trial period.</p>
+                    </div>
+                </div>
                 
-                <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
-                
-                <p style="color: #999; font-size: 12px;">
-                    MapMyStandards A³E | Autonomous Accreditation & Audit Engine<br>
-                    Questions? Reply to this email or visit our <a href="https://mapmystandards.ai/contact">support page</a>.
-                </p>
+                <div class="footer">
+                    <p style="margin: 0 0 10px 0;"><strong>MapMyStandards</strong></p>
+                    <p style="margin: 0;">AI-Powered Accreditation Management Platform</p>
+                    <p style="margin: 10px 0 0 0; font-size: 12px;">
+                        This email was sent to {user_email}. 
+                        <a href="https://mapmystandards.ai/unsubscribe" style="color: #64748b;">Unsubscribe</a>
+                    </p>
+                </div>
             </div>
         </body>
         </html>
         """
         
         text_body = f"""
-        Welcome to MapMyStandards A³E, {user_name}!
+        Welcome to MapMyStandards, {user_name}!
         
-        Thank you for starting your 7-day free trial.
+        Thank you for starting your 7-day free trial with our AI-powered accreditation management platform.
+        
+        YOUR PLATFORM INCLUDES:
+        
+        • AI-Powered Evidence Mapping - Advanced algorithms automatically map your documents to accreditation standards with 95% accuracy
+        • Real-Time Compliance Dashboard - Monitor your accreditation readiness with live analytics and comprehensive reporting
+        • Gap Analysis & Recommendations - Identify compliance gaps and receive actionable recommendations
+        • Multi-Accreditor Support - Work with multiple accrediting bodies simultaneously
+        
+        GETTING STARTED - YOUR 4-STEP ONBOARDING:
+        
+        1. Complete Your Profile - Set up your institution details and select your primary accrediting body
+        2. Upload Your First Documents - Begin with key documents like strategic plans or assessment reports
+        3. Review AI Mappings - Examine how our system maps your evidence to standards
+        4. Explore Your Dashboard - Familiarize yourself with compliance tracking and reporting tools
         
         Access your dashboard: https://platform.mapmystandards.ai/dashboard
         
-        Your trial expires in 7 days. Upgrade anytime to continue using all features.
+        HELPFUL RESOURCES:
+        • Quick Start Guide: https://mapmystandards.ai/quick-start
+        • Best Practices: https://mapmystandards.ai/best-practices
+        • Video Tutorials: https://mapmystandards.ai/video-tutorials
+        • Help Center: https://mapmystandards.ai/support
         
-        Questions? Visit https://mapmystandards.ai/contact
+        Need assistance? Contact our support team at support@northpathstrategies.org
+        
+        Your 7-day trial gives you full access to all platform features. You can upgrade at any time to continue using MapMyStandards.
+        
+        Best regards,
+        The MapMyStandards Team
+        
+        ---
+        MapMyStandards - AI-Powered Accreditation Management Platform
+        This email was sent to {user_email}
         """
         
         return self.send_email(
             to=user_email,
-            subject="Welcome to MapMyStandards A³E - Your Trial is Active!",
+            subject="Welcome to MapMyStandards - Your Trial is Active!",
             html_body=html_body,
             text_body=text_body,
             tag="trial-welcome"
@@ -312,3 +399,4 @@ def get_email_service() -> EmailServiceEnhanced:
     if _email_service is None:
         _email_service = EmailServiceEnhanced()
     return _email_service
+

@@ -19,6 +19,8 @@ from .org_chart import router as org_chart_router
 from .scenarios import router as scenarios_router
 from .enterprise_metrics import router as enterprise_metrics_router
 from .powerbi import router as powerbi_router
+from .teams import router as teams_router
+from .audit_logs import router as audit_logs_router
 
 # Create main API router
 api_router = APIRouter()
@@ -63,6 +65,10 @@ api_router.include_router(org_chart_router, tags=["organization"])
 api_router.include_router(scenarios_router, tags=["scenarios"])
 api_router.include_router(enterprise_metrics_router, tags=["metrics"])
 api_router.include_router(powerbi_router, tags=["powerbi"])
+
+# Include enterprise features
+api_router.include_router(teams_router, prefix="/teams", tags=["teams"])
+api_router.include_router(audit_logs_router, prefix="/audit-logs", tags=["audit"])
 
 # Configuration router not yet implemented
 
