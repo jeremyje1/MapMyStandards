@@ -17,5 +17,11 @@ COPY . .
 # Expose the port
 EXPOSE 8000
 
-# Command to run the application - use shell form to expand env vars
-CMD uvicorn src.a3e.main:app --host 0.0.0.0 --port ${PORT:-8000}
+# Set Python path
+ENV PYTHONPATH=/app
+
+# Make start script executable if it exists
+RUN if [ -f /app/start.sh ]; then chmod +x /app/start.sh; fi
+
+# Command to run the application with better error handling
+CMD ["sh", "-c", "python -m uvicorn src.a3e.main:app --host 0.0.0.0 --port ${PORT:-8000} --log-level info || (echo 'Failed to start uvicorn'; exit 1)"]
