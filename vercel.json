@@ -4,17 +4,16 @@
   "devCommand": "",
   "installCommand": "",
   "framework": null,
+  "cleanUrls": true,
+  "trailingSlash": false,
   "routes": [
     {
-      "src": "/(.*)",
-      "dest": "/$1"
+      "src": "/signup",
+      "dest": "/trial-signup-flow.html"
     },
     {
       "src": "/",
       "dest": "/homepage-enhanced.html"
-    },
-    {
-      "handle": "filesystem"
     }
   ]
 }
