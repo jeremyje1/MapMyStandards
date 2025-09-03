@@ -6,7 +6,7 @@
     <title>Start Your Free Trial | MapMyStandards A³E</title>
     <meta name="description" content="Start your 7-day free trial of MapMyStandards A³E. Choose your plan and get instant access.">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/tailwind.css">
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -353,8 +353,8 @@
                         <label class="flex items-start">
                             <input type="checkbox" id="terms" name="terms" required class="mt-1 mr-3">
                             <span class="text-sm text-gray-600">
-                                I agree to the <a href="https://platform.mapmystandards.ai/terms.html" target="_blank" class="text-blue-600 hover:underline">Terms of Service</a>
-                                and <a href="https://platform.mapmystandards.ai/privacy.html" target="_blank" class="text-blue-600 hover:underline">Privacy Policy</a>
+                                I agree to the <a href="https://mapmystandards.ai/terms" target="_blank" class="text-blue-600 hover:underline">Terms of Service</a>
+                                and <a href="https://mapmystandards.ai/privacy" target="_blank" class="text-blue-600 hover:underline">Privacy Policy</a>
                             </span>
                         </label>
                         <span class="error-message" id="termsError"></span>
@@ -735,7 +735,7 @@
                     const planKey = `${selectedPlan}_${billingPeriod}`;
                     const plan = planConfigs[planKey];
                     
-                    const checkoutResponse = await fetch('/api/v1/billing/create-checkout-session', {
+                    const checkoutResponse = await fetch('https://api.mapmystandards.ai/api/v1/billing/create-checkout-session', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -743,8 +743,8 @@
                         },
                         body: JSON.stringify({
                             price_id: plan.priceId,
-                            success_url: window.location.origin + '/dashboard?trial=started',
-                            cancel_url: window.location.origin + '/trial-signup-flow.html',
+                            success_url: 'https://platform.mapmystandards.ai/dashboard?trial=started',
+                            cancel_url: 'https://platform.mapmystandards.ai/signup',
                             trial_period_days: 7,
                             metadata: {
                                 user_id: signupData.user.id,
@@ -757,7 +757,7 @@
                     if (!checkoutResponse.ok) {
                         // If checkout fails, still let them access dashboard (trial started)
                         console.error('Checkout session creation failed, proceeding to dashboard');
-                        window.location.href = '/dashboard?trial=started&setup=payment-pending';
+                        window.location.href = 'https://platform.mapmystandards.ai/dashboard?trial=started&setup=payment-pending';
                         return;
                     }
 
@@ -768,7 +768,7 @@
                         window.location.href = checkoutData.url;
                     } else {
                         // Fallback to dashboard if no checkout URL
-                        window.location.href = '/dashboard?trial=started';
+                        window.location.href = 'https://platform.mapmystandards.ai/dashboard?trial=started';
                     }
                     
                 } catch (error) {

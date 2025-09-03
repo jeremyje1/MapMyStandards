@@ -2,11 +2,35 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard | MapMyStandards A�E</title>
+    <meta name="viewport" content="width=device-widt                                       <div class="ml-4">
+                        <h3 class="text-lg font-medium text-gray-900">Scenario Modeling</h3>
+                        <p class="text-gray-600 text-sm">ROI & predictive planning</p>
+                        <a href="https://platform.mapmystandards.ai/scenario-modeling" class="text-blue-600 hover:text-blue-800 text-sm font-medium">Model Scenarios →</a>
+                    </div> class="ml-4">
+                        <h3 class="text-lg font-medium text-gray-900">Organization Chart</h3>
+                        <p class="text-gray-600 text-sm">Map your institutional hierarchy</p>
+                        <a href="https://platform.mapmystandards.ai/org-chart" class="text-blue-600 hover:text-blue-800 text-sm font-medium">View Chart →</a>
+                    </div>itial-scale=1.0">
+    <title>Dashboard | MapMyStandards A³E</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f9fafb;
+        }
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -15,11 +39,11 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <div class="flex items-center">
-                    <h1 class="text-xl font-semibold text-gray-900">MapMyStandards A�E</h1>
+                    <h1 class="text-xl font-semibold text-gray-900">MapMyStandards A³E</h1>
                 </div>
                 <div class="flex items-center space-x-4">
                     <span class="text-sm text-gray-600" id="userEmail">Welcome!</span>
-                    <a href="/onboarding" class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700">
+                    <a href="https://platform.mapmystandards.ai/onboarding" class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700">
                         Complete Setup
                     </a>
                 </div>
@@ -38,7 +62,7 @@
                     </svg>
                 </div>
                 <div class="ml-4">
-                    <h2 class="text-lg font-medium text-blue-900">Welcome to your A�E Dashboard!</h2>
+                    <h2 class="text-lg font-medium text-blue-900">Welcome to your A³E Dashboard!</h2>
                     <p class="text-blue-700">Your 7-day free trial is active. Complete the onboarding to get started with accreditation management.</p>
                 </div>
             </div>
@@ -53,10 +77,10 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                         </svg>
                     </div>
-                    <div class="ml-4">
+                                        <div class="ml-4">
                         <h3 class="text-lg font-medium text-gray-900">Complete Onboarding</h3>
-                        <p class="text-gray-600 text-sm">Set up your institution and preferences</p>
-                        <a href="/onboarding" class="text-blue-600 hover:text-blue-800 text-sm font-medium">Get Started →</a>
+                        <p class="text-gray-600 text-sm">Set up your accreditation profile</p>
+                        <a href="https://platform.mapmystandards.ai/onboarding" class="text-blue-600 hover:text-blue-800 text-sm font-medium">Start Setup →</a>
                     </div>
                 </div>
             </div>
@@ -101,10 +125,10 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                         </svg>
                     </div>
-                    <div class="ml-4">
-                        <h3 class="text-lg font-medium text-gray-900">Organization Chart</h3>
-                        <p class="text-gray-600 text-sm">Map your compliance structure</p>
-                        <a href="/org-chart.html" class="text-blue-600 hover:text-blue-800 text-sm font-medium">Build Chart →</a>
+                                        <div class="ml-4">
+                        <h3 class="text-lg font-medium text-gray-900">Analytics Dashboard</h3>
+                        <p class="text-gray-600 text-sm">View compliance insights</p>
+                        <a href="https://platform.mapmystandards.ai/analytics-dashboard" class="text-blue-600 hover:text-blue-800 text-sm font-medium">Open Analytics →</a>
                     </div>
                 </div>
             </div>
@@ -116,10 +140,10 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
                         </svg>
                     </div>
-                    <div class="ml-4">
-                        <h3 class="text-lg font-medium text-gray-900">Scenario Modeling</h3>
-                        <p class="text-gray-600 text-sm">Calculate ROI and savings</p>
-                        <a href="/scenario-modeling.html" class="text-blue-600 hover:text-blue-800 text-sm font-medium">Model Scenarios →</a>
+                                        <div class="ml-4">
+                        <h3 class="text-lg font-medium text-gray-900">Team Settings</h3>
+                        <p class="text-gray-600 text-sm">Manage users & permissions</p>
+                        <a href="https://platform.mapmystandards.ai/team-settings" class="text-blue-600 hover:text-blue-800 text-sm font-medium">Manage Team →</a>
                     </div>
                 </div>
             </div>
@@ -134,7 +158,7 @@
                     <div class="ml-4">
                         <h3 class="text-lg font-medium text-gray-900">Enterprise Analytics</h3>
                         <p class="text-gray-600 text-sm">Advanced insights & Power BI</p>
-                        <a href="/enterprise-dashboard.html" class="text-blue-600 hover:text-blue-800 text-sm font-medium">View Analytics →</a>
+                        <a href="https://platform.mapmystandards.ai/powerbi-dashboard" class="text-blue-600 hover:text-blue-800 text-sm font-medium">View Analytics →</a>
                     </div>
                 </div>
             </div>
@@ -149,7 +173,7 @@
                     <p class="text-xs text-gray-500" id="trialInfo">7 days remaining</p>
                 </div>
                 <div>
-                    <a href="/billing" class="bg-green-600 text-white px-4 py-2 rounded-md text-sm hover:bg-green-700">
+                    <a href="https://platform.mapmystandards.ai/billing" class="bg-green-600 text-white px-4 py-2 rounded-md text-sm hover:bg-green-700">
                         Upgrade Plan
                     </a>
                 </div>
@@ -183,7 +207,7 @@
             }
         }
 
-        console.log('MapMyStandards A�E Dashboard loaded');
+        console.log('MapMyStandards A³E Dashboard loaded');
     </script>
 </body>
 </html>
