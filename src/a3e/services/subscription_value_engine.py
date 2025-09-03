@@ -30,7 +30,7 @@ class SubscriptionValueEngine:
             "integration_bridge": IntegrationBridgeService()
         }
     
-    def get_subscription_value_proposition(self, institution_id: str) -> Dict[str, Any]:
+    async def get_subscription_value_proposition(self, institution_id: str) -> Dict[str, Any]:
         """Complete value proposition that makes cancellation unthinkable"""
         
         return {

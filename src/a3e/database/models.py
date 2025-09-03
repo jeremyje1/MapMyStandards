@@ -5,7 +5,7 @@ Production-ready SQLAlchemy models for persistent storage
 
 from sqlalchemy import (
     Column, String, Integer, DateTime, Text, JSON, Boolean, 
-    Float, LargeBinary, ForeignKey, Index
+    Float, LargeBinary, ForeignKey, Index, Table
 )
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
@@ -14,6 +14,9 @@ from datetime import datetime
 import uuid
 
 Base = declarative_base()
+
+# Import user_teams association table from enterprise_models when needed
+user_teams = None
 
 class User(Base):
     """User model matching existing database schema"""
@@ -35,6 +38,13 @@ class User(Base):
     org_charts = relationship("OrgChart", back_populates="user", cascade="all, delete-orphan")
     scenarios = relationship("Scenario", back_populates="user", cascade="all, delete-orphan")
     powerbi_configs = relationship("PowerBIConfig", back_populates="user", cascade="all, delete-orphan")
+    
+    # Enterprise features
+    default_team_id = Column(String, ForeignKey("teams.id"), nullable=True)
+    default_team = relationship("Team", foreign_keys=[default_team_id])
+    
+    # Teams relationship will be added when enterprise_models is imported
+    # teams = relationship("Team", secondary=user_teams, back_populates="members")
 
 
 class Accreditor(Base):
@@ -215,6 +225,7 @@ class OrgChart(Base):
     
     id = Column(String, primary_key=True, default=lambda: f"org_{uuid.uuid4().hex[:12]}")
     user_id = Column(String, ForeignKey("users.id"), nullable=False)
+    team_id = Column(String, ForeignKey("teams.id"), nullable=True)
     name = Column(String, nullable=False)
     description = Column(Text, nullable=True)
     data = Column(JSON, nullable=False)  # Chart structure (nodes, edges)
@@ -225,6 +236,7 @@ class OrgChart(Base):
     
     # Relationships
     user = relationship("User", back_populates="org_charts")
+    team = relationship("Team", back_populates="org_charts")
     
     # Indexes
     __table_args__ = (
@@ -238,6 +250,7 @@ class Scenario(Base):
     
     id = Column(String, primary_key=True, default=lambda: f"scenario_{uuid.uuid4().hex[:12]}")
     user_id = Column(String, ForeignKey("users.id"), nullable=False)
+    team_id = Column(String, ForeignKey("teams.id"), nullable=True)
     name = Column(String, nullable=False)
     description = Column(Text, nullable=True)
     inputs = Column(JSON, nullable=False)  # Scenario input parameters
@@ -248,6 +261,7 @@ class Scenario(Base):
     
     # Relationships
     user = relationship("User", back_populates="scenarios")
+    team = relationship("Team", back_populates="scenarios")
     
     # Indexes
     __table_args__ = (
@@ -262,6 +276,7 @@ class PowerBIConfig(Base):
     
     id = Column(String, primary_key=True, default=lambda: f"pbi_{uuid.uuid4().hex[:12]}")
     user_id = Column(String, ForeignKey("users.id"), nullable=False)
+    team_id = Column(String, ForeignKey("teams.id"), nullable=True)
     workspace_id = Column(String, nullable=False)
     report_id = Column(String, nullable=False)
     last_sync = Column(DateTime, nullable=True)
@@ -271,6 +286,7 @@ class PowerBIConfig(Base):
     
     # Relationships
     user = relationship("User", back_populates="powerbi_configs")
+    team = relationship("Team", back_populates="powerbi_configs")
     
     # Indexes
     __table_args__ = (

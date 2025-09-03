@@ -1,20 +1,27 @@
 """
-Enterprise Metrics API endpoints
-Provides real-time compliance metrics and analytics
+Enterprise Metrics API endpoints for real-time analytics dashboard
+Provides comprehensive enterprise-level metrics for C-suite executives
 """
 
 from datetime import datetime, timedelta
-from typing import List, Optional, Dict, Any
+from typing import List, Dict, Any, Optional, AsyncGenerator
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from pydantic import BaseModel, Field
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 import random
 
-from ...database import get_db
+from ...database.connection import db_manager
 from ..dependencies import get_current_user, has_active_subscription
 from ...models import User
 
 router = APIRouter()
+
+# Dependency for async database session
+async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
+    """Get async database session"""
+    await db_manager.initialize()
+    async with db_manager.get_session() as session:
+        yield session
 
 
 class MetricValue(BaseModel):
@@ -87,7 +94,7 @@ async def get_enterprise_metrics(
     time_range: str = Query("30d", description="Time range: 7d, 30d, 90d, 1y"),
     current_user: User = Depends(get_current_user),
     has_subscription: bool = Depends(has_active_subscription),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db_session)
 ):
     """
     Get comprehensive enterprise metrics for the dashboard
@@ -277,7 +284,7 @@ async def get_enterprise_metrics(
 async def get_department_metrics(
     current_user: User = Depends(get_current_user),
     has_subscription: bool = Depends(has_active_subscription),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db_session)
 ):
     """
     Get detailed metrics for all departments
@@ -361,7 +368,7 @@ async def get_compliance_trend(
     days: int = Query(30, description="Number of days to show"),
     current_user: User = Depends(get_current_user),
     has_subscription: bool = Depends(has_active_subscription),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db_session)
 ):
     """
     Get compliance score trend over time

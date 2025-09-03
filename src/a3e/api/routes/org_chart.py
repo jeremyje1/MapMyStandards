@@ -7,14 +7,23 @@ from datetime import datetime
 from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 
-from ...database import get_db
 from ..dependencies import get_current_user, has_active_subscription
 from ...models import User
 from ...database.models import OrgChart
+from ...services.database_service import DatabaseService
+from ...core.config import get_settings
 
 router = APIRouter()
+settings = get_settings()
+
+# Database dependency
+async def get_db():
+    db_service = DatabaseService(settings.database_url)
+    async with db_service.get_session() as session:
+        yield session
 
 
 class OrgNode(BaseModel):

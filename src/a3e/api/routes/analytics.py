@@ -9,11 +9,12 @@ from fastapi import APIRouter, HTTPException, Depends, WebSocket, WebSocketDisco
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
 from pydantic import BaseModel, Field
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from typing import AsyncGenerator
 import logging
 import random
 
-from ...database import get_db
+from ...database.connection import db_manager
 from ..dependencies import get_current_user, has_active_subscription
 from ...models import User
 from ...services.analytics_service import (

@@ -9,15 +9,23 @@ from datetime import datetime, timedelta
 from typing import Optional, Dict, Any, List
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from typing import AsyncGenerator
 
-from ...database import get_db
+from ...database.connection import db_manager
 from ..dependencies import get_current_user, has_active_subscription
 from ...models import User
 from ...database.models import PowerBIConfig as PowerBIConfigModel
 from ...services.powerbi_service import create_powerbi_service, PowerBIService
 
 router = APIRouter()
+# Dependency for async database session
+async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
+    """Get async database session"""
+    await db_manager.initialize()
+    async with db_manager.get_session() as session:
+        yield session
+
 
 
 class PowerBIConfig(BaseModel):
@@ -158,7 +166,7 @@ async def create_embed_token(
     request: PowerBIEmbedRequest,
     current_user: User = Depends(get_current_user),
     has_subscription: bool = Depends(has_active_subscription),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db_session)
 ):
     """
     Generate Power BI embed token with Row-Level Security
@@ -398,7 +406,7 @@ async def configure_rls(
     institution_filter: str,
     current_user: User = Depends(get_current_user),
     has_subscription: bool = Depends(has_active_subscription),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db_session)
 ):
     """
     Configure Row-Level Security for Power BI reports
