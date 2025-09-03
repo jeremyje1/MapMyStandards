@@ -10,7 +10,7 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).parent.parent))
 
 # Import your models
-from src.a3e.models.database_schema import Base
+from src.a3e.database.models import Base
 
 # this is the Alembic Config object
 config = context.config

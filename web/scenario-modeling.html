@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scenario Modeling & ROI Calculator | MapMyStandards</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/api-client.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .scenario-card { transition: all 0.3s ease; }
+        .scenario-card:hover { transform: translateY(-2px); }
+        .slider { -webkit-appearance: none; appearance: none; height: 6px; background: #e5e7eb; outline: none; }
+        .slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; background: #3b82f6; cursor: pointer; border-radius: 50%; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <h1 class="text-xl font-semibold text-gray-900">MapMyStandards - Scenario Modeling</h1>
+                <nav class="flex items-center gap-4">
+                    <a href="/dashboard.html" class="text-gray-600 hover:text-gray-900">Dashboard</a>
+                    <button id="saveScenario" class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700">
+                        Save Scenario
+                    </button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <!-- Message Containers -->
+        <div id="error-container"></div>
+        <div id="success-container"></div>
+        
+        <!-- ROI Summary -->
+        <div class="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg p-6 text-white mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <div class="text-3xl font-bold" id="monthlyROI">$0</div>
+                    <div class="text-sm opacity-90">Monthly Value Created</div>
+                </div>
+                <div>
+                    <div class="text-3xl font-bold" id="timeSaved">0 hrs</div>
+                    <div class="text-sm opacity-90">Hours Saved Monthly</div>
+                </div>
+                <div>
+                    <div class="text-3xl font-bold" id="riskReduction">0%</div>
+                    <div class="text-sm opacity-90">Risk Reduction</div>
+                </div>
+                <div>
+                    <div class="text-3xl font-bold" id="roiMultiple">0x</div>
+                    <div class="text-sm opacity-90">ROI Multiple</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Input Parameters -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-semibold mb-4">Institution Parameters</h3>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Student Enrollment
+                                <span id="enrollmentValue" class="float-right text-blue-600">10,000</span>
+                            </label>
+                            <input type="range" id="enrollment" class="slider w-full" 
+                                   min="1000" max="50000" step="1000" value="10000">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Accreditation Staff
+                                <span id="staffValue" class="float-right text-blue-600">5</span>
+                            </label>
+                            <input type="range" id="staff" class="slider w-full" 
+                                   min="1" max="20" step="1" value="5">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Standards to Map
+                                <span id="standardsValue" class="float-right text-blue-600">500</span>
+                            </label>
+                            <input type="range" id="standards" class="slider w-full" 
+                                   min="100" max="2000" step="50" value="500">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Average Hourly Cost
+                                <span id="hourlyCostValue" class="float-right text-blue-600">$75</span>
+                            </label>
+                            <input type="range" id="hourlyCost" class="slider w-full" 
+                                   min="50" max="150" step="5" value="75">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Compliance Maturity
+                            </label>
+                            <select id="maturity" class="w-full border rounded-md px-3 py-2">
+                                <option value="low">Low (Manual Processes)</option>
+                                <option value="medium" selected>Medium (Some Automation)</option>
+                                <option value="high">High (Integrated Systems)</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Number of Accreditors
+                            </label>
+                            <select id="accreditors" class="w-full border rounded-md px-3 py-2">
+                                <option value="1">1 (Regional only)</option>
+                                <option value="2" selected>2 (Regional + 1 Programmatic)</option>
+                                <option value="3">3-5 (Multiple Programs)</option>
+                                <option value="6">6+ (Complex Multi-Accreditor)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 pt-6 border-t">
+                        <h4 class="font-medium mb-3">Quick Scenarios</h4>
+                        <div class="space-y-2">
+                            <button class="w-full text-left text-sm border rounded px-3 py-2 hover:bg-gray-50"
+                                    onclick="loadScenario('small-college')">
+                                Small College
+                            </button>
+                            <button class="w-full text-left text-sm border rounded px-3 py-2 hover:bg-gray-50"
+                                    onclick="loadScenario('mid-university')">
+                                Mid-Size University
+                            </button>
+                            <button class="w-full text-left text-sm border rounded px-3 py-2 hover:bg-gray-50"
+                                    onclick="loadScenario('large-complex')">
+                                Large Complex Institution
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results & Visualization -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Time Allocation Comparison -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-semibold mb-4">Time Allocation Comparison</h3>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-600 mb-2">Current State (Manual)</h4>
+                            <canvas id="currentChart"></canvas>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-600 mb-2">With MapMyStandards</h4>
+                            <canvas id="futureChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detailed ROI Breakdown -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-semibold mb-4">ROI Breakdown</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center py-2 border-b">
+                            <span class="text-sm">Evidence Mapping Automation</span>
+                            <span class="font-semibold text-green-600" id="mappingSavings">+$0</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b">
+                            <span class="text-sm">Narrative Generation</span>
+                            <span class="font-semibold text-green-600" id="narrativeSavings">+$0</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b">
+                            <span class="text-sm">Gap Prevention</span>
+                            <span class="font-semibold text-green-600" id="gapSavings">+$0</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b">
+                            <span class="text-sm">Consultant Cost Avoidance</span>
+                            <span class="font-semibold text-green-600" id="consultantSavings">+$0</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b">
+                            <span class="text-sm">Multi-Accreditor Efficiency</span>
+                            <span class="font-semibold text-green-600" id="crosswalkSavings">+$0</span>
+                        </div>
+                        <div class="flex justify-between items-center pt-3 border-t-2 border-gray-300">
+                            <span class="font-medium">Total Monthly Value</span>
+                            <span class="font-bold text-green-600 text-lg" id="totalValue">$0</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="font-medium">MapMyStandards Cost</span>
+                            <span class="font-bold text-red-600" id="platformCost">-$199</span>
+                        </div>
+                        <div class="flex justify-between items-center pt-3 border-t-2 border-gray-300">
+                            <span class="font-bold">Net Monthly ROI</span>
+                            <span class="font-bold text-2xl text-blue-600" id="netROI">$0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Impact Timeline -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-semibold mb-4">Implementation Timeline & Impact</h3>
+                    <canvas id="timelineChart"></canvas>
+                </div>
+
+                <!-- Risk Mitigation Value -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-semibold mb-4">Risk Mitigation Value</h3>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-orange-600" id="currentRisk">High</div>
+                            <div class="text-sm text-gray-600">Current Risk Level</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl">→</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-green-600" id="futureRisk">Low</div>
+                            <div class="text-sm text-gray-600">With MapMyStandards</div>
+                        </div>
+                    </div>
+                    <div class="mt-4 bg-gray-50 rounded p-4">
+                        <p class="text-sm text-gray-700">
+                            <strong>Financial Impact of Risk Reduction:</strong> Avoiding just one major finding
+                            can save <span id="findingCost" class="font-semibold">$50,000-$200,000</span> in remediation costs.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Initialize charts
+        const currentCtx = document.getElementById('currentChart').getContext('2d');
+        const futureCtx = document.getElementById('futureChart').getContext('2d');
+        const timelineCtx = document.getElementById('timelineChart').getContext('2d');
+
+        // Donut chart configs
+        const donutConfig = {
+            type: 'doughnut',
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom', labels: { boxWidth: 12 } }
+                }
+            }
+        };
+
+        const currentChart = new Chart(currentCtx, {
+            ...donutConfig,
+            data: {
+                labels: ['Evidence Search', 'Mapping', 'Writing', 'Review', 'Admin'],
+                datasets: [{
+                    data: [35, 25, 20, 15, 5],
+                    backgroundColor: ['#ef4444', '#f59e0b', '#eab308', '#84cc16', '#6b7280']
+                }]
+            }
+        });
+
+        const futureChart = new Chart(futureCtx, {
+            ...donutConfig,
+            data: {
+                labels: ['Strategic Planning', 'Quality Review', 'Stakeholder Engagement', 'Analysis', 'Admin'],
+                datasets: [{
+                    data: [30, 25, 25, 15, 5],
+                    backgroundColor: ['#3b82f6', '#06b6d4', '#8b5cf6', '#10b981', '#6b7280']
+                }]
+            }
+        });
+
+        // Timeline chart
+        const timelineChart = new Chart(timelineCtx, {
+            type: 'line',
+            data: {
+                labels: ['Month 1', 'Month 2', 'Month 3', 'Month 6', 'Month 12'],
+                datasets: [{
+                    label: 'Cumulative ROI',
+                    data: [0, 500, 2000, 8000, 20000],
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => `ROI: $${context.raw.toLocaleString()}`
+                        }
+                    }
+                }
+            }
+        });
+
+        // Calculate ROI
+        function calculateROI() {
+            const enrollment = parseInt(document.getElementById('enrollment').value);
+            const staff = parseInt(document.getElementById('staff').value);
+            const standards = parseInt(document.getElementById('standards').value);
+            const hourlyCost = parseInt(document.getElementById('hourlyCost').value);
+            const maturity = document.getElementById('maturity').value;
+            const accreditors = parseInt(document.getElementById('accreditors').value);
+
+            // Base calculations
+            const hoursPerStandard = maturity === 'low' ? 2 : maturity === 'medium' ? 1.5 : 1;
+            const monthlyMappingHours = (standards / 12) * hoursPerStandard;
+            const mappingAutomation = monthlyMappingHours * 0.85; // 85% reduction
+            
+            // Calculate savings
+            const mappingSavings = mappingAutomation * hourlyCost;
+            const narrativeSavings = staff * 20 * hourlyCost; // 20 hours/month per staff
+            const gapSavings = (enrollment / 1000) * 500; // Risk-based calculation
+            const consultantSavings = accreditors * 2000; // Per accreditor
+            const crosswalkSavings = accreditors > 1 ? (accreditors - 1) * 1500 : 0;
+            
+            const totalValue = mappingSavings + narrativeSavings + gapSavings + consultantSavings + crosswalkSavings;
+            const netROI = totalValue - 199;
+            const roiMultiple = (totalValue / 199).toFixed(1);
+            const timeSaved = Math.round(mappingAutomation + staff * 20);
+            const riskReduction = Math.min(90, 30 + (accreditors * 10) + (maturity === 'high' ? 20 : 0));
+
+            // Update display
+            document.getElementById('monthlyROI').textContent = `$${Math.round(totalValue).toLocaleString()}`;
+            document.getElementById('timeSaved').textContent = `${timeSaved} hrs`;
+            document.getElementById('riskReduction').textContent = `${riskReduction}%`;
+            document.getElementById('roiMultiple').textContent = `${roiMultiple}x`;
+
+            document.getElementById('mappingSavings').textContent = `+$${Math.round(mappingSavings).toLocaleString()}`;
+            document.getElementById('narrativeSavings').textContent = `+$${Math.round(narrativeSavings).toLocaleString()}`;
+            document.getElementById('gapSavings').textContent = `+$${Math.round(gapSavings).toLocaleString()}`;
+            document.getElementById('consultantSavings').textContent = `+$${Math.round(consultantSavings).toLocaleString()}`;
+            document.getElementById('crosswalkSavings').textContent = `+$${Math.round(crosswalkSavings).toLocaleString()}`;
+            document.getElementById('totalValue').textContent = `$${Math.round(totalValue).toLocaleString()}`;
+            document.getElementById('netROI').textContent = `$${Math.round(netROI).toLocaleString()}`;
+
+            // Update timeline chart
+            const months = [1, 2, 3, 6, 12];
+            const cumulativeROI = months.map(m => Math.round(netROI * m));
+            timelineChart.data.datasets[0].data = cumulativeROI;
+            timelineChart.update();
+        }
+
+        // Slider updates
+        document.getElementById('enrollment').addEventListener('input', (e) => {
+            document.getElementById('enrollmentValue').textContent = parseInt(e.target.value).toLocaleString();
+            calculateROI();
+        });
+
+        document.getElementById('staff').addEventListener('input', (e) => {
+            document.getElementById('staffValue').textContent = e.target.value;
+            calculateROI();
+        });
+
+        document.getElementById('standards').addEventListener('input', (e) => {
+            document.getElementById('standardsValue').textContent = e.target.value;
+            calculateROI();
+        });
+
+        document.getElementById('hourlyCost').addEventListener('input', (e) => {
+            document.getElementById('hourlyCostValue').textContent = `$${e.target.value}`;
+            calculateROI();
+        });
+
+        document.getElementById('maturity').addEventListener('change', calculateROI);
+        document.getElementById('accreditors').addEventListener('change', calculateROI);
+
+        // Load scenarios
+        function loadScenario(type) {
+            const scenarios = {
+                'small-college': { enrollment: 3000, staff: 2, standards: 300, hourlyCost: 65, maturity: 'low', accreditors: '1' },
+                'mid-university': { enrollment: 12000, staff: 5, standards: 600, hourlyCost: 75, maturity: 'medium', accreditors: '2' },
+                'large-complex': { enrollment: 30000, staff: 12, standards: 1500, hourlyCost: 85, maturity: 'high', accreditors: '6' }
+            };
+            
+            const s = scenarios[type];
+            document.getElementById('enrollment').value = s.enrollment;
+            document.getElementById('enrollmentValue').textContent = s.enrollment.toLocaleString();
+            document.getElementById('staff').value = s.staff;
+            document.getElementById('staffValue').textContent = s.staff;
+            document.getElementById('standards').value = s.standards;
+            document.getElementById('standardsValue').textContent = s.standards;
+            document.getElementById('hourlyCost').value = s.hourlyCost;
+            document.getElementById('hourlyCostValue').textContent = `$${s.hourlyCost}`;
+            document.getElementById('maturity').value = s.maturity;
+            document.getElementById('accreditors').value = s.accreditors;
+            
+            calculateROI();
+        }
+
+        // Save scenario
+        document.getElementById('saveScenario').addEventListener('click', async () => {
+            const inputs = {
+                enrollment: parseFloat(document.getElementById('enrollment').value),
+                staff: parseFloat(document.getElementById('staff').value),
+                standards: parseFloat(document.getElementById('standards').value),
+                hourlyCost: parseFloat(document.getElementById('hourlyCost').value),
+                maturity: parseFloat(document.getElementById('maturity').value),
+                accreditors: parseFloat(document.getElementById('accreditors').value)
+            };
+
+            const scenarioData = {
+                name: prompt('Enter a name for this scenario:') || 'My ROI Scenario',
+                description: prompt('Enter a description (optional):') || '',
+                inputs: inputs,
+                is_template: false
+            };
+
+            try {
+                const result = await window.mmsAPI.saveScenario(scenarioData);
+                window.mmsAPI.showSuccess('Scenario saved successfully!');
+                console.log('Saved scenario:', result);
+            } catch (error) {
+                console.error('Error saving scenario:', error);
+                window.mmsAPI.showError(error);
+            }
+        });
+
+        // Initialize
+        calculateROI();
+    </script>
+</body>
+</html>

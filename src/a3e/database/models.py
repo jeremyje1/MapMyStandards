@@ -16,67 +16,26 @@ import uuid
 Base = declarative_base()
 
 class User(Base):
-    """User model for trial accounts"""
+    """User model matching existing database schema"""
     __tablename__ = "users"
     
-    # Primary key and identity
-    id = Column(String, primary_key=True, default=lambda: f"user_{uuid.uuid4().hex[:12]}")
-    user_id = Column(String, unique=True, nullable=False, index=True, default=lambda: f"user_{uuid.uuid4().hex[:12]}")
+    # Primary key and basic info (matching existing schema)
+    id = Column(String, primary_key=True)
     email = Column(String, unique=True, nullable=False, index=True)
-    
-    # User information
     name = Column(String, nullable=True)
-    first_name = Column(String, nullable=True)
-    last_name = Column(String, nullable=True)
-    institution_name = Column(String, nullable=True)
-    phone = Column(String, nullable=True)
-    role = Column(String, default="user")
-    
-    # Authentication
-    password_hash = Column(String, nullable=False)
-    api_key = Column(String, unique=True, nullable=True)
-    
-    # Account status
+    role = Column(String, nullable=True)
+    institution_id = Column(String, nullable=True)
+    auth_provider = Column(String, nullable=True)
+    last_login = Column(DateTime, nullable=True)
     is_active = Column(Boolean, default=True)
-    is_trial = Column(Boolean, default=True)
-    newsletter_opt_in = Column(Boolean, default=False)
-    
-    # Subscription information
-    subscription_tier = Column(String, default="trial")
-    plan = Column(String, default="professional_monthly")
-    billing_period = Column(String, default="monthly")
-    customer_id = Column(String, nullable=True)  # Stripe customer ID
-    subscription_id = Column(String, nullable=True)  # Stripe subscription ID
-    
-    # Trial information
-    trial_expires_at = Column(DateTime, nullable=True)
-    trial_end = Column(DateTime, nullable=True)
-    
-    # Timestamps
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
     
-    # Relationships
-    files = relationship("File", back_populates="user", cascade="all, delete-orphan")
-    jobs = relationship("Job", back_populates="user", cascade="all, delete-orphan")
-    reports = relationship("Report", back_populates="user", cascade="all, delete-orphan")
-    
-    @property
-    def is_trial_active(self):
-        """Check if trial is still active"""
-        if not self.is_trial:
-            return False
-        if not self.trial_end:
-            return True
-        return datetime.utcnow() < self.trial_end
-    
-    @property
-    def days_remaining_in_trial(self):
-        """Calculate days remaining in trial"""
-        if not self.is_trial or not self.trial_end:
-            return 0
-        delta = self.trial_end - datetime.utcnow()
-        return max(0, delta.days)
+    # Relationships to new tables only
+    org_charts = relationship("OrgChart", back_populates="user", cascade="all, delete-orphan")
+    scenarios = relationship("Scenario", back_populates="user", cascade="all, delete-orphan")
+    powerbi_configs = relationship("PowerBIConfig", back_populates="user", cascade="all, delete-orphan")
+
 
 class Accreditor(Base):
     """Accreditor organizations (SACSCOC, HLC, etc.)"""
@@ -130,7 +89,7 @@ class File(Base):
     __tablename__ = "files"
     
     file_id = Column(String, primary_key=True, default=lambda: f"file_{uuid.uuid4().hex[:16]}")
-    user_id = Column(String, ForeignKey("users.user_id"), nullable=False)
+    user_id = Column(String, ForeignKey("users.id"), nullable=False)
     filename = Column(String, nullable=False)
     original_filename = Column(String, nullable=False)
     content_type = Column(String, nullable=False)
@@ -143,7 +102,7 @@ class File(Base):
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
     
     # Relationships
-    user = relationship("User", back_populates="files")
+    user = relationship("User")
     accreditor = relationship("Accreditor")
     jobs = relationship("Job", back_populates="file", cascade="all, delete-orphan")
     
@@ -157,7 +116,7 @@ class Job(Base):
     __tablename__ = "jobs"
     
     job_id = Column(String, primary_key=True, default=lambda: f"job_{uuid.uuid4().hex[:24]}")
-    user_id = Column(String, ForeignKey("users.user_id"), nullable=False)
+    user_id = Column(String, ForeignKey("users.id"), nullable=False)
     file_id = Column(String, ForeignKey("files.file_id"), nullable=False)
     status = Column(String, nullable=False, default="queued")  # queued, extracting, embedding, matching, analyzing, completed, failed
     progress = Column(Integer, default=0)  # 0-100
@@ -170,7 +129,7 @@ class Job(Base):
     completed_at = Column(DateTime, nullable=True)
     
     # Relationships
-    user = relationship("User", back_populates="jobs")
+    user = relationship("User")
     file = relationship("File", back_populates="jobs")
     mappings = relationship("StandardMapping", back_populates="job", cascade="all, delete-orphan")
     
@@ -208,7 +167,7 @@ class Report(Base):
     __tablename__ = "reports"
     
     report_id = Column(String, primary_key=True, default=lambda: f"rpt_{uuid.uuid4().hex[:24]}")
-    user_id = Column(String, ForeignKey("users.user_id"), nullable=False)
+    user_id = Column(String, ForeignKey("users.id"), nullable=False)
     type = Column(String, nullable=False)  # "evidence_mapping_summary", "qep_impact_assessment"
     status = Column(String, nullable=False, default="queued")  # queued, generating, completed, failed
     progress = Column(Integer, default=0)  # 0-100
@@ -225,7 +184,7 @@ class Report(Base):
     completed_at = Column(DateTime, nullable=True)
     
     # Relationships
-    user = relationship("User", back_populates="reports")
+    user = relationship("User")
     
     # Indexes
     __table_args__ = (
@@ -247,4 +206,74 @@ class SystemMetrics(Base):
     # Indexes
     __table_args__ = (
         Index("ix_metrics_type_date", "metric_type", "metric_date"),
+    )
+
+
+class OrgChart(Base):
+    """Organization charts for compliance structure mapping"""
+    __tablename__ = "org_charts"
+    
+    id = Column(String, primary_key=True, default=lambda: f"org_{uuid.uuid4().hex[:12]}")
+    user_id = Column(String, ForeignKey("users.id"), nullable=False)
+    name = Column(String, nullable=False)
+    description = Column(Text, nullable=True)
+    data = Column(JSON, nullable=False)  # Chart structure (nodes, edges)
+    institution_type = Column(String, nullable=True)
+    total_employees = Column(Integer, nullable=True)
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    
+    # Relationships
+    user = relationship("User", back_populates="org_charts")
+    
+    # Indexes
+    __table_args__ = (
+        Index("ix_org_charts_user_created", "user_id", "created_at"),
+    )
+
+
+class Scenario(Base):
+    """ROI calculation scenarios"""
+    __tablename__ = "scenarios"
+    
+    id = Column(String, primary_key=True, default=lambda: f"scenario_{uuid.uuid4().hex[:12]}")
+    user_id = Column(String, ForeignKey("users.id"), nullable=False)
+    name = Column(String, nullable=False)
+    description = Column(Text, nullable=True)
+    inputs = Column(JSON, nullable=False)  # Scenario input parameters
+    results = Column(JSON, nullable=False)  # Calculated ROI results
+    is_template = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    
+    # Relationships
+    user = relationship("User", back_populates="scenarios")
+    
+    # Indexes
+    __table_args__ = (
+        Index("ix_scenarios_user_created", "user_id", "created_at"),
+        Index("ix_scenarios_template", "is_template"),
+    )
+
+
+class PowerBIConfig(Base):
+    """Power BI integration configurations"""
+    __tablename__ = "powerbi_configs"
+    
+    id = Column(String, primary_key=True, default=lambda: f"pbi_{uuid.uuid4().hex[:12]}")
+    user_id = Column(String, ForeignKey("users.id"), nullable=False)
+    workspace_id = Column(String, nullable=False)
+    report_id = Column(String, nullable=False)
+    last_sync = Column(DateTime, nullable=True)
+    rls_config = Column(JSON, nullable=True)  # Row-level security configuration
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    
+    # Relationships
+    user = relationship("User", back_populates="powerbi_configs")
+    
+    # Indexes
+    __table_args__ = (
+        Index("ix_powerbi_configs_user", "user_id"),
+        Index("ix_powerbi_configs_workspace", "workspace_id"),
     )

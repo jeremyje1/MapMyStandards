@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Power BI Analytics Dashboard | MapMyStandards</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/api-client.js"></script>
+    <!-- Power BI JavaScript SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/powerbi-client@2.22.1/dist/powerbi.min.js"></script>
+    <style>
+        .powerbi-container {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .report-iframe {
+            width: 100%;
+            height: 600px;
+            border: none;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-connected { background-color: #10b981; }
+        .status-disconnected { background-color: #ef4444; }
+        .status-loading { background-color: #f59e0b; }
+        
+        /* Loading animations */
+        .loading-spinner {
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #3b82f6;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <h1 class="text-xl font-semibold text-gray-900">MapMyStandards - Power BI Analytics</h1>
+                <nav class="flex items-center gap-4">
+                    <a href="dashboard.html" class="text-gray-600 hover:text-gray-900">Dashboard</a>
+                    <button id="refreshAll" class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700">
+                        <span class="loading-spinner hidden"></span>
+                        Refresh All Data
+                    </button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <!-- Message Containers -->
+        <div id="error-container"></div>
+        <div id="success-container"></div>
+
+        <!-- Power BI Status -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold">Power BI Connection Status</h2>
+                <button id="testConnection" class="text-sm border rounded px-3 py-1 hover:bg-gray-50">
+                    Test Connection
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="flex items-center">
+                    <span id="connectionStatus" class="status-indicator status-loading"></span>
+                    <span id="connectionText">Testing connection...</span>
+                </div>
+                <div class="flex items-center">
+                    <span id="credentialsStatus" class="status-indicator status-loading"></span>
+                    <span id="credentialsText">Checking credentials...</span>
+                </div>
+                <div class="flex items-center">
+                    <span id="workspaceStatus" class="status-indicator status-loading"></span>
+                    <span id="workspaceText">Loading workspace...</span>
+                </div>
+            </div>
+            
+            <div id="workspaceInfo" class="mt-4 text-sm text-gray-600 hidden">
+                <strong>Workspace:</strong> <span id="workspaceName">Loading...</span> 
+                (<span id="workspaceType">Unknown</span>)
+            </div>
+            
+            <div id="connectionError" class="mt-4 text-sm text-red-600 hidden"></div>
+        </div>
+
+        <!-- Reports Selection -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-lg font-semibold mb-4">Available Reports</h2>
+            <div id="reportsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="text-center text-gray-500 col-span-full">
+                    <div class="loading-spinner mx-auto mb-2"></div>
+                    Loading reports...
+                </div>
+            </div>
+        </div>
+
+        <!-- Embedded Report -->
+        <div id="reportContainer" class="bg-white rounded-lg shadow p-6 hidden">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold">
+                    <span id="currentReportName">Report</span>
+                </h2>
+                <div class="flex gap-2">
+                    <button id="fullscreenReport" class="text-sm border rounded px-3 py-1 hover:bg-gray-50">
+                        Fullscreen
+                    </button>
+                    <button id="exportReport" class="text-sm border rounded px-3 py-1 hover:bg-gray-50">
+                        Export
+                    </button>
+                    <button id="refreshReport" class="text-sm bg-blue-600 text-white rounded px-3 py-1 hover:bg-blue-700">
+                        Refresh
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Power BI Report Embed -->
+            <div class="powerbi-container">
+                <div id="reportEmbed" class="report-iframe"></div>
+            </div>
+            
+            <!-- Report Controls -->
+            <div class="mt-4 flex items-center justify-between text-sm text-gray-600">
+                <div>
+                    <span>Last updated: <span id="lastUpdated">Never</span></span>
+                </div>
+                <div>
+                    <span>Token expires: <span id="tokenExpiry">Unknown</span></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Datasets Management -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-lg font-semibold mb-4">Dataset Management</h2>
+            <div id="datasetsContainer">
+                <div class="text-center text-gray-500">
+                    <div class="loading-spinner mx-auto mb-2"></div>
+                    Loading datasets...
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Report Selection Modal -->
+    <div id="reportModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen">
+            <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 class="text-lg font-semibold mb-4">Select Report to Embed</h3>
+            <div id="reportList" class="space-y-2 max-h-64 overflow-y-auto">
+                <!-- Report list will be populated here -->
+            </div>
+            <div class="mt-4 flex justify-end gap-2">
+                <button id="cancelReportSelection" class="px-4 py-2 text-gray-600 hover:text-gray-800">
+                    Cancel
+                </button>
+                <button id="confirmReportSelection" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50" disabled>
+                    Embed Report
+                </button>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <script>
+        // Global variables
+        let powerBIService = null;
+        let currentReport = null;
+        let selectedReportId = null;
+        let embedToken = null;
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', async () => {
+            await checkPowerBIStatus();
+            await loadReports();
+            await loadDatasets();
+            
+            // Set up event listeners
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            document.getElementById('testConnection').addEventListener('click', checkPowerBIStatus);
+            document.getElementById('refreshAll').addEventListener('click', refreshAllData);
+            document.getElementById('fullscreenReport').addEventListener('click', toggleFullscreen);
+            document.getElementById('exportReport').addEventListener('click', exportReport);
+            document.getElementById('refreshReport').addEventListener('click', refreshCurrentReport);
+            
+            // Modal event listeners
+            document.getElementById('cancelReportSelection').addEventListener('click', closeReportModal);
+            document.getElementById('confirmReportSelection').addEventListener('click', embedSelectedReport);
+        }
+
+        // Check Power BI connection status
+        async function checkPowerBIStatus() {
+            try {
+                const config = await window.mmsAPI.getPowerBIConfig();
+                
+                // Update connection status
+                updateStatus('connectionStatus', 'connectionText', 
+                    config.connection_test, 
+                    config.connection_test ? 'Connected' : 'Connection Failed'
+                );
+                
+                // Update credentials status
+                updateStatus('credentialsStatus', 'credentialsText',
+                    config.has_credentials,
+                    config.has_credentials ? 'Credentials Valid' : 'Credentials Missing'
+                );
+                
+                // Update workspace status
+                updateStatus('workspaceStatus', 'workspaceText',
+                    config.configured,
+                    config.configured ? 'Workspace Configured' : 'Not Configured'
+                );
+                
+                // Show workspace info if available
+                if (config.workspace_info) {
+                    document.getElementById('workspaceName').textContent = config.workspace_info.name;
+                    document.getElementById('workspaceType').textContent = config.workspace_info.type;
+                    document.getElementById('workspaceInfo').classList.remove('hidden');
+                }
+                
+                // Show error if any
+                if (config.error_message) {
+                    document.getElementById('connectionError').textContent = config.error_message;
+                    document.getElementById('connectionError').classList.remove('hidden');
+                } else {
+                    document.getElementById('connectionError').classList.add('hidden');
+                }
+                
+            } catch (error) {
+                console.error('Failed to check Power BI status:', error);
+                window.mmsAPI.showError(error);
+                
+                // Update all statuses to failed
+                updateStatus('connectionStatus', 'connectionText', false, 'Connection Failed');
+                updateStatus('credentialsStatus', 'credentialsText', false, 'Check Failed');
+                updateStatus('workspaceStatus', 'workspaceText', false, 'Check Failed');
+            }
+        }
+
+        function updateStatus(statusId, textId, success, text) {
+            const statusEl = document.getElementById(statusId);
+            const textEl = document.getElementById(textId);
+            
+            statusEl.className = `status-indicator ${success ? 'status-connected' : 'status-disconnected'}`;
+            textEl.textContent = text;
+        }
+
+        // Load available reports
+        async function loadReports() {
+            try {
+                const reports = await window.mmsAPI.getPowerBIReports();
+                const container = document.getElementById('reportsContainer');
+                
+                if (reports.length === 0) {
+                    container.innerHTML = '<div class="text-center text-gray-500 col-span-full">No reports available</div>';
+                    return;
+                }
+                
+                container.innerHTML = reports.map(report => `
+                    <div class="border rounded-lg p-4 hover:border-blue-500 cursor-pointer report-card" 
+                         data-report-id="${report.id}">
+                        <h3 class="font-semibold text-sm mb-2">${report.name}</h3>
+                        <p class="text-xs text-gray-600 mb-2">
+                            Modified: ${new Date(report.modified_date).toLocaleDateString()}
+                        </p>
+                        <button class="w-full bg-blue-600 text-white py-1 px-2 rounded text-xs hover:bg-blue-700">
+                            Embed Report
+                        </button>
+                    </div>
+                `).join('');
+                
+                // Add click handlers
+                container.querySelectorAll('.report-card').forEach(card => {
+                    card.addEventListener('click', () => {
+                        const reportId = card.dataset.reportId;
+                        embedReport(reportId, reports.find(r => r.id === reportId));
+                    });
+                });
+                
+            } catch (error) {
+                console.error('Failed to load reports:', error);
+                document.getElementById('reportsContainer').innerHTML = 
+                    '<div class="text-center text-red-500 col-span-full">Failed to load reports</div>';
+            }
+        }
+
+        // Load datasets
+        async function loadDatasets() {
+            try {
+                const datasets = await window.mmsAPI.getDatasets();
+                const container = document.getElementById('datasetsContainer');
+                
+                if (datasets.length === 0) {
+                    container.innerHTML = '<div class="text-center text-gray-500">No datasets available</div>';
+                    return;
+                }
+                
+                container.innerHTML = `
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dataset</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Last Refresh</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                ${datasets.map(dataset => `
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium text-gray-900">${dataset.name}</div>
+                                            <div class="text-sm text-gray-500">${dataset.id}</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            ${dataset.last_refresh ? new Date(dataset.last_refresh).toLocaleString() : 'Never'}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${dataset.is_refreshable ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">
+                                                ${dataset.is_refreshable ? 'Refreshable' : 'Static'}
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            <button onclick="refreshDataset('${dataset.id}')" 
+                                                    class="text-blue-600 hover:text-blue-900 mr-2"
+                                                    ${!dataset.is_refreshable ? 'disabled' : ''}>
+                                                Refresh
+                                            </button>
+                                            <button onclick="viewRefreshHistory('${dataset.id}')" 
+                                                    class="text-gray-600 hover:text-gray-900">
+                                                History
+                                            </button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+                
+            } catch (error) {
+                console.error('Failed to load datasets:', error);
+                document.getElementById('datasetsContainer').innerHTML = 
+                    '<div class="text-center text-red-500">Failed to load datasets</div>';
+            }
+        }
+
+        // Embed a Power BI report
+        async function embedReport(reportId, reportInfo) {
+            try {
+                // Show loading
+                const container = document.getElementById('reportContainer');
+                container.classList.remove('hidden');
+                document.getElementById('currentReportName').textContent = reportInfo.name;
+                document.getElementById('reportEmbed').innerHTML = '<div class="flex items-center justify-center h-96"><div class="loading-spinner"></div><span class="ml-2">Loading report...</span></div>';
+                
+                // Get embed token
+                embedToken = await window.mmsAPI.createEmbedToken({
+                    report_ids: [reportId],
+                    username: localStorage.getItem('user_email') || 'user@example.com',
+                    roles: ['User']
+                });
+                
+                // Configure Power BI embed
+                const embedConfig = {
+                    type: 'report',
+                    id: reportId,
+                    embedUrl: reportInfo.embed_url,
+                    accessToken: embedToken.access_token,
+                    tokenType: models.TokenType.Embed,
+                    settings: {
+                        filterPaneEnabled: true,
+                        navContentPaneEnabled: true,
+                        background: models.BackgroundType.Transparent
+                    }
+                };
+                
+                // Embed the report
+                const reportContainer = document.getElementById('reportEmbed');
+                currentReport = powerbi.embed(reportContainer, embedConfig);
+                
+                // Handle events
+                currentReport.on('loaded', () => {
+                    console.log('Report loaded successfully');
+                    document.getElementById('lastUpdated').textContent = new Date().toLocaleString();
+                });
+                
+                currentReport.on('error', (event) => {
+                    console.error('Report error:', event.detail);
+                    window.mmsAPI.showError(new Error('Failed to load Power BI report'));
+                });
+                
+                // Update token expiry display
+                document.getElementById('tokenExpiry').textContent = 
+                    new Date(embedToken.token_expiry).toLocaleString();
+                
+            } catch (error) {
+                console.error('Failed to embed report:', error);
+                window.mmsAPI.showError(error);
+                document.getElementById('reportEmbed').innerHTML = 
+                    '<div class="text-center text-red-500 p-8">Failed to load report</div>';
+            }
+        }
+
+        // Refresh a dataset
+        async function refreshDataset(datasetId) {
+            try {
+                const result = await window.mmsAPI.refreshDataset(datasetId);
+                window.mmsAPI.showSuccess(`Dataset refresh initiated: ${result.request_id}`);
+                
+                // Reload datasets to show updated status
+                setTimeout(loadDatasets, 2000);
+                
+            } catch (error) {
+                console.error('Failed to refresh dataset:', error);
+                window.mmsAPI.showError(error);
+            }
+        }
+
+        // View refresh history
+        async function viewRefreshHistory(datasetId) {
+            try {
+                const history = await window.mmsAPI.getRefreshHistory(datasetId);
+                
+                // Create a simple modal or alert with history
+                const historyText = history.refresh_history.map(refresh => 
+                    `${refresh.status}: ${new Date(refresh.startTime).toLocaleString()}`
+                ).join('\n');
+                
+                alert(`Refresh History for ${datasetId}:\n\n${historyText}`);
+                
+            } catch (error) {
+                console.error('Failed to get refresh history:', error);
+                window.mmsAPI.showError(error);
+            }
+        }
+
+        // Refresh all data
+        async function refreshAllData() {
+            const button = document.getElementById('refreshAll');
+            const spinner = button.querySelector('.loading-spinner');
+            
+            button.disabled = true;
+            spinner.classList.remove('hidden');
+            
+            try {
+                await Promise.all([
+                    checkPowerBIStatus(),
+                    loadReports(),
+                    loadDatasets()
+                ]);
+                
+                window.mmsAPI.showSuccess('All data refreshed successfully');
+                
+            } catch (error) {
+                console.error('Failed to refresh data:', error);
+                window.mmsAPI.showError(error);
+            } finally {
+                button.disabled = false;
+                spinner.classList.add('hidden');
+            }
+        }
+
+        // Toggle fullscreen
+        function toggleFullscreen() {
+            if (currentReport) {
+                currentReport.fullscreen();
+            }
+        }
+
+        // Export report
+        function exportReport() {
+            if (currentReport) {
+                currentReport.exportData();
+            }
+        }
+
+        // Refresh current report
+        function refreshCurrentReport() {
+            if (currentReport) {
+                currentReport.refresh();
+                document.getElementById('lastUpdated').textContent = new Date().toLocaleString();
+            }
+        }
+
+        // Close report modal
+        function closeReportModal() {
+            document.getElementById('reportModal').classList.add('hidden');
+        }
+
+        // Embed selected report
+        function embedSelectedReport() {
+            if (selectedReportId) {
+                // Implementation for embedding selected report
+                closeReportModal();
+            }
+        }
+    </script>
+</body>
+</html>

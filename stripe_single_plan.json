@@ -1,0 +1,34 @@
+{
+  "pricing": {
+    "standard": {
+      "product_id": "prod_MapMyStandards",
+      "product_name": "MapMyStandards Platform",
+      "monthly": {
+        "price_id": "price_SINGLE_199_MONTHLY",
+        "amount": 19900,
+        "display": "$199/month",
+        "description": "Full platform access with all features"
+      }
+    }
+  },
+  "features": {
+    "all_included": [
+      "Evidence Mapping & Intelligence",
+      "Narrative Generation with CiteGuard",
+      "Gap Risk Prediction",
+      "Organizational Charts",
+      "Scenario Modeling & ROI",
+      "Data Connectors & Integrations",
+      "Enterprise Dashboard",
+      "Unlimited Users & Documents",
+      "Priority Support"
+    ]
+  },
+  "legacy_mapping": {
+    "starter": "standard",
+    "professional": "standard",
+    "institution": "standard",
+    "enterprise": "standard",
+    "trial": "trial"
+  }
+}

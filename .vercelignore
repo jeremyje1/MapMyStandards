@@ -36,10 +36,22 @@ test_*.py
 *_test.py
 
 # Large directories
-node_modules/ (in root)
+.tmpenv/
 .git/
 backups/
+archive/
+old_code/
+wordpress-plugin/
+migrations/
+scripts/
+assets/
+uploads/
 
-# Allow frontend files explicitly
-!frontend/
-!frontend/**
+# Frontend specific ignores  
+frontend/node_modules/
+frontend/build/
+frontend/.next/
+
+# Keep app directory for Next.js
+!app/
+!app/**

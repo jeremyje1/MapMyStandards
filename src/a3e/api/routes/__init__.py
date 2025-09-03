@@ -15,6 +15,10 @@ from .auth import router as auth_router
 from .onboarding import router as onboarding_router
 from .sample_data import router as sample_data_router
 from .nurturing import router as nurturing_router
+from .org_chart import router as org_chart_router
+from .scenarios import router as scenarios_router
+from .enterprise_metrics import router as enterprise_metrics_router
+from .powerbi import router as powerbi_router
 
 # Create main API router
 api_router = APIRouter()
@@ -53,6 +57,12 @@ api_router.include_router(
 api_router.include_router(onboarding_router)
 api_router.include_router(sample_data_router)  
 api_router.include_router(nurturing_router)
+
+# Include new feature routes
+api_router.include_router(org_chart_router, tags=["organization"])
+api_router.include_router(scenarios_router, tags=["scenarios"])
+api_router.include_router(enterprise_metrics_router, tags=["metrics"])
+api_router.include_router(powerbi_router, tags=["powerbi"])
 
 # Configuration router not yet implemented
 
