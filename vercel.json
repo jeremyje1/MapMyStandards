@@ -1,3 +1,20 @@
 {
-  "framework": "nextjs"
+  "outputDirectory": "web",
+  "buildCommand": "",
+  "devCommand": "",
+  "installCommand": "",
+  "framework": null,
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    },
+    {
+      "src": "/",
+      "dest": "/homepage-enhanced.html"
+    },
+    {
+      "handle": "filesystem"
+    }
+  ]
 }
