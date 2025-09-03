@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Organizational Chart Builder | MapMyStandards</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/api-client.js"></script>
+    <script src="https://unpkg.com/vis-network@latest/dist/vis-network.min.js"></script>
+    <style>
+        #network { height: 600px; border: 1px solid #e5e7eb; border-radius: 8px; }
+        .node-form { transition: all 0.3s ease; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <h1 class="text-xl font-semibold text-gray-900">MapMyStandards - Org Chart Builder</h1>
+                <nav class="flex items-center gap-4">
+                    <a href="/dashboard.html" class="text-gray-600 hover:text-gray-900">Dashboard</a>
+                    <button id="saveChart" class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700">
+                        Save Chart
+                    </button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <!-- Message Containers -->
+        <div id="error-container"></div>
+        <div id="success-container"></div>
+        
+        <!-- Instructions -->
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <h2 class="font-semibold text-blue-900 mb-2">Build Your Compliance Organization Structure</h2>
+            <p class="text-blue-700 text-sm">
+                Map your institution's compliance hierarchy. Click nodes to edit, drag to reposition, and use the form to add new roles.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Chart Area -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-semibold mb-4">Organization Structure</h3>
+                    <div id="network"></div>
+                    <div class="mt-4 flex gap-2">
+                        <button id="exportPNG" class="text-sm border rounded px-3 py-1 hover:bg-gray-50">Export as PNG</button>
+                        <button id="exportJSON" class="text-sm border rounded px-3 py-1 hover:bg-gray-50">Export as JSON</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add/Edit Form -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-semibold mb-4">Add/Edit Position</h3>
+                    <form id="nodeForm" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                            <input type="text" id="nodeTitle" class="w-full border rounded-md px-3 py-2" 
+                                   placeholder="e.g., VP of Academic Affairs">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                            <input type="text" id="nodeName" class="w-full border rounded-md px-3 py-2" 
+                                   placeholder="e.g., Dr. Jane Smith">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Department</label>
+                            <input type="text" id="nodeDept" class="w-full border rounded-md px-3 py-2" 
+                                   placeholder="e.g., Academic Affairs">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Reports To</label>
+                            <select id="nodeParent" class="w-full border rounded-md px-3 py-2">
+                                <option value="">-- Top Level --</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Compliance Role</label>
+                            <select id="nodeRole" class="w-full border rounded-md px-3 py-2">
+                                <option value="oversight">Oversight</option>
+                                <option value="coordinator">Coordinator</option>
+                                <option value="contributor">Contributor</option>
+                                <option value="reviewer">Reviewer</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700">
+                            Add Position
+                        </button>
+                    </form>
+
+                    <div class="mt-6 pt-6 border-t">
+                        <h4 class="font-medium mb-3">Quick Templates</h4>
+                        <div class="space-y-2">
+                            <button class="w-full text-left text-sm border rounded px-3 py-2 hover:bg-gray-50"
+                                    onclick="loadTemplate('small')">
+                                Small Institution (< 5,000)
+                            </button>
+                            <button class="w-full text-left text-sm border rounded px-3 py-2 hover:bg-gray-50"
+                                    onclick="loadTemplate('medium')">
+                                Medium Institution (5,000-15,000)
+                            </button>
+                            <button class="w-full text-left text-sm border rounded px-3 py-2 hover:bg-gray-50"
+                                    onclick="loadTemplate('large')">
+                                Large Institution (> 15,000)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Compliance Coverage Analysis -->
+        <div class="mt-6 bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold mb-4">Compliance Coverage Analysis</h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="border rounded-lg p-4">
+                    <div class="text-2xl font-bold text-blue-600" id="totalPositions">0</div>
+                    <div class="text-sm text-gray-600">Total Positions</div>
+                </div>
+                <div class="border rounded-lg p-4">
+                    <div class="text-2xl font-bold text-green-600" id="complianceRoles">0</div>
+                    <div class="text-sm text-gray-600">Compliance Roles</div>
+                </div>
+                <div class="border rounded-lg p-4">
+                    <div class="text-2xl font-bold text-purple-600" id="departments">0</div>
+                    <div class="text-sm text-gray-600">Departments</div>
+                </div>
+                <div class="border rounded-lg p-4">
+                    <div class="text-2xl font-bold text-orange-600" id="coverage">0%</div>
+                    <div class="text-sm text-gray-600">Coverage Score</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Initialize vis.js network
+        const container = document.getElementById('network');
+        const nodes = new vis.DataSet([
+            { id: 1, label: 'President\nDr. Example', level: 0, group: 'executive' }
+        ]);
+        const edges = new vis.DataSet([]);
+        
+        const data = { nodes, edges };
+        const options = {
+            layout: {
+                hierarchical: {
+                    direction: 'UD',
+                    sortMethod: 'directed',
+                    levelSeparation: 150
+                }
+            },
+            nodes: {
+                shape: 'box',
+                margin: 10,
+                font: { size: 14 }
+            },
+            edges: {
+                arrows: { to: { enabled: true } },
+                smooth: { type: 'cubicBezier' }
+            },
+            groups: {
+                executive: { color: { background: '#dbeafe', border: '#3b82f6' } },
+                oversight: { color: { background: '#dcfce7', border: '#22c55e' } },
+                coordinator: { color: { background: '#fef3c7', border: '#f59e0b' } },
+                contributor: { color: { background: '#e0e7ff', border: '#6366f1' } },
+                reviewer: { color: { background: '#fce7f3', border: '#ec4899' } }
+            }
+        };
+        
+        const network = new vis.Network(container, data, options);
+        
+        // Update parent dropdown
+        function updateParentDropdown() {
+            const select = document.getElementById('nodeParent');
+            select.innerHTML = '<option value="">-- Top Level --</option>';
+            nodes.forEach(node => {
+                const option = document.createElement('option');
+                option.value = node.id;
+                option.textContent = node.label.split('\n')[0];
+                select.appendChild(option);
+            });
+        }
+        
+        // Form submission
+        document.getElementById('nodeForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const title = document.getElementById('nodeTitle').value;
+            const name = document.getElementById('nodeName').value;
+            const dept = document.getElementById('nodeDept').value;
+            const parentId = document.getElementById('nodeParent').value;
+            const role = document.getElementById('nodeRole').value;
+            
+            if (!title) return;
+            
+            const id = nodes.length + 1;
+            const label = `${title}\n${name || 'TBD'}`;
+            const level = parentId ? nodes.get(parentId).level + 1 : 1;
+            
+            nodes.add({ id, label, level, group: role, dept });
+            if (parentId) {
+                edges.add({ from: parentId, to: id });
+            }
+            
+            updateParentDropdown();
+            updateStats();
+            
+            // Reset form
+            e.target.reset();
+        });
+        
+        // Update statistics
+        function updateStats() {
+            document.getElementById('totalPositions').textContent = nodes.length;
+            document.getElementById('complianceRoles').textContent = 
+                nodes.get().filter(n => n.group !== 'executive').length;
+            document.getElementById('departments').textContent = 
+                [...new Set(nodes.get().map(n => n.dept).filter(Boolean))].length;
+            document.getElementById('coverage').textContent = 
+                Math.round((nodes.length / 10) * 100) + '%';
+        }
+        
+        // Load templates
+        function loadTemplate(size) {
+            nodes.clear();
+            edges.clear();
+            
+            if (size === 'small') {
+                nodes.add([
+                    { id: 1, label: 'President\nDr. Leadership', level: 0, group: 'executive' },
+                    { id: 2, label: 'Provost\nDr. Academic', level: 1, group: 'oversight', dept: 'Academic Affairs' },
+                    { id: 3, label: 'Accreditation Liaison\nMs. Compliance', level: 2, group: 'coordinator', dept: 'Academic Affairs' },
+                    { id: 4, label: 'IR Director\nMr. Data', level: 2, group: 'contributor', dept: 'Institutional Research' }
+                ]);
+                edges.add([
+                    { from: 1, to: 2 },
+                    { from: 2, to: 3 },
+                    { from: 2, to: 4 }
+                ]);
+            }
+            // Add more templates as needed
+            
+            updateParentDropdown();
+            updateStats();
+        }
+        
+        // Export functions
+        document.getElementById('exportPNG').addEventListener('click', () => {
+            network.on('stabilized', function() {
+                const canvas = container.querySelector('canvas');
+                const url = canvas.toDataURL('image/png');
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'org-chart.png';
+                a.click();
+            });
+            network.stabilize();
+        });
+        
+        document.getElementById('exportJSON').addEventListener('click', () => {
+            const data = {
+                nodes: nodes.get(),
+                edges: edges.get(),
+                metadata: {
+                    created: new Date().toISOString(),
+                    institution: 'MapMyStandards Organization'
+                }
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'org-chart.json';
+            a.click();
+        });
+        
+        // Save to backend
+        document.getElementById('saveChart').addEventListener('click', async () => {
+            const chartData = {
+                name: prompt('Enter a name for your organization chart:') || 'My Organization Chart',
+                description: prompt('Enter a description (optional):') || '',
+                nodes: nodes.get(),
+                edges: edges.get(),
+                metadata: {
+                    created_with: 'org-chart-builder',
+                    version: '1.0'
+                },
+                institution_type: 'university', // You could make this configurable
+                total_employees: nodes.length
+            };
+            
+            try {
+                const result = await window.mmsAPI.createOrgChart(chartData);
+                window.mmsAPI.showSuccess('Organization chart saved successfully!');
+                console.log('Saved chart:', result);
+            } catch (error) {
+                console.error('Error saving chart:', error);
+                window.mmsAPI.showError(error);
+            }
+        });
+        
+        // Initialize
+        updateParentDropdown();
+        updateStats();
+    </script>
+</body>
+</html>

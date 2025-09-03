@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Connection Test | MapMyStandards</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/api-client.js"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="max-w-4xl mx-auto py-12 px-4">
+        <div class="bg-white rounded-lg shadow p-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-8">API Connection Test</h1>
+            
+            <!-- Message Containers -->
+            <div id="error-container"></div>
+            <div id="success-container"></div>
+            
+            <!-- Connection Status -->
+            <div class="bg-gray-50 rounded-lg p-6 mb-8">
+                <h2 class="text-lg font-semibold mb-4">Connection Status</h2>
+                <div id="connectionStatus" class="text-gray-600">Testing connection...</div>
+                <div class="mt-4">
+                    <div class="text-sm text-gray-500">Current API Base URL: <span id="apiUrl" class="font-mono"></span></div>
+                    <div class="text-sm text-gray-500">Environment: <span id="environment" class="font-mono"></span></div>
+                </div>
+            </div>
+
+            <!-- Authentication Test -->
+            <div class="bg-gray-50 rounded-lg p-6 mb-8">
+                <h2 class="text-lg font-semibold mb-4">Authentication Test</h2>
+                <div class="flex gap-4 mb-4">
+                    <input type="text" id="testToken" placeholder="Enter test token (optional)" 
+                           class="flex-1 border border-gray-300 rounded-md px-3 py-2">
+                    <button id="setToken" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                        Set Token
+                    </button>
+                    <button id="clearToken" class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700">
+                        Clear Token
+                    </button>
+                </div>
+                <div id="authStatus" class="text-gray-600">No token set</div>
+            </div>
+
+            <!-- API Tests -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Org Chart Test -->
+                <div class="bg-white border rounded-lg p-6">
+                    <h3 class="font-semibold mb-4">Organization Charts</h3>
+                    <div class="space-y-2">
+                        <button id="testOrgCharts" class="w-full bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700">
+                            Test Get Charts
+                        </button>
+                        <button id="createTestChart" class="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
+                            Create Test Chart
+                        </button>
+                    </div>
+                    <div id="orgChartResult" class="mt-4 text-sm text-gray-600"></div>
+                </div>
+
+                <!-- Scenarios Test -->
+                <div class="bg-white border rounded-lg p-6">
+                    <h3 class="font-semibold mb-4">Scenarios</h3>
+                    <div class="space-y-2">
+                        <button id="testScenarios" class="w-full bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700">
+                            Test Get Scenarios
+                        </button>
+                        <button id="createTestScenario" class="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
+                            Create Test Scenario
+                        </button>
+                        <button id="calcROI" class="w-full bg-purple-600 text-white py-2 px-4 rounded hover:bg-purple-700">
+                            Calculate ROI
+                        </button>
+                    </div>
+                    <div id="scenarioResult" class="mt-4 text-sm text-gray-600"></div>
+                </div>
+
+                <!-- PowerBI Test -->
+                <div class="bg-white border rounded-lg p-6">
+                    <h3 class="font-semibold mb-4">Power BI</h3>
+                    <div class="space-y-2">
+                        <button id="testPowerBI" class="w-full bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700">
+                            Test Config & Connection
+                        </button>
+                        <button id="testReports" class="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
+                            Get Reports
+                        </button>
+                        <button id="testDatasets" class="w-full bg-purple-600 text-white py-2 px-4 rounded hover:bg-purple-700">
+                            Get Datasets
+                        </button>
+                        <button id="testEmbedToken" class="w-full bg-orange-600 text-white py-2 px-4 rounded hover:bg-orange-700">
+                            Generate Embed Token
+                        </button>
+                    </div>
+                    <div id="powerbiResult" class="mt-4 text-sm text-gray-600"></div>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="mt-8 pt-6 border-t">
+                <div class="flex gap-4">
+                    <a href="org-chart.html" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                        Go to Org Chart Builder
+                    </a>
+                    <a href="scenario-modeling.html" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                        Go to Scenario Modeling
+                    </a>
+                    <a href="powerbi-dashboard.html" class="bg-orange-600 text-white px-4 py-2 rounded hover:bg-orange-700">
+                        Go to PowerBI Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Display API configuration
+            document.getElementById('apiUrl').textContent = window.mmsAPI.baseUrl;
+            document.getElementById('environment').textContent = 
+                window.location.hostname === 'platform.mapmystandards.ai' ? 'Production' : 'Development';
+            
+            // Update auth status
+            updateAuthStatus();
+            
+            // Test connection
+            await testConnection();
+        });
+
+        // Update authentication status display
+        function updateAuthStatus() {
+            const token = window.mmsAPI.getAuthToken();
+            const status = document.getElementById('authStatus');
+            if (token) {
+                status.innerHTML = `<span class="text-green-600">Token set: ${token.substring(0, 20)}...</span>`;
+            } else {
+                status.innerHTML = '<span class="text-gray-600">No token set</span>';
+            }
+        }
+
+        // Test connection
+        async function testConnection() {
+            const status = document.getElementById('connectionStatus');
+            try {
+                const isConnected = await window.mmsAPI.testConnection();
+                if (isConnected) {
+                    status.innerHTML = '<span class="text-green-600 font-semibold">✓ Connected to API</span>';
+                } else {
+                    status.innerHTML = '<span class="text-red-600 font-semibold">✗ Connection failed</span>';
+                }
+            } catch (error) {
+                status.innerHTML = '<span class="text-red-600 font-semibold">✗ Connection error</span>';
+                console.error('Connection test failed:', error);
+            }
+        }
+
+        // Authentication handlers
+        document.getElementById('setToken').addEventListener('click', () => {
+            const token = document.getElementById('testToken').value.trim();
+            if (token) {
+                window.mmsAPI.setAuthToken(token);
+                updateAuthStatus();
+                window.mmsAPI.showSuccess('Token set successfully!');
+            } else {
+                window.mmsAPI.showError(new Error('Please enter a token'));
+            }
+        });
+
+        document.getElementById('clearToken').addEventListener('click', () => {
+            window.mmsAPI.clearAuth();
+            updateAuthStatus();
+            window.mmsAPI.showSuccess('Token cleared!');
+        });
+
+        // Org Chart tests
+        document.getElementById('testOrgCharts').addEventListener('click', async () => {
+            const result = document.getElementById('orgChartResult');
+            try {
+                const charts = await window.mmsAPI.getOrgCharts();
+                result.innerHTML = `<span class="text-green-600">Success: Found ${charts.length} charts</span>`;
+            } catch (error) {
+                result.innerHTML = `<span class="text-red-600">Error: ${error.message}</span>`;
+            }
+        });
+
+        document.getElementById('createTestChart').addEventListener('click', async () => {
+            const result = document.getElementById('orgChartResult');
+            try {
+                const testChart = {
+                    name: 'API Test Chart',
+                    description: 'Created from API test page',
+                    nodes: [
+                        { id: 1, label: 'President', level: 1 },
+                        { id: 2, label: 'VP Academic Affairs', level: 2 }
+                    ],
+                    edges: [
+                        { from: 1, to: 2 }
+                    ],
+                    institution_type: 'university',
+                    total_employees: 2
+                };
+                const created = await window.mmsAPI.createOrgChart(testChart);
+                result.innerHTML = `<span class="text-green-600">Created chart: ${created.id}</span>`;
+            } catch (error) {
+                result.innerHTML = `<span class="text-red-600">Error: ${error.message}</span>`;
+            }
+        });
+
+        // Scenario tests
+        document.getElementById('testScenarios').addEventListener('click', async () => {
+            const result = document.getElementById('scenarioResult');
+            try {
+                const scenarios = await window.mmsAPI.getScenarios();
+                result.innerHTML = `<span class="text-green-600">Success: Found ${scenarios.length} scenarios</span>`;
+            } catch (error) {
+                result.innerHTML = `<span class="text-red-600">Error: ${error.message}</span>`;
+            }
+        });
+
+        document.getElementById('createTestScenario').addEventListener('click', async () => {
+            const result = document.getElementById('scenarioResult');
+            try {
+                const testScenario = {
+                    name: 'API Test Scenario',
+                    description: 'Created from API test page',
+                    inputs: {
+                        enrollment: 5000,
+                        staff: 50,
+                        standards: 100,
+                        hourlyCost: 75,
+                        maturity: 3,
+                        accreditors: 2
+                    }
+                };
+                const created = await window.mmsAPI.saveScenario(testScenario);
+                result.innerHTML = `<span class="text-green-600">Created scenario: ${created.id}</span>`;
+            } catch (error) {
+                result.innerHTML = `<span class="text-red-600">Error: ${error.message}</span>`;
+            }
+        });
+
+        document.getElementById('calcROI').addEventListener('click', async () => {
+            const result = document.getElementById('scenarioResult');
+            try {
+                const inputs = {
+                    enrollment: 5000,
+                    staff: 50,
+                    standards: 100,
+                    hourlyCost: 75,
+                    maturity: 3,
+                    accreditors: 2
+                };
+                const roi = await window.mmsAPI.calculateScenario(inputs);
+                result.innerHTML = `<span class="text-green-600">ROI calculated: $${roi.roi}</span>`;
+            } catch (error) {
+                result.innerHTML = `<span class="text-red-600">Error: ${error.message}</span>`;
+            }
+        });
+
+        // PowerBI tests
+        document.getElementById('testPowerBI').addEventListener('click', async () => {
+            const result = document.getElementById('powerbiResult');
+            try {
+                const config = await window.mmsAPI.getPowerBIConfig();
+                result.innerHTML = `<span class="text-green-600">Connection: ${config.connection_test ? 'Success' : 'Failed'}<br>Configured: ${config.configured}</span>`;
+            } catch (error) {
+                result.innerHTML = `<span class="text-red-600">Error: ${error.message}</span>`;
+            }
+        });
+
+        document.getElementById('testReports').addEventListener('click', async () => {
+            const result = document.getElementById('powerbiResult');
+            try {
+                const reports = await window.mmsAPI.getPowerBIReports();
+                result.innerHTML = `<span class="text-green-600">Found ${reports.length} reports</span>`;
+            } catch (error) {
+                result.innerHTML = `<span class="text-red-600">Error: ${error.message}</span>`;
+            }
+        });
+
+        document.getElementById('testDatasets').addEventListener('click', async () => {
+            const result = document.getElementById('powerbiResult');
+            try {
+                const datasets = await window.mmsAPI.getDatasets();
+                result.innerHTML = `<span class="text-green-600">Found ${datasets.length} datasets</span>`;
+            } catch (error) {
+                result.innerHTML = `<span class="text-red-600">Error: ${error.message}</span>`;
+            }
+        });
+
+        document.getElementById('testEmbedToken').addEventListener('click', async () => {
+            const result = document.getElementById('powerbiResult');
+            try {
+                // First get reports to use their IDs
+                const reports = await window.mmsAPI.getPowerBIReports();
+                if (reports.length === 0) {
+                    result.innerHTML = `<span class="text-yellow-600">No reports available for embed token</span>`;
+                    return;
+                }
+                
+                const embedToken = await window.mmsAPI.createEmbedToken({
+                    report_ids: [reports[0].id],
+                    username: 'test@example.com',
+                    roles: ['User']
+                });
+                result.innerHTML = `<span class="text-green-600">Embed token generated successfully<br>Expires: ${new Date(embedToken.token_expiry).toLocaleString()}</span>`;
+            } catch (error) {
+                result.innerHTML = `<span class="text-red-600">Error: ${error.message}</span>`;
+            }
+        });
+    </script>
+</body>
+</html>

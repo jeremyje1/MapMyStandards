@@ -80,24 +80,23 @@ async def get_optional_user(
     except:
         return None
 
-def require_plan(allowed_plans: list):
+def has_active_subscription(current_user: Dict = Depends(get_current_user)):
     """
-    Dependency to require specific subscription plans
+    Check if user has an active subscription (single $199/mo plan)
     """
-    async def plan_checker(current_user: Dict = Depends(get_current_user)):
-        user_plan = current_user.get("plan", "trial")
-        
-        if user_plan not in allowed_plans:
-            raise HTTPException(
-                status_code=403,
-                detail=f"This feature requires one of these plans: {', '.join(allowed_plans)}"
-            )
-        
-        return current_user
+    # Check if user has active subscription
+    is_subscribed = current_user.get("subscription_status") == "active"
+    is_trial = current_user.get("trial_status") == "active"
     
-    return plan_checker
+    if not is_subscribed and not is_trial:
+        raise HTTPException(
+            status_code=403,
+            detail="This feature requires an active subscription. Subscribe for $199/month to access all features."
+        )
+    
+    return current_user
 
-# Common plan dependencies
-require_professional = require_plan(["professional", "institution", "enterprise"])
-require_institution = require_plan(["institution", "enterprise"])
-require_paid_plan = require_plan(["starter", "professional", "institution", "enterprise"])
+# Legacy compatibility - all point to same check
+require_professional = has_active_subscription
+require_institution = has_active_subscription  
+require_paid_plan = has_active_subscription
