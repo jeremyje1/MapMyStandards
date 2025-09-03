@@ -474,11 +474,11 @@
         await persist();
         successMsg.style.display='block';
         fillEl.style.width='100%'; pctEl.textContent='100%';
-    // Redirect to main dashboard (temporarily using /upload until dashboard fully implemented)
-    setTimeout(()=>{ window.location.href='/dashboard'; }, 1500);
+    // Redirect to main dashboard
+    setTimeout(()=>{ window.location.href='https://platform.mapmystandards.ai/dashboard'; }, 1500);
       }
     });
-  skipBtn.addEventListener('click', ()=>{ window.location.href='/dashboard'; });
+  skipBtn.addEventListener('click', ()=>{ window.location.href='https://platform.mapmystandards.ai/dashboard'; });
 
     // Initialize
     showStep();
