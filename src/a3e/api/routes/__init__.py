@@ -21,6 +21,7 @@ from .enterprise_metrics import router as enterprise_metrics_router
 from .powerbi import router as powerbi_router
 from .teams import router as teams_router
 from .audit_logs import router as audit_logs_router
+from .sso import router as sso_router
 
 # Create main API router
 api_router = APIRouter()
@@ -69,6 +70,7 @@ api_router.include_router(powerbi_router, tags=["powerbi"])
 # Include enterprise features
 api_router.include_router(teams_router, prefix="/teams", tags=["teams"])
 api_router.include_router(audit_logs_router, prefix="/audit-logs", tags=["audit"])
+api_router.include_router(sso_router, prefix="/sso", tags=["sso"])
 
 # Configuration router not yet implemented
 

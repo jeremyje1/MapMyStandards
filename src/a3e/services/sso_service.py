@@ -344,3 +344,77 @@ class SSOService:
                 }
         
         return available
+    
+    @staticmethod
+    async def configure_provider(
+        db: AsyncSession,
+        provider_name: str,
+        config: Dict[str, Any]
+    ) -> bool:
+        """Configure SSO provider settings"""
+        # In a real implementation, this would store the config in database
+        # For now, we'll validate and return success
+        
+        if provider_name not in ["google", "microsoft", "saml", "oauth"]:
+            raise ValueError(f"Unknown provider: {provider_name}")
+        
+        # Validate required fields based on provider type
+        if provider_name == "google":
+            required = ["client_id", "client_secret"]
+        elif provider_name == "microsoft":
+            required = ["tenant_id", "client_id", "client_secret"]
+        elif provider_name == "saml":
+            required = ["entity_id", "sso_url", "certificate"]
+        elif provider_name == "oauth":
+            required = ["auth_url", "token_url", "client_id", "client_secret"]
+        else:
+            required = []
+        
+        for field in required:
+            if not config.get(field):
+                raise ValueError(f"Missing required field: {field}")
+        
+        # TODO: Store in database
+        # For now, return success
+        return True
+    
+    @staticmethod
+    async def get_configurations(db: AsyncSession) -> Dict[str, Dict[str, Any]]:
+        """Get SSO provider configurations"""
+        # In a real implementation, this would load from database
+        # For now, return empty configurations
+        return {
+            "google": {},
+            "microsoft": {},
+            "saml": {},
+            "oauth": {}
+        }
+    
+    @staticmethod
+    async def validate_session_token(db: AsyncSession, token: str) -> Optional[Any]:
+        """Validate session token and return user"""
+        # In a real implementation, this would validate against SessionSecurity table
+        # For now, we'll do a basic check
+        
+        # Extract user ID from token (simplified)
+        # Token format: "sess_<user_id>_<random>"
+        if not token or not token.startswith("sess_"):
+            return None
+        
+        try:
+            parts = token.split("_")
+            if len(parts) < 3:
+                return None
+            
+            user_id = parts[1]
+            
+            # Get user from database
+            from ..database.models import User
+            stmt = select(User).where(User.id == user_id, User.is_active.is_(True))
+            result = await db.execute(stmt)
+            user = result.scalar_one_or_none()
+            
+            return user
+            
+        except Exception:
+            return None
