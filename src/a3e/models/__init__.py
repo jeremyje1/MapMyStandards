@@ -226,7 +226,7 @@ class AgentWorkflow(Base):
     __tablename__ = "agent_workflows"
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    institution_id = Column(UUID(as_uuid=True), ForeignKey('institutions.id'), nullable=False)
+    institution_id = Column(String(36), ForeignKey('institutions.id'), nullable=False)
     
     # Workflow identification
     workflow_type = Column(String(50), nullable=False)  # mapping, gap_analysis, narrative_generation
