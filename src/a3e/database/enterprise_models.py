@@ -18,7 +18,8 @@ user_teams = Table(
     Column('user_id', String, ForeignKey('users.id'), primary_key=True),
     Column('team_id', String, ForeignKey('teams.id'), primary_key=True),
     Column('role', String, nullable=False, default='viewer'),
-    Column('joined_at', DateTime, default=datetime.utcnow)
+    Column('joined_at', DateTime, default=datetime.utcnow),
+    extend_existing=True  # Allow redefinition if table already exists
 )
 
 class UserRole(enum.Enum):

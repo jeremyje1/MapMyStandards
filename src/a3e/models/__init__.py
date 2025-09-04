@@ -26,7 +26,8 @@ institution_accreditor_association = Table(
     'institution_accreditor',
     Base.metadata,
     Column('institution_id', UUID(as_uuid=True), ForeignKey('institutions.id')),
-    Column('accreditor_id', String, ForeignKey('accreditors.id'))
+    Column('accreditor_id', String, ForeignKey('accreditors.id')),
+    extend_existing=True  # Allow redefinition if table already exists
 )
 
 evidence_standard_association = Table(
@@ -37,7 +38,8 @@ evidence_standard_association = Table(
     Column('confidence_score', Float, default=0.0),
     Column('mapped_by_agent', Boolean, default=True),
     Column('verified_by_human', Boolean, default=False),
-    Column('mapping_timestamp', DateTime, default=datetime.utcnow)
+    Column('mapping_timestamp', DateTime, default=datetime.utcnow),
+    extend_existing=True  # Allow redefinition if table already exists
 )
 
 
