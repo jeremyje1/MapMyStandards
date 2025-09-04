@@ -15,7 +15,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import AsyncGenerator
 from sqlalchemy import func, and_, or_
 
-from ..database.models import User, OrgChart, Scenario, PowerBIConfig
+from ..models.user import User
+from ..database.enterprise_models import OrgChart, Scenario, PowerBIConfig
 from ..database.connection import db_manager
 
 logger = logging.getLogger(__name__)

@@ -16,7 +16,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.a3e.database.models import User
+from src.a3e.models.user import User
 
 # Test user credentials
 TEST_EMAIL = "testuser@example.com"

@@ -16,7 +16,8 @@ from datetime import datetime, timedelta
 import logging
 
 from ...database.connection import db_manager
-from ...database.models import User, OrgChart, Scenario
+from ...models.user import User
+from ...database.enterprise_models import OrgChart, Scenario
 from ...database.enterprise_models import Team, TeamInvitation, AuditLog
 from ..dependencies import get_current_user
 from ...schemas.enterprise import (

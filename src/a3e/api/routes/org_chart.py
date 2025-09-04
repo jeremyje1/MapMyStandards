@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from ..dependencies import get_current_user, has_active_subscription
 from ...models import User
-from ...database.models import OrgChart
+from ...database.enterprise_models import OrgChart
 from ...services.database_service import DatabaseService
 from ...core.config import get_settings
 

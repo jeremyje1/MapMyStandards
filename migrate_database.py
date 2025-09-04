@@ -8,7 +8,7 @@ import logging
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy import text
 import os
-from src.a3e.database.models import Base
+from src.a3e.models.database_schema import Base
 from src.a3e.core.config import get_settings
 
 logging.basicConfig(level=logging.INFO)

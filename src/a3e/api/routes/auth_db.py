@@ -15,7 +15,7 @@ from datetime import datetime, timedelta
 import jwt
 import logging
 
-from ...database.models import User
+from ...models.user import User
 from ...services.database_service import DatabaseService
 from ...services.payment_service import PaymentService
 from ...services.email_service import EmailService

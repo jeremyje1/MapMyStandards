@@ -15,9 +15,13 @@ import json
 from io import BytesIO
 import xlsxwriter
 
-from src.a3e.database.models import (
-    User, Team, Organization, Standard, Evidence, 
-    StandardRequirement, ComplianceAssessment
+from src.a3e.models.user import User
+from src.a3e.database.enterprise_models import (
+    OrgChart, 
+    Scenario,
+    PowerBIConfig,
+    ReportSchedule,
+    ReportTemplate
 )
 from src.a3e.database.enterprise_models import (
     AuditLog, TeamMember, Department, ComplianceScore
