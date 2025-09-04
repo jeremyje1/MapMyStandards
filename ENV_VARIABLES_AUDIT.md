@@ -24,8 +24,8 @@
 | ADMIN_EMAIL | ✅ info@northpathstrategies.org | ✅ Same | ✓ OK | None |
 | FROM_EMAIL | ✅ info@northpathstrategies.org | ✅ Same | ✓ OK | None |
 | REPLY_TO_EMAIL | ✅ info@northpathstrategies.org | ✅ Same | ✓ OK | None |
-| MAILER_SEND_API_KEY | ✅ mlsn.bf729c75ae03d2593c0ed22b2f699cc41cf4637c671bf295562a6a9d97f8aa1e | ✅ Same | ✓ OK | None |
-| POSTMARK_API_TOKEN | ✅ 6a45e155-5e3c-4f9f-9cff-45528a162248 | ✅ Same | ✓ OK | None |
+| MAILER_SEND_API_KEY | ✅ [REDACTED_FOR_SECURITY] | ✅ Same | ✓ OK | None |
+| POSTMARK_API_TOKEN | ✅ [REDACTED_FOR_SECURITY] | ✅ Same | ✓ OK | None |
 | POSTMARK_MESSAGE_STREAM | ✅ mapmystandards-transactional | ✅ Same | ✓ OK | None |
 | **Stripe Configuration** |
 | STRIPE_MONTHLY_PRICE_ID | ✅ price_1Rxb2wRMpSG47vNmCzxZGv5I (Team Monthly $995) | ❌ price_1RtXF3K8PKpLCKDZJNfi3Rvi (Invalid) | ❌ WRONG | **UPDATE IN VERCEL** |

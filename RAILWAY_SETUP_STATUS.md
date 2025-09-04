@@ -18,7 +18,7 @@
 - ✅ `DEBUG` = false
 
 ### Email Configuration (Postmark)
-- ✅ `POSTMARK_API_TOKEN` = 6a45e155-5e3c-4f9f-9cff-45528a162248
+- ✅ `POSTMARK_API_TOKEN` = [REDACTED_FOR_SECURITY]
 - ✅ `POSTMARK_MESSAGE_STREAM` = outbound
 - ✅ `FROM_EMAIL` = noreply@mapmystandards.ai
 - ✅ `REPLY_TO_EMAIL` = support@mapmystandards.ai
