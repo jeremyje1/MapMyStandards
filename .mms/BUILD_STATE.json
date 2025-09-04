@@ -420,7 +420,7 @@
       {
         "issue": "Stripe webhook signature error",
         "status": "fixed",
-        "fix": "Updated STRIPE_WEBHOOK_SECRET in Railway environment to correct value: whsec_IrKVrLesP6FOD2wo08nYf6FmOf9zULTU"
+        "fix": "Updated STRIPE_WEBHOOK_SECRET in Railway environment to correct value"
       },
       {
         "issue": "Database foreign key constraint error",
