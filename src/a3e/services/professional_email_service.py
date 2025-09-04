@@ -40,7 +40,7 @@ class ProfessionalEmailService:
         
         # Try Postmark first
         if POSTMARK_AVAILABLE:
-            postmark_token = os.getenv('POSTMARK_SERVER_TOKEN')
+            postmark_token = os.getenv('POSTMARK_API_TOKEN') or os.getenv('POSTMARK_SERVER_TOKEN')
             if postmark_token:
                 try:
                     self.postmark = PostmarkClient(server_token=postmark_token)

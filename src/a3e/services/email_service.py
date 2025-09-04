@@ -32,6 +32,14 @@ except Exception:  # pragma: no cover - absence is acceptable
     base64 = None  # type: ignore
     logging.getLogger(__name__).warning("SendGrid not available - falling back to SMTP if configured")
 
+# Optional Postmark
+try:
+    from postmarker.core import PostmarkClient
+    POSTMARK_AVAILABLE = True
+except Exception:
+    POSTMARK_AVAILABLE = False
+    logging.getLogger(__name__).info("Postmark not available")
+
 from ..core.url_helpers import build_unsubscribe_link
 
 logger = logging.getLogger(__name__)
@@ -39,13 +47,18 @@ logger = logging.getLogger(__name__)
 
 class EmailService:
     def __init__(self):
-        # SendGrid configuration (preferred)
+        # Postmark configuration (preferred)
+        self.postmark_api_key = os.getenv('POSTMARK_API_TOKEN')
+        self.use_postmark = POSTMARK_AVAILABLE and self.postmark_api_key
+        
+        # SendGrid configuration (fallback)
         self.sendgrid_api_key = os.getenv('SENDGRID_API_KEY')
-        self.use_sendgrid = SENDGRID_AVAILABLE and self.sendgrid_api_key
+        self.use_sendgrid = SENDGRID_AVAILABLE and self.sendgrid_api_key and not self.use_postmark
         
         # Common settings
-        self.default_from = os.getenv('EMAIL_FROM', 'support@mapmystandards.ai')
+        self.default_from = os.getenv('FROM_EMAIL', os.getenv('EMAIL_FROM', 'info@northpathstrategies.org'))
         self.default_from_name = os.getenv('EMAIL_FROM_NAME', 'MapMyStandards Support')
+        self.admin_email = os.getenv('ADMIN_EMAIL', 'info@northpathstrategies.org')
         
         # SMTP fallback configuration
         self.smtp_server = os.getenv('SMTP_SERVER', 'mx1.titan.email')
@@ -54,8 +67,12 @@ class EmailService:
         self.smtp_username = os.getenv('SMTP_USERNAME', 'support@mapmystandards.ai')
         self.smtp_password = os.getenv('SMTP_PASSWORD')
         
+        # Initialize Postmark client if available
+        if self.use_postmark:
+            self.postmark = PostmarkClient(server_token=self.postmark_api_key)
+            logger.info("Email service initialized with Postmark")
         # Initialize SendGrid client if available
-        if self.use_sendgrid:
+        elif self.use_sendgrid:
             self.sg = SendGridAPIClient(api_key=self.sendgrid_api_key)
             logger.info("Email service initialized with SendGrid")
         elif self.smtp_password:
@@ -86,10 +103,46 @@ class EmailService:
         Returns:
             bool: True if email sent successfully, False otherwise
         """
-        if self.use_sendgrid:
+        if self.use_postmark:
+            return self._send_via_postmark(to_emails, subject, body, from_email, html_body, attachments)
+        elif self.use_sendgrid:
             return self._send_via_sendgrid(to_emails, subject, body, from_email, html_body, attachments)
         else:
             return self._send_via_smtp(to_emails, subject, body, from_email, html_body, attachments)
+    
+    def _send_via_postmark(
+        self,
+        to_emails: List[str],
+        subject: str,
+        body: str,
+        from_email: Optional[str] = None,
+        html_body: Optional[str] = None,
+        attachments: Optional[List[str]] = None
+    ) -> bool:
+        """Send email via Postmark"""
+        try:
+            # Use default from email if not specified
+            from_email = from_email or self.default_from
+            
+            # Prepare email data
+            email_data = {
+                'From': f"{self.default_from_name} <{from_email}>",
+                'To': ', '.join(to_emails),
+                'Subject': subject,
+                'TextBody': body
+            }
+            
+            if html_body:
+                email_data['HtmlBody'] = html_body
+            
+            # Send email
+            response = self.postmark.emails.send(**email_data)
+            logger.info(f"Email sent successfully via Postmark to {', '.join(to_emails)}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to send email via Postmark: {e}")
+            return False
     
     def _send_via_sendgrid(
         self, 
@@ -362,9 +415,10 @@ Sent from MapMyStandards.ai contact form
         """
         
         if plan_name:
+            amount_str = f"${amount:.2f}" if amount else "N/A"
             html_body += f"""
                     <tr><td style='padding:8px 0;font-weight:600;'>Plan:</td><td>{plan_name}</td></tr>
-                    <tr><td style='padding:8px 0;font-weight:600;'>Amount:</td><td>${amount:.2f if amount else 'N/A'}</td></tr>
+                    <tr><td style='padding:8px 0;font-weight:600;'>Amount:</td><td>{amount_str}</td></tr>
             """
         
         if stripe_customer_id:
