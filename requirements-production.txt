@@ -32,7 +32,9 @@ stripe==12.4.0
 
 # Email Services
 postmarker==1.0  # Postmark Python library (primary)
+sendgrid==6.11.0  # SendGrid as fallback
 aiosmtplib==3.0.1
+emails==0.6  # For email templates
 
 # HTTP Client
 httpx==0.25.2
@@ -51,6 +53,10 @@ pyyaml==6.0.2
 PyPDF2==3.0.1
 python-docx==1.1.0
 openpyxl==3.1.2
+pypdf==3.17.0
+python-magic==0.4.27
+chardet==5.2.0
+Pillow==10.1.0  # For image processing
 
 # Pinecone (without heavy ML deps)
 pinecone-client==3.0.0
@@ -60,3 +66,9 @@ redis==5.0.1
 
 # CORS Support
 flask-cors==6.0.1
+
+# Additional utilities
+python-jose[cryptography]==3.3.0  # For JWT handling
+itsdangerous==2.1.2  # For secure sessions
+markupsafe==2.1.3  # For safe HTML
+bleach==6.1.0  # For HTML sanitization
