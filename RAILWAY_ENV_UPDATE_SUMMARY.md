@@ -9,8 +9,8 @@
 - `ADMIN_EMAIL`: info@northpathstrategies.org
 - `FROM_EMAIL`: info@northpathstrategies.org
 - `REPLY_TO_EMAIL`: info@northpathstrategies.org
-- `MAILER_SEND_API_KEY`: mlsn.bf729c75ae03d2593c0ed22b2f699cc41cf4637c671bf295562a6a9d97f8aa1e
-- `POSTMARK_API_TOKEN`: 6a45e155-5e3c-4f9f-9cff-45528a162248
+- `MAILER_SEND_API_KEY`: [REDACTED_FOR_SECURITY]
+- `POSTMARK_API_TOKEN`: [REDACTED_FOR_SECURITY]
 - `POSTMARK_MESSAGE_STREAM`: mapmystandards-transactional
 
 ### 💳 Stripe Configuration

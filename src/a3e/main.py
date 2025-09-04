@@ -13,6 +13,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 from typing import List, Optional, Dict, Any
+from pydantic import BaseModel, EmailStr
 import uvicorn
 import logging
 import os
@@ -21,8 +22,12 @@ import os.path
 from pathlib import Path
 from datetime import datetime
 
+# Local imports
+from .services.llm_service import LLMService
+from .services.document_service import DocumentService
+from .api.routes import integrations_router, proprietary_router
+
 # Configure basic logging first before any imports that might use it  
-import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -70,7 +75,6 @@ try:
 except Exception as e:
     logger.error(f"❌ Billing router import failed: {e}")
     billing_router = None
-from pydantic import BaseModel, EmailStr
 try:
     from .api.routes.onboarding import router as onboarding_router
     _onboarding_available = True
@@ -98,9 +102,6 @@ except ImportError:
     # logger not yet configured; will log after config
     _vector_import_error = True
 
-from .services.llm_service import LLMService
-from .services.document_service import DocumentService
-from .api.routes import integrations_router, proprietary_router
 """NOTE: Agent Orchestrator is optional. It depends on heavy LLM coordination
 libraries (e.g., autogen) that aren't required for core API functionality.
 We attempt to import it but degrade gracefully if unavailable so the
@@ -272,11 +273,11 @@ if not globals().get('AGENT_ORCHESTRATOR_AVAILABLE', False):
     log_warning_once(f"Agent orchestrator unavailable - advanced multi-agent flows disabled: {globals().get('_agent_orchestrator_import_exception')}")
 
 # Global service instances
-db_service: Optional[DatabaseService] = None
-vector_service: Optional[VectorService] = None
-llm_service: Optional[LLMService] = None
-document_service: Optional[DocumentService] = None
-agent_orchestrator: Optional['A3EAgentOrchestrator'] = None
+db_service: Any = None
+vector_service: Any = None
+llm_service: Any = None
+document_service: Any = None
+agent_orchestrator: Any = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -893,8 +894,6 @@ async def health_check():
             }
         )
 
-
-
 try:
     from .routes.customer_pages import router as customer_pages_router
     app.include_router(customer_pages_router)
@@ -1300,7 +1299,6 @@ async def _execute_workflow_background(
 # Resolve absolute path to /web directory
 # In Docker/Railway, we're at /app, so web is at /app/web
 # In local dev, we're at src/a3e/main.py, so web is three levels up
-import os
 if os.path.exists("/app/web"):
     # Production environment (Docker/Railway)
     WEB_DIR = Path("/app/web").resolve()
@@ -1708,7 +1706,6 @@ else:
         @app.get("/checkout", response_class=FileResponse, include_in_schema=False)
         async def checkout_page_alt():  # noqa: D401 - alt name to avoid redefinition
             return FileResponse(os.path.join(alt_web_directory, "checkout.html"))
-
 
         @app.get("/homepage", response_class=FileResponse, include_in_schema=False)
         async def homepage():  # noqa: D401

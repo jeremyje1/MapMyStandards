@@ -15,7 +15,7 @@ JWT_SECRET_KEY=<generate-new-for-production>
 NEXTAUTH_SECRET=<generate-new-for-production>
 
 # Email (From your .env)
-POSTMARK_API_TOKEN=6a45e155-5e3c-4f9f-9cff-45528a162248
+POSTMARK_API_TOKEN=[REDACTED_FOR_SECURITY]
 FROM_EMAIL=noreply@mapmystandards.ai
 
 # Database (Railway provides this automatically)
@@ -50,7 +50,7 @@ railway login
 # Set each variable
 railway variables set SECRET_KEY=your-production-secret
 railway variables set JWT_SECRET_KEY=your-jwt-key
-railway variables set POSTMARK_API_TOKEN=6a45e155-5e3c-4f9f-9cff-45528a162248
+railway variables set POSTMARK_API_TOKEN=[REDACTED_FOR_SECURITY]
 # ... continue for all variables
 ```
 
