@@ -5,11 +5,15 @@ FROM python:3.9-slim
 WORKDIR /app
 
 # Copy requirements first for better Docker layer caching
-COPY requirements.txt .
+COPY requirements*.txt ./
 
-# Install Python dependencies
+# Use production requirements for Railway deployment
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+    if [ -f requirements-production.txt ]; then \
+        pip install --no-cache-dir -r requirements-production.txt; \
+    else \
+        pip install --no-cache-dir -r requirements.txt; \
+    fi
 
 # Copy the application code
 COPY . .

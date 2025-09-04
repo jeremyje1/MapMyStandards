@@ -505,6 +505,16 @@
         "id": "4bfbea4",
         "timestamp": "2025-09-04T13:45:00Z",
         "result": "deployed - fixed SQLAlchemy table definition conflicts"
+      },
+      {
+        "id": "3cec2d5",
+        "timestamp": "2025-09-04T14:00:00Z",
+        "result": "deployed - added missing models and fixed all table definitions"
+      },
+      {
+        "id": "manual-db",
+        "timestamp": "2025-09-04T14:15:00Z",
+        "result": "created all 9 missing tables directly in PostgreSQL via psql"
       }
     ],
     "completedSteps": [
@@ -514,8 +524,15 @@
       "Added placeholder classes for missing models",
       "Fixed SQLAlchemy table redefinition errors",
       "Added extend_existing=True to all association tables",
+      "Added missing OrgChart, Scenario, PowerBIConfig models to enterprise_models.py",
+      "Created all 9 enterprise tables in PostgreSQL database",
       "Deployed all fixes to Railway production"
     ],
-    "finalStatus": "All import and table definition errors resolved, deployment complete"
+    "tablesCreated": [
+      "teams", "team_invitations", "user_teams",
+      "org_charts", "scenarios", "powerbi_configs",
+      "audit_logs", "api_keys", "session_security"
+    ],
+    "finalStatus": "All models, tables, and import errors resolved - database fully configured"
   }
 }
