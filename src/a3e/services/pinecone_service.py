@@ -18,12 +18,40 @@ except ImportError:
     logger.warning("sentence-transformers not available - embeddings disabled")
     EMBEDDINGS_AVAILABLE = False
     
+    import hashlib
+    import numpy as np
+    
     class SentenceTransformer:
+        """Fallback embedding generator using hash-based pseudo-embeddings"""
         def __init__(self, *args, **kwargs):
-            pass
+            self.dim = 384
         
-        def encode(self, *args, **kwargs):
-            return [0.0] * 384  # Return dummy embedding
+        def encode(self, text, *args, **kwargs):
+            """Generate deterministic pseudo-embedding from text hash"""
+            if isinstance(text, list):
+                return np.array([self._hash_embed(t) for t in text])
+            
+            return self._hash_embed(text)
+        
+        def _hash_embed(self, text):
+            """Create pseudo-embedding from text hash"""
+            # Create multiple hashes for different dimensions
+            text_bytes = str(text).encode('utf-8')
+            embeddings = []
+            
+            for i in range(self.dim):
+                h = hashlib.sha256(text_bytes + str(i).encode()).digest()
+                # Convert hash bytes to float between -1 and 1
+                value = (int.from_bytes(h[:4], 'big') / 2147483647.0) - 1.0
+                embeddings.append(value)
+            
+            # Normalize to unit vector
+            embedding = np.array(embeddings)
+            norm = np.linalg.norm(embedding)
+            if norm > 0:
+                embedding = embedding / norm
+            
+            return embedding
 
 
 class PineconeVectorService:
