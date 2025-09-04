@@ -11,10 +11,22 @@ from sqlalchemy.orm import selectinload
 import json
 import uuid
 
-from .models import (
-    User, Accreditor, Standard, File, Job, StandardMapping, 
-    Report, SystemMetrics
+from ..models import (
+    User, Accreditor, Standard
 )
+from ..models.database_schema import (
+    StandardMapping, Report
+)
+# TODO: File, Job, SystemMetrics models need to be created or services need to be updated
+# Temporarily creating placeholder classes to avoid import errors
+class File:
+    pass
+
+class Job:
+    pass
+
+class SystemMetrics:
+    pass
 from .connection import db_manager
 
 logger = logging.getLogger(__name__)

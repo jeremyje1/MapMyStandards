@@ -9,7 +9,7 @@ from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy.ext.declarative import declarative_base
 import enum
 
-from .models import Base
+from ..models.database_schema import Base
 
 # Association table for many-to-many relationship between users and teams
 user_teams = Table(
