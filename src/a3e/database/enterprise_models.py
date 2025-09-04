@@ -32,6 +32,7 @@ class UserRole(enum.Enum):
 class Team(Base):
     """Team/Organization model for multi-tenancy"""
     __tablename__ = 'teams'
+    __table_args__ = {'extend_existing': True}
     
     id: Mapped[str] = mapped_column(String, primary_key=True)
     name: Mapped[str] = mapped_column(String, nullable=False)
@@ -66,6 +67,7 @@ class Team(Base):
 class TeamInvitation(Base):
     """Invitations to join teams"""
     __tablename__ = 'team_invitations'
+    __table_args__ = {'extend_existing': True}
     
     id: Mapped[str] = mapped_column(String, primary_key=True)
     team_id: Mapped[str] = mapped_column(String, ForeignKey('teams.id'))
@@ -89,6 +91,7 @@ class TeamInvitation(Base):
 class AuditLog(Base):
     """Audit log for tracking all actions"""
     __tablename__ = 'audit_logs'
+    __table_args__ = {'extend_existing': True}
     
     id: Mapped[str] = mapped_column(String, primary_key=True)
     team_id: Mapped[str] = mapped_column(String, ForeignKey('teams.id'))
@@ -114,6 +117,7 @@ class AuditLog(Base):
 class ApiKey(Base):
     """API keys for programmatic access"""
     __tablename__ = 'api_keys'
+    __table_args__ = {'extend_existing': True}
     
     id: Mapped[str] = mapped_column(String, primary_key=True)
     team_id: Mapped[str] = mapped_column(String, ForeignKey('teams.id'))
@@ -144,6 +148,7 @@ class ApiKey(Base):
 class SessionSecurity(Base):
     """Enhanced session security tracking"""
     __tablename__ = 'session_security'
+    __table_args__ = {'extend_existing': True}
     
     id: Mapped[str] = mapped_column(String, primary_key=True)
     user_id: Mapped[str] = mapped_column(String, ForeignKey('users.id'))
@@ -161,6 +166,65 @@ class SessionSecurity(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     last_activity_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    
+    # Relationships
+    user = relationship("User")
+
+# Feature-specific models that were missing
+class OrgChart(Base):
+    """Organization chart model"""
+    __tablename__ = 'org_charts'
+    __table_args__ = {'extend_existing': True}
+    
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    team_id: Mapped[str] = mapped_column(String, ForeignKey('teams.id'))
+    user_id: Mapped[str] = mapped_column(String, ForeignKey('users.id'))
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(Text)
+    chart_data: Mapped[dict] = mapped_column(JSON, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    team = relationship("Team", back_populates="org_charts")
+    user = relationship("User")
+
+class Scenario(Base):
+    """Scenario modeling for ROI calculations"""
+    __tablename__ = 'scenarios'
+    __table_args__ = {'extend_existing': True}
+    
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    team_id: Mapped[str] = mapped_column(String, ForeignKey('teams.id'))
+    user_id: Mapped[str] = mapped_column(String, ForeignKey('users.id'))
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(Text)
+    parameters: Mapped[dict] = mapped_column(JSON, nullable=False)
+    results: Mapped[Optional[dict]] = mapped_column(JSON)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    team = relationship("Team", back_populates="scenarios")
+    user = relationship("User")
+
+class PowerBIConfig(Base):
+    """Power BI configuration for analytics"""
+    __tablename__ = 'powerbi_configs'
+    __table_args__ = {'extend_existing': True}
+    
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    user_id: Mapped[str] = mapped_column(String, ForeignKey('users.id'))
+    workspace_id: Mapped[Optional[str]] = mapped_column(String)
+    report_id: Mapped[Optional[str]] = mapped_column(String)
+    dataset_id: Mapped[Optional[str]] = mapped_column(String)
+    tenant_id: Mapped[Optional[str]] = mapped_column(String)
+    client_id: Mapped[Optional[str]] = mapped_column(String)
+    embed_token: Mapped[Optional[str]] = mapped_column(Text)
+    embed_url: Mapped[Optional[str]] = mapped_column(Text)
+    config_data: Mapped[Optional[dict]] = mapped_column(JSON)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
     user = relationship("User")
