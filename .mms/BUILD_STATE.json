@@ -411,5 +411,80 @@
       "onboarding.html - User onboarding flow"
     ],
     "readyForDeployment": true
+  },
+  "deploymentFixes": {
+    "timestamp": "2025-09-04T13:15:00Z",
+    "status": "in_progress",
+    "issues": [
+      {
+        "issue": "Stripe webhook signature error",
+        "status": "fixed",
+        "fix": "Updated STRIPE_WEBHOOK_SECRET in Railway environment to correct value: whsec_IrKVrLesP6FOD2wo08nYf6FmOf9zULTU"
+      },
+      {
+        "issue": "Database foreign key constraint error",
+        "status": "fixed", 
+        "fix": "Removed conflicting src/a3e/database/models.py file that had VARCHAR types instead of UUID"
+      },
+      {
+        "issue": "Pinecone embedding error - list has no attribute tolist",
+        "status": "fixed",
+        "fix": "Added type checking in pinecone_service.py to handle both list and numpy array types"
+      },
+      {
+        "issue": "ModuleNotFoundError: No module named 'src.a3e.database.models'",
+        "status": "fixed",
+        "fix": "Updated all imports in 15 files to use correct model sources"
+      },
+      {
+        "issue": "Database __init__.py still importing from removed models.py",
+        "status": "fixed",
+        "fix": "Updated database/__init__.py to import from correct model locations"
+      }
+    ],
+    "filesModified": [
+      "src/a3e/services/pinecone_service.py - Fixed embedding type handling",
+      "src/a3e/database/connection.py - Fixed import path to models", 
+      "src/a3e/database/__init__.py - Fixed imports from removed models.py",
+      "src/a3e/services/sso_service.py - Updated User import",
+      "src/a3e/services/analytics_service.py - Updated model imports",
+      "src/a3e/services/team_service.py - Updated User import",
+      "src/a3e/services/two_factor_service.py - Updated User import",
+      "src/a3e/services/auth_service.py - Updated User import",
+      "src/a3e/services/advanced_reporting_service.py - Updated model imports",
+      "src/a3e/api/routes/enterprise.py - Updated model imports",
+      "src/a3e/api/routes/org_chart.py - Updated OrgChart import",
+      "src/a3e/api/routes/powerbi.py - Updated PowerBIConfig import",
+      "src/a3e/api/routes/auth_db.py - Updated User import",
+      "src/a3e/api/routes/scenarios.py - Updated Scenario import",
+      "migrate_database.py - Updated Base import",
+      "clear_test_accounts.py - Updated User import",
+      "migrate_test_user.py - Updated User import", 
+      "migrations/env.py - Updated Base import"
+    ],
+    "deploymentAttempts": [
+      {
+        "id": "e815ffaf-613c-4568-b002-a6e17ff126d3",
+        "timestamp": "2025-09-04T12:57:00Z",
+        "result": "failed - import errors"
+      },
+      {
+        "id": "2a710a91-7233-4f20-8a16-5a98658f88a1", 
+        "timestamp": "2025-09-04T13:08:00Z",
+        "result": "failed - database/__init__.py import error"
+      },
+      {
+        "id": "f8f4c39d-9004-4ecb-8eff-8d9afa4ac259",
+        "timestamp": "2025-09-04T13:15:00Z",
+        "result": "pending - awaiting logs"
+      }
+    ],
+    "nextSteps": [
+      "Monitor deployment logs for any remaining import errors",
+      "Fix any additional import issues that arise",
+      "Verify API health endpoint responds correctly",
+      "Test webhook endpoint functionality",
+      "Confirm user signup flow works"
+    ]
   }
 }
