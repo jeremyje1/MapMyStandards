@@ -531,80 +531,53 @@
                 submitBtn.querySelector('.loading-spinner').style.display = 'inline-block';
                 
                 try {
-                    // Create account using the actual backend endpoint
-                    const signupResponse = await fetch('https://api.mapmystandards.ai/api/trial/signup-lite', {
+                    // Go directly to Stripe checkout for trial signup
+                    const planKey = selectedPlan;
+                    const plan = planConfigs[planKey];
+                    
+                    // Store form data temporarily for after checkout
+                    sessionStorage.setItem('pendingSignup', JSON.stringify({
+                        name: `${formData.firstName} ${formData.lastName}`,
+                        email: formData.email,
+                        password: formData.password,
+                        institution_name: formData.institutionName,
+                        institution_type: 'college',
+                        role: formData.role || 'Administrator',
+                        plan: selectedPlan
+                    }));
+                    
+                    // Create checkout session directly
+                    const checkoutResponse = await fetch('https://api.mapmystandards.ai/api/v1/billing/create-checkout-session', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({
-                            name: `${formData.firstName} ${formData.lastName}`,
-                            email: formData.email,
-                            password: formData.password,
-                            institution_name: formData.institutionName,
-                            institution_type: 'college',
-                            role: formData.role || 'Administrator',
-                            plan: selectedPlan,
-                            newsletter_opt_in: false
-                        })
-                    });
-
-                    if (!signupResponse.ok) {
-                        const error = await signupResponse.json();
-                        throw new Error(error.detail || 'Failed to create account');
-                    }
-
-                    const signupData = await signupResponse.json();
-                    
-                    // Store auth token - the API returns api_key, not access_token
-                    if (signupData.success && signupData.api_key) {
-                        localStorage.setItem('token', signupData.api_key);
-                        localStorage.setItem('user', JSON.stringify({
-                            email: formData.email,
-                            name: `${formData.firstName} ${formData.lastName}`,
-                            institution: formData.institutionName,
-                            trial_id: signupData.trial_id,
-                            expires_at: signupData.expires_at
-                        }));
-                    }
-
-                    // Create checkout session for payment method (for after trial)
-                    const planKey = selectedPlan;
-                    const plan = planConfigs[planKey];
-                    
-                    const checkoutResponse = await fetch('https://api.mapmystandards.ai/api/v1/billing/create-checkout-session', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${signupData.access_token}`
-                        },
-                        body: JSON.stringify({
                             price_id: plan.priceId,
-                            success_url: 'https://platform.mapmystandards.ai/dashboard?trial=started',
-                            cancel_url: 'https://platform.mapmystandards.ai/signup',
+                            customer_email: formData.email,
+                            success_url: 'https://platform.mapmystandards.ai/trial-success.html?session_id={CHECKOUT_SESSION_ID}',
+                            cancel_url: 'https://platform.mapmystandards.ai/trial-signup-flow.html',
                             trial_period_days: 7,
                             metadata: {
-                                user_id: signupData.user.id,
+                                signup_email: formData.email,
+                                institution_name: formData.institutionName,
                                 plan: selectedPlan
                             }
                         })
                     });
 
                     if (!checkoutResponse.ok) {
-                        // If checkout fails, still let them access dashboard (trial started)
-                        console.error('Checkout session creation failed, proceeding to dashboard');
-                        window.location.href = 'https://platform.mapmystandards.ai/dashboard?trial=started&setup=payment-pending';
-                        return;
+                        const error = await checkoutResponse.json();
+                        throw new Error(error.detail || error.error || 'Failed to create checkout session');
                     }
 
                     const checkoutData = await checkoutResponse.json();
                     
-                    // Redirect to Stripe checkout to collect payment method for after trial
+                    // Redirect to Stripe checkout
                     if (checkoutData.url) {
                         window.location.href = checkoutData.url;
                     } else {
-                        // Fallback to dashboard if no checkout URL
-                        window.location.href = 'https://platform.mapmystandards.ai/dashboard?trial=started';
+                        throw new Error('No checkout URL received');
                     }
                     
                 } catch (error) {

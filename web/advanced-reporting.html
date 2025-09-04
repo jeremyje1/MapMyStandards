@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Reporting - MapMyStandards A³E</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .card-shadow { box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
+        
+        .report-template {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .report-template:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15);
+        }
+        
+        .report-template.selected {
+            border-color: #6366f1;
+            background-color: #eef2ff;
+        }
+        
+        .schedule-item {
+            transition: all 0.2s ease;
+        }
+        
+        .schedule-item:hover {
+            background-color: #f9fafb;
+        }
+        
+        .export-format {
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        
+        .export-format:hover {
+            border-color: #e5e7eb;
+        }
+        
+        .export-format.selected {
+            border-color: #6366f1;
+            background-color: #eef2ff;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .slide-in {
+            animation: slideIn 0.3s ease-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <h1 class="text-2xl font-bold text-indigo-600">MapMyStandards A³E</h1>
+                    <span class="ml-4 text-gray-500">Advanced Reporting</span>
+                </div>
+                <nav class="flex items-center space-x-6">
+                    <a href="https://platform.mapmystandards.ai/dashboard.html" class="text-gray-600 hover:text-gray-900">Dashboard</a>
+                    <a href="https://platform.mapmystandards.ai/enterprise-dashboard-v2.html" class="text-gray-600 hover:text-gray-900">Enterprise</a>
+                    <button class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition">
+                        <i class="fas fa-plus mr-2"></i>New Report
+                    </button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Report Templates -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6">Report Templates</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Comprehensive Compliance Report -->
+                <div class="report-template bg-white rounded-xl p-6 card-shadow border-2 border-transparent" onclick="selectTemplate('comprehensive')">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="p-3 bg-blue-100 rounded-lg">
+                            <i class="fas fa-file-alt text-blue-600 text-xl"></i>
+                        </div>
+                        <span class="text-xs font-medium bg-blue-100 text-blue-800 px-2 py-1 rounded">Popular</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Comprehensive Compliance</h3>
+                    <p class="text-sm text-gray-600 mb-4">Full institutional compliance analysis with evidence mapping</p>
+                    <div class="flex items-center text-xs text-gray-500">
+                        <i class="fas fa-clock mr-1"></i>
+                        <span>45-60 pages</span>
+                        <span class="mx-2">•</span>
+                        <span>2-3 hours</span>
+                    </div>
+                </div>
+
+                <!-- Gap Analysis Report -->
+                <div class="report-template bg-white rounded-xl p-6 card-shadow border-2 border-transparent" onclick="selectTemplate('gap')">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="p-3 bg-yellow-100 rounded-lg">
+                            <i class="fas fa-exclamation-triangle text-yellow-600 text-xl"></i>
+                        </div>
+                        <span class="text-xs font-medium bg-green-100 text-green-800 px-2 py-1 rounded">Quick</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Gap Analysis</h3>
+                    <p class="text-sm text-gray-600 mb-4">Identify compliance gaps and risk areas with recommendations</p>
+                    <div class="flex items-center text-xs text-gray-500">
+                        <i class="fas fa-clock mr-1"></i>
+                        <span>15-20 pages</span>
+                        <span class="mx-2">•</span>
+                        <span>30 min</span>
+                    </div>
+                </div>
+
+                <!-- Executive Summary -->
+                <div class="report-template bg-white rounded-xl p-6 card-shadow border-2 border-transparent" onclick="selectTemplate('executive')">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="p-3 bg-purple-100 rounded-lg">
+                            <i class="fas fa-chart-line text-purple-600 text-xl"></i>
+                        </div>
+                        <span class="text-xs font-medium bg-purple-100 text-purple-800 px-2 py-1 rounded">Executive</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Executive Summary</h3>
+                    <p class="text-sm text-gray-600 mb-4">High-level overview for leadership and board presentations</p>
+                    <div class="flex items-center text-xs text-gray-500">
+                        <i class="fas fa-clock mr-1"></i>
+                        <span>5-8 pages</span>
+                        <span class="mx-2">•</span>
+                        <span>15 min</span>
+                    </div>
+                </div>
+
+                <!-- QEP Report -->
+                <div class="report-template bg-white rounded-xl p-6 card-shadow border-2 border-transparent" onclick="selectTemplate('qep')">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="p-3 bg-green-100 rounded-lg">
+                            <i class="fas fa-graduation-cap text-green-600 text-xl"></i>
+                        </div>
+                        <span class="text-xs font-medium bg-gray-100 text-gray-800 px-2 py-1 rounded">Specialized</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">QEP Progress</h3>
+                    <p class="text-sm text-gray-600 mb-4">Quality Enhancement Plan progress tracking and outcomes</p>
+                    <div class="flex items-center text-xs text-gray-500">
+                        <i class="fas fa-clock mr-1"></i>
+                        <span>25-30 pages</span>
+                        <span class="mx-2">•</span>
+                        <span>1 hour</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Report Configuration -->
+        <section class="mb-8 slide-in" id="reportConfig" style="display: none;">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6">Configure Report</h2>
+            <div class="bg-white rounded-xl p-6 card-shadow">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Left Column -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Report Settings</h3>
+                        
+                        <!-- Report Name -->
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Report Name</label>
+                            <input type="text" id="reportName" placeholder="Enter report name..." 
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+
+                        <!-- Date Range -->
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Date Range</label>
+                            <div class="grid grid-cols-2 gap-4">
+                                <input type="date" id="startDate" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <input type="date" id="endDate" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                        </div>
+
+                        <!-- Standards Selection -->
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Standards to Include</label>
+                            <div class="space-y-2 max-h-48 overflow-y-auto border border-gray-300 rounded-lg p-3">
+                                <label class="flex items-center">
+                                    <input type="checkbox" checked class="mr-2">
+                                    <span class="text-sm">All Standards</span>
+                                </label>
+                                <label class="flex items-center ml-4">
+                                    <input type="checkbox" class="mr-2">
+                                    <span class="text-sm">1. Mission and Governance</span>
+                                </label>
+                                <label class="flex items-center ml-4">
+                                    <input type="checkbox" class="mr-2">
+                                    <span class="text-sm">2. Academic Programs</span>
+                                </label>
+                                <label class="flex items-center ml-4">
+                                    <input type="checkbox" class="mr-2">
+                                    <span class="text-sm">3. Faculty Resources</span>
+                                </label>
+                                <label class="flex items-center ml-4">
+                                    <input type="checkbox" class="mr-2">
+                                    <span class="text-sm">4. Student Success</span>
+                                </label>
+                                <label class="flex items-center ml-4">
+                                    <input type="checkbox" class="mr-2">
+                                    <span class="text-sm">5. Financial Resources</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Export Options</h3>
+                        
+                        <!-- Export Format -->
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Export Format</label>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="export-format bg-gray-50 p-4 rounded-lg text-center" onclick="selectFormat('pdf')">
+                                    <i class="fas fa-file-pdf text-red-600 text-2xl mb-2"></i>
+                                    <p class="text-sm font-medium">PDF</p>
+                                </div>
+                                <div class="export-format bg-gray-50 p-4 rounded-lg text-center" onclick="selectFormat('excel')">
+                                    <i class="fas fa-file-excel text-green-600 text-2xl mb-2"></i>
+                                    <p class="text-sm font-medium">Excel</p>
+                                </div>
+                                <div class="export-format bg-gray-50 p-4 rounded-lg text-center" onclick="selectFormat('word')">
+                                    <i class="fas fa-file-word text-blue-600 text-2xl mb-2"></i>
+                                    <p class="text-sm font-medium">Word</p>
+                                </div>
+                                <div class="export-format bg-gray-50 p-4 rounded-lg text-center" onclick="selectFormat('powerpoint')">
+                                    <i class="fas fa-file-powerpoint text-orange-600 text-2xl mb-2"></i>
+                                    <p class="text-sm font-medium">PowerPoint</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Additional Options -->
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Additional Options</label>
+                            <div class="space-y-2">
+                                <label class="flex items-center">
+                                    <input type="checkbox" checked class="mr-2">
+                                    <span class="text-sm">Include evidence links</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" checked class="mr-2">
+                                    <span class="text-sm">Add executive summary</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" class="mr-2">
+                                    <span class="text-sm">Include recommendations</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" class="mr-2">
+                                    <span class="text-sm">Add visualizations</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Schedule -->
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Schedule Report</label>
+                            <select class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <option>Generate Now</option>
+                                <option>Daily</option>
+                                <option>Weekly</option>
+                                <option>Monthly</option>
+                                <option>Quarterly</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex justify-end space-x-4 mt-8 pt-6 border-t border-gray-200">
+                    <button onclick="cancelReport()" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+                        Cancel
+                    </button>
+                    <button onclick="previewReport()" class="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition">
+                        <i class="fas fa-eye mr-2"></i>Preview
+                    </button>
+                    <button onclick="generateReport()" class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
+                        <i class="fas fa-magic mr-2"></i>Generate Report
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Scheduled Reports -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6">Scheduled Reports</h2>
+            <div class="bg-white rounded-xl card-shadow overflow-hidden">
+                <table class="w-full">
+                    <thead class="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Report Name</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Schedule</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Run</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Next Run</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <tr class="schedule-item">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <i class="fas fa-file-alt text-blue-600 mr-3"></i>
+                                    <span class="text-sm font-medium text-gray-900">Monthly Compliance Report</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Comprehensive</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                    Monthly
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Dec 1, 2024</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Jan 1, 2025</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <button class="text-indigo-600 hover:text-indigo-900 mr-3">Edit</button>
+                                <button class="text-gray-600 hover:text-gray-900 mr-3">Run Now</button>
+                                <button class="text-red-600 hover:text-red-900">Delete</button>
+                            </td>
+                        </tr>
+                        <tr class="schedule-item">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <i class="fas fa-exclamation-triangle text-yellow-600 mr-3"></i>
+                                    <span class="text-sm font-medium text-gray-900">Weekly Gap Analysis</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Gap Analysis</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                    Weekly
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Dec 25, 2024</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Jan 1, 2025</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <button class="text-indigo-600 hover:text-indigo-900 mr-3">Edit</button>
+                                <button class="text-gray-600 hover:text-gray-900 mr-3">Run Now</button>
+                                <button class="text-red-600 hover:text-red-900">Delete</button>
+                            </td>
+                        </tr>
+                        <tr class="schedule-item">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <i class="fas fa-chart-line text-purple-600 mr-3"></i>
+                                    <span class="text-sm font-medium text-gray-900">Board Meeting Summary</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Executive</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
+                                    Quarterly
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Oct 1, 2024</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Jan 1, 2025</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <button class="text-indigo-600 hover:text-indigo-900 mr-3">Edit</button>
+                                <button class="text-gray-600 hover:text-gray-900 mr-3">Run Now</button>
+                                <button class="text-red-600 hover:text-red-900">Delete</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Recent Reports -->
+        <section>
+            <h2 class="text-2xl font-bold text-gray-900 mb-6">Recent Reports</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="bg-white rounded-xl p-6 card-shadow hover:shadow-xl transition">
+                    <div class="flex items-start justify-between mb-4">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900">December Compliance Report</h3>
+                            <p class="text-sm text-gray-500 mt-1">Generated on Dec 1, 2024</p>
+                        </div>
+                        <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded">Completed</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center text-sm text-gray-600">
+                            <i class="fas fa-file-pdf text-red-600 mr-2"></i>
+                            <span>PDF • 47 pages</span>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button class="text-indigo-600 hover:text-indigo-900">
+                                <i class="fas fa-download"></i>
+                            </button>
+                            <button class="text-gray-600 hover:text-gray-900">
+                                <i class="fas fa-share"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl p-6 card-shadow hover:shadow-xl transition">
+                    <div class="flex items-start justify-between mb-4">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900">Q4 Executive Summary</h3>
+                            <p class="text-sm text-gray-500 mt-1">Generated on Nov 30, 2024</p>
+                        </div>
+                        <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded">Completed</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center text-sm text-gray-600">
+                            <i class="fas fa-file-powerpoint text-orange-600 mr-2"></i>
+                            <span>PPT • 12 slides</span>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button class="text-indigo-600 hover:text-indigo-900">
+                                <i class="fas fa-download"></i>
+                            </button>
+                            <button class="text-gray-600 hover:text-gray-900">
+                                <i class="fas fa-share"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl p-6 card-shadow hover:shadow-xl transition">
+                    <div class="flex items-start justify-between mb-4">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900">Risk Assessment Report</h3>
+                            <p class="text-sm text-gray-500 mt-1">Generated on Nov 28, 2024</p>
+                        </div>
+                        <span class="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded">Processing</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center text-sm text-gray-600">
+                            <i class="fas fa-file-excel text-green-600 mr-2"></i>
+                            <span>Excel • Generating...</span>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button class="text-gray-400 cursor-not-allowed" disabled>
+                                <i class="fas fa-download"></i>
+                            </button>
+                            <button class="text-gray-400 cursor-not-allowed" disabled>
+                                <i class="fas fa-share"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script>
+        const API_BASE = 'https://api.mapmystandards.ai/api';
+        let selectedTemplate = null;
+        let selectedFormat = 'pdf';
+        
+        // Get auth headers
+        function getAuthHeaders() {
+            const token = localStorage.getItem('api_key') || localStorage.getItem('token');
+            return token ? { 'Authorization': `Bearer ${token}` } : {};
+        }
+
+        // Select report template
+        function selectTemplate(template) {
+            selectedTemplate = template;
+            
+            // Update UI
+            document.querySelectorAll('.report-template').forEach(el => {
+                el.classList.remove('selected');
+            });
+            event.target.closest('.report-template').classList.add('selected');
+            
+            // Show configuration section
+            document.getElementById('reportConfig').style.display = 'block';
+            document.getElementById('reportConfig').scrollIntoView({ behavior: 'smooth' });
+            
+            // Set default name based on template
+            const names = {
+                'comprehensive': 'Comprehensive Compliance Report',
+                'gap': 'Gap Analysis Report',
+                'executive': 'Executive Summary',
+                'qep': 'QEP Progress Report'
+            };
+            document.getElementById('reportName').value = names[template] + ' - ' + new Date().toLocaleDateString();
+        }
+
+        // Select export format
+        function selectFormat(format) {
+            selectedFormat = format;
+            
+            // Update UI
+            document.querySelectorAll('.export-format').forEach(el => {
+                el.classList.remove('selected');
+            });
+            event.target.closest('.export-format').classList.add('selected');
+        }
+
+        // Cancel report
+        function cancelReport() {
+            document.getElementById('reportConfig').style.display = 'none';
+            selectedTemplate = null;
+            document.querySelectorAll('.report-template').forEach(el => {
+                el.classList.remove('selected');
+            });
+        }
+
+        // Preview report
+        async function previewReport() {
+            if (!selectedTemplate) {
+                showNotification('Please select a report template', 'warning');
+                return;
+            }
+
+            try {
+                const reportData = gatherReportData();
+                
+                // Open preview in new window
+                const previewWindow = window.open('', 'Report Preview', 'width=800,height=600');
+                previewWindow.document.write(`
+                    <html>
+                    <head>
+                        <title>Report Preview - ${reportData.name}</title>
+                        <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+                    </head>
+                    <body class="p-8">
+                        <h1 class="text-2xl font-bold mb-4">${reportData.name}</h1>
+                        <p class="text-gray-600 mb-6">Preview generated on ${new Date().toLocaleString()}</p>
+                        <div class="prose max-w-none">
+                            <h2 class="text-xl font-semibold mb-2">Report Configuration</h2>
+                            <ul>
+                                <li>Template: ${selectedTemplate}</li>
+                                <li>Date Range: ${reportData.startDate} to ${reportData.endDate}</li>
+                                <li>Format: ${selectedFormat.toUpperCase()}</li>
+                            </ul>
+                            <p class="mt-4 text-gray-500">Full report will be generated with actual data...</p>
+                        </div>
+                    </body>
+                    </html>
+                `);
+                
+                showNotification('Preview opened in new window', 'success');
+            } catch (error) {
+                showNotification('Failed to generate preview', 'error');
+            }
+        }
+
+        // Generate report
+        async function generateReport() {
+            if (!selectedTemplate) {
+                showNotification('Please select a report template', 'warning');
+                return;
+            }
+
+            try {
+                const reportData = gatherReportData();
+                showNotification('Generating report...', 'info');
+
+                const response = await axios.post(`${API_BASE}/reports/generate`, {
+                    template: selectedTemplate,
+                    format: selectedFormat,
+                    ...reportData
+                }, { headers: getAuthHeaders() });
+
+                if (response.data.download_url) {
+                    // Download the report
+                    window.open(response.data.download_url, '_blank');
+                    showNotification('Report generated successfully!', 'success');
+                    
+                    // Reset form
+                    cancelReport();
+                    
+                    // Refresh recent reports
+                    setTimeout(() => location.reload(), 2000);
+                } else {
+                    showNotification('Report queued for generation', 'info');
+                }
+            } catch (error) {
+                showNotification('Failed to generate report', 'error');
+            }
+        }
+
+        // Gather report data from form
+        function gatherReportData() {
+            return {
+                name: document.getElementById('reportName').value,
+                startDate: document.getElementById('startDate').value,
+                endDate: document.getElementById('endDate').value,
+                standards: Array.from(document.querySelectorAll('input[type="checkbox"]:checked'))
+                    .map(cb => cb.nextElementSibling.textContent.trim()),
+                includeEvidence: document.querySelector('input[type="checkbox"][checked]').checked,
+                includeExecutiveSummary: true,
+                includeRecommendations: true,
+                includeVisualizations: true
+            };
+        }
+
+        // Show notification
+        function showNotification(message, type) {
+            const toast = document.createElement('div');
+            toast.className = `fixed top-4 right-4 px-6 py-3 rounded-lg text-white ${
+                type === 'success' ? 'bg-green-500' :
+                type === 'error' ? 'bg-red-500' :
+                type === 'warning' ? 'bg-yellow-500' :
+                'bg-blue-500'
+            } shadow-lg transform transition-all duration-300 translate-x-full`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.remove('translate-x-full');
+            }, 100);
+            
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Set default dates
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date();
+            const thirtyDaysAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+            
+            document.getElementById('endDate').value = today.toISOString().split('T')[0];
+            document.getElementById('startDate').value = thirtyDaysAgo.toISOString().split('T')[0];
+        });
+    </script>
+</body>
+</html>

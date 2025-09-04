@@ -364,6 +364,20 @@
     try {
       state.email = sessionStorage.getItem('a3e_pending_email') || localStorage.getItem('a3e_user_email') || null;
       state.apiKey = sessionStorage.getItem('a3e_pending_api_key') || localStorage.getItem('a3e_api_key') || null;
+      
+      // Also check for user data from trial success page
+      if (!state.email) {
+        const userDataStr = localStorage.getItem('user');
+        if (userDataStr) {
+          try {
+            const userData = JSON.parse(userDataStr);
+            state.email = userData.email;
+            state.data.email = userData.email;
+            state.data.institution = userData.institution;
+          } catch(e) { console.warn('Unable to parse user data', e); }
+        }
+      }
+      
       if(state.email){ state.data.email = state.email; }
       
       // Load signup data for pre-population

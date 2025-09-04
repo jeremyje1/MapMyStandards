@@ -12,7 +12,7 @@ from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 import asyncpg
 
-from .models import Base
+from ..models import Base
 
 logger = logging.getLogger(__name__)
 
@@ -159,7 +159,7 @@ class DatabaseManager:
     
     async def _seed_sacscoc_data(self, session: AsyncSession):
         """Seed SACSCOC accreditor and standards"""
-        from .models import Accreditor, Standard
+        from ..models import Accreditor, Standard
         
         # Create SACSCOC accreditor
         accreditor = Accreditor(

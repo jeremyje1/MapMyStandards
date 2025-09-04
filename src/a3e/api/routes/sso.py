@@ -31,6 +31,44 @@ class SSOProviderInfo(BaseModel):
     enabled: bool
     icon: str
 
+# Add current user dependency
+async def get_current_user(
+    request: Request,
+    db: AsyncSession = Depends(get_db)
+):
+    """Get current user from session token"""
+    # Check for session token in cookie or Authorization header
+    token = None
+    
+    # Check cookie
+    if "session_token" in request.cookies:
+        token = request.cookies["session_token"]
+    
+    # Check Authorization header
+    auth_header = request.headers.get("Authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        token = auth_header.split(" ")[1]
+    
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated"
+        )
+    
+    # Validate token and get user
+    user = await SSOService.validate_session_token(db, token)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired session"
+        )
+    
+    return {
+        "id": user.id,
+        "email": user.email,
+        "role": getattr(user, "role", "user")
+    }
+
 # Routes
 @router.get("/providers", response_model=Dict[str, SSOProviderInfo])
 async def get_sso_providers():
@@ -138,4 +176,83 @@ async def sso_callback(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="SSO authentication failed"
+        )
+
+class SSOConfiguration(BaseModel):
+    provider: str
+    client_id: Optional[str] = None
+    client_secret: Optional[str] = None
+    tenant_id: Optional[str] = None
+    allowed_domains: Optional[list[str]] = None
+    auth_url: Optional[str] = None
+    token_url: Optional[str] = None
+    entity_id: Optional[str] = None
+    sso_url: Optional[str] = None
+    certificate: Optional[str] = None
+
+@router.post("/configure")
+async def configure_sso(
+    config: SSOConfiguration,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """Configure SSO provider (admin only)"""
+    if current_user.get("role") not in ["admin", "owner"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only administrators can configure SSO"
+        )
+    
+    try:
+        result = await SSOService.configure_provider(
+            db=db,
+            provider_name=config.provider,
+            config=config.dict(exclude_unset=True)
+        )
+        
+        # Log the configuration change
+        await AuditService.log_action(
+            db=db,
+            user_id=current_user["id"],
+            action="configure",
+            resource_type="sso",
+            resource_id=config.provider,
+            details={"provider": config.provider}
+        )
+        
+        return {"success": True, "message": f"{config.provider} SSO configured successfully"}
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to configure SSO: {str(e)}"
+        )
+
+@router.get("/configurations")
+async def get_sso_configurations(
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """Get SSO configurations (admin only)"""
+    if current_user.get("role") not in ["admin", "owner"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only administrators can view SSO configurations"
+        )
+    
+    try:
+        configurations = await SSOService.get_configurations(db)
+        # Remove sensitive data
+        for provider, config in configurations.items():
+            if "client_secret" in config:
+                config["client_secret"] = "***"
+            if "certificate" in config and config["certificate"]:
+                config["certificate"] = "*** REDACTED ***"
+        
+        return configurations
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve SSO configurations"
         )

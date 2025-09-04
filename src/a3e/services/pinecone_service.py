@@ -134,7 +134,10 @@ class PineconeVectorService:
                     text += f" {standard.full_text}"
                 
                 # Generate embedding
-                embedding = self.embedding_model.encode(text).tolist()
+                embedding = self.embedding_model.encode(text)
+                # Convert to list if it's not already (handles both numpy arrays and lists)
+                if hasattr(embedding, 'tolist'):
+                    embedding = embedding.tolist()
                 
                 # Prepare vector data
                 metadata = {
@@ -181,7 +184,10 @@ class PineconeVectorService:
         
         try:
             # Generate query embedding
-            query_embedding = self.embedding_model.encode(query).tolist()
+            query_embedding = self.embedding_model.encode(query)
+            # Convert to list if it's not already (handles both numpy arrays and lists)
+            if hasattr(query_embedding, 'tolist'):
+                query_embedding = query_embedding.tolist()
             
             # Perform search
             results = self.index.query(

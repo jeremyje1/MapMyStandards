@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSO Configuration - MapMyStandards A³E</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .card-shadow { box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <div class="flex-shrink-0 flex items-center">
+                        <h1 class="text-2xl font-bold text-indigo-600">MapMyStandards A³E</h1>
+                    </div>
+                    <div class="hidden md:ml-6 md:flex md:space-x-8">
+                        <a href="https://platform.mapmystandards.ai/dashboard.html" class="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Dashboard</a>
+                        <a href="https://platform.mapmystandards.ai/team-settings.html" class="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Teams</a>
+                        <a href="https://platform.mapmystandards.ai/sso-settings.html" class="text-gray-900 px-3 py-2 rounded-md text-sm font-semibold">SSO</a>
+                        <a href="https://platform.mapmystandards.ai/powerbi-dashboard.html" class="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Analytics</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="mb-8">
+            <h2 class="text-3xl font-bold text-gray-900">Single Sign-On Configuration</h2>
+            <p class="mt-2 text-gray-600">Configure SSO providers for your organization</p>
+        </div>
+
+        <!-- SSO Providers -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <!-- Google SSO -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center">
+                        <i class="fab fa-google text-2xl text-red-500 mr-3"></i>
+                        <h3 class="text-xl font-semibold">Google Workspace</h3>
+                    </div>
+                    <div class="toggle-container">
+                        <label class="switch">
+                            <input type="checkbox" id="google-sso-toggle" onchange="toggleProvider('google')">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+                <div id="google-config" class="hidden">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Client ID</label>
+                            <input type="text" id="google-client-id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Client Secret</label>
+                            <input type="password" id="google-client-secret" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Allowed Domains</label>
+                            <input type="text" id="google-allowed-domains" placeholder="example.com, company.com" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        </div>
+                        <button onclick="saveGoogleConfig()" class="w-full bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">
+                            Save Configuration
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Microsoft SSO -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center">
+                        <i class="fab fa-microsoft text-2xl text-blue-600 mr-3"></i>
+                        <h3 class="text-xl font-semibold">Microsoft Azure AD</h3>
+                    </div>
+                    <div class="toggle-container">
+                        <label class="switch">
+                            <input type="checkbox" id="microsoft-sso-toggle" onchange="toggleProvider('microsoft')">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+                <div id="microsoft-config" class="hidden">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Tenant ID</label>
+                            <input type="text" id="microsoft-tenant-id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Client ID</label>
+                            <input type="text" id="microsoft-client-id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Client Secret</label>
+                            <input type="password" id="microsoft-client-secret" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        </div>
+                        <button onclick="saveMicrosoftConfig()" class="w-full bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">
+                            Save Configuration
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SAML SSO -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center">
+                        <i class="fas fa-shield-alt text-2xl text-green-600 mr-3"></i>
+                        <h3 class="text-xl font-semibold">SAML 2.0</h3>
+                    </div>
+                    <div class="toggle-container">
+                        <label class="switch">
+                            <input type="checkbox" id="saml-sso-toggle" onchange="toggleProvider('saml')">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+                <div id="saml-config" class="hidden">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Entity ID</label>
+                            <input type="text" id="saml-entity-id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">SSO URL</label>
+                            <input type="url" id="saml-sso-url" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">X.509 Certificate</label>
+                            <textarea id="saml-certificate" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></textarea>
+                        </div>
+                        <button onclick="saveSAMLConfig()" class="w-full bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">
+                            Save Configuration
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- OAuth 2.0 Generic -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center">
+                        <i class="fas fa-key text-2xl text-purple-600 mr-3"></i>
+                        <h3 class="text-xl font-semibold">Custom OAuth 2.0</h3>
+                    </div>
+                    <div class="toggle-container">
+                        <label class="switch">
+                            <input type="checkbox" id="oauth-sso-toggle" onchange="toggleProvider('oauth')">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+                <div id="oauth-config" class="hidden">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Authorization URL</label>
+                            <input type="url" id="oauth-auth-url" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Token URL</label>
+                            <input type="url" id="oauth-token-url" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Client ID</label>
+                            <input type="text" id="oauth-client-id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Client Secret</label>
+                            <input type="password" id="oauth-client-secret" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        </div>
+                        <button onclick="saveOAuthConfig()" class="w-full bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">
+                            Save Configuration
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SSO Test Section -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-xl font-semibold mb-4">Test SSO Configuration</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Select Provider</label>
+                    <select id="test-provider" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <option value="">Choose a provider...</option>
+                        <option value="google">Google Workspace</option>
+                        <option value="microsoft">Microsoft Azure AD</option>
+                        <option value="saml">SAML 2.0</option>
+                        <option value="oauth">Custom OAuth 2.0</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Test Email</label>
+                    <input type="email" id="test-email" placeholder="user@example.com" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                </div>
+            </div>
+            <button onclick="testSSO()" class="mt-4 bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700">
+                <i class="fas fa-play mr-2"></i> Test SSO Login
+            </button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script>
+        const API_BASE = 'https://api.mapmystandards.ai/api';
+        
+        // Get auth headers
+        function getAuthHeaders() {
+            const token = localStorage.getItem('api_key') || localStorage.getItem('token');
+            return token ? { 'Authorization': `Bearer ${token}` } : {};
+        }
+
+        // Toggle provider configuration
+        function toggleProvider(provider) {
+            const toggle = document.getElementById(`${provider}-sso-toggle`);
+            const config = document.getElementById(`${provider}-config`);
+            
+            if (toggle.checked) {
+                config.classList.remove('hidden');
+            } else {
+                config.classList.add('hidden');
+            }
+        }
+
+        // Save Google configuration
+        async function saveGoogleConfig() {
+            try {
+                const config = {
+                    provider: 'google',
+                    client_id: document.getElementById('google-client-id').value,
+                    client_secret: document.getElementById('google-client-secret').value,
+                    allowed_domains: document.getElementById('google-allowed-domains').value.split(',').map(d => d.trim())
+                };
+
+                await axios.post(`${API_BASE}/sso/configure`, config, { headers: getAuthHeaders() });
+                showNotification('Google SSO configuration saved successfully!', 'success');
+            } catch (error) {
+                showNotification('Failed to save Google SSO configuration', 'error');
+            }
+        }
+
+        // Save Microsoft configuration
+        async function saveMicrosoftConfig() {
+            try {
+                const config = {
+                    provider: 'microsoft',
+                    tenant_id: document.getElementById('microsoft-tenant-id').value,
+                    client_id: document.getElementById('microsoft-client-id').value,
+                    client_secret: document.getElementById('microsoft-client-secret').value
+                };
+
+                await axios.post(`${API_BASE}/sso/configure`, config, { headers: getAuthHeaders() });
+                showNotification('Microsoft SSO configuration saved successfully!', 'success');
+            } catch (error) {
+                showNotification('Failed to save Microsoft SSO configuration', 'error');
+            }
+        }
+
+        // Save SAML configuration
+        async function saveSAMLConfig() {
+            try {
+                const config = {
+                    provider: 'saml',
+                    entity_id: document.getElementById('saml-entity-id').value,
+                    sso_url: document.getElementById('saml-sso-url').value,
+                    certificate: document.getElementById('saml-certificate').value
+                };
+
+                await axios.post(`${API_BASE}/sso/configure`, config, { headers: getAuthHeaders() });
+                showNotification('SAML SSO configuration saved successfully!', 'success');
+            } catch (error) {
+                showNotification('Failed to save SAML SSO configuration', 'error');
+            }
+        }
+
+        // Save OAuth configuration
+        async function saveOAuthConfig() {
+            try {
+                const config = {
+                    provider: 'oauth',
+                    auth_url: document.getElementById('oauth-auth-url').value,
+                    token_url: document.getElementById('oauth-token-url').value,
+                    client_id: document.getElementById('oauth-client-id').value,
+                    client_secret: document.getElementById('oauth-client-secret').value
+                };
+
+                await axios.post(`${API_BASE}/sso/configure`, config, { headers: getAuthHeaders() });
+                showNotification('OAuth SSO configuration saved successfully!', 'success');
+            } catch (error) {
+                showNotification('Failed to save OAuth SSO configuration', 'error');
+            }
+        }
+
+        // Test SSO
+        async function testSSO() {
+            const provider = document.getElementById('test-provider').value;
+            const email = document.getElementById('test-email').value;
+
+            if (!provider || !email) {
+                showNotification('Please select a provider and enter an email', 'warning');
+                return;
+            }
+
+            try {
+                const response = await axios.get(`${API_BASE}/sso/initiate/${provider}`, {
+                    params: { test_email: email },
+                    headers: getAuthHeaders()
+                });
+
+                // Open SSO login in new window
+                window.open(response.data.auth_url, 'sso-test', 'width=500,height=600');
+                showNotification('SSO test initiated. Check the popup window.', 'info');
+            } catch (error) {
+                showNotification('Failed to initiate SSO test', 'error');
+            }
+        }
+
+        // Show notification
+        function showNotification(message, type) {
+            // Create toast notification
+            const toast = document.createElement('div');
+            toast.className = `fixed top-4 right-4 px-6 py-3 rounded-lg text-white ${
+                type === 'success' ? 'bg-green-500' :
+                type === 'error' ? 'bg-red-500' :
+                type === 'warning' ? 'bg-yellow-500' :
+                'bg-blue-500'
+            }`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        // Load existing configurations on page load
+        async function loadConfigurations() {
+            try {
+                const response = await axios.get(`${API_BASE}/sso/configurations`, {
+                    headers: getAuthHeaders()
+                });
+
+                // Populate forms with existing configurations
+                if (response.data.google) {
+                    document.getElementById('google-sso-toggle').checked = true;
+                    toggleProvider('google');
+                    document.getElementById('google-client-id').value = response.data.google.client_id || '';
+                    document.getElementById('google-allowed-domains').value = (response.data.google.allowed_domains || []).join(', ');
+                }
+
+                if (response.data.microsoft) {
+                    document.getElementById('microsoft-sso-toggle').checked = true;
+                    toggleProvider('microsoft');
+                    document.getElementById('microsoft-tenant-id').value = response.data.microsoft.tenant_id || '';
+                    document.getElementById('microsoft-client-id').value = response.data.microsoft.client_id || '';
+                }
+
+                // Similar for SAML and OAuth
+            } catch (error) {
+                console.error('Failed to load SSO configurations:', error);
+            }
+        }
+
+        // Load configurations on page load
+        window.addEventListener('DOMContentLoaded', loadConfigurations);
+    </script>
+
+    <style>
+        /* Toggle switch styles */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+        }
+
+        input:checked + .slider {
+            background-color: #4f46e5;
+        }
+
+        input:focus + .slider {
+            box-shadow: 0 0 1px #4f46e5;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .slider.round {
+            border-radius: 34px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* Form input styles */
+        input[type="text"],
+        input[type="email"],
+        input[type="url"],
+        input[type="password"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            line-height: 1.25rem;
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="url"]:focus,
+        input[type="password"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+    </style>
+</body>
+</html>

@@ -368,6 +368,86 @@
                 }
                 loadTrial();
         
+        <script>
+        // Handle Stripe checkout completion and account creation
+        async function handleStripeCheckoutSuccess() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const sessionId = urlParams.get('session_id');
+            
+            if (sessionId) {
+                // This is a Stripe checkout success - complete account creation
+                try {
+                    // Get stored signup data
+                    const pendingSignup = sessionStorage.getItem('pendingSignup');
+                    if (!pendingSignup) {
+                        console.error('No pending signup data found');
+                        return;
+                    }
+
+                    const signupData = JSON.parse(pendingSignup);
+
+                    // Verify the Stripe session
+                    const sessionResponse = await fetch(`https://api.mapmystandards.ai/api/v1/billing/verify-session/${sessionId}`);
+                    if (!sessionResponse.ok) {
+                        throw new Error('Failed to verify payment session');
+                    }
+
+                    const sessionData = await sessionResponse.json();
+
+                    // Create the user account now that payment is confirmed
+                    const accountResponse = await fetch('https://api.mapmystandards.ai/api/trial/signup', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            ...signupData,
+                            payment_method_id: 'from_checkout_session',
+                            stripe_customer_id: sessionData.customer_id,
+                            stripe_subscription_id: sessionData.subscription_id
+                        })
+                    });
+
+                    if (!accountResponse.ok) {
+                        const error = await accountResponse.json();
+                        throw new Error(error.detail || 'Failed to create account');
+                    }
+
+                    const accountData = await accountResponse.json();
+
+                    // Store auth token
+                    if (accountData.success && accountData.api_key) {
+                        localStorage.setItem('token', accountData.api_key);
+                        localStorage.setItem('a3e_api_key', accountData.api_key);
+                        localStorage.setItem('a3e_user_email', signupData.email);
+                        localStorage.setItem('user', JSON.stringify({
+                            email: signupData.email,
+                            name: signupData.name,
+                            institution: signupData.institution_name,
+                            trial_id: accountData.trial_id,
+                            expires_at: accountData.expires_at
+                        }));
+                        
+                        // Store signup data for onboarding page
+                        sessionStorage.setItem('a3e_signup_data', JSON.stringify(signupData));
+                        sessionStorage.setItem('a3e_pending_email', signupData.email);
+                        sessionStorage.setItem('a3e_pending_api_key', accountData.api_key);
+                    }
+
+                    // Clear pending signup data
+                    sessionStorage.removeItem('pendingSignup');
+
+                    console.log('Account created successfully after Stripe checkout');
+
+                } catch (error) {
+                    console.error('Error completing account setup:', error);
+                }
+            }
+        }
+
+        // Run the Stripe checkout handler on page load
+        document.addEventListener('DOMContentLoaded', handleStripeCheckoutSuccess);
+        
     // Auto-redirect to onboarding after 12 seconds
     let countdown = 12;
         const countdownElement = document.getElementById('countdown');
