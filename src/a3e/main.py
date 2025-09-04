@@ -116,7 +116,7 @@ except Exception as e:  # Broad except to catch ImportError + transitive errors
     _agent_orchestrator_import_exception = e
 # Import auth router separately to handle any import issues
 try:
-    from .api.routes.auth import router as auth_router
+    from .api.routes.auth_db import router as auth_router
     auth_router_available = True
 except ImportError as e:
     auth_router_available = False
