@@ -744,5 +744,22 @@
     "readyForProduction": true,
     "estimatedUserCapacity": "1000+ concurrent users",
     "performanceOptimized": true
+  },
+  "deploymentProgress": {
+    "timestamp": "2025-09-04T17:00:00Z",
+    "status": "in_progress",
+    "stepsCompleted": [
+      "✅ Code changes committed and pushed to GitHub",
+      "✅ Railway deployment triggered automatically",
+      "✅ Created database fix script (apply_database_fix.py)",
+      "✅ Created manual fix instructions (MANUAL_DATABASE_FIX.md)"
+    ],
+    "pendingSteps": [
+      "⏳ Apply database fix for agent_workflows table",
+      "⏳ Verify deployment logs show no foreign key errors",
+      "⏳ Confirm all services are operational"
+    ],
+    "deploymentCommit": "dab9e81",
+    "notes": "Database fix needs to be applied either via Railway console or by running apply_database_fix.py in the Railway environment"
   }
 }
