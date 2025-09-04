@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import update
 import logging
 
-from ..database.models import User
+from ..models.user import User
 from ..database.enterprise_models import SessionSecurity
 
 logger = logging.getLogger(__name__)

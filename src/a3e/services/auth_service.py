@@ -12,7 +12,7 @@ from sqlalchemy import select, and_, or_, update
 from fastapi import HTTPException, status
 import logging
 
-from ..database.models import User
+from ..models.user import User
 from ..database.enterprise_models import Team, UserRole, user_teams, ApiKey, SessionSecurity
 from .team_service import TeamService
 

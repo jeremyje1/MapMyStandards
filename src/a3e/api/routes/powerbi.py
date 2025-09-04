@@ -15,7 +15,7 @@ from typing import AsyncGenerator
 from ...database.connection import db_manager
 from ..dependencies import get_current_user, has_active_subscription
 from ...models import User
-from ...database.models import PowerBIConfig as PowerBIConfigModel
+from ...database.enterprise_models import PowerBIConfig as PowerBIConfigModel
 from ...services.powerbi_service import create_powerbi_service, PowerBIService
 
 router = APIRouter()

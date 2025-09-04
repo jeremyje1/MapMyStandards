@@ -16,7 +16,7 @@ from sqlalchemy import select
 import logging
 import base64
 
-from ..database.models import User
+from ..models.user import User
 from ..database.enterprise_models import Team, SessionSecurity
 from ..services.team_service import TeamService
 from ..core.config import get_settings
@@ -409,7 +409,7 @@ class SSOService:
             user_id = parts[1]
             
             # Get user from database
-            from ..database.models import User
+            from ..models.user import User
             stmt = select(User).where(User.id == user_id, User.is_active.is_(True))
             result = await db.execute(stmt)
             user = result.scalar_one_or_none()

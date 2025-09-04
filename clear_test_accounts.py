@@ -9,7 +9,7 @@ import asyncio
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
 from src.a3e.database.connection import db_manager
-from src.a3e.database.models import User
+from src.a3e.models.user import User
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 

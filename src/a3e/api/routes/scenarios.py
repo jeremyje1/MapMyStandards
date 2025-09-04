@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ...database.connection import db_manager
 from ..dependencies import get_current_user, has_active_subscription
 from ...models import User
-from ...database.models import Scenario
+from ...database.enterprise_models import Scenario
 from ...services.subscription_value_engine import SubscriptionValueEngine
 
 router = APIRouter()

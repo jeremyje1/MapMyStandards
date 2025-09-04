@@ -13,7 +13,7 @@ from sqlalchemy.orm import selectinload
 import hashlib
 
 from ..database.enterprise_models import Team, TeamInvitation, UserRole, user_teams
-from ..database.models import User
+from ..models.user import User
 from ..core.config import get_settings
 import logging
 
