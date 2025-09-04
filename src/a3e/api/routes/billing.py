@@ -578,7 +578,61 @@ async def stripe_webhook(request: Request):
                 except Exception as e:
                     logger.error(f"Error sending emails for checkout completion: {e}")
                 
-                # TODO: Update user subscription status in database
+                # Create user in database
+                try:
+                    from ...models.user import User
+                    from ...services.database_service import DatabaseService
+                    from ...core.config import get_settings
+                    import secrets
+                    from datetime import datetime, timedelta
+                    
+                    settings = get_settings()
+                    db_service = DatabaseService(settings.database_url)
+                    
+                    async with db_service.get_session() as db:
+                        # Check if user already exists
+                        from sqlalchemy import select
+                        stmt = select(User).where(User.email == customer_email)
+                        result = await db.execute(stmt)
+                        existing_user = result.scalar_one_or_none()
+                        
+                        if not existing_user:
+                            # Create new user
+                            user = User(
+                                email=customer_email,
+                                name=customer_name,
+                                password_hash="pending_reset",  # User will need to set password via reset
+                                institution_name=metadata.get("institution_name", ""),
+                                institution_type=metadata.get("institution_type", "college"),
+                                role=metadata.get("role", "Administrator"),
+                                is_trial=True,  # Even paid users start with trial period
+                                trial_started_at=datetime.utcnow(),
+                                trial_ends_at=datetime.utcnow() + timedelta(days=7),
+                                subscription_tier=plan_name.lower(),
+                                stripe_customer_id=stripe_customer_id,
+                                stripe_subscription_id=subscription_id,
+                                api_key=secrets.token_urlsafe(32),
+                                api_key_created_at=datetime.utcnow(),
+                                is_active=True,
+                                is_verified=True,  # Verified via Stripe checkout
+                                email_verified_at=datetime.utcnow()
+                            )
+                            db.add(user)
+                            await db.commit()
+                            logger.info(f"✅ Created user in database: {customer_email}")
+                        else:
+                            # Update existing user
+                            existing_user.stripe_customer_id = stripe_customer_id
+                            existing_user.stripe_subscription_id = subscription_id
+                            existing_user.subscription_tier = plan_name.lower()
+                            existing_user.is_active = True
+                            existing_user.is_verified = True
+                            existing_user.email_verified_at = datetime.utcnow()
+                            await db.commit()
+                            logger.info(f"✅ Updated existing user in database: {customer_email}")
+                            
+                except Exception as e:
+                    logger.error(f"Error creating/updating user in database: {e}")
                 
         elif event_type == "payment_intent.succeeded":
             # Handle successful payment
