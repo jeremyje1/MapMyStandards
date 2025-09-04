@@ -480,6 +480,16 @@
         "issue": "WARNING: Agent orchestrator unavailable",
         "status": "deferred",
         "fix": "Temporarily disabled pyautogen to avoid dependency conflicts"
+      },
+      {
+        "issue": "CRITICAL: NameError: name 'openai' is not defined",
+        "status": "fixed",
+        "fix": "Added openai==1.6.1 to requirements-production.txt"
+      },
+      {
+        "issue": "CRITICAL: Missing database tables causing foreign key errors",
+        "status": "fixed",
+        "fix": "Created institution_accreditor, evidence, and evidence_standard tables"
       }
     ],
     "filesModified": [
@@ -550,6 +560,11 @@
         "id": "7b34142",
         "timestamp": "2025-09-04T14:30:00Z",
         "result": "deployed - optimized production requirements and fixed service warnings"
+      },
+      {
+        "id": "080b576",
+        "timestamp": "2025-09-04T14:45:00Z",
+        "result": "CRITICAL FIX - added openai dependency and created missing database tables"
       }
     ],
     "completedSteps": [
@@ -570,17 +585,19 @@
     "tablesCreated": [
       "teams", "team_invitations", "user_teams",
       "org_charts", "scenarios", "powerbi_configs",
-      "audit_logs", "api_keys", "session_security"
+      "audit_logs", "api_keys", "session_security",
+      "institution_accreditor", "evidence", "evidence_standard"
     ],
-    "finalStatus": "Production deployment optimized with all critical services operational",
+    "finalStatus": "Critical issues fixed - deployment should be stable",
     "serviceStatus": {
       "email": "✅ Configured with Postmark API",
       "documentProcessing": "✅ Essential libraries included",
       "fileUpload": "✅ Should work with simplified dependencies",
       "embeddings": "⚠️ Disabled for memory optimization",
       "agentOrchestration": "⚠️ Disabled to avoid conflicts",
-      "database": "✅ All tables created and verified",
-      "api": "✅ Starting successfully with minimal warnings"
+      "database": "✅ All 12 required tables created and verified",
+      "api": "✅ Fixed critical startup error with openai",
+      "llmService": "✅ OpenAI and Anthropic clients now available"
     },
     "performanceOptimizations": [
       "Created lightweight requirements-production.txt",
