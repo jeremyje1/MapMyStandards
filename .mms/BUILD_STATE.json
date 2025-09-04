@@ -450,6 +450,11 @@
         "issue": "services.py importing from removed models.py",
         "status": "fixed",
         "fix": "Updated imports and added placeholder classes for missing File, Job, SystemMetrics models"
+      },
+      {
+        "issue": "SQLAlchemy InvalidRequestError: Table 'user_teams' already defined",
+        "status": "fixed",
+        "fix": "Added extend_existing=True to all Table definitions to allow redefinition"
       }
     ],
     "filesModified": [
@@ -471,8 +476,9 @@
       "clear_test_accounts.py - Updated User import",
       "migrate_test_user.py - Updated User import", 
       "migrations/env.py - Updated Base import",
-      "src/a3e/database/enterprise_models.py - Fixed Base import path",
-      "src/a3e/database/services.py - Fixed model imports and added placeholders"
+      "src/a3e/database/enterprise_models.py - Fixed Base import path and added extend_existing",
+      "src/a3e/database/services.py - Fixed model imports and added placeholders",
+      "src/a3e/models/__init__.py - Added extend_existing to association tables"
     ],
     "deploymentAttempts": [
       {
@@ -494,15 +500,22 @@
         "id": "bcc22a5",
         "timestamp": "2025-09-04T13:30:00Z",
         "result": "deployed - all import errors fixed, deployment pushed to Railway"
+      },
+      {
+        "id": "4bfbea4",
+        "timestamp": "2025-09-04T13:45:00Z",
+        "result": "deployed - fixed SQLAlchemy table definition conflicts"
       }
     ],
     "completedSteps": [
       "Fixed all database model import errors",
       "Removed conflicting models.py file",
-      "Updated 17 files to use correct import paths",
+      "Updated 19 files to use correct import paths",
       "Added placeholder classes for missing models",
-      "Deployed fixes to Railway production"
+      "Fixed SQLAlchemy table redefinition errors",
+      "Added extend_existing=True to all association tables",
+      "Deployed all fixes to Railway production"
     ],
-    "finalStatus": "All import errors resolved, deployment complete"
+    "finalStatus": "All import and table definition errors resolved, deployment complete"
   }
 }
