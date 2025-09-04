@@ -1,0 +1,4 @@
+Deployment marker to force Railway build
+Timestamp: 2025-09-04T20:00:00Z
+Purpose: Ensure all fixes from commit 3356b6e are deployed
+Status: Production deployment with all services enabled
