@@ -543,6 +543,7 @@ async def stripe_webhook(request: Request):
                 
                 # Send welcome email to customer
                 try:
+                    # Use the regular email service which has the proper methods
                     from ...services.email_service import email_service
                     
                     # Extract customer name if available
