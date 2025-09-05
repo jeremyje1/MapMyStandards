@@ -246,6 +246,12 @@
         // Pre-fill email if available
         document.getElementById('email').value = customerEmail;
         
+        // Store email in session/local storage for onboarding page
+        if (customerEmail) {
+            localStorage.setItem('a3e_user_email', customerEmail);
+            sessionStorage.setItem('a3e_pending_email', customerEmail);
+        }
+        
         // If no session ID, something went wrong
         if (!sessionId) {
             document.getElementById('errorMessage').textContent = 'Invalid session. Please contact support.';
@@ -305,7 +311,8 @@
                     // Store auth token if provided
                     if (data.access_token) {
                         localStorage.setItem('auth_token', data.access_token);
-                        localStorage.setItem('user_email', data.email);
+                        localStorage.setItem('a3e_user_email', data.email);
+                        sessionStorage.setItem('a3e_pending_email', data.email);
                     }
                     
                     // Redirect to dashboard
