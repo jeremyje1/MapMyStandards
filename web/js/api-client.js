@@ -31,14 +31,22 @@ class MapMyStandardsAPI {
         this.authToken = this.getAuthToken();
     }
 
-    // Get authentication token from storage
+    // Get authentication token from storage (check multiple keys for compatibility)
     getAuthToken() {
-        return localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
+        return localStorage.getItem('access_token') || 
+               localStorage.getItem('auth_token') || 
+               localStorage.getItem('token') ||
+               localStorage.getItem('a3e_api_key') ||
+               sessionStorage.getItem('access_token') ||
+               sessionStorage.getItem('auth_token');
     }
 
     // Set authentication token
     setAuthToken(token) {
+        // Store with multiple keys for compatibility
+        localStorage.setItem('access_token', token);
         localStorage.setItem('auth_token', token);
+        localStorage.setItem('token', token);
         this.authToken = token;
     }
 
@@ -91,7 +99,12 @@ class MapMyStandardsAPI {
 
     // Clear authentication
     clearAuth() {
+        // Clear all possible token keys
+        localStorage.removeItem('access_token');
         localStorage.removeItem('auth_token');
+        localStorage.removeItem('token');
+        localStorage.removeItem('a3e_api_key');
+        sessionStorage.removeItem('access_token');
         sessionStorage.removeItem('auth_token');
         this.authToken = null;
     }
