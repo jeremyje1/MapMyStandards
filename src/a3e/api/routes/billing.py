@@ -36,6 +36,7 @@ PRICING: Dict[str, Dict[str, Any]] = {
 class TrialSignupRequest(BaseModel):
     institution_name: str
     email: EmailStr
+    password: str  # Required for user account creation
     role: Optional[str] = None  # Made optional since frontend might not send it
     plan: str = "college_monthly"  # Updated default to match stripe_trial_setup.md
     payment_method_id: str  # Stripe payment method ID
@@ -50,6 +51,7 @@ class TrialSignupRequest(BaseModel):
     billing_zip: Optional[str] = None  # Frontend sends this
     user_count: Optional[str] = None  # Frontend might send this
     primary_accreditor: Optional[str] = None  # Frontend might send this
+    institution_type: Optional[str] = "college"  # Added missing field
 
 class SubscriptionRequest(BaseModel):
     customer_id: str
@@ -138,6 +140,71 @@ async def trial_signup(request: TrialSignupRequest, background_tasks: Background
         if result['success']:
             elapsed_total = int((time.time() - started) * 1000)
             result.setdefault('timing_ms', elapsed_total)
+            
+            # Create user in database after successful Stripe subscription
+            try:
+                from ...models.user import User
+                from ...services.database_service import DatabaseService
+                from sqlalchemy import select
+                import secrets
+                import bcrypt
+                from datetime import datetime, timedelta
+                
+                settings = get_settings()
+                db_service = DatabaseService(settings.database_url)
+                
+                async with db_service.get_session() as db:
+                    # Check if user already exists
+                    stmt = select(User).where(User.email == request.email)
+                    db_result = await db.execute(stmt)
+                    existing_user = db_result.scalar_one_or_none()
+                    
+                    if not existing_user:
+                        # Generate secure password hash
+                        password_hash = bcrypt.hashpw(request.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+                        
+                        # Create new user
+                        user = User(
+                            email=request.email,
+                            name=f"{request.first_name} {request.last_name}".strip(),
+                            first_name=request.first_name,
+                            last_name=request.last_name,
+                            password_hash=password_hash,
+                            institution_name=request.institution_name,
+                            institution_type=request.institution_type or "college",
+                            role=request.role or "Administrator",
+                            is_trial=True,
+                            trial_started_at=datetime.utcnow(),
+                            trial_ends_at=datetime.utcnow() + timedelta(days=7),
+                            subscription_tier=request.plan.lower(),
+                            stripe_customer_id=result.get('customer_id'),
+                            stripe_subscription_id=result.get('subscription_id'),
+                            api_key=result.get('api_key', secrets.token_urlsafe(32)),
+                            api_key_created_at=datetime.utcnow(),
+                            is_active=True,
+                            is_verified=True,  # Verified via trial signup
+                            email_verified_at=datetime.utcnow()
+                        )
+                        db.add(user)
+                        await db.commit()
+                        logger.info(f"✅ Created user in database for trial: {request.email}")
+                    else:
+                        # Update existing user with trial info
+                        existing_user.stripe_customer_id = result.get('customer_id')
+                        existing_user.stripe_subscription_id = result.get('subscription_id')
+                        existing_user.subscription_tier = request.plan.lower()
+                        existing_user.is_trial = True
+                        existing_user.trial_started_at = datetime.utcnow()
+                        existing_user.trial_ends_at = datetime.utcnow() + timedelta(days=7)
+                        existing_user.is_active = True
+                        existing_user.is_verified = True
+                        await db.commit()
+                        logger.info(f"✅ Updated existing user for trial: {request.email}")
+                        
+            except Exception as e:
+                logger.error(f"Failed to create user in database: {e}")
+                # Don't fail the trial signup if user creation fails
+                # The user can still be created later via webhook
             
             # Send email notifications for trial signup
             from ...services.professional_email_service import email_service
