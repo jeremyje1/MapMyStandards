@@ -110,9 +110,11 @@ async def do_login(request: LoginRequest, db: AsyncSession):
                 raise HTTPException(status_code=401, detail="Invalid email or password")
             
             # Check password
+            # Handle password hash that's stored as string (from registration)
+            password_hash_bytes = user.password_hash.encode('utf-8') if isinstance(user.password_hash, str) else user.password_hash
             is_valid = bcrypt.checkpw(
                 request.password.encode('utf-8'),
-                user.password_hash.encode('utf-8')
+                password_hash_bytes
             )
             
             if not is_valid:
