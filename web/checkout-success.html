@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome! Set Your Password - MapMyStandards</title>
+    <title>Complete Your Account | MapMyStandards</title>
     <style>
         * {
             margin: 0;
@@ -12,11 +12,11 @@
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #0f172a;
-            color: #e2e8f0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             padding: 2rem;
@@ -28,11 +28,150 @@
         }
 
         .card {
-            background: #1e293b;
+            background: white;
             border-radius: 16px;
-            padding: 3rem 2.5rem;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
-            border: 1px solid #334155;
+            padding: 2.5rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+        }
+
+        .success-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #dcfce7;
+            color: #166534;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+
+        h1 {
+            color: #111827;
+            font-size: 1.875rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: #6b7280;
+            font-size: 1rem;
+            margin-bottom: 2rem;
+            line-height: 1.5;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            color: #374151;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        input[readonly] {
+            background: #f9fafb;
+            color: #6b7280;
+            cursor: not-allowed;
+        }
+
+        .password-requirements {
+            background: #f3f4f6;
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin-top: 0.5rem;
+        }
+
+        .requirement {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #6b7280;
+            font-size: 0.875rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .requirement:last-child {
+            margin-bottom: 0;
+        }
+
+        .requirement.met {
+            color: #059669;
+        }
+
+        .requirement-icon {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid currentColor;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.625rem;
+            font-weight: bold;
+        }
+
+        .requirement.met .requirement-icon {
+            background: #059669;
+            border-color: #059669;
+            color: white;
+        }
+
+        button {
+            width: 100%;
+            padding: 0.875rem;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.5);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .error-message {
+            background: #fef2f2;
+            color: #991b1b;
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+            display: none;
+        }
+
+        .success-state {
+            text-align: center;
+            display: none;
         }
 
         .success-icon {
@@ -43,261 +182,249 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 2rem;
+            margin: 0 auto 1.5rem;
             font-size: 2.5rem;
         }
 
-        h1 {
-            font-size: 2rem;
-            font-weight: 700;
-            text-align: center;
-            margin-bottom: 1rem;
-            background: linear-gradient(135deg, #60a5fa, #3b82f6);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-top: 2rem;
         }
 
-        .subtitle {
-            text-align: center;
-            color: #94a3b8;
-            margin-bottom: 2rem;
-            line-height: 1.6;
+        .btn-secondary {
+            background: white;
+            color: #6366f1;
+            border: 2px solid #6366f1;
         }
 
-        .status-message {
-            background: #1e3a4c;
-            border: 1px solid #2563eb;
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .status-message h3 {
-            color: #60a5fa;
-            font-size: 1.1rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .status-message p {
-            color: #cbd5e1;
-            font-size: 0.95rem;
-            line-height: 1.5;
-        }
-
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-
-        label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            color: #e2e8f0;
-            font-size: 0.9rem;
-        }
-
-        input {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            background: #0f172a;
-            border: 2px solid #334155;
-            border-radius: 8px;
-            color: #f1f5f9;
-            font-size: 1rem;
-            transition: all 0.2s;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-
-        .password-requirements {
-            font-size: 0.85rem;
-            color: #64748b;
-            margin-top: 0.5rem;
-        }
-
-        .btn {
-            width: 100%;
-            padding: 1rem;
-            background: linear-gradient(135deg, #3b82f6, #2563eb);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-top: 1rem;
-        }
-
-        .btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px -5px rgba(59, 130, 246, 0.5);
-        }
-
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
+        .btn-secondary:hover {
+            background: #f3f4f6;
         }
 
         .loading {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-top-color: white;
+            display: none;
+            text-align: center;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #e5e7eb;
+            border-top-color: #6366f1;
             border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin-right: 0.5rem;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
         }
 
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
-
-        .error-message {
-            background: #7f1d1d;
-            border: 1px solid #dc2626;
-            color: #fca5a5;
-            padding: 1rem;
-            border-radius: 8px;
-            margin-top: 1rem;
-            font-size: 0.9rem;
-        }
-
-        .success-message {
-            background: #064e3b;
-            border: 1px solid #10b981;
-            color: #86efac;
-            padding: 1rem;
-            border-radius: 8px;
-            margin-top: 1rem;
-            font-size: 0.9rem;
-        }
-
-        .skip-link {
-            display: block;
-            text-align: center;
-            margin-top: 1.5rem;
-            color: #64748b;
-            font-size: 0.9rem;
-            text-decoration: none;
-            transition: color 0.2s;
-        }
-
-        .skip-link:hover {
-            color: #94a3b8;
-        }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="card">
-            <div class="success-icon">✓</div>
-            
-            <h1>Payment Successful!</h1>
-            <p class="subtitle">Your subscription is active. Let's set up your password to access your dashboard.</p>
-            
-            <div class="status-message">
-                <h3>What happens next?</h3>
-                <p>Set your password below to complete your account setup. You'll then be able to access all platform features immediately.</p>
+        <div class="card" id="passwordForm">
+            <div class="success-badge">
+                ✅ Payment Successful
             </div>
+            
+            <h1>Create Your Password</h1>
+            <p class="subtitle">Welcome to MapMyStandards! Please set a password to secure your account and start your 7-day trial.</p>
 
-            <form id="passwordForm">
+            <div class="error-message" id="errorMessage"></div>
+
+            <form id="setupForm">
                 <div class="form-group">
                     <label for="email">Email Address</label>
-                    <input type="email" id="email" name="email" required readonly>
+                    <input type="email" id="email" name="email" readonly>
                 </div>
 
                 <div class="form-group">
-                    <label for="password">Create Password</label>
-                    <input type="password" id="password" name="password" required minlength="8" 
-                           placeholder="Enter your password">
-                    <p class="password-requirements">Minimum 8 characters</p>
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required placeholder="Enter your password">
+                    
+                    <div class="password-requirements">
+                        <div class="requirement" id="req-length">
+                            <span class="requirement-icon">✓</span>
+                            <span>At least 8 characters</span>
+                        </div>
+                        <div class="requirement" id="req-match">
+                            <span class="requirement-icon">✓</span>
+                            <span>Passwords match</span>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="form-group">
                     <label for="confirmPassword">Confirm Password</label>
-                    <input type="password" id="confirmPassword" name="confirmPassword" required minlength="8"
-                           placeholder="Re-enter your password">
+                    <input type="password" id="confirmPassword" name="confirmPassword" required placeholder="Re-enter your password">
                 </div>
 
-                <button type="submit" class="btn" id="submitBtn">
-                    Set Password & Access Dashboard
-                </button>
+                <button type="submit">Set Password & Continue</button>
             </form>
+        </div>
 
-            <a href="#" class="skip-link" id="skipLink">I'll do this later (check your email for instructions)</a>
+        <div class="card loading" id="loadingState">
+            <div class="spinner"></div>
+            <p style="color: #6b7280;">Setting up your account...</p>
+        </div>
 
-            <div id="errorMessage" class="error-message" style="display: none;"></div>
-            <div id="successMessage" class="success-message" style="display: none;"></div>
+        <div class="card success-state" id="successState">
+            <div class="success-icon">✓</div>
+            <h1>Account Ready!</h1>
+            <p class="subtitle">Your password has been set successfully. You can now access all features of MapMyStandards.</p>
+            
+            <div class="action-buttons">
+                <button onclick="window.location.href='/onboarding'">
+                    🚀 Start Guided Onboarding
+                </button>
+                <button class="btn-secondary" onclick="window.location.href='/dashboard'">
+                    Skip to Dashboard →
+                </button>
+            </div>
         </div>
     </div>
 
     <script>
-        // Get session info from URL
+        // Wait for user to be created by webhook
+        async function waitForUser(email, attempts = 0) {
+            if (attempts > 10) {
+                throw new Error('Account creation is taking longer than expected. Please try refreshing the page.');
+            }
+
+            try {
+                // Check if user exists in database
+                const response = await fetch('https://api.mapmystandards.ai/auth-simple/check-user', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.exists) {
+                        return true;
+                    }
+                }
+            } catch (error) {
+                console.log('Checking user status...', error);
+            }
+
+            // Wait and retry
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            return waitForUser(email, attempts + 1);
+        }
+
+        // Get session ID and email
         const urlParams = new URLSearchParams(window.location.search);
         const sessionId = urlParams.get('session_id');
-        const customerEmail = urlParams.get('email') || '';
         
-        // Pre-fill email if available
-        document.getElementById('email').value = customerEmail;
-        
-        // Store email in session/local storage for onboarding page
-        if (customerEmail) {
-            localStorage.setItem('a3e_user_email', customerEmail);
-            sessionStorage.setItem('a3e_pending_email', customerEmail);
+        // Try to get email from various sources
+        let userEmail = localStorage.getItem('a3e_user_email') || 
+                       sessionStorage.getItem('signup_email') ||
+                       sessionStorage.getItem('a3e_pending_email');
+
+        // Extract email from Stripe session if possible
+        if (!userEmail && sessionId) {
+            // Parse session ID for email hint (Stripe sometimes includes it)
+            const emailMatch = window.location.href.match(/email=([^&]+)/);
+            if (emailMatch) {
+                userEmail = decodeURIComponent(emailMatch[1]);
+            }
         }
-        
-        // If no session ID, something went wrong
-        if (!sessionId) {
-            document.getElementById('errorMessage').textContent = 'Invalid session. Please contact support.';
-            document.getElementById('errorMessage').style.display = 'block';
-            document.getElementById('passwordForm').style.display = 'none';
+
+        // Fallback: prompt for email if we don't have it
+        if (!userEmail) {
+            const promptEmail = prompt('Please enter the email you used for checkout:');
+            if (promptEmail) {
+                userEmail = promptEmail;
+                sessionStorage.setItem('signup_email', userEmail);
+            }
         }
-        
+
+        // Pre-fill email
+        if (userEmail) {
+            document.getElementById('email').value = userEmail;
+        }
+
+        // Password validation
+        const passwordInput = document.getElementById('password');
+        const confirmPasswordInput = document.getElementById('confirmPassword');
+        const reqLength = document.getElementById('req-length');
+        const reqMatch = document.getElementById('req-match');
+
+        function validatePasswords() {
+            const password = passwordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+
+            // Check length
+            if (password.length >= 8) {
+                reqLength.classList.add('met');
+            } else {
+                reqLength.classList.remove('met');
+            }
+
+            // Check match
+            if (password && confirmPassword && password === confirmPassword) {
+                reqMatch.classList.add('met');
+            } else {
+                reqMatch.classList.remove('met');
+            }
+        }
+
+        passwordInput.addEventListener('input', validatePasswords);
+        confirmPasswordInput.addEventListener('input', validatePasswords);
+
         // Handle form submission
-        document.getElementById('passwordForm').addEventListener('submit', async (e) => {
+        document.getElementById('setupForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const submitBtn = document.getElementById('submitBtn');
-            const errorMsg = document.getElementById('errorMessage');
-            const successMsg = document.getElementById('successMessage');
+            const password = passwordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+            const email = document.getElementById('email').value;
+            const errorEl = document.getElementById('errorMessage');
             
-            // Reset messages
-            errorMsg.style.display = 'none';
-            successMsg.style.display = 'none';
+            // Reset error
+            errorEl.style.display = 'none';
+            errorEl.textContent = '';
             
-            // Validate passwords match
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-            
-            if (password !== confirmPassword) {
-                errorMsg.textContent = 'Passwords do not match.';
-                errorMsg.style.display = 'block';
+            // Validate
+            if (!email) {
+                errorEl.textContent = 'Email is required';
+                errorEl.style.display = 'block';
                 return;
             }
             
-            // Show loading state
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span class="loading"></span>Setting up your account...';
+            if (password !== confirmPassword) {
+                errorEl.textContent = 'Passwords do not match';
+                errorEl.style.display = 'block';
+                return;
+            }
+            
+            if (password.length < 8) {
+                errorEl.textContent = 'Password must be at least 8 characters';
+                errorEl.style.display = 'block';
+                return;
+            }
+            
+            // Show loading
+            document.getElementById('passwordForm').style.display = 'none';
+            document.getElementById('loadingState').style.display = 'block';
             
             try {
-                // First, wait a moment for webhook to process
-                await new Promise(resolve => setTimeout(resolve, 2000));
+                // First, wait for user to be created by webhook
+                console.log('Waiting for account creation...');
+                await waitForUser(email);
                 
-                // Try to set password for the webhook-created user
-                const response = await fetch('https://api.mapmystandards.ai/api/auth/checkout-password-setup', {
+                // Now set the password
+                const response = await fetch('https://api.mapmystandards.ai/auth/checkout-password-setup', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        session_id: sessionId,
-                        email: document.getElementById('email').value,
+                        session_id: sessionId || 'direct',
+                        email: email,
                         password: password
                     })
                 });
@@ -305,48 +432,32 @@
                 const data = await response.json();
                 
                 if (response.ok && data.success) {
-                    successMsg.textContent = 'Password set successfully! Redirecting to dashboard...';
-                    successMsg.style.display = 'block';
-                    
-                    // Store auth token if provided
-                    if (data.access_token) {
-                        localStorage.setItem('auth_token', data.access_token);
-                        localStorage.setItem('a3e_user_email', data.email);
-                        sessionStorage.setItem('a3e_pending_email', data.email);
+                    // Store auth data if provided
+                    if (data.token) {
+                        localStorage.setItem('token', data.token);
+                        localStorage.setItem('a3e_api_key', data.token);
                     }
+                    localStorage.setItem('a3e_user_email', email);
                     
-                    // Redirect to dashboard
+                    // Show success
+                    document.getElementById('loadingState').style.display = 'none';
+                    document.getElementById('successState').style.display = 'block';
+                    
+                    // Auto-redirect after 3 seconds
                     setTimeout(() => {
                         window.location.href = '/dashboard';
-                    }, 2000);
+                    }, 3000);
                 } else {
-                    throw new Error(data.message || 'Failed to set password');
+                    throw new Error(data.detail || 'Failed to set password');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                errorMsg.textContent = error.message || 'An error occurred. Please try again or check your email for password setup instructions.';
-                errorMsg.style.display = 'block';
-                
-                // Reset button
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Set Password & Access Dashboard';
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('passwordForm').style.display = 'block';
+                errorEl.textContent = error.message || 'Failed to set password. Please try again.';
+                errorEl.style.display = 'block';
             }
-        });
-        
-        // Handle skip link
-        document.getElementById('skipLink').addEventListener('click', (e) => {
-            e.preventDefault();
-            const email = document.getElementById('email').value;
-            
-            if (email) {
-                alert(`We'll send password setup instructions to ${email}. Check your inbox!`);
-            }
-            
-            // Redirect to homepage
-            setTimeout(() => {
-                window.location.href = '/';
-            }, 2000);
         });
     </script>
 </body>
-</html> 
+</html>

@@ -7,7 +7,7 @@
   
   "recent_deployment_context": {
     "date": "2025-09-05",
-    "status": "FIXED - Signup flow complete with password setup emails working",
+    "status": "RESOLVED - Webhook works when called at correct API endpoint",
     "frontend_url": "https://platform.mapmystandards.ai",
     "backend_url": "https://api.mapmystandards.ai",
     "marketing_url": "https://mapmystandards.ai",
@@ -207,13 +207,14 @@
     ],
     "critical_fix_details": {
       "problem": "Signups not creating users, no emails sent, no password saved",
-      "root_cause": "Missing database tables (password_resets, user_sessions) and model fields",
-      "solution": "Created missing tables via SQL script, updated models with required fields",
-      "files_modified": [
-        "src/a3e/models/user.py - Added reset_code to PasswordReset, first_name/last_name to User",
-        "create_auth_tables.sql - Created missing authentication tables"
-      ],
-      "verification": "Webhook now successfully creates users and sends password setup emails"
+      "root_cause": "Webhook endpoint wasn't configured to listen for checkout.session.completed event",
+      "solution": "Backend code was working correctly; just needed to enable the event in Stripe",
+      "stripe_webhook_config": {
+        "WRONG": "https://platform.mapmystandards.ai/api/v1/billing/webhook/stripe (frontend - cannot process)",
+        "CORRECT": "https://api.mapmystandards.ai/api/billing/webhook/stripe (backend - works perfectly)"
+      },
+      "verification": "Tested webhook directly - creates users, password tokens, and sends emails successfully",
+      "action_required": "Remove/disable the incorrect webhook in Stripe Dashboard → Developers → Webhooks"
     },
     "production_urls": {
       "platform": "https://platform.mapmystandards.ai",
