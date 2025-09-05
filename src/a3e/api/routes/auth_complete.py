@@ -372,6 +372,66 @@ async def complete_password_setup(request: PasswordSetupComplete, db: AsyncSessi
         logger.error(f"complete_password_setup error: {e}")
         raise HTTPException(status_code=500, detail="Failed to set password")
 
+class CheckoutPasswordSetupRequest(BaseModel):
+    session_id: str
+    email: EmailStr
+    password: str
+
+@router.post("/checkout-password-setup", response_model=AuthResponse)
+async def checkout_password_setup(request: CheckoutPasswordSetupRequest, db: AsyncSession = Depends(get_db)):
+    """Set password for user created via Stripe checkout (no token required)"""
+    try:
+        # Find user by email
+        result = await db.execute(
+            select(User).where(User.email == request.email.lower())
+        )
+        user = result.scalar_one_or_none()
+        
+        if not user:
+            raise HTTPException(
+                status_code=404, 
+                detail="Account not found. The payment webhook may still be processing. Please try again in a moment."
+            )
+        
+        # Check if user already has a real password (not "pending_reset")
+        if user.password_hash and user.password_hash != "pending_reset":
+            raise HTTPException(
+                status_code=400,
+                detail="Password already set. Please login with your existing password."
+            )
+        
+        # Set the password
+        password_hash = bcrypt.hashpw(request.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        user.password_hash = password_hash
+        user.is_verified = True
+        user.is_active = True
+        
+        await db.commit()
+        
+        # Generate access token for immediate login
+        access_token = create_access_token(
+            data={"sub": user.email, "user_id": str(user.id)},
+            expires_delta=timedelta(days=7)
+        )
+        
+        return AuthResponse(
+            success=True,
+            message="Password set successfully!",
+            data={
+                "access_token": access_token,
+                "token_type": "bearer",
+                "email": user.email,
+                "name": user.name,
+                "user_id": str(user.id)
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"checkout_password_setup error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to set password")
+
 @router.get("/verify-token")
 async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """Verify if an access token is valid"""
