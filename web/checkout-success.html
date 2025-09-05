@@ -290,30 +290,22 @@
     <script>
         // Wait for user to be created by webhook
         async function waitForUser(email, attempts = 0) {
-            if (attempts > 10) {
-                throw new Error('Account creation is taking longer than expected. Please try refreshing the page.');
+            // Simply wait a bit for the webhook to process
+            // The webhook usually completes within 2-5 seconds
+            if (attempts === 0) {
+                console.log('Waiting for account setup to complete...');
+                // Initial wait of 3 seconds for webhook to process
+                await new Promise(resolve => setTimeout(resolve, 3000));
+            } else if (attempts > 3) {
+                // After 3 attempts (about 9 seconds), proceed anyway
+                // The user might already exist or webhook completed
+                console.log('Proceeding with password setup...');
+                return true;
+            } else {
+                // Additional short waits
+                await new Promise(resolve => setTimeout(resolve, 2000));
             }
-
-            try {
-                // Check if user exists in database
-                const response = await fetch('https://api.mapmystandards.ai/auth-simple/check-user', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email })
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.exists) {
-                        return true;
-                    }
-                }
-            } catch (error) {
-                console.log('Checking user status...', error);
-            }
-
-            // Wait and retry
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            
             return waitForUser(email, attempts + 1);
         }
 
@@ -447,14 +439,31 @@
                     setTimeout(() => {
                         window.location.href = '/dashboard';
                     }, 3000);
+                } else if (response.status === 404 && data.detail && data.detail.includes('webhook')) {
+                    // Webhook might still be processing
+                    throw new Error('Your account is still being created. Please wait a moment and try again.');
+                } else if (response.status === 400 && data.detail && data.detail.includes('already set')) {
+                    // Password already set - this is actually success
+                    localStorage.setItem('a3e_user_email', email);
+                    document.getElementById('loadingState').style.display = 'none';
+                    document.getElementById('successState').style.display = 'block';
+                    setTimeout(() => {
+                        window.location.href = '/dashboard';
+                    }, 2000);
                 } else {
-                    throw new Error(data.detail || 'Failed to set password');
+                    throw new Error(data.detail || 'Failed to set password. Please try again.');
                 }
             } catch (error) {
                 console.error('Error:', error);
                 document.getElementById('loadingState').style.display = 'none';
                 document.getElementById('passwordForm').style.display = 'block';
-                errorEl.textContent = error.message || 'Failed to set password. Please try again.';
+                
+                // More helpful error messages
+                if (error.message.includes('still being created')) {
+                    errorEl.innerHTML = error.message + '<br><small>The payment was successful. Please refresh this page in a few seconds.</small>';
+                } else {
+                    errorEl.textContent = error.message || 'Failed to set password. Please try again.';
+                }
                 errorEl.style.display = 'block';
             }
         });
