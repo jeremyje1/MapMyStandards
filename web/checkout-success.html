@@ -463,14 +463,26 @@
                 const data = await response.json();
                 
                 if (response.ok && data.success) {
-                    // Store auth data if provided (use multiple keys for compatibility)
-                    if (data.token || data.access_token) {
-                        const authToken = data.access_token || data.token;
+                    // Store auth data if provided (check both data and data.data for token)
+                    const authToken = data.data?.access_token || data.data?.token || data.access_token || data.token;
+                    if (authToken) {
                         localStorage.setItem('access_token', authToken);
                         localStorage.setItem('token', authToken);
                         localStorage.setItem('a3e_api_key', authToken);
+                        console.log('Auth token stored successfully');
+                    } else {
+                        console.warn('No auth token in response');
                     }
+                    
+                    // Store user email and data
                     localStorage.setItem('a3e_user_email', email);
+                    if (data.data) {
+                        localStorage.setItem('user', JSON.stringify({
+                            email: data.data.email || email,
+                            name: data.data.name || email.split('@')[0],
+                            user_id: data.data.user_id
+                        }));
+                    }
                     
                     // Show success
                     document.getElementById('loadingState').style.display = 'none';
