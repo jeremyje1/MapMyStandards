@@ -858,7 +858,26 @@
         "deploymentStatus": "Deployed to Railway via GitHub integration"
       },
       {
-        "priority": "🔧 HIGH",
+        "priority": "� IN PROGRESS",
+        "issue": "Stripe Checkout Password Flow",
+        "description": "Users who checkout via Stripe cannot login because accounts are created without passwords",
+        "rootCause": "Webhook creates users with password_hash='pending_reset' instead of actual password",
+        "partialFixes": [
+          "billing.py: Added password setup email to webhook handler",
+          "Created checkout-success.html for immediate password setup",
+          "Added /api/auth/checkout-password-setup endpoint",
+          "Existing users must use forgot password flow"
+        ],
+        "remainingWork": [
+          "Update Stripe checkout success_url to use new checkout-success.html",
+          "Find and update /api/stripe/checkout endpoint to set proper success URL",
+          "Test complete Stripe checkout → password setup → login flow",
+          "Consider capturing password during checkout form"
+        ],
+        "workaround": "Users can use forgot-password.html to set password after checkout"
+      },
+      {
+        "priority": "�🔧 HIGH",
         "issue": "Database Schema Errors",
         "description": "PostgreSQL foreign key constraint failures in Railway deployment",
         "evidence": [
@@ -883,7 +902,12 @@
           "✅ Login Fix Deployed: Fixed password hash encoding issue in auth_simple.py",
           "✅ Registration Fix Deployed: Added user creation to trial signup endpoint",
           "✅ Password Field Added: Trial signup now accepts and stores user passwords",
-          "✅ Complete Flow Working: Users can now register and immediately login"
+          "✅ Complete Flow Working: Users can now register and immediately login",
+          "⚠️ Stripe Checkout Issue Found: Users created via webhook with pending_reset password",
+          "✅ Webhook Enhanced: Added password setup email sending after Stripe checkout",
+          "✅ Checkout Success Page Created: Immediate password setup UI after payment",
+          "✅ New Auth Endpoint: /api/auth/checkout-password-setup for post-payment setup",
+          "✅ Improved UX: Users can set password on platform instead of checking email"
         ]
       }
     ],
@@ -892,7 +916,9 @@
       "Homepage optimizations live at https://platform.mapmystandards.ai/",
       "Email template updates active in production",
       "Security fixes committed and pushed",
-      "✅ Registration/Login fixes deployed - customers can now onboard successfully"
+      "✅ Registration/Login fixes deployed - trial signup flow working",
+      "⚠️ Stripe checkout users need password setup via email or forgot-password",
+      "🔄 Partial fix deployed - webhook now sends password setup emails"
     ],
     "technicalDebt": [
       {
@@ -957,6 +983,46 @@
         "commits": [
           "dee9578 - Fix password hash encoding issue in login",
           "61fcef7 - Fix registration flow - add user creation to trial signup"
+        ]
+      },
+      "stripeCheckoutPasswordFix": {
+        "issue": "Stripe checkout creates users without passwords",
+        "discovery": "User reported completing checkout but unable to login",
+        "rootCause": "Webhook creates users with password_hash='pending_reset'",
+        "solutions": [
+          {
+            "file": "src/a3e/api/routes/billing.py",
+            "fix": "Added password setup email to Stripe webhook handler",
+            "details": [
+              "Generate password reset token after user creation",
+              "Send password setup email with secure link",
+              "Users receive email to set password after checkout"
+            ]
+          },
+          {
+            "file": "web/checkout-success.html",
+            "fix": "Created immediate password setup UI",
+            "details": [
+              "Better UX - set password right after payment",
+              "No need to check email",
+              "Shows clear instructions and password form"
+            ]
+          },
+          {
+            "file": "src/a3e/api/routes/auth_complete.py",
+            "fix": "Added checkout-password-setup endpoint",
+            "details": [
+              "Allows password setup without token for checkout users",
+              "Returns auth token for immediate dashboard access",
+              "Validates user exists and has pending_reset status"
+            ]
+          }
+        ],
+        "status": "Partially complete - need to update Stripe success URLs",
+        "workaround": "Users can use forgot-password.html flow",
+        "commits": [
+          "d1ef8bd - Add password setup email to Stripe webhook",
+          "a8c976b - Add immediate password setup flow after Stripe checkout"
         ]
       }
     }
