@@ -207,7 +207,7 @@ async def trial_signup(request: TrialSignupRequest, background_tasks: Background
                 # The user can still be created later via webhook
             
             # Send email notifications for trial signup
-            from ...services.professional_email_service import email_service
+            from ...services.email_service import email_service
             
             # Construct full name from first and last name
             customer_name = f"{request.first_name} {request.last_name}".strip()
@@ -215,27 +215,33 @@ async def trial_signup(request: TrialSignupRequest, background_tasks: Background
                 customer_name = request.email.split('@')[0]
             
             # Send customer welcome email
-            background_tasks.add_task(
-                email_service.send_customer_welcome_email,
-                email=request.email,
-                name=customer_name,
-                institution=request.institution_name,
-                trial_days=7
-            )
+            try:
+                background_tasks.add_task(
+                    email_service.send_welcome_email,
+                    user_email=request.email,
+                    user_name=customer_name,
+                    plan_name=request.plan
+                )
+                logger.info(f"Scheduled welcome email for {request.email}")
+            except Exception as e:
+                logger.error(f"Failed to schedule welcome email: {e}")
             
             # Send admin notification
-            background_tasks.add_task(
-                email_service.send_admin_notification,
-                customer_email=request.email,
-                customer_name=customer_name,
-                institution=request.institution_name,
-                signup_type="trial",
-                additional_info={
-                    "role": request.role,
-                    "plan": request.plan,
-                    "institution_type": request.institution_type
-                }
-            )
+            try:
+                background_tasks.add_task(
+                    email_service.send_admin_new_signup_notification,
+                    user_email=request.email,
+                    user_name=customer_name,
+                    institution=request.institution_name,
+                    trial=True,
+                    plan_name=request.plan,
+                    amount=0,  # Trial is free
+                    stripe_customer_id=result.get('customer_id'),
+                    subscription_id=result.get('subscription_id')
+                )
+                logger.info(f"Scheduled admin notification for {request.email}")
+            except Exception as e:
+                logger.error(f"Failed to schedule admin notification: {e}")
             
             return {
                 "success": True,
