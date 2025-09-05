@@ -775,6 +775,88 @@ legacy_router = _APIRouterAlias(prefix="/api/billing", tags=["billing-legacy"])
 async def stripe_webhook_legacy(request: Request):
     return await stripe_webhook(request)
 
+@router.post("/debug/test-user-creation", include_in_schema=False)
+async def test_user_creation(email: str = "test@example.com", name: str = "Test User"):
+    """Debug endpoint to test user creation flow"""
+    try:
+        from ...models.user import User, PasswordReset
+        from ...services.database_service import DatabaseService
+        from ...services.email_service import email_service
+        from ...core.config import get_settings
+        import secrets
+        import uuid
+        from datetime import datetime, timedelta
+        
+        settings = get_settings()
+        db_service = DatabaseService(settings.database_url)
+        
+        async with db_service.get_session() as db:
+            # Check if user exists
+            from sqlalchemy import select
+            stmt = select(User).where(User.email == email)
+            result = await db.execute(stmt)
+            existing_user = result.scalar_one_or_none()
+            
+            if existing_user:
+                return {"error": "User already exists", "user_id": existing_user.id}
+            
+            # Create new user
+            user = User(
+                email=email,
+                name=name,
+                password_hash="pending_reset",
+                institution_name="Test Institution",
+                institution_type="college",
+                role="Administrator",
+                is_trial=True,
+                trial_started_at=datetime.utcnow(),
+                trial_ends_at=datetime.utcnow() + timedelta(days=7),
+                subscription_tier="professional",
+                api_key=secrets.token_urlsafe(32),
+                api_key_created_at=datetime.utcnow(),
+                is_active=True,
+                is_verified=True,
+                email_verified_at=datetime.utcnow()
+            )
+            db.add(user)
+            await db.commit()
+            
+            # Create password reset token
+            token = str(uuid.uuid4())
+            code = secrets.token_hex(3).upper()
+            expires_at = datetime.utcnow() + timedelta(hours=48)
+            
+            password_reset = PasswordReset(
+                user_id=user.id,
+                reset_token=token,
+                reset_code=code,
+                expires_at=expires_at
+            )
+            db.add(password_reset)
+            await db.commit()
+            
+            # Send password setup email
+            setup_link = f"https://platform.mapmystandards.ai/set-password?token={token}"
+            email_sent = email_service.send_password_setup_email(
+                user_email=email,
+                user_name=name,
+                setup_link=setup_link
+            )
+            
+            return {
+                "success": True,
+                "user_id": user.id,
+                "email": email,
+                "password_token": token,
+                "setup_link": setup_link,
+                "email_sent": email_sent
+            }
+            
+    except Exception as e:
+        logger.error(f"Test user creation failed: {e}")
+        import traceback
+        return {"error": str(e), "traceback": traceback.format_exc()}
+
 async def _handle_payment_success(payment_intent):
     """Handle successful payment"""
     customer_id = payment_intent.get("customer")
