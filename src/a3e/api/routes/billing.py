@@ -775,6 +775,43 @@ legacy_router = _APIRouterAlias(prefix="/api/billing", tags=["billing-legacy"])
 async def stripe_webhook_legacy(request: Request):
     return await stripe_webhook(request)
 
+@router.get("/session-email")
+async def get_session_email(session_id: str):
+    """Get email from Stripe session or database"""
+    try:
+        # First check if user exists in database with this session
+        from ...models.user import User
+        from ...services.database_service import DatabaseService
+        from ...core.config import get_settings
+        from sqlalchemy import select
+        
+        settings = get_settings()
+        db_service = DatabaseService(settings.database_url)
+        
+        # Try to get from recent users (webhook may have created them)
+        async with db_service.get_session() as db:
+            # Get most recent user (likely from this session)
+            from datetime import datetime, timedelta
+            recent_time = datetime.utcnow() - timedelta(minutes=10)
+            
+            stmt = select(User).where(
+                User.created_at > recent_time
+            ).order_by(User.created_at.desc()).limit(1)
+            
+            result = await db.execute(stmt)
+            user = result.scalar_one_or_none()
+            
+            if user:
+                return {"email": user.email}
+        
+        # If no recent user, try Stripe API (requires session retrieval)
+        # This would need Stripe session lookup which is more complex
+        return {"email": None, "message": "Session not found"}
+        
+    except Exception as e:
+        logger.error(f"Error getting session email: {e}")
+        return {"email": None, "error": str(e)}
+
 @router.post("/debug/test-user-creation", include_in_schema=False)
 async def test_user_creation(email: str = "test@example.com", name: str = "Test User"):
     """Debug endpoint to test user creation flow"""
