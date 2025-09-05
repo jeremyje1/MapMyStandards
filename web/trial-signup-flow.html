@@ -534,7 +534,7 @@
                         body: JSON.stringify({
                             price_id: plan.priceId,
                             customer_email: formData.email,
-                            success_url: 'https://platform.mapmystandards.ai/checkout-success.html?session_id={CHECKOUT_SESSION_ID}',
+                            success_url: `https://platform.mapmystandards.ai/checkout-success.html?session_id={CHECKOUT_SESSION_ID}&email=${encodeURIComponent(formData.email)}`,
                             cancel_url: 'https://platform.mapmystandards.ai/trial-signup-flow.html',
                             trial_period_days: 7,
                             metadata: {
