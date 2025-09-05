@@ -688,6 +688,40 @@ async def stripe_webhook(request: Request):
                             db.add(user)
                             await db.commit()
                             logger.info(f"✅ Created user in database: {customer_email}")
+                            
+                            # Send password setup email for Stripe checkout users
+                            try:
+                                from ...models.user import PasswordReset
+                                import uuid
+                                
+                                # Generate password setup token
+                                token = str(uuid.uuid4())
+                                code = secrets.token_hex(3).upper()  # 6-char code
+                                expires_at = datetime.utcnow() + timedelta(hours=48)
+                                
+                                # Create password reset entry
+                                password_reset = PasswordReset(
+                                    user_id=user.id,
+                                    reset_token=token,
+                                    reset_code=code,
+                                    expires_at=expires_at
+                                )
+                                db.add(password_reset)
+                                await db.commit()
+                                
+                                # Send password setup email
+                                setup_link = f"https://platform.mapmystandards.ai/set-password?token={token}"
+                                email_service.send_password_setup_email(
+                                    user_email=customer_email,
+                                    user_name=customer_name,
+                                    setup_link=setup_link
+                                )
+                                logger.info(f"✅ Sent password setup email to {customer_email}")
+                                
+                            except Exception as e:
+                                logger.error(f"Failed to send password setup email: {e}")
+                                # Don't fail the webhook if email fails
+                                
                         else:
                             # Update existing user
                             existing_user.stripe_customer_id = stripe_customer_id
