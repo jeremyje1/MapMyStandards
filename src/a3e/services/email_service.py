@@ -307,8 +307,8 @@ Sent from MapMyStandards.ai contact form
             "3. Review Mappings: See how your documents align with accreditation standards\n"
             "4. Generate Reports: Create compliance reports for your review\n\n"
             "Need Help?\n"
-            "Email: support@mapmystandards.com\n"
-            "Documentation: https://docs.mapmystandards.com\n\n"
+            "Email: support@northpathstrategies.org\n"
+            "Schedule a demo: https://calendly.com/jeremyestrella/30min\n\n"
             "Best regards,\n"
             "The MapMyStandards Team"
         )
@@ -329,7 +329,7 @@ Sent from MapMyStandards.ai contact form
                 </div>
                 
                 <div style="text-align:center;margin:30px 0;">
-                    <a href="https://app.mapmystandards.com/dashboard" style="display:inline-block;padding:12px 30px;background:#3b82f6;color:white;text-decoration:none;border-radius:5px;">Access Your Dashboard</a>
+                    <a href="https://platform.mapmystandards.ai/login" style="display:inline-block;padding:12px 30px;background:#3b82f6;color:white;text-decoration:none;border-radius:5px;">Access Your Dashboard</a>
                 </div>
                 
                 <h3 style="color:#1f2937;">Getting Started:</h3>
@@ -343,9 +343,8 @@ Sent from MapMyStandards.ai contact form
                 <h3 style="color:#1f2937;">Need Help?</h3>
                 <p style="color:#4b5563;">Our support team is here to assist you:</p>
                 <ul style="color:#4b5563;">
-                    <li>Email: <a href="mailto:support@mapmystandards.com">support@mapmystandards.com</a></li>
-                    <li>Documentation: <a href="https://docs.mapmystandards.com">docs.mapmystandards.com</a></li>
-                    <li>Schedule a demo: <a href="https://calendly.com/mapmystandards">Book a call</a></li>
+                    <li>Email: <a href="mailto:support@northpathstrategies.org">support@northpathstrategies.org</a></li>
+                    <li>Schedule a demo: <a href="https://calendly.com/jeremyestrella/30min">Book a call</a></li>
                 </ul>
             </div>
             <div style="text-align:center;color:#6b7280;font-size:14px;margin-top:30px;">

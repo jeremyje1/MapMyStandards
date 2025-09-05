@@ -275,10 +275,14 @@ const CheckoutSuccess: React.FC = () => {
             <h4 className="font-semibold text-blue-900 mb-2">Need Help?</h4>
             <p className="text-blue-700">
               Our support team is ready to assist you. Contact us at{' '}
-              <a href="mailto:support@mapmystandards.com" className="underline">
-                support@mapmystandards.com
+              <a href="mailto:support@northpathstrategies.org" className="underline">
+                support@northpathstrategies.org
               </a>{' '}
-              or schedule a demo call with our team.
+              or{' '}
+              <a href="https://calendly.com/jeremyestrella/30min" className="underline">
+                schedule a demo call
+              </a>{' '}
+              with our team.
             </p>
           </div>
         </div>
