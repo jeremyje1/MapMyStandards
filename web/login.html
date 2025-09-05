@@ -326,7 +326,11 @@
                 if (result.success) {
                     // Store authentication token and user data
                     if (result.data) {
+                        // Store with both keys for compatibility
+                        localStorage.setItem('access_token', result.data.access_token || result.data.api_key);
                         localStorage.setItem('token', result.data.access_token || result.data.api_key);
+                        localStorage.setItem('a3e_api_key', result.data.api_key || result.data.access_token);
+                        localStorage.setItem('a3e_user_email', result.data.email);
                         localStorage.setItem('user', JSON.stringify({
                             email: result.data.email,
                             name: result.data.name,

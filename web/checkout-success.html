@@ -424,10 +424,12 @@
                 const data = await response.json();
                 
                 if (response.ok && data.success) {
-                    // Store auth data if provided
-                    if (data.token) {
-                        localStorage.setItem('token', data.token);
-                        localStorage.setItem('a3e_api_key', data.token);
+                    // Store auth data if provided (use multiple keys for compatibility)
+                    if (data.token || data.access_token) {
+                        const authToken = data.access_token || data.token;
+                        localStorage.setItem('access_token', authToken);
+                        localStorage.setItem('token', authToken);
+                        localStorage.setItem('a3e_api_key', authToken);
                     }
                     localStorage.setItem('a3e_user_email', email);
                     
@@ -444,11 +446,13 @@
                     throw new Error('Your account is still being created. Please wait a moment and try again.');
                 } else if (response.status === 400 && data.detail && data.detail.includes('already set')) {
                     // Password already set - this is actually success
+                    // Note: We don't have a token here, user needs to login
                     localStorage.setItem('a3e_user_email', email);
                     document.getElementById('loadingState').style.display = 'none';
                     document.getElementById('successState').style.display = 'block';
+                    // Redirect to login since we don't have a token
                     setTimeout(() => {
-                        window.location.href = '/dashboard';
+                        window.location.href = '/login';
                     }, 2000);
                 } else {
                     throw new Error(data.detail || 'Failed to set password. Please try again.');
