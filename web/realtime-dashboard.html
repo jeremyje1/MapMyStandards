@@ -249,7 +249,9 @@ Waiting for API response...
 
     <script>
         // Configuration
-        const API_BASE_URL = 'http://localhost:8000';
+        const API_BASE_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:8000' 
+            : 'https://api.mapmystandards.ai';
         const REFRESH_INTERVAL = 5000; // 5 seconds
         
         let chart = null;
