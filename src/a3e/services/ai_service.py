@@ -10,6 +10,7 @@ import json
 import logging
 from typing import Dict, Any, Optional, List
 from enum import Enum
+import httpx
 
 logger = logging.getLogger(__name__)
 
@@ -21,12 +22,8 @@ except ImportError:
     ANTHROPIC_AVAILABLE = False
     logger.warning("Anthropic not available - install anthropic package")
 
-try:
-    import openai
-    OPENAI_AVAILABLE = True
-except ImportError:
-    OPENAI_AVAILABLE = False
-    logger.warning("OpenAI not available - install openai package")
+# We avoid importing the OpenAI SDK due to httpx wrapper issues; use HTTP instead
+OPENAI_AVAILABLE = True
 
 
 class AIProvider(Enum):
@@ -54,19 +51,16 @@ class AIService:
             except Exception as e:
                 logger.error(f"Failed to initialize Anthropic: {e}")
         
-        # Try to initialize OpenAI (fallback)
+        # Configure OpenAI API key (use HTTP calls vs SDK)
         openai_key = os.environ.get('OPENAI_API_KEY') or os.environ.get('OPENAI_KEY')
-        if OPENAI_AVAILABLE and openai_key:
-            try:
-                self.openai_client = openai.AsyncOpenAI(api_key=openai_key)
-                if self.primary_provider == AIProvider.NONE:
-                    self.primary_provider = AIProvider.OPENAI
-                    logger.info("✅ OpenAI initialized as primary provider")
-                else:
-                    self.fallback_provider = AIProvider.OPENAI
-                    logger.info("✅ OpenAI initialized as fallback provider")
-            except Exception as e:
-                logger.error(f"Failed to initialize OpenAI: {e}")
+        self._openai_api_key = openai_key if openai_key else None
+        if self._openai_api_key:
+            if self.primary_provider == AIProvider.NONE:
+                self.primary_provider = AIProvider.OPENAI
+                logger.info("✅ OpenAI configured as primary provider (HTTP)")
+            else:
+                self.fallback_provider = AIProvider.OPENAI
+                logger.info("✅ OpenAI configured as fallback provider (HTTP)")
         
         if self.primary_provider == AIProvider.NONE:
             logger.warning("⚠️ No AI provider available - using basic processing")
@@ -153,34 +147,46 @@ class AIService:
         max_tokens: int
     ) -> Optional[Dict[str, Any]]:
         """Analyze using OpenAI GPT"""
-        
-        if not self.openai_client:
+        if not getattr(self, '_openai_api_key', None):
             return None
-        
+
         try:
             prompt = self._build_analysis_prompt(text, metadata)
-            
-            response = await self.openai_client.chat.completions.create(
-                model="gpt-4o-mini",  # Affordable and capable
-                messages=[
+
+            headers = {
+                "Authorization": f"Bearer {self._openai_api_key}",
+                "Content-Type": "application/json",
+            }
+            payload = {
+                "model": "gpt-4o-mini",
+                "messages": [
                     {
                         "role": "system",
-                        "content": "You are an expert accreditation analyst specializing in higher education compliance. Analyze documents for evidence mapping to accreditation standards."
+                        "content": "You are an expert accreditation analyst specializing in higher education compliance. Analyze documents for evidence mapping to accreditation standards. Always return valid JSON only.",
                     },
-                    {"role": "user", "content": prompt}
+                    {"role": "user", "content": prompt},
                 ],
-                response_format={"type": "json_object"},
-                temperature=0.3,
-                max_tokens=max_tokens
-            )
-            
-            analysis = json.loads(response.choices[0].message.content)
+                "temperature": 0.3,
+                "max_tokens": max_tokens,
+                "response_format": {"type": "json_object"},
+            }
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                resp = await client.post(
+                    "https://api.openai.com/v1/chat/completions",
+                    headers=headers,
+                    json=payload,
+                )
+                resp.raise_for_status()
+                data = resp.json()
+                content = data["choices"][0]["message"]["content"]
+                analysis = json.loads(content)
+
             analysis['ai_provider'] = 'openai'
             analysis['ai_model'] = 'gpt-4o-mini'
-            
+
             logger.info("✅ Document analyzed with OpenAI")
             return analysis
-            
+
         except Exception as e:
             logger.error(f"OpenAI analysis failed: {e}")
             return None
@@ -311,17 +317,34 @@ Return a JSON array of mappings, each with:
                 content = response.content[0].text if response.content else "[]"
                 
             elif self.primary_provider == AIProvider.OPENAI:
-                response = await self.openai_client.chat.completions.create(
-                    model="gpt-4o-mini",
-                    messages=[
-                        {"role": "system", "content": f"You are an expert in {accreditor} accreditation standards."},
-                        {"role": "user", "content": prompt}
+                if not getattr(self, '_openai_api_key', None):
+                    return None
+                headers = {
+                    "Authorization": f"Bearer {self._openai_api_key}",
+                    "Content-Type": "application/json",
+                }
+                payload = {
+                    "model": "gpt-4o-mini",
+                    "messages": [
+                        {
+                            "role": "system",
+                            "content": f"You are an expert in {accreditor} accreditation standards. Return only valid JSON.",
+                        },
+                        {"role": "user", "content": prompt},
                     ],
-                    response_format={"type": "json_object"},
-                    temperature=0.2,
-                    max_tokens=1000
-                )
-                content = response.choices[0].message.content
+                    "response_format": {"type": "json_object"},
+                    "temperature": 0.2,
+                    "max_tokens": 1000,
+                }
+                async with httpx.AsyncClient(timeout=60.0) as client:
+                    resp = await client.post(
+                        "https://api.openai.com/v1/chat/completions",
+                        headers=headers,
+                        json=payload,
+                    )
+                    resp.raise_for_status()
+                    data = resp.json()
+                    content = data["choices"][0]["message"]["content"]
             else:
                 return None
             
@@ -362,7 +385,7 @@ Return a JSON array of mappings, each with:
             'primary_provider': self.primary_provider.value,
             'fallback_provider': self.fallback_provider.value,
             'anthropic_available': self.anthropic_client is not None,
-            'openai_available': self.openai_client is not None,
+            'openai_available': bool(getattr(self, '_openai_api_key', None)),
             'ai_enabled': self.primary_provider != AIProvider.NONE
         }
 

@@ -168,3 +168,8 @@ mailersend_api.env
 # Environment files with sensitive data
 .env.vercel*
 .env.local
+
+# Prevent committing Railway/local secret env files
+railway.env
+*.railway.env
+*railway*.env

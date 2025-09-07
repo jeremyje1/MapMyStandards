@@ -821,7 +821,15 @@ async def health_check():
 
         # Check if services are initialized (during startup they might be None)
         db_ok, db_latency = (False, None)
-        if db_service:
+        # Try production db_manager first, fallback to legacy db_service
+        try:
+            from .database.connection import db_manager
+            if db_manager and db_manager._initialized:
+                db_ok, db_latency = await timed(db_manager.health_check())
+        except:
+            pass
+        
+        if not db_ok and db_service:
             db_ok, db_latency = await timed(db_service.health_check())
 
         vector_status = "unavailable"
@@ -843,7 +851,17 @@ async def health_check():
         # Determine overall status: 
         # - If no services initialized yet (startup), return "starting"
         # - If core services (db) available, determine healthy/degraded/unhealthy
-        if not db_service:
+        # Check if either db_manager or db_service is available
+        db_available = False
+        try:
+            from .database.connection import db_manager
+            db_available = db_manager and db_manager._initialized
+        except:
+            pass
+        if not db_available:
+            db_available = db_service is not None
+            
+        if not db_available:
             overall = "starting"
             status_code = 200  # Allow health checks during startup
         else:

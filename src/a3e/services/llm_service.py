@@ -10,6 +10,9 @@ import json
 import logging
 from typing import Dict, Any, Optional, List
 from dataclasses import dataclass
+import os
+
+import httpx
 
 # Optional AWS imports
 try:  # Optional AWS
@@ -53,11 +56,14 @@ class LLMService:
         self.bedrock_client = None
         self.openai_client = None
         self.anthropic_client = None
+        # OpenAI HTTP fallback state
+        self._openai_http_fallback = False
+        self._openai_api_key = None
         
     async def initialize(self):
-        """Initialize LLM clients"""
+        """Initialize LLM clients. Never crash app if a provider fails; degrade gracefully."""
+        # Initialize AWS Bedrock client (optional)
         try:
-            # Initialize AWS Bedrock client
             if self.settings.aws_access_key_id and self.settings.aws_secret_access_key:
                 self.bedrock_client = boto3.client(
                     'bedrock-runtime',
@@ -66,24 +72,28 @@ class LLMService:
                     aws_secret_access_key=self.settings.aws_secret_access_key
                 )
                 logger.info("✅ AWS Bedrock client initialized")
-            
-            # Initialize OpenAI client
-            if self.settings.openai_api_key:
-                self.openai_client = openai.AsyncOpenAI(
-                    api_key=self.settings.openai_api_key
-                )
-                logger.info("✅ OpenAI client initialized")
-            
-            # Initialize Anthropic client
-            if self.settings.anthropic_api_key:
-                self.anthropic_client = anthropic.AsyncAnthropic(
-                    api_key=self.settings.anthropic_api_key
-                )
-                logger.info("✅ Anthropic client initialized")
-                
         except Exception as e:
-            logger.error(f"Failed to initialize LLM clients: {e}")
-            raise
+            logger.warning(f"AWS Bedrock initialization skipped: {e}")
+
+        # Initialize OpenAI via HTTP fallback only (avoid SDK proxies bugs in this env)
+        try:
+            if self.settings.openai_api_key:
+                self._openai_http_fallback = True
+                self._openai_api_key = self.settings.openai_api_key
+                logger.info("✅ OpenAI HTTP fallback enabled")
+        except Exception as e:
+            logger.warning(f"OpenAI initialization skipped: {e}")
+
+        # Initialize Anthropic client (optional)
+        try:
+            if self.settings.anthropic_api_key and AI_SERVICES_AVAILABLE:
+                try:
+                    self.anthropic_client = anthropic.AsyncAnthropic(api_key=self.settings.anthropic_api_key)
+                    logger.info("✅ Anthropic client initialized")
+                except Exception as sdk_err:
+                    logger.warning(f"Anthropic SDK init failed: {sdk_err}")
+        except Exception as e:
+            logger.warning(f"Anthropic initialization skipped: {e}")
     
     async def generate_response(
         self,
@@ -107,7 +117,7 @@ class LLMService:
                 )
             
             # Fallback to OpenAI
-            elif self.openai_client and "gpt" in model.lower():
+            elif (self.openai_client or self._openai_http_fallback) and "gpt" in model.lower():
                 return await self._generate_openai_response(
                     prompt, model, temperature, max_tokens, agent_name
                 )
@@ -192,6 +202,10 @@ class LLMService:
         """Generate response using OpenAI"""
         
         try:
+            if self._openai_http_fallback and self._openai_api_key:
+                return await self._generate_openai_response_via_httpx(prompt, model, temperature, max_tokens, agent_name)
+
+            # SDK path
             response = await self.openai_client.chat.completions.create(
                 model=model,
                 messages=[
@@ -207,17 +221,16 @@ class LLMService:
                 temperature=temperature,
                 max_tokens=max_tokens
             )
-            
+
             content = response.choices[0].message.content
             usage = response.usage
-            
-            # Estimate cost for OpenAI models
+
             cost_estimate = self._calculate_openai_cost(
                 model,
                 usage.prompt_tokens,
                 usage.completion_tokens
             )
-            
+
             return LLMResponse(
                 content=content,
                 model=model,
@@ -229,10 +242,53 @@ class LLMService:
                 finish_reason=response.choices[0].finish_reason,
                 cost_estimate=cost_estimate
             )
-            
+
         except Exception as e:
             logger.error(f"OpenAI error: {e}")
             raise
+
+    async def _generate_openai_response_via_httpx(
+        self,
+        prompt: str,
+        model: str,
+        temperature: float,
+        max_tokens: int,
+        agent_name: str
+    ) -> LLMResponse:
+        """Direct HTTP fallback for OpenAI Chat Completions to avoid SDK issues."""
+        headers = {
+            "Authorization": f"Bearer {self._openai_api_key}",
+            "Content-Type": "application/json",
+        }
+        payload = {
+            "model": model,
+            "messages": [
+                {"role": "system", "content": f"You are the {agent_name} agent in the A3E accreditation system."},
+                {"role": "user", "content": prompt},
+            ],
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+        }
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
+            resp.raise_for_status()
+            data = resp.json()
+            content = data["choices"][0]["message"]["content"]
+            usage = data.get("usage", {})
+            prompt_tokens = usage.get("prompt_tokens", 0)
+            completion_tokens = usage.get("completion_tokens", 0)
+            cost_estimate = self._calculate_openai_cost(model, prompt_tokens, completion_tokens)
+            return LLMResponse(
+                content=content,
+                model=model,
+                usage={
+                    "prompt_tokens": prompt_tokens,
+                    "completion_tokens": completion_tokens,
+                    "total_tokens": prompt_tokens + completion_tokens,
+                },
+                finish_reason=data["choices"][0].get("finish_reason"),
+                cost_estimate=cost_estimate,
+            )
     
     async def _generate_anthropic_response(
         self,
