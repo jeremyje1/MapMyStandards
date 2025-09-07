@@ -36,7 +36,7 @@ except ImportError:
     logger.warning("OpenAI not available - AI features disabled")
 
 from ..core.config import Settings
-from ..models.database import get_async_session
+from ..database.connection import DatabaseManager
 from sqlalchemy import text
 from .ai_service import get_ai_service
 
