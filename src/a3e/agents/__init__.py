@@ -7,7 +7,7 @@ Supports all US accrediting bodies with institution-type contextualization.
 
 from typing import Dict, List, Optional, Any, Tuple
 from dataclasses import dataclass
-from autogen import AssistantAgent, UserProxyAgent, GroupChat, GroupChatManager
+from pyautogen import AssistantAgent, UserProxyAgent, GroupChat, GroupChatManager
 import json
 import asyncio
 from datetime import datetime
