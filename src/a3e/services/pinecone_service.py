@@ -5,65 +5,112 @@ Pinecone Vector Service for A3E
 import os
 import logging
 import json
+import hashlib
+import numpy as np
+import httpx
 from typing import List, Dict, Any, Optional
 from pinecone import Pinecone, ServerlessSpec
 
 logger = logging.getLogger(__name__)
 
-# Optional imports
+# Embedding backends (prefer sentence-transformers, fallback to OpenAI, then deterministic hash)
+EMBEDDING_DIM = 384  # Pinecone index dimension we standardize to
+
 try:
-    from sentence_transformers import SentenceTransformer
-    EMBEDDINGS_AVAILABLE = True
+    from sentence_transformers import SentenceTransformer as _STModel
+    EMBEDDINGS_BACKEND = "sentence-transformers"
 except ImportError:
-    logger.warning("sentence-transformers not available - embeddings disabled")
-    EMBEDDINGS_AVAILABLE = False
-    
-    import hashlib
-    import numpy as np
-    
-    class SentenceTransformer:
-        """Fallback embedding generator using hash-based pseudo-embeddings"""
-        def __init__(self, *args, **kwargs):
-            self.dim = 384
-        
-        def encode(self, text, *args, **kwargs):
-            """Generate deterministic pseudo-embedding from text hash"""
+    _STModel = None  # type: ignore
+    EMBEDDINGS_BACKEND = None
+
+class _HashEmbedder:
+    """Deterministic lightweight embeddings (no network/deps)."""
+    def __init__(self, dim: int = EMBEDDING_DIM):
+        self.dim = dim
+
+    def encode(self, text, *args, **kwargs):
+        if isinstance(text, list):
+            return np.array([self._hash_embed(t) for t in text])
+        return self._hash_embed(text)
+
+    def _hash_embed(self, text):
+        text_bytes = str(text).encode('utf-8')
+        embeddings = []
+        for i in range(self.dim):
+            h = hashlib.sha256(text_bytes + str(i).encode()).digest()
+            value = (int.from_bytes(h[:4], 'big') / 2147483647.0) - 1.0
+            embeddings.append(value)
+        embedding = np.array(embeddings)
+        norm = np.linalg.norm(embedding)
+        if norm > 0:
+            embedding = embedding / norm
+        return embedding
+
+class _OpenAIEmbedder:
+    """OpenAI embeddings via HTTP with projection to EMBEDDING_DIM (no SDK)."""
+    def __init__(self, model: str = "text-embedding-3-small", dim: int = EMBEDDING_DIM):
+        self._model = model
+        self._dim = dim
+        self._api_key = os.environ.get("OPENAI_API_KEY")
+        # Build a fixed random projection for dimensionality reduction (seeded)
+        rng = np.random.default_rng(42)
+        # text-embedding-3-small returns 1536 dims
+        self._source_dim = 1536
+        self._proj = rng.normal(0, 1, size=(self._source_dim, self._dim)) / np.sqrt(self._dim)
+        self._available = bool(self._api_key)
+
+    def encode(self, text, *args, **kwargs):
+        if not self._available:
+            return _HashEmbedder(self._dim).encode(text)
+        try:
+            texts = text if isinstance(text, list) else [text]
+            headers = {
+                "Authorization": f"Bearer {self._api_key}",
+                "Content-Type": "application/json",
+            }
+            payload = {"model": self._model, "input": texts}
+            with httpx.Client(timeout=30.0) as client:
+                r = client.post("https://api.openai.com/v1/embeddings", headers=headers, json=payload)
+                r.raise_for_status()
+                data = r.json()
+                vecs = [np.array(item["embedding"]) for item in data.get("data", [])]
+            # Project to EMBEDDING_DIM
+            reduced = [np.asarray(v[:self._source_dim]) @ self._proj for v in vecs]
             if isinstance(text, list):
-                return np.array([self._hash_embed(t) for t in text])
-            
-            return self._hash_embed(text)
-        
-        def _hash_embed(self, text):
-            """Create pseudo-embedding from text hash"""
-            # Create multiple hashes for different dimensions
-            text_bytes = str(text).encode('utf-8')
-            embeddings = []
-            
-            for i in range(self.dim):
-                h = hashlib.sha256(text_bytes + str(i).encode()).digest()
-                # Convert hash bytes to float between -1 and 1
-                value = (int.from_bytes(h[:4], 'big') / 2147483647.0) - 1.0
-                embeddings.append(value)
-            
-            # Normalize to unit vector
-            embedding = np.array(embeddings)
-            norm = np.linalg.norm(embedding)
-            if norm > 0:
-                embedding = embedding / norm
-            
-            return embedding
+                return np.stack(reduced)
+            return reduced[0]
+        except Exception as e:
+            logger.warning(f"OpenAI embedding failed, using hash fallback: {e}")
+            return _HashEmbedder(self._dim).encode(text)
+
+def _get_embedder():
+    # Priority: sentence-transformers > OpenAI > hash
+    if _STModel is not None:
+        try:
+            model = _STModel('all-MiniLM-L6-v2')
+            logger.info("✅ Sentence transformer model loaded")
+            return model
+        except Exception as e:
+            logger.warning(f"Sentence transformer load failed: {e}")
+    # Try OpenAI
+    emb = _OpenAIEmbedder()
+    if getattr(emb, '_available', False):
+        logger.info("✅ OpenAI embedding backend enabled (projected to 384d)")
+        return emb
+    logger.warning("⚠️ Using dummy embeddings - install sentence-transformers or set OPENAI_API_KEY for real embeddings")
+    return _HashEmbedder()
 
 
 class PineconeVectorService:
     """Pinecone-based vector service for semantic search"""
-    
+
     def __init__(self):
         self.pc = None
         self.index = None
         self.index_name = "mapmystandards"
         self.embedding_model = None
         self.initialized = False
-        
+
     async def initialize(self):
         """Initialize Pinecone connection and embedding model"""
         try:
@@ -71,78 +118,81 @@ class PineconeVectorService:
             if not api_key:
                 logger.warning("PINECONE_API_KEY not set - vector features disabled")
                 return False
-            
+
             # Initialize Pinecone
             self.pc = Pinecone(api_key=api_key)
-            
+
             # Check if index exists, create if not
             existing_indexes = self.pc.list_indexes()
             if self.index_name not in existing_indexes.names():
                 logger.info(f"Creating Pinecone index: {self.index_name}")
                 self.pc.create_index(
                     name=self.index_name,
-                    dimension=384,  # for all-MiniLM-L6-v2
+                    dimension=EMBEDDING_DIM,  # standardized dimension
                     metric='cosine',
                     spec=ServerlessSpec(
                         cloud='gcp',
                         region='us-central1'
-                    )
+                    ),
                 )
-            
+
             self.index = self.pc.Index(self.index_name)
-            
-            # Initialize embedding model if available
-            if EMBEDDINGS_AVAILABLE:
-                self.embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
-                logger.info("✅ Sentence transformer model loaded")
-            else:
-                self.embedding_model = SentenceTransformer()  # Dummy
-                logger.warning("⚠️ Using dummy embeddings - install sentence-transformers for real embeddings")
-            
+
+            # Initialize embedding model with best available backend
+            self.embedding_model = _get_embedder()
+
             self.initialized = True
-            logger.info(f"✅ Pinecone vector service initialized with index: {self.index_name}")
+            logger.info(
+                f"✅ Pinecone vector service initialized with index: {self.index_name}"
+            )
             return True
-            
+
         except Exception as e:
             logger.error(f"Failed to initialize Pinecone: {e}")
             self.initialized = False
             return False
-    
+
     async def index_documents(self, documents: List[Dict[str, Any]], batch_size: int = 100):
         """Index documents for semantic search"""
         if not self.initialized:
             logger.warning("Pinecone not initialized - skipping indexing")
             return
-        
+
         try:
             vectors = []
             for doc in documents:
                 # Create text for embedding
                 text = f"{doc.get('title', '')} {doc.get('description', '')} {doc.get('content', '')}"
-                
+
                 # Generate embedding
-                embedding = self.embedding_model.encode(text).tolist()
-                
+                embedding = self.embedding_model.encode(text)
+                if hasattr(embedding, 'tolist'):
+                    embedding = embedding.tolist()
+
                 # Prepare vector data
-                vectors.append({
-                    "id": str(doc.get('id', '')),
-                    "values": embedding,
-                    "metadata": {
-                        "title": doc.get('title', '')[:500],  # Limit metadata size
-                        "type": doc.get('type', 'document'),
-                        "source": doc.get('source', ''),
-                        "description": doc.get('description', '')[:1000]
+                vectors.append(
+                    {
+                        "id": str(doc.get("id", "")),
+                        "values": embedding,
+                        "metadata": {
+                            "title": doc.get("title", "")[:500],  # Limit metadata size
+                            "type": doc.get("type", "document"),
+                            "source": doc.get("source", ""),
+                            "description": doc.get("description", "")[:1000],
+                        },
                     }
-                })
-            
+                )
+
             # Upsert in batches
             for i in range(0, len(vectors), batch_size):
-                batch = vectors[i:i+batch_size]
+                batch = vectors[i:i + batch_size]
                 self.index.upsert(vectors=batch)
-                logger.info(f"Indexed batch {i//batch_size + 1}: {len(batch)} documents")
-            
+                logger.info(
+                    f"Indexed batch {i // batch_size + 1}: {len(batch)} documents"
+                )
+
             logger.info(f"✅ Successfully indexed {len(vectors)} documents")
-            
+
         except Exception as e:
             logger.error(f"Failed to index documents: {e}")
             raise
@@ -273,12 +323,10 @@ class PineconeVectorService:
         cited_excerpt: str
     ) -> float:
         """Verify citation accuracy using cosine similarity"""
-        if not self.initialized or not EMBEDDINGS_AVAILABLE:
+        if not self.initialized or self.embedding_model is None:
             return 0.5  # Default score when embeddings not available
         
         try:
-            import numpy as np
-            
             # Generate embeddings
             narrative_embedding = self.embedding_model.encode(narrative_text)
             evidence_embedding = self.embedding_model.encode(evidence_text)

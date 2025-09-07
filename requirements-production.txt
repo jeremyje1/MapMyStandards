@@ -37,11 +37,12 @@ aiosmtplib==3.0.1
 emails==0.6  # For email templates
 
 # HTTP Client
-httpx==0.25.2
+httpx==0.28.1  # Updated to match pyautogen requirement
 aiohttp==3.9.1
 
 # AI/LLM Services (Required for startup)
-openai==1.6.1
+# Bumped OpenAI to a newer SDK compatible with httpx 0.28.x to avoid 'proxies' init errors
+openai==1.40.6
 anthropic==0.39.0
 
 # Data Processing (Minimal)
@@ -57,9 +58,13 @@ pypdf==3.17.0
 python-magic==0.4.27
 chardet==5.2.0
 Pillow==10.1.0  # For image processing
+reportlab==4.2.0  # For PDF generation in report_generation
 
 # Pinecone (without heavy ML deps)
 pinecone-client==3.0.0
+
+# Lightweight ML utilities used by analytics endpoints
+scikit-learn==1.3.2
 
 # Production essentials
 redis==5.0.1
@@ -72,3 +77,6 @@ python-jose[cryptography]==3.3.0  # For JWT handling
 itsdangerous==2.1.2  # For secure sessions
 markupsafe==2.1.3  # For safe HTML
 bleach==6.1.0  # For HTML sanitization
+
+# Agent orchestration (optional but included for full functionality)
+pyautogen==0.9.0  # For multi-agent workflows

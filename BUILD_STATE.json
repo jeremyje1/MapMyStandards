@@ -231,7 +231,7 @@
   },
   
   "session_recovery_context": {
-    "last_session_date": "2025-09-07",
+  "last_session_date": "2025-09-07",
     "last_major_tasks": [
       "Fixed critical email contamination bug (showed wrong user's email)",
       "Removed duplicate password collection from pre-checkout flow",
@@ -253,6 +253,17 @@
     ],
     "backend_component_fixes": {
       "date": "2025-09-07",
+      "latest_deploy_status": {
+        "timestamp": "2025-09-07T12:30:00Z",
+        "health_check": "API operational with degraded status (by design)",
+        "routers_loaded": "All 20+ routers loaded successfully including Compliance Intelligence",
+        "vector_service": "Pinecone healthy and operational (125ms latency)",
+        "llm_service": "Healthy and operational (591ms latency)",
+        "remaining_issues": [
+          "Database connection needs Railway DATABASE_URL env var",
+          "pyautogen not installed (optional feature)"
+        ]
+      },
       "database_fixes": [
         "Created gap_analyses table with proper foreign keys",
         "Created narratives table with version tracking",
@@ -260,19 +271,21 @@
         "Fixed standards table reference (standard_id not id)"
       ],
       "dependency_fixes": [
-        "Added reportlab==4.4.3 for PDF generation",
-        "Added sentence-transformers==5.1.0 for embeddings",
-        "Added pyautogen==0.9.0 for agent workflows",
-        "Added torch==2.8.0 and transformers==4.56.0 as dependencies"
+        "Added reportlab to requirements-production.txt for PDF generation in production",
+        "Refactored Pinecone embeddings to prefer sentence-transformers but gracefully fallback to OpenAI embeddings or deterministic hash (no heavy deps required in prod)",
+        "Switched autogen import to pyautogen to match available package"
       ],
       "import_fixes": [
         "Fixed evidence_processor.py import from models.database to database.connection"
       ],
       "remaining_warnings": [
-        "autogen module import issue (package name mismatch)",
-        "sentence-transformers not loading in production",
-        "reportlab not loading in production",
-        "Some routers still unavailable"
+        "pyautogen not installed in production (optional agent orchestrator feature)",
+        "Validate vector service initializes on Railway with PINECONE_API_KEY"
+      ],
+      "fixed_in_latest_deploy": [
+        "Compliance Intelligence router now loads successfully",
+        "All core routers loading properly",
+        "Standards graph and evidence mapper initialized"
       ]
     },
     "working_directory": "/Users/jeremy.estrella/Desktop/MapMyStandards-main",
@@ -324,8 +337,8 @@
       "Add forgot password link on login page",
       "Implement real user data endpoints (beyond sample data)",
       "Set up email templates for welcome and onboarding",
-      "Deploy backend API to production (Railway)",
-      "Update production frontend to use new dashboard"
+      "Redeploy backend API to Railway to pick up prod dependency changes",
+      "Verify /health, report generation routes, and Pinecone init logs"
     ]
   }
 }
