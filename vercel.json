@@ -12,6 +12,10 @@
       "destination": "/trial-signup-flow.html"
     },
     {
+      "source": "/dashboard",
+      "destination": "/dashboard-fixed.html"
+    },
+    {
       "source": "/",
       "destination": "/homepage-enhanced.html"
     }
