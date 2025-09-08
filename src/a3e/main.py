@@ -6,6 +6,7 @@ Features proprietary ontology, vector-weighted matching, multi-agent pipeline, a
 """
 
 from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, BackgroundTasks, Request, Response
+from fastapi import WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, HTMLResponse, FileResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -26,6 +27,7 @@ from datetime import datetime
 from .services.llm_service import LLMService
 from .services.document_service import DocumentService
 from .api.routes import integrations_router, proprietary_router
+from .services.analytics_service import analytics_service
 
 # Configure basic logging first before any imports that might use it  
 logging.basicConfig(level=logging.INFO)
@@ -791,6 +793,44 @@ try:
     logger.info("✅ Report generation router loaded (real reports)")
 except Exception as e:
     logger.warning(f"⚠️ Could not load report generation router: {e}")
+
+    # Root-level WebSocket endpoint for frontend clients: wss://api.../ws
+    @app.websocket("/ws")
+    async def websocket_root(ws: WebSocket):
+        """WebSocket endpoint bridging to analytics real-time service.
+
+        Auth: supports optional `token` and `user_id` query params.
+        If absent, a demo user_id is used to allow public dashboard previews.
+        """
+        # Accept early to allow message exchange; auth-lite via query params
+        await ws.accept()
+        params = ws.query_params
+        token = params.get("token")
+        user_id = params.get("user_id") or "demo"
+
+        # Env toggle to allow demo fallback
+        demo_mode = os.getenv("DASHBOARD_DEMO_MODE", "0").lower() in ("1", "true", "yes", "y")
+
+        # In non-demo mode, require a plausible token
+        if not demo_mode:
+            if not token or len(token) < 10:
+                await ws.close(code=4401)
+                return
+        try:
+            # Register connection and forward basic ping/pong
+            await analytics_service.register_connection(ws, user_id)
+            while True:
+                try:
+                    message = await ws.receive_text()
+                    if message == "ping":
+                        await ws.send_text("pong")
+                except WebSocketDisconnect:
+                    break
+        finally:
+            try:
+                await analytics_service.unregister_connection(user_id)
+            except Exception:
+                pass
 
 # Define health endpoint BEFORE customer_pages router to avoid catch-all interference
 @app.get("/health")

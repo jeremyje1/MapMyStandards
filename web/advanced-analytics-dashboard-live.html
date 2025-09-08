@@ -861,61 +861,48 @@
 
         // WebSocket Connection for Real-time Updates
         function setupWebSocketConnection() {
-            // Skip WebSocket setup if API is not available
             if (!window.mmsAPI || !window.mmsAPI.baseUrl) {
                 console.log('API not configured, skipping WebSocket setup');
                 updateConnectionStatus(false, 'Demo Mode');
                 startMockDataStream();
                 return;
             }
-            
+
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsUrl = `${protocol}//${window.mmsAPI.baseUrl.replace(/^https?:\/\//, '')}/ws`;
-            
+            const apiBase = (window.mmsAPI.baseUrl || '').replace(/^https?:\/\//, '');
+            const token = (window.localStorage && (localStorage.getItem('mms_token') || localStorage.getItem('token'))) || null;
+            const userId = (window.localStorage && (localStorage.getItem('mms_user_id') || localStorage.getItem('user_id'))) || 'demo';
+            const host = apiBase || 'api.mapmystandards.ai';
+            const query = token ? `?user_id=${encodeURIComponent(userId)}&token=${encodeURIComponent(token)}` : `?user_id=demo`;
+            const wsUrl = `${protocol}//${host}/ws${query}`;
+
             try {
                 websocket = new WebSocket(wsUrl);
-                
-                websocket.onopen = function(event) {
+                websocket.onopen = function() {
                     console.log('✅ WebSocket connected for real-time analytics');
                     updateConnectionStatus(true);
-                    
-                    // Subscribe to relevant streams
-                    websocket.send(JSON.stringify({
-                        type: 'subscribe',
-                        stream_types: ['metrics', 'events', 'alerts', 'analytics']
-                    }));
+                    websocket.send(JSON.stringify({ type: 'subscribe', stream_types: ['metrics', 'events', 'alerts', 'analytics'] }));
                 };
-                
                 websocket.onmessage = function(event) {
                     const data = JSON.parse(event.data);
                     handleRealtimeData(data);
                 };
-                
-                websocket.onclose = function(event) {
+                websocket.onclose = function() {
                     console.log('❌ WebSocket disconnected');
                     updateConnectionStatus(false);
-                    
-                    // Don't attempt to reconnect in demo mode
-                    if (window.location.protocol === 'file:') {
+                    if (!token || window.location.protocol === 'file:') {
                         startMockDataStream();
                         return;
                     }
-                    
-                    // Attempt to reconnect after 5 seconds
-                    setTimeout(() => {
-                        console.log('🔄 Attempting to reconnect WebSocket...');
-                        setupWebSocketConnection();
-                    }, 5000);
+                    setTimeout(setupWebSocketConnection, 5000);
                 };
-                
-                websocket.onerror = function(error) {
-                    console.error('WebSocket error:', error);
+                websocket.onerror = function(err) {
+                    console.error('WebSocket error:', err);
                     updateConnectionStatus(false, 'Demo Mode');
                     startMockDataStream();
                 };
-                
-            } catch (error) {
-                console.error('Failed to setup WebSocket connection:', error);
+            } catch (err) {
+                console.error('Failed to setup WebSocket connection:', err);
                 updateConnectionStatus(false, 'Demo Mode');
                 startMockDataStream();
             }
