@@ -16,8 +16,8 @@ from ...core.config import get_settings
 from ..routes.auth_impl import verify_jwt_token
 
 router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
-# Allow requests without Authorization header and treat as demo when absent
-security = HTTPBearer(auto_error=False)
+# Require Authorization header for real user data
+security = HTTPBearer(auto_error=True)
 settings = get_settings()
 logger = logging.getLogger(__name__)
 
@@ -32,38 +32,10 @@ async def get_current_user(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
     db: AsyncSession = Depends(get_db)
 ) -> User:
-    """Get current authenticated user or return demo when unauthenticated.
-
-    Behavior:
-    - If no Authorization header present, return a lightweight demo user.
-    - If token is 'demo-token' or starts with 'test-', return demo user.
-    - Else verify JWT and load user from DB with standard checks.
-    """
-    # Demo fallback when no credentials provided
+    """Get current authenticated user (no demo fallbacks)."""
     token = credentials.credentials if credentials else None
-    if not token or token == "demo-token" or (isinstance(token, str) and token.startswith("test-")):
-        # Minimal demo user object with attributes used by endpoints
-        class _DemoUser:
-            id = "demo"
-            email = "demo@example.com"
-            name = "Demo User"
-            institution_name = "Demo Institution"
-            role = "administrator"
-            subscription_tier = "trial"
-            is_trial = True
-            is_active = True
-            documents_analyzed = 0
-            reports_generated = 0
-            compliance_checks_run = 0
-            
-            @property
-            def is_trial_active(self):
-                return True
-            
-            @property
-            def days_remaining_in_trial(self):
-                return 14
-        return _DemoUser()  # type: ignore[return-value]
+    if not token:
+        raise HTTPException(status_code=401, detail="Authorization required")
 
     # Standard JWT verification path
     email = verify_jwt_token(token)
@@ -136,11 +108,12 @@ async def get_dashboard_overview(
                 "money_saved_usd": money_saved
             },
             "quick_stats": {
-                "active_standards": 12,  # Mock data
-                "mapped_evidence": 45,   # Mock data
-                "gaps_identified": 8,    # Mock data
-                "recommendations": 23    # Mock data
+                "active_standards": 0,
+                "mapped_evidence": 0,
+                "gaps_identified": 0,
+                "recommendations": 0
             },
+            "note": "Metrics will populate after you upload documents and processing completes.",
             "recent_activity": recent_activity
         }
         
@@ -194,26 +167,17 @@ async def get_analytics_data(
             if date_str not in usage_trends:
                 usage_trends[date_str] = {}
             usage_trends[date_str][row.event_category or "other"] = row.count
-        
-        # Generate mock data for demonstration
-        compliance_trends = generate_compliance_trends(period)
-        
+
+        # Placeholder until real trend computation is implemented
+        compliance_trends: List[Dict[str, Any]] = []
+
         return {
             "period": period,
             "usage_trends": usage_trends,
             "compliance_trends": compliance_trends,
-            "top_standards": [
-                {"standard": "HLC Criterion 3", "score": 92, "documents": 8},
-                {"standard": "HLC Criterion 4", "score": 88, "documents": 12},
-                {"standard": "HLC Criterion 5", "score": 85, "documents": 6},
-                {"standard": "HLC Criterion 1", "score": 82, "documents": 5},
-                {"standard": "HLC Criterion 2", "score": 78, "documents": 9}
-            ],
-            "improvement_areas": [
-                {"area": "Assessment Documentation", "priority": "high", "gap_score": 35},
-                {"area": "Faculty Credentials", "priority": "medium", "gap_score": 22},
-                {"area": "Student Learning Outcomes", "priority": "medium", "gap_score": 18}
-            ]
+            "top_standards": [],
+            "improvement_areas": [],
+            "note": "Analytics will populate after you upload documents and the system processes activity."
         }
         
     except Exception as e:

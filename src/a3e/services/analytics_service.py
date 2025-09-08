@@ -371,12 +371,14 @@ class RealTimeAnalyticsService:
         suitable_templates = []
         
         for template in self.dashboard_templates.values():
-            if (template.target_audience == user_role or 
-                template.target_audience == "all" or 
-                user_role == "administrator"):
-                if (template.institution_type == institution_type or 
-                    template.institution_type == "all"):
-                    suitable_templates.append(template)
+            audience_ok = (
+                (template.target_audience == user_role) or (template.target_audience == "all") or (user_role == "administrator")
+            )
+            type_ok = (
+                (template.institution_type == institution_type) or (template.institution_type == "all")
+            )
+            if audience_ok and type_ok:
+                suitable_templates.append(template)
         
         return suitable_templates
     
@@ -392,65 +394,61 @@ class RealTimeAnalyticsService:
     
     # Analytics calculation methods
     async def get_compliance_score(self, user_id: str) -> float:
-        """Calculate compliance score for a user"""
-        # Mock calculation - in production, calculate from actual data
-        return 78.5
+        """Calculate compliance score for a user.
+
+        Placeholder: return 0.0 until sufficient data exists.
+        """
+        # TODO: compute from standards mappings + evidence coverage
+        return 0.0
     
     async def get_active_standards_count(self, user_id: str) -> int:
-        """Get count of active standards for a user"""
-        return 42
+        """Get count of active standards for a user.
+
+        Placeholder: return 0 until documents are uploaded and processed.
+        """
+        return 0
     
     async def get_pending_actions_count(self, user_id: str) -> int:
-        """Get count of pending actions for a user"""
-        return 7
+        """Get count of pending actions for a user.
+
+        Placeholder: return 0 until tasks are generated.
+        """
+        return 0
     
     async def get_recent_activity(self, user_id: str) -> List[Dict[str, Any]]:
-        """Get recent activity for a user"""
-        return [
-            {
-                "action": "Org chart updated",
-                "timestamp": (datetime.utcnow() - timedelta(minutes=15)).isoformat(),
-                "impact": "medium"
-            },
-            {
-                "action": "ROI scenario calculated", 
-                "timestamp": (datetime.utcnow() - timedelta(hours=2)).isoformat(),
-                "impact": "high"
-            }
-        ]
+        """Get recent activity for a user.
+
+        Placeholder: return empty list until events are tracked.
+        """
+        return []
     
     async def generate_advanced_analytics(self, user_id: str, time_range: str = "30d") -> Dict[str, Any]:
-        """Generate advanced analytics insights"""
+        """Generate advanced analytics insights.
+
+        Placeholder skeleton until real analytics are computed.
+        """
         return {
             "compliance_trends": {
-                "current_score": 78.5,
-                "trend": "improving",
-                "change_over_period": 5.2,
-                "projection": 82.1
+                "current_score": 0.0,
+                "trend": "stable",
+                "change_over_period": 0.0,
+                "projection": 0.0
             },
             "organizational_insights": {
-                "structure_complexity": "medium",
+                "structure_complexity": None,
                 "compliance_distribution": {
-                    "high_performers": 65,
-                    "average_performers": 28,
-                    "need_attention": 7
+                    "high_performers": 0,
+                    "average_performers": 0,
+                    "need_attention": 0
                 },
-                "recommendations": [
-                    "Focus on training for departments scoring below 70%",
-                    "Consider restructuring compliance reporting in Finance dept"
-                ]
+                "recommendations": []
             },
             "predictive_analytics": {
-                "risk_factors": [
-                    {"factor": "staff_turnover", "impact": "high", "probability": 0.3},
-                    {"factor": "regulation_changes", "impact": "medium", "probability": 0.6}
-                ],
-                "success_probability": 0.85,
-                "recommended_actions": [
-                    "Increase training frequency in Q4",
-                    "Review policy documentation quarterly"
-                ]
-            }
+                "risk_factors": [],
+                "success_probability": None,
+                "recommended_actions": []
+            },
+            "note": "Metrics will populate after you upload documents and begin activity."
         }
 
 
