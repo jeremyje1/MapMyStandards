@@ -16,7 +16,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          if [ -f requirements-production.txt ]; then pip install -r requirements-production.txt; elif [ -f requirements.txt ]; then pip install -r requirements.txt; else echo "No requirements file"; fi
           pip install gunicorn uvicorn
       - name: Run tests
         run: |
@@ -30,18 +30,5 @@ jobs:
         with:
             name: mapmystandards-native
             path: dist/*.tar.gz
-      - name: Optional remote deploy
-        if: ${{ secrets.DEPLOY_KEY != '' }}
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.DEPLOY_HOST }}
-          username: ${{ secrets.DEPLOY_USER }}
-          key: ${{ secrets.DEPLOY_KEY }}
-          script: |
-            set -e
-            WORKDIR=/opt/mapmystandards
-            sudo mkdir -p $WORKDIR
-            sudo chown $USER:$USER $WORKDIR
-            cd $WORKDIR
-            echo 'Retrieve artifact & deploy (customize this block).'
-            if [ -f native_deploy/deploy_fastapi.sh ]; then bash native_deploy/deploy_fastapi.sh; fi
+
+  
