@@ -16,7 +16,8 @@ from ...core.config import get_settings
 from ..routes.auth_impl import verify_jwt_token
 
 router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
-security = HTTPBearer()
+# Allow requests without Authorization header and treat as demo when absent
+security = HTTPBearer(auto_error=False)
 settings = get_settings()
 logger = logging.getLogger(__name__)
 
@@ -28,30 +29,61 @@ async def get_db():
 
 # Auth dependency
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    credentials: HTTPAuthorizationCredentials | None = Depends(security),
     db: AsyncSession = Depends(get_db)
 ) -> User:
-    """Get current authenticated user"""
-    token = credentials.credentials
+    """Get current authenticated user or return demo when unauthenticated.
+
+    Behavior:
+    - If no Authorization header present, return a lightweight demo user.
+    - If token is 'demo-token' or starts with 'test-', return demo user.
+    - Else verify JWT and load user from DB with standard checks.
+    """
+    # Demo fallback when no credentials provided
+    token = credentials.credentials if credentials else None
+    if not token or token == "demo-token" or (isinstance(token, str) and token.startswith("test-")):
+        # Minimal demo user object with attributes used by endpoints
+        class _DemoUser:
+            id = "demo"
+            email = "demo@example.com"
+            name = "Demo User"
+            institution_name = "Demo Institution"
+            role = "administrator"
+            subscription_tier = "trial"
+            is_trial = True
+            is_active = True
+            documents_analyzed = 0
+            reports_generated = 0
+            compliance_checks_run = 0
+            
+            @property
+            def is_trial_active(self):
+                return True
+            
+            @property
+            def days_remaining_in_trial(self):
+                return 14
+        return _DemoUser()  # type: ignore[return-value]
+
+    # Standard JWT verification path
     email = verify_jwt_token(token)
-    
     if not email:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
-    
+
     stmt = select(User).where(User.email == email)
     result = await db.execute(stmt)
     user = result.scalar_one_or_none()
-    
+
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    
+
     if not user.is_active:
         raise HTTPException(status_code=403, detail="Account is disabled")
-    
+
     # Check trial status
     if user.is_trial and not user.is_trial_active:
         raise HTTPException(status_code=403, detail="Trial period has expired")
-    
+
     return user
 
 

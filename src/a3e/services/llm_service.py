@@ -13,6 +13,7 @@ from dataclasses import dataclass
 import os
 
 import httpx
+from ..core.config import Settings
 
 # Optional AWS imports
 try:  # Optional AWS
@@ -25,15 +26,8 @@ except ImportError:  # pragma: no cover - optional dependency
     class ClientError(Exception):  # type: ignore
         pass
 
-# Optional AI service imports (should be available in minimal requirements)
-# Optional AI service imports (Anthropic optional; avoid OpenAI SDK entirely)
-try:  # Optional AI services
-    import anthropic  # type: ignore
-    AI_SERVICES_AVAILABLE = True
-except ImportError:  # pragma: no cover
-    AI_SERVICES_AVAILABLE = False
-
-from ..core.config import Settings
+# Avoid Anthropic SDK to prevent httpx wrapper issues; we'll call HTTP API directly
+AI_SERVICES_AVAILABLE = True
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +49,7 @@ class LLMService:
         self.settings = settings
         self.bedrock_client = None
         self.openai_client = None
-        self.anthropic_client = None
+        self.anthropic_client = None  # Deprecated path; keep attribute to avoid ref churn
         # OpenAI HTTP fallback state
         self._openai_http_fallback = False
         self._openai_api_key = None
@@ -84,16 +78,9 @@ class LLMService:
         except Exception as e:
             logger.warning(f"OpenAI initialization skipped: {e}")
 
-        # Initialize Anthropic client (optional)
-        try:
-            if self.settings.anthropic_api_key and AI_SERVICES_AVAILABLE:
-                try:
-                    self.anthropic_client = anthropic.AsyncAnthropic(api_key=self.settings.anthropic_api_key)
-                    logger.info("✅ Anthropic client initialized")
-                except Exception as sdk_err:
-                    logger.warning(f"Anthropic SDK init failed: {sdk_err}")
-        except Exception as e:
-            logger.warning(f"Anthropic initialization skipped: {e}")
+        # Anthropic: indicate availability if key present; we'll use HTTPX instead of SDK
+        if self.settings.anthropic_api_key:
+            logger.info("✅ Anthropic HTTP enabled")
     
     async def generate_response(
         self,
@@ -123,7 +110,7 @@ class LLMService:
                 )
             
             # Fallback to Anthropic direct API
-            elif self.anthropic_client and "claude" in model.lower():
+            elif self.settings.anthropic_api_key and "claude" in model.lower():
                 return await self._generate_anthropic_response(
                     prompt, model, temperature, max_tokens, agent_name
                 )
@@ -261,44 +248,52 @@ class LLMService:
         max_tokens: int,
         agent_name: str
     ) -> LLMResponse:
-        """Generate response using Anthropic direct API"""
-        
+        """Generate response using Anthropic via HTTP API"""
         try:
-            # New SDK (0.39.0+) - messages is always available for AsyncAnthropic
-            response = await self.anthropic_client.messages.create(
-                model=model.replace("anthropic.", "").replace(":0", ""),  # Clean up model name
-                max_tokens=max_tokens,
-                temperature=temperature,
-                messages=[
+            headers = {
+                "x-api-key": self.settings.anthropic_api_key,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
+            }
+            # Normalize model name if prefixed
+            model_name = model.replace("anthropic.", "").replace(":0", "")
+            payload = {
+                "model": model_name,
+                "max_tokens": max_tokens,
+                "temperature": temperature,
+                "messages": [
                     {
                         "role": "user",
-                        "content": prompt
+                        "content": prompt,
                     }
-                ]
-            )
-            
-            content = response.content[0].text
-            usage = response.usage
-            
-            # Estimate cost for Anthropic models
-            cost_estimate = self._calculate_anthropic_cost(
-                model,
-                usage.input_tokens,
-                usage.output_tokens
-            )
-            
+                ],
+            }
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                resp = await client.post(
+                    "https://api.anthropic.com/v1/messages",
+                    headers=headers,
+                    json=payload,
+                )
+                resp.raise_for_status()
+                data = resp.json()
+                content_items = data.get("content", [])
+                content = content_items[0].get("text", "") if content_items else ""
+                usage = data.get("usage", {})
+                input_tokens = usage.get("input_tokens", 0)
+                output_tokens = usage.get("output_tokens", 0)
+
+            cost_estimate = self._calculate_anthropic_cost(model, input_tokens, output_tokens)
             return LLMResponse(
                 content=content,
                 model=model,
                 usage={
-                    'prompt_tokens': usage.input_tokens,
-                    'completion_tokens': usage.output_tokens,
-                    'total_tokens': usage.input_tokens + usage.output_tokens
+                    "prompt_tokens": input_tokens,
+                    "completion_tokens": output_tokens,
+                    "total_tokens": input_tokens + output_tokens,
                 },
-                finish_reason=response.stop_reason,
-                cost_estimate=cost_estimate
+                finish_reason=data.get("stop_reason"),
+                cost_estimate=cost_estimate,
             )
-            
         except Exception as e:
             logger.error(f"Anthropic error: {e}")
             raise

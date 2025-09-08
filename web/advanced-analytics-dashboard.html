@@ -867,7 +867,20 @@
             }
             
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsUrl = `${protocol}//${window.mmsAPI.baseUrl.replace(/^https?:\/\//, '')}/ws`;
+            const apiBase = (window.mmsAPI.baseUrl || '').replace(/^https?:\/\//, '');
+
+            // Extract token if available (localStorage/sessionStorage or cookies as needed)
+            const token = (window.localStorage && (localStorage.getItem('mms_token') || localStorage.getItem('token'))) || null;
+            const userId = (window.localStorage && (localStorage.getItem('mms_user_id') || localStorage.getItem('user_id'))) || 'demo';
+
+            // Default to production API host when unauthenticated
+            const host = apiBase || 'api.mapmystandards.ai';
+
+            const query = token
+                ? `?user_id=${encodeURIComponent(userId)}&token=${encodeURIComponent(token)}`
+                : `?user_id=demo`;
+
+            const wsUrl = `${protocol}//${host}/ws${query}`;
             
             try {
                 websocket = new WebSocket(wsUrl);
@@ -893,7 +906,7 @@
                     updateConnectionStatus(false);
                     
                     // Don't attempt to reconnect in demo mode
-                    if (window.location.protocol === 'file:') {
+                    if (!token || window.location.protocol === 'file:') {
                         startMockDataStream();
                         return;
                     }
