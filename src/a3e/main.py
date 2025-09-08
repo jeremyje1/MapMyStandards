@@ -806,8 +806,8 @@ async def websocket_root(ws: WebSocket):
     token = params.get("token")
     user_id = params.get("user_id") or "demo"
 
-    # Env toggle to allow demo fallback (default ON unless explicitly disabled)
-    demo_mode = os.getenv("DASHBOARD_DEMO_MODE", "1").lower() in ("1", "true", "yes", "y")
+    # Env toggle to allow demo fallback (default OFF in production)
+    demo_mode = os.getenv("DASHBOARD_DEMO_MODE", "0").lower() in ("1", "true", "yes", "y")
 
     if not demo_mode:
         # In non-demo mode, require a plausible token
