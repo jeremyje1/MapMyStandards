@@ -7,6 +7,7 @@ hard-coding production domains. Falls back to settings defaults.
 from __future__ import annotations
 
 from .config import settings
+from typing import Optional
 
 
 def _join(base: str, path: str) -> str:
@@ -28,8 +29,7 @@ def public_api_url(path: str = "") -> str:
     """Return full public API URL for a path."""
     return _join(settings.PUBLIC_API_URL, path)
 
-
-def build_unsubscribe_link(token: str | None = None) -> str:
+def build_unsubscribe_link(token: Optional[str] = None) -> str:
     """Return unsubscribe/preferences link with optional token."""
     base = public_app_url("/email-preferences")
     if token:
