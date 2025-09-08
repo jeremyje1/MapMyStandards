@@ -76,26 +76,29 @@ async def upload_document(
                 status_code=400,
                 detail=f"Invalid file type. Allowed types: {', '.join(allowed_types)}"
             )
-        
-        # Check file size (max 10MB)
-        if file.size > 10 * 1024 * 1024:
+
+        # Read file to get content and size
+        contents = await file.read()
+        file_size = len(contents)
+
+        # Check file size (max from settings)
+        if file_size > settings.max_file_size_mb * 1024 * 1024:
             raise HTTPException(
                 status_code=400,
-                detail="File size exceeds 10MB limit"
+                detail=f"File size exceeds {settings.max_file_size_mb}MB limit"
             )
-        
+
         # Generate unique filename
         document_id = str(uuid.uuid4())
         safe_filename = f"{document_id}{file_ext}"
-        
+
         # Create upload directory if it doesn't exist
-        upload_dir = os.path.join(settings.data_dir, "uploads", str(current_user.id))
+        upload_base = getattr(settings, "data_dir", "/app/data")
+        upload_dir = os.path.join(upload_base, "uploads", str(current_user.id))
         os.makedirs(upload_dir, exist_ok=True)
-        
+
         # Save file
         file_path = os.path.join(upload_dir, safe_filename)
-        contents = await file.read()
-        
         with open(file_path, 'wb') as f:
             f.write(contents)
         
@@ -103,10 +106,10 @@ async def upload_document(
         usage_event = UsageEvent(
             user_id=current_user.id,
             event_type="document_upload",
-            event_category="analysis",
-            event_metadata={
+            event_data={
+                "category": "analysis",
                 "filename": file.filename,
-                "file_size": file.size,
+                "file_size": file_size,
                 "file_type": file_ext,
                 "document_id": document_id
             }

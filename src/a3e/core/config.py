@@ -78,6 +78,8 @@ class Settings(BaseSettings):
     
     # Document Processing
     max_file_size_mb: int = Field(default=100, env="MAX_FILE_SIZE_MB")
+    # Directory for storing uploaded files and generated artifacts
+    data_dir: str = Field(default="/app/data", env="DATA_DIR")
     supported_file_types: str = Field(
         default="pdf,docx,xlsx,csv,txt,md",
         env="SUPPORTED_FILE_TYPES"

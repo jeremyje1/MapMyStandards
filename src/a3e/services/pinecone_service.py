@@ -13,7 +13,9 @@ from pinecone import Pinecone, ServerlessSpec
 
 logger = logging.getLogger(__name__)
 
-# Embedding backends (prefer sentence-transformers, fallback to OpenAI, then deterministic hash)
+# Embedding backends
+# Default priority: sentence-transformers > OpenAI > deterministic hash
+# Can be overridden with env EMBEDDINGS_BACKEND in {"st"|"sentence-transformers", "openai", "hash"}
 EMBEDDING_DIM = 384  # Pinecone index dimension we standardize to
 
 try:
@@ -102,19 +104,56 @@ class _OpenAIEmbedder:
             return _HashEmbedder(self._dim).encode(text)
 
 def _get_embedder():
-    # Priority: sentence-transformers > OpenAI > hash
-    if _STModel is not None:
+    """
+    Select embedding backend based on availability and env override.
+
+    Order of resolution:
+    1) If EMBEDDINGS_BACKEND env is set, honor it (st | sentence-transformers | openai | hash)
+    2) Otherwise, try sentence-transformers, then OpenAI, then hash.
+    """
+    backend_pref = (os.environ.get("EMBEDDINGS_BACKEND") or "").strip().lower()
+
+    def _try_st():
+        if _STModel is None:
+            return None
         try:
             model = _STModel('all-MiniLM-L6-v2')
-            logger.info("✅ Sentence transformer model loaded")
+            logger.info("✅ Sentence-transformers backend loaded: all-MiniLM-L6-v2 (384d)")
             return model
         except Exception as e:
-            logger.warning(f"Sentence transformer load failed: {e}")
-    # Try OpenAI
-    emb = _OpenAIEmbedder()
-    if getattr(emb, '_available', False):
-        logger.info("✅ OpenAI embedding backend enabled (projected to 384d)")
-        return emb
+            logger.warning(f"Sentence-transformers load failed: {e}")
+            return None
+
+    def _try_openai():
+        emb = _OpenAIEmbedder()
+        if getattr(emb, '_available', False):
+            logger.info("✅ OpenAI embedding backend enabled (projected to 384d)")
+            return emb
+        return None
+
+    if backend_pref in {"st", "sentence-transformers"}:
+        st = _try_st()
+        if st is not None:
+            return st
+        logger.warning("Requested EMBEDDINGS_BACKEND=sentence-transformers but it's unavailable; falling back")
+        # fall through
+    elif backend_pref == "openai":
+        oa = _try_openai()
+        if oa is not None:
+            return oa
+        logger.warning("Requested EMBEDDINGS_BACKEND=openai but it's unavailable; falling back")
+        # fall through
+    elif backend_pref == "hash":
+        logger.warning("EMBEDDINGS_BACKEND=hash selected; using deterministic fallback embeddings")
+        return _HashEmbedder()
+
+    # Default priority: sentence-transformers > OpenAI > hash
+    st = _try_st()
+    if st is not None:
+        return st
+    oa = _try_openai()
+    if oa is not None:
+        return oa
     logger.warning("⚠️ Using dummy embeddings - install sentence-transformers or set OPENAI_API_KEY for real embeddings")
     return _HashEmbedder()
 

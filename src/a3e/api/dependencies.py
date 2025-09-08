@@ -81,19 +81,33 @@ async def get_optional_user(
         return None
 
 def has_active_subscription(current_user: Dict = Depends(get_current_user)):
+    """Return current user if they have access under subscription rules.
+
+    Historical tokens only include a 'plan' field (e.g. 'trial', 'professional').
+    Newer tokens may include explicit 'subscription_status' / 'trial_status'.
+    To avoid blanket 403s for older tokens, we treat missing fields as an active trial.
     """
-    Check if user has an active subscription (single $199/mo plan)
-    """
-    # Check if user has active subscription
-    is_subscribed = current_user.get("subscription_status") == "active"
-    is_trial = current_user.get("trial_status") == "active"
-    
-    if not is_subscribed and not is_trial:
+    subscription_status = current_user.get("subscription_status")
+    trial_status = current_user.get("trial_status")
+    plan = current_user.get("plan")
+
+    # Derive flags
+    is_subscribed = (
+        subscription_status == "active" or plan in {"professional", "enterprise", "paid"}
+    )
+    is_trial = (
+        trial_status == "active" or plan == "trial"
+    )
+
+    # If legacy token with neither status field, allow as trial to prevent false negatives
+    if subscription_status is None and trial_status is None and plan is not None:
+        is_trial = True
+
+    if not (is_subscribed or is_trial):
         raise HTTPException(
             status_code=403,
-            detail="This feature requires an active subscription. Subscribe for $199/month to access all features."
+            detail="Subscription required. Upgrade to access this feature."
         )
-    
     return current_user
 
 # Legacy compatibility - all point to same check

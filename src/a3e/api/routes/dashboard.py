@@ -70,24 +70,26 @@ async def get_dashboard_overview(
         compliance_score = calculate_compliance_score(current_user)
         time_saved = calculate_time_saved(current_user)
         money_saved = calculate_money_saved(current_user)
-        
+
         # Get recent activity
         stmt = select(UsageEvent).where(
             UsageEvent.user_id == current_user.id
         ).order_by(UsageEvent.created_at.desc()).limit(10)
-        
+
         result = await db.execute(stmt)
         recent_events = result.scalars().all()
         
-        recent_activity = [
-            {
-                "type": event.event_type,
-                "category": event.event_category,
-                "timestamp": event.created_at.isoformat(),
-                "details": event.event_metadata
-            }
-            for event in recent_events
-        ]
+        recent_activity = []
+        for event in recent_events:
+            details = event.event_data or {}
+            recent_activity.append(
+                {
+                    "type": event.event_type,
+                    "category": (details.get("category") if isinstance(details, dict) else None),
+                    "timestamp": event.created_at.isoformat() if event.created_at else None,
+                    "details": details,
+                }
+            )
         
         return {
             "user": {
@@ -148,13 +150,13 @@ async def get_analytics_data(
         stmt = select(
             func.date(UsageEvent.created_at).label('date'),
             func.count(UsageEvent.id).label('count'),
-            UsageEvent.event_category
+            UsageEvent.event_type.label('event_type')
         ).where(
             UsageEvent.user_id == current_user.id,
             UsageEvent.created_at >= start_date
         ).group_by(
             func.date(UsageEvent.created_at),
-            UsageEvent.event_category
+            UsageEvent.event_type
         )
         
         result = await db.execute(stmt)
@@ -166,7 +168,8 @@ async def get_analytics_data(
             date_str = row.date.isoformat() if row.date else "unknown"
             if date_str not in usage_trends:
                 usage_trends[date_str] = {}
-            usage_trends[date_str][row.event_category or "other"] = row.count
+            # group by event_type to avoid reliance on JSON fields
+            usage_trends[date_str][getattr(row, 'event_type', None) or "other"] = row.count
 
         # Placeholder until real trend computation is implemented
         compliance_trends: List[Dict[str, Any]] = []
