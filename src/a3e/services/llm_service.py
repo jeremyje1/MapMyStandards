@@ -26,8 +26,8 @@ except ImportError:  # pragma: no cover - optional dependency
         pass
 
 # Optional AI service imports (should be available in minimal requirements)
+# Optional AI service imports (Anthropic optional; avoid OpenAI SDK entirely)
 try:  # Optional AI services
-    import openai  # type: ignore
     import anthropic  # type: ignore
     AI_SERVICES_AVAILABLE = True
 except ImportError:  # pragma: no cover
@@ -117,7 +117,7 @@ class LLMService:
                 )
             
             # Fallback to OpenAI
-            elif (self.openai_client or self._openai_http_fallback) and "gpt" in model.lower():
+            elif (self._openai_http_fallback) and "gpt" in model.lower():
                 return await self._generate_openai_response(
                     prompt, model, temperature, max_tokens, agent_name
                 )
@@ -199,50 +199,13 @@ class LLMService:
         max_tokens: int,
         agent_name: str
     ) -> LLMResponse:
-        """Generate response using OpenAI"""
-        
+        """Generate response using OpenAI (HTTP-only)."""
         try:
             if self._openai_http_fallback and self._openai_api_key:
-                return await self._generate_openai_response_via_httpx(prompt, model, temperature, max_tokens, agent_name)
-
-            # SDK path
-            response = await self.openai_client.chat.completions.create(
-                model=model,
-                messages=[
-                    {
-                        "role": "system",
-                        "content": f"You are the {agent_name} agent in the A3E accreditation system."
-                    },
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
-                ],
-                temperature=temperature,
-                max_tokens=max_tokens
-            )
-
-            content = response.choices[0].message.content
-            usage = response.usage
-
-            cost_estimate = self._calculate_openai_cost(
-                model,
-                usage.prompt_tokens,
-                usage.completion_tokens
-            )
-
-            return LLMResponse(
-                content=content,
-                model=model,
-                usage={
-                    'prompt_tokens': usage.prompt_tokens,
-                    'completion_tokens': usage.completion_tokens,
-                    'total_tokens': usage.total_tokens
-                },
-                finish_reason=response.choices[0].finish_reason,
-                cost_estimate=cost_estimate
-            )
-
+                return await self._generate_openai_response_via_httpx(
+                    prompt, model, temperature, max_tokens, agent_name
+                )
+            raise RuntimeError("OpenAI not configured")
         except Exception as e:
             logger.error(f"OpenAI error: {e}")
             raise
