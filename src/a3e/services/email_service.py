@@ -360,12 +360,12 @@ Sent from MapMyStandards.ai contact form
         self, 
         user_email: str, 
         user_name: str, 
-        institution: str | None = None, 
+        institution: Optional[str] = None, 
         trial: bool = False,
-        plan_name: str | None = None,
-        amount: float | None = None,
-        stripe_customer_id: str | None = None,
-        subscription_id: str | None = None
+        plan_name: Optional[str] = None,
+        amount: Optional[float] = None,
+        stripe_customer_id: Optional[str] = None,
+        subscription_id: Optional[str] = None
     ) -> bool:
         """Notify internal admin address of a new signup or subscription."""
         admin_recipient = os.getenv("ADMIN_NOTIFICATION_EMAIL", "info@northpathstrategies.org")
