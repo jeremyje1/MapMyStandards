@@ -1,4 +1,4 @@
-# MapMyStandards Platform Requirements
+# MapMyStandards Production Requirements (Optimized for Railway)
 # Python 3.9+ Required
 
 # Core Web Framework
@@ -30,51 +30,53 @@ cryptography==41.0.7
 # Payment Processing
 stripe==12.4.0
 
-# Email Services (Using Postmark as primary)
+# Email Services
+postmarker==1.0  # Postmark Python library (primary)
+sendgrid==6.11.0  # SendGrid as fallback
 aiosmtplib==3.0.1
-postmark==1.0.0
-postmarker==1.0  # Actual Postmark Python library
-sendgrid==6.11.0  # Backup email service
+emails==0.6  # For email templates
 
 # HTTP Client
-httpx==0.25.2
+httpx==0.28.1  # Updated to match pyautogen requirement
 aiohttp==3.9.1
 
-# AI/ML Services (Optional - loaded on demand)
-openai==1.6.1
+# AI/LLM Services (Required for startup)
+# Bumped OpenAI to a newer SDK compatible with httpx 0.28.x to avoid 'proxies' init errors
+openai==1.40.6
 anthropic==0.39.0
 
-# Data Processing
+# Data Processing (Minimal)
 pandas==2.0.3
 numpy==1.24.3
 pyyaml==6.0.2
 
-# CORS Support
-flask-cors==6.0.1
-
-# Development & Testing
-pytest==7.4.3
-pytest-asyncio==0.21.1
-pytest-cov==4.1.0
-
-# Production Dependencies
-redis==5.0.1
-celery==5.3.4
-
-# Vector Database & Embeddings
-pinecone-client==3.0.0  # Updated to working version
-sentence-transformers==5.1.0  # Re-enabled for embedding generation
-torch==2.8.0  # Required for sentence-transformers
-transformers==4.56.0  # Required for sentence-transformers
-
-# Document Processing
+# Document Processing (Essential only)
 PyPDF2==3.0.1
 python-docx==1.1.0
 openpyxl==3.1.2
-pypdf==3.17.0  # Additional PDF support
-python-magic==0.4.27  # File type detection
-chardet==5.2.0  # Character encoding detection
-reportlab==4.4.3  # PDF generation for reports
+pypdf==3.17.0
+python-magic==0.4.27
+chardet==5.2.0
+Pillow==10.1.0  # For image processing
+reportlab==4.2.0  # For PDF generation in report_generation
 
-# Agent Orchestrator
-pyautogen==0.9.0  # Updated to latest version for agent workflows
+# Pinecone (without heavy ML deps)
+pinecone-client==3.0.0
+
+# Lightweight ML utilities used by analytics endpoints
+scikit-learn==1.3.2
+
+# Production essentials
+redis==5.0.1
+
+# CORS Support
+flask-cors==6.0.1
+
+# Additional utilities
+python-jose[cryptography]==3.3.0  # For JWT handling
+itsdangerous==2.1.2  # For secure sessions
+markupsafe==2.1.3  # For safe HTML
+bleach==6.1.0  # For HTML sanitization
+
+# Agent orchestration (optional but included for full functionality)
+pyautogen==0.9.0  # For multi-agent workflows
