@@ -148,6 +148,7 @@ except ImportError as e:
 
 try:
     from .api.routes.documents import router as documents_router
+    from .api.routes.documents import upload_document as upload_document_handler
     documents_router_available = True
 except ImportError as e:
     documents_router_available = False
@@ -587,6 +588,12 @@ except ImportError as e:
 if documents_router_available:
     app.include_router(documents_router)
     logger.info("✅ Documents router loaded")
+    # Back-compat aliases (frontend uses /documents/*)
+    try:
+        app.add_api_route("/documents/upload", upload_document_handler, methods=["POST"])
+        logger.info("🔗 Added alias route: POST /documents/upload -> /api/documents/upload")
+    except Exception as e:
+        logger.warning(f"⚠️ Could not add alias route for documents upload: {e}")
 else:
     logger.warning("⚠️ Documents router not available")
 
