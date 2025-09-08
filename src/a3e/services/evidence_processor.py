@@ -26,19 +26,15 @@ except ImportError:
     logger = logging.getLogger(__name__)
     logger.warning("PDF/DOCX support not available - install PyPDF2, python-docx, pandas")
 
-# OpenAI imports
-try:
-    import openai
-    OPENAI_AVAILABLE = True
-except ImportError:
-    OPENAI_AVAILABLE = False
-    logger = logging.getLogger(__name__)
-    logger.warning("OpenAI not available - AI features disabled")
-
 from ..core.config import Settings
 from ..database.connection import DatabaseManager
-from sqlalchemy import text
 from .ai_service import get_ai_service
+
+"""
+Note: We intentionally avoid importing the OpenAI SDK here. All AI calls
+are routed through AIService, which uses Anthropic SDK or OpenAI via HTTPX.
+This prevents httpx wrapper shutdown errors from third-party SDKs.
+"""
 
 logger = logging.getLogger(__name__)
 
@@ -158,52 +154,8 @@ class EvidenceProcessor:
         return text.strip()
     
     async def analyze_with_ai(self, text: str, metadata: Dict[str, Any]) -> Dict[str, Any]:
-        """Analyze document content using OpenAI"""
-        
-        if not self.openai_client:
-            return self.fallback_analysis(text, metadata)
-        
-        try:
-            # Prepare analysis prompt
-            prompt = f"""Analyze this academic document for accreditation evidence.
-            
-Document: {metadata.get('filename', 'Unknown')}
-Institution: {metadata.get('institution_name', 'Unknown')}
-Accreditor: {metadata.get('accreditor', 'SACSCOC')}
-
-Document Text (first 3000 chars):
-{text[:3000]}
-
-Provide a JSON response with:
-1. document_type: Type of document (e.g., "strategic_plan", "assessment_report", "policy", etc.)
-2. key_topics: List of 5-10 main topics covered
-3. evidence_elements: List of specific evidence items relevant to accreditation
-4. compliance_areas: List of compliance areas addressed
-5. strengths: List of institutional strengths demonstrated
-6. potential_gaps: Any potential compliance gaps or areas needing attention
-7. recommendations: Specific recommendations for using this evidence
-8. confidence_score: 0-100 score for how relevant this is to accreditation"""
-
-            response = await self.openai_client.chat.completions.create(
-                model="gpt-4o-mini",  # Using affordable model
-                messages=[
-                    {"role": "system", "content": "You are an expert accreditation analyst specializing in higher education compliance. Analyze documents for evidence mapping to accreditation standards."},
-                    {"role": "user", "content": prompt}
-                ],
-                response_format={"type": "json_object"},
-                temperature=0.3,
-                max_tokens=1500
-            )
-            
-            analysis = json.loads(response.choices[0].message.content)
-            analysis['ai_model'] = 'gpt-4o-mini'
-            analysis['analysis_timestamp'] = datetime.utcnow().isoformat()
-            
-            return analysis
-            
-        except Exception as e:
-            logger.error(f"AI analysis failed: {e}")
-            return self.fallback_analysis(text, metadata)
+        """Legacy shim: delegate to AIService for analysis."""
+        return await self.ai_service.analyze_document(text, metadata)
     
     def fallback_analysis(self, text: str, metadata: Dict[str, Any]) -> Dict[str, Any]:
         """Basic analysis without AI"""

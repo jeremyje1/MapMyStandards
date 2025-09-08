@@ -52,12 +52,15 @@ class _OpenAIEmbedder:
         self._model = model
         self._dim = dim
         self._api_key = os.environ.get("OPENAI_API_KEY")
+        self._org = os.environ.get("OPENAI_ORG") or os.environ.get("OPENAI_ORGANIZATION")
+        self._project = os.environ.get("OPENAI_PROJECT")
+        self._disabled = os.environ.get("DISABLE_OPENAI_EMBEDDINGS", "0").lower() in ("1", "true", "yes")
         # Build a fixed random projection for dimensionality reduction (seeded)
         rng = np.random.default_rng(42)
         # text-embedding-3-small returns 1536 dims
         self._source_dim = 1536
         self._proj = rng.normal(0, 1, size=(self._source_dim, self._dim)) / np.sqrt(self._dim)
-        self._available = bool(self._api_key)
+        self._available = bool(self._api_key) and not self._disabled
 
     def encode(self, text, *args, **kwargs):
         if not self._available:
@@ -68,9 +71,24 @@ class _OpenAIEmbedder:
                 "Authorization": f"Bearer {self._api_key}",
                 "Content-Type": "application/json",
             }
+            if self._org:
+                headers["OpenAI-Organization"] = self._org
+            if self._project:
+                headers["OpenAI-Project"] = self._project
             payload = {"model": self._model, "input": texts}
             with httpx.Client(timeout=30.0) as client:
                 r = client.post("https://api.openai.com/v1/embeddings", headers=headers, json=payload)
+                if r.status_code in (401, 403):
+                    # Disable further attempts this process to avoid log spam
+                    self._available = False
+                    try:
+                        err = r.json().get("error", {})
+                        code = err.get("code") or err.get("type")
+                        msg = err.get("message") or ""
+                        logger.warning(f"OpenAI embeddings disabled after {r.status_code} ({code}): {msg}")
+                    except Exception:
+                        logger.warning(f"OpenAI embeddings disabled after status {r.status_code}")
+                    return _HashEmbedder(self._dim).encode(text)
                 r.raise_for_status()
                 data = r.json()
                 vecs = [np.array(item["embedding"]) for item in data.get("data", [])]
