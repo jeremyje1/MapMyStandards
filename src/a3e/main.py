@@ -1533,6 +1533,21 @@ async def trial_signup_redirect():  # noqa: D401
 async def trial_signup_stripe_redirect():  # noqa: D401
     return Response(status_code=307, headers={"Location": "/subscribe"})
 
+@app.get("/debug/routes", include_in_schema=False)
+async def debug_routes():  # noqa: D401
+    """Return list of registered route paths (debug)."""
+    try:
+        route_info = []
+        for r in app.router.routes:
+            path = getattr(r, 'path', None)
+            methods = list(getattr(r, 'methods', [])) if hasattr(r, 'methods') else []
+            if path:
+                route_info.append({"path": path, "methods": methods})
+        route_info.sort(key=lambda x: x["path"])  # stable ordering
+        return {"count": len(route_info), "routes": route_info}
+    except Exception as e:
+        return {"error": str(e)}
+
 @app.get("/favicon.ico", include_in_schema=False)
 async def favicon():  # noqa: D401
     """Return favicon if present; suppress 404 noise if missing."""
