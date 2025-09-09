@@ -19,6 +19,7 @@ import os
 import secrets
 import hashlib
 import logging
+from typing import Optional
 import jwt  # PyJWT
 
 logger = logging.getLogger(__name__)
@@ -204,11 +205,11 @@ async def login(req: LoginRequest, response: Response):
 
 class RefreshRequest(BaseModel):
     # Allow body or cookie usage; body optional
-    refresh_token: str | None = None
+    refresh_token: Optional[str] = None
 
 
 @router.post("/refresh", response_model=AuthSuccess)
-async def refresh(request: Request, response: Response, body: RefreshRequest | None = None):
+async def refresh(request: Request, response: Response, body: Optional[RefreshRequest] = None):
     token = (body.refresh_token if body else None) or request.cookies.get("refresh_token")
     if not token:
         raise HTTPException(status_code=401, detail="Missing refresh token")
