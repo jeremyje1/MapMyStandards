@@ -97,9 +97,20 @@ async def trial_signup(request: TrialSignupRequest, background_tasks: Background
     logger.info(f"Trial signup request received for email: {request.email}, plan: {request.plan}")
     logger.info(f"Full request data: institution_name={request.institution_name}, role={request.role}, first_name={request.first_name}, last_name={request.last_name}")
     import time
+    import asyncio
     started = time.time()
+    stage = "start"
     try:
-        # Log Stripe key presence + short payment method id for diagnostics
+        # 1. Normalize plan early
+        original_plan = request.plan
+        if request.plan in ("college", "multicampus", "professional"):
+            request.plan = f"{request.plan}_monthly"
+        elif request.plan.endswith("_annual"):
+            request.plan = request.plan.replace("_annual", "_yearly")
+        if request.plan != original_plan:
+            logger.info("[billing] Normalized incoming plan %s -> %s", original_plan, request.plan)
+
+        # 2. Stripe diagnostics
         try:
             import stripe
             logger.info(
@@ -111,19 +122,16 @@ async def trial_signup(request: TrialSignupRequest, background_tasks: Background
             )
         except Exception:
             logger.info("[trial] Unable to introspect Stripe module for diagnostics")
-        # Create trial subscription with Stripe (timed)
-        import asyncio
+
+        # 3. Invoke payment service with timeout
         stage = "create_trial_subscription"
         try:
-            result = await asyncio.wait_for(
-                payment_service.create_trial_subscription(
-                    email=request.email,
-                    plan=request.plan,
-                    payment_method_id=request.payment_method_id,
-                    coupon_code=request.coupon_code
-                ),
-                timeout=12
-            )
+            result = await asyncio.wait_for(payment_service.create_trial_subscription(
+                email=request.email,
+                plan=request.plan,
+                payment_method_id=request.payment_method_id,
+                coupon_code=request.coupon_code
+            ), timeout=12)
         except asyncio.TimeoutError:
             elapsed = int((time.time() - started) * 1000)
             logger.error("Trial signup timed out after %sms (stage=%s)", elapsed, stage)
@@ -137,7 +145,8 @@ async def trial_signup(request: TrialSignupRequest, background_tasks: Background
                 })
             raise HTTPException(status_code=504, detail={"error": "Signup timed out", "stage": stage, "elapsed_ms": elapsed})
 
-        if result['success']:
+        # 4. Success path
+        if result.get('success'):
             elapsed_total = int((time.time() - started) * 1000)
             result.setdefault('timing_ms', elapsed_total)
             
@@ -246,46 +255,38 @@ async def trial_signup(request: TrialSignupRequest, background_tasks: Background
             return {
                 "success": True,
                 "message": "7-day free trial started successfully",
-                "trial_id": result['subscription_id'],  # Add trial_id for frontend redirect
+                "trial_id": result['subscription_id'],
                 "data": {
                     "api_key": result['api_key'],
-                    "trial_end": result['trial_end'], 
+                    "trial_end": result['trial_end'],
                     "customer_id": result['customer_id'],
                     "subscription_id": result['subscription_id'],
                     "plan": request.plan,
                     "status": "trialing",
-                    "billing_starts": result['trial_end']  # When billing begins
+                    "billing_starts": result['trial_end']
                 }
             }
-        else:
-            # Enhanced diagnostics for 400 errors seen in client
-            logger.error(
-                "Trial signup failed (email=%s plan=%s payment_method_id=%s) -> %s",
-                request.email,
-                request.plan,
-                request.payment_method_id[:10] + '...' if request.payment_method_id else None,
-                result
-            )
-            # Provide a structured error so frontend can surface stage
-            error_payload = {"error": result.get('error', 'Unknown error'), "stage": result.get('stage')}
-            raise HTTPException(status_code=400, detail=error_payload)
-            
+        # 5. Failure path
+        stage = result.get('stage', 'unknown')
+        logger.error(
+            "Trial signup failed (email=%s plan=%s payment_method_id=%s) -> %s",
+            request.email,
+            request.plan,
+            request.payment_method_id[:10] + '...' if request.payment_method_id else None,
+            result
+        )
+        error_payload = {"error": result.get('error', 'Unknown error'), "stage": result.get('stage')}
+        raise HTTPException(status_code=400, detail=error_payload)
     except HTTPException:
         raise
     except Exception as e:
         elapsed_total = int((time.time() - started) * 1000)
-        logger.error(f"Trial signup error after {elapsed_total}ms: {e}")
+        logger.error(f"Trial signup error after {elapsed_total}ms (stage={stage}): {e}")
         logger.error(f"Error type: {type(e).__name__}")
         logger.error(f"Error details: {str(e)}")
-
-        # Check if this is a Stripe configuration issue
         if "API key" in str(e):
-            raise HTTPException(
-                status_code=503,
-                detail="Payment system is not properly configured. Please contact support."
-            )
-
-        raise HTTPException(status_code=500, detail={"error": f"Failed to create trial subscription: {str(e)}", "elapsed_ms": elapsed_total})
+            raise HTTPException(status_code=503, detail="Payment system is not properly configured. Please contact support.")
+        raise HTTPException(status_code=500, detail={"error": f"Failed to create trial subscription: {str(e)}", "stage": stage, "elapsed_ms": elapsed_total})
 
 @router.get("/trial/ping", include_in_schema=False)
 async def trial_ping():
