@@ -698,6 +698,48 @@ async def _sentinel_main():  # noqa: D401
 async def _sentinel_simple():  # noqa: D401
     return {"ok": True, "ts": __import__('datetime').datetime.utcnow().isoformat() + 'Z'}
 
+try:
+    from prometheus_client import Counter, Gauge, Histogram, generate_latest, CONTENT_TYPE_LATEST  # type: ignore
+    _prom_enabled = True
+    REQUEST_COUNT = Counter('app_requests_total', 'Total HTTP requests', ['method', 'path', 'status'])
+    CHECKOUT_SESSIONS = Counter('checkout_sessions_created_total', 'Checkout sessions created')
+    FALLBACK_PROVISION = Counter('fallback_provision_created_total', 'Fallback user provisions created')
+    VERIFY_LATENCY = Histogram('verify_session_latency_seconds', 'Latency for verify-session handler')
+except Exception:
+    _prom_enabled = False
+
+@app.middleware("http")
+async def _metrics_middleware(request, call_next):  # type: ignore
+    if not _prom_enabled:
+        return await call_next(request)
+    from time import time
+    start = time()
+    response = await call_next(request)
+    try:
+        REQUEST_COUNT.labels(method=request.method, path=request.url.path, status=response.status_code).inc()
+    except Exception:
+        pass
+    # Specialized counters updated inside billing router via logging (optional future wiring)
+    if request.url.path.endswith('/create-single-plan-checkout') and response.status_code < 500:
+        try:
+            CHECKOUT_SESSIONS.inc()
+        except Exception:
+            pass
+    if request.url.path.endswith('/verify-session') and response.status_code == 200:
+        # Histogram only for verify-session
+        try:
+            VERIFY_LATENCY.observe(time() - start)
+        except Exception:
+            pass
+    return response
+
+@app.get('/metrics', include_in_schema=False)
+async def metrics():  # noqa: D401
+    if not _prom_enabled:
+        return Response("prometheus_client not installed", status_code=503)
+    data = generate_latest()  # type: ignore
+    return Response(content=data, media_type=CONTENT_TYPE_LATEST)
+
 @app.get("/robots.txt", include_in_schema=False)
 async def robots():  # noqa: D401
     # Explicitly allow all so external services cannot claim blocking.
