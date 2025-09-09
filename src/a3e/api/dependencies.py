@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 # Security scheme
 security = HTTPBearer()
+optional_security = HTTPBearer(auto_error=False)
 
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> Dict:
     """
@@ -67,7 +68,7 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         )
 
 async def get_optional_user(
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(optional_security)
 ) -> Optional[Dict]:
     """
     Get current user if authenticated, None otherwise
@@ -79,6 +80,25 @@ async def get_optional_user(
         return await get_current_user(credentials)
     except:
         return None
+
+async def get_optional_current_user(authorization: Optional[str] = None) -> Optional[Dict]:
+    """
+    Get current user without requiring authentication.
+    Used for endpoints that should work for both authenticated and anonymous users.
+    """
+    if not authorization:
+        return None
+    
+    try:
+        # Extract bearer token
+        if authorization.startswith("Bearer "):
+            token = authorization[7:]
+            credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
+            return await get_current_user(credentials)
+    except:
+        pass
+    
+    return None
 
 def has_active_subscription(current_user: Dict = Depends(get_current_user)):
     """Return current user if they have access under subscription rules.

@@ -80,7 +80,10 @@
         const statusEl = document.getElementById('status');
         statusEl.textContent = 'Verifying checkout...';
         try {
-          const resp = await fetch(`/api/v1/billing/verify-session?session_id=${encodeURIComponent(sid)}`);
+          const apiBase = window.location.hostname === 'localhost' 
+            ? 'http://localhost:8000'
+            : 'https://api.mapmystandards.ai';
+          const resp = await fetch(`${apiBase}/api/v1/billing/verify-session?session_id=${encodeURIComponent(sid)}`);
           const data = await resp.json();
           if(resp.ok && data.success){
             statusEl.className='status success';
@@ -113,9 +116,14 @@
         const origin = window.location.origin;
         const success = origin + '/dashboard.html?session_id={CHECKOUT_SESSION_ID}';
         const cancel = origin + '/subscribe.html';
+        // Determine API base URL
+        const apiBase = window.location.hostname === 'localhost' 
+          ? 'http://localhost:8000'
+          : 'https://api.mapmystandards.ai';
+        
         const endpoints = [
-          '/api/v1/billing/create-single-plan-checkout', // preferred
-          '/api/billing/create-single-plan-checkout'     // legacy fallback
+          apiBase + '/api/v1/billing/create-single-plan-checkout', // preferred
+          apiBase + '/api/billing/create-single-plan-checkout'     // legacy fallback
         ];
         let data = null;
         let lastError = null;
