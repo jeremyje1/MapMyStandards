@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Subscribe - MapMyStandards</title>
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg,#667eea,#764ba2);
+      --primary:#6366f1;
+      --primary-accent:#4f46e5;
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; background:var(--bg-gradient); color:#111; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:2rem; }
+    .card { background:#fff; width:100%; max-width:480px; border-radius:18px; padding:2.25rem 2rem 2.5rem; box-shadow:0 24px 60px -10px rgba(0,0,0,.35); position:relative; }
+    h1 { margin:0 0 .75rem; font-size:1.85rem; background:var(--bg-gradient); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+    p.lead { margin:.25rem 0 1.5rem; color:#374151; line-height:1.45; }
+    ul { padding-left:1.1rem; margin:0 0 1.75rem; }
+    li { margin:.4rem 0; font-size:.95rem; color:#374151; }
+    .price { font-size:2.4rem; font-weight:600; margin:.25rem 0 1.25rem; letter-spacing:-1px; }
+    .interval { font-size:.9rem; color:#6b7280; margin-left:.25rem; font-weight:500; }
+    button { cursor:pointer; border:none; background:var(--primary); color:#fff; font-size:1.05rem; font-weight:600; padding:.95rem 1.25rem; border-radius:10px; width:100%; display:flex; align-items:center; justify-content:center; gap:.55rem; box-shadow:0 10px 22px -4px rgba(99,102,241,.55); transition:.18s ease; }
+    button:hover:not([disabled]) { background:var(--primary-accent); transform:translateY(-2px); box-shadow:0 14px 30px -6px rgba(99,102,241,.6); }
+    button[disabled] { opacity:.55; cursor:progress; }
+    .status { margin-top:1.25rem; font-size:.85rem; min-height:1.2em; color:#374151; }
+    .status.error { color:#b91c1c; }
+    .status.success { color:#065f46; }
+    .badge { position:absolute; top:-14px; right:16px; background:#10b981; color:#fff; font-size:.7rem; font-weight:700; padding:.4rem .65rem .35rem; border-radius:50px; letter-spacing:.5px; box-shadow:0 4px 12px -2px rgba(16,185,129,.55); }
+    .subnote { font-size:.7rem; text-transform:uppercase; letter-spacing:1px; color:#6b7280; font-weight:600; margin:-.35rem 0 1.2rem; }
+    .footer-note { margin-top:2rem; font-size:.7rem; text-align:center; color:#6b7280; }
+    a.inline { color:var(--primary); text-decoration:none; font-weight:600; }
+    a.inline:hover { text-decoration:underline; }
+    .spinner { width:18px; height:18px; border:3px solid rgba(255,255,255,.35); border-top-color:#fff; border-radius:50%; animation:spin 1s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg);} }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="badge">LIVE</div>
+    <h1>Platform Subscription</h1>
+    <div class="subnote">Secure Stripe Checkout</div>
+    <div class="price">$199<span class="interval">/month</span></div>
+    <p class="lead">Full access to MapMyStandards: evidence mapping, narrative generation with CiteGuard™, risk prediction, integrations, unlimited users & documents, and priority support.</p>
+    <ul>
+      <li>Unlimited users & documents</li>
+      <li>Evidence & standards intelligence</li>
+      <li>Narrative & reporting suite</li>
+      <li>Dashboards & analytics</li>
+      <li>Integrations & connectors</li>
+      <li>Priority support & updates</li>
+    </ul>
+    <button id="subscribeBtn">
+      <span class="btn-label">Proceed to Secure Checkout</span>
+    </button>
+    <div class="status" id="status"></div>
+    <div class="footer-note">You will be redirected to our PCI-compliant Stripe hosted checkout page. Need a purchase order? <a class="inline" href="mailto:sales@mapmystandards.ai?subject=Purchase%20Order%20Request">Contact us</a>.</div>
+  </div>
+  <script>
+    const btn = document.getElementById('subscribeBtn');
+    const statusEl = document.getElementById('status');
+
+    function setStatus(msg, cls) {
+      statusEl.textContent = msg || '';
+      statusEl.className = 'status' + (cls ? ' ' + cls : '');
+    }
+
+    async function createCheckout() {
+      setStatus('Creating secure checkout session...', '');
+      btn.disabled = true;
+      const original = btn.innerHTML;
+      btn.innerHTML = '<div class="spinner"></div> Redirecting...';
+      try {
+        const origin = window.location.origin;
+        const success = origin + '/dashboard.html?session_id={CHECKOUT_SESSION_ID}';
+        const cancel = origin + '/subscribe.html';
+        const resp = await fetch('/api/v1/billing/create-single-plan-checkout', {
+          method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ success_url: success, cancel_url: cancel })
+        });
+        if (!resp.ok) {
+          const errTxt = await resp.text();
+          throw new Error('Request failed: ' + resp.status + ' ' + errTxt);
+        }
+        const data = await resp.json();
+        if (!data.checkout_url) {
+          throw new Error('Missing checkout_url in response');
+        }
+        setStatus('Redirecting to Stripe...', 'success');
+        window.location.href = data.checkout_url;
+      } catch (e) {
+        console.error(e);
+        setStatus(e.message || 'Failed to start checkout', 'error');
+        btn.disabled = false;
+        btn.innerHTML = original;
+      }
+    }
+
+    btn.addEventListener('click', createCheckout);
+  </script>
+</body>
+</html>

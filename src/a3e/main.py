@@ -182,6 +182,14 @@ except ImportError as e:
     auth_simple_router_available = False
     _auth_simple_import_exception = e
 
+# Single plan billing (hosted Stripe Checkout) router
+try:
+    from .api.routes.billing_single_plan import router as billing_single_plan_router
+    billing_single_plan_router_available = True
+except ImportError as e:
+    billing_single_plan_router_available = False
+    _billing_single_plan_import_exception = e
+
 try:
     from .api.routes.upload import router as upload_router
     upload_router_available = True
@@ -635,6 +643,13 @@ if auth_simple_router_available:
     logger.info("✅ Simple auth router loaded")
 else:
     logger.warning("⚠️ Simple auth router not available")
+
+# Mount single plan billing checkout endpoints (hosted Stripe Checkout flow)
+if 'billing_single_plan_router_available' in globals() and billing_single_plan_router_available:
+    app.include_router(billing_single_plan_router)
+    logger.info("✅ Single-plan billing router loaded (hosted checkout)")
+else:
+    logger.warning("⚠️ Single-plan billing router not available")
 
 if narrative_router_available:
     app.include_router(narrative_router)
