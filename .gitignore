@@ -2,22 +2,57 @@
 .env
 .env.local
 .env.*.local
+*.env
+!.env.example
 
-# Performance optimization - Exclude large directories
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
 stripe_venv/
 venv/
+.venv/
+ENV/
 env/
+.env/
+.tmpenv/
+a3e_enhanced_env/
+
+# Node.js
 node_modules/
-__pycache__/
-.pytest_cache/
-*.pyc
-*.pyo
-*.pyd
-.DS_Store
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
 
 # Next.js build output
 .next/
 out/
+build/
+
+# React/CRA
+/frontend/build/
+/frontend/node_modules/
 
 # Security - Never commit these files
 *password*
@@ -43,10 +78,102 @@ config/*secret*
 config/*password*
 
 # API keys and sensitive configuration
-.env*
 secrets/
 credentials/
 keys/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+log/
+
+# Testing
+.coverage
+.pytest_cache/
+htmlcov/
+.tox/
+.hypothesis/
+coverage.xml
+*.cover
+.cache
+nosetests.xml
+coverage/
+cypress/videos/
+cypress/screenshots/
+
+# Uploads (should use cloud storage)
+uploads/
+/uploads/
+production_uploads/
+production_reports/
+production_analysis/
+
+# Backups
+backups/
+backup/
+*.backup
+*.bak
+old_code/
+archive/
+docker-configs-backup/
+docs-backup/
+frontend-backup/
+native_deploy/
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+*.tmp
+*.temp
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+instance/
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Desktop.ini
+
+# Deployment
+.vercel
+.railway/
+.amplify/
+
+# Package files
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Misc
+*.pid
+*.gz
+*.orig
+.grunt
+.sass-cache/
+jobs_status/
+reports_generated/
+wordpress-plugin/
 
 # Python cache
 __pycache__/
