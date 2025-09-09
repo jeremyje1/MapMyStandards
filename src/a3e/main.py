@@ -1499,6 +1499,22 @@ async def checkout_page(request: Request):  # noqa: D401
         return HTMLResponse(content="<h1>Checkout page not found</h1>", status_code=404)
     return HTMLResponse(content=content)
 
+@app.get("/subscribe", response_class=HTMLResponse, include_in_schema=False)
+async def subscribe_page(request: Request):  # noqa: D401
+    """Serve simplified single-plan subscription page (subscribe.html)."""
+    content = _read_web_file("subscribe.html")
+    if content is None:
+        # Fallback helpful message if file missing or not deployed
+        return HTMLResponse(
+            content=(
+                "<h1>Subscription Page Not Deployed</h1>"
+                "<p>The file subscribe.html was not found in the web directory.</p>"
+                "<p>Ensure web/subscribe.html exists in the deployment artifact.</p>"
+            ),
+            status_code=404
+        )
+    return HTMLResponse(content=content)
+
 @app.get("/favicon.ico", include_in_schema=False)
 async def favicon():  # noqa: D401
     """Return favicon if present; suppress 404 noise if missing."""
