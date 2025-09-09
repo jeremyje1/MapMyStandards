@@ -185,6 +185,7 @@ except ImportError as e:
 # Single plan billing (hosted Stripe Checkout) router
 try:
     from .api.routes.billing_single_plan import router as billing_single_plan_router
+    from .api.routes.billing_single_plan import legacy_single_plan_router as billing_single_plan_legacy_router
     billing_single_plan_router_available = True
 except ImportError as e:
     billing_single_plan_router_available = False
@@ -648,6 +649,11 @@ else:
 if 'billing_single_plan_router_available' in globals() and billing_single_plan_router_available:
     app.include_router(billing_single_plan_router)
     logger.info("✅ Single-plan billing router loaded (hosted checkout)")
+    try:
+        app.include_router(billing_single_plan_legacy_router)
+        logger.info("✅ Single-plan legacy router loaded (/api/billing/*)")
+    except Exception as _e:
+        logger.warning(f"⚠️ Could not mount legacy single-plan router: {_e}")
 else:
     logger.warning("⚠️ Single-plan billing router not available")
 
