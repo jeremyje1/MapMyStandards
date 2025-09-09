@@ -15,17 +15,16 @@ def configure_cors(app: FastAPI):
         "https://www.mapmystandards.ai",
         "https://api.mapmystandards.ai",
         "https://platform.mapmystandards.ai",
+        # Always allow localhost for testing
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://localhost:8000",
+        "http://localhost:8888",
+        "http://localhost:8080",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:8000",
+        "http://127.0.0.1:8888",
     ]
-    
-    # Add localhost for development if not in production
-    if os.getenv("ENVIRONMENT", "development") != "production":
-        allowed_origins.extend([
-            "http://localhost:3000",
-            "http://localhost:3001",
-            "http://localhost:8000",
-            "http://127.0.0.1:3000",
-            "http://127.0.0.1:8000",
-        ])
     
     # Configure CORS middleware
     app.add_middleware(

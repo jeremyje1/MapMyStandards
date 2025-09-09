@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MapMyStandards Upload Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 20px 0;
+        }
+        .upload-area:hover {
+            border-color: #4CAF50;
+            background: #f9f9f9;
+        }
+        .upload-area.dragging {
+            border-color: #4CAF50;
+            background: #e8f5e9;
+        }
+        .file-input {
+            display: none;
+        }
+        .upload-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+        .upload-btn:hover {
+            background: #45a049;
+        }
+        .upload-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .file-list {
+            margin-top: 20px;
+        }
+        .file-item {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: #4CAF50;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        .status {
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .status.uploading {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .login-section {
+            background: #f0f8ff;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .login-form input {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        .error-message {
+            color: #d32f2f;
+            margin: 10px 0;
+            padding: 10px;
+            background: #ffebee;
+            border-radius: 5px;
+        }
+        .success-message {
+            color: #2e7d32;
+            margin: 10px 0;
+            padding: 10px;
+            background: #e8f5e9;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 MapMyStandards Upload Test</h1>
+        
+        <div id="loginSection" class="login-section">
+            <h3>Step 1: Login or Create Test Account</h3>
+            <div class="login-form">
+                <input type="email" id="email" placeholder="Email" value="test@example.com">
+                <input type="password" id="password" placeholder="Password" value="TestPass123!">
+                <div style="margin: 10px 0;">
+                    <button onclick="login()" class="upload-btn">Login</button>
+                    <button onclick="register()" class="upload-btn" style="background: #2196F3;">Create Account</button>
+                </div>
+            </div>
+            <div id="authMessage"></div>
+        </div>
+
+        <div id="uploadSection" style="display: none;">
+            <h3>Step 2: Test File Upload</h3>
+            <div class="upload-area" id="uploadArea">
+                <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                <p style="margin: 20px 0; color: #666;">
+                    Drag & drop files here or click to browse
+                </p>
+                <p style="color: #999; font-size: 14px;">
+                    Supported: PDF, Word, Excel, CSV, Text (Max 100MB)
+                </p>
+                <input type="file" id="fileInput" class="file-input" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt">
+            </div>
+
+            <div id="fileList" class="file-list"></div>
+        </div>
+
+        <div id="results" style="margin-top: 20px;"></div>
+    </div>
+
+    <script>
+        const API_URL = 'https://api.mapmystandards.ai';
+        let accessToken = localStorage.getItem('access_token');
+        
+        // Check if already logged in
+        if (accessToken) {
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('uploadSection').style.display = 'block';
+        }
+
+        async function register() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const timestamp = Date.now();
+            
+            try {
+                const response = await fetch(`${API_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        email: `test_${timestamp}@example.com`,
+                        password: password,
+                        name: 'Test User',
+                        first_name: 'Test',
+                        last_name: 'User',
+                        institution_name: 'Test University',
+                        role: 'Administrator'
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok && data.access_token) {
+                    accessToken = data.access_token;
+                    localStorage.setItem('access_token', accessToken);
+                    showMessage('authMessage', `✅ Account created! User: test_${timestamp}@example.com`, 'success');
+                    document.getElementById('loginSection').style.display = 'none';
+                    document.getElementById('uploadSection').style.display = 'block';
+                } else {
+                    showMessage('authMessage', `❌ Registration failed: ${JSON.stringify(data.detail || data.message)}`, 'error');
+                }
+            } catch (error) {
+                showMessage('authMessage', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const response = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        email: email,
+                        password: password,
+                        rememberMe: false
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok && data.access_token) {
+                    accessToken = data.access_token;
+                    localStorage.setItem('access_token', accessToken);
+                    showMessage('authMessage', '✅ Logged in successfully!', 'success');
+                    document.getElementById('loginSection').style.display = 'none';
+                    document.getElementById('uploadSection').style.display = 'block';
+                } else {
+                    showMessage('authMessage', `❌ Login failed: ${data.detail || data.message}`, 'error');
+                }
+            } catch (error) {
+                showMessage('authMessage', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        function showMessage(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.className = type === 'error' ? 'error-message' : 'success-message';
+            element.textContent = message;
+        }
+
+        // File upload handling
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileList = document.getElementById('fileList');
+
+        uploadArea.addEventListener('click', () => fileInput.click());
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragging');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragging');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragging');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+
+        async function handleFiles(files) {
+            for (const file of files) {
+                await uploadFile(file);
+            }
+        }
+
+        async function uploadFile(file) {
+            const fileId = 'file-' + Date.now();
+            
+            // Add file to list
+            const fileItem = document.createElement('div');
+            fileItem.className = 'file-item';
+            fileItem.id = fileId;
+            fileItem.innerHTML = `
+                <div style="flex: 1;">
+                    <div><strong>${file.name}</strong> (${(file.size / 1024 / 1024).toFixed(2)} MB)</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="${fileId}-progress"></div>
+                    </div>
+                </div>
+                <span class="status uploading">Uploading...</span>
+            `;
+            fileList.appendChild(fileItem);
+
+            try {
+                // Step 1: Get presigned URL
+                const presignResponse = await fetch(`${API_URL}/upload/presign`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken}`
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        filename: file.name,
+                        content_type: file.type || 'application/octet-stream',
+                        file_size: file.size
+                    })
+                });
+
+                if (!presignResponse.ok) {
+                    throw new Error(`Failed to get upload URL: ${await presignResponse.text()}`);
+                }
+
+                const presignData = await presignResponse.json();
+
+                // Step 2: Upload to S3
+                const formData = new FormData();
+                Object.entries(presignData.upload_fields).forEach(([key, value]) => {
+                    formData.append(key, value);
+                });
+                formData.append('file', file);
+
+                const xhr = new XMLHttpRequest();
+                
+                xhr.upload.addEventListener('progress', (e) => {
+                    if (e.lengthComputable) {
+                        const progress = (e.loaded / e.total) * 100;
+                        document.getElementById(`${fileId}-progress`).style.width = progress + '%';
+                    }
+                });
+
+                await new Promise((resolve, reject) => {
+                    xhr.addEventListener('load', () => {
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            resolve();
+                        } else {
+                            reject(new Error(`Upload failed with status ${xhr.status}`));
+                        }
+                    });
+                    xhr.addEventListener('error', reject);
+                    xhr.open('POST', presignData.upload_url);
+                    xhr.send(formData);
+                });
+
+                // Step 3: Complete upload
+                const completeResponse = await fetch(`${API_URL}/upload/complete`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken}`
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        file_key: presignData.file_key,
+                        filename: file.name,
+                        file_size: file.size,
+                        content_type: file.type || 'application/octet-stream'
+                    })
+                });
+
+                if (!completeResponse.ok) {
+                    throw new Error(`Failed to complete upload: ${await completeResponse.text()}`);
+                }
+
+                const result = await completeResponse.json();
+                
+                // Update status
+                const statusElement = fileItem.querySelector('.status');
+                statusElement.className = 'status success';
+                statusElement.textContent = '✅ Uploaded';
+                
+                // Show success message
+                showMessage('results', `✅ File uploaded successfully! Document ID: ${result.id}`, 'success');
+                
+            } catch (error) {
+                // Update status to error
+                const statusElement = document.querySelector(`#${fileId} .status`);
+                if (statusElement) {
+                    statusElement.className = 'status error';
+                    statusElement.textContent = '❌ Failed';
+                }
+                showMessage('results', `❌ Upload failed: ${error.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html>
