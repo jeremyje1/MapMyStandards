@@ -75,13 +75,11 @@ def _resolve_single_price_id() -> str:
             logger.info(f"Using price ID from env: {cid[:10]}...")
             return cid.strip()
     
-    # If in test mode, use a known test price ID
-    if os.getenv("STRIPE_SECRET_KEY", "").startswith("sk_test_"):
-        test_price_id = "price_1RyVEORMpSG47vNmYL4DWCYF"  # $299/month from .env.stripe
-        logger.warning(f"No price ID configured, using test default: {test_price_id}")
-        return test_price_id
-    
-    return ""  # force error if still empty in live mode
+    # Use hardcoded production price ID as fallback
+    # This is the single $199/month plan price ID
+    production_price_id = "price_1S2yYNK8PKpLCKDZ6zgFu2ay"
+    logger.warning(f"No price ID configured in env, using production default: {production_price_id}")
+    return production_price_id
 
 def _stripe_mode() -> str:
     key = stripe.api_key or ""
