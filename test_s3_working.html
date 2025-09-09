@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MapMyStandards S3 Upload Test - Working Version</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        .upload-section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 5px;
+        }
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+        .file-input-wrapper label {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: inline-block;
+        }
+        .file-input-wrapper label:hover {
+            background: #45a049;
+        }
+        .selected-file {
+            margin: 10px 0;
+            padding: 10px;
+            background: #e8f5e9;
+            border-radius: 5px;
+            color: #2e7d32;
+        }
+        button {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #1976D2;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .progress {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 20px 0;
+            display: none;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+            width: 0%;
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        .result {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+        .result.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+        .result.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+        .result.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+            display: block;
+        }
+        .api-status {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .api-status.healthy {
+            background: #d4edda;
+            color: #155724;
+        }
+        .api-status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 MapMyStandards S3 Upload Test</h1>
+        
+        <div class="api-status" id="apiStatus">
+            Checking API status...
+        </div>
+
+        <div class="upload-section">
+            <h2>📤 Direct S3 Upload Test</h2>
+            <p>This will upload your file directly to S3 using the existing API endpoints.</p>
+            
+            <div class="file-input-wrapper">
+                <label for="fileInput">Choose File</label>
+                <input type="file" id="fileInput" accept=".pdf,.txt,.csv,.doc,.docx,.xls,.xlsx">
+            </div>
+            
+            <div id="selectedFile" class="selected-file" style="display: none;"></div>
+            
+            <button id="uploadBtn" onclick="uploadFile()" disabled>Upload to S3</button>
+            <button onclick="testWithSampleFile()">Test with Sample Text File</button>
+            
+            <div class="progress" id="progressWrapper">
+                <div class="progress-bar" id="progressBar">0%</div>
+            </div>
+            
+            <div class="result" id="result"></div>
+        </div>
+
+        <div class="upload-section">
+            <h2>📊 Your AWS S3 Configuration</h2>
+            <div style="background: #f0f8ff; padding: 15px; border-radius: 5px;">
+                <p><strong>✅ S3 Bucket:</strong> mapmystandards-uploads</p>
+                <p><strong>✅ Region:</strong> us-east-1</p>
+                <p><strong>✅ CORS:</strong> Configured for all domains</p>
+                <p><strong>✅ IAM User:</strong> mapmystandards-api</p>
+                <p><strong>✅ Access Keys:</strong> Configured in Railway</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://api.mapmystandards.ai';
+        let selectedFile = null;
+
+        // Check API status on load
+        async function checkAPI() {
+            const statusDiv = document.getElementById('apiStatus');
+            try {
+                const response = await fetch(`${API_URL}/health`);
+                const data = await response.json();
+                statusDiv.className = 'api-status healthy';
+                statusDiv.innerHTML = `✅ API Status: ${data.status} | Environment: ${data.environment}`;
+            } catch (error) {
+                statusDiv.className = 'api-status error';
+                statusDiv.innerHTML = `❌ API Error: ${error.message}`;
+            }
+        }
+
+        // File selection
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                selectedFile = file;
+                document.getElementById('selectedFile').style.display = 'block';
+                document.getElementById('selectedFile').innerHTML = `
+                    <strong>Selected:</strong> ${file.name} 
+                    (${(file.size / 1024 / 1024).toFixed(2)} MB)
+                `;
+                document.getElementById('uploadBtn').disabled = false;
+            }
+        });
+
+        // Create a sample text file for testing
+        function testWithSampleFile() {
+            const content = `Test S3 Upload - ${new Date().toISOString()}\n\nThis is a test file uploaded to AWS S3 bucket: mapmystandards-uploads`;
+            const blob = new Blob([content], { type: 'text/plain' });
+            selectedFile = new File([blob], `test-${Date.now()}.txt`, { type: 'text/plain' });
+            
+            document.getElementById('selectedFile').style.display = 'block';
+            document.getElementById('selectedFile').innerHTML = `
+                <strong>Created test file:</strong> ${selectedFile.name}
+            `;
+            document.getElementById('uploadBtn').disabled = false;
+        }
+
+        // Upload file
+        async function uploadFile() {
+            if (!selectedFile) {
+                showResult('error', 'Please select a file first');
+                return;
+            }
+
+            const progressWrapper = document.getElementById('progressWrapper');
+            const progressBar = document.getElementById('progressBar');
+            const uploadBtn = document.getElementById('uploadBtn');
+            
+            progressWrapper.style.display = 'block';
+            uploadBtn.disabled = true;
+            
+            try {
+                // Create FormData
+                const formData = new FormData();
+                formData.append('file', selectedFile);
+
+                // Upload with progress tracking
+                const xhr = new XMLHttpRequest();
+                
+                xhr.upload.addEventListener('progress', (e) => {
+                    if (e.lengthComputable) {
+                        const percentComplete = Math.round((e.loaded / e.total) * 100);
+                        progressBar.style.width = percentComplete + '%';
+                        progressBar.textContent = percentComplete + '%';
+                    }
+                });
+
+                xhr.addEventListener('load', function() {
+                    if (xhr.status === 200) {
+                        try {
+                            const response = JSON.parse(xhr.responseText);
+                            showResult('success', `
+                                ✅ Upload Successful!<br>
+                                <strong>File ID:</strong> ${response.id || response.file_id || 'N/A'}<br>
+                                <strong>Filename:</strong> ${response.filename || selectedFile.name}<br>
+                                <strong>S3 Location:</strong> ${response.s3_key || response.file_key || 'Stored in S3'}<br>
+                                <strong>Status:</strong> ${response.status || 'Uploaded'}
+                            `);
+                            
+                            // Check S3 bucket
+                            console.log('File uploaded to S3:', response);
+                            
+                            // Reset for next upload
+                            setTimeout(() => {
+                                progressWrapper.style.display = 'none';
+                                progressBar.style.width = '0%';
+                                uploadBtn.disabled = false;
+                            }, 2000);
+                        } catch (e) {
+                            showResult('success', `✅ File uploaded successfully! Response: ${xhr.responseText}`);
+                        }
+                    } else if (xhr.status === 401 || xhr.status === 403) {
+                        showResult('error', `❌ Authentication required. The upload endpoint requires login.`);
+                    } else {
+                        showResult('error', `❌ Upload failed with status ${xhr.status}: ${xhr.responseText}`);
+                    }
+                    uploadBtn.disabled = false;
+                });
+
+                xhr.addEventListener('error', function() {
+                    showResult('error', '❌ Upload failed: Network error');
+                    uploadBtn.disabled = false;
+                });
+
+                // Try the main upload endpoint
+                xhr.open('POST', `${API_URL}/api/documents/upload`);
+                xhr.send(formData);
+                
+                showResult('info', '📤 Uploading to S3...');
+                
+            } catch (error) {
+                showResult('error', `❌ Error: ${error.message}`);
+                uploadBtn.disabled = false;
+            }
+        }
+
+        function showResult(type, message) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = `result ${type}`;
+            resultDiv.innerHTML = message;
+            resultDiv.style.display = 'block';
+        }
+
+        // Check API on page load
+        checkAPI();
+    </script>
+</body>
+</html>

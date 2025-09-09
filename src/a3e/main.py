@@ -748,6 +748,37 @@ if password_reset_router_available:
 else:
     logger.warning(f"⚠️ Password Reset router not available")
 
+# Include Enhanced Auth router (with JWT and cookies)
+try:
+    from .api.routes.auth_enhanced import router as auth_enhanced_router
+    app.include_router(auth_enhanced_router)
+    logger.info("✅ Enhanced Auth router loaded (JWT + cookies)")
+except ImportError as e:
+    logger.warning(f"⚠️ Enhanced Auth router not available: {e}")
+
+# Include S3 Upload router
+try:
+    from .api.routes.upload import router as s3_upload_router
+    app.include_router(s3_upload_router)
+    logger.info("✅ S3 Upload router loaded (presigned URLs)")
+except ImportError as e:
+    logger.warning(f"⚠️ S3 Upload router not available: {e}")
+    # Try local storage fallback
+    try:
+        from .api.routes.upload_local import router as local_upload_router
+        app.include_router(local_upload_router)
+        logger.info("✅ Local Upload router loaded (fallback)")
+    except ImportError as e2:
+        logger.warning(f"⚠️ No upload router available: {e2}")
+
+# Include Personalization router
+try:
+    from .api.routes.personalization import router as personalization_router
+    app.include_router(personalization_router)
+    logger.info("✅ Personalization router loaded")
+except ImportError as e:
+    logger.warning(f"⚠️ Personalization router not available: {e}")
+
 # Include routers with error handling
 try:
     app.include_router(integrations_router)
