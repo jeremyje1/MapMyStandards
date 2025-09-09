@@ -8,6 +8,7 @@ import stripe
 import asyncio  # Added to allow background task for non-critical DB/email work
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
+import traceback
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from ..core.config import get_settings
@@ -47,15 +48,24 @@ class PaymentService:
             self.db_service = None  # type: ignore
         
     async def create_trial_subscription(self, email: str, plan: str, payment_method_id: str, coupon_code: Optional[str] = None) -> Dict[str, Any]:
-        """Create a real Stripe trial subscription with 7-day free trial"""
+        """Create a real Stripe trial subscription with 7-day free trial.
+
+        Returns dict with success flag and rich diagnostics when failing.
+        """
+        stage = 'start'
         try:
             # Check if Stripe is configured
+            stage = 'precheck'
             if not stripe.api_key:
                 logger.error("Stripe API key not configured - check STRIPE_SECRET_KEY environment variable")
                 logger.error(f"Current settings has STRIPE_SECRET_KEY: {bool(self.settings.STRIPE_SECRET_KEY)}")
                 logger.error(f"stripe.api_key is: {stripe.api_key}")
-                self.last_trial_failure = {'stage': 'precheck', 'error': 'Payment system not configured. Please contact support.'}
-                return {'success': False, 'stage': 'precheck', 'error': 'Payment system not configured. Please contact support.'}
+                self.last_trial_failure = {
+                    'stage': stage,
+                    'error': 'Payment system not configured. Please contact support.',
+                    'stripe_key_present': False,
+                }
+                return {'success': False, 'stage': stage, 'error': 'Payment system not configured. Please contact support.'}
 
             # Normalize simple plan codes to explicit interval-specific keys
             original_plan = plan
@@ -66,6 +76,7 @@ class PaymentService:
                 # Accept accidental *_annual to *_yearly
                 plan = plan.replace("_annual", "_yearly")
                 logger.info("[trial] Normalized annual alias to '%s'", plan)
+            normalized_plan = plan
             
             # Helper to run blocking stripe calls in a thread
             async def _call(func, *f_args, **f_kwargs):
@@ -74,7 +85,8 @@ class PaymentService:
                 # run_in_executor doesn't support kwargs, so we use a lambda
                 return await loop.run_in_executor(None, lambda: func(*f_args, **f_kwargs))
 
-            logger.info("[trial] Starting customer lookup/create for %s", email)
+            stage = 'customer_lookup'
+            logger.info("[trial] Starting customer lookup/create for %s (plan=%s orig=%s)", email, normalized_plan, original_plan)
             customers = await _call(stripe.Customer.list, email=email, limit=1)
             if customers.data:
                 customer = customers.data[0]
@@ -91,6 +103,7 @@ class PaymentService:
                 logger.info("[trial] Created new customer %s", customer.id)
             
             # Attach payment method if not already attached
+            stage = 'attach_payment_method'
             try:
                 await _call(
                     stripe.PaymentMethod.attach,
@@ -102,6 +115,7 @@ class PaymentService:
                 pass
             
             # Get the price ID for the plan
+            stage = 'price_lookup'
             price_id = self._get_price_id(plan)
             logger.info(f"Price ID for plan '{plan}': {price_id}")
             
@@ -114,8 +128,15 @@ class PaymentService:
                     self.settings.STRIPE_PRICE_MULTI_CAMPUS_MONTHLY,
                     getattr(self.settings, 'STRIPE_PRICE_MULTI_CAMPUS_YEARLY', None)
                 )
-                self.last_trial_failure = {'stage': 'price_lookup', 'error': f'Invalid plan selected: {plan}', 'plan': plan, 'original_plan': original_plan}
-                return {'success': False, 'stage': 'price_lookup', 'error': f'Invalid plan selected: {original_plan}'}
+                self.last_trial_failure = {
+                    'stage': stage,
+                    'error': f'Invalid plan selected: {plan}',
+                    'plan': plan,
+                    'original_plan': original_plan,
+                    'env_price_college': self.settings.STRIPE_PRICE_COLLEGE_MONTHLY,
+                    'env_price_multicampus': self.settings.STRIPE_PRICE_MULTI_CAMPUS_MONTHLY,
+                }
+                return {'success': False, 'stage': stage, 'error': f'Invalid plan selected: {original_plan}'}
             
             # Create subscription with trial
             subscription_params = {
@@ -131,6 +152,7 @@ class PaymentService:
             if coupon_code:
                 subscription_params['coupon'] = coupon_code
             
+            stage = 'create_subscription'
             logger.info("[trial] Creating subscription for customer %s plan %s", customer.id, plan)
             subscription = await _call(stripe.Subscription.create, **subscription_params)
             logger.info("[trial] Subscription %s status=%s", subscription.id, getattr(subscription, 'status', None))
@@ -150,6 +172,7 @@ class PaymentService:
             }
             
             # Persist account + send password setup email in background so slow DB/email doesn't block checkout UX
+            stage = 'persist_account'
             try:
                 asyncio.create_task(self._create_account_record(account_data))  # fire and forget
             except Exception as bg_err:
@@ -188,6 +211,7 @@ class PaymentService:
                 logger.debug(f"Unable to parse discount info (non-fatal): {di_err}")
 
             # Fire welcome email (non-blocking best-effort)
+            stage = 'welcome_email'
             try:
                 if _email_available:
                     EmailService().send_welcome_email(email, email.split('@')[0])
@@ -208,13 +232,28 @@ class PaymentService:
             }
             
         except stripe.error.StripeError as e:
-            logger.error(f"Stripe error creating trial subscription: {e}")
-            self.last_trial_failure = {'stage': 'stripe', 'error': str(e), 'email': email, 'plan': plan}
+            logger.error(f"Stripe error creating trial subscription (stage={stage}): {e}")
+            self.last_trial_failure = {
+                'stage': 'stripe',
+                'error': str(e),
+                'email': email,
+                'plan': plan,
+                'exception_type': type(e).__name__
+            }
             return {'success': False, 'stage': 'stripe', 'error': str(e)}
         except Exception as e:
-            logger.error(f"Error creating trial subscription: {e}")
-            self.last_trial_failure = {'stage': 'unexpected', 'error': str(e), 'email': email, 'plan': plan}
-            return {'success': False, 'stage': 'unexpected', 'error': 'Failed to create trial subscription'}
+            tb = traceback.format_exc(limit=5)
+            logger.error(f"Error creating trial subscription (stage={stage}): {e}")
+            logger.debug(tb)
+            self.last_trial_failure = {
+                'stage': stage,
+                'error': str(e),
+                'email': email,
+                'plan': plan,
+                'exception_type': type(e).__name__,
+                'trace': tb.split('\n')[-5:]
+            }
+            return {'success': False, 'stage': stage, 'error': 'Failed to create trial subscription'}
     
     async def create_subscription(self, 
                                 customer_id: str,
