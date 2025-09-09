@@ -217,6 +217,24 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Attempt to include the simplified single-plan billing router (hosted Stripe Checkout)
+try:  # pragma: no cover - defensive import
+    from src.a3e.api.routes.billing_single_plan import router as billing_single_plan_router
+    from src.a3e.api.routes.billing_single_plan import legacy_single_plan_router as billing_single_plan_legacy_router
+    app.include_router(billing_single_plan_router)
+    app.include_router(billing_single_plan_legacy_router)
+    logger.info("✅ Single-plan billing router loaded in enhanced production entrypoint")
+except Exception as _e:  # pragma: no cover - log but continue
+    logger.warning(f"⚠️ Could not load single-plan billing router in enhanced production: {_e}")
+
+@app.get("/_sentinel_enhanced", include_in_schema=False)
+async def _sentinel_enhanced():  # noqa: D401
+    return {
+        "entrypoint": "a3e_enhanced_production",
+        "single_plan_router": any(getattr(r, 'path', '').endswith('/create-single-plan-checkout') for r in app.router.routes),
+        "route_count": len(app.router.routes)
+    }
+
 # Authentication endpoints
 @app.post("/auth/register")
 async def register_user(request: Request):

@@ -38,6 +38,24 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Try to include single-plan billing router so this lightweight entrypoint also supports checkout
+try:  # pragma: no cover
+    from src.a3e.api.routes.billing_single_plan import router as billing_single_plan_router
+    from src.a3e.api.routes.billing_single_plan import legacy_single_plan_router as billing_single_plan_legacy_router
+    app.include_router(billing_single_plan_router)
+    app.include_router(billing_single_plan_legacy_router)
+    logger.info("✅ Single-plan billing router loaded (deploy lightweight)")
+except Exception as _e:  # pragma: no cover
+    logger.warning(f"⚠️ Could not load single-plan billing router in deploy entrypoint: {_e}")
+
+@app.get("/_sentinel_deploy", include_in_schema=False)
+async def _sentinel_deploy():  # noqa: D401
+    return {
+        "entrypoint": "a3e_main_deploy",
+        "single_plan_router": any(getattr(r, 'path', '').endswith('/create-single-plan-checkout') for r in app.router.routes),
+        "route_count": len(app.router.routes)
+    }
+
 # Templates and static files
 templates_dir = Path(__file__).parent / "templates"
 static_dir = Path(__file__).parent / "static"
