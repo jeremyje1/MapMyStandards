@@ -182,6 +182,14 @@ except ImportError as e:
     auth_simple_router_available = False
     _auth_simple_import_exception = e
 
+# Session-based auth (access + refresh cookies)
+try:
+    from .api.routes.auth_session import router as auth_session_router
+    auth_session_router_available = True
+except ImportError as e:
+    auth_session_router_available = False
+    _auth_session_import_exception = e
+
 # Single plan billing (hosted Stripe Checkout) router
 try:
     from .api.routes.billing_single_plan import router as billing_single_plan_router
@@ -644,6 +652,12 @@ if auth_simple_router_available:
     logger.info("✅ Simple auth router loaded")
 else:
     logger.warning("⚠️ Simple auth router not available")
+
+if 'auth_session_router_available' in globals() and auth_session_router_available:
+    app.include_router(auth_session_router)
+    logger.info("✅ Session auth router loaded (access + refresh cookies)")
+else:
+    logger.warning("⚠️ Session auth router not available")
 
 # Mount single plan billing checkout endpoints (hosted Stripe Checkout flow)
 if 'billing_single_plan_router_available' in globals() and billing_single_plan_router_available:
