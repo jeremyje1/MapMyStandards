@@ -114,7 +114,7 @@
       btn.innerHTML = '<div class="spinner"></div> Redirecting...';
       try {
         const origin = window.location.origin;
-        const success = origin + '/dashboard.html?session_id={CHECKOUT_SESSION_ID}';
+        const success = origin + '/payment-success.html?session_id={CHECKOUT_SESSION_ID}';
         const cancel = origin + '/subscribe.html';
         // Determine API base URL
         const apiBase = window.location.hostname === 'localhost' 

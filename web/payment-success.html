@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Payment Success - MapMyStandards</title>
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg,#667eea,#764ba2);
+      --primary:#6366f1;
+      --primary-accent:#4f46e5;
+    }
+    * { box-sizing:border-box; }
+    body { 
+      margin:0; 
+      font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; 
+      background:var(--bg-gradient); 
+      color:#111; 
+      min-height:100vh; 
+      display:flex; 
+      align-items:center; 
+      justify-content:center; 
+      padding:2rem; 
+    }
+    .card { 
+      background:#fff; 
+      width:100%; 
+      max-width:600px; 
+      border-radius:18px; 
+      padding:2.5rem; 
+      box-shadow:0 24px 60px -10px rgba(0,0,0,.35); 
+      text-align:center;
+    }
+    h1 { 
+      margin:0 0 1rem; 
+      font-size:2rem; 
+      color:#10b981; 
+    }
+    .icon {
+      width:80px;
+      height:80px;
+      background:#10b981;
+      border-radius:50%;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      margin-bottom:1.5rem;
+      font-size:40px;
+      color:white;
+    }
+    p { 
+      margin:.5rem 0 1.5rem; 
+      color:#374151; 
+      line-height:1.5; 
+      font-size:1.1rem;
+    }
+    .status-section {
+      background:#f9fafb;
+      border:1px solid #e5e7eb;
+      border-radius:12px;
+      padding:1.5rem;
+      margin:2rem 0;
+      text-align:left;
+    }
+    .status-item {
+      display:flex;
+      align-items:center;
+      margin:0.75rem 0;
+    }
+    .status-icon {
+      width:24px;
+      height:24px;
+      margin-right:12px;
+      flex-shrink:0;
+    }
+    .loading { color:#6366f1; animation: spin 1s linear infinite; }
+    .success { color:#10b981; }
+    .pending { color:#f59e0b; }
+    .error { color:#ef4444; }
+    @keyframes spin {
+      to { transform:rotate(360deg); }
+    }
+    .button {
+      display:inline-block;
+      background:var(--primary);
+      color:white;
+      padding:0.875rem 2rem;
+      border-radius:8px;
+      text-decoration:none;
+      font-weight:600;
+      margin:0.5rem;
+      transition:all 0.2s;
+    }
+    .button:hover {
+      background:var(--primary-accent);
+      transform:translateY(-2px);
+    }
+    .button.secondary {
+      background:#e5e7eb;
+      color:#374151;
+    }
+    .button.secondary:hover {
+      background:#d1d5db;
+    }
+    .email-box {
+      background:#f0f9ff;
+      border:1px solid #3b82f6;
+      border-radius:8px;
+      padding:1rem;
+      margin:1.5rem 0;
+      font-family:monospace;
+      color:#1e40af;
+    }
+    .help-text {
+      font-size:0.875rem;
+      color:#6b7280;
+      margin-top:2rem;
+    }
+    .error-box {
+      background:#fee;
+      border:1px solid #ef4444;
+      color:#dc2626;
+      padding:1rem;
+      border-radius:8px;
+      margin:1.5rem 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">✓</div>
+    <h1>Payment Successful!</h1>
+    <p>Thank you for subscribing to MapMyStandards. We're setting up your account...</p>
+    
+    <div class="status-section">
+      <div class="status-item">
+        <span class="status-icon success">✓</span>
+        <span>Payment processed successfully</span>
+      </div>
+      <div class="status-item">
+        <span id="verifyIcon" class="status-icon loading">⟳</span>
+        <span id="verifyText">Verifying subscription and creating account...</span>
+      </div>
+    </div>
+    
+    <div id="userEmail" class="email-box" style="display:none;"></div>
+    
+    <div id="actionButtons" style="display:none; margin-top:2rem;">
+      <a href="/checkout-success.html" class="button" id="passwordBtn">Set Password</a>
+      <a href="/login" class="button secondary">Go to Login</a>
+    </div>
+    
+    <div id="errorMessage" class="error-box" style="display:none;"></div>
+    
+    <div class="help-text">
+      Need help? Contact <a href="mailto:support@mapmystandards.ai" style="color:var(--primary);">support@mapmystandards.ai</a>
+    </div>
+  </div>
+
+  <script>
+    // Get session ID from URL
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get('session_id');
+    
+    if (!sessionId) {
+      showError('Invalid session. Please contact support.');
+    } else {
+      verifySession();
+    }
+    
+    async function verifySession() {
+      const apiBase = window.location.hostname === 'localhost' 
+        ? 'http://localhost:8000'
+        : 'https://api.mapmystandards.ai';
+      
+      try {
+        // Call verify-session endpoint - this will trigger user creation if needed
+        const resp = await fetch(`${apiBase}/api/v1/billing/verify-session?session_id=${encodeURIComponent(sessionId)}`);
+        const data = await resp.json();
+        
+        if (resp.ok && data.success) {
+          updateStatus('verify', 'success', 'Subscription verified and account created');
+          
+          // Show email if available
+          if (data.customer_email) {
+            document.getElementById('userEmail').textContent = data.customer_email;
+            document.getElementById('userEmail').style.display = 'block';
+          }
+          
+          // Show action buttons
+          const buttons = document.getElementById('actionButtons');
+          buttons.style.display = 'block';
+          
+          // If email is available, add it to password setup URL
+          if (data.customer_email) {
+            const passwordBtn = document.getElementById('passwordBtn');
+            passwordBtn.href = `/checkout-success.html?session_id=${sessionId}&email=${encodeURIComponent(data.customer_email)}`;
+          }
+        } else {
+          throw new Error(data.detail || 'Verification failed');
+        }
+      } catch (error) {
+        console.error('Verification error:', error);
+        updateStatus('verify', 'error', 'Verification failed');
+        showError(error.message || 'Unable to verify your subscription. Please contact support.');
+      }
+    }
+    
+    function updateStatus(step, status, text) {
+      const icons = {
+        loading: '⟳',
+        success: '✓',
+        pending: '○',
+        error: '✗'
+      };
+      
+      const icon = document.getElementById(step + 'Icon');
+      const textEl = document.getElementById(step + 'Text');
+      
+      if (icon) {
+        icon.textContent = icons[status] || '○';
+        icon.className = `status-icon ${status}`;
+      }
+      if (textEl) {
+        textEl.textContent = text;
+      }
+    }
+    
+    function showError(message) {
+      const errorEl = document.getElementById('errorMessage');
+      errorEl.textContent = message;
+      errorEl.style.display = 'block';
+    }
+  </script>
+</body>
+</html>
