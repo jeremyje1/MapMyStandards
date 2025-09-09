@@ -882,7 +882,7 @@
             return icons[extension] || '📄';
         }
 
-        async function uploadFiles() {
+    async function uploadFiles() {
             if (selectedFiles.length === 0) {
                 alert('Please select files to upload.');
                 return;
@@ -892,60 +892,43 @@
             const progressFill = document.getElementById('progressFill');
             const progressText = document.getElementById('progressText');
             const uploadBtn = document.getElementById('uploadBtn');
+            const token = localStorage.getItem('jwt_token') || localStorage.getItem('auth_token') || localStorage.getItem('a3e_api_key');
 
             // Show progress section
             progressSection.classList.add('show');
             uploadBtn.disabled = true;
             uploadBtn.innerHTML = '⏳ Processing...';
 
-            const progressSteps = [
-                'Uploading files...',
-                'Extracting content...',
-                'Analyzing with AI...',
-                'Mapping to standards...',
-                'Generating insights...',
-                'Finalizing results...'
-            ];
-
-            let progress = 0;
-            let stepIndex = 0;
-
-            const progressInterval = setInterval(() => {
-                progress += Math.random() * 15;
-                if (progress > 100) progress = 100;
-
-                // Update step text
-                const currentStep = Math.floor((progress / 100) * progressSteps.length);
-                if (currentStep > stepIndex && currentStep < progressSteps.length) {
-                    stepIndex = currentStep;
-                    progressText.textContent = progressSteps[stepIndex];
+            let uploaded = 0;
+            for (const file of selectedFiles) {
+                progressText.textContent = `Uploading ${file.name}...`;
+                const formData = new FormData();
+                formData.append('file', file);
+                try {
+                    const resp = await fetch('/api/documents/upload', {
+                        method: 'POST',
+                        headers: token ? { 'Authorization': 'Bearer ' + token } : {},
+                        body: formData
+                    });
+                    if (resp.ok) {
+                        uploaded++;
+                    } else {
+                        console.error('Upload failed', file.name, await resp.text());
+                    }
+                } catch (err) {
+                    console.error('Upload error', file.name, err);
                 }
-
-                progressFill.style.width = progress + '%';
-
-                if (progress >= 100) {
-                    clearInterval(progressInterval);
-                    progressText.textContent = 'Analysis complete!';
-                    
-                    setTimeout(() => {
-                        alert('✅ Files uploaded and analyzed successfully!\n\n📊 View detailed results in the Reports section.');
-                        
-                        // Add files to recent list
-                        addToRecentFiles();
-                        
-                        // Clear current selection
-                        clearFiles();
-                        
-                        // Hide progress section
-                        progressSection.classList.remove('show');
-                        progressFill.style.width = '0%';
-                        
-                        // Reset button
-                        uploadBtn.disabled = false;
-                        uploadBtn.innerHTML = '🚀 Start Analysis';
-                    }, 1500);
-                }
-            }, 300);
+                const pct = Math.round((uploaded / selectedFiles.length) * 100);
+                progressFill.style.width = pct + '%';
+                progressText.textContent = `Uploaded ${uploaded} of ${selectedFiles.length}`;
+            }
+            progressText.textContent = 'Uploads complete';
+            alert(`Uploaded ${uploaded} of ${selectedFiles.length} file(s)`);
+            addToRecentFiles();
+            clearFiles();
+            uploadBtn.disabled = false;
+            uploadBtn.innerHTML = '🚀 Start Analysis';
+            setTimeout(() => { progressSection.classList.remove('show'); progressFill.style.width = '0%'; }, 1200);
         }
 
         function addToRecentFiles() {

@@ -822,11 +822,10 @@
                 // Update progress text
                 updateProgress(0, 'Uploading file...');
                 
-                const response = await fetch('/api/v1/upload/evidence', {
+                const token = localStorage.getItem('jwt_token') || localStorage.getItem('auth_token') || localStorage.getItem('a3e_api_key');
+                const response = await fetch('/api/documents/upload', {
                     method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('a3e_api_key')}`
-                    },
+                    headers: token ? { 'Authorization': `Bearer ${token}` } : {},
                     body: formData
                 });
                 
