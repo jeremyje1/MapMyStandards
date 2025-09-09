@@ -1521,6 +1521,18 @@ async def subscribe_page(request: Request):  # noqa: D401
         )
     return HTMLResponse(content=content)
 
+@app.get("/pricing", include_in_schema=False)
+async def pricing_redirect():  # noqa: D401
+    return Response(status_code=307, headers={"Location": "/subscribe"})
+
+@app.get("/trial-signup", include_in_schema=False)
+async def trial_signup_redirect():  # noqa: D401
+    return Response(status_code=307, headers={"Location": "/subscribe"})
+
+@app.get("/trial-signup-stripe", include_in_schema=False)
+async def trial_signup_stripe_redirect():  # noqa: D401
+    return Response(status_code=307, headers={"Location": "/subscribe"})
+
 @app.get("/favicon.ico", include_in_schema=False)
 async def favicon():  # noqa: D401
     """Return favicon if present; suppress 404 noise if missing."""
