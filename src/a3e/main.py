@@ -694,6 +694,15 @@ async def _sentinel_main():  # noqa: D401
         "total_routes": len(app.router.routes)
     }
 
+@app.get("/__sentinel", include_in_schema=False)
+async def _sentinel_simple():  # noqa: D401
+    return {"ok": True, "ts": __import__('datetime').datetime.utcnow().isoformat() + 'Z'}
+
+@app.get("/robots.txt", include_in_schema=False)
+async def robots():  # noqa: D401
+    # Explicitly allow all so external services cannot claim blocking.
+    return Response(content="User-agent: *\nDisallow:\n", media_type="text/plain")
+
 if narrative_router_available:
     app.include_router(narrative_router)
     logger.info("✅ Narrative generation router loaded")
