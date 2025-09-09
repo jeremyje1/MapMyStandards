@@ -127,9 +127,11 @@ node_modules/
 
 # Uploads and data
 uploads/
+/uploads/
 data/
 documents/
 artifacts/
+backups/
 
 # AWS
 .aws/

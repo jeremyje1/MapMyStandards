@@ -47,11 +47,26 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     last_login_at = Column(DateTime)
+    last_login = Column(DateTime)  # Alias for compatibility
+    
+    # Auth tokens
+    refresh_token = Column(String(500))
+    refresh_token_expires = Column(DateTime)
+    reset_token = Column(String(255))
+    reset_token_expires = Column(DateTime)
+    
+    # Contact info
+    phone = Column(String(50))
+    newsletter_opt_in = Column(Boolean, default=False)
     
     # Usage tracking
     documents_analyzed = Column(Integer, default=0)
     reports_generated = Column(Integer, default=0)
     compliance_checks_run = Column(Integer, default=0)
+
+    # Onboarding
+    onboarding_completed = Column(Boolean, default=False)
+    onboarding_data = Column(JSON)  # Store full onboarding wizard responses (step data, goals, etc.)
     
     # Relationships
     sessions = relationship("UserSession", back_populates="user", cascade="all, delete-orphan")

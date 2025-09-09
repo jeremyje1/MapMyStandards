@@ -495,8 +495,42 @@
   skipBtn.addEventListener('click', ()=>{ window.location.href='https://platform.mapmystandards.ai/dashboard'; });
 
     // Initialize
+    async function loadExisting(){
+      if(!state.email) return;
+      try{
+        const res = await fetch(`/api/v1/onboarding/progress/${encodeURIComponent(state.email)}`);
+        if(res.ok){
+          const data = await res.json();
+          if(data.found){
+            state.data = data.data.merged || data.data || {};
+            // If previously completed, redirect quickly
+            if(data.completed){
+              successMsg.style.display='block';
+              setTimeout(()=>{ window.location.href='https://platform.mapmystandards.ai/dashboard'; }, 1000);
+              return;
+            }
+            // Pre-fill form fields
+            if(state.data.institution_name) document.getElementById('institution_name').value = state.data.institution_name;
+            if(state.data.primary_accreditor) document.getElementById('primary_accreditor').value = state.data.primary_accreditor;
+            if(state.data.institution_size) document.getElementById('institution_size').value = state.data.institution_size;
+            if(state.data.state) document.getElementById('state').value = state.data.state;
+            if(Array.isArray(state.data.goals)){
+              state.data.goals.forEach(g=>{
+                const id = 'goal_' + g.replace(/[^a-z0-9]+/gi,'_').toLowerCase();
+                const el = document.getElementById(id);
+                if(el) el.checked = true;
+              });
+            }
+            if(state.data.doc_types) document.getElementById('doc_types').value = state.data.doc_types;
+            if(state.data.launch_timing) document.getElementById('launch_timing').value = state.data.launch_timing;
+            if(state.data.success_definition) document.getElementById('success_definition').value = state.data.success_definition;
+          }
+        }
+      }catch(e){ console.info('No existing onboarding data', e); }
+    }
     showStep();
     prePopulateFields();
+    loadExisting();
     // If no email, display a gentle notice so user knows progress won't stick
     if(!state.email){
       const notice = document.createElement('div');
