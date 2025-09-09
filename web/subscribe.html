@@ -56,6 +56,28 @@
     <div class="footer-note">You will be redirected to our PCI-compliant Stripe hosted checkout page. Need a purchase order? <a class="inline" href="mailto:sales@mapmystandards.ai?subject=Purchase%20Order%20Request">Contact us</a>.</div>
   </div>
   <script>
+      // Auto-detect checkout return with session_id and verify
+      (async function handleReturn(){
+        const params = new URLSearchParams(window.location.search);
+        const sid = params.get('session_id');
+        if(!sid) return;
+        const statusEl = document.getElementById('status');
+        statusEl.textContent = 'Verifying checkout...';
+        try {
+          const resp = await fetch(`/api/v1/billing/verify-session?session_id=${encodeURIComponent(sid)}`);
+          const data = await resp.json();
+          if(resp.ok && data.success){
+            statusEl.className='status success';
+            statusEl.textContent='Subscription confirmed. You can now log in. Check your email for credentials or password setup.';
+          } else {
+            statusEl.className='status error';
+            statusEl.textContent='Checkout not complete yet. Refresh in a few seconds.';
+          }
+        } catch(e){
+          statusEl.className='status error';
+          statusEl.textContent='Unable to verify session.';
+        }
+      })();
     const btn = document.getElementById('subscribeBtn');
     const statusEl = document.getElementById('status');
 

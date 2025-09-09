@@ -143,3 +143,60 @@ async def get_single_plan_info():
 @legacy_single_plan_router.get("/single-plan-info", include_in_schema=False)
 async def legacy_single_plan_info():
     return await get_single_plan_info()
+
+class SessionVerifyResponse(BaseModel):
+    success: bool
+    status: str
+    customer_email: Optional[str] = None
+    customer_id: Optional[str] = None
+    subscription_id: Optional[str] = None
+    price_id: Optional[str] = None
+    message: Optional[str] = None
+
+@router.get("/verify-session", response_model=SessionVerifyResponse)
+async def verify_session(session_id: str):
+    """Verify a completed Checkout Session and return subscription + customer info.
+
+    Frontend flow: After redirect with ?session_id=cs_test_123, call this endpoint.
+    Use response to confirm success and optionally create/login user.
+    """
+    try:
+        if not session_id:
+            raise HTTPException(status_code=400, detail="session_id required")
+        session = stripe.checkout.Session.retrieve(session_id)
+        if not session:
+            raise HTTPException(status_code=404, detail="Session not found")
+        if session.get("payment_status") not in ("paid", "no_payment_required") and session.get("status") != "complete":
+            return SessionVerifyResponse(success=False, status=session.get("status", "incomplete"), message="Session not complete yet")
+        subscription_id = session.get("subscription")
+        customer_id = session.get("customer")
+        customer_email = session.get("customer_details", {}).get("email") if session.get("customer_details") else session.get("customer_email")
+        price_id = None
+        # Attempt to get price from line items
+        try:
+            line_items = stripe.checkout.Session.list_line_items(session_id, limit=1)
+            if line_items.data:
+                price_id = line_items.data[0].price.id if getattr(line_items.data[0], 'price', None) else None
+        except Exception:
+            pass
+        return SessionVerifyResponse(
+            success=True,
+            status="complete",
+            customer_email=customer_email,
+            customer_id=customer_id,
+            subscription_id=subscription_id,
+            price_id=price_id or SINGLE_PLAN_PRICE_ID,
+            message="Checkout session verified"
+        )
+    except HTTPException:
+        raise
+    except stripe.error.StripeError as e:
+        logger.error(f"Stripe error verifying session: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error verifying session: {e}")
+        raise HTTPException(status_code=500, detail="Failed to verify session")
+
+@legacy_single_plan_router.get("/verify-session", include_in_schema=False)
+async def legacy_verify_session(session_id: str):
+    return await verify_session(session_id)

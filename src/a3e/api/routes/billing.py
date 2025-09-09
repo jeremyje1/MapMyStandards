@@ -94,6 +94,12 @@ async def trial_signup(request: TrialSignupRequest, background_tasks: Background
     Create a 7-day free trial subscription with automatic billing.
     Requires credit card for seamless conversion.
     """
+    # Trial flow deprecated in favor of single hosted checkout. Return 410 unless explicitly re-enabled.
+    if os.getenv("ENABLE_TRIAL_SIGNUP", "0").lower() not in ("1", "true", "yes"):
+        raise HTTPException(status_code=410, detail={
+            "error": "Trial signup deprecated",
+            "message": "Use hosted checkout: /api/v1/billing/create-single-plan-checkout (or /subscribe)"
+        })
     logger.info(f"Trial signup request received for email: {request.email}, plan: {request.plan}")
     logger.info(f"Full request data: institution_name={request.institution_name}, role={request.role}, first_name={request.first_name}, last_name={request.last_name}")
     import time
