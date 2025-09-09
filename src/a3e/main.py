@@ -479,6 +479,7 @@ for required_origin in [
     "http://localhost:8000",
     "http://localhost:3000",  # React dev server
     "http://localhost:3001",  # Alternative React port
+    "http://localhost:8888",  # Local static server / alt dev port
 ]:
     if required_origin not in _cors_origins:
         _cors_origins.append(required_origin)
@@ -1486,14 +1487,20 @@ async def checkout_page(request: Request):  # noqa: D401
 @app.get("/favicon.ico", include_in_schema=False)
 async def favicon():  # noqa: D401
     """Return favicon if present; suppress 404 noise if missing."""
-    icon_path = WEB_DIR / "favicon.ico"
-    if icon_path.exists():
-        return FileResponse(str(icon_path))
+    # Prefer SVG (crisper scaling) even if a placeholder .ico exists
     svg_path = WEB_DIR / "favicon.svg"
     if svg_path.exists():
         return FileResponse(str(svg_path), media_type="image/svg+xml")
-    # Return empty 204 to avoid repeated 404 logs in browsers
-    return Response(status_code=204)
+    icon_path = WEB_DIR / "favicon.ico"
+    if icon_path.exists():
+        return FileResponse(str(icon_path))
+    # Return a 1x1 transparent PNG so browsers cache it and stop requesting
+    transparent_png = (
+        b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01"
+        b"\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\x0cIDATx\x9cc```\x00\x00\x00\x04\x00\x01"
+        b"\x0b\x0e\x02\xb5\x00\x00\x00\x00IEND\xaeB`\x82"
+    )
+    return Response(content=transparent_png, media_type="image/png", status_code=200)
 
 # Mount static files for web assets and add direct routes for key pages
 
