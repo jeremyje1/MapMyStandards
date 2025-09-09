@@ -3,14 +3,18 @@
 Adds diagnostics & legacy path alias (/api/billing/*) to avoid 404s when
 older frontend code (or Stripe webhooks) still reference the non-versioned prefix.
 """
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 from pydantic import BaseModel
 import stripe
 import os
 import logging
 from typing import Optional, Dict
 
-from ..dependencies import get_current_user
+from ..dependencies import get_optional_user, get_current_user
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+
+# Create a custom security scheme that doesn't raise on missing auth
+optional_security = HTTPBearer(auto_error=False)
 
 logger = logging.getLogger(__name__)
 
@@ -152,7 +156,10 @@ def _build_checkout_session(request: CreateCheckoutRequest, current_user: Option
     }
 
 @router.post("/create-single-plan-checkout")
-async def create_single_plan_checkout(request: CreateCheckoutRequest, current_user: Optional[dict] = Depends(get_current_user)):
+async def create_single_plan_checkout(
+    request: CreateCheckoutRequest, 
+    current_user: Optional[dict] = Depends(get_optional_user)
+):
     """Primary (versioned) endpoint to create hosted checkout session."""
     _metrics['checkout_sessions_created'] += 1
     try:

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>API Diagnostic - MapMyStandards</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+      background: #f5f5f5;
+    }
+    .card {
+      background: white;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    h1 { color: #333; margin-top: 0; }
+    h2 { color: #555; font-size: 1.2rem; margin-top: 0; }
+    .endpoint {
+      background: #f8f9fa;
+      padding: 1rem;
+      border-radius: 4px;
+      margin-bottom: 0.5rem;
+      font-family: monospace;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .status {
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+    .status.success { background: #d4edda; color: #155724; }
+    .status.error { background: #f8d7da; color: #721c24; }
+    .status.pending { background: #fff3cd; color: #856404; }
+    button {
+      background: #6366f1;
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1rem;
+      margin-right: 0.5rem;
+    }
+    button:hover { background: #4f46e5; }
+    button:disabled { 
+      background: #ccc; 
+      cursor: not-allowed; 
+    }
+    .result {
+      background: #f8f9fa;
+      padding: 1rem;
+      border-radius: 4px;
+      margin-top: 1rem;
+      font-family: monospace;
+      font-size: 0.875rem;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .error { color: #dc3545; }
+    .success { color: #28a745; }
+    pre { margin: 0; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>API Diagnostic Tool</h1>
+  
+  <div class="card">
+    <h2>API Configuration</h2>
+    <div id="config"></div>
+  </div>
+
+  <div class="card">
+    <h2>Critical Endpoints</h2>
+    <div id="endpoints"></div>
+    <button onclick="testAll()">Test All Endpoints</button>
+    <button onclick="clearResults()">Clear Results</button>
+  </div>
+
+  <div class="card">
+    <h2>Test Results</h2>
+    <div id="results"></div>
+  </div>
+
+  <script>
+    const API_BASE = window.location.hostname === 'localhost' 
+      ? 'http://localhost:8000'
+      : 'https://api.mapmystandards.ai';
+
+    const endpoints = [
+      { path: '/_sentinel_main', method: 'GET', name: 'Main Sentinel' },
+      { path: '/__sentinel', method: 'GET', name: 'Simple Sentinel' },
+      { path: '/metrics', method: 'GET', name: 'Prometheus Metrics' },
+      { path: '/api/v1/billing/single-plan-info', method: 'GET', name: 'Single Plan Info' },
+      { path: '/api/billing/single-plan-info', method: 'GET', name: 'Single Plan Info (Legacy)' },
+      { path: '/docs', method: 'GET', name: 'API Documentation' },
+      { path: '/health', method: 'GET', name: 'Health Check' }
+    ];
+
+    // Display configuration
+    document.getElementById('config').innerHTML = `
+      <div class="endpoint">
+        <span>API Base URL:</span>
+        <strong>${API_BASE}</strong>
+      </div>
+      <div class="endpoint">
+        <span>Current Location:</span>
+        <strong>${window.location.origin}</strong>
+      </div>
+    `;
+
+    // Display endpoints
+    function renderEndpoints() {
+      const html = endpoints.map((ep, i) => `
+        <div class="endpoint">
+          <span>${ep.method} ${ep.path}</span>
+          <div>
+            <span id="status-${i}" class="status pending">Not tested</span>
+            <button onclick="testEndpoint(${i})" style="margin-left: 1rem; padding: 0.25rem 0.75rem; font-size: 0.875rem;">Test</button>
+          </div>
+        </div>
+      `).join('');
+      document.getElementById('endpoints').innerHTML = html;
+    }
+
+    async function testEndpoint(index) {
+      const ep = endpoints[index];
+      const statusEl = document.getElementById(`status-${index}`);
+      const resultsEl = document.getElementById('results');
+      
+      statusEl.textContent = 'Testing...';
+      statusEl.className = 'status pending';
+      
+      const startTime = Date.now();
+      
+      try {
+        const resp = await fetch(API_BASE + ep.path, {
+          method: ep.method,
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
+        
+        const elapsed = Date.now() - startTime;
+        let data;
+        const contentType = resp.headers.get('content-type');
+        
+        if (contentType && contentType.includes('application/json')) {
+          data = await resp.json();
+        } else {
+          data = await resp.text();
+        }
+        
+        if (resp.ok) {
+          statusEl.textContent = `✓ ${resp.status} (${elapsed}ms)`;
+          statusEl.className = 'status success';
+          
+          resultsEl.innerHTML += `
+            <div class="result">
+              <div class="success">✓ ${ep.name} - ${ep.method} ${ep.path}</div>
+              <div>Status: ${resp.status} ${resp.statusText}</div>
+              <div>Time: ${elapsed}ms</div>
+              <div>Response:</div>
+              <pre>${typeof data === 'string' ? data : JSON.stringify(data, null, 2)}</pre>
+            </div>
+          `;
+        } else {
+          statusEl.textContent = `✗ ${resp.status}`;
+          statusEl.className = 'status error';
+          
+          resultsEl.innerHTML += `
+            <div class="result">
+              <div class="error">✗ ${ep.name} - ${ep.method} ${ep.path}</div>
+              <div>Status: ${resp.status} ${resp.statusText}</div>
+              <div>Response:</div>
+              <pre>${typeof data === 'string' ? data : JSON.stringify(data, null, 2)}</pre>
+            </div>
+          `;
+        }
+      } catch (error) {
+        statusEl.textContent = '✗ Error';
+        statusEl.className = 'status error';
+        
+        resultsEl.innerHTML += `
+          <div class="result">
+            <div class="error">✗ ${ep.name} - ${ep.method} ${ep.path}</div>
+            <div>Error: ${error.message}</div>
+            <div>This usually means the API is not accessible or CORS is blocking the request.</div>
+          </div>
+        `;
+      }
+      
+      resultsEl.scrollTop = resultsEl.scrollHeight;
+    }
+
+    async function testAll() {
+      clearResults();
+      for (let i = 0; i < endpoints.length; i++) {
+        await testEndpoint(i);
+        // Small delay between requests
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+    }
+
+    function clearResults() {
+      document.getElementById('results').innerHTML = '';
+      renderEndpoints();
+    }
+
+    // Initial render
+    renderEndpoints();
+    
+    // Auto-test sentinel on load
+    setTimeout(() => testEndpoint(0), 500);
+  </script>
+</body>
+</html>
