@@ -95,16 +95,36 @@
         const origin = window.location.origin;
         const success = origin + '/dashboard.html?session_id={CHECKOUT_SESSION_ID}';
         const cancel = origin + '/subscribe.html';
-        const resp = await fetch('/api/v1/billing/create-single-plan-checkout', {
-          method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ success_url: success, cancel_url: cancel })
-        });
-        if (!resp.ok) {
-          const errTxt = await resp.text();
-          throw new Error('Request failed: ' + resp.status + ' ' + errTxt);
+        const endpoints = [
+          '/api/v1/billing/create-single-plan-checkout', // preferred
+          '/api/billing/create-single-plan-checkout'     // legacy fallback
+        ];
+        let data = null;
+        let lastError = null;
+        for (const ep of endpoints) {
+          try {
+            console.log('Attempting checkout endpoint:', ep);
+            const resp = await fetch(ep, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ success_url: success, cancel_url: cancel })
+            });
+            if (!resp.ok) {
+              const txt = await resp.text();
+              throw new Error('HTTP ' + resp.status + ' ' + txt.slice(0,200));
+            }
+            data = await resp.json();
+            data._endpoint_used = ep;
+            break;
+          } catch (err) {
+            lastError = err;
+            continue;
+          }
         }
-        const data = await resp.json();
+        if (!data) {
+          throw lastError || new Error('All checkout endpoints failed');
+        }
+        console.log('Checkout session created via', data._endpoint_used);
         if (!data.checkout_url) {
           throw new Error('Missing checkout_url in response');
         }
