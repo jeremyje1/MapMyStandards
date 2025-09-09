@@ -590,8 +590,20 @@ if documents_router_available:
     logger.info("✅ Documents router loaded")
     # Back-compat aliases (frontend uses /documents/*)
     try:
-        app.add_api_route("/documents/upload", upload_document_handler, methods=["POST"])
-        logger.info("🔗 Added alias route: POST /documents/upload -> /api/documents/upload")
+        # Only add if not already registered
+        existing = [r.path for r in app.router.routes if hasattr(r, 'path')]
+        if "/documents/upload" not in existing:
+            app.add_api_route("/documents/upload", upload_document_handler, methods=["POST"])
+            logger.info("🔗 Added alias route: POST /documents/upload -> /api/documents/upload")
+        else:
+            logger.info("ℹ️ Alias route /documents/upload already present")
+
+        # Temporary debug route to verify alias in prod (safe, GET only, no data)
+        async def documents_upload_debug():
+            return {"status": "ok", "message": "documents upload endpoint available"}
+
+        if "/documents/upload/debug" not in existing:
+            app.add_api_route("/documents/upload/debug", documents_upload_debug, methods=["GET"])
     except Exception as e:
         logger.warning(f"⚠️ Could not add alias route for documents upload: {e}")
 else:
