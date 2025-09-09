@@ -13,6 +13,7 @@ import logging
 import os
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from typing import Optional, Dict, Any
 
 logger = logging.getLogger(__name__)
 
@@ -32,14 +33,32 @@ except ImportError:
     ALGORITHM = "HS256"
     settings = None
 
-# Database dependency
+# Reuse a single DatabaseService instance to avoid repeated init attempts (Python 3.9 compatible typing)
+_db_service: Optional['DatabaseService'] = None  # type: ignore
+
+def _get_db_service() -> Optional['DatabaseService']:  # type: ignore
+    global _db_service
+    if not settings:
+        return None
+    if _db_service is None:
+        try:
+            _db_service = DatabaseService(settings.database_url)
+        except Exception as e:  # pragma: no cover
+            logger.error(f"Failed to create DatabaseService: {e}")
+            return None
+    return _db_service
+
 async def get_db():
-    if settings:
-        db_service = DatabaseService(settings.database_url)
-        async with db_service.get_session() as session:
+    svc = _get_db_service()
+    if svc is None:
+        yield None
+        return
+    try:
+        async with svc.get_session() as session:
             yield session
-    else:
-        # Fallback - won't actually work but allows import
+    except RuntimeError as e:
+        # Engine/session factory unavailable (likely DB unreachable)
+        logger.error(f"Database session unavailable: {e}")
         yield None
 
 class LoginRequest(BaseModel):
@@ -75,89 +94,76 @@ async def auth_login(request: LoginRequest, db: AsyncSession = Depends(get_db)):
 async def do_login(request: LoginRequest, db: AsyncSession):
     """Simple login that works with database session"""
     try:
-        # Handle demo account
+        # Demo account shortcut
         if request.email == "demo@example.com" and request.password == "demo123":
-            token = create_token(
-                {"sub": request.email, "user_id": "demo_user"},
-                timedelta(days=7 if request.remember else 1)
-            )
-            return AuthResponse(
-                success=True,
-                message="Login successful",
-                data={
-                    "access_token": token,
-                    "token_type": "bearer",
-                    "user_id": "demo_user",
-                    "email": request.email,
-                    "name": "Demo User"
-                }
-            )
-        
-        # Get user from database using SQLAlchemy
-        if db:
-            result = await db.execute(
-                select(User).where(User.email == request.email.lower())
-            )
-            user = result.scalar_one_or_none()
-            
-            if not user:
-                logger.warning(f"User not found: {request.email}")
-                raise HTTPException(status_code=401, detail="Invalid email or password")
-            
-            # Verify password
-            if not user.password_hash:
-                logger.error(f"User {request.email} has no password hash")
-                raise HTTPException(status_code=401, detail="Invalid email or password")
-            
-            # Check password
-            # Handle password hash that's stored as string (from registration)
-            password_hash_bytes = user.password_hash.encode('utf-8') if isinstance(user.password_hash, str) else user.password_hash
-            is_valid = bcrypt.checkpw(
-                request.password.encode('utf-8'),
-                password_hash_bytes
-            )
-            
-            if not is_valid:
-                logger.warning(f"Invalid password for user: {request.email}")
-                raise HTTPException(status_code=401, detail="Invalid email or password")
-            
-            # Create token
-            token = create_token(
-                {"sub": user.email, "user_id": str(user.id)},
-                timedelta(days=7 if request.remember else 1)
-            )
-            
-            # Return success
-            return AuthResponse(
-                success=True,
-                message="Login successful",
-                data={
-                    "access_token": token,
-                    "token_type": "bearer",
-                    "user_id": str(user.id),
-                    "email": user.email,
-                    "name": f"{user.first_name} {user.last_name}" if user.first_name else user.email.split('@')[0].title(),
-                    "plan": user.subscription_tier or "trial",
-                    "is_trial": user.is_trial if hasattr(user, 'is_trial') else True,
-                    "trial_end": user.trial_ends_at.isoformat() if hasattr(user, 'trial_ends_at') and user.trial_ends_at else None,
-                    "customer_id": user.stripe_customer_id if hasattr(user, 'stripe_customer_id') and user.stripe_customer_id else f"cus_{secrets.token_hex(8)}",
-                    "api_key": f"key_{secrets.token_hex(16)}"
-                }
-            )
-        else:
-            # No database connection available
-            raise HTTPException(status_code=500, detail="Database connection unavailable")
-            
+            token = create_token({"sub": request.email, "user_id": "demo_user"}, timedelta(days=7 if request.remember else 1))
+            return AuthResponse(success=True, message="Login successful", data={
+                "access_token": token,
+                "token_type": "bearer",
+                "user_id": "demo_user",
+                "email": request.email,
+                "name": "Demo User"
+            })
+
+        if not db:
+            raise HTTPException(status_code=503, detail="database_unavailable")
+
+        result = await db.execute(select(User).where(User.email == request.email.lower()))
+        user = result.scalar_one_or_none()
+        if not user:
+            logger.warning(f"User not found: {request.email}")
+            raise HTTPException(status_code=401, detail="Invalid email or password")
+
+        if not user.password_hash:
+            logger.error(f"User {request.email} has no password hash")
+            raise HTTPException(status_code=401, detail="Invalid email or password")
+
+        password_hash_bytes = user.password_hash.encode('utf-8') if isinstance(user.password_hash, str) else user.password_hash
+        if not bcrypt.checkpw(request.password.encode('utf-8'), password_hash_bytes):
+            logger.warning(f"Invalid password for user: {request.email}")
+            raise HTTPException(status_code=401, detail="Invalid email or password")
+
+        token = create_token({"sub": user.email, "user_id": str(user.id)}, timedelta(days=7 if request.remember else 1))
+        return AuthResponse(success=True, message="Login successful", data={
+            "access_token": token,
+            "token_type": "bearer",
+            "user_id": str(user.id),
+            "email": user.email,
+            "name": f"{user.first_name} {user.last_name}" if user.first_name else user.email.split('@')[0].title(),
+            "plan": user.subscription_tier or "trial",
+            "is_trial": getattr(user, 'is_trial', True),
+            "trial_end": user.trial_ends_at.isoformat() if getattr(user, 'trial_ends_at', None) else None,
+            "customer_id": getattr(user, 'stripe_customer_id', None) or f"cus_{secrets.token_hex(8)}",
+            "api_key": f"key_{secrets.token_hex(16)}"
+        })
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Login error: {e}")
-        raise HTTPException(status_code=500, detail="Login failed")
+        logger.exception(f"Login error unexpected: {e}")
+        raise HTTPException(status_code=500, detail="login_failed")
 
 @router.get("/auth-simple/test")
 async def test_endpoint():
     """Test if this router is working"""
     return {"status": "ok", "message": "Simple auth router is working"}
+
+@router.get("/auth-simple/diag")
+async def diag():
+    """Basic diagnostics for auth subsystem"""
+    svc = _get_db_service()
+    status: Dict[str, Any] = {"router": "ok", "db_configured": bool(svc is not None)}
+    if svc:
+        try:
+            # Lightweight connectivity test
+            async with svc.get_session() as session:  # type: ignore
+                await session.execute(select(User).limit(1))
+            status["db_status"] = "ok"
+        except Exception as e:  # pragma: no cover
+            status["db_status"] = "error"
+            status["db_error"] = str(e)
+    else:
+        status["db_status"] = "unconfigured"
+    return status
 
 @router.get("/api/dashboard/overview")
 async def dashboard_overview(
