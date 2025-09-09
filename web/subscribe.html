@@ -49,6 +49,22 @@
       <li>Integrations & connectors</li>
       <li>Priority support & updates</li>
     </ul>
+    <div style="margin:1.25rem 0 1.5rem;">
+      <div style="display:grid; gap:.75rem;">
+        <input id="email" type="email" placeholder="Work Email (recommended)" style="padding:.7rem .85rem;border:1px solid #d1d5db;border-radius:8px;font-size:.9rem;" />
+        <input id="name" type="text" placeholder="Full Name" style="padding:.7rem .85rem;border:1px solid #d1d5db;border-radius:8px;font-size:.9rem;" />
+        <input id="institution" type="text" placeholder="Institution / Organization" style="padding:.7rem .85rem;border:1px solid #d1d5db;border-radius:8px;font-size:.9rem;" />
+        <input id="role" type="text" placeholder="Role (e.g. Accreditation Director)" style="padding:.7rem .85rem;border:1px solid #d1d5db;border-radius:8px;font-size:.9rem;" />
+        <select id="institution_type" style="padding:.7rem .85rem;border:1px solid #d1d5db;border-radius:8px;font-size:.9rem;">
+          <option value="">Institution Type (optional)</option>
+          <option value="college">College</option>
+          <option value="university">University</option>
+          <option value="system">System / Network</option>
+          <option value="organization">Organization</option>
+        </select>
+        <small style="color:#6b7280;font-size:.65rem;line-height:1.2;">Providing these details lets us auto-provision your account immediately after checkout (no waiting for webhook).</small>
+      </div>
+    </div>
     <button id="subscribeBtn">
       <span class="btn-label">Proceed to Secure Checkout</span>
     </button>
@@ -68,7 +84,9 @@
           const data = await resp.json();
           if(resp.ok && data.success){
             statusEl.className='status success';
-            statusEl.textContent='Subscription confirmed. You can now log in. Check your email for credentials or password setup.';
+            statusEl.textContent = data.provisioned
+              ? 'Subscription confirmed. Your account is provisioned. Check your email to set a password and log in.'
+              : 'Subscription confirmed. Provisioning in progress—refresh in a few seconds if you cannot log in yet.';
           } else {
             statusEl.className='status error';
             statusEl.textContent='Checkout not complete yet. Refresh in a few seconds.';
@@ -101,13 +119,29 @@
         ];
         let data = null;
         let lastError = null;
+        // Collect optional metadata
+        const payload = {
+          success_url: success,
+          cancel_url: cancel,
+        };
+        const emailEl = document.getElementById('email');
+        const nameEl = document.getElementById('name');
+        const instEl = document.getElementById('institution');
+        const roleEl = document.getElementById('role');
+        const typeEl = document.getElementById('institution_type');
+        if(emailEl && emailEl.value) payload.email = emailEl.value.trim();
+        if(nameEl && nameEl.value) payload.name = nameEl.value.trim();
+        if(instEl && instEl.value) payload.institution_name = instEl.value.trim();
+        if(roleEl && roleEl.value) payload.role = roleEl.value.trim();
+        if(typeEl && typeEl.value) payload.institution_type = typeEl.value;
+
         for (const ep of endpoints) {
           try {
             console.log('Attempting checkout endpoint:', ep);
             const resp = await fetch(ep, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ success_url: success, cancel_url: cancel })
+              body: JSON.stringify(payload)
             });
             if (!resp.ok) {
               const txt = await resp.text();

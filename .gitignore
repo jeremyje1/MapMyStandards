@@ -4,6 +4,11 @@
 .env.*.local
 *.env
 !.env.example
+!.env.complete.example
+
+# Disallow all other env variant files (prevent accidental secret commits)
+.env.*
+*.env.*
 
 # Python
 __pycache__/
@@ -37,6 +42,11 @@ env/
 .env/
 .tmpenv/
 a3e_enhanced_env/
+enhanced_env/
+/.python_env/
+/.ruff_cache/
+/.mypy_cache/
+pip-wheel-metadata/
 
 # Node.js
 node_modules/
@@ -128,6 +138,11 @@ docker-configs-backup/
 docs-backup/
 frontend-backup/
 native_deploy/
+experimental/
+legacy_scripts/
+
+# Runtime verification script artifacts (placeholder path)
+scripts/verify_runtime_tmp/
 
 # Temporary files
 tmp/

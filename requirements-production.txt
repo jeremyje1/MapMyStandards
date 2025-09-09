@@ -80,3 +80,4 @@ bleach==6.1.0  # For HTML sanitization
 
 # Agent orchestration (optional but included for full functionality)
 pyautogen==0.9.0  # For multi-agent workflows
+prometheus-client==0.20.0  # Metrics exposition
