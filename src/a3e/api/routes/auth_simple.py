@@ -139,7 +139,7 @@ async def do_login(request: LoginRequest, db: AsyncSession):
                     "name": f"{user.first_name} {user.last_name}" if user.first_name else user.email.split('@')[0].title(),
                     "plan": user.subscription_tier or "trial",
                     "is_trial": user.is_trial if hasattr(user, 'is_trial') else True,
-                    "trial_end": user.trial_end_date.isoformat() if hasattr(user, 'trial_end_date') and user.trial_end_date else None,
+                    "trial_end": user.trial_ends_at.isoformat() if hasattr(user, 'trial_ends_at') and user.trial_ends_at else None,
                     "customer_id": user.stripe_customer_id if hasattr(user, 'stripe_customer_id') and user.stripe_customer_id else f"cus_{secrets.token_hex(8)}",
                     "api_key": f"key_{secrets.token_hex(16)}"
                 }
