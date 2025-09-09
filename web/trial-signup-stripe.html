@@ -427,6 +427,23 @@
     </div>
     
     <script>
+        // Check for pre-filled data from previous page
+        const storedData = sessionStorage.getItem('signupFormData');
+        if (storedData) {
+            const data = JSON.parse(storedData);
+            // Pre-fill form fields when DOM is ready
+            window.addEventListener('DOMContentLoaded', () => {
+                if (data.firstName) document.getElementById('firstName').value = data.firstName;
+                if (data.lastName) document.getElementById('lastName').value = data.lastName;
+                if (data.email) document.getElementById('email').value = data.email;
+                if (data.password) document.getElementById('password').value = data.password;
+                if (data.institution) document.getElementById('institution').value = data.institution;
+                if (data.role) document.getElementById('role').value = data.role;
+                // Clear the stored data after using it
+                sessionStorage.removeItem('signupFormData');
+            });
+        }
+        
         // Initialize Stripe (use test key for now, replace with live key in production)
         const stripe = Stripe('pk_live_51Pnu1YRxvNLGQNSQsT6d10qvF88hYdTyLAE0oY8Xei23Y16z0p6RSi3oSKGN4nJqD30NLmJdqxlRXOcZDzUqxBMi002JJtWLdD');
         const elements = stripe.elements();
@@ -595,20 +612,21 @@
                 }
                 
                 // Create account with payment method
-                const response = await fetch('https://api.mapmystandards.ai/api/trial/signup', {
+                const response = await fetch('https://api.mapmystandards.ai/api/v1/billing/trial/signup', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        name: `${formData.firstName} ${formData.lastName}`,
+                        institution_name: formData.institution,
                         email: formData.email,
                         password: formData.password,
-                        institution_name: formData.institution,
-                        institution_type: 'college',
+                        first_name: formData.firstName,
+                        last_name: formData.lastName,
                         role: formData.role,
                         plan: `college_${selectedPlan}`,
                         payment_method_id: paymentMethod.id,
+                        institution_type: 'college',
                         newsletter_opt_in: false
                     })
                 });
@@ -633,7 +651,7 @@
                 }
                 
                 // Redirect to dashboard
-                window.location.href = 'https://platform.mapmystandards.ai/dashboard-advanced.html?trial=started';
+                window.location.href = 'https://platform.mapmystandards.ai/dashboard.html?trial=started';
                 
             } catch (error) {
                 console.error('Signup error:', error);
