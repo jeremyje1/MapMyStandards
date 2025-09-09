@@ -11,6 +11,11 @@ LOCAL_API_BASE = "http://localhost:8000"
 
 # Choose which to test
 USE_LOCAL = False  # Set to True to test local
+
+# Add delay for deployment
+import time
+print("Waiting 30 seconds for deployment...")
+time.sleep(30)
 BASE_URL = LOCAL_API_BASE if USE_LOCAL else API_BASE
 
 # Test endpoints

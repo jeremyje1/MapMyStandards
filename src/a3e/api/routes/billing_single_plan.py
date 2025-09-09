@@ -64,13 +64,24 @@ def _resolve_single_price_id() -> str:
     candidates = [
         os.getenv("STRIPE_SINGLE_PLAN_PRICE_ID"),
         os.getenv("STRIPE_PRICE_MONTHLY"),
+        os.getenv("STRIPE_MONTHLY_PRICE_ID"),  # Alternative naming
         os.getenv("STRIPE_PRICE_COLLEGE_MONTHLY"),  # legacy naming
         os.getenv("STRIPE_PRICE_ID_PROFESSIONAL_MONTHLY"),
     ]
+    
+    # Check all candidates
     for cid in candidates:
         if cid and cid.strip() and not cid.startswith("sk_"):
+            logger.info(f"Using price ID from env: {cid[:10]}...")
             return cid.strip()
-    return ""  # force error if still empty
+    
+    # If in test mode, use a known test price ID
+    if os.getenv("STRIPE_SECRET_KEY", "").startswith("sk_test_"):
+        test_price_id = "price_1RyVEORMpSG47vNmYL4DWCYF"  # $299/month from .env.stripe
+        logger.warning(f"No price ID configured, using test default: {test_price_id}")
+        return test_price_id
+    
+    return ""  # force error if still empty in live mode
 
 def _stripe_mode() -> str:
     key = stripe.api_key or ""
@@ -174,7 +185,7 @@ async def create_single_plan_checkout(
         raise HTTPException(status_code=500, detail="Failed to create checkout session")
 
 @legacy_single_plan_router.post("/create-single-plan-checkout", include_in_schema=False)
-async def legacy_create_single_plan_checkout(request: CreateCheckoutRequest, current_user: Optional[dict] = Depends(get_current_user)):
+async def legacy_create_single_plan_checkout(request: CreateCheckoutRequest, current_user: Optional[dict] = Depends(get_optional_user)):
     """Legacy path alias (/api/billing/create-single-plan-checkout) to prevent 404s."""
     return await create_single_plan_checkout(request, current_user)  # reuse logic
 
