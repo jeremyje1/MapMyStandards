@@ -654,8 +654,31 @@ if 'billing_single_plan_router_available' in globals() and billing_single_plan_r
         logger.info("✅ Single-plan legacy router loaded (/api/billing/*)")
     except Exception as _e:
         logger.warning(f"⚠️ Could not mount legacy single-plan router: {_e}")
+    # Extra diagnostic log to confirm environment price configuration (masked)
+    try:
+        import os as _os
+        _price_id = _os.getenv("STRIPE_SINGLE_PLAN_PRICE_ID") or _os.getenv("STRIPE_PRICE_MONTHLY") or "<unset>"
+        if _price_id and _price_id not in ("<unset>"):
+            _masked = _price_id[:6] + "..." + _price_id[-4:]
+        else:
+            _masked = _price_id
+        logger.info(f"🔍 Single-plan price env detected: {_masked}")
+    except Exception as _e:  # pragma: no cover - best effort
+        logger.warning(f"⚠️ Could not log single-plan price env: {_e}")
 else:
     logger.warning("⚠️ Single-plan billing router not available")
+
+# Sentinel route very early for deployment verification (confirm this file is active)
+@app.get("/_sentinel_main", include_in_schema=False)
+async def _sentinel_main():  # noqa: D401
+    return {
+        "entrypoint": "src.a3e.main",
+        "billing_single_plan_router_available": bool(globals().get("billing_single_plan_router_available")),
+        "billing_single_plan_routes_present": any(
+            getattr(r, 'path', '').endswith('/create-single-plan-checkout') for r in app.router.routes
+        ),
+        "total_routes": len(app.router.routes)
+    }
 
 if narrative_router_available:
     app.include_router(narrative_router)
