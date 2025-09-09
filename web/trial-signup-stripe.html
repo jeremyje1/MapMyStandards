@@ -444,8 +444,8 @@
             });
         }
         
-        // Initialize Stripe (use test key for now, replace with live key in production)
-        const stripe = Stripe('pk_live_51Pnu1YRxvNLGQNSQsT6d10qvF88hYdTyLAE0oY8Xei23Y16z0p6RSi3oSKGN4nJqD30NLmJdqxlRXOcZDzUqxBMi002JJtWLdD');
+        // Initialize Stripe with correct publishable key
+        const stripe = Stripe('pk_live_51Rr4dNK8PKpLCKDZH9u9mOEqmPVSR946uGYKSdk73mmNjBR4i9Ibon3wvDLNpYPRzsXmaAXTrwSPKKxNolArj8G200tZyrr6qE');
         const elements = stripe.elements();
         
         // Create card element
@@ -624,7 +624,7 @@
                         first_name: formData.firstName,
                         last_name: formData.lastName,
                         role: formData.role,
-                        plan: `college_${selectedPlan}`,
+                        plan: 'college_monthly', // Single $199/month plan
                         payment_method_id: paymentMethod.id,
                         institution_type: 'college',
                         newsletter_opt_in: false
