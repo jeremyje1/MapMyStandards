@@ -255,17 +255,14 @@
     </main>
 
     <script>
-        // Load user information
+        // Redirect to AI-powered dashboard
         document.addEventListener('DOMContentLoaded', function() {
-            const userEmail = localStorage.getItem('userEmail');
-            if (userEmail) {
-                document.getElementById('userEmail').textContent = userEmail;
-            }
-
-            // Check if user is logged in
-            const token = localStorage.getItem('access_token');
+            const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
             if (!token) {
                 window.location.href = 'https://platform.mapmystandards.ai/login';
+            } else {
+                // Redirect to the new AI dashboard
+                window.location.href = 'https://platform.mapmystandards.ai/ai-dashboard';
             }
         });
     </script>

@@ -6,8 +6,8 @@ import os
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine
 
-# Get DATABASE_URL from environment or use the Railway URL
-DATABASE_URL = os.getenv('DATABASE_URL', 'postgresql://postgres:jOSLpQcnUAahNTkVPIAraoepMQxbqXGc@postgres-rlai.railway.internal:5432/railway')
+# Get DATABASE_URL from environment or use the Railway proxy URL
+DATABASE_URL = os.getenv('DATABASE_URL', 'postgresql://postgres:jOSLpQcnUAahNTkVPIAraoepMQxbqXGc@shinkansen.proxy.rlwy.net:28831/railway')
 
 # Convert to asyncpg URL format
 if DATABASE_URL.startswith('postgres://'):
