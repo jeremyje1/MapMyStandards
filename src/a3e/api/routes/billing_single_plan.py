@@ -281,6 +281,7 @@ async def verify_session(session_id: str):
                     result = await db.execute(stmt)
                     existing = result.scalar_one_or_none()
                     if not existing:
+                        logger.info(f"[verify-session] User {customer_email} not found, creating via fallback provisioning")
                         _metrics['fallback_provision_attempts'] += 1
                         # Check if subscription has trial
                         is_trial = False
@@ -344,10 +345,15 @@ async def verify_session(session_id: str):
                             pass
                         provisioned = True
                         _metrics['fallback_provision_created'] += 1
+                        logger.info(f"[verify-session] Successfully created user {customer_email} via fallback")
                     else:
                         provisioned = True
-            except Exception:
-                # Silent fail; provisioning will still happen via webhook
+                        logger.info(f"[verify-session] User {customer_email} already exists")
+            except Exception as e:
+                # Log the error but don't fail the verification
+                logger.error(f"[verify-session] Failed to provision user {customer_email}: {e}")
+                import traceback
+                logger.error(f"[verify-session] Traceback: {traceback.format_exc()}")
                 pass
         else:
             logger.warning("[single-plan] verify-session: no customer email present in session %s", session_id)
