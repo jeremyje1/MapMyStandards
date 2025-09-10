@@ -486,6 +486,22 @@ class StandardsGraph:
         results.sort(key=lambda x: x[1], reverse=True)
         return results[:limit]
     
+    def get_graph_stats(self) -> Dict[str, Any]:
+        """Get basic statistics about the standards graph"""
+        # Count edges (parent-child relationships)
+        total_edges = sum(len(node.children) for node in self.nodes.values())
+        
+        return {
+            'total_nodes': len(self.nodes),
+            'total_edges': total_edges,
+            'accreditors': list(self.accreditor_roots.keys()),
+            'by_level': {
+                'standards': len([n for n in self.nodes.values() if n.level == 'standard']),
+                'clauses': len([n for n in self.nodes.values() if n.level == 'clause']),
+                'indicators': len([n for n in self.nodes.values() if n.level == 'indicator'])
+            }
+        }
+    
     def export_graph_structure(self) -> Dict[str, Any]:
         """Export the graph structure for visualization"""
         return {

@@ -257,6 +257,14 @@ except ImportError as e:
     user_intelligence_router_available = False
     _user_intelligence_import_exception = e
 
+# User Intelligence Simple Router (Fallback)
+try:
+    from .api.routes.user_intelligence_simple import router as user_intelligence_simple_router
+    user_intelligence_simple_router_available = True
+except ImportError as e:
+    user_intelligence_simple_router_available = False
+    _user_intelligence_simple_import_exception = e
+
 # Password Reset Router
 try:
     from .api.routes.password_reset import router as password_reset_router
@@ -865,6 +873,13 @@ if user_intelligence_router_available:
     logger.info("✅ User Intelligence router loaded (Dashboard Integration)")
 else:
     logger.warning(f"⚠️ User Intelligence router not available: {_user_intelligence_import_exception}")
+
+# Include User Intelligence Simple router (Fallback)
+if user_intelligence_simple_router_available:
+    app.include_router(user_intelligence_simple_router)
+    logger.info("✅ User Intelligence Simple router loaded (Fallback)")
+else:
+    logger.warning(f"⚠️ User Intelligence Simple router not available")
 
 # Include Password Reset router
 if password_reset_router_available:
@@ -1897,6 +1912,16 @@ if WEB_DIR.exists():
     async def upload_ai_html():  # noqa: D401
         """AI-enhanced upload interface with real-time analysis."""
         return FileResponse(str(WEB_DIR / "upload-ai.html"))
+
+    @app.get("/debug-api", response_class=FileResponse, include_in_schema=False)
+    async def debug_api():  # noqa: D401
+        """Debug API endpoints tool."""
+        return FileResponse(str(WEB_DIR / "debug-api.html"))
+
+    @app.get("/debug-api.html", response_class=FileResponse, include_in_schema=False) 
+    async def debug_api_html():  # noqa: D401
+        """Debug API endpoints tool."""
+        return FileResponse(str(WEB_DIR / "debug-api.html"))
 
     @app.get("/homepage", response_class=FileResponse, include_in_schema=False)
     async def homepage():  # noqa: D401
