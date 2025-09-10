@@ -1,0 +1,15 @@
+# Missing dependencies that are causing warnings and limiting customer experience
+
+# Vector database functionality (for enhanced AI search)
+pymilvus>=2.3.0
+numpy>=1.24.0
+sentence-transformers>=2.2.0
+
+# Authentication enhancement (password hashing)
+argon2-cffi>=21.3.0
+
+# Multi-agent orchestration (for advanced AI features)
+pyautogen>=0.2.0
+
+# Additional recommended dependencies
+faiss-cpu>=1.7.4  # Alternative vector search if Milvus unavailable
