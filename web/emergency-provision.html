@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Emergency User Provisioning - MapMyStandards</title>
+  <style>
+    body { 
+      margin:0; 
+      font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; 
+      background:linear-gradient(135deg,#667eea,#764ba2); 
+      color:#111; 
+      min-height:100vh; 
+      display:flex; 
+      align-items:center; 
+      justify-content:center; 
+      padding:2rem; 
+    }
+    .card { 
+      background:#fff; 
+      width:100%; 
+      max-width:500px; 
+      border-radius:18px; 
+      padding:2.5rem; 
+      box-shadow:0 24px 60px -10px rgba(0,0,0,.35); 
+    }
+    h1 { 
+      margin:0 0 1rem; 
+      font-size:1.75rem; 
+      color:#1f2937; 
+    }
+    p {
+      color:#6b7280;
+      margin-bottom:2rem;
+    }
+    input {
+      width:100%;
+      padding:0.875rem 1rem;
+      border:1px solid #e5e7eb;
+      border-radius:8px;
+      margin-bottom:1rem;
+      font-size:1rem;
+    }
+    button {
+      width:100%;
+      background:#6366f1;
+      color:white;
+      padding:0.875rem 2rem;
+      border-radius:8px;
+      border:none;
+      font-weight:600;
+      font-size:1rem;
+      cursor:pointer;
+      transition:all 0.2s;
+    }
+    button:hover {
+      background:#4f46e5;
+    }
+    button:disabled {
+      background:#9ca3af;
+      cursor:not-allowed;
+    }
+    .status {
+      margin-top:1.5rem;
+      padding:1rem;
+      border-radius:8px;
+      display:none;
+    }
+    .status.success {
+      background:#d1fae5;
+      color:#065f46;
+      border:1px solid #6ee7b7;
+    }
+    .status.error {
+      background:#fee2e2;
+      color:#991b1b;
+      border:1px solid #fca5a5;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Emergency User Provisioning</h1>
+    <p>If your payment was successful but account creation failed, use this form to manually provision your account.</p>
+    
+    <form id="provisionForm">
+      <input type="email" id="email" placeholder="Your email address" required />
+      <input type="text" id="sessionId" placeholder="Stripe session ID (optional)" />
+      <button type="submit" id="submitBtn">Provision Account</button>
+    </form>
+    
+    <div id="successStatus" class="status success">
+      Account provisioned successfully! You can now <a href="/checkout-success.html">set your password</a>.
+    </div>
+    
+    <div id="errorStatus" class="status error">
+      <span id="errorMessage">An error occurred</span>
+    </div>
+  </div>
+
+  <script>
+    // Pre-fill from URL params
+    const params = new URLSearchParams(window.location.search);
+    const emailParam = params.get('email');
+    const sessionParam = params.get('session_id');
+    
+    if (emailParam) document.getElementById('email').value = decodeURIComponent(emailParam);
+    if (sessionParam) document.getElementById('sessionId').value = sessionParam;
+    
+    document.getElementById('provisionForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const email = document.getElementById('email').value;
+      const sessionId = document.getElementById('sessionId').value || 'manual_provision';
+      const submitBtn = document.getElementById('submitBtn');
+      
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Provisioning...';
+      
+      // Hide previous statuses
+      document.getElementById('successStatus').style.display = 'none';
+      document.getElementById('errorStatus').style.display = 'none';
+      
+      try {
+        const response = await fetch('https://api.mapmystandards.ai/auth/checkout-provision-user', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, session_id: sessionId })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+          document.getElementById('successStatus').style.display = 'block';
+          
+          // Add link with email
+          const link = document.getElementById('successStatus').querySelector('a');
+          link.href = `/checkout-success.html?email=${encodeURIComponent(email)}&session_id=${sessionId}`;
+          
+          // Auto-redirect after 3 seconds
+          setTimeout(() => {
+            window.location.href = link.href;
+          }, 3000);
+        } else {
+          throw new Error(data.detail || 'Failed to provision account');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('errorMessage').textContent = error.message;
+        document.getElementById('errorStatus').style.display = 'block';
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Provision Account';
+      }
+    });
+  </script>
+</body>
+</html>
