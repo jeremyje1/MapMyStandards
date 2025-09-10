@@ -124,7 +124,11 @@ def _build_checkout_session(request: CreateCheckoutRequest, current_user: Option
             "STRIPE_CANCEL_URL",
             "https://platform.mapmystandards.ai/subscribe"
         ),
-        'allow_promotion_codes': True
+        'allow_promotion_codes': True,
+        # Add 7-day trial period
+        'subscription_data': {
+            'trial_period_days': 7
+        }
     }
     # Always attach metadata so webhook / fallback provisioning has context
     metadata: Dict[str, str] = {
@@ -159,9 +163,10 @@ def _build_checkout_session(request: CreateCheckoutRequest, current_user: Option
         "session_id": session.id,
         "plan": "single",
         "amount": SINGLE_PLAN_AMOUNT,
-        "display_amount": "$199/month",
+        "display_amount": "$199/month after 7-day trial",
         "price_id": SINGLE_PLAN_PRICE_ID,
         "mode": _stripe_mode(),
+        "trial_days": 7
     }
 
 @router.post("/create-single-plan-checkout")
@@ -195,6 +200,7 @@ async def get_single_plan_info():
             "name": "MapMyStandards Platform",
             "price_cents": SINGLE_PLAN_AMOUNT,
             "display_price": "$199/month",
+            "trial_info": "7-day free trial",
             "interval": "month",
             "features": [
                 "Evidence Mapping & Intelligence",
@@ -276,6 +282,24 @@ async def verify_session(session_id: str):
                     existing = result.scalar_one_or_none()
                     if not existing:
                         _metrics['fallback_provision_attempts'] += 1
+                        # Check if subscription has trial
+                        is_trial = False
+                        trial_started_at = None
+                        trial_ends_at = None
+                        
+                        if subscription_id:
+                            try:
+                                subscription = stripe.Subscription.retrieve(subscription_id)
+                                if subscription.trial_end:
+                                    is_trial = True
+                                    trial_started_at = datetime.utcnow()
+                                    trial_ends_at = datetime.fromtimestamp(subscription.trial_end)
+                            except:
+                                # Default to trial for new subscriptions
+                                is_trial = True
+                                trial_started_at = datetime.utcnow()
+                                trial_ends_at = datetime.utcnow() + timedelta(days=7)
+                        
                         user = User(
                             email=customer_email,
                             name=session.get('customer_details', {}).get('name') or customer_email.split('@')[0],
@@ -283,9 +307,9 @@ async def verify_session(session_id: str):
                             institution_name=session.get('metadata', {}).get('institution_name'),
                             institution_type=session.get('metadata', {}).get('institution_type') or 'college',
                             role=session.get('metadata', {}).get('role') or 'Administrator',
-                            is_trial=False,
-                            trial_started_at=None,
-                            trial_ends_at=None,
+                            is_trial=is_trial,
+                            trial_started_at=trial_started_at,
+                            trial_ends_at=trial_ends_at,
                             subscription_tier='single',
                             stripe_customer_id=customer_id,
                             stripe_subscription_id=subscription_id,
