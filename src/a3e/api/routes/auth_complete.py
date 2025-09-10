@@ -13,7 +13,7 @@ import hashlib
 import os
 from datetime import datetime, timedelta
 import logging
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...core.config import settings
@@ -387,20 +387,23 @@ class CheckoutPasswordSetupRequest(BaseModel):
 async def checkout_password_setup(request: CheckoutPasswordSetupRequest, db: AsyncSession = Depends(get_db)):
     """Set password for user created via Stripe checkout (no token required)"""
     try:
-        # Find user by email
-        result = await db.execute(
-            select(User).where(User.email == request.email.lower())
-        )
-        user = result.scalar_one_or_none()
+        # Find user by email - use raw SQL to avoid schema issues
+        result = await db.execute(text("""
+            SELECT id, email, name, password_hash, stripe_customer_id, stripe_subscription_id,
+                   is_active, is_verified, created_at
+            FROM users 
+            WHERE email = :email
+        """), {"email": request.email.lower()})
+        user_row = result.fetchone()
         
-        if not user:
+        if not user_row:
             raise HTTPException(
                 status_code=404, 
                 detail="Account not found. The payment webhook may still be processing. Please try again in a moment."
             )
         
         # Check if user already has a real password (not "pending_reset")
-        if user.password_hash and user.password_hash != "pending_reset":
+        if user_row.password_hash and user_row.password_hash != "pending_reset":
             raise HTTPException(
                 status_code=400,
                 detail="Password already set. Please login with your existing password."
@@ -408,15 +411,24 @@ async def checkout_password_setup(request: CheckoutPasswordSetupRequest, db: Asy
         
         # Set the password
         password_hash = bcrypt.hashpw(request.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-        user.password_hash = password_hash
-        user.is_verified = True
-        user.is_active = True
+        
+        # Update user with raw SQL
+        await db.execute(text("""
+            UPDATE users 
+            SET password_hash = :password_hash,
+                is_verified = TRUE,
+                is_active = TRUE
+            WHERE id = :user_id
+        """), {
+            "password_hash": password_hash,
+            "user_id": user_row.id
+        })
         
         await db.commit()
         
         # Generate access token for immediate login
         access_token = create_access_token(
-            data={"sub": user.email, "user_id": str(user.id)},
+            data={"sub": user_row.email, "user_id": str(user_row.id)},
             expires_delta=timedelta(days=7)
         )
         
@@ -426,9 +438,9 @@ async def checkout_password_setup(request: CheckoutPasswordSetupRequest, db: Asy
             data={
                 "access_token": access_token,
                 "token_type": "bearer",
-                "email": user.email,
-                "name": user.name,
-                "user_id": str(user.id)
+                "email": user_row.email,
+                "name": user_row.name,
+                "user_id": str(user_row.id)
             }
         )
         
