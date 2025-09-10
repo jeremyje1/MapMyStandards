@@ -249,6 +249,14 @@ except ImportError as e:
     intelligence_router_available = False
     _intelligence_import_exception = e
 
+# User Intelligence Router (Dashboard Integration)
+try:
+    from .api.routes.user_intelligence import router as user_intelligence_router
+    user_intelligence_router_available = True
+except ImportError as e:
+    user_intelligence_router_available = False
+    _user_intelligence_import_exception = e
+
 # Password Reset Router
 try:
     from .api.routes.password_reset import router as password_reset_router
@@ -850,6 +858,13 @@ if intelligence_router_available:
     logger.info("✅ Compliance Intelligence router loaded")
 else:
     logger.warning(f"⚠️ Compliance Intelligence router not available")
+
+# Include User Intelligence router (Dashboard Integration)
+if user_intelligence_router_available:
+    app.include_router(user_intelligence_router)
+    logger.info("✅ User Intelligence router loaded (Dashboard Integration)")
+else:
+    logger.warning(f"⚠️ User Intelligence router not available: {_user_intelligence_import_exception}")
 
 # Include Password Reset router
 if password_reset_router_available:
@@ -1867,6 +1882,21 @@ if WEB_DIR.exists():
             <script>window.location.href = '/dashboard';</script>
         </body></html>
         """)
+
+    @app.get("/ai-dashboard", response_class=FileResponse, include_in_schema=False)
+    async def ai_dashboard():  # noqa: D401
+        """AI-powered dashboard with real-time compliance insights."""
+        return FileResponse(str(WEB_DIR / "ai-dashboard.html"))
+
+    @app.get("/ai-dashboard.html", response_class=FileResponse, include_in_schema=False)
+    async def ai_dashboard_html():  # noqa: D401
+        """AI-powered dashboard with real-time compliance insights."""
+        return FileResponse(str(WEB_DIR / "ai-dashboard.html"))
+
+    @app.get("/upload-ai.html", response_class=FileResponse, include_in_schema=False)
+    async def upload_ai_html():  # noqa: D401
+        """AI-enhanced upload interface with real-time analysis."""
+        return FileResponse(str(WEB_DIR / "upload-ai.html"))
 
     @app.get("/homepage", response_class=FileResponse, include_in_schema=False)
     async def homepage():  # noqa: D401

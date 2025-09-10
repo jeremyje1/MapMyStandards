@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Dashboard | MapMyStandards A³E</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f9fafb;
+        }
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .ai-badge {
+            background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .metric-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-left: 4px solid #3b82f6;
+        }
+        .error-message {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+        .success-message {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #166534;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <h1 class="text-xl font-semibold text-gray-900">MapMyStandards A³E</h1>
+                    <span class="ai-badge ml-3">AI Powered</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm text-gray-600" id="userEmail">Loading...</span>
+                    <a href="https://platform.mapmystandards.ai/onboarding" class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700 transition-colors">
+                        Settings
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <!-- Loading State -->
+        <div id="loadingState" class="text-center py-8">
+            <div class="loading-spinner mx-auto mb-4"></div>
+            <p class="text-gray-600">Loading your AI-powered compliance dashboard...</p>
+        </div>
+
+        <!-- Error State -->
+        <div id="errorState" class="hidden">
+            <div class="error-message">
+                <h3 class="font-semibold">Unable to load dashboard</h3>
+                <p id="errorMessage">Please check your connection and try again.</p>
+                <button onclick="loadDashboard()" class="mt-2 bg-red-600 text-white px-4 py-2 rounded">Retry</button>
+            </div>
+        </div>
+
+        <!-- Main Dashboard Content -->
+        <div id="dashboardContent" class="hidden">
+            <!-- Welcome Banner -->
+            <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg p-6 mb-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-xl font-semibold mb-2" id="welcomeMessage">Welcome to your AI Dashboard!</h2>
+                        <p class="opacity-90" id="institutionInfo">Your compliance intelligence platform is ready.</p>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-2xl font-bold" id="complianceScore">--</div>
+                        <div class="text-sm opacity-90">Compliance Score</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Key Metrics -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="metric-card">
+                    <div class="flex items-center">
+                        <div class="p-2 bg-blue-100 rounded-lg">
+                            <i class="fas fa-chart-line text-blue-600"></i>
+                        </div>
+                        <div class="ml-4">
+                            <div class="text-2xl font-bold text-gray-900" id="metricCompliance">--</div>
+                            <div class="text-sm text-gray-600">Overall Compliance</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="flex items-center">
+                        <div class="p-2 bg-green-100 rounded-lg">
+                            <i class="fas fa-file-alt text-green-600"></i>
+                        </div>
+                        <div class="ml-4">
+                            <div class="text-2xl font-bold text-gray-900" id="metricDocuments">--</div>
+                            <div class="text-sm text-gray-600">Documents Analyzed</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="flex items-center">
+                        <div class="p-2 bg-purple-100 rounded-lg">
+                            <i class="fas fa-sitemap text-purple-600"></i>
+                        </div>
+                        <div class="ml-4">
+                            <div class="text-2xl font-bold text-gray-900" id="metricStandards">--</div>
+                            <div class="text-sm text-gray-600">Standards Mapped</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="flex items-center">
+                        <div class="p-2 bg-red-100 rounded-lg">
+                            <i class="fas fa-exclamation-triangle text-red-600"></i>
+                        </div>
+                        <div class="ml-4">
+                            <div class="text-2xl font-bold text-gray-900" id="metricGaps">--</div>
+                            <div class="text-sm text-gray-600">Gaps Identified</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Actions -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-lg shadow card-hover">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0">
+                            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-brain text-blue-600"></i>
+                            </div>
+                        </div>
+                        <div class="ml-4 flex-1">
+                            <h3 class="text-lg font-medium text-gray-900">AI Evidence Analysis</h3>
+                            <p class="text-gray-600 text-sm mt-1">Upload documents for intelligent standards mapping</p>
+                            <div class="mt-4">
+                                <input type="file" id="evidenceFile" accept=".pdf,.doc,.docx,.txt" class="hidden">
+                                <button onclick="document.getElementById('evidenceFile').click()" class="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700">
+                                    Upload & Analyze
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow card-hover">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0">
+                            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-project-diagram text-purple-600"></i>
+                            </div>
+                        </div>
+                        <div class="ml-4 flex-1">
+                            <h3 class="text-lg font-medium text-gray-900">Standards Graph™</h3>
+                            <p class="text-gray-600 text-sm mt-1">Explore standards relationships</p>
+                            <button onclick="loadStandardsGraph()" class="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium mt-3">
+                                View Graph 
+                                <i class="fas fa-arrow-right ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow card-hover">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0">
+                            <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-exclamation-circle text-red-600"></i>
+                            </div>
+                        </div>
+                        <div class="ml-4 flex-1">
+                            <h3 class="text-lg font-medium text-gray-900">Gap Analysis</h3>
+                            <p class="text-gray-600 text-sm mt-1">AI-powered compliance gap detection</p>
+                            <button onclick="loadGapAnalysis()" class="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium mt-3">
+                                Analyze Gaps 
+                                <i class="fas fa-arrow-right ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analysis Results -->
+            <div id="analysisResults" class="hidden mb-8">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-semibold mb-4">Latest Analysis Results</h3>
+                    <div id="analysisContent"></div>
+                </div>
+            </div>
+
+            <!-- Standards Graph Section -->
+            <div id="standardsGraphSection" class="hidden mb-8">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-semibold mb-4">Standards Graph™ - <span id="currentAccreditor"></span></h3>
+                    <div id="standardsContent">
+                        <div class="text-center py-8">
+                            <div class="loading-spinner mx-auto mb-4"></div>
+                            <p class="text-gray-600">Loading standards graph...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gap Analysis Section -->
+            <div id="gapAnalysisSection" class="hidden mb-8">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-semibold mb-4">GapRisk Predictor™ Analysis</h3>
+                    <div id="gapContent">
+                        <div class="text-center py-8">
+                            <div class="loading-spinner mx-auto mb-4"></div>
+                            <p class="text-gray-600">Analyzing compliance gaps...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let dashboardData = null;
+
+        // Load dashboard on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check authentication
+            const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+            if (!token) {
+                window.location.href = 'https://platform.mapmystandards.ai/login';
+                return;
+            }
+
+            loadDashboard();
+            
+            // Set up file upload handler
+            document.getElementById('evidenceFile').addEventListener('change', handleFileUpload);
+        });
+
+        async function loadDashboard() {
+            const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+            
+            try {
+                showLoading();
+                
+                // Load dashboard overview
+                const response = await fetch('/api/user/intelligence/dashboard/overview', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Dashboard load failed: ${response.status}`);
+                }
+
+                dashboardData = await response.json();
+                displayDashboard(dashboardData);
+                
+                // Load metrics
+                await loadMetrics();
+                
+            } catch (error) {
+                console.error('Dashboard load error:', error);
+                showError(`Failed to load dashboard: ${error.message}`);
+            }
+        }
+
+        async function loadMetrics() {
+            const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+            
+            try {
+                const response = await fetch('/api/user/intelligence/metrics/summary', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const metrics = await response.json();
+                    displayMetrics(metrics);
+                }
+            } catch (error) {
+                console.error('Metrics load error:', error);
+            }
+        }
+
+        function displayDashboard(data) {
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('errorState').classList.add('hidden');
+            document.getElementById('dashboardContent').classList.remove('hidden');
+
+            // Update user info
+            document.getElementById('userEmail').textContent = data.user.email;
+            document.getElementById('welcomeMessage').textContent = `Welcome, ${data.user.institution_name}!`;
+            document.getElementById('institutionInfo').textContent = `${data.user.primary_accreditor} Accreditation Management`;
+            document.getElementById('complianceScore').textContent = `${data.compliance_overview.overall_score}%`;
+
+            // Update basic metrics
+            document.getElementById('metricCompliance').textContent = `${data.compliance_overview.overall_score}%`;
+            document.getElementById('metricDocuments').textContent = data.compliance_overview.documents_uploaded;
+            document.getElementById('metricStandards').textContent = data.compliance_overview.standards_mapped;
+            document.getElementById('metricGaps').textContent = data.compliance_overview.gaps_identified;
+        }
+
+        function displayMetrics(data) {
+            // Update detailed metrics if available
+            if (data.compliance_metrics) {
+                document.getElementById('metricCompliance').textContent = `${data.compliance_metrics.overall_percentage}%`;
+                document.getElementById('metricDocuments').textContent = data.compliance_metrics.documents_analyzed;
+                document.getElementById('metricStandards').textContent = `${data.compliance_metrics.standards_covered}/${data.compliance_metrics.standards_total}`;
+                document.getElementById('metricGaps').textContent = data.compliance_metrics.gaps_identified;
+            }
+        }
+
+        async function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                showAnalysisLoading();
+
+                const response = await fetch('/api/user/intelligence/evidence/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Analysis failed: ${response.status}`);
+                }
+
+                const result = await response.json();
+                displayAnalysisResults(result);
+                
+                // Refresh dashboard metrics
+                await loadMetrics();
+
+            } catch (error) {
+                console.error('File analysis error:', error);
+                showAnalysisError(error.message);
+            }
+        }
+
+        async function loadStandardsGraph() {
+            const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+            
+            try {
+                document.getElementById('standardsGraphSection').classList.remove('hidden');
+                
+                const response = await fetch('/api/user/intelligence/standards/graph', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Standards graph load failed: ${response.status}`);
+                }
+
+                const graphData = await response.json();
+                displayStandardsGraph(graphData);
+
+            } catch (error) {
+                console.error('Standards graph error:', error);
+                document.getElementById('standardsContent').innerHTML = `
+                    <div class="text-red-600">
+                        <i class="fas fa-exclamation-circle mr-2"></i>
+                        Failed to load standards graph: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        async function loadGapAnalysis() {
+            const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+            
+            try {
+                document.getElementById('gapAnalysisSection').classList.remove('hidden');
+                
+                const response = await fetch('/api/user/intelligence/compliance/gaps', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Gap analysis failed: ${response.status}`);
+                }
+
+                const gapData = await response.json();
+                displayGapAnalysis(gapData);
+
+            } catch (error) {
+                console.error('Gap analysis error:', error);
+                document.getElementById('gapContent').innerHTML = `
+                    <div class="text-red-600">
+                        <i class="fas fa-exclamation-circle mr-2"></i>
+                        Failed to load gap analysis: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        function displayAnalysisResults(data) {
+            document.getElementById('analysisResults').classList.remove('hidden');
+            
+            const mappingsHtml = data.analysis.mappings.map(mapping => `
+                <div class="border rounded p-3 mb-2">
+                    <div class="font-medium">${mapping.standard_id}</div>
+                    <div class="text-sm text-gray-600 mb-1">${mapping.title}</div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                            Confidence: ${(mapping.confidence * 100).toFixed(1)}%
+                        </span>
+                        <span class="text-xs text-gray-500">${mapping.accreditor}</span>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('analysisContent').innerHTML = `
+                <div class="success-message">
+                    <h4 class="font-semibold">Analysis Complete: ${data.filename}</h4>
+                    <p>Document processed with EvidenceMapper™ and EvidenceTrust Score™</p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+                    <div>
+                        <h5 class="font-medium mb-2">Trust Score Analysis</h5>
+                        <div class="bg-gray-50 p-3 rounded">
+                            <div>Overall Score: <span class="font-semibold">${(data.analysis.trust_score.overall_score * 100).toFixed(1)}%</span></div>
+                            <div>Quality: ${(data.analysis.trust_score.quality_score * 100).toFixed(1)}%</div>
+                            <div>Reliability: ${(data.analysis.trust_score.reliability_score * 100).toFixed(1)}%</div>
+                            <div>Confidence: ${(data.analysis.trust_score.confidence_score * 100).toFixed(1)}%</div>
+                        </div>
+                    </div>
+                    <div>
+                        <h5 class="font-medium mb-2">Mapping Statistics</h5>
+                        <div class="bg-gray-50 p-3 rounded">
+                            <div>Standards Mapped: <span class="font-semibold">${data.analysis.standards_mapped}</span></div>
+                            <div>Content Length: ${data.analysis.content_length} chars</div>
+                            <div>Processing: Complete</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h5 class="font-medium mb-2">Standards Mappings (Top ${data.analysis.mappings.length})</h5>
+                    <div class="max-h-64 overflow-y-auto">
+                        ${mappingsHtml}
+                    </div>
+                </div>
+            `;
+        }
+
+        function displayStandardsGraph(data) {
+            document.getElementById('currentAccreditor').textContent = data.accreditor;
+            
+            const standardsList = Object.entries(data.standards).map(([id, standard]) => `
+                <div class="border rounded p-3 mb-2 hover:bg-gray-50">
+                    <div class="font-medium text-sm">${id}</div>
+                    <div class="text-sm text-gray-600">${standard.title}</div>
+                    <div class="text-xs text-gray-500 mt-1">
+                        Category: ${standard.category} | Domain: ${standard.domain}
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('standardsContent').innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div class="bg-blue-50 p-4 rounded">
+                        <div class="text-2xl font-bold text-blue-600">${data.total_standards}</div>
+                        <div class="text-sm text-gray-600">Total Standards</div>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded">
+                        <div class="text-2xl font-bold text-green-600">${data.relationships.length}</div>
+                        <div class="text-sm text-gray-600">Relationships</div>
+                    </div>
+                    <div class="bg-purple-50 p-4 rounded">
+                        <div class="text-2xl font-bold text-purple-600">${data.available_accreditors.length}</div>
+                        <div class="text-sm text-gray-600">Accreditors</div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <h5 class="font-medium mb-2">Available Accreditors</h5>
+                    <div class="flex flex-wrap gap-2">
+                        ${data.available_accreditors.map(acc => `
+                            <span class="bg-gray-100 px-3 py-1 rounded-full text-sm">${acc}</span>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <div>
+                    <h5 class="font-medium mb-2">Standards (Showing ${Object.keys(data.standards).length} of ${data.total_standards})</h5>
+                    <div class="max-h-96 overflow-y-auto">
+                        ${standardsList}
+                    </div>
+                </div>
+            `;
+        }
+
+        function displayGapAnalysis(data) {
+            const riskColor = data.risk_assessment.risk_level === 'Low' ? 'green' : 
+                            data.risk_assessment.risk_level === 'Medium' ? 'yellow' : 'red';
+
+            const categoriesHtml = Object.entries(data.category_risks).map(([category, risk]) => `
+                <div class="border rounded p-3 mb-2">
+                    <div class="flex justify-between items-center">
+                        <span class="font-medium">${category}</span>
+                        <span class="bg-${risk > 0.7 ? 'red' : risk > 0.4 ? 'yellow' : 'green'}-100 text-${risk > 0.7 ? 'red' : risk > 0.4 ? 'yellow' : 'green'}-800 px-2 py-1 rounded text-xs">
+                            ${(risk * 100).toFixed(1)}% Risk
+                        </span>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('gapContent').innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-${riskColor}-50 p-4 rounded border border-${riskColor}-200">
+                        <div class="text-2xl font-bold text-${riskColor}-600">${data.risk_assessment.risk_level}</div>
+                        <div class="text-sm text-gray-600">Overall Risk Level</div>
+                    </div>
+                    <div class="bg-blue-50 p-4 rounded">
+                        <div class="text-2xl font-bold text-blue-600">${(data.risk_assessment.confidence * 100).toFixed(1)}%</div>
+                        <div class="text-sm text-gray-600">Confidence</div>
+                    </div>
+                    <div class="bg-purple-50 p-4 rounded">
+                        <div class="text-2xl font-bold text-purple-600">${data.risk_assessment.timeline_months}</div>
+                        <div class="text-sm text-gray-600">Months to Address</div>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <h5 class="font-medium mb-3">Category Risk Assessment</h5>
+                    <div class="space-y-2">
+                        ${categoriesHtml}
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h5 class="font-medium mb-3">Recommendations</h5>
+                        <ul class="space-y-2">
+                            ${data.recommendations.map(rec => `
+                                <li class="flex items-start">
+                                    <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                    <span class="text-sm">${rec}</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                    <div>
+                        <h5 class="font-medium mb-3">Next Actions</h5>
+                        <ul class="space-y-2">
+                            ${data.next_actions.map(action => `
+                                <li class="flex items-start">
+                                    <i class="fas fa-arrow-right text-blue-500 mt-1 mr-2"></i>
+                                    <span class="text-sm">${action}</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showLoading() {
+            document.getElementById('loadingState').classList.remove('hidden');
+            document.getElementById('errorState').classList.add('hidden');
+            document.getElementById('dashboardContent').classList.add('hidden');
+        }
+
+        function showError(message) {
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('errorState').classList.remove('hidden');
+            document.getElementById('dashboardContent').classList.add('hidden');
+            document.getElementById('errorMessage').textContent = message;
+        }
+
+        function showAnalysisLoading() {
+            document.getElementById('analysisResults').classList.remove('hidden');
+            document.getElementById('analysisContent').innerHTML = `
+                <div class="text-center py-8">
+                    <div class="loading-spinner mx-auto mb-4"></div>
+                    <p class="text-gray-600">Analyzing document with AI algorithms...</p>
+                    <p class="text-sm text-gray-500 mt-2">Processing with EvidenceMapper™ and EvidenceTrust Score™</p>
+                </div>
+            `;
+        }
+
+        function showAnalysisError(message) {
+            document.getElementById('analysisResults').classList.remove('hidden');
+            document.getElementById('analysisContent').innerHTML = `
+                <div class="error-message">
+                    <h4 class="font-semibold">Analysis Failed</h4>
+                    <p>${message}</p>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
