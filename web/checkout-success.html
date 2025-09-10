@@ -492,9 +492,11 @@
                     setTimeout(() => {
                         window.location.href = '/dashboard';
                     }, 3000);
-                } else if (response.status === 404 && data.detail && data.detail.includes('webhook')) {
-                    // Webhook might still be processing
-                    throw new Error('Your account is still being created. Please wait a moment and try again.');
+                } else if (response.status === 404) {
+                    // User doesn't exist yet - redirect to payment-success.html to trigger provisioning
+                    console.log('User not found, redirecting to payment-success for provisioning...');
+                    window.location.href = `/payment-success.html?session_id=${sessionId}`;
+                    return;
                 } else if (response.status === 400 && data.detail && data.detail.includes('already set')) {
                     // Password already set - this is actually success
                     // Note: We don't have a token here, user needs to login
