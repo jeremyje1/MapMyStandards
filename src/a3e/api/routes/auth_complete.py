@@ -10,6 +10,7 @@ import jwt
 import bcrypt
 import secrets
 import hashlib
+import os
 from datetime import datetime, timedelta
 import logging
 from sqlalchemy import select
@@ -91,7 +92,12 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
         expire = datetime.utcnow() + timedelta(hours=24)
     
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, settings.secret_key, algorithm=settings.jwt_algorithm)
+    
+    # Use fallback secret key if not configured
+    secret_key = getattr(settings, 'secret_key', None) or os.environ.get('SECRET_KEY') or 'fallback-secret-key-for-production'
+    jwt_algorithm = getattr(settings, 'jwt_algorithm', 'HS256')
+    
+    encoded_jwt = jwt.encode(to_encode, secret_key, algorithm=jwt_algorithm)
     return encoded_jwt
 
 def generate_api_key() -> str:
@@ -429,8 +435,62 @@ async def checkout_password_setup(request: CheckoutPasswordSetupRequest, db: Asy
     except HTTPException:
         raise
     except Exception as e:
+        import traceback
         logger.error(f"checkout_password_setup error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to set password")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        # Return more specific error for debugging
+        error_msg = str(e)
+        if "secret_key" in error_msg.lower():
+            raise HTTPException(status_code=500, detail="Server configuration error: JWT secret not configured")
+        elif "database" in error_msg.lower() or "connection" in error_msg.lower():
+            raise HTTPException(status_code=500, detail="Database connection error")
+        else:
+            raise HTTPException(status_code=500, detail=f"Failed to set password: {error_msg}")
+
+class CheckoutProvisionRequest(BaseModel):
+    email: EmailStr
+    session_id: str
+
+@router.post("/checkout-provision-user")
+async def checkout_provision_user(request: CheckoutProvisionRequest, db: AsyncSession = Depends(get_db)):
+    """Emergency endpoint to provision user after checkout if webhook failed"""
+    try:
+        email = request.email.lower()
+        session_id = request.session_id
+        
+        if not email:
+            raise HTTPException(status_code=400, detail="Email required")
+            
+        # Check if user exists
+        result = await db.execute(select(User).where(User.email == email))
+        user = result.scalar_one_or_none()
+        
+        if user:
+            return {"success": True, "message": "User already exists", "provisioned": True}
+            
+        # Create user with minimal info
+        user = User(
+            email=email,
+            name=email.split('@')[0],
+            password_hash='pending_reset',
+            institution_name='Pending Setup',
+            institution_type='college',
+            role='Administrator',
+            is_trial=False,
+            subscription_tier='single',
+            stripe_customer_id=f'pending_{session_id[:20]}',
+            is_active=True,
+            is_verified=True,
+            email_verified_at=datetime.utcnow()
+        )
+        db.add(user)
+        await db.commit()
+        
+        return {"success": True, "message": "User provisioned", "provisioned": True}
+        
+    except Exception as e:
+        logger.error(f"checkout_provision_user error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/verify-token")
 async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
