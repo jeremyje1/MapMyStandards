@@ -26,10 +26,12 @@ try:
     from ...models import User
     from ...services.database_service import DatabaseService
     SECRET_KEY = settings.secret_key
+    JWT_SECRET = getattr(settings, 'jwt_secret_key', None) or os.getenv("JWT_SECRET_KEY") or SECRET_KEY
     ALGORITHM = settings.jwt_algorithm
 except ImportError:
     # Fallback for local development
     SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-here-change-in-production")
+    JWT_SECRET = os.getenv("JWT_SECRET_KEY", SECRET_KEY)
     ALGORITHM = "HS256"
     settings = None
 
@@ -79,7 +81,8 @@ def create_token(user_data: dict, expires_delta: timedelta = None):
     else:
         expire = datetime.utcnow() + timedelta(hours=24)
     to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    # Always sign with JWT secret (falls back to SECRET_KEY if unset)
+    return jwt.encode(to_encode, JWT_SECRET, algorithm=ALGORITHM)
 
 @router.post("/auth-simple/login", response_model=AuthResponse)
 async def simple_login(request: LoginRequest, db: AsyncSession = Depends(get_db)):
@@ -199,10 +202,14 @@ async def dashboard_overview(
             }
         
         # Try multiple secret keys for JWT validation
+        # Try multiple secret keys to validate tokens issued by different components
         secret_keys = [
+            JWT_SECRET,
+            getattr(settings, 'jwt_secret_key', None) if settings else None,
             SECRET_KEY,
-            "your-secret-key-here-change-in-production",
+            os.getenv("JWT_SECRET_KEY", ""),
             os.getenv("SECRET_KEY", ""),
+            "your-secret-key-here-change-in-production",
         ]
         
         payload = None
