@@ -244,7 +244,7 @@ async def dashboard_overview(
             try:
                 payload = jwt.decode(token, secret, algorithms=[ALGORITHM])
                 break
-            except jwt.JWTError:
+            except Exception:
                 continue
         
         if not payload:
