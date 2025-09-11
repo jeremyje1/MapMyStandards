@@ -643,6 +643,13 @@ if documents_router_available:
 else:
     logger.warning("⚠️ Documents router not available")
 
+# Load simple auth router early so its lightweight endpoints (e.g., /api/dashboard/overview) take effect
+if auth_simple_router_available:
+    app.include_router(auth_simple_router)
+    logger.info("✅ Simple auth router loaded (priority)")
+else:
+    logger.warning("⚠️ Simple auth router not available")
+
 if dashboard_router_available:
     app.include_router(dashboard_router)
     logger.info("✅ Dashboard router loaded")
@@ -662,10 +669,9 @@ if auth_complete_router_available:
 else:
     logger.warning("⚠️ Auth complete router not available")
 
-# Add the simple auth router that actually works
+# Simple auth router already loaded above
 if auth_simple_router_available:
-    app.include_router(auth_simple_router)
-    logger.info("✅ Simple auth router loaded")
+    logger.info("ℹ️ Simple auth router already loaded")
 else:
     logger.warning("⚠️ Simple auth router not available")
 
