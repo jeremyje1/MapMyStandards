@@ -1,25 +1,40 @@
 #!/usr/bin/env python3
-"""JWT Dashboard Token Generator and Setter"""
+"""JWT Dashboard Token Generator and Setter
 
+Generates a token compatible with the backend simple auth verifier.
+If ONBOARDING_SHARED_SECRET is set, uses it to match production onboarding tokens.
+Includes customer claims so the dashboard is tailored (no demo data).
+"""
+
+import os
 import jwt
 import json
 from datetime import datetime, timedelta
 
-# Configuration matching current development environment
-SECRET_KEY = "BzKxm0pmrXyEyJditsbVDnngbvyhD512-xo0ei5G_l-si4m4B4dsE7DQeF9zYduD1-AtYvvIK-v1fAXS7QjFWQ"
+# Prefer onboarding shared secret for cross-environment compatibility
+SECRET_KEY = os.getenv("ONBOARDING_SHARED_SECRET") or os.getenv("JWT_SECRET_KEY") or os.getenv("SECRET_KEY", "dev-secret")
 ALGORITHM = "HS256"
 
 def create_dashboard_token():
-    """Create a JWT token for dashboard access"""
-    # Create token with long expiry for development
+    """Create a JWT token for dashboard access with customer-tailoring claims"""
+    # Claims (can be overridden via environment for quick testing)
+    email = os.getenv("TEST_USER_EMAIL", "test@example.com")
+    org = os.getenv("ORG_NAME", "")
+    tier = os.getenv("TIER", "standard")
+    accreditor = os.getenv("PRIMARY_ACCREDITOR", "")
+
     payload = {
-        "sub": "test@example.com",  # Email as subject
-        "email": "test@example.com",
-        "user_id": "test-user-123",
-        "exp": datetime.utcnow() + timedelta(days=7),  # 7 days
-        "iat": datetime.utcnow()
+        "sub": email,
+        "email": email,
+        "user_id": os.getenv("USER_ID", "test-user-123"),
+        "organization": org,
+        "tier": tier,
+        # optional claim if available
+        **({"primary_accreditor": accreditor} if accreditor else {}),
+        "exp": datetime.utcnow() + timedelta(days=7),
+        "iat": datetime.utcnow(),
     }
-    
+
     token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
     return token
 
@@ -37,14 +52,12 @@ def main():
     print(token)
     print()
     print("🌐 Dashboard Setup Instructions:")
-    print("1. Go to: http://localhost:8000/debug-api")
-    print("2. Paste the token above in the 'JWT Token' field")
-    print("3. Click 'Save Token'")
-    print("4. Visit: http://localhost:8000/ai-dashboard")
+    print("1. In your browser console:")
+    print(f"   localStorage.setItem('jwt_token', '{token}');")
+    print("2. Visit: http://localhost:8000/ai-dashboard")
     print()
-    print("💻 OR use browser console:")
-    print(f"localStorage.setItem('jwt_token', '{token}');")
-    print("Then refresh the dashboard page")
+    print("� This token includes claims: email, organization, tier, (optional) primary_accreditor")
+    print("   Override with ORG_NAME, TIER, PRIMARY_ACCREDITOR env vars before running.")
     print()
     print("⏱️  Token expires in 7 days")
 
