@@ -27,6 +27,31 @@
     
     <!-- Tailwind (built) -->
     <link rel="stylesheet" href="/static/css/tailwind.css?v=2">
+    <script>
+        (function(){
+            const link = document.querySelector('link[href^="/static/css/tailwind.css"]');
+            if (!link) return;
+            let triedWeb = false;
+            link.addEventListener('error', function(){
+                if (!triedWeb) {
+                    triedWeb = true;
+                    const alt = document.createElement('link');
+                    alt.rel = 'stylesheet';
+                    alt.href = '/web/static/css/tailwind.css?v=1';
+                    alt.addEventListener('error', function(){
+                        const s = document.createElement('script');
+                        s.src = 'https://cdn.tailwindcss.com';
+                        document.head.appendChild(s);
+                    });
+                    document.head.appendChild(alt);
+                } else {
+                    const s = document.createElement('script');
+                    s.src = 'https://cdn.tailwindcss.com';
+                    document.head.appendChild(s);
+                }
+            });
+        })();
+    </script>
     
         <!-- Structured Data -->
         <script type="application/ld+json">
