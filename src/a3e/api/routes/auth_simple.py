@@ -168,6 +168,31 @@ async def diag():
         status["db_status"] = "unconfigured"
     return status
 
+@router.get("/auth-simple/verify")
+async def verify_token_endpoint(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Server-side verification of a Bearer token using known secrets (no secrets leaked)."""
+    token = credentials.credentials
+    secrets_to_try = [
+        JWT_SECRET,
+        getattr(settings, 'jwt_secret_key', None) if settings else None,
+        SECRET_KEY,
+        os.getenv("JWT_SECRET_KEY", ""),
+        os.getenv("SECRET_KEY", ""),
+    ]
+    for idx, secret in enumerate(secrets_to_try):
+        if not secret:
+            continue
+        try:
+            payload = jwt.decode(token, secret, algorithms=[ALGORITHM])
+            return {
+                "ok": True,
+                "used_index": idx,
+                "claims": {k: payload.get(k) for k in ("sub", "user_id", "email", "exp")}
+            }
+        except Exception:
+            continue
+    return {"ok": False, "error": "decode_failed"}
+
 @router.get("/api/dashboard/overview")
 async def dashboard_overview(
     credentials: HTTPAuthorizationCredentials = Depends(security),

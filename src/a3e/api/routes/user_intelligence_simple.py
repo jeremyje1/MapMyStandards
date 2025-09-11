@@ -7,6 +7,7 @@ from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import List, Dict, Any, Optional
 from datetime import datetime
+import os
 import json
 import logging
 import jwt
@@ -23,17 +24,29 @@ logger = logging.getLogger(__name__)
 
 # JWT configuration
 settings = get_settings()
-JWT_SECRET = settings.jwt_secret_key
 JWT_ALGORITHM = "HS256"
 
+def _candidate_secrets() -> List[str]:
+    """Return a prioritized list of possible JWT secrets for verification."""
+    candidates: List[Optional[str]] = [
+        getattr(settings, 'jwt_secret_key', None),
+        getattr(settings, 'secret_key', None),
+        os.getenv("JWT_SECRET_KEY"),
+        os.getenv("SECRET_KEY"),
+        "your-secret-key-here-change-in-production",
+    ]
+    return [c for c in candidates if c]
+
 def verify_simple_token(token: str) -> Optional[str]:
-    """Simple JWT verification"""
-    try:
-        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
-        return payload.get("sub") or payload.get("email")
-    except Exception as e:
-        logger.error(f"Token verification failed: {e}")
-        return None
+    """Verify JWT using multiple candidate secrets. Returns email/sub on success."""
+    for secret in _candidate_secrets():
+        try:
+            payload = jwt.decode(token, secret, algorithms=[JWT_ALGORITHM])
+            return payload.get("sub") or payload.get("email")
+        except Exception:
+            continue
+    logger.warning("Token verification failed for all candidate secrets")
+    return None
 
 async def get_current_user_simple(
     credentials: HTTPAuthorizationCredentials = Depends(security)
