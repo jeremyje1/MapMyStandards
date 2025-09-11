@@ -303,37 +303,63 @@ async def get_gap_analysis(current_user: str = Depends(get_current_user_simple))
 async def get_compliance_gaps_simple(current_user: str = Depends(get_current_user_simple)):
     """Simplified compliance gaps endpoint compatible with UI structure."""
     try:
-        # Provide a deterministic, user-agnostic prediction suitable for demo
-        gap_risk = gap_risk_predictor.predict_compliance_gaps(
-            institution_profile={
-                "accreditor": "HLC",
-                "size": "medium",
-                "evidence_count": 3,
-                "last_review": "next_year"
-            },
-            evidence_summary={
-                "total_documents": 3,
-                "coverage_percentage": 60,
-                "quality_scores": [0.78, 0.82, 0.75]
-            }
-        )
-
+        # Provide deterministic, user-agnostic predictions using available methods
+        import numpy as np  # local import to avoid unused at module import time
+        sample_standards = [
+            {"standard_id": "HLC_1", "coverage": 62, "trust_scores": [0.8, 0.75], "evidence_ages": [220, 340], "overdue_tasks": 2, "total_tasks": 8, "recent_changes": 1, "historical_findings": 1, "days_to_review": 150},
+            {"standard_id": "HLC_3", "coverage": 55, "trust_scores": [0.7, 0.68], "evidence_ages": [400, 500], "overdue_tasks": 3, "total_tasks": 7, "recent_changes": 2, "historical_findings": 2, "days_to_review": 120},
+            {"standard_id": "SACSCOC_10", "coverage": 48, "trust_scores": [0.72, 0.66], "evidence_ages": [360, 410], "overdue_tasks": 4, "total_tasks": 10, "recent_changes": 1, "historical_findings": 3, "days_to_review": 90},
+        ]
+        risks = [
+            gap_risk_predictor.predict_risk(
+                standard_id=s["standard_id"],
+                coverage_percentage=s["coverage"],
+                evidence_trust_scores=s["trust_scores"],
+                evidence_ages_days=s["evidence_ages"],
+                overdue_tasks_count=s["overdue_tasks"],
+                total_tasks_count=s["total_tasks"],
+                recent_changes_count=s["recent_changes"],
+                historical_findings_count=s["historical_findings"],
+                time_to_next_review_days=s["days_to_review"],
+            )
+            for s in sample_standards
+        ]
+        overall = float(np.mean([r.risk_score for r in risks])) if risks else 0.0
+        # Worst level among standards
+        levels_order = ["minimal", "low", "medium", "high", "critical"]
+        worst_level = max((r.risk_level.value for r in risks), key=lambda v: levels_order.index(v)) if risks else "low"
+        avg_conf = float(np.mean([r.confidence for r in risks])) if risks else 0.8
+        timeline_months = int(np.mean([r.time_to_review for r in risks]) / 30) if risks else 6
+        # Aggregate issues
+        issues = []
+        for r in risks:
+            issues.extend(r.predicted_issues)
+        # Deduplicate while preserving order
+        seen = set()
+        identified = []
+        for i in issues:
+            if i not in seen:
+                seen.add(i)
+                identified.append(i)
         return {
             "risk_assessment": {
-                "overall_risk": gap_risk.overall_risk,
-                "risk_level": gap_risk.risk_level,
-                "confidence": gap_risk.confidence,
-                "timeline_months": gap_risk.timeline_months
+                "overall_risk": round(overall, 3),
+                "risk_level": worst_level,
+                "confidence": round(avg_conf, 3),
+                "timeline_months": timeline_months,
             },
-            "category_risks": gap_risk.category_risks,
-            "recommendations": gap_risk.recommendations,
-            "identified_issues": gap_risk.identified_issues,
+            "recommendations": [
+                "Focus on high-contribution risk factors first",
+                "Refresh outdated evidence and close overdue tasks",
+                "Address standards with recent changes and findings",
+            ],
+            "identified_issues": identified[:6],
             "next_actions": [
                 "Upload additional evidence documents",
                 "Review high-risk categories",
                 "Schedule compliance assessment",
-                "Update institutional documentation"
-            ]
+                "Update institutional documentation",
+            ],
         }
     except Exception as e:
         logger.error(f"Compliance gaps (simple) error: {str(e)}")
@@ -345,15 +371,20 @@ async def get_standards_graph_simple(current_user: str = Depends(get_current_use
     """Provide a lightweight standards graph for visualization without DB deps."""
     try:
         acc = accreditor or "HLC"
-        standards = standards_graph.get_accreditor_standards(acc)
-        relationships = standards_graph.get_relationships(list(standards.keys())[:50])
-
+        roots = standards_graph.get_accreditor_standards(acc)
+        simple_nodes = [
+            {"id": n.node_id, "title": n.title, "level": n.level}
+            for n in roots[:50]
+        ]
+        relationships = []
+        for n in roots[:10]:
+            for c in standards_graph.get_children(n.node_id)[:10]:
+                relationships.append({"source": n.node_id, "target": c.node_id})
         return {
             "accreditor": acc,
-            "total_standards": len(standards),
-            "standards": dict(list(standards.items())[:50]),
-            "relationships": relationships[:100],
-            "available_accreditors": standards_graph.get_available_accreditors()
+            "total_standards": len(roots),
+            "standards": simple_nodes,
+            "relationships": relationships,
         }
     except Exception as e:
         logger.error(f"Standards graph (simple) error: {str(e)}")
