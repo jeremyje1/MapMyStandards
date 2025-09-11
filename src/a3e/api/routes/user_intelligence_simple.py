@@ -17,6 +17,7 @@ from ...services.standards_graph import standards_graph
 from ...services.evidence_mapper import evidence_mapper, EvidenceDocument
 from ...services.evidence_trust import evidence_trust_scorer, EvidenceType, SourceSystem
 from ...services.gap_risk_predictor import gap_risk_predictor
+from ...services.analytics_service import analytics_service
 
 router = APIRouter(prefix="/api/user/intelligence-simple", tags=["user-intelligence-simple"])
 security = HTTPBearer()
@@ -63,59 +64,53 @@ async def get_current_user_simple(
 
 @router.get("/dashboard/overview")
 async def get_dashboard_overview(current_user: Dict[str, Any] = Depends(get_current_user_simple)):
-    """Get AI-powered dashboard overview with fields compatible with UI."""
+    """Get AI-powered dashboard overview tailored to the authenticated customer.
+
+    No fabricated/demo numbers. If customer data is missing, return explicit guidance on
+    what inputs are needed to personalize their dashboard.
+    """
     try:
-        # Get data from AI services
-        graph_stats = standards_graph.get_graph_stats()
-        
-        # Simulate some sample data for demonstration
-        recent_analyses = [
-            {
-                "id": "analysis-001",
-                "document": "Evidence_Document_Sample.pdf",
-                "timestamp": datetime.utcnow().isoformat(),
-                "standards_mapped": 12,
-                "confidence_score": 0.89,
-                "ai_algorithm": "EvidenceMapper™"
-            }
-        ]
-        
-        compliance_status = {
-            "overall_score": 0.78,
-            "standards_met": 45,
-            "standards_total": 59,
-            "high_risk_gaps": 3,
-            "medium_risk_gaps": 8,
-            "low_risk_gaps": 3
-        }
-        
-        ai_insights = [
-            {
-                "type": "recommendation",
-                "priority": "high",
-                "message": "Upload evidence for Standard 2.5.1 to improve compliance score",
-                "algorithm": "GapRisk Predictor™"
-            },
-            {
-                "type": "achievement",
-                "priority": "medium",
-                "message": "StandardsGraph™ detected strong evidence coverage in Section 3",
-                "algorithm": "StandardsGraph™"
-            }
-        ]
-        
-        # Map to UI-expected fields while preserving existing keys
+        # Basic user object from claims
         user_obj = {
             "email": current_user.get("email") or current_user.get("sub"),
-            "institution_name": current_user.get("organization", "Demo Institution"),
-            "primary_accreditor": current_user.get("primary_accreditor", "HLC"),
+            "institution_name": current_user.get("organization") or current_user.get("org") or "",
+            "primary_accreditor": current_user.get("primary_accreditor") or current_user.get("accreditor") or "",
             "tier": current_user.get("tier", "standard"),
         }
+
+        # Pull real metrics (zeros by design until customer uploads/connects data)
+        user_id = current_user.get("user_id") or user_obj["email"] or "unknown"
+        try:
+            score = await analytics_service.get_compliance_score(user_id)
+            standards_count = await analytics_service.get_active_standards_count(user_id)
+            pending_actions = await analytics_service.get_pending_actions_count(user_id)
+            recent_activity = await analytics_service.get_recent_activity(user_id)
+        except Exception as _:
+            # Fail-safe: treat as missing data
+            score, standards_count, pending_actions, recent_activity = 0.0, 0, 0, []
+
+        # Determine missing inputs for personalization
+        missing: List[str] = []
+        if standards_count == 0:
+            missing.append("Upload at least 1 evidence document to enable standards mapping")
+        if not user_obj["primary_accreditor"]:
+            missing.append("Select your primary accreditor in Settings")
+        if not user_obj["institution_name"]:
+            missing.append("Provide your institution/organization name during onboarding")
+
+        # Integration prompts (based on env flags)
+        if not (os.getenv("GOOGLE_DRIVE_CLIENT_ID") or os.getenv("ONEDRIVE_CLIENT_ID")):
+            missing.append("Connect a document source (Google Drive or OneDrive)")
+        if not (os.getenv("CANVAS_CLIENT_ID") or os.getenv("MS_CLIENT_ID")):
+            missing.append("Optionally connect your LMS (Canvas or Microsoft)")
+
+        graph_stats = standards_graph.get_graph_stats()
+
         compliance_overview = {
-            "overall_score": int(round(compliance_status["overall_score"] * 100)),
-            "documents_uploaded": 15,
-            "standards_mapped": 187,
-            "gaps_identified": compliance_status["high_risk_gaps"] + compliance_status["medium_risk_gaps"] + compliance_status["low_risk_gaps"],
+            "overall_score": int(round((score or 0.0) * 100)),
+            "documents_uploaded": 0,  # Will increment as evidence is uploaded
+            "standards_mapped": standards_count,
+            "gaps_identified": 0,     # Computed after mappings exist
         }
 
         return {
@@ -123,16 +118,20 @@ async def get_dashboard_overview(current_user: Dict[str, Any] = Depends(get_curr
             "user": user_obj,
             "timestamp": datetime.utcnow().isoformat(),
             "compliance_overview": compliance_overview,
+            "data_status": {
+                "personalized": standards_count > 0 and score > 0,
+                "missing_inputs": missing,
+                "has_recent_activity": bool(recent_activity),
+            },
             "ai_capabilities": {
                 "standards_graph": {
                     "status": "active",
-                    "nodes": graph_stats["total_nodes"],
-                    "edges": graph_stats["total_edges"],
+                    "nodes": graph_stats.get("total_nodes", 0),
+                    "edges": graph_stats.get("total_edges", 0),
                     "algorithm": "StandardsGraph™"
                 },
                 "evidence_mapper": {
                     "status": "active",
-                    "accuracy": 0.87,
                     "algorithm": "EvidenceMapper™"
                 },
                 "trust_scorer": {
@@ -144,17 +143,14 @@ async def get_dashboard_overview(current_user: Dict[str, Any] = Depends(get_curr
                     "algorithm": "GapRisk Predictor™"
                 }
             },
-            "recent_analyses": recent_analyses,
-            "compliance_status": compliance_status,
-            "ai_insights": ai_insights,
+            # No fabricated recent analyses; present only if activity exists
+            "recent_analyses": recent_activity or [],
             "usage_stats": {
-                "documents_analyzed": 15,
-                "standards_mapped": 187,
-                "time_saved_hours": 32,
-                "accuracy_improvement": 0.24
+                "documents_analyzed": 0,
+                "standards_mapped": standards_count,
             }
         }
-        
+
     except Exception as e:
         logger.error(f"Dashboard overview error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to load dashboard: {str(e)}")
