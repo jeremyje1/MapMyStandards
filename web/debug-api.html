@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Debug Tool</title>
+    <link rel="stylesheet" href="/web/static/css/tailwind.css">
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-2xl font-bold mb-4">API Debug Tool</h1>
+        
+        <div class="bg-white p-6 rounded shadow mb-4">
+            <h2 class="text-lg font-semibold mb-2">Current URL Info:</h2>
+            <div id="urlInfo" class="font-mono text-sm bg-gray-100 p-2 rounded"></div>
+        </div>
+        
+        <div class="bg-white p-6 rounded shadow mb-4">
+            <h2 class="text-lg font-semibold mb-2">Test API Endpoints:</h2>
+            <button onclick="testEndpoint('/api/user/intelligence/dashboard/overview')" class="bg-blue-500 text-white px-4 py-2 rounded mr-2 mb-2">Test Dashboard Overview</button>
+            <button onclick="testEndpoint('/api/user/intelligence-simple/dashboard/overview')" class="bg-purple-500 text-white px-4 py-2 rounded mr-2 mb-2">Test Simple Dashboard</button>
+            <button onclick="testEndpoint('/auth/login')" class="bg-green-500 text-white px-4 py-2 rounded mr-2 mb-2">Test /auth/login</button>
+            <button onclick="testEndpoint('/api/auth/login')" class="bg-green-500 text-white px-4 py-2 rounded mr-2 mb-2">Test /api/auth/login</button>
+            <button onclick="testEndpoint('/api/session/auth/login')" class="bg-green-500 text-white px-4 py-2 rounded mr-2 mb-2">Test /api/session/auth/login</button>
+            <button onclick="testLogin()" class="bg-purple-500 text-white px-4 py-2 rounded mr-2 mb-2">Test Login with Credentials</button>
+            <button onclick="testEndpoint('/')" class="bg-gray-500 text-white px-4 py-2 rounded mb-2">Test Root</button>
+            <button onclick="testEndpoint('/auth-simple/login')" class="bg-green-500 text-white px-4 py-2 rounded mb-2">Test /auth-simple/login</button>
+        </div>
+        
+        <div class="bg-white p-6 rounded shadow mb-4">
+            <h2 class="text-lg font-semibold mb-2">Login Test:</h2>
+            <input type="email" id="testEmail" placeholder="Email" class="w-full p-2 border rounded mb-2" value="test@example.com">
+            <input type="password" id="testPassword" placeholder="Password" class="w-full p-2 border rounded mb-2" value="password123">
+            <button onclick="tryAllLogins()" class="bg-indigo-500 text-white px-4 py-2 rounded">Try All Login Endpoints</button>
+        </div>
+        
+        <div class="bg-white p-6 rounded shadow mb-4">
+            <h2 class="text-lg font-semibold mb-2">JWT Token:</h2>
+            <textarea id="jwtToken" placeholder="Paste JWT token here" class="w-full p-2 border rounded mb-2" rows="3"></textarea>
+            <button onclick="saveToken()" class="bg-purple-500 text-white px-4 py-2 rounded mr-2">Save Token</button>
+            <button onclick="testWithToken()" class="bg-green-500 text-white px-4 py-2 rounded">Test Dashboard with Token</button>
+            <div id="tokenStatus" class="mt-2"></div>
+        </div>
+        
+        <div class="bg-white p-6 rounded shadow">
+            <h2 class="text-lg font-semibold mb-2">Results:</h2>
+            <pre id="results" class="bg-gray-100 p-4 rounded overflow-auto max-h-96"></pre>
+        </div>
+    </div>
+    
+    <script>
+        // Show current URL info
+        document.getElementById('urlInfo').innerHTML = `
+            <strong>Current URL:</strong> ${window.location.href}<br>
+            <strong>Origin:</strong> ${window.location.origin}<br>
+            <strong>Protocol:</strong> ${window.location.protocol}<br>
+            <strong>Host:</strong> ${window.location.host}
+        `;
+        
+        // Load saved token
+        const savedToken = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+        if (savedToken) {
+            document.getElementById('jwtToken').value = savedToken;
+            document.getElementById('tokenStatus').innerHTML = '<span class="text-green-600">Token found in localStorage</span>';
+        }
+        
+        async function testEndpoint(endpoint) {
+            const resultsDiv = document.getElementById('results');
+            const token = document.getElementById('jwtToken').value;
+            
+            resultsDiv.textContent = `Testing ${endpoint}...\n\n`;
+            
+            try {
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+                
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+                
+                const fullUrl = `${window.location.origin}${endpoint}`;
+                resultsDiv.textContent += `Full URL: ${fullUrl}\n`;
+                resultsDiv.textContent += `Headers: ${JSON.stringify(headers, null, 2)}\n\n`;
+                
+                const response = await fetch(endpoint, { headers });
+                
+                resultsDiv.textContent += `Status: ${response.status} ${response.statusText}\n`;
+                resultsDiv.textContent += `Headers:\n${JSON.stringify(Object.fromEntries(response.headers), null, 2)}\n\n`;
+                
+                let body;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    body = await response.json();
+                    resultsDiv.textContent += `Response Body:\n${JSON.stringify(body, null, 2)}`;
+                } else {
+                    body = await response.text();
+                    resultsDiv.textContent += `Response Body:\n${body.substring(0, 500)}${body.length > 500 ? '...' : ''}`;
+                }
+                
+            } catch (error) {
+                resultsDiv.textContent += `\nError: ${error.message}\n`;
+                resultsDiv.textContent += `Stack: ${error.stack}`;
+            }
+        }
+        
+        function saveToken() {
+            const token = document.getElementById('jwtToken').value;
+            if (token) {
+                localStorage.setItem('access_token', token);
+                localStorage.setItem('jwt_token', token);
+                document.getElementById('tokenStatus').innerHTML = '<span class="text-green-600">Token saved to localStorage!</span>';
+            } else {
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('jwt_token');
+                document.getElementById('tokenStatus').innerHTML = '<span class="text-red-600">Token cleared from localStorage</span>';
+            }
+        }
+        
+        async function testWithToken() {
+            const token = document.getElementById('jwtToken').value;
+            if (!token) {
+                alert('Please enter a JWT token first');
+                return;
+            }
+            
+            // Save token first
+            saveToken();
+            
+            // Test the dashboard endpoint
+            await testEndpoint('/api/user/intelligence/dashboard/overview');
+        }
+        
+        async function testLogin() {
+            // This function tests a single login endpoint
+            tryAllLogins();
+        }
+        
+        async function tryAllLogins() {
+            const email = document.getElementById('testEmail').value;
+            const password = document.getElementById('testPassword').value;
+            const resultsDiv = document.getElementById('results');
+            
+            const loginEndpoints = [
+                '/auth/login',
+                '/auth-simple/login', 
+                '/api/auth/login',
+                '/api/session/auth/login'
+            ];
+            
+            resultsDiv.textContent = 'Trying all login endpoints...\n\n';
+            
+            for (const endpoint of loginEndpoints) {
+                resultsDiv.textContent += `\n========== Testing ${endpoint} ==========\n`;
+                
+                try {
+                    const response = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ email, password })
+                    });
+                    
+                    const data = await response.json();
+                    resultsDiv.textContent += `Status: ${response.status}\n`;
+                    resultsDiv.textContent += `Response: ${JSON.stringify(data, null, 2)}\n`;
+                    
+                    // If we got a token, save it
+                    if (response.ok && (data.access_token || data.token || data.jwt_token)) {
+                        const token = data.access_token || data.token || data.jwt_token;
+                        document.getElementById('jwtToken').value = token;
+                        saveToken();
+                        resultsDiv.textContent += `\n✅ SUCCESS! Token saved.\n`;
+                    }
+                } catch (error) {
+                    resultsDiv.textContent += `Error: ${error.message}\n`;
+                }
+            }
+        }
+        
+        async function testLogin() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.textContent = 'Testing login with test credentials...\n\n';
+            
+            // Try common test credentials
+            const testLogins = [
+                { endpoint: '/auth/login', email: 'test@example.com', password: 'test123' },
+                { endpoint: '/api/auth/login', email: 'test@example.com', password: 'test123' },
+                { endpoint: '/api/session/auth/login', email: 'test@example.com', password: 'test123' },
+            ];
+            
+            for (const test of testLogins) {
+                resultsDiv.textContent += `\nTrying ${test.endpoint}...\n`;
+                
+                try {
+                    const response = await fetch(test.endpoint, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            email: test.email,
+                            password: test.password
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    resultsDiv.textContent += `Status: ${response.status}\n`;
+                    resultsDiv.textContent += `Response: ${JSON.stringify(data, null, 2)}\n`;
+                    
+                    if (response.ok && data.access_token) {
+                        resultsDiv.textContent += `\n✅ SUCCESS! Got token!\n`;
+                        document.getElementById('jwtToken').value = data.access_token;
+                        saveToken();
+                        break;
+                    }
+                } catch (error) {
+                    resultsDiv.textContent += `Error: ${error.message}\n`;
+                }
+            }
+        }
+    </script>
+</body>
+</html>

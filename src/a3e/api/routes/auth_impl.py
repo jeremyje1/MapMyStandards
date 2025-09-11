@@ -25,7 +25,7 @@ settings = get_settings()
 logger = logging.getLogger(__name__)
 
 # JWT configuration
-JWT_SECRET = settings.jwt_secret_key if hasattr(settings, 'jwt_secret_key') else "your-secret-key-change-in-production"
+JWT_SECRET = settings.jwt_secret_key
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRATION_HOURS = 24
 
@@ -40,7 +40,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
 # JWT settings (use environment variables in production)
-JWT_SECRET = "your-secret-key-change-in-production"
+JWT_SECRET = settings.jwt_secret_key
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRATION_HOURS = 24
 

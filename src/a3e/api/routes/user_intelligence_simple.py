@@ -183,6 +183,57 @@ async def analyze_evidence(
         logger.error(f"Evidence analysis error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
 
+# Alias endpoint to match frontend path convention
+@router.post("/evidence/analyze")
+async def analyze_evidence_alias(
+    file: UploadFile = File(...),
+    current_user: str = Depends(get_current_user_simple)
+):
+    """Alias for evidence analysis to support /evidence/analyze path used by UI."""
+    try:
+        # Reuse the same logic as /analyze/evidence
+        content = await file.read()
+        text_content = content.decode('utf-8', errors='ignore')
+
+        doc = EvidenceDocument(
+            name=file.filename,
+            content=text_content,
+            metadata={"uploaded_by": current_user}
+        )
+
+        mapped_standards = evidence_mapper.map_evidence_to_standards([doc])
+        trust_score = evidence_trust_scorer.calculate_trust_score(
+            evidence_type=EvidenceType.POLICY_DOCUMENT,
+            source_system=SourceSystem.INTERNAL,
+            metadata_completeness=0.8,
+            verification_status=True
+        )
+
+        return {
+            "status": "success",
+            "document": file.filename,
+            "analysis": {
+                "mapped_standards": len(mapped_standards),
+                "confidence_scores": [m.confidence for m in mapped_standards[:5]],
+                "trust_score": trust_score,
+                "top_standards": [
+                    {
+                        "code": m.standard.code,
+                        "title": m.standard.title,
+                        "confidence": m.confidence
+                    } for m in mapped_standards[:5]
+                ]
+            },
+            "algorithms_used": [
+                "EvidenceMapper™",
+                "EvidenceTrust Score™",
+                "StandardsGraph™"
+            ]
+        }
+    except Exception as e:
+        logger.error(f"Evidence analysis alias error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+
 @router.get("/gaps/analysis")
 async def get_gap_analysis(current_user: str = Depends(get_current_user_simple)):
     """Get AI-powered gap analysis"""
@@ -233,6 +284,67 @@ async def get_gap_analysis(current_user: str = Depends(get_current_user_simple))
     except Exception as e:
         logger.error(f"Gap analysis error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Gap analysis failed: {str(e)}")
+
+# Alias endpoint to match UI path
+@router.get("/compliance/gaps")
+async def get_compliance_gaps_simple(current_user: str = Depends(get_current_user_simple)):
+    """Simplified compliance gaps endpoint compatible with UI structure."""
+    try:
+        # Provide a deterministic, user-agnostic prediction suitable for demo
+        gap_risk = gap_risk_predictor.predict_compliance_gaps(
+            institution_profile={
+                "accreditor": "HLC",
+                "size": "medium",
+                "evidence_count": 3,
+                "last_review": "next_year"
+            },
+            evidence_summary={
+                "total_documents": 3,
+                "coverage_percentage": 60,
+                "quality_scores": [0.78, 0.82, 0.75]
+            }
+        )
+
+        return {
+            "risk_assessment": {
+                "overall_risk": gap_risk.overall_risk,
+                "risk_level": gap_risk.risk_level,
+                "confidence": gap_risk.confidence,
+                "timeline_months": gap_risk.timeline_months
+            },
+            "category_risks": gap_risk.category_risks,
+            "recommendations": gap_risk.recommendations,
+            "identified_issues": gap_risk.identified_issues,
+            "next_actions": [
+                "Upload additional evidence documents",
+                "Review high-risk categories",
+                "Schedule compliance assessment",
+                "Update institutional documentation"
+            ]
+        }
+    except Exception as e:
+        logger.error(f"Compliance gaps (simple) error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to analyze compliance gaps: {str(e)}")
+
+
+@router.get("/standards/graph")
+async def get_standards_graph_simple(current_user: str = Depends(get_current_user_simple), accreditor: Optional[str] = None):
+    """Provide a lightweight standards graph for visualization without DB deps."""
+    try:
+        acc = accreditor or "HLC"
+        standards = standards_graph.get_accreditor_standards(acc)
+        relationships = standards_graph.get_relationships(list(standards.keys())[:50])
+
+        return {
+            "accreditor": acc,
+            "total_standards": len(standards),
+            "standards": dict(list(standards.items())[:50]),
+            "relationships": relationships[:100],
+            "available_accreditors": standards_graph.get_available_accreditors()
+        }
+    except Exception as e:
+        logger.error(f"Standards graph (simple) error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to load standards graph: {str(e)}")
 
 @router.get("/metrics/summary")
 async def get_metrics_summary(current_user: str = Depends(get_current_user_simple)):
