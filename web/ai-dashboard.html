@@ -7,14 +7,34 @@
         <!-- Use locally built Tailwind in production -->
         <link rel="stylesheet" href="/web/static/css/tailwind.css">
         <script>
-            // Optional dev fallback if CSS not found (prevents blank page locally)
+            // Prefer local CSS; if /web path fails, try /static alias, then CDN as last resort
             (function(){
                 const link = document.querySelector('link[href="/web/static/css/tailwind.css"]');
-                link.addEventListener('error', function(){
-                    const s = document.createElement('script');
-                    s.src = 'https://cdn.tailwindcss.com';
-                    document.head.appendChild(s);
-                    console.warn('Fallback to Tailwind CDN (dev only). Build CSS for production.');
+                if (!link) return;
+                let attemptedStatic = false;
+                link.addEventListener('error', function onWebCssError(){
+                    if (!attemptedStatic) {
+                        attemptedStatic = true;
+                        // Try the simpler alias path first
+                        const alt = document.createElement('link');
+                        alt.rel = 'stylesheet';
+                        alt.href = '/static/css/tailwind.css?v=1';
+                        alt.addEventListener('load', function(){
+                            console.info('Loaded Tailwind from /static alias fallback');
+                        });
+                        alt.addEventListener('error', function(){
+                            const s = document.createElement('script');
+                            s.src = 'https://cdn.tailwindcss.com';
+                            document.head.appendChild(s);
+                            console.warn('Fallback to Tailwind CDN (dev only). Build CSS for production.');
+                        });
+                        document.head.appendChild(alt);
+                    } else {
+                        const s = document.createElement('script');
+                        s.src = 'https://cdn.tailwindcss.com';
+                        document.head.appendChild(s);
+                        console.warn('Fallback to Tailwind CDN (dev only). Build CSS for production.');
+                    }
                 });
             })();
         </script>
