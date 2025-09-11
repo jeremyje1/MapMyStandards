@@ -4,7 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Dashboard | MapMyStandards A³E</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+        <!-- Use locally built Tailwind in production -->
+        <link rel="stylesheet" href="/web/static/css/tailwind.css">
+        <script>
+            // Optional dev fallback if CSS not found (prevents blank page locally)
+            (function(){
+                const link = document.querySelector('link[href="/web/static/css/tailwind.css"]');
+                link.addEventListener('error', function(){
+                    const s = document.createElement('script');
+                    s.src = 'https://cdn.tailwindcss.com';
+                    document.head.appendChild(s);
+                    console.warn('Fallback to Tailwind CDN (dev only). Build CSS for production.');
+                });
+            })();
+        </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -287,7 +300,7 @@
                 showLoading();
                 
                 // Load dashboard overview
-                const response = await fetch('/api/user/intelligence/dashboard/overview', {
+                const response = await fetch('/api/user/intelligence-simple/dashboard/overview', {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
@@ -314,7 +327,7 @@
             const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
             
             try {
-                const response = await fetch('/api/user/intelligence/metrics/summary', {
+                const response = await fetch('/api/user/intelligence-simple/metrics/summary', {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
@@ -369,7 +382,7 @@
             try {
                 showAnalysisLoading();
 
-                const response = await fetch('/api/user/intelligence/evidence/analyze', {
+                const response = await fetch('/api/user/intelligence-simple/evidence/analyze', {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -399,7 +412,7 @@
             try {
                 document.getElementById('standardsGraphSection').classList.remove('hidden');
                 
-                const response = await fetch('/api/user/intelligence/standards/graph', {
+                const response = await fetch('/api/user/intelligence-simple/standards/graph', {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
@@ -430,7 +443,7 @@
             try {
                 document.getElementById('gapAnalysisSection').classList.remove('hidden');
                 
-                const response = await fetch('/api/user/intelligence/compliance/gaps', {
+                const response = await fetch('/api/user/intelligence-simple/compliance/gaps', {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
