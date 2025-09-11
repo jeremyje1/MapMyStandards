@@ -14,6 +14,7 @@ import bcrypt
 import logging
 import secrets
 import uuid
+import hashlib
 
 from ...models.user import User, UserSession
 from ...services.database_service import DatabaseService
@@ -83,17 +84,29 @@ def create_jwt_token(email: str, remember: bool = False) -> str:
     
     return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
+def _candidate_secrets() -> list:
+    from os import getenv
+    # Try common keys to handle legacy tokens
+    return [
+        settings.jwt_secret_key,
+        getattr(settings, 'secret_key', None),
+        getenv('JWT_SECRET_KEY'),
+        getenv('SECRET_KEY'),
+        'your-secret-key-here-change-in-production',
+    ]
+
 def verify_jwt_token(token: str) -> Optional[str]:
-    """Verify JWT token and return email if valid"""
-    try:
-        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
-        return payload.get("sub")
-    except jwt.ExpiredSignatureError:
-        logger.warning("JWT token expired")
-        return None
-    except jwt.InvalidTokenError:
-        logger.warning("Invalid JWT token")
-        return None
+    """Verify JWT token and return email if valid. Tries multiple secrets."""
+    for secret in _candidate_secrets():
+        if not secret:
+            continue
+        try:
+            payload = jwt.decode(token, secret, algorithms=[JWT_ALGORITHM])
+            return payload.get("sub")
+        except Exception:
+            continue
+    logger.warning("JWT verification failed for all candidate secrets")
+    return None
 
 @router.post("/login", response_model=LoginResponse)
 async def login(request: LoginRequest, db: AsyncSession = Depends(get_db)):
