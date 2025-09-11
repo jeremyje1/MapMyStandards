@@ -167,43 +167,78 @@ async def analyze_evidence(
         # Read file content
         content = await file.read()
         text_content = content.decode('utf-8', errors='ignore')
-        
-        # Create evidence document
+
+        # Build EvidenceDocument expected by EvidenceMapper
         doc = EvidenceDocument(
-            name=file.filename,
-            content=text_content,
-            metadata={"uploaded_by": current_user}
+            doc_id=file.filename,
+            text=text_content,
+            metadata={"uploaded_by": current_user},
+            doc_type="policy",
+            source_system="manual",
+            upload_date=datetime.utcnow()
         )
-        
+
         # Run AI analysis
-        mapped_standards = evidence_mapper.map_evidence_to_standards([doc])
-        trust_score = evidence_trust_scorer.calculate_trust_score(
-            evidence_type=EvidenceType.POLICY_DOCUMENT,
-            source_system=SourceSystem.INTERNAL,
-            metadata_completeness=0.8,
-            verification_status=True
+        mappings = evidence_mapper.map_evidence(doc)
+
+        # Derive a mapping confidence proxy for trust scorer
+        top_conf = mappings[0].confidence if mappings else 0.6
+
+        # Compute trust score with reasonable defaults
+        trust = evidence_trust_scorer.calculate_trust_score(
+            evidence_id=doc.doc_id,
+            evidence_type=EvidenceType.POLICY,
+            source_system=SourceSystem.MANUAL,
+            upload_date=doc.upload_date,
+            last_modified=datetime.utcnow(),
+            content_length=len(doc.text or ""),
+            metadata=doc.metadata,
+            mapping_confidence=top_conf,
+            reviewer_approved=True,
+            citations_count=0,
+            conflicts_detected=0
         )
-        
+
+        # Shape trust score summary for UI
+        trust_dict = trust.to_dict()
+        # Extract per-signal values for derived fields
+        signals = {s["type"]: s["value"] for s in trust_dict.get("signals", [])}
+        quality_score = signals.get("completeness", trust_dict.get("overall_score", 0.7))
+        reliability_score = (
+            (signals.get("provenance", 0.7) + signals.get("alignment", 0.7)) / 2.0
+        )
+        confidence_score = signals.get("reviewer_verification", 0.8)
+
+        # Convert mappings for UI
+        mappings_ui = [
+            {
+                "standard_id": m.standard_id,
+                "title": m.standard_title,
+                "confidence": m.confidence,
+                "accreditor": m.accreditor,
+            }
+            for m in mappings[:10]
+        ]
+
         return {
             "status": "success",
-            "document": file.filename,
+            "filename": file.filename,
             "analysis": {
-                "mapped_standards": len(mapped_standards),
-                "confidence_scores": [m.confidence for m in mapped_standards[:5]],
-                "trust_score": trust_score,
-                "top_standards": [
-                    {
-                        "code": m.standard.code,
-                        "title": m.standard.title,
-                        "confidence": m.confidence
-                    } for m in mapped_standards[:5]
-                ]
+                "mappings": mappings_ui,
+                "trust_score": {
+                    "overall_score": trust_dict.get("overall_score", 0.7),
+                    "quality_score": round(quality_score, 3),
+                    "reliability_score": round(reliability_score, 3),
+                    "confidence_score": round(confidence_score, 3),
+                },
+                "standards_mapped": len(mappings),
+                "content_length": len(doc.text or ""),
             },
             "algorithms_used": [
                 "EvidenceMapper™",
                 "EvidenceTrust Score™",
                 "StandardsGraph™"
-            ]
+            ],
         }
         
     except Exception as e:
@@ -223,33 +258,61 @@ async def analyze_evidence_alias(
         text_content = content.decode('utf-8', errors='ignore')
 
         doc = EvidenceDocument(
-            name=file.filename,
-            content=text_content,
-            metadata={"uploaded_by": current_user}
+            doc_id=file.filename,
+            text=text_content,
+            metadata={"uploaded_by": current_user},
+            doc_type="policy",
+            source_system="manual",
+            upload_date=datetime.utcnow()
         )
 
-        mapped_standards = evidence_mapper.map_evidence_to_standards([doc])
-        trust_score = evidence_trust_scorer.calculate_trust_score(
-            evidence_type=EvidenceType.POLICY_DOCUMENT,
-            source_system=SourceSystem.INTERNAL,
-            metadata_completeness=0.8,
-            verification_status=True
+        mappings = evidence_mapper.map_evidence(doc)
+        top_conf = mappings[0].confidence if mappings else 0.6
+        trust = evidence_trust_scorer.calculate_trust_score(
+            evidence_id=doc.doc_id,
+            evidence_type=EvidenceType.POLICY,
+            source_system=SourceSystem.MANUAL,
+            upload_date=doc.upload_date,
+            last_modified=datetime.utcnow(),
+            content_length=len(doc.text or ""),
+            metadata=doc.metadata,
+            mapping_confidence=top_conf,
+            reviewer_approved=True,
+            citations_count=0,
+            conflicts_detected=0
         )
+
+        trust_dict = trust.to_dict()
+        signals = {s["type"]: s["value"] for s in trust_dict.get("signals", [])}
+        quality_score = signals.get("completeness", trust_dict.get("overall_score", 0.7))
+        reliability_score = (
+            (signals.get("provenance", 0.7) + signals.get("alignment", 0.7)) / 2.0
+        )
+        confidence_score = signals.get("reviewer_verification", 0.8)
+
+        mappings_ui = [
+            {
+                "standard_id": m.standard_id,
+                "title": m.standard_title,
+                "confidence": m.confidence,
+                "accreditor": m.accreditor,
+            }
+            for m in mappings[:10]
+        ]
 
         return {
             "status": "success",
-            "document": file.filename,
+            "filename": file.filename,
             "analysis": {
-                "mapped_standards": len(mapped_standards),
-                "confidence_scores": [m.confidence for m in mapped_standards[:5]],
-                "trust_score": trust_score,
-                "top_standards": [
-                    {
-                        "code": m.standard.code,
-                        "title": m.standard.title,
-                        "confidence": m.confidence
-                    } for m in mapped_standards[:5]
-                ]
+                "mappings": mappings_ui,
+                "trust_score": {
+                    "overall_score": trust_dict.get("overall_score", 0.7),
+                    "quality_score": round(quality_score, 3),
+                    "reliability_score": round(reliability_score, 3),
+                    "confidence_score": round(confidence_score, 3),
+                },
+                "standards_mapped": len(mappings),
+                "content_length": len(doc.text or ""),
             },
             "algorithms_used": [
                 "EvidenceMapper™",
@@ -338,12 +401,16 @@ async def get_compliance_gaps_simple(current_user: str = Depends(get_current_use
             )
             for s in sample_standards
         ]
+
         overall = float(np.mean([r.risk_score for r in risks])) if risks else 0.0
         # Worst level among standards
         levels_order = ["minimal", "low", "medium", "high", "critical"]
-        worst_level = max((r.risk_level.value for r in risks), key=lambda v: levels_order.index(v)) if risks else "low"
+        worst_level_raw = max((r.risk_level.value for r in risks), key=lambda v: levels_order.index(v)) if risks else "low"
+        # Title-case for UI expectations
+        worst_level = worst_level_raw.capitalize()
         avg_conf = float(np.mean([r.confidence for r in risks])) if risks else 0.8
         timeline_months = int(np.mean([r.time_to_review for r in risks]) / 30) if risks else 6
+
         # Aggregate issues
         issues = []
         for r in risks:
@@ -355,6 +422,35 @@ async def get_compliance_gaps_simple(current_user: str = Depends(get_current_use
             if i not in seen:
                 seen.add(i)
                 identified.append(i)
+
+        # Build category_risks for UI using factor averages
+        # Initialize accumulators
+        factor_avgs = {
+            "coverage": [],
+            "trust": [],
+            "staleness": [],
+            "task_debt": [],
+            "change_impact": [],
+            "review_history": [],
+        }
+        for r in risks:
+            for f in r.factors:
+                if f.factor_name in factor_avgs:
+                    factor_avgs[f.factor_name].append(f.normalized_value)
+    # Compute simple averages
+
+        def _avg(vals):
+            import numpy as _np
+            return float(_np.mean(vals)) if vals else 0.0
+        category_risks = {
+            "Documentation": round(_avg(factor_avgs["coverage"]), 3),
+            "Evidence Quality": round(_avg(factor_avgs["trust"]), 3),
+            "Freshness": round(_avg(factor_avgs["staleness"]), 3),
+            "Operations": round(_avg(factor_avgs["task_debt"]), 3),
+            "Change Management": round(_avg(factor_avgs["change_impact"]), 3),
+            "Audit History": round(_avg(factor_avgs["review_history"]), 3),
+        }
+
         return {
             "risk_assessment": {
                 "overall_risk": round(overall, 3),
@@ -362,6 +458,7 @@ async def get_compliance_gaps_simple(current_user: str = Depends(get_current_use
                 "confidence": round(avg_conf, 3),
                 "timeline_months": timeline_months,
             },
+            "category_risks": category_risks,
             "recommendations": [
                 "Focus on high-contribution risk factors first",
                 "Refresh outdated evidence and close overdue tasks",
@@ -386,19 +483,28 @@ async def get_standards_graph_simple(current_user: str = Depends(get_current_use
     try:
         acc = accreditor or "HLC"
         roots = standards_graph.get_accreditor_standards(acc)
-        simple_nodes = [
-            {"id": n.node_id, "title": n.title, "level": n.level}
+        # UI expects standards as an object keyed by id with title/category/domain
+        standards_obj = {
+            n.node_id: {
+                "title": n.title,
+                "category": n.level.title() if hasattr(n, "level") else "Standard",
+                "domain": "Core",
+            }
             for n in roots[:50]
-        ]
+        }
+        # Build simple relationships between standards and their first-level children
         relationships = []
         for n in roots[:10]:
             for c in standards_graph.get_children(n.node_id)[:10]:
                 relationships.append({"source": n.node_id, "target": c.node_id})
+
+        stats = standards_graph.get_graph_stats()
         return {
             "accreditor": acc,
             "total_standards": len(roots),
-            "standards": simple_nodes,
+            "standards": standards_obj,
             "relationships": relationships,
+            "available_accreditors": stats.get("accreditors", []),
         }
     except Exception as e:
         logger.error(f"Standards graph (simple) error: {str(e)}")
