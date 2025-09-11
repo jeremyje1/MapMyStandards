@@ -62,7 +62,7 @@ async def get_current_user_simple(
 
 @router.get("/dashboard/overview")
 async def get_dashboard_overview(current_user: str = Depends(get_current_user_simple)):
-    """Get AI-powered dashboard overview"""
+    """Get AI-powered dashboard overview with fields compatible with UI."""
     try:
         # Get data from AI services
         graph_stats = standards_graph.get_graph_stats()
@@ -103,10 +103,24 @@ async def get_dashboard_overview(current_user: str = Depends(get_current_user_si
             }
         ]
         
+        # Map to UI-expected fields while preserving existing keys
+        user_obj = {
+            "email": current_user,
+            "institution_name": "Demo Institution",
+            "primary_accreditor": "HLC",
+        }
+        compliance_overview = {
+            "overall_score": int(round(compliance_status["overall_score"] * 100)),
+            "documents_uploaded": 15,
+            "standards_mapped": 187,
+            "gaps_identified": compliance_status["high_risk_gaps"] + compliance_status["medium_risk_gaps"] + compliance_status["low_risk_gaps"],
+        }
+
         return {
             "status": "success",
-            "user": current_user,
+            "user": user_obj,
             "timestamp": datetime.utcnow().isoformat(),
+            "compliance_overview": compliance_overview,
             "ai_capabilities": {
                 "standards_graph": {
                     "status": "active",
