@@ -33,16 +33,17 @@ def _candidate_secrets() -> List[str]:
         getattr(settings, 'secret_key', None),
         os.getenv("JWT_SECRET_KEY"),
         os.getenv("SECRET_KEY"),
+        os.getenv("ONBOARDING_SHARED_SECRET"),  # optional shared secret for onboarding tokens
         "your-secret-key-here-change-in-production",
     ]
     return [c for c in candidates if c]
 
-def verify_simple_token(token: str) -> Optional[str]:
-    """Verify JWT using multiple candidate secrets. Returns email/sub on success."""
+def verify_simple_token(token: str) -> Optional[Dict[str, Any]]:
+    """Verify JWT using multiple candidate secrets. Returns full claims on success."""
     for secret in _candidate_secrets():
         try:
             payload = jwt.decode(token, secret, algorithms=[JWT_ALGORITHM])
-            return payload.get("sub") or payload.get("email")
+            return payload
         except Exception:
             continue
     logger.warning("Token verification failed for all candidate secrets")
@@ -50,18 +51,18 @@ def verify_simple_token(token: str) -> Optional[str]:
 
 async def get_current_user_simple(
     credentials: HTTPAuthorizationCredentials = Depends(security)
-) -> str:
-    """Get current authenticated user email"""
+) -> Dict[str, Any]:
+    """Get current authenticated user claims"""
     token = credentials.credentials
-    email = verify_simple_token(token)
+    claims = verify_simple_token(token)
     
-    if not email:
+    if not claims:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
     
-    return email
+    return claims
 
 @router.get("/dashboard/overview")
-async def get_dashboard_overview(current_user: str = Depends(get_current_user_simple)):
+async def get_dashboard_overview(current_user: Dict[str, Any] = Depends(get_current_user_simple)):
     """Get AI-powered dashboard overview with fields compatible with UI."""
     try:
         # Get data from AI services
@@ -105,9 +106,10 @@ async def get_dashboard_overview(current_user: str = Depends(get_current_user_si
         
         # Map to UI-expected fields while preserving existing keys
         user_obj = {
-            "email": current_user,
-            "institution_name": "Demo Institution",
-            "primary_accreditor": "HLC",
+            "email": current_user.get("email") or current_user.get("sub"),
+            "institution_name": current_user.get("organization", "Demo Institution"),
+            "primary_accreditor": current_user.get("primary_accreditor", "HLC"),
+            "tier": current_user.get("tier", "standard"),
         }
         compliance_overview = {
             "overall_score": int(round(compliance_status["overall_score"] * 100)),

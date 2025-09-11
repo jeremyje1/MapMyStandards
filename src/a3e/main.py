@@ -1739,6 +1739,18 @@ if WEB_DIR.exists():
             return FileResponse(str(css_file), media_type="text/css", headers=headers)
         return Response(status_code=404, content="/* tailwind.css missing (alias) */", media_type="text/css")
 
+    # Provide root-level convenience path (/tailwind.css) for environments rewriting paths
+    @app.get("/tailwind.css", include_in_schema=False)
+    async def tailwind_css_root():  # noqa: D401
+        css_file = WEB_DIR / "static" / "css" / "tailwind.css"
+        if css_file.exists():
+            headers = {
+                "Cache-Control": "public, max-age=300",
+                "ETag": str(css_file.stat().st_mtime_ns)
+            }
+            return FileResponse(str(css_file), media_type="text/css", headers=headers)
+        return Response(status_code=404, content="/* tailwind.css missing (root) */", media_type="text/css")
+
     @app.get("/login", response_class=FileResponse, include_in_schema=False)
     async def login_page():  # noqa: D401
         return FileResponse(str(WEB_DIR / "login.html"))
