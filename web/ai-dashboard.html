@@ -30,10 +30,11 @@
                         });
                         document.head.appendChild(alt);
                     } else {
-                        const s = document.createElement('script');
-                        s.src = 'https://cdn.tailwindcss.com';
-                        document.head.appendChild(s);
-                        console.warn('Fallback to Tailwind CDN (dev only). Build CSS for production.');
+                        const cdnLink = document.createElement('link');
+                        cdnLink.rel = 'stylesheet';
+                        cdnLink.href = 'https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css';
+                        document.head.appendChild(cdnLink);
+                        console.warn('Fallback to Tailwind CDN CSS (last resort).');
                     }
                 });
             })();
@@ -296,6 +297,17 @@
     </main>
 
     <script>
+        // Determine API base URL depending on where this page is hosted
+        const API_BASE = (function() {
+            try {
+                const stored = localStorage.getItem('api_base');
+                if (stored) return stored.replace(/\/$/, '');
+            } catch {}
+            const host = location.hostname;
+            if (host.includes('platform.mapmystandards.ai')) return 'https://api.mapmystandards.ai';
+            // Same-origin by default (works when served from API domain)
+            return '';
+        })();
         let dashboardData = null;
 
         // Load dashboard on page load
@@ -313,14 +325,14 @@
             document.getElementById('evidenceFile').addEventListener('change', handleFileUpload);
         });
 
-        async function loadDashboard() {
+    async function loadDashboard() {
             const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
             
             try {
                 showLoading();
                 
                 // Load dashboard overview
-                const response = await fetch('/api/user/intelligence-simple/dashboard/overview', {
+        const response = await fetch(`${API_BASE}/api/user/intelligence-simple/dashboard/overview`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
@@ -343,11 +355,11 @@
             }
         }
 
-        async function loadMetrics() {
+    async function loadMetrics() {
             const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
             
             try {
-                const response = await fetch('/api/user/intelligence-simple/metrics/summary', {
+        const response = await fetch(`${API_BASE}/api/user/intelligence-simple/metrics/summary`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
@@ -402,7 +414,7 @@
             try {
                 showAnalysisLoading();
 
-                const response = await fetch('/api/user/intelligence-simple/evidence/analyze', {
+                const response = await fetch(`${API_BASE}/api/user/intelligence-simple/evidence/analyze`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -432,7 +444,7 @@
             try {
                 document.getElementById('standardsGraphSection').classList.remove('hidden');
                 
-                const response = await fetch('/api/user/intelligence-simple/standards/graph', {
+                const response = await fetch(`${API_BASE}/api/user/intelligence-simple/standards/graph`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
@@ -463,7 +475,7 @@
             try {
                 document.getElementById('gapAnalysisSection').classList.remove('hidden');
                 
-                const response = await fetch('/api/user/intelligence-simple/compliance/gaps', {
+                const response = await fetch(`${API_BASE}/api/user/intelligence-simple/compliance/gaps`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
