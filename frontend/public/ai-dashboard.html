@@ -250,6 +250,7 @@
             </div>
 
             <div id="analysisResults" class="hidden mb-8">
+                <span id="export"></span>
                 <div class="bg-white rounded-lg shadow p-6">
                     <h3 class="text-lg font-semibold mb-4">Latest Analysis Results</h3>
                     <div class="flex items-center justify-between mb-3">
@@ -264,6 +265,7 @@
             </div>
 
             <div id="standardsGraphSection" class="hidden mb-8">
+                <span id="standards"></span>
                 <div class="bg-white rounded-lg shadow p-6">
                     <h3 class="text-lg font-semibold mb-4">Standards Graph™ - <span id="currentAccreditor"></span></h3>
                     <div id="standardsContent"><div class="text-center py-8"><div class="loading-spinner mx-auto mb-4"></div><p class="text-gray-600">Loading standards graph...</p></div></div>
@@ -300,6 +302,14 @@
             fetchSettings().finally(async () => {
                 await loadDashboard();
                 ensureIntegrations();
+                // Handle deep links for anchors
+                const hash = (location.hash || '').toLowerCase();
+                if (hash === '#standards') {
+                    try { await loadStandardsGraph(); document.getElementById('standards')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (_) {}
+                } else if (hash === '#export') {
+                    // Export section shows after an analysis; still scroll to anchor if present
+                    document.getElementById('export')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
             });
             document.getElementById('evidenceFile').addEventListener('change', handleFileUpload);
         });
