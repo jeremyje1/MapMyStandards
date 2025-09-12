@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Dashboard | MapMyStandards A³E</title>
+    <!-- Prefer local Tailwind in platform public folder; fallbacks maintain compatibility -->
+    <link id="tailwindPrimary" rel="stylesheet" href="./tailwind.min.css">
+    <script>
+        (function(){
+            const primary = document.getElementById('tailwindPrimary');
+            if (!primary) return;
+            let triedWeb = false, triedStatic = false;
+            function attach(href, onerror) {
+                const l = document.createElement('link');
+                l.rel = 'stylesheet';
+                l.href = href;
+                if (onerror) l.addEventListener('error', onerror, { once: true });
+                document.head.appendChild(l);
+                return l;
+            }
+            primary.addEventListener('error', function(){
+                if (!triedWeb) {
+                    triedWeb = true;
+                    attach('/web/static/css/tailwind.css', function(){
+                        if (!triedStatic) {
+                            triedStatic = true;
+                            attach('/static/css/tailwind.css?v=1', function(){
+                                const s = document.createElement('script');
+                                s.src = 'https://cdn.tailwindcss.com';
+                                document.head.appendChild(s);
+                            });
+                        }
+                    });
+                }
+            });
+        })();
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f9fafb;
+        }
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .card-hover { transition: all 0.3s ease; }
+        .card-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        .ai-badge { background: linear-gradient(45deg, #667eea 0%, #764ba2 100%); color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+        .metric-card { background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 4px solid #3b82f6; }
+        .error-message { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; padding: 1rem; border-radius: 8px; margin: 1rem 0; }
+        .success-message { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; padding: 1rem; border-radius: 8px; margin: 1rem 0; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <h1 class="text-xl font-semibold text-gray-900">MapMyStandards A³E</h1>
+                    <span class="ai-badge ml-3">AI Powered</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm text-gray-600" id="userEmail">Loading...</span>
+                    <button id="openSettingsBtn" class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700 transition-colors">
+                        Settings
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content (identical to web/ai-dashboard.html) -->
+    <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <div id="loadingState" class="text-center py-8">
+            <div class="loading-spinner mx-auto mb-4"></div>
+            <p class="text-gray-600">Loading your AI-powered compliance dashboard...</p>
+        </div>
+        <div id="errorState" class="hidden">
+            <div class="error-message">
+                <h3 class="font-semibold">Unable to load dashboard</h3>
+                <p id="errorMessage">Please check your connection and try again.</p>
+                <button onclick="loadDashboard()" class="mt-2 bg-red-600 text-white px-4 py-2 rounded">Retry</button>
+            </div>
+        </div>
+        <div id="dashboardContent" class="hidden">
+            <div id="settingsModal" class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center z-30">
+                <div class="bg-white rounded-lg shadow-lg w-full max-w-lg p-6 relative">
+                    <button id="closeSettingsBtn" class="absolute top-3 right-3 text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <h3 class="text-lg font-semibold mb-4">Account Settings</h3>
+                    <form id="settingsForm" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Organization</label>
+                            <input type="text" id="orgInput" class="mt-1 w-full border rounded px-3 py-2" placeholder="Your institution" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Primary Accreditor</label>
+                            <select id="accreditorSelect" class="mt-1 w-full border rounded px-3 py-2"></select>
+                            <p class="text-xs text-gray-500 mt-1">Used by Standards Graph™ and mapping defaults.</p>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Term System</label>
+                                <select id="termSelect" class="mt-1 w-full border rounded px-3 py-2">
+                                    <option value="">Select...</option>
+                                    <option>semester</option>
+                                    <option>quarter</option>
+                                    <option>trimester</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">LMS</label>
+                                <input type="text" id="lmsInput" class="mt-1 w-full border rounded px-3 py-2" placeholder="Canvas, Moodle, Blackboard, Microsoft" />
+                            </div>
+                        </div>
+                        <div class="text-xs text-gray-500">All features are enabled for your account.</div>
+                        <div class="flex items-center justify-end gap-3 pt-2">
+                            <button type="button" id="cancelSettingsBtn" class="px-4 py-2 rounded border">Cancel</button>
+                            <button type="submit" class="px-4 py-2 rounded bg-blue-600 text-white">Save</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div id="mappingDetailsModal" class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center z-40">
+                <div class="bg-white rounded-lg shadow-lg w-full max-w-2xl p-6 relative">
+                    <button id="closeMappingDetailsBtn" class="absolute top-3 right-3 text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <h3 class="text-lg font-semibold mb-2">Mapping Details</h3>
+                    <div id="mappingDetailsContent" class="text-sm text-gray-800">
+                        <div class="text-center py-6 text-gray-500">Loading…</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="dataStatusPanel" class="hidden bg-yellow-50 border border-yellow-200 text-yellow-900 rounded-lg p-4 mb-6">
+                <div class="flex items-start">
+                    <div class="mr-3"><i class="fas fa-info-circle"></i></div>
+                    <div>
+                        <div class="font-semibold mb-1">Complete setup to personalize your dashboard</div>
+                        <ul id="missingInputsList" class="list-disc list-inside text-sm"></ul>
+                        <div class="mt-2">
+                            <a href="https://platform.mapmystandards.ai/onboarding" class="inline-block bg-yellow-600 text-white px-3 py-1 rounded text-xs hover:bg-yellow-700">Go to Settings</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg p-6 mb-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-xl font-semibold mb-2" id="welcomeMessage">Welcome to your AI Dashboard!</h2>
+                        <p class="opacity-90" id="institutionInfo">Your compliance intelligence platform is ready.</p>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-2xl font-bold" id="complianceScore">--</div>
+                        <div class="text-sm opacity-90">Compliance Score</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="metric-card">
+                    <div class="flex items-center">
+                        <div class="p-2 bg-blue-100 rounded-lg"><i class="fas fa-chart-line text-blue-600"></i></div>
+                        <div class="ml-4">
+                            <div class="text-2xl font-bold text-gray-900" id="metricCompliance">--</div>
+                            <div class="text-sm text-gray-600">Overall Compliance</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="flex items-center">
+                        <div class="p-2 bg-green-100 rounded-lg"><i class="fas fa-file-alt text-green-600"></i></div>
+                        <div class="ml-4">
+                            <div class="text-2xl font-bold text-gray-900" id="metricDocuments">--</div>
+                            <div class="text-sm text-gray-600">Documents Analyzed</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="flex items-center">
+                        <div class="p-2 bg-purple-100 rounded-lg"><i class="fas fa-sitemap text-purple-600"></i></div>
+                        <div class="ml-4">
+                            <div class="text-2xl font-bold text-gray-900" id="metricStandards">--</div>
+                            <div class="text-sm text-gray-600">Standards Mapped</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="flex items-center">
+                        <div class="p-2 bg-red-100 rounded-lg"><i class="fas fa-exclamation-triangle text-red-600"></i></div>
+                        <div class="ml-4">
+                            <div class="text-2xl font-bold text-gray-900" id="metricGaps">--</div>
+                            <div class="text-sm text-gray-600">Gaps Identified</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-lg shadow card-hover">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0"><div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center"><i class="fas fa-brain text-blue-600"></i></div></div>
+                        <div class="ml-4 flex-1">
+                            <h3 class="text-lg font-medium text-gray-900">AI Evidence Analysis</h3>
+                            <p class="text-gray-600 text-sm mt-1">Upload documents for intelligent standards mapping</p>
+                            <div class="mt-4">
+                                <input type="file" id="evidenceFile" accept=".pdf,.doc,.docx,.txt" class="hidden">
+                                <button onclick="document.getElementById('evidenceFile').click()" class="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700">Upload & Analyze</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow card-hover">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0"><div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center"><i class="fas fa-project-diagram text-purple-600"></i></div></div>
+                        <div class="ml-4 flex-1">
+                            <h3 class="text-lg font-medium text-gray-900">Standards Graph™</h3>
+                            <p class="text-gray-600 text-sm mt-1">Explore standards relationships</p>
+                            <button onclick="loadStandardsGraph()" class="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium mt-3">View Graph <i class="fas fa-arrow-right ml-1"></i></button>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow card-hover">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0"><div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center"><i class="fas fa-exclamation-circle text-red-600"></i></div></div>
+                        <div class="ml-4 flex-1">
+                            <h3 class="text-lg font-medium text-gray-900">Gap Analysis</h3>
+                            <p class="text-gray-600 text-sm mt-1">AI-powered compliance gap detection</p>
+                            <button onclick="loadGapAnalysis()" class="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium mt-3">Analyze Gaps <i class="fas fa-arrow-right ml-1"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="analysisResults" class="hidden mb-8">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-semibold mb-4">Latest Analysis Results</h3>
+                    <div class="flex items-center justify-between mb-3">
+                        <div><button id="markAllReviewedBtn" class="text-sm bg-green-600 text-white px-3 py-1 rounded">Mark all reviewed</button></div>
+                        <div class="space-x-2">
+                            <button id="exportCsvBtn" class="text-sm bg-gray-700 text-white px-3 py-1 rounded">Export CSV</button>
+                            <button id="exportReportBtn" class="text-sm bg-gray-800 text-white px-3 py-1 rounded">Export Report</button>
+                        </div>
+                    </div>
+                    <div id="analysisContent"></div>
+                </div>
+            </div>
+
+            <div id="standardsGraphSection" class="hidden mb-8">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-semibold mb-4">Standards Graph™ - <span id="currentAccreditor"></span></h3>
+                    <div id="standardsContent"><div class="text-center py-8"><div class="loading-spinner mx-auto mb-4"></div><p class="text-gray-600">Loading standards graph...</p></div></div>
+                    <div id="categoryCoverage" class="mt-4 text-sm text-gray-700"></div>
+                </div>
+            </div>
+
+            <div id="gapAnalysisSection" class="hidden mb-8">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-semibold mb-4">GapRisk Predictor™ Analysis</h3>
+                    <div id="gapContent"><div class="text-center py-8"><div class="loading-spinner mx-auto mb-4"></div><p class="text-gray-600">Analyzing compliance gaps...</p></div></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const API_BASE = (function() {
+            try { const stored = localStorage.getItem('api_base'); if (stored) return stored.replace(/\/$/, ''); } catch {}
+            const host = location.hostname;
+            if (host.includes('platform.mapmystandards.ai')) return 'https://api.mapmystandards.ai';
+            return '';
+        })();
+        let dashboardData = null;
+        let userSettings = null;
+
+        function getToken() {
+            return localStorage.getItem('access_token') || localStorage.getItem('jwt_token') || localStorage.getItem('authToken');
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = getToken();
+            if (!token) { window.location.href = 'login.html'; return; }
+            fetchSettings().finally(async () => {
+                await loadDashboard();
+                ensureIntegrations();
+            });
+            document.getElementById('evidenceFile').addEventListener('change', handleFileUpload);
+        });
+
+        async function loadDashboard() {
+            const token = getToken();
+            try {
+                showLoading();
+                const response = await fetch(`${API_BASE}/api/user/intelligence-simple/dashboard/overview`, { headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } });
+                if (!response.ok) throw new Error(`Dashboard load failed: ${response.status}`);
+                dashboardData = await response.json();
+                displayDashboard(dashboardData);
+                await loadMetrics();
+            } catch (error) { console.error('Dashboard load error:', error); showError(`Failed to load dashboard: ${error.message}`); }
+        }
+        async function loadMetrics() {
+            const token = getToken();
+            try {
+                const response = await fetch(`${API_BASE}/api/user/intelligence-simple/metrics/summary`, { headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } });
+                if (response.ok) displayMetrics(await response.json());
+            } catch (error) { console.error('Metrics load error:', error); }
+        }
+        function displayDashboard(data) {
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('errorState').classList.add('hidden');
+            document.getElementById('dashboardContent').classList.remove('hidden');
+            document.getElementById('userEmail').textContent = data.user.email;
+            document.getElementById('welcomeMessage').textContent = `Welcome, ${data.user.institution_name}!`;
+            document.getElementById('institutionInfo').textContent = `${data.user.primary_accreditor} Accreditation Management`;
+            document.getElementById('complianceScore').textContent = `${data.compliance_overview.overall_score}%`;
+            document.getElementById('metricCompliance').textContent = `${data.compliance_overview.overall_score}%`;
+            document.getElementById('metricDocuments').textContent = data.compliance_overview.documents_uploaded;
+            document.getElementById('metricStandards').textContent = data.compliance_overview.standards_mapped;
+            document.getElementById('metricGaps').textContent = data.compliance_overview.gaps_identified;
+            try {
+                const ds = data.data_status || {}; const missing = ds.missing_inputs || [];
+                const panel = document.getElementById('dataStatusPanel'); const list = document.getElementById('missingInputsList');
+                if (missing.length) { panel.classList.remove('hidden'); list.innerHTML = missing.map(m => `<li>${m}</li>`).join(''); } else { panel.classList.add('hidden'); }
+            } catch (_) {}
+        }
+        function displayMetrics(data) {
+            if (data.compliance_metrics) {
+                document.getElementById('metricCompliance').textContent = `${data.compliance_metrics.overall_percentage}%`;
+                document.getElementById('metricDocuments').textContent = data.compliance_metrics.documents_analyzed;
+                document.getElementById('metricStandards').textContent = `${data.compliance_metrics.standards_covered}/${data.compliance_metrics.standards_total}`;
+                document.getElementById('metricGaps').textContent = data.compliance_metrics.gaps_identified;
+            }
+        }
+
+        async function handleFileUpload(event) {
+            const file = event.target.files[0]; if (!file) return;
+            const token = getToken();
+            const formData = new FormData(); formData.append('file', file);
+            try {
+                showAnalysisLoading();
+                const response = await fetch(`${API_BASE}/api/user/intelligence-simple/evidence/analyze`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData });
+                if (!response.ok) throw new Error(`Analysis failed: ${response.status}`);
+                const result = await response.json();
+                displayAnalysisResults(result);
+                await loadMetrics();
+            } catch (error) { console.error('File analysis error:', error); showAnalysisError(error.message); }
+        }
+
+        async function loadStandardsGraph() {
+            const token = getToken();
+            try {
+                document.getElementById('standardsGraphSection').classList.remove('hidden');
+                const acc = (userSettings && userSettings.settings && userSettings.settings.primary_accreditor) ? `?accreditor=${encodeURIComponent(userSettings.settings.primary_accreditor)}` : '';
+                const response = await fetch(`${API_BASE}/api/user/intelligence-simple/standards/graph${acc}`, { headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } });
+                if (!response.ok) throw new Error(`Standards graph load failed: ${response.status}`);
+                const graphData = await response.json();
+                displayStandardsGraph(graphData);
+                try { const catRes = await fetch(`${API_BASE}/api/user/intelligence-simple/standards/categories${acc}`, { headers: { 'Authorization': `Bearer ${token}` } }); if (catRes.ok) renderCategoryCoverage(await catRes.json()); } catch (_) {}
+            } catch (error) { console.error('Standards graph error:', error); document.getElementById('standardsContent').innerHTML = `<div class="text-red-600"><i class="fas fa-exclamation-circle mr-2"></i>Failed to load standards graph: ${error.message}</div>`; }
+        }
+        function renderCategoryCoverage(cat) {
+            if (!cat || !cat.categories) return;
+            const rows = Object.entries(cat.categories).map(([name, count]) => `<div class="flex items-center justify-between border-b py-1"><span>${name}</span><span class="text-gray-600">${count}</span></div>`).join('');
+            document.getElementById('categoryCoverage').innerHTML = `<h4 class="font-medium mb-2">Category Coverage</h4><div class="grid grid-cols-1 md:grid-cols-2 gap-4">${rows}</div>`;
+        }
+
+        async function loadGapAnalysis() {
+            const token = getToken();
+            try {
+                document.getElementById('gapAnalysisSection').classList.remove('hidden');
+                const response = await fetch(`${API_BASE}/api/user/intelligence-simple/compliance/gaps`, { headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } });
+                if (!response.ok) throw new Error(`Gap analysis failed: ${response.status}`);
+                const gapData = await response.json();
+                displayGapAnalysis(gapData);
+            } catch (error) { console.error('Gap analysis error:', error); document.getElementById('gapContent').innerHTML = `<div class='text-red-600'><i class='fas fa-exclamation-circle mr-2'></i>Failed to load gap analysis: ${error.message}</div>`; }
+        }
+
+        function displayAnalysisResults(data) {
+            document.getElementById('analysisResults').classList.remove('hidden');
+            const preview = (data && data.analysis && data.analysis.document_preview) ? String(data.analysis.document_preview) : '';
+            const spans = (data && data.analysis && Array.isArray(data.analysis.mappings)) ? data.analysis.mappings.flatMap(m => Array.isArray(m.rationale_spans) ? m.rationale_spans : []) : [];
+            const highlightedPreview = highlightPreview(preview, spans);
+            const mappingsHtml = data.analysis.mappings.map((mapping) => `
+                <div class="border rounded p-3 mb-2">
+                    <div class="font-medium">${mapping.standard_id}</div>
+                    <div class="text-sm text-gray-600 mb-1">${mapping.title}</div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Confidence: ${(mapping.confidence * 100).toFixed(1)}%</span>
+                        <span class="text-xs text-gray-500">${mapping.accreditor}</span>
+                    </div>
+                    <div class="mt-2 text-xs ${mapping.meets_standard ? 'text-green-700' : 'text-yellow-700'}">${mapping.meets_standard ? 'Meets standard' : 'Partially meets / needs evidence'} (${mapping.match_type})</div>
+                    <div class="mt-2 flex items-center gap-2"><button class="text-xs text-blue-600 hover:text-blue-800 view-details" data-standard="${mapping.standard_id}">View details</button></div>
+                    <div class="mt-2 flex items-center gap-3">
+                        <label class="inline-flex items-center gap-2 text-xs"><input type="checkbox" class="review-toggle" data-standard="${mapping.standard_id}" ${mapping.reviewed ? 'checked' : ''} /> Mark as reviewed</label>
+                        <input type="text" placeholder="Add note" value="${(mapping.note||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;')}" class="note-input text-xs border rounded px-2 py-1 flex-1" data-standard="${mapping.standard_id}" />
+                        <button class="save-note text-xs bg-gray-800 text-white px-2 py-1 rounded" data-standard="${mapping.standard_id}">Save</button>
+                    </div>
+                    ${Array.isArray(mapping.rationale_spans) && mapping.rationale_spans.length ? `
+                        <details class="mt-2">
+                            <summary class="text-xs text-gray-700 cursor-pointer">Show rationale excerpts</summary>
+                            <ul class="list-disc list-inside text-sm mt-1">${mapping.rationale_spans.map(span => `<li>${span}</li>`).join('')}</ul>
+                            ${mapping.explanation ? `<div class="mt-2 text-xs text-gray-600">${mapping.explanation}</div>` : ''}
+                            <div class="mt-2"><a href="#" class="text-xs text-blue-600 hover:text-blue-800 view-in-preview" data-span="${(mapping.rationale_spans[0] || '').replace(/"/g, '&quot;')}">View in preview</a></div>
+                        </details>
+                    ` : ''}
+                </div>
+            `).join('');
+            document.getElementById('analysisContent').innerHTML = `
+                <div class="success-message"><h4 class="font-semibold">Analysis Complete: ${data.filename}</h4><p>Document processed with EvidenceMapper™ and EvidenceTrust Score™</p></div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+                    <div>
+                        <h5 class="font-medium mb-2">Trust Score Analysis</h5>
+                        <div class="bg-gray-50 p-3 rounded text-sm">
+                            <div class="flex items-center gap-2"><span>Overall Score:</span><span class="font-semibold" title="Weighted blend of quality, reliability, and confidence metrics">${(data.analysis.trust_score.overall_score * 100).toFixed(1)}%</span></div>
+                            <div title="Source clarity, citations, and policy alignment">Quality: ${(data.analysis.trust_score.quality_score * 100).toFixed(1)}%</div>
+                            <div title="Consistency across sections and corroboration">Reliability: ${(data.analysis.trust_score.reliability_score * 100).toFixed(1)}%</div>
+                            <div title="Model certainty in this context">Confidence: ${(data.analysis.trust_score.confidence_score * 100).toFixed(1)}%</div>
+                        </div>
+                    </div>
+                    <div>
+                        <h5 class="font-medium mb-2">Mapping Statistics</h5>
+                        <div class="bg-gray-50 p-3 rounded">
+                            <div>Standards Mapped: <span class="font-semibold">${data.analysis.standards_mapped}</span></div>
+                            <div>Content Length: ${data.analysis.content_length} chars</div>
+                            <div>Processing: Complete</div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <h5 class="font-medium mb-2">Standards Mappings (Top ${data.analysis.mappings.length})</h5>
+                    ${renderQuickLinks(data.analysis.mappings)}
+                    <div class="max-h-64 overflow-y-auto">${mappingsHtml}</div>
+                </div>
+                ${preview ? `<div class="mt-6"><h5 class="font-medium mb-2">Document Preview (excerpts)</h5><div class="bg-white border rounded p-3 max-h-64 overflow-y-auto text-sm leading-relaxed" id="docPreview">${highlightedPreview}</div><p class="text-xs text-gray-500 mt-2">Highlighted text shows excerpts used as rationale.</p></div>` : ''}
+            `;
+            const container = document.getElementById('analysisContent');
+            container.querySelectorAll('.view-in-preview').forEach(link => link.addEventListener('click', (e) => { e.preventDefault(); const spanText = e.currentTarget.getAttribute('data-span') || ''; scrollToRationale(spanText); }));
+            container.querySelectorAll('.view-details').forEach(btn => btn.addEventListener('click', async (e) => { const standard = e.currentTarget.getAttribute('data-standard'); await openMappingDetails(standard); }));
+            container.querySelectorAll('.review-toggle').forEach(cb => cb.addEventListener('change', async (e) => { const standard = e.currentTarget.getAttribute('data-standard'); const reviewed = e.currentTarget.checked; try { await saveReview(data.filename, standard, { reviewed }); } catch (err) { console.error('Save review failed', err); } }));
+            container.querySelectorAll('.save-note').forEach(btn => btn.addEventListener('click', async (e) => { const standard = e.currentTarget.getAttribute('data-standard'); const input = container.querySelector(`.note-input[data-standard="${standard}"]`); const note = (input && input.value) || ''; try { await saveReview(data.filename, standard, { note }); btn.textContent = 'Saved'; setTimeout(() => btn.textContent = 'Save', 1200); } catch (err) { console.error('Save note failed', err); } }));
+            document.getElementById('markAllReviewedBtn').onclick = async () => { try { const cards = Array.from(container.querySelectorAll('.review-toggle')); await Promise.all(cards.map(async cb => { const standard = cb.getAttribute('data-standard'); cb.checked = true; await saveReview(data.filename, standard, { reviewed: true }); })); } catch (e) { console.error('Mark all reviewed failed', e); } };
+            document.getElementById('exportReportBtn').onclick = async () => { try { const token = getToken(); const res = await fetch(`${API_BASE}/api/user/intelligence-simple/evidence/report`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ filename: data.filename, analysis: data.analysis }) }); if (!res.ok) throw new Error('Failed to generate report'); const out = await res.json(); const w = window.open('', '_blank'); w.document.write(out.html || '<p>No report content</p>'); w.document.close(); } catch (e) { alert('Export failed'); } };
+            document.getElementById('exportCsvBtn').onclick = async () => { try { const token = getToken(); const res = await fetch(`${API_BASE}/api/user/intelligence-simple/evidence/report.csv`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ filename: data.filename, analysis: data.analysis }) }); if (!res.ok) throw new Error('Failed to generate CSV'); const blob = await res.blob(); const url = window.URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `evidence_report_${(data.filename || 'document').replace(/[^\w.-]/g,'_')}.csv`; document.body.appendChild(a); a.click(); a.remove(); window.URL.revokeObjectURL(url); } catch (e) { alert('Export CSV failed'); } };
+        }
+
+        function displayStandardsGraph(data) {
+            document.getElementById('currentAccreditor').textContent = data.accreditor;
+            const entries = Object.entries(data.standards); let filtered = entries; let page = 1; const pageSize = 20;
+            function renderList() {
+                const start = (page - 1) * pageSize; const slice = filtered.slice(start, start + pageSize);
+                const listHtml = slice.map(([id, standard]) => `<div class=\"border rounded p-3 mb-2 hover:bg-gray-50\"><div class=\"font-medium text-sm\">${id}</div><div class=\"text-sm text-gray-600\">${standard.title}</div><div class=\"text-xs text-gray-500 mt-1\">Category: ${standard.category} | Domain: ${standard.domain}</div></div>`).join('');
+                document.getElementById('standardsList').innerHTML = listHtml || '<div class="text-sm text-gray-500">No standards</div>';
+                const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+                document.getElementById('standardsPageInfo').textContent = `Page ${page} of ${totalPages}`;
+                (document.getElementById('prevStandardsPage')).disabled = page <= 1;
+                (document.getElementById('nextStandardsPage')).disabled = page >= totalPages;
+                document.getElementById('standardsShowing').textContent = `${slice.length} of ${filtered.length}`;
+            }
+            const accChips = (data.available_accreditors || []).map(acc => `<button data-acc=\"${acc}\" class=\"px-3 py-1 rounded-full text-sm border ${acc === data.accreditor ? 'bg-blue-600 text-white border-blue-600' : 'bg-gray-100 text-gray-800 border-gray-300'} hover:opacity-90 acc-chip\">${acc}</button>`).join('');
+            document.getElementById('standardsContent').innerHTML = `
+                <div class=\"grid grid-cols-1 md:grid-cols-3 gap-4 mb-4\">
+                    <div class=\"bg-blue-50 p-4 rounded\"><div class=\"text-2xl font-bold text-blue-600\">${data.total_standards}</div><div class=\"text-sm text-gray-600\">Total Standards</div></div>
+                    <div class=\"bg-green-50 p-4 rounded\"><div class=\"text-2xl font-bold text-green-600\">${data.relationships.length}</div><div class=\"text-sm text-gray-600\">Relationships</div></div>
+                    <div class=\"bg-purple-50 p-4 rounded\"><div class=\"text-2xl font-bold text-purple-600\">${data.available_accreditors.length}</div><div class=\"text-sm text-gray-600\">Accreditors</div></div>
+                </div>
+                <div class=\"mb-4\"><h5 class=\"font-medium mb-2\">Available Accreditors</h5><div class=\"flex flex-wrap gap-2\">${accChips}</div><div class=\"mt-2 text-xs text-gray-500\">Click to switch accreditor; selection will be saved to your settings.</div></div>
+                <div>
+                    <div class=\"flex items-center justify-between mb-2\">
+                        <h5 class=\"font-medium\">Standards (<span id=\"standardsShowing\"></span> of ${data.total_standards})</h5>
+                        <div class=\"flex items-center gap-2\">
+                            <input id=\"standardsSearch\" type=\"text\" placeholder=\"Search by code or title\" class=\"border rounded px-2 py-1 text-sm\" />
+                            <button id=\"prevStandardsPage\" class=\"px-2 py-1 border rounded text-sm\">Prev</button>
+                            <span id=\"standardsPageInfo\" class=\"text-xs text-gray-600\"></span>
+                            <button id=\"nextStandardsPage\" class=\"px-2 py-1 border rounded text-sm\">Next</button>
+                        </div>
+                    </div>
+                    <div id=\"standardsList\" class=\"max-h-96 overflow-y-auto\"></div>
+                </div>`;
+            document.querySelectorAll('#standardsContent .acc-chip').forEach(btn => btn.addEventListener('click', async (e) => { const acc = e.currentTarget.getAttribute('data-acc'); try { await saveSettings({ primary_accreditor: acc }); await fetchSettings(); await loadStandardsGraph(); } catch (err) { console.error('Failed to save accreditor setting', err); } }));
+            const searchInput = document.getElementById('standardsSearch');
+            searchInput.addEventListener('input', () => { const q = (searchInput.value || '').toLowerCase(); filtered = entries.filter(([id, st]) => id.toLowerCase().includes(q) || (st.title || '').toLowerCase().includes(q)); page = 1; renderList(); });
+            document.getElementById('prevStandardsPage').addEventListener('click', () => { if (page > 1) { page--; renderList(); } });
+            document.getElementById('nextStandardsPage').addEventListener('click', () => { const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize)); if (page < totalPages) { page++; renderList(); } });
+            renderList();
+        }
+
+        function displayGapAnalysis(data) {
+            const riskColor = data.risk_assessment.risk_level === 'Low' ? 'green' : data.risk_assessment.risk_level === 'Medium' ? 'yellow' : 'red';
+            const categoriesHtml = Object.entries(data.category_risks).map(([category, risk]) => `<div class=\"border rounded p-3 mb-2\"><div class=\"flex justify-between items-center\"><span class=\"font-medium\">${category}</span><span class=\"bg-${risk > 0.7 ? 'red' : risk > 0.4 ? 'yellow' : 'green'}-100 text-${risk > 0.7 ? 'red' : risk > 0.4 ? 'yellow' : 'green'}-800 px-2 py-1 rounded text-xs\">${(risk * 100).toFixed(1)}% Risk</span></div></div>`).join('');
+            document.getElementById('gapContent').innerHTML = `
+                <div class=\"grid grid-cols-1 md:grid-cols-3 gap-4 mb-6\">
+                    <div class=\"bg-${riskColor}-50 p-4 rounded border border-${riskColor}-200\"><div class=\"text-2xl font-bold text-${riskColor}-600\">${data.risk_assessment.risk_level}</div><div class=\"text-sm text-gray-600\">Overall Risk Level</div></div>
+                    <div class=\"bg-blue-50 p-4 rounded\"><div class=\"text-2xl font-bold text-blue-600\">${(data.risk_assessment.confidence * 100).toFixed(1)}%</div><div class=\"text-sm text-gray-600\">Confidence</div></div>
+                    <div class=\"bg-purple-50 p-4 rounded\"><div class=\"text-2xl font-bold text-purple-600\">${data.risk_assessment.timeline_months}</div><div class=\"text-sm text-gray-600\">Months to Address</div></div>
+                </div>
+                <div class=\"mb-6\"><h5 class=\"font-medium mb-3\">Category Risk Assessment</h5><div class=\"space-y-2\">${categoriesHtml}</div></div>
+                <div class=\"grid grid-cols-1 md:grid-cols-2 gap-6\">
+                    <div><h5 class=\"font-medium mb-3\">Recommendations</h5><ul class=\"space-y-2\">${data.recommendations.map(rec => `<li class=\"flex items-start\"><i class=\"fas fa-check-circle text-green-500 mt-1 mr-2\"></i><span class=\"text-sm\">${rec}</span></li>`).join('')}</ul></div>
+                    <div><h5 class=\"font-medium mb-3\">Next Actions</h5><ul class=\"space-y-2\">${data.next_actions.map(action => `<li class=\"flex items-start\"><i class=\"fas fa-arrow-right text-blue-500 mt-1 mr-2\"></i><span class=\"text-sm\">${action}</span></li>`).join('')}</ul></div>
+                </div>`;
+        }
+
+        function showLoading(){ document.getElementById('loadingState').classList.remove('hidden'); document.getElementById('errorState').classList.add('hidden'); document.getElementById('dashboardContent').classList.add('hidden'); }
+        function showError(message){ document.getElementById('loadingState').classList.add('hidden'); document.getElementById('errorState').classList.remove('hidden'); document.getElementById('dashboardContent').classList.add('hidden'); document.getElementById('errorMessage').textContent = message; }
+        function showAnalysisLoading(){ document.getElementById('analysisResults').classList.remove('hidden'); document.getElementById('analysisContent').innerHTML = `<div class=\"text-center py-8\"><div class=\"loading-spinner mx-auto mb-4\"></div><p class=\"text-gray-600\">Analyzing document with AI algorithms...</p><p class=\"text-sm text-gray-500 mt-2\">Processing with EvidenceMapper™ and EvidenceTrust Score™</p></div>`; }
+        function showAnalysisError(message){ document.getElementById('analysisResults').classList.remove('hidden'); document.getElementById('analysisContent').innerHTML = `<div class=\"error-message\"><h4 class=\"font-semibold\">Analysis Failed</h4><p>${message}</p></div>`; }
+
+    async function fetchSettings(){ const token = getToken(); try { const res = await fetch(`${API_BASE}/api/user/intelligence-simple/settings`, { headers: { 'Authorization': `Bearer ${token}` } }); if (res.ok) { userSettings = await res.json(); return userSettings; } } catch (e) { console.warn('Settings fetch failed', e); } return null; }
+    async function saveSettings(payload){ const token = getToken(); const res = await fetch(`${API_BASE}/api/user/intelligence-simple/settings`, { method:'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); if (!res.ok) throw new Error('Failed to save settings'); return res.json(); }
+    async function saveReview(filename, standard_id, { reviewed, note } = {}){ const token = getToken(); const res = await fetch(`${API_BASE}/api/user/intelligence-simple/evidence/review`, { method:'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ filename, standard_id, reviewed, note }) }); if (!res.ok) throw new Error('Failed to save review'); return res.json(); }
+
+        function escapeHtml(str){ return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
+        function highlightPreview(text, spans){ if (!text) return ''; let html = escapeHtml(text); if (!Array.isArray(spans) || !spans.length) return html; const uniq = Array.from(new Set(spans.filter(s => s && s.trim()))).sort((a,b) => b.length - a.length); for (const s of uniq){ const esc = escapeHtml(s).replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); try { const re = new RegExp(esc,'gi'); html = html.replace(re, m => `<mark class=\"bg-yellow-200\">${m}</mark>`);} catch(_){}} return html; }
+        function scrollToRationale(text){ if (!text) return; const previewEl = document.getElementById('docPreview'); if (!previewEl) return; const marks = Array.from(previewEl.querySelectorAll('mark')); const target = marks.find(m => (m.textContent || '').toLowerCase().includes(String(text).toLowerCase())); if (target){ target.scrollIntoView({ behavior:'smooth', block:'center' }); target.classList.add('ring','ring-offset-2','ring-yellow-400'); setTimeout(()=>{ target.classList.remove('ring','ring-offset-2','ring-yellow-400'); }, 1500); } }
+        function renderQuickLinks(mappings){ const low = mappings.filter(m => (m.confidence || 0) < 0.7 || (m.match_type || '').toLowerCase() === 'partial').slice(0,5); if (!low.length) return ''; const buttons = low.map(m => `<button class=\"text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded mr-2 quick-link\" data-standard=\"${m.standard_id}\">${m.standard_id}</button>`).join(''); return `<div class=\"mb-2\">Review low-confidence mappings: ${buttons}</div>`; }
+        async function openMappingDetails(standardId){ const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token'); const modal = document.getElementById('mappingDetailsModal'); const content = document.getElementById('mappingDetailsContent'); modal.classList.remove('hidden'); modal.classList.add('flex'); content.innerHTML = `<div class='text-center py-6 text-gray-500'>Loading…</div>`; try { const res = await fetch(`${API_BASE}/api/user/intelligence-simple/standards/detail?standard_id=${encodeURIComponent(standardId)}`, { headers: { 'Authorization': `Bearer ${token}` } }); if (res.ok) { const d = await res.json(); content.innerHTML = `<div><div class=\"text-sm text-gray-500\">${d.code || d.id}</div><div class=\"text-lg font-semibold\">${d.title || ''}</div><div class=\"text-xs text-gray-600\">Category: ${d.category || ''} | Domain: ${d.domain || ''}</div>${d.description ? `<div class=\"mt-3\">${d.description}</div>` : ''}</div>`; } else { content.innerHTML = `<div class='text-red-600'>Failed to load details</div>`; } } catch(_){ content.innerHTML = `<div class='text-red-600'>Error loading details</div>`; } }
+        document.addEventListener('click', (e) => { if (e.target && e.target.id === 'closeMappingDetailsBtn') { const modal = document.getElementById('mappingDetailsModal'); modal.classList.add('hidden'); modal.classList.remove('flex'); } if (e.target && e.target.id === 'mappingDetailsModal') { const modal = document.getElementById('mappingDetailsModal'); modal.classList.add('hidden'); modal.classList.remove('flex'); } });
+        const settingsModal = () => document.getElementById('settingsModal');
+        function openSettingsModal(){ populateSettingsForm(); settingsModal().classList.remove('hidden'); settingsModal().classList.add('flex'); }
+        function closeSettingsModal(){ settingsModal().classList.add('hidden'); settingsModal().classList.remove('flex'); }
+        async function populateSettingsForm(){ if (!userSettings) await fetchSettings(); const s = (userSettings && userSettings.settings) || {}; document.getElementById('orgInput').value = s.organization || ''; document.getElementById('lmsInput').value = s.lms || ''; document.getElementById('termSelect').value = s.term_system || ''; const select = document.getElementById('accreditorSelect'); const accs = await ensureAccreditors(); select.innerHTML = (accs && accs.length ? accs : ['HLC','SACSCOC','MSCHE','WASC','ABET']).map(a => `<option ${a === (s.primary_accreditor || '') ? 'selected' : ''}>${a}</option>`).join(''); }
+        async function ensureAccreditors(){ if (window.__availableAccreditors && Array.isArray(window.__availableAccreditors)) return window.__availableAccreditors; const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token'); try { const res = await fetch(`${API_BASE}/api/user/intelligence-simple/standards/graph`, { headers: { 'Authorization': `Bearer ${token}` } }); if (res.ok) { const data = await res.json(); window.__availableAccreditors = data.available_accreditors || []; return window.__availableAccreditors; } } catch(e){ console.warn('Accreditors fetch failed', e); } return []; }
+        async function ensureIntegrations(){ const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token'); try { const res = await fetch(`${API_BASE}/api/user/intelligence-simple/integrations/status`, { headers: { 'Authorization': `Bearer ${token}` } }); if (res.ok) { const data = await res.json(); const modal = document.getElementById('settingsForm'); const integrations = document.createElement('div'); integrations.className = 'text-xs text-gray-600'; integrations.innerHTML = `<div class=\"grid grid-cols-2 gap-2 pt-1\"><div>Google Drive: <span class=\"${data.google_drive_available ? 'text-green-600' : 'text-gray-500'}\">${data.google_drive_available ? 'Available' : 'Unavailable'}</span></div><div>OneDrive: <span class=\"${data.onedrive_available ? 'text-green-600' : 'text-gray-500'}\">${data.onedrive_available ? 'Available' : 'Unavailable'}</span></div><div>Canvas: <span class=\"${data.canvas_available ? 'text-green-600' : 'text-gray-500'}\">${data.canvas_available ? 'Available' : 'Unavailable'}</span></div><div>Microsoft: <span class=\"${data.microsoft_available ? 'text-green-600' : 'text-gray-500'}\">${data.microsoft_available ? 'Available' : 'Unavailable'}</span></div></div>`; if (!document.getElementById('integrationStatusBlock')) { const wrapper = document.createElement('div'); wrapper.id = 'integrationStatusBlock'; const label = document.createElement('div'); label.className = 'text-sm font-medium text-gray-700'; label.textContent = 'Integration Status'; wrapper.appendChild(label); wrapper.appendChild(integrations); modal.appendChild(wrapper); } } } catch(_){}
+        }
+        document.addEventListener('click', (e) => { if (e.target && e.target.id === 'openSettingsBtn') openSettingsModal(); if (e.target && (e.target.id === 'closeSettingsBtn' || e.target.id === 'cancelSettingsBtn')) closeSettingsModal(); if (e.target && e.target.id === 'settingsModal') closeSettingsModal(); });
+        document.getElementById('settingsForm').addEventListener('submit', async (e) => { e.preventDefault(); const payload = { organization: document.getElementById('orgInput').value, primary_accreditor: document.getElementById('accreditorSelect').value, term_system: document.getElementById('termSelect').value, lms: document.getElementById('lmsInput').value, }; try { await saveSettings(payload); await fetchSettings(); closeSettingsModal(); await loadDashboard(); if (!document.getElementById('standardsGraphSection').classList.contains('hidden')) { await loadStandardsGraph(); } } catch (err) { alert('Failed to save settings'); console.error(err); } });
+    </script>
+</body>
+</html>

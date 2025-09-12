@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MapMyStandards - Accreditation Dashboard</title>
+    <script>
+        // Temporary redirect to the new AI Dashboard
+        (function(){
+            var url = new URL(window.location.href);
+            if (!url.searchParams.get('legacy')) {
+                window.location.replace('ai-dashboard.html');
+            }
+        })();
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .gradient-bg {
