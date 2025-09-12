@@ -109,9 +109,9 @@
                 </div>
                 <div class="flex items-center space-x-4">
                     <span class="text-sm text-gray-600" id="userEmail">Loading...</span>
-                    <a href="https://platform.mapmystandards.ai/onboarding" class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700 transition-colors">
+                    <button id="openSettingsBtn" class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700 transition-colors">
                         Settings
-                    </a>
+                    </button>
                 </div>
             </div>
         </div>
@@ -136,6 +136,61 @@
 
         <!-- Main Dashboard Content -->
         <div id="dashboardContent" class="hidden">
+            <!-- Settings Modal -->
+            <div id="settingsModal" class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center z-30">
+                <div class="bg-white rounded-lg shadow-lg w-full max-w-lg p-6 relative">
+                    <button id="closeSettingsBtn" class="absolute top-3 right-3 text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <h3 class="text-lg font-semibold mb-4">Account Settings</h3>
+                    <form id="settingsForm" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Organization</label>
+                            <input type="text" id="orgInput" class="mt-1 w-full border rounded px-3 py-2" placeholder="Your institution" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Primary Accreditor</label>
+                            <select id="accreditorSelect" class="mt-1 w-full border rounded px-3 py-2"></select>
+                            <p class="text-xs text-gray-500 mt-1">Used by Standards Graph™ and mapping defaults.</p>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Term System</label>
+                                <select id="termSelect" class="mt-1 w-full border rounded px-3 py-2">
+                                    <option value="">Select...</option>
+                                    <option>semester</option>
+                                    <option>quarter</option>
+                                    <option>trimester</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">LMS</label>
+                                <input type="text" id="lmsInput" class="mt-1 w-full border rounded px-3 py-2" placeholder="Canvas, Moodle, Blackboard, Microsoft" />
+                            </div>
+                        </div>
+                        <div class="text-xs text-gray-500">
+                            All features are enabled for your account.
+                        </div>
+                        <div class="flex items-center justify-end gap-3 pt-2">
+                            <button type="button" id="cancelSettingsBtn" class="px-4 py-2 rounded border">Cancel</button>
+                            <button type="submit" class="px-4 py-2 rounded bg-blue-600 text-white">Save</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Mapping Details Modal -->
+            <div id="mappingDetailsModal" class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center z-40">
+                <div class="bg-white rounded-lg shadow-lg w-full max-w-2xl p-6 relative">
+                    <button id="closeMappingDetailsBtn" class="absolute top-3 right-3 text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <h3 class="text-lg font-semibold mb-2">Mapping Details</h3>
+                    <div id="mappingDetailsContent" class="text-sm text-gray-800">
+                        <div class="text-center py-6 text-gray-500">Loading…</div>
+                    </div>
+                </div>
+            </div>
             <!-- Data Status Guidance -->
             <div id="dataStatusPanel" class="hidden bg-yellow-50 border border-yellow-200 text-yellow-900 rounded-lg p-4 mb-6">
                 <div class="flex items-start">
@@ -277,6 +332,15 @@
             <div id="analysisResults" class="hidden mb-8">
                 <div class="bg-white rounded-lg shadow p-6">
                     <h3 class="text-lg font-semibold mb-4">Latest Analysis Results</h3>
+                    <div class="flex items-center justify-between mb-3">
+                        <div>
+                            <button id="markAllReviewedBtn" class="text-sm bg-green-600 text-white px-3 py-1 rounded">Mark all reviewed</button>
+                        </div>
+                        <div class="space-x-2">
+                            <button id="exportCsvBtn" class="text-sm bg-gray-700 text-white px-3 py-1 rounded">Export CSV</button>
+                            <button id="exportReportBtn" class="text-sm bg-gray-800 text-white px-3 py-1 rounded">Export Report</button>
+                        </div>
+                    </div>
                     <div id="analysisContent"></div>
                 </div>
             </div>
@@ -291,6 +355,7 @@
                             <p class="text-gray-600">Loading standards graph...</p>
                         </div>
                     </div>
+                    <div id="categoryCoverage" class="mt-4 text-sm text-gray-700"></div>
                 </div>
             </div>
 
@@ -321,7 +386,8 @@
             // Same-origin by default (works when served from API domain)
             return '';
         })();
-        let dashboardData = null;
+    let dashboardData = null;
+    let userSettings = null;
 
         // Load dashboard on page load
         document.addEventListener('DOMContentLoaded', function() {
@@ -332,7 +398,12 @@
                 return;
             }
 
-            loadDashboard();
+            // Fetch settings first (used by graph defaults), then load dashboard
+            fetchSettings().finally(async () => {
+                await loadDashboard();
+                // Preload integrations for settings modal
+                ensureIntegrations();
+            });
             
             // Set up file upload handler
             document.getElementById('evidenceFile').addEventListener('change', handleFileUpload);
@@ -430,7 +501,7 @@
             }
         }
 
-        async function handleFileUpload(event) {
+    async function handleFileUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
 
@@ -465,13 +536,13 @@
             }
         }
 
-        async function loadStandardsGraph() {
+    async function loadStandardsGraph() {
             const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
             
             try {
                 document.getElementById('standardsGraphSection').classList.remove('hidden');
-                
-                const response = await fetch(`${API_BASE}/api/user/intelligence-simple/standards/graph`, {
+        const acc = (userSettings && userSettings.settings && userSettings.settings.primary_accreditor) ? `?accreditor=${encodeURIComponent(userSettings.settings.primary_accreditor)}` : '';
+        const response = await fetch(`${API_BASE}/api/user/intelligence-simple/standards/graph${acc}`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
@@ -484,6 +555,14 @@
 
                 const graphData = await response.json();
                 displayStandardsGraph(graphData);
+                // Category coverage
+                try {
+                    const catRes = await fetch(`${API_BASE}/api/user/intelligence-simple/standards/categories${acc}`, { headers: { 'Authorization': `Bearer ${token}` } });
+                    if (catRes.ok) {
+                        const cat = await catRes.json();
+                        renderCategoryCoverage(cat);
+                    }
+                } catch (_) {}
 
             } catch (error) {
                 console.error('Standards graph error:', error);
@@ -494,6 +573,19 @@
                     </div>
                 `;
             }
+        }
+        function renderCategoryCoverage(cat) {
+            if (!cat || !cat.categories) return;
+            const rows = Object.entries(cat.categories).map(([name, count]) => `
+                <div class="flex items-center justify-between border-b py-1">
+                    <span>${name}</span>
+                    <span class="text-gray-600">${count}</span>
+                </div>
+            `).join('');
+            document.getElementById('categoryCoverage').innerHTML = `
+                <h4 class="font-medium mb-2">Category Coverage</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">${rows}</div>
+            `;
         }
 
         async function loadGapAnalysis() {
@@ -529,8 +621,11 @@
 
         function displayAnalysisResults(data) {
             document.getElementById('analysisResults').classList.remove('hidden');
+            const preview = (data && data.analysis && data.analysis.document_preview) ? String(data.analysis.document_preview) : '';
+            const spans = (data && data.analysis && Array.isArray(data.analysis.mappings)) ? data.analysis.mappings.flatMap(m => Array.isArray(m.rationale_spans) ? m.rationale_spans : []) : [];
+            const highlightedPreview = highlightPreview(preview, spans);
             
-            const mappingsHtml = data.analysis.mappings.map(mapping => `
+            const mappingsHtml = data.analysis.mappings.map((mapping, idx) => `
                 <div class="border rounded p-3 mb-2">
                     <div class="font-medium">${mapping.standard_id}</div>
                     <div class="text-sm text-gray-600 mb-1">${mapping.title}</div>
@@ -540,6 +635,32 @@
                         </span>
                         <span class="text-xs text-gray-500">${mapping.accreditor}</span>
                     </div>
+                    <div class="mt-2 text-xs ${mapping.meets_standard ? 'text-green-700' : 'text-yellow-700'}">
+                        ${mapping.meets_standard ? 'Meets standard' : 'Partially meets / needs evidence'} (${mapping.match_type})
+                    </div>
+                    <div class="mt-2 flex items-center gap-2">
+                        <button class="text-xs text-blue-600 hover:text-blue-800 view-details" data-standard="${mapping.standard_id}">View details</button>
+                    </div>
+                    <div class="mt-2 flex items-center gap-3">
+                        <label class="inline-flex items-center gap-2 text-xs">
+                            <input type="checkbox" class="review-toggle" data-standard="${mapping.standard_id}" ${mapping.reviewed ? 'checked' : ''} />
+                            Mark as reviewed
+                        </label>
+                        <input type="text" placeholder="Add note" value="${(mapping.note||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;')}" class="note-input text-xs border rounded px-2 py-1 flex-1" data-standard="${mapping.standard_id}" />
+                        <button class="save-note text-xs bg-gray-800 text-white px-2 py-1 rounded" data-standard="${mapping.standard_id}">Save</button>
+                    </div>
+                    ${Array.isArray(mapping.rationale_spans) && mapping.rationale_spans.length ? `
+                        <details class="mt-2">
+                            <summary class="text-xs text-gray-700 cursor-pointer">Show rationale excerpts</summary>
+                            <ul class="list-disc list-inside text-sm mt-1">
+                                ${mapping.rationale_spans.map(span => `<li>${span}</li>`).join('')}
+                            </ul>
+                            ${mapping.explanation ? `<div class="mt-2 text-xs text-gray-600">${mapping.explanation}</div>` : ''}
+                            <div class="mt-2">
+                                <a href="#" class="text-xs text-blue-600 hover:text-blue-800 view-in-preview" data-span="${(mapping.rationale_spans[0] || '').replace(/"/g, '&quot;')}">View in preview</a>
+                            </div>
+                        </details>
+                    ` : ''}
                 </div>
             `).join('');
 
@@ -552,11 +673,14 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
                     <div>
                         <h5 class="font-medium mb-2">Trust Score Analysis</h5>
-                        <div class="bg-gray-50 p-3 rounded">
-                            <div>Overall Score: <span class="font-semibold">${(data.analysis.trust_score.overall_score * 100).toFixed(1)}%</span></div>
-                            <div>Quality: ${(data.analysis.trust_score.quality_score * 100).toFixed(1)}%</div>
-                            <div>Reliability: ${(data.analysis.trust_score.reliability_score * 100).toFixed(1)}%</div>
-                            <div>Confidence: ${(data.analysis.trust_score.confidence_score * 100).toFixed(1)}%</div>
+                        <div class="bg-gray-50 p-3 rounded text-sm">
+                            <div class="flex items-center gap-2">
+                                <span>Overall Score:</span>
+                                <span class="font-semibold" title="Weighted blend of quality, reliability, and confidence metrics">${(data.analysis.trust_score.overall_score * 100).toFixed(1)}%</span>
+                            </div>
+                            <div title="Source clarity, citations, and policy alignment">Quality: ${(data.analysis.trust_score.quality_score * 100).toFixed(1)}%</div>
+                            <div title="Consistency across sections and corroboration">Reliability: ${(data.analysis.trust_score.reliability_score * 100).toFixed(1)}%</div>
+                            <div title="Model certainty in this context">Confidence: ${(data.analysis.trust_score.confidence_score * 100).toFixed(1)}%</div>
                         </div>
                     </div>
                     <div>
@@ -571,24 +695,146 @@
 
                 <div>
                     <h5 class="font-medium mb-2">Standards Mappings (Top ${data.analysis.mappings.length})</h5>
+                    ${renderQuickLinks(data.analysis.mappings)}
                     <div class="max-h-64 overflow-y-auto">
                         ${mappingsHtml}
                     </div>
                 </div>
+
+                ${preview ? `
+                <div class="mt-6">
+                    <h5 class="font-medium mb-2">Document Preview (excerpts)</h5>
+                    <div class="bg-white border rounded p-3 max-h-64 overflow-y-auto text-sm leading-relaxed" id="docPreview">${highlightedPreview}</div>
+                    <p class="text-xs text-gray-500 mt-2">Highlighted text shows excerpts used as rationale.</p>
+                </div>` : ''}
             `;
+
+            // Delegate clicks to view-in-preview links and review/note actions
+            const container = document.getElementById('analysisContent');
+            container.querySelectorAll('.view-in-preview').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const spanText = e.currentTarget.getAttribute('data-span') || '';
+                    scrollToRationale(spanText);
+                });
+            });
+            container.querySelectorAll('.view-details').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const standard = e.currentTarget.getAttribute('data-standard');
+                    await openMappingDetails(standard);
+                });
+            });
+            container.querySelectorAll('.review-toggle').forEach(cb => {
+                cb.addEventListener('change', async (e) => {
+                    const standard = e.currentTarget.getAttribute('data-standard');
+                    const reviewed = e.currentTarget.checked;
+                    try {
+                        await saveReview(data.filename, standard, { reviewed });
+                    } catch (err) { console.error('Save review failed', err); }
+                });
+            });
+            container.querySelectorAll('.save-note').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const standard = e.currentTarget.getAttribute('data-standard');
+                    const input = container.querySelector(`.note-input[data-standard="${standard}"]`);
+                    const note = (input && input.value) || '';
+                    try {
+                        await saveReview(data.filename, standard, { note });
+                        btn.textContent = 'Saved';
+                        setTimeout(() => btn.textContent = 'Save', 1200);
+                    } catch (err) { console.error('Save note failed', err); }
+                });
+            });
+            // Mark all reviewed
+            const markAllBtn = document.getElementById('markAllReviewedBtn');
+            markAllBtn.onclick = async () => {
+                try {
+                    const cards = Array.from(container.querySelectorAll('.review-toggle'));
+                    await Promise.all(cards.map(async cb => {
+                        const standard = cb.getAttribute('data-standard');
+                        cb.checked = true;
+                        await saveReview(data.filename, standard, { reviewed: true });
+                    }));
+                } catch (e) { console.error('Mark all reviewed failed', e); }
+            };
+
+            // Export report
+            const exportBtn = document.getElementById('exportReportBtn');
+            exportBtn.onclick = async () => {
+                try {
+                    const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+                    const res = await fetch(`${API_BASE}/api/user/intelligence-simple/evidence/report`, {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ filename: data.filename, analysis: data.analysis })
+                    });
+                    if (!res.ok) throw new Error('Failed to generate report');
+                    const out = await res.json();
+                    const w = window.open('', '_blank');
+                    w.document.write(out.html || '<p>No report content</p>');
+                    w.document.close();
+                } catch (e) {
+                    alert('Export failed');
+                }
+            };
+
+            // Export CSV
+            const exportCsvBtn = document.getElementById('exportCsvBtn');
+            exportCsvBtn.onclick = async () => {
+                try {
+                    const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+                    const res = await fetch(`${API_BASE}/api/user/intelligence-simple/evidence/report.csv`, {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ filename: data.filename, analysis: data.analysis })
+                    });
+                    if (!res.ok) throw new Error('Failed to generate CSV');
+                    const blob = await res.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `evidence_report_${(data.filename || 'document').replace(/[^\w.-]/g,'_')}.csv`;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    window.URL.revokeObjectURL(url);
+                } catch (e) {
+                    alert('Export CSV failed');
+                }
+            };
         }
 
-        function displayStandardsGraph(data) {
+    function displayStandardsGraph(data) {
             document.getElementById('currentAccreditor').textContent = data.accreditor;
-            
-            const standardsList = Object.entries(data.standards).map(([id, standard]) => `
-                <div class="border rounded p-3 mb-2 hover:bg-gray-50">
-                    <div class="font-medium text-sm">${id}</div>
-                    <div class="text-sm text-gray-600">${standard.title}</div>
-                    <div class="text-xs text-gray-500 mt-1">
-                        Category: ${standard.category} | Domain: ${standard.domain}
+
+            // Client-side search + pagination
+            const entries = Object.entries(data.standards);
+            let filtered = entries;
+            let page = 1;
+            const pageSize = 20;
+
+            function renderList() {
+                const start = (page - 1) * pageSize;
+                const slice = filtered.slice(start, start + pageSize);
+                const listHtml = slice.map(([id, standard]) => `
+                    <div class="border rounded p-3 mb-2 hover:bg-gray-50">
+                        <div class="font-medium text-sm">${id}</div>
+                        <div class="text-sm text-gray-600">${standard.title}</div>
+                        <div class="text-xs text-gray-500 mt-1">
+                            Category: ${standard.category} | Domain: ${standard.domain}
+                        </div>
                     </div>
-                </div>
+                `).join('');
+                document.getElementById('standardsList').innerHTML = listHtml || '<div class="text-sm text-gray-500">No standards</div>';
+                const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+                document.getElementById('standardsPageInfo').textContent = `Page ${page} of ${totalPages}`;
+                (document.getElementById('prevStandardsPage')).disabled = page <= 1;
+                (document.getElementById('nextStandardsPage')).disabled = page >= totalPages;
+                document.getElementById('standardsShowing').textContent = `${slice.length} of ${filtered.length}`;
+            }
+
+            const accChips = (data.available_accreditors || []).map(acc => `
+                <button data-acc="${acc}" class="px-3 py-1 rounded-full text-sm border ${acc === data.accreditor ? 'bg-blue-600 text-white border-blue-600' : 'bg-gray-100 text-gray-800 border-gray-300'} hover:opacity-90 acc-chip">${acc}</button>
             `).join('');
 
             document.getElementById('standardsContent').innerHTML = `
@@ -609,20 +855,51 @@
 
                 <div class="mb-4">
                     <h5 class="font-medium mb-2">Available Accreditors</h5>
-                    <div class="flex flex-wrap gap-2">
-                        ${data.available_accreditors.map(acc => `
-                            <span class="bg-gray-100 px-3 py-1 rounded-full text-sm">${acc}</span>
-                        `).join('')}
-                    </div>
+                    <div class="flex flex-wrap gap-2">${accChips}</div>
+                    <div class="mt-2 text-xs text-gray-500">Click to switch accreditor; selection will be saved to your settings.</div>
                 </div>
 
                 <div>
-                    <h5 class="font-medium mb-2">Standards (Showing ${Object.keys(data.standards).length} of ${data.total_standards})</h5>
-                    <div class="max-h-96 overflow-y-auto">
-                        ${standardsList}
+                    <div class="flex items-center justify-between mb-2">
+                        <h5 class="font-medium">Standards (<span id="standardsShowing"></span> of ${data.total_standards})</h5>
+                        <div class="flex items-center gap-2">
+                            <input id="standardsSearch" type="text" placeholder="Search by code or title" class="border rounded px-2 py-1 text-sm" />
+                            <button id="prevStandardsPage" class="px-2 py-1 border rounded text-sm">Prev</button>
+                            <span id="standardsPageInfo" class="text-xs text-gray-600"></span>
+                            <button id="nextStandardsPage" class="px-2 py-1 border rounded text-sm">Next</button>
+                        </div>
                     </div>
+                    <div id="standardsList" class="max-h-96 overflow-y-auto"></div>
                 </div>
             `;
+
+            // Attach click handlers to accreditor chips
+            document.querySelectorAll('#standardsContent .acc-chip').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const acc = e.currentTarget.getAttribute('data-acc');
+                    try {
+                        await saveSettings({ primary_accreditor: acc });
+                        await fetchSettings();
+                        await loadStandardsGraph();
+                    } catch (err) {
+                        console.error('Failed to save accreditor setting', err);
+                    }
+                });
+            });
+
+            // Search & pagination handlers
+            const searchInput = document.getElementById('standardsSearch');
+            searchInput.addEventListener('input', () => {
+                const q = (searchInput.value || '').toLowerCase();
+                filtered = entries.filter(([id, st]) => id.toLowerCase().includes(q) || (st.title || '').toLowerCase().includes(q));
+                page = 1;
+                renderList();
+            });
+            document.getElementById('prevStandardsPage').addEventListener('click', () => { if (page > 1) { page--; renderList(); } });
+            document.getElementById('nextStandardsPage').addEventListener('click', () => { const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize)); if (page < totalPages) { page++; renderList(); } });
+
+            // Initial render
+            renderList();
         }
 
         function displayGapAnalysis(data) {
@@ -723,6 +1000,247 @@
                 </div>
             `;
         }
+
+        // Settings helpers
+        async function fetchSettings() {
+            const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+            try {
+                const res = await fetch(`${API_BASE}/api/user/intelligence-simple/settings`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                if (res.ok) {
+                    userSettings = await res.json();
+                    return userSettings;
+                }
+            } catch (e) {
+                console.warn('Settings fetch failed', e);
+            }
+            return null;
+        }
+
+        async function saveSettings(payload) {
+            const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+            const res = await fetch(`${API_BASE}/api/user/intelligence-simple/settings`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+            if (!res.ok) throw new Error('Failed to save settings');
+            return res.json();
+        }
+
+        async function saveReview(filename, standard_id, { reviewed, note } = {}) {
+            const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+            const res = await fetch(`${API_BASE}/api/user/intelligence-simple/evidence/review`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ filename, standard_id, reviewed, note })
+            });
+            if (!res.ok) throw new Error('Failed to save review');
+            return res.json();
+        }
+
+        // Highlight helper for document preview
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function highlightPreview(text, spans) {
+            if (!text) return '';
+            let html = escapeHtml(text);
+            if (!Array.isArray(spans) || !spans.length) return html;
+            // De-duplicate and sort by length desc to avoid nested replacements breaking
+            const uniq = Array.from(new Set(spans.filter(s => s && s.trim()))).sort((a, b) => b.length - a.length);
+            for (const s of uniq) {
+                const esc = escapeHtml(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                try {
+                    const re = new RegExp(esc, 'gi');
+                    html = html.replace(re, match => `<mark class="bg-yellow-200">${match}</mark>`);
+                } catch (_) {
+                    // ignore malformed regex
+                }
+            }
+            return html;
+        }
+
+        function scrollToRationale(text) {
+            if (!text) return;
+            const previewEl = document.getElementById('docPreview');
+            if (!previewEl) return;
+            const marks = Array.from(previewEl.querySelectorAll('mark'));
+            const target = marks.find(m => (m.textContent || '').toLowerCase().includes(String(text).toLowerCase()));
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                // Flash effect
+                target.classList.add('ring', 'ring-offset-2', 'ring-yellow-400');
+                setTimeout(() => {
+                    target.classList.remove('ring', 'ring-offset-2', 'ring-yellow-400');
+                }, 1500);
+            }
+        }
+
+        function renderQuickLinks(mappings) {
+            const low = mappings.filter(m => (m.confidence || 0) < 0.7 || (m.match_type || '').toLowerCase() === 'partial').slice(0, 5);
+            if (!low.length) return '';
+            const buttons = low.map(m => `<button class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded mr-2 quick-link" data-standard="${m.standard_id}">${m.standard_id}</button>`).join('');
+            return `<div class="mb-2">Review low-confidence mappings: ${buttons}</div>`;
+        }
+
+        async function openMappingDetails(standardId) {
+            const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+            const modal = document.getElementById('mappingDetailsModal');
+            const content = document.getElementById('mappingDetailsContent');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            content.innerHTML = `<div class='text-center py-6 text-gray-500'>Loading…</div>`;
+            try {
+                const res = await fetch(`${API_BASE}/api/user/intelligence-simple/standards/detail?standard_id=${encodeURIComponent(standardId)}`, { headers: { 'Authorization': `Bearer ${token}` } });
+                if (res.ok) {
+                    const d = await res.json();
+                    content.innerHTML = `
+                        <div>
+                            <div class="text-sm text-gray-500">${d.code || d.id}</div>
+                            <div class="text-lg font-semibold">${d.title || ''}</div>
+                            <div class="text-xs text-gray-600">Category: ${d.category || ''} | Domain: ${d.domain || ''}</div>
+                            ${d.description ? `<div class="mt-3">${d.description}</div>` : ''}
+                        </div>
+                    `;
+                } else {
+                    content.innerHTML = `<div class='text-red-600'>Failed to load details</div>`;
+                }
+            } catch (_) {
+                content.innerHTML = `<div class='text-red-600'>Error loading details</div>`;
+            }
+        }
+
+        // Close mapping details modal
+        document.addEventListener('click', (e) => {
+            if (e.target && e.target.id === 'closeMappingDetailsBtn') {
+                const modal = document.getElementById('mappingDetailsModal');
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+            if (e.target && e.target.id === 'mappingDetailsModal') {
+                const modal = document.getElementById('mappingDetailsModal');
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        });
+
+        // Settings modal behavior
+        const settingsModal = () => document.getElementById('settingsModal');
+        function openSettingsModal() {
+            populateSettingsForm();
+            settingsModal().classList.remove('hidden');
+            settingsModal().classList.add('flex');
+        }
+        function closeSettingsModal() {
+            settingsModal().classList.add('hidden');
+            settingsModal().classList.remove('flex');
+        }
+        async function populateSettingsForm() {
+            if (!userSettings) await fetchSettings();
+            const s = (userSettings && userSettings.settings) || {};
+            document.getElementById('orgInput').value = s.organization || '';
+            document.getElementById('lmsInput').value = s.lms || '';
+            document.getElementById('termSelect').value = s.term_system || '';
+            // Populate accreditors
+            const select = document.getElementById('accreditorSelect');
+            const accs = await ensureAccreditors();
+            select.innerHTML = (accs && accs.length ? accs : ['HLC','SACSCOC','MSCHE','WASC','ABET'])
+                .map(a => `<option ${a === (s.primary_accreditor || '') ? 'selected' : ''}>${a}</option>`)
+                .join('');
+        }
+        async function ensureAccreditors() {
+            if (window.__availableAccreditors && Array.isArray(window.__availableAccreditors)) return window.__availableAccreditors;
+            const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+            try {
+                const res = await fetch(`${API_BASE}/api/user/intelligence-simple/standards/graph`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    window.__availableAccreditors = data.available_accreditors || [];
+                    return window.__availableAccreditors;
+                }
+            } catch (e) {
+                console.warn('Accreditors fetch failed', e);
+            }
+            return [];
+        }
+
+        async function ensureIntegrations() {
+            const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+            try {
+                const res = await fetch(`${API_BASE}/api/user/intelligence-simple/integrations/status`, { headers: { 'Authorization': `Bearer ${token}` } });
+                if (res.ok) {
+                    const data = await res.json();
+                    const modal = document.getElementById('settingsForm');
+                    const integrations = document.createElement('div');
+                    integrations.className = 'text-xs text-gray-600';
+                    integrations.innerHTML = `
+                        <div class="grid grid-cols-2 gap-2 pt-1">
+                            <div>Google Drive: <span class="${data.google_drive_available ? 'text-green-600' : 'text-gray-500'}">${data.google_drive_available ? 'Available' : 'Unavailable'}</span></div>
+                            <div>OneDrive: <span class="${data.onedrive_available ? 'text-green-600' : 'text-gray-500'}">${data.onedrive_available ? 'Available' : 'Unavailable'}</span></div>
+                            <div>Canvas: <span class="${data.canvas_available ? 'text-green-600' : 'text-gray-500'}">${data.canvas_available ? 'Available' : 'Unavailable'}</span></div>
+                            <div>Microsoft: <span class="${data.microsoft_available ? 'text-green-600' : 'text-gray-500'}">${data.microsoft_available ? 'Available' : 'Unavailable'}</span></div>
+                        </div>
+                    `;
+                    // Avoid duplicates
+                    if (!document.getElementById('integrationStatusBlock')) {
+                        const wrapper = document.createElement('div');
+                        wrapper.id = 'integrationStatusBlock';
+                        const label = document.createElement('div');
+                        label.className = 'text-sm font-medium text-gray-700';
+                        label.textContent = 'Integration Status';
+                        wrapper.appendChild(label);
+                        wrapper.appendChild(integrations);
+                        modal.appendChild(wrapper);
+                    }
+                }
+            } catch (_) {}
+        }
+        document.addEventListener('click', (e) => {
+            if (e.target && e.target.id === 'openSettingsBtn') openSettingsModal();
+            if (e.target && (e.target.id === 'closeSettingsBtn' || e.target.id === 'cancelSettingsBtn')) closeSettingsModal();
+            // backdrop click
+            if (e.target && e.target.id === 'settingsModal') closeSettingsModal();
+        });
+        document.getElementById('settingsForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const payload = {
+                organization: document.getElementById('orgInput').value,
+                primary_accreditor: document.getElementById('accreditorSelect').value,
+                term_system: document.getElementById('termSelect').value,
+                lms: document.getElementById('lmsInput').value,
+            };
+            try {
+                await saveSettings(payload);
+                await fetchSettings();
+                closeSettingsModal();
+                await loadDashboard();
+                // If graph is open, reload it too
+                if (!document.getElementById('standardsGraphSection').classList.contains('hidden')) {
+                    await loadStandardsGraph();
+                }
+            } catch (err) {
+                alert('Failed to save settings');
+                console.error(err);
+            }
+        });
     </script>
 </body>
 </html>

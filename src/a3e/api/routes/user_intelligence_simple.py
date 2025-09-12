@@ -11,6 +11,9 @@ import os
 import json
 import logging
 import jwt
+from fastapi.responses import JSONResponse, PlainTextResponse
+import csv
+import io
 
 from ...core.config import get_settings
 from ...services.standards_graph import standards_graph
@@ -26,6 +29,103 @@ logger = logging.getLogger(__name__)
 # JWT configuration
 settings = get_settings()
 JWT_ALGORITHM = "HS256"
+
+# Lightweight file-backed settings store (fallback when DB personalization is unavailable)
+_project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../.."))
+SETTINGS_STORE_PATH = os.getenv(
+    "USER_SETTINGS_STORE",
+    os.path.join(_project_root, "user_settings_store.json"),
+)
+REVIEWS_STORE_PATH = os.getenv(
+    "USER_REVIEWS_STORE",
+    os.path.join(_project_root, "user_reviews_store.json"),
+)
+
+def _load_all_settings() -> Dict[str, Any]:
+    try:
+        if os.path.exists(SETTINGS_STORE_PATH):
+            with open(SETTINGS_STORE_PATH, "r", encoding="utf-8") as f:
+                return json.load(f)
+    except Exception as e:
+        logger.warning("Settings read failed: %s", e)
+    return {}
+
+def _save_all_settings(data: Dict[str, Any]) -> None:
+    try:
+        with open(SETTINGS_STORE_PATH, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+    except Exception as e:
+        logger.warning("Settings write failed: %s", e)
+
+def _load_all_reviews() -> Dict[str, Any]:
+    try:
+        if os.path.exists(REVIEWS_STORE_PATH):
+            with open(REVIEWS_STORE_PATH, "r", encoding="utf-8") as f:
+                return json.load(f)
+    except Exception as e:
+        logger.warning("Reviews read failed: %s", e)
+    return {}
+
+def _save_all_reviews(data: Dict[str, Any]) -> None:
+    try:
+        with open(REVIEWS_STORE_PATH, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+    except Exception as e:
+        logger.warning("Reviews write failed: %s", e)
+
+def _user_key(claims: Dict[str, Any]) -> str:
+    return (claims.get("email") or claims.get("sub") or "unknown").lower()
+
+def _get_user_settings(claims: Dict[str, Any]) -> Dict[str, Any]:
+    all_s = _load_all_settings()
+    return all_s.get(_user_key(claims), {})
+
+def _merge_claims_with_settings(claims: Dict[str, Any]) -> Dict[str, Any]:
+    s = _get_user_settings(claims)
+    return {
+        "organization": s.get("organization") or claims.get("organization") or claims.get("org") or "",
+        "primary_accreditor": s.get("primary_accreditor") or claims.get("primary_accreditor") or claims.get("accreditor") or "",
+        "tier": s.get("tier") or claims.get("tier", "standard"),
+        "lms": s.get("lms") or "",
+        "document_sources": s.get("document_sources") or [],
+        "term_system": s.get("term_system") or "",
+    }
+
+def _set_user_settings(claims: Dict[str, Any], new_settings: Dict[str, Any]) -> Dict[str, Any]:
+    all_s = _load_all_settings()
+    key = _user_key(claims)
+    current = all_s.get(key, {})
+    current.update({k: v for k, v in new_settings.items() if v is not None})
+    all_s[key] = current
+    _save_all_settings(all_s)
+    return current
+
+def _get_user_reviews(claims: Dict[str, Any], filename: Optional[str] = None) -> Dict[str, Any]:
+    """Return review map for user. Structure:
+    { user_key: { filename: { standard_id: { reviewed: bool, note: str } } } }
+    """
+    all_r = _load_all_reviews()
+    uk = _user_key(claims)
+    user_map = all_r.get(uk, {})
+    if filename:
+        return user_map.get(filename, {})
+    return user_map
+
+def _set_user_review(claims: Dict[str, Any], filename: str, standard_id: str, reviewed: Optional[bool], note: Optional[str]) -> Dict[str, Any]:
+    all_r = _load_all_reviews()
+    uk = _user_key(claims)
+    user_map = all_r.get(uk, {})
+    file_map = user_map.get(filename, {})
+    entry = file_map.get(standard_id, {})
+    if reviewed is not None:
+        entry["reviewed"] = bool(reviewed)
+    if note is not None:
+        entry["note"] = str(note)
+    file_map[standard_id] = entry
+    user_map[filename] = file_map
+    all_r[uk] = user_map
+    _save_all_reviews(all_r)
+    return entry
 
 def _candidate_secrets() -> List[str]:
     """Return a prioritized list of possible JWT secrets for verification."""
@@ -70,12 +170,16 @@ async def get_dashboard_overview(current_user: Dict[str, Any] = Depends(get_curr
     what inputs are needed to personalize their dashboard.
     """
     try:
-        # Basic user object from claims
+        # Basic user object from claims + stored settings (for deeper onboarding)
+        merged = _merge_claims_with_settings(current_user)
         user_obj = {
             "email": current_user.get("email") or current_user.get("sub"),
-            "institution_name": current_user.get("organization") or current_user.get("org") or "",
-            "primary_accreditor": current_user.get("primary_accreditor") or current_user.get("accreditor") or "",
-            "tier": current_user.get("tier", "standard"),
+            "institution_name": merged["organization"],
+            "primary_accreditor": merged["primary_accreditor"],
+            "tier": merged["tier"],
+            "lms": merged["lms"],
+            "document_sources": merged["document_sources"],
+            "term_system": merged["term_system"],
         }
 
         # Pull real metrics (zeros by design until customer uploads/connects data)
@@ -97,6 +201,10 @@ async def get_dashboard_overview(current_user: Dict[str, Any] = Depends(get_curr
             missing.append("Select your primary accreditor in Settings")
         if not user_obj["institution_name"]:
             missing.append("Provide your institution/organization name during onboarding")
+        if not user_obj["term_system"]:
+            missing.append("Specify your academic term system (semester/quarter/trimester)")
+        if not user_obj["lms"]:
+            missing.append("Connect your LMS (Canvas, Moodle, Blackboard, Microsoft)")
 
         # Integration prompts (based on env flags)
         if not (os.getenv("GOOGLE_DRIVE_CLIENT_ID") or os.getenv("ONEDRIVE_CLIENT_ID")):
@@ -155,6 +263,50 @@ async def get_dashboard_overview(current_user: Dict[str, Any] = Depends(get_curr
         logger.error(f"Dashboard overview error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to load dashboard: {str(e)}")
 
+@router.get("/settings")
+async def get_user_settings_endpoint(current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+    """Return merged settings and which keys are missing for full functionality."""
+    merged = _merge_claims_with_settings(current_user)
+    missing = []
+    for key in ("organization", "primary_accreditor", "term_system"):
+        if not merged.get(key):
+            missing.append(key)
+    return {"settings": merged, "missing": missing}
+
+@router.post("/settings")
+async def save_user_settings_endpoint(payload: Dict[str, Any], current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+    allowed = {"organization", "primary_accreditor", "tier", "lms", "document_sources", "term_system"}
+    filtered = {k: payload.get(k) for k in allowed if k in payload}
+    saved = _set_user_settings(current_user, filtered)
+    return {"status": "success", "saved": saved}
+
+@router.get("/integrations/status")
+async def get_integrations_status(current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+    """Surface basic integration capabilities based on env config.
+    UI uses this to guide source connections.
+    """
+    return {
+        "google_drive_available": bool(os.getenv("GOOGLE_DRIVE_CLIENT_ID") or os.getenv("GOOGLE_DRIVE_SERVICE_ACCOUNT")),
+        "onedrive_available": bool(os.getenv("ONEDRIVE_CLIENT_ID") or os.getenv("MS_CLIENT_ID")),
+        "canvas_available": bool(os.getenv("CANVAS_CLIENT_ID")),
+        "microsoft_available": bool(os.getenv("MS_CLIENT_ID")),
+    }
+
+@router.get("/evidence/reviews")
+async def get_evidence_reviews(filename: str, current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+    return {"filename": filename, "reviews": _get_user_reviews(current_user, filename)}
+
+@router.post("/evidence/review")
+async def save_evidence_review(payload: Dict[str, Any], current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+    filename = payload.get("filename")
+    standard_id = payload.get("standard_id")
+    if not filename or not standard_id:
+        raise HTTPException(status_code=400, detail="filename and standard_id are required")
+    reviewed = payload.get("reviewed")
+    note = payload.get("note")
+    entry = _set_user_review(current_user, filename, standard_id, reviewed, note)
+    return {"status": "success", "filename": filename, "standard_id": standard_id, "entry": entry}
+
 @router.post("/analyze/evidence")
 async def analyze_evidence(
     file: UploadFile = File(...),
@@ -207,16 +359,29 @@ async def analyze_evidence(
         )
         confidence_score = signals.get("reviewer_verification", 0.8)
 
-        # Convert mappings for UI
-        mappings_ui = [
-            {
+        # Convert mappings for UI (include rationales and explanation)
+        def _meets(mt: str, conf: float) -> bool:
+            try:
+                return bool(mt in ("exact", "strong") or float(conf) >= 0.7)
+            except Exception:
+                return False
+        # Attach review state if available
+        reviews_map = _get_user_reviews(current_user, file.filename)
+        mappings_ui = []
+        for m in mappings[:10]:
+            review = reviews_map.get(m.standard_id, {}) if isinstance(reviews_map, dict) else {}
+            mappings_ui.append({
                 "standard_id": m.standard_id,
                 "title": m.standard_title,
-                "confidence": m.confidence,
+                "confidence": float(m.confidence),
                 "accreditor": m.accreditor,
-            }
-            for m in mappings[:10]
-        ]
+                "match_type": m.match_type,
+                "meets_standard": bool(_meets(m.match_type, m.confidence)),
+                "rationale_spans": m.rationale_spans,
+                "explanation": m.explanation,
+                "reviewed": bool(review.get("reviewed", False)),
+                "note": review.get("note", ""),
+            })
 
         return {
             "status": "success",
@@ -224,13 +389,14 @@ async def analyze_evidence(
             "analysis": {
                 "mappings": mappings_ui,
                 "trust_score": {
-                    "overall_score": trust_dict.get("overall_score", 0.7),
-                    "quality_score": round(quality_score, 3),
-                    "reliability_score": round(reliability_score, 3),
-                    "confidence_score": round(confidence_score, 3),
+                    "overall_score": float(trust_dict.get("overall_score", 0.7) or 0.7),
+                    "quality_score": float(round(float(quality_score), 3)),
+                    "reliability_score": float(round(float(reliability_score), 3)),
+                    "confidence_score": float(round(float(confidence_score), 3)),
                 },
                 "standards_mapped": len(mappings),
                 "content_length": len(doc.text or ""),
+                "document_preview": (doc.text or "")[:2000],
             },
             "algorithms_used": [
                 "EvidenceMapper™",
@@ -263,7 +429,6 @@ async def analyze_evidence_alias(
             source_system="manual",
             upload_date=datetime.utcnow()
         )
-
         mappings = evidence_mapper.map_evidence(doc)
         top_conf = mappings[0].confidence if mappings else 0.6
         trust = evidence_trust_scorer.calculate_trust_score(
@@ -288,15 +453,27 @@ async def analyze_evidence_alias(
         )
         confidence_score = signals.get("reviewer_verification", 0.8)
 
-        mappings_ui = [
-            {
+        def _meets(mt: str, conf: float) -> bool:
+            try:
+                return bool(mt in ("exact", "strong") or float(conf) >= 0.7)
+            except Exception:
+                return False
+        reviews_map = _get_user_reviews(current_user, file.filename)
+        mappings_ui = []
+        for m in mappings[:10]:
+            review = reviews_map.get(m.standard_id, {}) if isinstance(reviews_map, dict) else {}
+            mappings_ui.append({
                 "standard_id": m.standard_id,
                 "title": m.standard_title,
-                "confidence": m.confidence,
+                "confidence": float(m.confidence),
                 "accreditor": m.accreditor,
-            }
-            for m in mappings[:10]
-        ]
+                "match_type": m.match_type,
+                "meets_standard": bool(_meets(m.match_type, m.confidence)),
+                "rationale_spans": m.rationale_spans,
+                "explanation": m.explanation,
+                "reviewed": bool(review.get("reviewed", False)),
+                "note": review.get("note", ""),
+            })
 
         return {
             "status": "success",
@@ -304,13 +481,14 @@ async def analyze_evidence_alias(
             "analysis": {
                 "mappings": mappings_ui,
                 "trust_score": {
-                    "overall_score": trust_dict.get("overall_score", 0.7),
-                    "quality_score": round(quality_score, 3),
-                    "reliability_score": round(reliability_score, 3),
-                    "confidence_score": round(confidence_score, 3),
+                    "overall_score": float(trust_dict.get("overall_score", 0.7) or 0.7),
+                    "quality_score": float(round(float(quality_score), 3)),
+                    "reliability_score": float(round(float(reliability_score), 3)),
+                    "confidence_score": float(round(float(confidence_score), 3)),
                 },
                 "standards_mapped": len(mappings),
                 "content_length": len(doc.text or ""),
+                "document_preview": (doc.text or "")[:2000],
             },
             "algorithms_used": [
                 "EvidenceMapper™",
@@ -476,10 +654,11 @@ async def get_compliance_gaps_simple(current_user: str = Depends(get_current_use
 
 
 @router.get("/standards/graph")
-async def get_standards_graph_simple(current_user: str = Depends(get_current_user_simple), accreditor: Optional[str] = None):
+async def get_standards_graph_simple(current_user: Dict[str, Any] = Depends(get_current_user_simple), accreditor: Optional[str] = None):
     """Provide a lightweight standards graph for visualization without DB deps."""
     try:
-        acc = accreditor or "HLC"
+        # pick accreditor from query -> settings -> claims -> fallback
+        acc = accreditor or _merge_claims_with_settings(current_user).get("primary_accreditor") or (current_user.get("primary_accreditor") if isinstance(current_user, dict) else None) or "HLC"
         roots = standards_graph.get_accreditor_standards(acc)
         # UI expects standards as an object keyed by id with title/category/domain
         standards_obj = {
@@ -532,3 +711,174 @@ async def get_metrics_summary(current_user: str = Depends(get_current_user_simpl
             }
         }
     }
+
+
+@router.get("/standards/detail")
+async def get_standard_detail(standard_id: str, current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+    """Return details for a specific standard/node id if available."""
+    try:
+        node = standards_graph.standards.get(standard_id)
+        if not node:
+            # some graphs may use code as id
+            # attempt a linear search by code attribute
+            for n in standards_graph.standards.values():
+                if getattr(n, "code", None) == standard_id:
+                    node = n
+                    break
+        if not node:
+            raise HTTPException(status_code=404, detail="Standard not found")
+        return {
+            "id": getattr(node, "node_id", standard_id),
+            "code": getattr(node, "code", standard_id),
+            "title": getattr(node, "title", ""),
+            "category": getattr(node, "category", getattr(node, "level", "Standard")),
+            "domain": getattr(node, "domain", "Core"),
+            "description": getattr(node, "description", ""),
+            "level": getattr(node, "level", None),
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Standard detail error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch standard detail")
+
+
+@router.get("/standards/categories")
+async def get_standards_categories(current_user: Dict[str, Any] = Depends(get_current_user_simple), accreditor: Optional[str] = None):
+    try:
+        acc = accreditor or _merge_claims_with_settings(current_user).get("primary_accreditor") or "HLC"
+        roots = standards_graph.get_accreditor_standards(acc)
+        counts: Dict[str, int] = {}
+        for n in roots:
+            cat = getattr(n, "category", getattr(n, "level", "Standard"))
+            counts[cat] = counts.get(cat, 0) + 1
+        return {"accreditor": acc, "categories": counts}
+    except Exception as e:
+        logger.error(f"Standards categories error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to load categories")
+
+
+@router.post("/evidence/report")
+async def generate_evidence_report(payload: Dict[str, Any], current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+    """Generate a simple HTML report for an analyzed document.
+    Body may include: filename, analysis { mappings, trust_score, standards_mapped, content_length }, user/organization, accreditor.
+    Returns { html } and client can open/print to PDF.
+    """
+    try:
+        filename = payload.get("filename", "document")
+        analysis = payload.get("analysis", {})
+        trust = analysis.get("trust_score", {})
+        mappings: List[Dict[str, Any]] = analysis.get("mappings", [])
+        org = payload.get("organization") or _merge_claims_with_settings(current_user).get("organization") or ""
+        accreditor = payload.get("accreditor") or _merge_claims_with_settings(current_user).get("primary_accreditor") or ""
+
+        def pct(x):
+            try:
+                return f"{float(x) * 100:.1f}%"
+            except Exception:
+                return "-"
+
+        rows = "".join([
+            f"""
+            <tr>
+                <td style='padding:6px;border:1px solid #e5e7eb'>{m.get('standard_id','')}</td>
+                <td style='padding:6px;border:1px solid #e5e7eb'>{m.get('title','')}</td>
+                <td style='padding:6px;border:1px solid #e5e7eb'>{pct(m.get('confidence',0))}</td>
+                <td style='padding:6px;border:1px solid #e5e7eb'>{m.get('match_type','')}</td>
+                <td style='padding:6px;border:1px solid #e5e7eb'>{'Yes' if m.get('meets_standard') else 'No'}</td>
+                <td style='padding:6px;border:1px solid #e5e7eb'>{'; '.join(m.get('rationale_spans') or [])}</td>
+                <td style='padding:6px;border:1px solid #e5e7eb'>{(m.get('note') or '').replace('<','&lt;').replace('>','&gt;')}</td>
+            </tr>
+            """
+            for m in mappings
+        ])
+
+        html = f"""
+        <!DOCTYPE html>
+        <html><head><meta charset='utf-8'>
+        <title>Evidence Report - {filename}</title>
+        <style>
+            body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial; color: #111827; }}
+            .card {{ border:1px solid #e5e7eb; border-radius:8px; padding:16px; margin:12px 0; }}
+            h1 {{ font-size: 20px; }} h2 {{ font-size:16px; }} table {{ border-collapse: collapse; width:100%; font-size: 12px; }}
+        </style></head>
+        <body>
+            <h1>Evidence Report</h1>
+            <div class='card'>
+                <div><strong>Organization:</strong> {org or '-'} | <strong>Accreditor:</strong> {accreditor or '-'}</div>
+                <div><strong>File:</strong> {filename}</div>
+                <div><strong>Generated:</strong> {datetime.utcnow().isoformat()} UTC</div>
+            </div>
+            <div class='card'>
+                <h2>Trust Score</h2>
+                <div>Overall: {pct(trust.get('overall_score'))} | Quality: {pct(trust.get('quality_score'))} | Reliability: {pct(trust.get('reliability_score'))} | Confidence: {pct(trust.get('confidence_score'))}</div>
+            </div>
+            <div class='card'>
+                <h2>Mappings</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th style='text-align:left;padding:6px;border:1px solid #e5e7eb'>Standard</th>
+                            <th style='text-align:left;padding:6px;border:1px solid #e5e7eb'>Title</th>
+                            <th style='text-align:left;padding:6px;border:1px solid #e5e7eb'>Confidence</th>
+                            <th style='text-align:left;padding:6px;border:1px solid #e5e7eb'>Match</th>
+                            <th style='text-align:left;padding:6px;border:1px solid #e5e7eb'>Meets</th>
+                            <th style='text-align:left;padding:6px;border:1px solid #e5e7eb'>Rationales</th>
+                            <th style='text-align:left;padding:6px;border:1px solid #e5e7eb'>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>{rows}</tbody>
+                </table>
+            </div>
+        </body></html>
+        """
+        return JSONResponse({"html": html})
+    except Exception as e:
+        logger.error(f"Report generation error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to generate report")
+
+
+@router.post("/evidence/report.csv")
+async def generate_evidence_report_csv(payload: Dict[str, Any], current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+    """Generate a CSV report for an analyzed document.
+    Body may include: filename, analysis { mappings, trust_score, standards_mapped, content_length }.
+    Returns text/csv with Content-Disposition for download.
+    """
+    try:
+        filename = payload.get("filename", "document")
+        analysis = payload.get("analysis", {})
+        mappings: List[Dict[str, Any]] = analysis.get("mappings", [])
+
+        output = io.StringIO()
+        writer = csv.writer(output)
+        # Header
+        writer.writerow(["Standard", "Title", "Confidence", "Match", "Meets", "Rationales", "Notes"])
+
+        def pct_val(x):
+            try:
+                return f"{float(x) * 100:.1f}%"
+            except Exception:
+                return "-"
+
+        for m in mappings:
+            standard_id = m.get("standard_id", "")
+            title = m.get("title", "")
+            confidence = pct_val(m.get("confidence", 0))
+            match_type = m.get("match_type", "")
+            meets = "Yes" if m.get("meets_standard") else "No"
+            rationals = "; ".join(m.get("rationale_spans") or [])
+            note = (m.get("note") or "").replace("\r", " ").replace("\n", " ")
+            writer.writerow([standard_id, title, confidence, match_type, meets, rationals, note])
+
+        csv_text = output.getvalue()
+        output.close()
+
+        # Sanitize filename for header
+        safe_name = "".join(c for c in filename if c.isalnum() or c in ("_", "-", ".")) or "document"
+        headers = {
+            "Content-Disposition": f'attachment; filename="evidence_report_{safe_name}.csv"'
+        }
+        return PlainTextResponse(content=csv_text, media_type="text/csv", headers=headers)
+    except Exception as e:
+        logger.error(f"CSV report generation error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to generate CSV report")
