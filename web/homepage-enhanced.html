@@ -88,22 +88,41 @@
         }
         
         :root {
+            /* Brand */
             --primary: #6366f1;
             --primary-dark: #4f46e5;
             --secondary: #8b5cf6;
-            --bg-dark: #0a0a0a;
-            --bg-darker: #000000;
-            --bg-card: #141414;
-            --bg-card-hover: #1a1a1a;
-            --border-color: #262626;
-            --text-primary: #ffffff;
-            --text-secondary: #a3a3a3;
-            --text-muted: #737373;
+
+            /* Light theme surface colors */
+            --bg-darker: #f8fafc; /* page background */
+            --bg-dark: #ffffff;   /* kept for compatibility */
+            --bg-card: #ffffff;   /* cards */
+            --bg-card-hover: #f9fafb;
+            --border-color: #e5e7eb;
+
+            /* Text colors */
+            --text-primary: #0f172a;   /* slate-900 */
+            --text-secondary: #475569; /* slate-600 */
+            --text-muted: #64748b;     /* slate-500 */
+
+            /* Status */
             --success: #22c55e;
             --warning: #f59e0b;
             --danger: #ef4444;
+
+            /* Utility vars used inline */
+            --white: #ffffff;
+            --gray: #64748b;
+            --light: #f3f4f6;
+
+            /* Gradients */
             --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-            --gradient-dark: linear-gradient(180deg, rgba(10,10,10,0.9) 0%, rgba(0,0,0,1) 100%);
+            --gradient-dark: linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(255,255,255,1) 100%);
+
+            /* Elevation */
+            --shadow-sm: 0 1px 2px rgba(2, 6, 23, 0.05), 0 1px 1px rgba(2, 6, 23, 0.04);
+            --shadow-md: 0 6px 16px rgba(2, 6, 23, 0.08);
+            --shadow-lg: 0 12px 28px rgba(2, 6, 23, 0.12);
         }
         
         body {
@@ -111,13 +130,8 @@
             line-height: 1.6;
             color: var(--text-primary);
             background-color: var(--bg-darker);
-            background-image: 
-                var(--gradient-dark),
-                url('https://mapmystandards.ai/wp-content/uploads/2025/08/ChatGPT-Image-Aug-4-2025-03_38_23-PM.png');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
+            /* Light theme: remove dark image background */
+            background-image: none;
             overflow-x: hidden;
         }
         
@@ -149,12 +163,12 @@
         /* Selection styling */
         ::selection {
             background: var(--primary);
-            color: var(--text-primary);
+            color: #ffffff;
         }
         
         ::-moz-selection {
             background: var(--primary);
-            color: var(--text-primary);
+            color: #ffffff;
         }
         
         /* Focus styles */
@@ -170,9 +184,9 @@
         
         /* Navigation */
         nav {
-            background: rgba(10, 10, 10, 0.85);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--border-color);
             position: sticky;
             top: 0;
@@ -250,7 +264,7 @@
         
         .btn-primary {
             background: var(--gradient-primary);
-            color: var(--text-primary);
+            color: #ffffff;
             border: none;
         }
         
@@ -279,6 +293,18 @@
             right: 0;
             bottom: 0;
             background: radial-gradient(ellipse at center, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        /* soft light gradient band at top of hero for depth */
+        .hero::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 140px;
+            background: linear-gradient(180deg, rgba(99,102,241,0.06), transparent);
             pointer-events: none;
         }
         
@@ -437,7 +463,8 @@
             padding: 2.5rem;
             position: relative;
             overflow: hidden;
-            transition: all 0.3s ease;
+            transition: all 0.25s ease;
+            box-shadow: var(--shadow-sm);
         }
         
         .algorithm-card::before {
@@ -455,7 +482,8 @@
         .algorithm-card:hover {
             background: var(--bg-card-hover);
             border-color: var(--primary);
-            transform: translateY(-4px);
+            transform: translateY(-6px);
+            box-shadow: var(--shadow-lg);
         }
         
         .algorithm-card:hover::before {
@@ -535,6 +563,7 @@
             border-radius: 4px;
             padding: 3rem;
             overflow: hidden;
+            box-shadow: var(--shadow-sm);
         }
         
         .demo-tabs {
@@ -598,11 +627,13 @@
             border-radius: 4px;
             margin-bottom: 1rem;
             border-left: 3px solid var(--success);
-            transition: all 0.3s ease;
+            transition: all 0.25s ease;
+            box-shadow: var(--shadow-sm);
         }
         
         .demo-result:hover {
             background: var(--bg-card-hover);
+            box-shadow: var(--shadow-md);
         }
         
         .confidence-bar {
@@ -640,7 +671,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: linear-gradient(180deg, transparent 0%, rgba(10,10,10,0.5) 50%, transparent 100%);
+            background: linear-gradient(180deg, transparent 0%, rgba(99,102,241,0.06) 50%, transparent 100%);
             pointer-events: none;
         }
         
@@ -658,9 +689,10 @@
             background: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: 4px;
-            transition: all 0.3s ease;
+            transition: all 0.25s ease;
             position: relative;
             overflow: hidden;
+            box-shadow: var(--shadow-sm);
         }
         
         .differentiator-card::before {
@@ -677,7 +709,8 @@
         
         .differentiator-card:hover {
             background: var(--bg-card-hover);
-            transform: translateY(-4px);
+            transform: translateY(-6px);
+            box-shadow: var(--shadow-lg);
         }
         
         .differentiator-card:hover::before {
@@ -728,6 +761,7 @@
             margin: 0 auto;
             position: relative;
             overflow: hidden;
+            box-shadow: var(--shadow-sm);
         }
         
         .pricing-card::before {
@@ -864,14 +898,14 @@
         }
         
         .btn-white {
-            background: var(--text-primary);
+            background: #ffffff;
             color: var(--primary-dark);
             font-weight: 600;
         }
         
         .btn-white:hover {
-            background: rgba(255,255,255,0.9);
-            box-shadow: 0 8px 24px rgba(255,255,255,0.2);
+            background: #f8fafc;
+            box-shadow: 0 8px 24px rgba(2, 6, 23, 0.06);
         }
         
         .btn-outline {
@@ -881,18 +915,26 @@
         }
         
         .btn-outline:hover {
-            background: rgba(255,255,255,0.1);
+            background: rgba(99,102,241,0.06);
             transform: translateY(-1px);
         }
+
+        /* Ensure CTA section text/buttons are legible on gradient */
+        .cta-section { color: #ffffff; }
+        .cta-section .btn-outline { border-color: #ffffff; color: #ffffff; }
+        .cta-section .btn-outline:hover { background: rgba(255,255,255,0.12); }
         
         /* Platform card hover effects */
         .platform-card {
             cursor: pointer;
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
         }
         
         .platform-card:hover {
             background: var(--bg-card-hover) !important;
-            transform: translateY(-2px);
+            transform: translateY(-6px);
+            box-shadow: var(--shadow-lg);
         }
         
         .platform-card:hover .platform-card-border {
@@ -924,6 +966,12 @@
                 font-size: 0.875rem;
             }
         }
+
+        /* Reduce motion preferences */
+        @media (prefers-reduced-motion: reduce) {
+            * { transition: none !important; animation: none !important; }
+            .platform-card:hover, .algorithm-card:hover, .differentiator-card:hover { transform: none !important; }
+        }
     </style>
 </head>
 <body>
@@ -934,10 +982,11 @@
                 <img src="https://mapmystandards.ai/wp-content/uploads/2025/07/Original-Logo.png" alt="MapMyStandards">
             </div>
             <div class="nav-links">
-                <a href="#features">Features</a>
+                <a href="#platform-features">Features</a>
                 <a href="#pricing">Pricing</a>
                 <a href="https://platform.mapmystandards.ai/login.html">Login</a>
                 <a href="https://platform.mapmystandards.ai/subscribe" class="btn btn-primary">Get Started</a>
+            </div>
         </div>
     </nav>
 
@@ -1214,10 +1263,10 @@
             
             <div class="demo-container">
                 <div class="demo-tabs">
-                    <button class="demo-tab active" onclick="showDemo('mapping')">Evidence Mapping</button>
-                    <button class="demo-tab" onclick="showDemo('trust')">Trust Scoring</button>
-                    <button class="demo-tab" onclick="showDemo('risk')">Gap Prediction</button>
-                    <button class="demo-tab" onclick="showDemo('crosswalk')">CrosswalkX</button>
+                    <button class="demo-tab active" onclick="showDemo('mapping', event)">Evidence Mapping</button>
+                    <button class="demo-tab" onclick="showDemo('trust', event)">Trust Scoring</button>
+                    <button class="demo-tab" onclick="showDemo('risk', event)">Gap Prediction</button>
+                    <button class="demo-tab" onclick="showDemo('crosswalk', event)">CrosswalkX</button>
                 </div>
                 
                 <div id="mapping-demo" class="demo-content">
@@ -1371,9 +1420,9 @@
     <!-- Value Differentiators -->
     <section class="differentiators-section">
         <div class="container">
-            <div class="section-header" style="color: var(--white);">
-                <h2 style="color: var(--white);">Why Not ChatGPT or Claude?</h2>
-                <p style="color: rgba(255,255,255,0.9);">Purpose-built intelligence that generic AI can't match - all features included, no hidden costs</p>
+            <div class="section-header">
+                <h2>Why Not ChatGPT or Claude?</h2>
+                <p>Purpose-built intelligence that generic AI can't match - all features included, no hidden costs</p>
             </div>
             
             <div class="differentiator-grid">
@@ -1437,7 +1486,7 @@
                     <i class="fas fa-tachometer-alt" style="font-size: 2.25rem; color: var(--primary); margin-bottom: 1.25rem; display: block;"></i>
                     <h3 style="color: var(--text-primary); margin-bottom: 0.75rem; font-size: 1.25rem; font-weight: 600;">Intelligent Dashboard</h3>
                     <p style="color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.6;">Real-time compliance metrics, predictive analytics, and actionable insights</p>
-                    <a href="https://platform.mapmystandards.ai/dashboard.html" style="color: var(--primary); text-decoration: none; font-weight: 500; display: inline-flex; align-items: center; gap: 0.5rem; transition: gap 0.3s ease;" onmouseover="this.style.gap='0.75rem'" onmouseout="this.style.gap='0.5rem'">Access Dashboard <i class="fas fa-arrow-right" style="font-size: 0.875rem;"></i></a>
+                    <a href="https://platform.mapmystandards.ai/ai-dashboard" style="color: var(--primary); text-decoration: none; font-weight: 500; display: inline-flex; align-items: center; gap: 0.5rem; transition: gap 0.3s ease;" onmouseover="this.style.gap='0.75rem'" onmouseout="this.style.gap='0.5rem'">Access Dashboard <i class="fas fa-arrow-right" style="font-size: 0.875rem;"></i></a>
                 </div>
                 
                 <!-- Org Chart -->
@@ -1484,6 +1533,24 @@
                     <p style="color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.6;">User management, permissions, and collaboration tools</p>
                     <a href="https://platform.mapmystandards.ai/team-settings.html" style="color: var(--primary); text-decoration: none; font-weight: 500; display: inline-flex; align-items: center; gap: 0.5rem; transition: gap 0.3s ease;" onmouseover="this.style.gap='0.75rem'" onmouseout="this.style.gap='0.5rem'">Manage Team <i class="fas fa-arrow-right" style="font-size: 0.875rem;"></i></a>
                 </div>
+
+                <!-- Reports & Export -->
+                <div class="platform-card" style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 2.5rem; border-radius: 4px; transition: all 0.3s ease; position: relative; overflow: hidden;">
+                    <div class="platform-card-border" style="position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: var(--gradient-primary); opacity: 0; transition: opacity 0.3s ease;"></div>
+                    <i class="fas fa-file-arrow-down" style="font-size: 2.25rem; color: var(--primary); margin-bottom: 1.25rem; display: block;"></i>
+                    <h3 style="color: var(--text-primary); margin-bottom: 0.75rem; font-size: 1.25rem; font-weight: 600;">Reports & Export</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.6;">Export HTML and CSV evidence reports directly from your dashboard</p>
+                    <a href="https://platform.mapmystandards.ai/ai-dashboard#export" style="color: var(--primary); text-decoration: none; font-weight: 500; display: inline-flex; align-items: center; gap: 0.5rem; transition: gap 0.3s ease;" onmouseover="this.style.gap='0.75rem'" onmouseout="this.style.gap='0.5rem'">Export Evidence <i class="fas fa-arrow-right" style="font-size: 0.875rem;"></i></a>
+                </div>
+
+                <!-- Standards Explorer -->
+                <div class="platform-card" style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 2.5rem; border-radius: 4px; transition: all 0.3s ease; position: relative; overflow: hidden;">
+                    <div class="platform-card-border" style="position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: var(--gradient-primary); opacity: 0; transition: opacity 0.3s ease;"></div>
+                    <i class="fas fa-magnifying-glass" style="font-size: 2.25rem; color: var(--primary); margin-bottom: 1.25rem; display: block;"></i>
+                    <h3 style="color: var(--text-primary); margin-bottom: 0.75rem; font-size: 1.25rem; font-weight: 600;">Standards Explorer</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.6;">Search standards and page through results with context and categories</p>
+                    <a href="https://platform.mapmystandards.ai/ai-dashboard#standards" style="color: var(--primary); text-decoration: none; font-weight: 500; display: inline-flex; align-items: center; gap: 0.5rem; transition: gap 0.3s ease;" onmouseover="this.style.gap='0.75rem'" onmouseout="this.style.gap='0.5rem'">Browse Standards <i class="fas fa-arrow-right" style="font-size: 0.875rem;"></i></a>
+                </div>
             </div>
             
             <div style="text-align: center; margin-top: 3rem;">
@@ -1491,6 +1558,47 @@
                     Get Everything for $199/month <i class="fas fa-arrow-right" style="margin-left: 0.5rem;"></i>
                 </a>
                 <p style="color: var(--text-secondary); margin-top: 1rem; font-size: 0.95rem;">Start with a 7-day free trial - card required, not charged until trial ends</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Latest Updates -->
+    <section id="updates" style="padding: 4rem 0; background: transparent;">
+        <div class="container">
+            <div class="section-header" style="margin-bottom: 2rem;">
+                <h2>Latest updates</h2>
+                <p>Recently shipped enhancements across dashboard and API</p>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+                <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 4px; padding: 1rem; box-shadow: var(--shadow-sm);">
+                    <div style="display:flex; align-items:center; gap:.5rem; margin-bottom:.25rem;">
+                        <span style="display:inline-block;padding:.125rem .5rem; border-radius:999px; background: rgba(34,197,94,0.12); color:#15803d; font-size:.75rem; font-weight:600;">New</span>
+                        <strong style="color: var(--text-primary);">CSV Evidence Export</strong>
+                    </div>
+                    <p style="color: var(--text-secondary); font-size:.95rem;">Download evidence reports as CSV from the dashboard (and HTML too).</p>
+                </div>
+                <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 4px; padding: 1rem; box-shadow: var(--shadow-sm);">
+                    <div style="display:flex; align-items:center; gap:.5rem; margin-bottom:.25rem;">
+                        <span style="display:inline-block;padding:.125rem .5rem; border-radius:999px; background: rgba(99,102,241,0.12); color:#4f46e5; font-size:.75rem; font-weight:600;">New</span>
+                        <strong style="color: var(--text-primary);">Standards Search + Pagination</strong>
+                    </div>
+                    <p style="color: var(--text-secondary); font-size:.95rem;">Quickly find standards and navigate results in the StandardsGraph view.</p>
+                </div>
+                <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 4px; padding: 1rem; box-shadow: var(--shadow-sm);">
+                    <div style="display:flex; align-items:center; gap:.5rem; margin-bottom:.25rem;">
+                        <span style="display:inline-block;padding:.125rem .5rem; border-radius:999px; background: rgba(2,132,199,0.12); color:#075985; font-size:.75rem; font-weight:600;">Improved</span>
+                        <strong style="color: var(--text-primary);">Mark All Reviewed</strong>
+                    </div>
+                    <p style="color: var(--text-secondary); font-size:.95rem;">Batch-review mappings in one click to speed up audits and QA.</p>
+                </div>
+                <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 4px; padding: 1rem; box-shadow: var(--shadow-sm);">
+                    <div style="display:flex; align-items:center; gap:.5rem; margin-bottom:.25rem;">
+                        <span style="display:inline-block;padding:.125rem .5rem; border-radius:999px; background: rgba(245,158,11,0.12); color:#a16207; font-size:.75rem; font-weight:600;">Improved</span>
+                        <strong style="color: var(--text-primary);">Trust Score Tooltips</strong>
+                    </div>
+                    <p style="color: var(--text-secondary); font-size:.95rem;">Transparent scoring with hover tooltips for each evidence trust signal.</p>
+                </div>
             </div>
         </div>
     </section>
@@ -1563,18 +1671,18 @@
                 </a>
             </div>
             
-            <div style="margin-top: 3rem; display: flex; gap: 3rem; justify-content: center; flex-wrap: wrap;">
+        <div style="margin-top: 3rem; display: flex; gap: 3rem; justify-content: center; flex-wrap: wrap;">
                 <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    <i class="fas fa-check-circle" style="color: var(--text-primary); opacity: 0.8;"></i>
-                    <span style="opacity: 0.9;">7-day free trial</span>
+            <i class="fas fa-check-circle" style="color: #ffffff; opacity: 0.9;"></i>
+            <span style="opacity: 0.95; color: rgba(255,255,255,0.95);">7-day free trial</span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    <i class="fas fa-check-circle" style="color: var(--text-primary); opacity: 0.8;"></i>
-                    <span style="opacity: 0.9;">Card required, not charged</span>
+            <i class="fas fa-check-circle" style="color: #ffffff; opacity: 0.9;"></i>
+            <span style="opacity: 0.95; color: rgba(255,255,255,0.95);">Card required, not charged</span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    <i class="fas fa-check-circle" style="color: var(--text-primary); opacity: 0.8;"></i>
-                    <span style="opacity: 0.9;">SOC 2 compliant</span>
+            <i class="fas fa-check-circle" style="color: #ffffff; opacity: 0.9;"></i>
+            <span style="opacity: 0.95; color: rgba(255,255,255,0.95);">SOC 2 compliant</span>
                 </div>
             </div>
         </div>
@@ -1650,7 +1758,7 @@
         document.documentElement.style.scrollBehavior = 'smooth';
         
         // Demo tab switching
-        function showDemo(type) {
+    function showDemo(type, event) {
             // Hide all demos
             document.querySelectorAll('.demo-content').forEach(el => {
                 el.style.display = 'none';
@@ -1665,7 +1773,9 @@
             document.getElementById(type + '-demo').style.display = 'block';
             
             // Add active class to clicked tab
-            event.target.classList.add('active');
+            if (event && event.target) {
+                event.target.classList.add('active');
+            }
         }
         
         // Animate elements on scroll
