@@ -489,10 +489,10 @@
         successMsg.style.display='block';
         fillEl.style.width='100%'; pctEl.textContent='100%';
     // Redirect to main dashboard
-    setTimeout(()=>{ window.location.href='https://platform.mapmystandards.ai/dashboard'; }, 1500);
+  setTimeout(()=>{ window.location.href='https://platform.mapmystandards.ai/ai-dashboard'; }, 1500);
       }
     });
-  skipBtn.addEventListener('click', ()=>{ window.location.href='https://platform.mapmystandards.ai/dashboard'; });
+  skipBtn.addEventListener('click', ()=>{ window.location.href='https://platform.mapmystandards.ai/ai-dashboard'; });
 
     // Initialize
     async function loadExisting(){
@@ -506,7 +506,7 @@
             // If previously completed, redirect quickly
             if(data.completed){
               successMsg.style.display='block';
-              setTimeout(()=>{ window.location.href='https://platform.mapmystandards.ai/dashboard'; }, 1000);
+              setTimeout(()=>{ window.location.href='https://platform.mapmystandards.ai/ai-dashboard'; }, 1000);
               return;
             }
             // Pre-fill form fields

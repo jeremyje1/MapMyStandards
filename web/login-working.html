@@ -180,7 +180,7 @@
                 if (response.ok) {
                     localStorage.setItem('a3e_trial_id', trialId);
                     localStorage.setItem('a3e_user_type', 'trial');
-                    window.location.href = `https://api.mapmystandards.ai/dashboard/${trialId}`;
+                    window.location.href = `https://platform.mapmystandards.ai/ai-dashboard?trial_id=${trialId}`;
                 } else if (response.status === 404) {
                     throw new Error('Trial not found. Please check your trial ID or start a new trial.');
                 } else {
@@ -233,7 +233,7 @@
                     
                     // Redirect to dashboard
                     setTimeout(() => {
-                        window.location.href = '/dashboard';
+                        window.location.href = '/ai-dashboard';
                     }, 1000);
                 } else {
                     throw new Error(result.message || 'Login failed');

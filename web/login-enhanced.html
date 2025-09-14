@@ -169,7 +169,7 @@
             if (urlParams.has('sso_success')) {
                 showSuccess('Login successful! Redirecting to dashboard...');
                 setTimeout(() => {
-                    window.location.href = '/dashboard.html';
+                    window.location.href = '/ai-dashboard.html';
                 }, 1500);
             }
         });
@@ -268,7 +268,7 @@
                 closeTwoFactorModal();
                 
                 setTimeout(() => {
-                    window.location.href = '/dashboard.html';
+                    window.location.href = '/ai-dashboard.html';
                 }, 1500);
                 
             } catch (error) {

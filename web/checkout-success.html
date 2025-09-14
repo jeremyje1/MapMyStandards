@@ -280,7 +280,7 @@
                 <button onclick="window.location.href='/onboarding'">
                     🚀 Start Guided Onboarding
                 </button>
-                <button class="btn-secondary" onclick="window.location.href='/dashboard'">
+                <button class="btn-secondary" onclick="window.location.href='https://platform.mapmystandards.ai/ai-dashboard'">
                     Skip to Dashboard →
                 </button>
             </div>
@@ -490,7 +490,7 @@
                     
                     // Auto-redirect after 3 seconds
                     setTimeout(() => {
-                        window.location.href = '/dashboard';
+                        window.location.href = 'https://platform.mapmystandards.ai/ai-dashboard';
                     }, 3000);
                 } else if (response.status === 404) {
                     // User doesn't exist yet - redirect to payment-success.html to trigger provisioning

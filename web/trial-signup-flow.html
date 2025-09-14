@@ -573,9 +573,9 @@
 
                     const data = await response.json();
                     
-                    // Redirect to dashboard on success
+                    // Redirect to AI dashboard on success
                     if (data.success) {
-                        window.location.href = '/dashboard.html';
+                        window.location.href = '/ai-dashboard.html';
                     } else {
                         throw new Error(data.message || 'Trial signup failed');
                     }

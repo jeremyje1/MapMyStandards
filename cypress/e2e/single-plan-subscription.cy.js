@@ -19,7 +19,7 @@ describe('Single Plan Subscription Flow', () => {
     })
 
     // Visit dashboard
-    cy.visit('https://platform.mapmystandards.ai/dashboard.html')
+  cy.visit('https://platform.mapmystandards.ai/ai-dashboard.html')
     
     // Check that all features are accessible (no tier restrictions)
     cy.contains('Complete Setup').should('be.visible')

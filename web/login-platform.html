@@ -34,6 +34,7 @@
         .logo h1 {
             font-size: 1.8rem;
             background: linear-gradient(135deg, #667eea, #764ba2);
+            background-clip: text;
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -331,9 +332,9 @@
                     
                     showSuccess('Login successful! Redirecting...');
                     
-                    // Redirect to dashboard
+                    // Redirect to AI dashboard
                     setTimeout(() => {
-                        window.location.href = 'https://platform.mapmystandards.ai/dashboard-advanced.html';
+                        window.location.href = 'https://platform.mapmystandards.ai/ai-dashboard';
                     }, 1000);
                 } else {
                     showError(result.message || 'Invalid email or password');
@@ -360,7 +361,7 @@
                     showSuccess('Demo login successful! Redirecting...');
                     
                     setTimeout(() => {
-                        window.location.href = 'https://platform.mapmystandards.ai/dashboard-advanced.html';
+                        window.location.href = 'https://platform.mapmystandards.ai/ai-dashboard';
                     }, 1000);
                 } else {
                     showError('Unable to connect to server. Please try again.');

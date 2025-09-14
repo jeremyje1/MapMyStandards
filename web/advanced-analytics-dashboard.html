@@ -1182,7 +1182,7 @@
         async function loadPowerBIConfig() {
             try {
                 // Try to get dashboard data which might contain report config
-                const dashboardData = await window.mmsAPI.request('/api/dashboard/overview');
+                const dashboardData = await window.mmsAPI.request('/api/user/intelligence-simple/dashboard/overview');
                 
                 // Create a mock Power BI config structure from dashboard data
                 return {
@@ -1210,7 +1210,7 @@
                 const container = document.getElementById(containerId);
                 
                 // Get embed token
-                const tokenResponse = await window.mmsAPI.request('/api/dashboard/analytics', {
+                const tokenResponse = await window.mmsAPI.request('/api/user/intelligence-simple/dashboard/analytics', {
                     method: 'POST',
                     body: JSON.stringify({
                         report_id: reportConfig.report_id,
@@ -1294,7 +1294,7 @@
 
         async function loadComplianceHeatmap() {
             try {
-                const response = await window.mmsAPI.request('/api/dashboard/analytics');
+                const response = await window.mmsAPI.request('/api/user/intelligence-simple/dashboard/analytics');
                 // Analytics endpoint might not have custom_visuals, so we'll use the data to create visualizations
                 const heatmapData = null; // Will trigger demo visualization
                 

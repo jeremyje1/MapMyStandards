@@ -599,7 +599,7 @@
                     
                     // Redirect to dashboard
                     setTimeout(() => {
-                        window.location.href = '/dashboard';
+                        window.location.href = '/ai-dashboard';
                     }, 1000);
                 } else {
                     throw new Error(result.message || 'Login failed');
@@ -675,7 +675,7 @@
             const apiKey = localStorage.getItem('a3e_api_key');
             if (apiKey) {
                 // User is already logged in, redirect to dashboard
-                window.location.href = '/dashboard';
+                window.location.href = '/ai-dashboard';
             }
             
             // Form persistence functionality

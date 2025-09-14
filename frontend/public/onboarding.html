@@ -426,9 +426,9 @@
                 completedAt: new Date().toISOString()
             }));
             
-            // Redirect to dashboard
+            // Redirect to AI dashboard
             await new Promise(resolve => setTimeout(resolve, 1000));
-            window.location.href = 'dashboard.html?onboarding=complete';
+            window.location.href = 'ai-dashboard.html?onboarding=complete';
         }
 
         // Check if user is already onboarded
@@ -437,7 +437,7 @@
                 // User already completed onboarding
                 const skipOnboarding = confirm('You have already completed onboarding. Do you want to skip to the dashboard?');
                 if (skipOnboarding) {
-                    window.location.href = 'dashboard.html';
+                    window.location.href = 'ai-dashboard.html';
                 }
             }
         });

@@ -342,9 +342,9 @@
                     alertMessage.textContent = 'Login successful! Redirecting...';
                     alertMessage.style.display = 'block';
                     
-                    // Redirect to dashboard with slight delay
+                    // Redirect to AI dashboard with slight delay
                     setTimeout(() => {
-                        window.location.href = '/dashboard';
+                        window.location.href = 'https://platform.mapmystandards.ai/ai-dashboard';
                     }, 1000);
                 } else {
                     // Show error message
@@ -364,7 +364,7 @@
                 alertMessage.style.display = 'block';
                 
                 setTimeout(() => {
-                    window.location.href = '/dashboard';
+                    window.location.href = 'https://platform.mapmystandards.ai/ai-dashboard';
                 }, 1000);
             } finally {
                 // Reset button state

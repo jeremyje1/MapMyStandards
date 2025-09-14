@@ -234,7 +234,7 @@ class EmailServiceEnhanced:
                     </div>
                     
                     <div class="section" style="text-align: center; margin: 30px 0;">
-                        <a href="https://platform.mapmystandards.ai/dashboard" class="cta-button">Access Your Dashboard</a>
+                        <a href="https://platform.mapmystandards.ai/ai-dashboard" class="cta-button">Access Your Dashboard</a>
                     </div>
                     
                     <div class="section">
@@ -290,7 +290,7 @@ class EmailServiceEnhanced:
         3. Review AI Mappings - Examine how our system maps your evidence to standards
         4. Explore Your Dashboard - Familiarize yourself with compliance tracking and reporting tools
         
-        Access your dashboard: https://platform.mapmystandards.ai/dashboard
+    Access your dashboard: https://platform.mapmystandards.ai/ai-dashboard
         
         HELPFUL RESOURCES:
         • Quick Start Guide: https://mapmystandards.ai/quick-start

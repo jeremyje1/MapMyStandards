@@ -80,7 +80,7 @@ class EmailNotificationService:
                         
                         <div style="text-align: center; margin: 30px 0;">
                             <a href="https://mapmystandards.ai/engine" class="button">Launch A³E Engine</a>
-                            <a href="https://mapmystandards.ai/dashboard.html" class="button" style="background: #059669; margin-left: 10px;">View Dashboard</a>
+                            <a href="https://platform.mapmystandards.ai/ai-dashboard" class="button" style="background: #059669; margin-left: 10px;">View Dashboard</a>
                         </div>
                         
                         <div class="feature">
@@ -222,7 +222,7 @@ class EmailNotificationService:
                         </ul>
                         
                         <div style="text-align: center; margin: 30px 0;">
-                            <a href="https://mapmystandards.ai/dashboard.html" class="button">Access Your Dashboard</a>
+                            <a href="https://platform.mapmystandards.ai/ai-dashboard" class="button">Access Your Dashboard</a>
                         </div>
                         
                         <p><strong>Need help getting started?</strong> Our team offers free onboarding sessions to ensure you get maximum value from A³E.</p>

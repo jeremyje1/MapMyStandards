@@ -8,7 +8,7 @@ Features proprietary ontology, vector-weighted matching, multi-agent pipeline, a
 from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, BackgroundTasks, Request, Response
 from fastapi import WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, HTMLResponse, FileResponse
+from fastapi.responses import JSONResponse, HTMLResponse, FileResponse, RedirectResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
@@ -1886,35 +1886,15 @@ if WEB_DIR.exists():
             dashboard_file = WEB_DIR / "dashboard-page.html"
             if dashboard_file.exists():
                 return FileResponse(str(dashboard_file))
-        
-        # If no authentication, redirect to login page
-        return HTMLResponse("""
-        <!DOCTYPE html>
-        <html><head><title>A³E Platform - Authentication Required</title>
-        <meta http-equiv="refresh" content="2; url=/login"></head>
-        <body style="font-family: -apple-system, sans-serif; text-align: center; padding: 3rem; background: #f8fafc;">
-            <div style="width: 60px; height: 60px; background: #3b82f6; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 2rem;">
-                <span style="color: white; font-size: 1.5rem;">🔐</span>
-            </div>
-            <h1 style="color: #1e293b; margin-bottom: 1rem;">Authentication Required</h1>
-            <p style="color: #64748b; margin-bottom: 2rem;">Please sign in to access your A³E dashboard.</p>
-            <p><a href="/login" style="display: inline-block; background: #1e40af; color: white; text-decoration: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600;">Sign In →</a></p>
-        </body></html>
-        """)
+
+        # If no authentication, redirect to login page immediately (avoid meta refresh flash)
+        return RedirectResponse(url="/login", status_code=302)
 
     @app.get("/dashboard.html", response_class=HTMLResponse, include_in_schema=False)
     async def dashboard_html_page():  # noqa: D401
         """Redirect dashboard.html to /dashboard for compatibility."""
-        # Redirect to the proper dashboard route
-        return HTMLResponse("""
-        <!DOCTYPE html>
-        <html><head><title>Redirecting...</title>
-        <meta http-equiv="refresh" content="0; url=/dashboard"></head>
-        <body style="font-family: -apple-system, sans-serif; text-align: center; padding: 3rem;">
-            <p>Redirecting to dashboard...</p>
-            <script>window.location.href = '/dashboard';</script>
-        </body></html>
-        """)
+        # Redirect to the proper dashboard route without rendering intermediary HTML
+        return RedirectResponse(url="/dashboard", status_code=302)
 
     @app.get("/ai-dashboard", response_class=FileResponse, include_in_schema=False)
     async def ai_dashboard():  # noqa: D401
@@ -1952,7 +1932,7 @@ if WEB_DIR.exists():
         if signup_file.exists():
             return FileResponse(str(signup_file))
         # Redirect to non-.html version
-        return HTMLResponse("<html><head><meta http-equiv='refresh' content='0; url=/trial-signup'></head><body>Redirecting...</body></html>")
+        return RedirectResponse(url="/trial-signup", status_code=302)
 
     @app.get("/stripe-checkout-redirect.html", response_class=HTMLResponse, include_in_schema=False)
     async def stripe_checkout_redirect_html():  # noqa: D401
@@ -1961,7 +1941,7 @@ if WEB_DIR.exists():
         if checkout_file.exists():
             return FileResponse(str(checkout_file))
         # Fallback redirect to homepage
-        return HTMLResponse("<html><head><meta http-equiv='refresh' content='0; url=/'></head><body>Redirecting to homepage...</body></html>")
+        return RedirectResponse(url="/", status_code=302)
     
     @app.get("/trial-success.html", response_class=HTMLResponse, include_in_schema=False)
     async def trial_success_html():  # noqa: D401

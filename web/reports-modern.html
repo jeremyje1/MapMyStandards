@@ -124,6 +124,7 @@
             font-size: 3rem;
             font-weight: 800;
             background: var(--gradient-primary);
+            background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -609,7 +610,7 @@
         <div class="header-content">
             <a href="/" class="logo">A³E</a>
             <nav class="nav-links">
-                <a href="/dashboard">Dashboard</a>
+                <a href="/ai-dashboard">Dashboard</a>
                 <a href="/upload">Upload</a>
                 <a href="/standards">Standards</a>
                 <a href="/reports" class="active">Reports</a>
@@ -754,7 +755,7 @@
         async function loadDashboardMetrics() {
             try {
                 const token = localStorage.getItem('authToken') || 'demo-token';
-                const response = await fetch('/api/metrics/dashboard', {
+                const response = await fetch('/api/user/intelligence-simple/dashboard/metrics', {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${token}`,

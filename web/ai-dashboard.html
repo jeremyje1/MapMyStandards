@@ -5,22 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Dashboard | MapMyStandards A³E</title>
         <!-- Use locally built Tailwind in production -->
-        <link rel="stylesheet" href="/web/static/css/tailwind.css">
+        <link rel="stylesheet" href="/static/css/tailwind.css?v=1">
         <script>
-            // Prefer local CSS; if /web path fails, try /static alias, then CDN as last resort
+            // Prefer local CSS; if /static alias fails, try /web path, then CDN as last resort
             (function(){
-                const link = document.querySelector('link[href="/web/static/css/tailwind.css"]');
+                const link = document.querySelector('link[href^="/static/css/tailwind.css"]');
                 if (!link) return;
-                let attemptedStatic = false;
-                link.addEventListener('error', function onWebCssError(){
-                    if (!attemptedStatic) {
-                        attemptedStatic = true;
-                        // Try the simpler alias path first
+                let attemptedWeb = false;
+                link.addEventListener('error', function onStaticCssError(){
+                    if (!attemptedWeb) {
+                        attemptedWeb = true;
                         const alt = document.createElement('link');
                         alt.rel = 'stylesheet';
-                        alt.href = '/static/css/tailwind.css?v=1';
+                        alt.href = '/web/static/css/tailwind.css';
                         alt.addEventListener('load', function(){
-                            console.info('Loaded Tailwind from /static alias fallback');
+                            console.info('Loaded Tailwind from /web fallback');
                         });
                         alt.addEventListener('error', function(){
                             const s = document.createElement('script');
@@ -621,7 +620,11 @@
 
         function displayAnalysisResults(data) {
             document.getElementById('analysisResults').classList.remove('hidden');
-            const preview = (data && data.analysis && data.analysis.document_preview) ? String(data.analysis.document_preview) : '';
+            const isPdf = !!(data && data.analysis && data.analysis.is_pdf);
+            const previewRaw = (data && data.analysis && data.analysis.document_preview) ? String(data.analysis.document_preview) : '';
+            // Defensive: if the backend missed a PDF, suppress when magic header is present
+            const looksLikePdf = /^%PDF-/.test(previewRaw.trim());
+            const preview = (isPdf || looksLikePdf) ? '' : previewRaw;
             const spans = (data && data.analysis && Array.isArray(data.analysis.mappings)) ? data.analysis.mappings.flatMap(m => Array.isArray(m.rationale_spans) ? m.rationale_spans : []) : [];
             const highlightedPreview = highlightPreview(preview, spans);
             
@@ -701,12 +704,18 @@
                     </div>
                 </div>
 
-                ${preview ? `
+                ${(!isPdf && preview) ? `
                 <div class="mt-6">
                     <h5 class="font-medium mb-2">Document Preview (excerpts)</h5>
                     <div class="bg-white border rounded p-3 max-h-64 overflow-y-auto text-sm leading-relaxed" id="docPreview">${highlightedPreview}</div>
                     <p class="text-xs text-gray-500 mt-2">Highlighted text shows excerpts used as rationale.</p>
-                </div>` : ''}
+                </div>` : `
+                <div class="mt-6">
+                    <div class="bg-yellow-50 border border-yellow-200 text-yellow-900 rounded p-3 text-sm">
+                        Document preview unavailable for PDFs. You can still use mappings and trust scores above.
+                    </div>
+                </div>
+                `}
             `;
 
             // Delegate clicks to view-in-preview links and review/note actions

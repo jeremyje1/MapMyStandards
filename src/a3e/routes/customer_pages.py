@@ -203,6 +203,9 @@ async def catch_all(path: str):
     if path.startswith(('api/', 'docs', 'redoc', 'openapi')) or path in ('health', 'health/frontend'):
         # Let these fall through to be handled by other routes
         raise HTTPException(status_code=404, detail=f"Not found: {path}")
+    # Don't intercept static or mounted asset paths; let StaticFiles and mounts handle them
+    if path.startswith(('web/', 'static/', 'assets/')) or path in ('favicon.ico', 'robots.txt', 'sitemap.xml', 'tailwind.css'):
+        raise HTTPException(status_code=404, detail=f"Asset not handled by pages router: {path}")
     
     # Don't handle stripe-checkout-redirect.html - let main.py handle it
     if path == "stripe-checkout-redirect.html":

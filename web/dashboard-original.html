@@ -209,7 +209,7 @@
         <div class="header-content">
             <a href="/" class="logo">MapMyStandards A³E</a>
             <nav class="nav-links">
-                <a href="/dashboard" class="active">Dashboard</a>
+                <a href="/ai-dashboard" class="active">Dashboard</a>
                 <a href="/standards">Standards</a>
                 <a href="/reports">Reports</a>
                 <a href="#" onclick="logout()">Logout</a>
@@ -306,7 +306,7 @@
                 // Check if user has token
                 const token = localStorage.getItem('authToken') || 'demo-token';
                 
-                const response = await fetch('/api/metrics/dashboard', {
+                const response = await fetch('/api/user/intelligence-simple/dashboard/metrics', {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${token}`,

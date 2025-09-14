@@ -116,7 +116,7 @@
                 <a href="/onboarding" class="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors" id="onboardingLink">
                     🚀 Begin Guided Onboarding
                 </a>
-                <a href="/dashboard" class="border-2 border-white text-white px-6 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors" id="dashboardLink">
+                <a href="https://platform.mapmystandards.ai/ai-dashboard" class="border-2 border-white text-white px-6 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors" id="dashboardLink">
                     ⏭️ Skip & Go To Dashboard
                 </a>
             </div>
@@ -383,7 +383,7 @@
                         const end = data.trial_end ? new Date(data.trial_end) : new Date(Date.now()+7*86400000);
                         setTrialDates(start, end);
                         localStorage.setItem('a3e_trial_id', trialId);
-                        document.querySelectorAll('a[href="dashboard.html"]').forEach(a=>a.href=`/dashboard?trial_id=${trialId}`);
+                        document.querySelectorAll('a[href="dashboard.html"]').forEach(a=>a.href=`https://platform.mapmystandards.ai/ai-dashboard?trial_id=${trialId}`);
                     } catch(e){
                         console.warn('Trial fetch failed; fallback', e);
                         const now = new Date();
@@ -500,7 +500,7 @@
                 // Robust redirect function
                 async function redirectToDashboard() {
                     const redirectUrls = [
-                        '/dashboard',
+                        'https://platform.mapmystandards.ai/ai-dashboard',
                         '/upload',
                         '/onboarding',
                         '/'
@@ -509,7 +509,7 @@
                     // Skip the connectivity check and go directly to dashboard
                     // The platform is working, just redirect
                     console.log('Redirecting to dashboard...');
-                    window.location.href = '/dashboard';
+                    window.location.href = 'https://platform.mapmystandards.ai/ai-dashboard';
                 }
 
                 // API Key copy helper if stored
