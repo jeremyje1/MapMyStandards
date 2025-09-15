@@ -147,6 +147,22 @@
                             <label class="block text-sm font-medium text-gray-700">Organization</label>
                             <input type="text" id="orgInput" class="mt-1 w-full border rounded px-3 py-2" placeholder="Your institution" />
                         </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">State / Region</label>
+                                <input type="text" id="stateInput" class="mt-1 w-full border rounded px-3 py-2" placeholder="CA, TX, FL..." />
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Institution Size</label>
+                                <select id="sizeSelect" class="mt-1 w-full border rounded px-3 py-2">
+                                    <option value="">Select...</option>
+                                    <option value="under_1000">Under 1,000</option>
+                                    <option value="1k_5k">1,000 – 5,000</option>
+                                    <option value="5k_15k">5,000 – 15,000</option>
+                                    <option value="15k_plus">15,000+</option>
+                                </select>
+                            </div>
+                        </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Primary Accreditor</label>
                             <select id="accreditorSelect" class="mt-1 w-full border rounded px-3 py-2"></select>
@@ -485,9 +501,11 @@
             const s = (userSettings && userSettings.settings) || {};
             const institutionName = user.institution_name || s.organization || 'A³E user';
             const accreditorName = user.primary_accreditor || s.primary_accreditor || 'Accreditor';
+            const lmsInfo = s.lms ? ` • LMS: ${s.lms}` : '';
+            const termInfo = s.term_system ? ` • Term: ${s.term_system}` : '';
             document.getElementById('userEmail').textContent = user.email || '—';
             document.getElementById('welcomeMessage').textContent = `Welcome, ${institutionName}!`;
-            document.getElementById('institutionInfo').textContent = `${accreditorName} Accreditation Management`;
+            document.getElementById('institutionInfo').textContent = `${accreditorName} Accreditation Management${lmsInfo}${termInfo}`;
 
             // Normalize compliance score percent (overview API returns metrics.compliance_score)
             const score = (data && data.metrics && typeof data.metrics.compliance_score === 'number') ? data.metrics.compliance_score : 0;
@@ -1224,6 +1242,8 @@
             if (!userSettings) await fetchSettings();
             const s = (userSettings && userSettings.settings) || {};
             document.getElementById('orgInput').value = s.organization || '';
+            document.getElementById('stateInput').value = s.state || '';
+            document.getElementById('sizeSelect').value = s.institution_size || '';
             document.getElementById('lmsInput').value = s.lms || '';
             document.getElementById('termSelect').value = s.term_system || '';
             // Populate accreditors
@@ -1295,6 +1315,8 @@
                 primary_accreditor: document.getElementById('accreditorSelect').value,
                 term_system: document.getElementById('termSelect').value,
                 lms: document.getElementById('lmsInput').value,
+                state: document.getElementById('stateInput').value,
+                institution_size: document.getElementById('sizeSelect').value,
             };
             try {
                 await saveSettings(payload);

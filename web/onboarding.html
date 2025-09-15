@@ -462,22 +462,25 @@
     }
 
     async function persist(partial=false){
-      // If we still don't have email, skip to avoid noisy 500s
-      if(!state.email){
-        console.info('Skipping persist – no email available yet');
-        return;
-      }
+      // Write directly to settings API when token is available
+      const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+      if (!token) { return; }
       try {
-        const payload = { data: state.data, step: state.step, complete: state.step === state.total, email: state.email };
-        const headers = { 'Content-Type':'application/json' };
-        if(state.apiKey){ headers['X-API-Key'] = state.apiKey; }
-        const res = await fetch('/api/v1/onboarding/progress', {
+        const payload = {
+          organization: state.data.institution_name || '',
+          primary_accreditor: state.data.primary_accreditor || '',
+          state: state.data.state || '',
+          institution_size: state.data.institution_size || '',
+        };
+        // Avoid no-op network calls
+        if (!(payload.organization || payload.primary_accreditor || payload.state || payload.institution_size)) return;
+        const res = await fetch('/api/user/intelligence-simple/settings', {
           method:'POST',
-          headers,
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
-        if(!res.ok){ console.warn('Persist response not ok', res.status); }
-      } catch(e){ console.warn('Persist failed', e); }
+        if(!res.ok){ console.warn('Settings persist not ok', res.status); }
+      } catch(e){ console.warn('Settings persist failed', e); }
     }
 
     backBtn.addEventListener('click', ()=>{ if(state.step>1){ collectStep(); state.step--; showStep(); persist(true);} });
@@ -496,37 +499,22 @@
 
     // Initialize
     async function loadExisting(){
-      if(!state.email) return;
+      // Try pre-populate from settings if user is authenticated
+      const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+      if (!token) return;
       try{
-        const res = await fetch(`/api/v1/onboarding/progress/${encodeURIComponent(state.email)}`);
+        const res = await fetch('/api/user/intelligence-simple/settings', { headers: { 'Authorization': `Bearer ${token}` } });
         if(res.ok){
-          const data = await res.json();
-          if(data.found){
-            state.data = data.data.merged || data.data || {};
-            // If previously completed, redirect quickly
-            if(data.completed){
-              successMsg.style.display='block';
-              setTimeout(()=>{ window.location.href='https://platform.mapmystandards.ai/ai-dashboard'; }, 1000);
-              return;
-            }
-            // Pre-fill form fields
-            if(state.data.institution_name) document.getElementById('institution_name').value = state.data.institution_name;
-            if(state.data.primary_accreditor) document.getElementById('primary_accreditor').value = state.data.primary_accreditor;
-            if(state.data.institution_size) document.getElementById('institution_size').value = state.data.institution_size;
-            if(state.data.state) document.getElementById('state').value = state.data.state;
-            if(Array.isArray(state.data.goals)){
-              state.data.goals.forEach(g=>{
-                const id = 'goal_' + g.replace(/[^a-z0-9]+/gi,'_').toLowerCase();
-                const el = document.getElementById(id);
-                if(el) el.checked = true;
-              });
-            }
-            if(state.data.doc_types) document.getElementById('doc_types').value = state.data.doc_types;
-            if(state.data.launch_timing) document.getElementById('launch_timing').value = state.data.launch_timing;
-            if(state.data.success_definition) document.getElementById('success_definition').value = state.data.success_definition;
+          const s = await res.json();
+          const settings = (s && s.organization !== undefined) ? s : (s.settings || {});
+          if (settings) {
+            if(settings.organization) document.getElementById('institution_name').value = settings.organization;
+            if(settings.primary_accreditor) document.getElementById('primary_accreditor').value = settings.primary_accreditor;
+            if(settings.institution_size) document.getElementById('institution_size').value = settings.institution_size;
+            if(settings.state) document.getElementById('state').value = settings.state;
           }
         }
-      }catch(e){ console.info('No existing onboarding data', e); }
+      }catch(e){ console.info('No existing settings data', e); }
     }
     showStep();
     prePopulateFields();

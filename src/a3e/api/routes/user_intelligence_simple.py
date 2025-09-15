@@ -106,6 +106,8 @@ def _merge_claims_with_settings(claims: Dict[str, Any]) -> Dict[str, Any]:
         "tier": claims.get("tier") or "starter",
         "lms": claims.get("lms") or "",
         "term_system": claims.get("term_system") or "semester",
+        "state": claims.get("state") or "",
+        "institution_size": claims.get("institution_size") or "",
         "document_sources": claims.get("document_sources") or [],
     }
     saved = _get_user_settings(claims)
