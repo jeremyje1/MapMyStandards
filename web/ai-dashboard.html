@@ -286,7 +286,7 @@
             </div>
 
             <!-- AI Actions -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                 <div class="bg-white p-6 rounded-lg shadow card-hover">
                     <div class="flex items-start">
                         <div class="flex-shrink-0">
@@ -325,6 +325,11 @@
                                 View Graph 
                                 <i class="fas fa-arrow-right ml-1"></i>
                             </button>
+                            <div class="mt-3 flex items-center gap-2">
+                                <input id="standardsSearchGlobal" type="text" placeholder="Search standard, clause, indicator" class="border rounded px-2 py-1 text-sm w-64" />
+                                <button id="standardsSearchBtn" class="px-2 py-1 text-sm border rounded">Search</button>
+                            </div>
+                            <div id="standardsSearchResults" class="mt-2 text-sm text-gray-700 max-h-40 overflow-y-auto"></div>
                         </div>
                     </div>
                 </div>
@@ -341,6 +346,24 @@
                             <p class="text-gray-600 text-sm mt-1">AI-powered compliance gap detection</p>
                             <button onclick="loadGapAnalysis()" class="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium mt-3">
                                 Analyze Gaps 
+                                <i class="fas fa-arrow-right ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow card-hover">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0">
+                            <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-book-open text-indigo-600"></i>
+                            </div>
+                        </div>
+                        <div class="ml-4 flex-1">
+                            <h3 class="text-lg font-medium text-gray-900">Narrative (CiteGuard)</h3>
+                            <p class="text-gray-600 text-sm mt-1">Generate and export your accreditation narrative</p>
+                            <button onclick="openNarrative()" class="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium mt-3">
+                                Open Narrative 
                                 <i class="fas fa-arrow-right ml-1"></i>
                             </button>
                         </div>
@@ -389,9 +412,29 @@
                     </div>
                     <div id="categoryCoverage" class="mt-4 text-sm text-gray-700"></div>
                     <div class="mt-4">
-                        <h4 class="font-medium mb-2">Interactive Graph</h4>
+                        <div class="flex items-center justify-between mb-2">
+                            <h4 class="font-medium">Interactive Graph</h4>
+                            <div class="flex items-center gap-4">
+                                <label class="inline-flex items-center gap-2 text-xs text-gray-700">
+                                    <input type="checkbox" id="toggleReuseLinks" class="rounded border-gray-300" />
+                                    <span>Show reuse links</span>
+                                </label>
+                                <label class="inline-flex items-center gap-2 text-xs text-gray-700">
+                                    <input type="checkbox" id="toggleCrossAccOnly" class="rounded border-gray-300" />
+                                    <span>Cross-accreditor only</span>
+                                </label>
+                            </div>
+                        </div>
                         <svg id="standardsGraphSvg" width="100%" height="360" role="img" aria-label="Interactive standards graph"></svg>
-                        <div class="text-xs text-gray-500 mt-1">Hover nodes to highlight links. Click accreditor chips to switch frameworks.</div>
+                        <div class="text-xs text-gray-500 mt-1 flex items-center gap-4">
+                            <span>Hover nodes to highlight links. Click accreditor chips to switch frameworks. Toggle reuse to see dashed links where evidence is shared.</span>
+                            <span class="inline-flex items-center gap-2">
+                                <span class="inline-block w-6 border-t-2 border-dashed" style="border-color:#16a34a"></span>
+                                <span>Reuse edge</span>
+                                <span class="inline-block w-2 h-2 rounded-full" style="background:#3b82f6"></span>
+                                <span>Standard node</span>
+                            </span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -406,6 +449,31 @@
                             <p class="text-gray-600">Analyzing compliance gaps...</p>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- Narrative (CiteGuard-lite) Section -->
+            <div id="narrativeSection" class="hidden mb-8">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-lg font-semibold">CiteGuard Narrative</h3>
+                        <div class="flex items-center gap-2">
+                            <button id="generateNarrativeBtn" class="text-sm bg-blue-600 text-white px-3 py-1 rounded">Generate</button>
+                            <button id="exportNarrativeDocxBtn" class="text-sm bg-gray-800 text-white px-3 py-1 rounded">Export DOCX</button>
+                        </div>
+                    </div>
+                    <div id="narrativeContent" class="prose prose-sm max-w-none"></div>
+                </div>
+            </div>
+
+            <!-- Risk Transparency Section -->
+            <div id="riskTransparencySection" class="hidden mb-8">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-lg font-semibold">Risk Model Transparency</h3>
+                        <a href="#" id="editRiskWeightsLink" class="text-sm text-blue-600">Adjust weights</a>
+                    </div>
+                    <div id="riskFactorsContent" class="text-sm text-gray-800"></div>
                 </div>
             </div>
 
@@ -428,6 +496,8 @@
     <div id="uploadToast" class="hidden fixed bottom-4 right-4 z-50 px-4 py-2 rounded shadow-lg text-white text-sm" style="background:#16a34a;">
         Upload complete. Metrics refreshed.
     </div>
+    <!-- Tooltip for Standards Graph -->
+    <div id="graphTooltip" class="hidden fixed z-50 max-w-sm bg-white border border-gray-200 shadow-lg rounded p-3 text-xs text-gray-800"></div>
 
     <script>
         // Determine API base URL depending on where this page is hosted
@@ -803,6 +873,23 @@
             }
         }
 
+        // Quick action: Open Narrative panel
+        async function openNarrative(){
+            try {
+                const sec = document.getElementById('narrativeSection');
+                if (sec) {
+                    sec.classList.remove('hidden');
+                    // If content empty, trigger generation once
+                    const out = document.getElementById('narrativeContent');
+                    if (out && !out.innerHTML.trim()) {
+                        const btn = document.getElementById('generateNarrativeBtn');
+                        if (btn) btn.click();
+                    }
+                    sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            } catch (_) {}
+        }
+
         function displayAnalysisResults(data) {
             document.getElementById('analysisResults').classList.remove('hidden');
             const isPdf = !!(data && data.analysis && data.analysis.is_pdf);
@@ -840,8 +927,9 @@
                     <div class="mt-2">
                         <label class="block text-xs text-gray-600">Rationale annotation</label>
                         <textarea class="rationale-input w-full text-xs border rounded px-2 py-1" rows="2" data-standard="${mapping.standard_id}" placeholder="Add context or corrections to the rationale...">${(mapping.rationale_note||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
-                        <div class="mt-1">
+                        <div class="mt-1 flex items-center gap-2">
                             <button class="save-rationale text-xs bg-gray-700 text-white px-2 py-1 rounded" data-standard="${mapping.standard_id}">Save rationale</button>
+                            <button class="add-selected text-xs bg-blue-600 text-white px-2 py-1 rounded" data-standard="${mapping.standard_id}">Add selected text</button>
                         </div>
                     </div>
                     ${Array.isArray(mapping.rationale_spans) && mapping.rationale_spans.length ? `
@@ -956,6 +1044,26 @@
                         btn.textContent = 'Saved';
                         setTimeout(() => btn.textContent = 'Save rationale', 1200);
                     } catch (err) { console.error('Save rationale failed', err); }
+                });
+            });
+            // Add selected text as rationale span
+            container.querySelectorAll('.add-selected').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const standard = e.currentTarget.getAttribute('data-standard');
+                    const sel = window.getSelection ? String(window.getSelection()) : '';
+                    const spanText = (sel || '').trim();
+                    if (!spanText) { alert('Select text in the preview pane first.'); return; }
+                    try {
+                        const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+                        const res = await fetch(`${API_BASE}/api/user/intelligence-simple/evidence/annotate`, {
+                            method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ filename: data.filename, standard_id: standard, span: spanText })
+                        });
+                        if (res.ok) {
+                            e.currentTarget.textContent = 'Added';
+                            setTimeout(() => e.currentTarget.textContent = 'Add selected text', 1200);
+                        }
+                    } catch (_) {}
                 });
             });
             // Mark all reviewed
@@ -1123,6 +1231,29 @@
                     const height = +svg.attr('height') || 360;
                     const nodes = Object.keys(data.standards).map((id) => ({ id }));
                     const links = data.relationships.map(r => ({ source: r.source, target: r.target }));
+                    // Preload evidence map for tooltips
+                    let evidenceMap = {};
+                    // track accreditors per standard from evidence map for cross-accreditor filter
+                    let accreditorsByStandard = {};
+                    (async () => {
+                        try {
+                            const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+                            const emRes = await fetch(`${API_BASE}/api/user/intelligence-simple/standards/evidence-map`, { headers: { 'Authorization': `Bearer ${token}` } });
+                            if (emRes.ok) {
+                                const em = await emRes.json();
+                                evidenceMap = em && em.mapping ? em.mapping : {};
+                                accreditorsByStandard = {};
+                                Object.entries(evidenceMap).forEach(([sid, items]) => {
+                                    const set = new Set();
+                                    (items||[]).forEach(it => { if (it && it.accreditor) set.add(it.accreditor); });
+                                    accreditorsByStandard[sid] = set;
+                                });
+                                // recompute reuse edges now that evidence map is loaded
+                                if (typeof updateReuse === 'function') updateReuse();
+                            }
+                        } catch(_) {}
+                    })();
+
                     const sim = d3.forceSimulation(nodes)
                         .force('link', d3.forceLink(links).id(d => d.id).distance(60))
                         .force('charge', d3.forceManyBody().strength(-120))
@@ -1131,10 +1262,101 @@
                     const node = svg.append('g').selectAll('circle').data(nodes).enter().append('circle')
                         .attr('r', 5).attr('fill', '#3b82f6').attr('aria-label','standard node')
                         .call(d3.drag().on('start', dragstarted).on('drag', dragged).on('end', dragended));
+
+                    // Reuse links layer (dashed green) between standards that share evidence
+                    const nodeById = Object.fromEntries(nodes.map(n => [n.id, n]));
+                    let reuse = svg.append('g').attr('class','reuse-links').selectAll('line');
+                    function computeReuseEdges(){
+                        const byFile = {};
+                        Object.entries(evidenceMap || {}).forEach(([sid, items]) => {
+                            (items || []).forEach(it => {
+                                const f = it && it.filename; if (!f) return;
+                                if (!byFile[f]) byFile[f] = new Set();
+                                byFile[f].add(sid);
+                            });
+                        });
+                        const seen = new Set();
+                        const edges = [];
+                        Object.values(byFile).forEach(set => {
+                            const arr = Array.from(set);
+                            for (let i=0;i<arr.length;i++){
+                                for (let j=i+1;j<arr.length;j++){
+                                    const a = arr[i], b = arr[j];
+                                    const key = a < b ? a+'|'+b : b+'|'+a;
+                                    if (!seen.has(key)) {
+                                        seen.add(key);
+                                        // optional cross-accreditor-only filter
+                                        const crossOnly = !!document.getElementById('toggleCrossAccOnly')?.checked;
+                                        if (crossOnly) {
+                                            const setA = accreditorsByStandard[a] || new Set();
+                                            const setB = accreditorsByStandard[b] || new Set();
+                                            // keep only if disjoint or no intersection
+                                            let intersects = false;
+                                            for (const val of setA) { if (setB.has(val)) { intersects = true; break; } }
+                                            if (intersects) continue;
+                                        }
+                                        edges.push({ source:a, target:b });
+                                    }
+                                }
+                            }
+                        });
+                        return edges;
+                    }
+                    function applyReuseVisibility(){
+                        const on = !!document.getElementById('toggleReuseLinks')?.checked;
+                        reuse.style('display', on ? null : 'none');
+                    }
+                    function updateReuse(){
+                        const edges = computeReuseEdges();
+                        reuse = reuse.data(edges, d => d.source + '|' + d.target);
+                        reuse.exit().remove();
+                        reuse = reuse.enter().append('line')
+                            .attr('stroke', '#16a34a')
+                            .attr('stroke-dasharray', '3,3')
+                            .attr('stroke-width', 1)
+                            .merge(reuse);
+                        applyReuseVisibility();
+                    }
+                    document.getElementById('toggleReuseLinks')?.addEventListener('change', applyReuseVisibility);
+                    document.getElementById('toggleCrossAccOnly')?.addEventListener('change', () => updateReuse());
+                    node.on('mousemove', (event, d) => {
+                        const t = document.getElementById('graphTooltip');
+                        if (!t) return;
+                        const items = (evidenceMap[d.id] || []).slice(0, 6);
+                        const list = items.length ? items.map(it => `
+                            <div class='flex items-center justify-between gap-2'>
+                                <div class='truncate' title='${it.filename || ''}'>${(it.filename || '').replace(/&/g,'&amp;').replace(/</g,'&lt;')}</div>
+                                <div class='text-gray-500 whitespace-nowrap'>${(it.doc_type||'').slice(0,16)}</div>
+                                <div class='text-gray-700 font-medium whitespace-nowrap'>${typeof it.confidence==='number' ? Math.round(it.confidence*100)+'%' : ''}</div>
+                            </div>`).join('') : "<div class='text-gray-500'>No evidence yet</div>";
+                        t.innerHTML = `<div class='text-[11px] text-gray-500 mb-1'>${d.id}</div>${list}`;
+                        t.style.left = Math.min(event.pageX + 16, window.scrollX + window.innerWidth - 280) + 'px';
+                        t.style.top = Math.min(event.pageY + 16, window.scrollY + window.innerHeight - 120) + 'px';
+                        t.classList.remove('hidden');
+                        // highlight connected
+                        link.attr('stroke', l => (l.source.id===d.id || l.target.id===d.id) ? '#60a5fa' : '#e5e7eb').attr('stroke-width', l => (l.source.id===d.id || l.target.id===d.id) ? 2 : 1);
+                        // highlight reuse edges
+                        reuse.attr('stroke', l => (l.source===d.id || l.target===d.id) ? '#16a34a' : '#bbf7d0');
+                    }).on('mouseleave', () => {
+                        const t = document.getElementById('graphTooltip');
+                        if (t) t.classList.add('hidden');
+                        link.attr('stroke', '#d1d5db').attr('stroke-width', 1);
+                        reuse.attr('stroke', '#16a34a');
+                    }).on('click', (event, d) => {
+                        // open details modal if available
+                        if (typeof openMappingDetails === 'function') {
+                            openMappingDetails(d.id);
+                        }
+                    });
                     node.append('title').text(d => d.id);
                     sim.on('tick', () => {
                         link.attr('x1', d => d.source.x).attr('y1', d => d.source.y).attr('x2', d => d.target.x).attr('y2', d => d.target.y);
                         node.attr('cx', d => d.x).attr('cy', d => d.y);
+                        // position reuse links using node positions
+                        reuse.attr('x1', d => (nodeById[d.source]||{}).x)
+                             .attr('y1', d => (nodeById[d.source]||{}).y)
+                             .attr('x2', d => (nodeById[d.target]||{}).x)
+                             .attr('y2', d => (nodeById[d.target]||{}).y);
                     });
                     function dragstarted(event, d){ if (!event.active) sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; }
                     function dragged(event, d){ d.fx = event.x; d.fy = event.y; }
@@ -1147,6 +1369,131 @@
             const riskColor = data.risk_assessment.risk_level === 'Low' ? 'green' : 
                             data.risk_assessment.risk_level === 'Medium' ? 'yellow' : 'red';
 
+
+        // ----- Enhancements: Standards search, Narrative, Risk transparency -----
+        document.addEventListener('DOMContentLoaded', () => {
+            // Standards global search
+            const searchBtn = document.getElementById('standardsSearchBtn');
+            const searchInput = document.getElementById('standardsSearchGlobal');
+            const searchOut = document.getElementById('standardsSearchResults');
+            if (searchBtn && searchInput && searchOut) {
+                const runSearch = async () => {
+                    const q = (searchInput.value || '').trim();
+                    if (!q) { searchOut.innerHTML = ''; return; }
+                    try {
+                        const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+                        const res = await fetch(`${API_BASE}/api/user/intelligence-simple/standards/search?q=${encodeURIComponent(q)}`, { headers: { 'Authorization': `Bearer ${token}` } });
+                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                        const data = await res.json();
+                        searchOut.innerHTML = (data.results || []).map(r => `
+                            <div class='border rounded p-2 mb-1 hover:bg-gray-50 cursor-pointer' data-sid='${r.id}'>
+                                <div class='text-sm font-medium'>${r.code}</div>
+                                <div class='text-xs text-gray-600'>${r.title}</div>
+                                ${r.snippet ? `<div class='text-xs text-gray-500 mt-1'>${r.snippet}</div>` : ''}
+                            </div>
+                        `).join('');
+                        searchOut.querySelectorAll('[data-sid]').forEach(el => {
+                            el.addEventListener('click', () => {
+                                loadStandardsGraph();
+                            });
+                        });
+                    } catch (e) {
+                        searchOut.innerHTML = `<div class='text-xs text-red-600'>Search failed</div>`;
+                    }
+                };
+                searchBtn.addEventListener('click', runSearch);
+                searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') runSearch(); });
+            }
+
+            // Narrative generation (CiteGuard-lite)
+            const genBtn = document.getElementById('generateNarrativeBtn');
+            const narOut = document.getElementById('narrativeContent');
+            if (genBtn && narOut) {
+                genBtn.addEventListener('click', async () => {
+                    narOut.innerHTML = '<div class="text-gray-500 text-sm">Generating narrative…</div>';
+                    try {
+                        const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+                        const res = await fetch(`${API_BASE}/api/user/intelligence-simple/narrative/generate`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: '{}' });
+                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                        const data = await res.json();
+                        narOut.innerHTML = data.html || '<div class="text-sm text-gray-600">No content</div>';
+                    } catch (e) {
+                        narOut.innerHTML = '<div class="text-sm text-red-600">Failed to generate narrative</div>';
+                    }
+                });
+            }
+
+            // Export Narrative as DOCX
+            const exportDocxBtn = document.getElementById('exportNarrativeDocxBtn');
+            if (exportDocxBtn && narOut) {
+                exportDocxBtn.addEventListener('click', async () => {
+                    try {
+                        const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+                        const payload = { html: narOut.innerHTML };
+                        const res = await fetch(`${API_BASE}/api/user/intelligence-simple/narrative/export.docx`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                        const blob = await res.blob();
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url; a.download = 'accreditation_narrative.docx';
+                        document.body.appendChild(a); a.click(); a.remove();
+                        window.URL.revokeObjectURL(url);
+                    } catch (e) {
+                        alert('DOCX export failed');
+                    }
+                });
+            }
+
+            // Risk transparency
+            const riskOut = document.getElementById('riskFactorsContent');
+            const editWeightsLink = document.getElementById('editRiskWeightsLink');
+            const loadRisk = async () => {
+                if (!riskOut) return;
+                try {
+                    const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+                    const res = await fetch(`${API_BASE}/api/user/intelligence-simple/risk/factors`, { headers: { 'Authorization': `Bearer ${token}` } });
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    const data = await res.json();
+                    const weights = data.weights || {};
+                    riskOut.innerHTML = `
+                        <div class='grid grid-cols-1 md:grid-cols-2 gap-3'>
+                            ${(data.factors||[]).map(f => `
+                                <div class='border rounded p-3'>
+                                    <div class='flex items-center justify-between'>
+                                        <div class='font-medium'>${f.name}</div>
+                                        <div class='text-xs text-gray-600'>w=${(weights[f.key] ?? 1.0).toFixed(2)}</div>
+                                    </div>
+                                    <div class='text-xs text-gray-600 mt-1'>${f.description}</div>
+                                </div>`).join('')}
+                        </div>
+                        <div class='text-xs text-gray-500 mt-2'>Formula: ${data.formula}</div>
+                    `;
+                } catch (e) {
+                    riskOut.innerHTML = '<div class="text-sm text-red-600">Failed to load risk model</div>';
+                }
+            };
+            if (riskOut) loadRisk();
+            if (editWeightsLink) {
+                editWeightsLink.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    try {
+                        const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+                        const res = await fetch(`${API_BASE}/api/user/intelligence-simple/risk/weights`, { headers: { 'Authorization': `Bearer ${token}` } });
+                        const data = await res.json();
+                        const weights = data.weights || {};
+                        const newVals = {};
+                        for (const [k,v] of Object.entries(weights)) {
+                            const nv = prompt(`Weight for ${k}`, String(v));
+                            if (nv === null) continue;
+                            const f = parseFloat(nv);
+                            if (!isNaN(f)) newVals[k] = f;
+                        }
+                        const save = await fetch(`${API_BASE}/api/user/intelligence-simple/risk/weights`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ weights: newVals }) });
+                        if (save.ok) loadRisk();
+                    } catch (_) {}
+                });
+            }
+        });
             const categoriesHtml = Object.entries(data.category_risks).map(([category, risk]) => `
                 <div class="border rounded p-3 mb-2">
                     <div class="flex justify-between items-center">

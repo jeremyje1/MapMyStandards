@@ -4,7 +4,7 @@ Bypasses complex database queries to provide direct access to AI features
 """
 
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form
-from fastapi.responses import JSONResponse, PlainTextResponse
+from fastapi.responses import JSONResponse, PlainTextResponse, Response
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import List, Dict, Any, Optional
 from datetime import datetime
@@ -145,7 +145,7 @@ def _set_user_uploads(claims: Dict[str, Any], data: Dict[str, Any]) -> None:
 
 
 def _record_user_upload(
-    claims: Dict[str, Any], filename: str, standard_ids: List[str], doc_type: Optional[str] = None
+    claims: Dict[str, Any], filename: str, standard_ids: List[str], doc_type: Optional[str] = None, mapping_details: Optional[List[Dict[str, Any]]] = None
 ) -> Dict[str, Any]:
     data = _get_user_uploads(claims)
     docs = data.get("documents", [])
@@ -154,6 +154,8 @@ def _record_user_upload(
         "uploaded_at": datetime.utcnow().isoformat(),
         "standards_mapped": list(standard_ids or []),
         "doc_type": doc_type or "",
+        # optional rich mapping details
+        "mappings": mapping_details or [],
     }
     docs.append(entry)
     # Update unique standards
@@ -254,10 +256,27 @@ async def get_dashboard_overview(current_user: Dict[str, Any] = Depends(get_curr
         except Exception:
             score, standards_count, pending_actions, recent_activity = 0.0, 0, 0, []
 
-        # Fallback to uploads store for new users
+        # Fallback to uploads store for new users and compute compliance from coverage
         uploads = _get_user_uploads(current_user)
         if not standards_count:
             standards_count = len(uploads.get("unique_standards", []))
+        # Compute compliance score if missing using coverage vs total standards for current accreditor
+        if not score:
+            try:
+                acc = merged.get("primary_accreditor") or "HLC"
+                total = len(standards_graph.get_accreditor_standards(acc)) or 1
+                covered = len(uploads.get("unique_standards", []))
+                coverage = min(1.0, covered / float(total))
+                # Blend with average trust score from uploads if available
+                trust_scores = []
+                for d in uploads.get("documents", []):
+                    ts = (d.get("trust_score") or {}).get("overall_score")
+                    if isinstance(ts, (int, float)):
+                        trust_scores.append(float(ts))
+                avg_trust = float(sum(trust_scores) / len(trust_scores)) if trust_scores else 0.7
+                score = round((coverage * 0.7 + avg_trust * 0.3) * 100, 1)
+            except Exception:
+                score = 0.0
         if not recent_activity:
             recent_activity = [
                 {"type": "upload", "filename": d.get("filename"), "at": d.get("uploaded_at")}
@@ -285,6 +304,39 @@ async def get_dashboard_overview(current_user: Dict[str, Any] = Depends(get_curr
         raise HTTPException(status_code=500, detail="Failed to build overview")
 
 
+# ------------------------------
+# Standards search (code/title/description)
+# ------------------------------
+@router.get("/standards/search")
+async def search_standards(q: str, current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+    try:
+        ql = (q or "").strip().lower()
+        if not ql:
+            return {"results": []}
+        results: List[Dict[str, Any]] = []
+        # Light search across all nodes
+        for n in list(standards_graph.nodes.values())[:5000]:
+            code = str(getattr(n, "standard_id", getattr(n, "code", getattr(n, "node_id", ""))) or "")
+            title = str(getattr(n, "title", "") or "")
+            desc = str(getattr(n, "description", "") or "")
+            hay = " ".join([code, title, desc]).lower()
+            if ql in hay:
+                results.append({
+                    "id": getattr(n, "node_id", code),
+                    "code": code,
+                    "title": title,
+                    "snippet": (desc[:180] + ("…" if len(desc) > 180 else "")) if desc else "",
+                    "category": getattr(n, "level", "Standard"),
+                    "accreditor": getattr(n, "accreditor", "")
+                })
+                if len(results) >= 50:
+                    break
+        return {"results": results}
+    except Exception as e:
+        logger.error(f"Standards search error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to search standards")
+
+
 @router.get("/metrics/summary")
 async def get_metrics_summary(current_user: Dict[str, Any] = Depends(get_current_user_simple)):
     # Reflect actual uploads where available
@@ -299,7 +351,7 @@ async def get_metrics_summary(current_user: Dict[str, Any] = Depends(get_current
             "ai_accuracy": 0.87,
             "time_savings": {"hours_saved": 32, "efficiency_gain": "4.2x"},
             # Coverage reflects user uploads if present
-            "coverage": {"standards_analyzed": uniq_standards, "documents_processed": docs_uploaded, "evidence_mapped": 0},
+            "coverage": {"standards_analyzed": uniq_standards, "documents_processed": docs_uploaded, "evidence_mapped": sum(len(d.get("mappings", [])) for d in uploads.get("documents", []))},
             "algorithms_performance": {
                 "StandardsGraph™": {"accuracy": 0.92, "speed": "real-time"},
                 "EvidenceMapper™": {"accuracy": 0.87, "confidence": 0.85},
@@ -308,6 +360,179 @@ async def get_metrics_summary(current_user: Dict[str, Any] = Depends(get_current
             },
         },
     }
+
+
+# ------------------------------
+# Risk model transparency
+# ------------------------------
+@router.get("/risk/factors")
+async def get_risk_factors(current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+    """Explain risk factors and default weights."""
+    factors = [
+        {"name": "Documentation", "key": "Documentation", "description": "Availability and completeness of required documents aligned to each standard."},
+        {"name": "Evidence Quality", "key": "Evidence Quality", "description": "Clarity, relevance, and trust in mapped evidence (derived from EvidenceTrust Score)."},
+        {"name": "Freshness", "key": "Freshness", "description": "How recently evidence has been updated; stale evidence increases risk."},
+        {"name": "Operations", "key": "Operations", "description": "Operational controls and processes supporting sustained compliance."},
+        {"name": "Change Management", "key": "Change Management", "description": "Impact of recent organizational or program changes on compliance."},
+        {"name": "Audit History", "key": "Audit History", "description": "Prior findings, open issues, and remediation status."},
+        {"name": "Coverage", "key": "Coverage", "description": "Percent of standards with mapped evidence."},
+        {"name": "Confidence", "key": "Confidence", "description": "Model confidence in mappings and assessments."},
+    ]
+    weights = (await get_risk_weights(current_user)).get("weights", {})  # type: ignore
+    return {"factors": factors, "weights": weights, "formula": "overall_risk = weighted_mean(factors)"}
+
+
+# ------------------------------
+# Narrative generation (CiteGuard-lite)
+# ------------------------------
+@router.post("/narrative/generate")
+async def generate_narrative(payload: Dict[str, Any] = None, current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+    """Generate a simple narrative with inline citations based on current uploads and reviews."""
+    try:
+        uploads = _get_user_uploads(current_user)
+        org = _merge_claims_with_settings(current_user).get("organization") or "Your Institution"
+        accreditor = _merge_claims_with_settings(current_user).get("primary_accreditor") or "HLC"
+        sections = []
+        for d in uploads.get("documents", [])[:10]:
+            fname = d.get("filename")
+            for m in (d.get("mappings") or [])[:8]:
+                sid = m.get("standard_id")
+                title = m.get("title") or sid
+                rationale = "; ".join(m.get("rationale_spans") or [])
+                # include reviewer note if present
+                note = None
+                try:
+                    rv = _get_user_reviews(current_user, fname).get(sid)
+                    note = rv.get("rationale_note") or rv.get("note")
+                except Exception:
+                    note = None
+                para = f"For standard {sid} ({title}), the institution provides evidence in {fname} [cite:{fname}]. "
+                if rationale:
+                    para += f"Key rationale excerpts include: {rationale}. "
+                if note:
+                    para += f"Reviewer annotation: {note}. "
+                para += f"Confidence: {int((m.get('confidence') or 0)*100)}%."
+                sections.append(para)
+        if not sections:
+            sections = ["No mapped evidence available yet. Upload documents to generate a narrative."]
+        html = f"""
+        <div>
+            <h2 style='margin:0 0 8px 0'>Accreditation Narrative – {org}</h2>
+            <div style='color:#6b7280;margin-bottom:12px'>Framework: {accreditor}</div>
+            {''.join(f"<p style='margin:8px 0;line-height:1.5'>{s}</p>" for s in sections)}
+            <hr style='margin:12px 0;border:none;border-top:1px solid #e5e7eb' />
+            <div style='font-size:12px;color:#6b7280'>Citations: [cite:filename] refer to uploaded documents in your workspace.</div>
+        </div>
+        """
+        return {"html": html}
+    except Exception as e:
+        logger.error(f"Narrative generation error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to generate narrative")
+
+
+# ------------------------------
+# Narrative DOCX export
+# ------------------------------
+@router.post("/narrative/export.docx")
+async def export_narrative_docx(payload: Optional[Dict[str, Any]] = None, current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+    """Generate and download a DOCX version of the narrative.
+
+    Accepts optional payload { html?: str }. If not provided, generates narrative on the fly.
+    """
+    try:
+        # Obtain HTML from payload or generate fresh
+        html_in = (payload or {}).get("html") if isinstance(payload, dict) else None
+        if not html_in:
+            gen = await generate_narrative({}, current_user)  # type: ignore[arg-type]
+            html_in = gen.get("html", "") if isinstance(gen, dict) else ""
+
+        # Very light HTML to plain text conversion for paragraphs
+        try:
+            import re
+            # Split on paragraph-like tags; fallback to splitting by <br>
+            parts = re.split(r"</p>|<p[^>]*>", html_in or "", flags=re.IGNORECASE)
+            paras = [re.sub(r"<[^>]+>", "", p).strip() for p in parts]
+            paragraphs = [p for p in paras if p]
+        except Exception:
+            paragraphs = ["Accreditation Narrative", "Content unavailable."]
+
+        # Build DOCX
+        from docx import Document  # type: ignore
+        from docx.shared import Pt  # type: ignore
+
+        doc = Document()
+        styles = doc.styles
+        try:
+            styles["Normal"].font.name = "Calibri"
+            styles["Normal"].font.size = Pt(11)
+        except Exception:
+            pass
+
+        s = _merge_claims_with_settings(current_user)
+        org = s.get("organization") or "Your Institution"
+        accreditor = s.get("primary_accreditor") or "Accreditor"
+
+        doc.add_heading(f"Accreditation Narrative – {org}", level=1)
+        doc.add_paragraph(f"Framework: {accreditor}")
+        doc.add_paragraph("")
+
+        for p in paragraphs:
+            # Keep inline [cite:...] tokens as-is for traceability
+            doc.add_paragraph(p)
+
+        doc.add_paragraph("")
+        doc.add_paragraph("Citations: [cite:filename] refer to uploaded documents in your workspace.")
+
+        buf = io.BytesIO()
+        doc.save(buf)
+        buf.seek(0)
+
+        safe_org = "".join(c for c in org if c.isalnum() or c in ("_", "-")) or "institution"
+        filename = f"narrative_{safe_org}_{datetime.utcnow().strftime('%Y%m%d')}.docx"
+        headers = {
+            "Content-Disposition": f'attachment; filename="{filename}"'
+        }
+        return Response(content=buf.getvalue(), media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document", headers=headers)
+    except Exception as e:
+        logger.error(f"Narrative DOCX export error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to export DOCX narrative")
+
+
+# ------------------------------
+# Evidence annotation updates
+# ------------------------------
+@router.post("/evidence/annotate")
+async def annotate_evidence(payload: Dict[str, Any], current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+    """Append a rationale span to a document mapping for a given standard."""
+    try:
+        filename = payload.get("filename")
+        standard_id = payload.get("standard_id")
+        span = (payload.get("span") or "").strip()
+        if not filename or not standard_id or not span:
+            raise HTTPException(status_code=400, detail="filename, standard_id, and span are required")
+        all_u = _safe_load_json(UPLOADS_STORE)
+        uk = _user_key(current_user)
+        user_docs = all_u.get(uk, {}).get("documents", [])
+        updated = False
+        for d in user_docs:
+            if d.get("filename") == filename:
+                for m in d.get("mappings", []):
+                    if m.get("standard_id") == standard_id:
+                        spans = m.get("rationale_spans") or []
+                        if span not in spans:
+                            spans.append(span)
+                            m["rationale_spans"] = spans
+                            updated = True
+                break
+        if updated:
+            all_u.setdefault(uk, {})["documents"] = user_docs
+            _safe_save_json(UPLOADS_STORE, all_u)
+        return {"status": "updated" if updated else "unchanged"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Annotate evidence error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to annotate evidence")
 
 
 # ------------------------------
@@ -326,7 +551,20 @@ async def save_evidence_review(payload: Dict[str, Any], current_user: Dict[str, 
         raise HTTPException(status_code=400, detail="filename and standard_id are required")
     reviewed = payload.get("reviewed")
     note = payload.get("note")
+    rationale_note = payload.get("rationale_note")
     entry = _set_user_review(current_user, filename, standard_id, reviewed, note)
+    # store rationale_note alongside review if provided
+    if rationale_note is not None:
+        entry["rationale_note"] = str(rationale_note)
+        # persist full reviews map update
+        all_r = _safe_load_json(REVIEWS_STORE)
+        uk = _user_key(current_user)
+        user_map = all_r.get(uk, {})
+        file_map = user_map.get(filename, {})
+        file_map[standard_id] = entry
+        user_map[filename] = file_map
+        all_r[uk] = user_map
+        _safe_save_json(REVIEWS_STORE, all_r)
     return {"status": "success", "filename": filename, "standard_id": standard_id, "entry": entry}
 
 
@@ -404,6 +642,7 @@ async def analyze_evidence(
 
         reviews_map = _get_user_reviews(current_user, file.filename)
         mappings_ui = []
+        mapping_details: List[Dict[str, Any]] = []
         for m in mappings[:10]:
             review = reviews_map.get(m.standard_id, {}) if isinstance(reviews_map, dict) else {}
             mappings_ui.append(
@@ -418,10 +657,16 @@ async def analyze_evidence(
                     "explanation": m.explanation,
                     "reviewed": bool(review.get("reviewed", False)),
                     "note": review.get("note", ""),
+                    "rationale_note": review.get("rationale_note", ""),
                 }
             )
+            mapping_details.append({
+                "standard_id": m.standard_id,
+                "accreditor": m.accreditor,
+                "confidence": float(m.confidence),
+            })
         # Record upload for metrics/overview
-        _record_user_upload(current_user, file.filename, [m.standard_id for m in mappings], doc_type)
+        _record_user_upload(current_user, file.filename, [m.standard_id for m in mappings], doc_type, mapping_details)
 
         return {
             "status": "success",
@@ -456,6 +701,117 @@ async def analyze_evidence_alias(
 ):
     # Delegate to main handler (duplicate logic for clarity and isolation)
     return await analyze_evidence(file=file, doc_type=doc_type, current_user=current_user)
+
+
+# ------------------------------
+# Bulk analyze (multi-file upload)
+# ------------------------------
+@router.post("/evidence/analyze/bulk")
+async def analyze_evidence_bulk(
+    files: List[UploadFile] = File(...),
+    doc_type: Optional[str] = Form(None),
+    current_user: Dict[str, Any] = Depends(get_current_user_simple),
+):
+    results: List[Dict[str, Any]] = []
+    for f in files:
+        try:
+            res = await analyze_evidence(file=f, doc_type=doc_type, current_user=current_user)
+            results.append(res)
+        except Exception as e:
+            results.append({"status": "error", "filename": getattr(f, 'filename', ''), "detail": str(e)})
+    return {"status": "success", "results": results}
+
+
+# ------------------------------
+# Evidence map and crosswalk
+# ------------------------------
+@router.get("/standards/evidence-map")
+async def get_evidence_map(current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+    uploads = _get_user_uploads(current_user)
+    mapping: Dict[str, List[Dict[str, Any]]] = {}
+    for d in uploads.get("documents", []):
+        fname = d.get("filename")
+        dt = d.get("doc_type")
+        for md in d.get("mappings", []):
+            sid = md.get("standard_id")
+            if not sid:
+                continue
+            mapping.setdefault(sid, []).append({
+                "filename": fname,
+                "doc_type": dt,
+                "accreditor": md.get("accreditor"),
+                "confidence": md.get("confidence"),
+            })
+    return {"mapping": mapping}
+
+
+@router.get("/evidence/crosswalk")
+async def get_crosswalk(current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+    uploads = _get_user_uploads(current_user)
+    # Collect evidence and standards across accreditors
+    evidence_files: List[str] = []
+    standards: List[str] = []
+    accreditors: List[str] = []
+    matrix: Dict[str, Dict[str, int]] = {}
+    for d in uploads.get("documents", []):
+        fname = d.get("filename")
+        if fname not in evidence_files:
+            evidence_files.append(fname)
+        for md in d.get("mappings", []):
+            sid = md.get("standard_id")
+            acc = md.get("accreditor") or ""
+            if sid and sid not in standards:
+                standards.append(sid)
+            if acc and acc not in accreditors:
+                accreditors.append(acc)
+            if sid:
+                matrix.setdefault(fname, {})
+                matrix[fname][sid] = 1
+    # Compute reuse percentage: standards per evidence >1 across different accreditors
+    reuse_count = 0
+    multi_use_files = 0
+    for fname in evidence_files:
+        mapped = [sid for sid, v in (matrix.get(fname, {}) or {}).items() if v]
+        if len(mapped) > 1:
+            multi_use_files += 1
+            reuse_count += len(mapped) - 1
+    total_links = sum(len(v) for v in matrix.values()) or 1
+    reuse_pct = round((reuse_count / total_links) * 100, 1)
+    return {
+        "evidence": evidence_files,
+        "standards": standards,
+        "matrix": matrix,  # {filename: {standard_id: 1}}
+        "accreditors": accreditors,
+        "reuse_percentage": reuse_pct,
+        "multi_use_count": multi_use_files,
+    }
+
+
+# ------------------------------
+# Risk weights
+# ------------------------------
+@router.get("/risk/weights")
+async def get_risk_weights(current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+    s = _merge_claims_with_settings(current_user)
+    return {"weights": s.get("risk_weights", {
+        "Documentation": 1.0,
+        "Evidence Quality": 1.0,
+        "Freshness": 1.0,
+        "Operations": 1.0,
+        "Change Management": 1.0,
+        "Audit History": 1.0,
+    })}
+
+
+@router.post("/risk/weights")
+async def set_risk_weights(payload: Dict[str, Any], current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+    s = _merge_claims_with_settings(current_user)
+    weights = payload.get("weights") or {}
+    if not isinstance(weights, dict):
+        raise HTTPException(status_code=400, detail="weights must be a dict")
+    s["risk_weights"] = {k: float(v) for k, v in weights.items()}
+    _save_user_settings(current_user, s)
+    return {"status": "saved", "weights": s["risk_weights"]}
 
 
 # ------------------------------
