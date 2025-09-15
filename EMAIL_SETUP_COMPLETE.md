@@ -7,7 +7,7 @@ The Postmark email service has been successfully configured for MapMyStandards A
 ## Configuration Details
 
 ### Environment Variables Set
-- `POSTMARK_API_TOKEN`: `776c9c30-09ed-4c8f-8f5d-8d7cdb4c8326` (Real server token)
+- `POSTMARK_API_TOKEN`: `[REDACTED_FOR_SECURITY]`
 - `FROM_EMAIL`: `info@northpathstrategies.org`
 - `ADMIN_EMAIL`: `info@northpathstrategies.org`
 - `REPLY_TO_EMAIL`: `info@northpathstrategies.org`

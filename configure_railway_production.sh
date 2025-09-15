@@ -7,7 +7,7 @@ echo "==========================================="
 echo "📝 Setting environment variables..."
 
 # Set webhook secret
-railway variables --set STRIPE_WEBHOOK_SECRET=whsec_IrKVrLesP6FOD2wo08nYf6FmOf9zULTU
+railway variables --set STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:?export STRIPE_WEBHOOK_SECRET before running}
 
 # Verify DATABASE_URL is set correctly
 echo ""

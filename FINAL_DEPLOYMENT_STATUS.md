@@ -15,7 +15,7 @@
 4. Click link to sign in
 
 ### 2. ✅ Stripe Webhook Configuration
-- **Webhook Secret**: Already configured (`whsec_TqKQ0vUUsUYQ9ZvaPRJLfgXoTpisXaj`)
+- **Webhook Secret**: Already configured (`whsec_****************`)
 - **Endpoint**: https://api.mapmystandards.ai/api/stripe/webhook
 - **Status**: Ready to receive events (HTTP 405 for GET = working correctly)
 - **Stripe Keys**: Both secret and publishable keys configured

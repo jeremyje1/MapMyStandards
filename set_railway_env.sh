@@ -10,7 +10,7 @@ railway variables set PYTHONPATH=/app
 railway variables set PORT=8000
 
 # JWT and Security
-railway variables set JWT_SECRET_KEY="7UKtJWo1jG6Yji-Fw-0t1HRC6y8QsPojrWkEJhEXXTQV0myYJIJ183xEPLcT6vDcPjLR_mB9tBQsGejvTxg-QA"
+railway variables set JWT_SECRET_KEY="${JWT_SECRET_KEY:?export JWT_SECRET_KEY before running}"
 railway variables set SECRET_KEY="BzKxm0pmrXyEyJditsbVDnngbvyhD512-xo0ei5G_l-si4m4B4dsE7DQeF9zYduD1-AtYvvIK-v1fAXS7QjFWQ"
 railway variables set JWT_ALGORITHM=HS256
 railway variables set ACCESS_TOKEN_EXPIRE_MINUTES=30

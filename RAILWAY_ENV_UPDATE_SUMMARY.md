@@ -18,12 +18,12 @@
 - `STRIPE_ANNUAL_PRICE_ID`: price_1Rxb32RMpSG47vNmlMtDijH7 (Team Yearly $10,000)
 - `STRIPE_ONETIME_PRICE_ID`: price_1Rxb3uRMpSG47vNmdMuVZlrn (AI Pulse Check $299)
 - `STRIPE_API_KEY`: sk_test_... (test mode - actual key configured)
-- `STRIPE_WEBHOOK_SECRET`: whsec_b4dc6a99fa351c7891f876b828f89f1f8a1fca947c1f4709a66b1a033228e72e
+- `STRIPE_WEBHOOK_SECRET`: whsec_**************** (set via CLI)
 - `STRIPE_PUBLISHABLE_KEY`: pk_test_51Rxag5RMpSG47vNm... (test mode)
 
 ### 🔧 Application Configuration
 - `NEXT_PUBLIC_APP_URL`: https://app.mapmystandards.ai
-- `JWT_SECRET_KEY`: 7UKtJWo1jG6Yji-Fw-0t1HRC6y8QsPojrWkEJhEXXTQV0myYJIJ183xEPLcT6vDcPjLR_mB9tBQsGejvTxg-QA
+- `JWT_SECRET_KEY`: **************** (rotated; set via CLI)
 - `API_BASE_URL`: https://api.mapmystandards.ai
 
 ### 🚂 Railway System Variables (Auto-provided)

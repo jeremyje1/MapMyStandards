@@ -32,11 +32,11 @@
 | STRIPE_ANNUAL_PRICE_ID | ✅ price_1Rxb32RMpSG47vNmlMtDijH7 (Team Yearly $10k) | ❌ price_1RtXF3K8PKpLCKDZAMb4rM8U (Invalid) | ❌ WRONG | **UPDATE IN VERCEL** |
 | STRIPE_ONETIME_PRICE_ID | ✅ price_1Rxb3uRMpSG47vNmdMuVZlrn (Pulse Check $299) | ❌ Not set | ❌ MISSING | **ADD TO VERCEL** |
 | STRIPE_API_KEY | ✅ sk_test_... (configured) | ❌ Not set | ❌ MISSING | **ADD TO VERCEL** |
-| STRIPE_WEBHOOK_SECRET | ✅ whsec_b4dc6a99fa351c7891f876b828f89f1f8a1fca947c1f4709a66b1a033228e72e | ❌ Not set | ❌ MISSING | **ADD TO VERCEL** |
+| STRIPE_WEBHOOK_SECRET | ✅ whsec_**************** | ❌ Not set | ❌ MISSING | **ADD TO VERCEL** |
 | STRIPE_PUBLISHABLE_KEY | ✅ pk_test_51Rxag5RMpSG47vNm... | ❌ Not set | ❌ MISSING | **ADD TO VERCEL** |
 | **Application Configuration** |
 | NEXT_PUBLIC_APP_URL | ✅ https://app.mapmystandards.ai | ✅ Same | ✓ OK | None |
-| JWT_SECRET_KEY | ✅ 7UKtJWo1jG6Yji-Fw-0t1HRC6y8QsPojrWkEJhEXXTQV0myYJIJ183xEPLcT6vDcPjLR_mB9tBQsGejvTxg-QA | ❌ Not set | ❌ MISSING | **ADD TO VERCEL** |
+| JWT_SECRET_KEY | ✅ **************** | ❌ Not set | ❌ MISSING | **ADD TO VERCEL** |
 | DATABASE_URL | ✅ sqlite:////Users/jeremy.estrella/Desktop/MapMyStandards-main/data/a3e_dev.db | ❌ Not set | ❌ MISSING | **ADD TO VERCEL** (Use PostgreSQL URL for production) |
 | API_BASE_URL | ✅ http://localhost:8000 | ❌ Not set | ❌ MISSING | **ADD TO VERCEL** (Use production URL) |
 
@@ -53,13 +53,13 @@ STRIPE_ANNUAL_PRICE_ID="price_1Rxb32RMpSG47vNmlMtDijH7"
 ```bash
 STRIPE_ONETIME_PRICE_ID="price_1Rxb3uRMpSG47vNmdMuVZlrn"
 STRIPE_API_KEY="sk_test_YOUR_STRIPE_TEST_KEY_HERE"
-STRIPE_WEBHOOK_SECRET="whsec_b4dc6a99fa351c7891f876b828f89f1f8a1fca947c1f4709a66b1a033228e72e"
+STRIPE_WEBHOOK_SECRET="whsec_****************"
 STRIPE_PUBLISHABLE_KEY="pk_test_51Rxag5RMpSG47vNmqhABDBgO7IJMlIgKxy07zsU9JiIespCNnQylscJZGYqMvoLA2mtLaNP8d6lkNSwePHrGefGw00JNrDhL0k"
 ```
 
 ### 3. Add Application Variables
 ```bash
-JWT_SECRET_KEY="7UKtJWo1jG6Yji-Fw-0t1HRC6y8QsPojrWkEJhEXXTQV0myYJIJ183xEPLcT6vDcPjLR_mB9tBQsGejvTxg-QA"
+JWT_SECRET_KEY="****************"
 DATABASE_URL="postgresql://user:password@host:port/database"  # Replace with actual PostgreSQL URL
 API_BASE_URL="https://api.mapmystandards.ai"  # Replace with actual API URL
 ```

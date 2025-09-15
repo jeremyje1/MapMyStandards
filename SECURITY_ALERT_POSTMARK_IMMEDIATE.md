@@ -8,7 +8,7 @@
 ## ⚠️ SECURITY BREACH SUMMARY
 
 **Exposed Secrets:**
-1. **Postmark API Token:** `6a45e155-5e3c-4f9f-9cff-45528a162248`
+1. **Postmark API Token:** `[REDACTED_FOR_SECURITY]`
 2. **MailerSend API Key:** `mlsn.bf729c75ae03d2593c0ed22b2f699cc41cf4637c671bf295562a6a9d97f8aa1e`
 
 **Repository:** jeremyje1/MapMyStandards  
@@ -40,7 +40,7 @@
 **Postmark (URGENT):**
 1. Login to Postmark dashboard: https://postmarkapp.com/
 2. Navigate to "Server Tokens" or "API Tokens"
-3. **IMMEDIATELY REVOKE** token: `6a45e155-5e3c-4f9f-9cff-45528a162248`
+3. **IMMEDIATELY REVOKE** token: `[REDACTED_FOR_SECURITY]`
 4. Generate new token for production use
 5. Update Railway environment variables with new token
 

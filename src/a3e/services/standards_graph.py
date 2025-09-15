@@ -1,15 +1,11 @@
 """
 StandardsGraph™ - Living standards knowledge graph with multi-granular indexing
-Maps accreditor → standard → clause → indicator with semantic embeddings
+Maps accreditor → standard → clause → indicator with sparse keyword search
 """
 
-import json
-import hashlib
 from typing import List, Dict, Any, Optional, Tuple, Set
 from datetime import datetime
 from dataclasses import dataclass
-import numpy as np
-from sklearn.metrics.pairwise import cosine_similarity
 import logging
 
 logger = logging.getLogger(__name__)
@@ -17,7 +13,6 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class StandardNode:
-    """Node in the standards graph representing a standard/clause/indicator"""
     node_id: str
     accreditor: str
     standard_id: str
@@ -27,14 +22,12 @@ class StandardNode:
     parent_id: Optional[str]
     children: List[str]
     text_content: str
-    embedding: Optional[np.ndarray]
     keywords: Set[str]
     version: str
     effective_date: datetime
     evidence_requirements: List[str]
-    
+
     def to_dict(self) -> Dict[str, Any]:
-        """Convert to dictionary for storage"""
         return {
             'node_id': self.node_id,
             'accreditor': self.accreditor,
@@ -48,37 +41,31 @@ class StandardNode:
             'keywords': list(self.keywords),
             'version': self.version,
             'effective_date': self.effective_date.isoformat(),
-            'evidence_requirements': self.evidence_requirements
+            'evidence_requirements': self.evidence_requirements,
         }
 
 
 class StandardsGraph:
-    """Multi-granular knowledge graph of accreditation standards"""
-    
-    def __init__(self):
+    """Multi-granular knowledge graph of accreditation standards."""
+
+    def __init__(self) -> None:
         self.nodes: Dict[str, StandardNode] = {}
         self.accreditor_roots: Dict[str, List[str]] = {}
-        self.embeddings_cache: Dict[str, np.ndarray] = {}
-        self.keyword_index: Dict[str, Set[str]] = {}  # keyword -> node_ids
+        self.keyword_index: Dict[str, Set[str]] = {}
         self._initialize_graph()
-    
-    def _initialize_graph(self):
-        """Initialize the graph with comprehensive standards data"""
-        # SACSCOC Standards
+
+    # ------------------------ Initialization ------------------------
+    def _initialize_graph(self) -> None:
         self._add_sacscoc_standards()
-        # HLC Standards  
         self._add_hlc_standards()
-        # MSCHE Standards
         self._add_msche_standards()
-        # Additional accreditors
         self._add_wasc_standards()
         self._add_nwccu_standards()
         self._add_neasc_standards()
-        
-        logger.info(f"StandardsGraph initialized with {len(self.nodes)} nodes")
-    
-    def _add_sacscoc_standards(self):
-        """Add SACSCOC standards to the graph"""
+        logger.info("StandardsGraph initialized with %d nodes", len(self.nodes))
+
+    # ------------------------ Data seeding ------------------------
+    def _add_sacscoc_standards(self) -> None:
         sacscoc_standards = [
             {
                 'id': 'SACSCOC_1',
@@ -92,10 +79,10 @@ class StandardsGraph:
                             'Mission statement is board-approved',
                             'Mission guides institutional planning',
                             'Mission is publicly available',
-                            'Mission reviewed regularly'
-                        ]
+                            'Mission reviewed regularly',
+                        ],
                     }
-                ]
+                ],
             },
             {
                 'id': 'SACSCOC_8',
@@ -109,8 +96,8 @@ class StandardsGraph:
                             'Faculty credentials documented',
                             'Terminal degrees in discipline',
                             'Professional experience relevant',
-                            'Ongoing professional development'
-                        ]
+                            'Ongoing professional development',
+                        ],
                     },
                     {
                         'id': 'SACSCOC_8.2a',
@@ -120,10 +107,10 @@ class StandardsGraph:
                             'Annual performance reviews',
                             'Student evaluation data',
                             'Peer review process',
-                            'Professional development plans'
-                        ]
-                    }
-                ]
+                            'Professional development plans',
+                        ],
+                    },
+                ],
             },
             {
                 'id': 'SACSCOC_10',
@@ -137,79 +124,16 @@ class StandardsGraph:
                             'Positive net assets',
                             'Adequate cash reserves',
                             'Diversified revenue streams',
-                            'Clean audit opinions'
-                        ]
+                            'Clean audit opinions',
+                        ],
                     }
-                ]
-            }
+                ],
+            },
         ]
-        
         for standard in sacscoc_standards:
-            # Create standard node
-            standard_node = StandardNode(
-                node_id=standard['id'],
-                accreditor='SACSCOC',
-                standard_id=standard['id'],
-                title=standard['title'],
-                description=f"SACSCOC Standard: {standard['title']}",
-                level='standard',
-                parent_id=None,
-                children=[],
-                text_content=standard['title'],
-                embedding=None,
-                keywords=self._extract_keywords(standard['title']),
-                version='2024',
-                effective_date=datetime(2024, 1, 1),
-                evidence_requirements=[]
-            )
-            self.nodes[standard_node.node_id] = standard_node
-            self.accreditor_roots.setdefault('SACSCOC', []).append(standard_node.node_id)
-            
-            # Add clauses
-            for clause in standard.get('clauses', []):
-                clause_node = StandardNode(
-                    node_id=clause['id'],
-                    accreditor='SACSCOC',
-                    standard_id=clause['id'],
-                    title=clause['title'],
-                    description=clause['description'],
-                    level='clause',
-                    parent_id=standard['id'],
-                    children=[],
-                    text_content=f"{clause['title']}: {clause['description']}",
-                    embedding=None,
-                    keywords=self._extract_keywords(f"{clause['title']} {clause['description']}"),
-                    version='2024',
-                    effective_date=datetime(2024, 1, 1),
-                    evidence_requirements=clause.get('indicators', [])
-                )
-                self.nodes[clause_node.node_id] = clause_node
-                standard_node.children.append(clause_node.node_id)
-                
-                # Add indicators
-                for idx, indicator in enumerate(clause.get('indicators', [])):
-                    indicator_id = f"{clause['id']}_ind_{idx+1}"
-                    indicator_node = StandardNode(
-                        node_id=indicator_id,
-                        accreditor='SACSCOC',
-                        standard_id=indicator_id,
-                        title=f"Indicator {idx+1}",
-                        description=indicator,
-                        level='indicator',
-                        parent_id=clause['id'],
-                        children=[],
-                        text_content=indicator,
-                        embedding=None,
-                        keywords=self._extract_keywords(indicator),
-                        version='2024',
-                        effective_date=datetime(2024, 1, 1),
-                        evidence_requirements=[indicator]
-                    )
-                    self.nodes[indicator_id] = indicator_node
-                    clause_node.children.append(indicator_id)
-    
-    def _add_hlc_standards(self):
-        """Add HLC Criteria to the graph"""
+            self._add_standard_hierarchy('SACSCOC', standard)
+
+    def _add_hlc_standards(self) -> None:
         hlc_standards = [
             {
                 'id': 'HLC_1',
@@ -218,12 +142,12 @@ class StandardsGraph:
                     {
                         'id': 'HLC_1.A',
                         'title': 'Mission Articulation',
-                        'description': 'The institution\'s mission is articulated publicly',
+                        'description': "The institution's mission is articulated publicly",
                         'indicators': [
                             'Mission documents are current',
                             'Mission guides operations',
-                            'Mission understood by stakeholders'
-                        ]
+                            'Mission understood by stakeholders',
+                        ],
                     },
                     {
                         'id': 'HLC_1.B',
@@ -232,10 +156,10 @@ class StandardsGraph:
                         'indicators': [
                             'Community engagement documented',
                             'Public service initiatives',
-                            'Economic development contributions'
-                        ]
-                    }
-                ]
+                            'Economic development contributions',
+                        ],
+                    },
+                ],
             },
             {
                 'id': 'HLC_3',
@@ -248,18 +172,16 @@ class StandardsGraph:
                         'indicators': [
                             'Rigor appropriate to degree level',
                             'Differentiated learning goals',
-                            'Program assessment processes'
-                        ]
+                            'Program assessment processes',
+                        ],
                     }
-                ]
-            }
+                ],
+            },
         ]
-        
         for standard in hlc_standards:
             self._add_standard_hierarchy('HLC', standard)
-    
-    def _add_msche_standards(self):
-        """Add MSCHE Standards to the graph"""
+
+    def _add_msche_standards(self) -> None:
         msche_standards = [
             {
                 'id': 'MSCHE_I',
@@ -272,10 +194,10 @@ class StandardsGraph:
                         'indicators': [
                             'Mission approved by governing body',
                             'Goals measurable and achievable',
-                            'Regular mission review process'
-                        ]
+                            'Regular mission review process',
+                        ],
                     }
-                ]
+                ],
             },
             {
                 'id': 'MSCHE_V',
@@ -288,18 +210,16 @@ class StandardsGraph:
                         'indicators': [
                             'Organized assessment process',
                             'Direct measures of learning',
-                            'Assessment results used for improvement'
-                        ]
+                            'Assessment results used for improvement',
+                        ],
                     }
-                ]
-            }
+                ],
+            },
         ]
-        
         for standard in msche_standards:
             self._add_standard_hierarchy('MSCHE', standard)
-    
-    def _add_wasc_standards(self):
-        """Add WASC Standards"""
+
+    def _add_wasc_standards(self) -> None:
         wasc_standards = [
             {
                 'id': 'WASC_1',
@@ -308,17 +228,16 @@ class StandardsGraph:
                     {
                         'id': 'WASC_1.1',
                         'title': 'Institutional Purposes',
-                        'description': 'The institution\'s purposes are appropriate and clear',
-                        'indicators': ['Educational objectives defined', 'Purpose drives planning']
+                        'description': "The institution's purposes are appropriate and clear",
+                        'indicators': ['Educational objectives defined', 'Purpose drives planning'],
                     }
-                ]
+                ],
             }
         ]
         for standard in wasc_standards:
             self._add_standard_hierarchy('WASC', standard)
-    
-    def _add_nwccu_standards(self):
-        """Add NWCCU Standards"""
+
+    def _add_nwccu_standards(self) -> None:
         nwccu_standards = [
             {
                 'id': 'NWCCU_1',
@@ -328,16 +247,15 @@ class StandardsGraph:
                         'id': 'NWCCU_1.A',
                         'title': 'Mission',
                         'description': 'The institution has a widely published mission statement',
-                        'indicators': ['Mission defines purpose', 'Core themes identified']
+                        'indicators': ['Mission defines purpose', 'Core themes identified'],
                     }
-                ]
+                ],
             }
         ]
         for standard in nwccu_standards:
             self._add_standard_hierarchy('NWCCU', standard)
-    
-    def _add_neasc_standards(self):
-        """Add NEASC Standards"""
+
+    def _add_neasc_standards(self) -> None:
         neasc_standards = [
             {
                 'id': 'NEASC_1',
@@ -347,17 +265,17 @@ class StandardsGraph:
                         'id': 'NEASC_1.1',
                         'title': 'Mission Statement',
                         'description': 'The institution has a mission appropriate to higher education',
-                        'indicators': ['Mission defines educational purpose', 'Mission widely disseminated']
+                        'indicators': ['Mission defines educational purpose', 'Mission widely disseminated'],
                     }
-                ]
+                ],
             }
         ]
         for standard in neasc_standards:
             self._add_standard_hierarchy('NEASC', standard)
-    
-    def _add_standard_hierarchy(self, accreditor: str, standard_data: Dict[str, Any]):
-        """Helper to add a standard and its hierarchy to the graph"""
-        # Create standard node
+
+    # ------------------------ Helpers ------------------------
+    def _add_standard_hierarchy(self, accreditor: str, standard_data: Dict[str, Any]) -> None:
+        # Standard node
         standard_node = StandardNode(
             node_id=standard_data['id'],
             accreditor=accreditor,
@@ -368,16 +286,16 @@ class StandardsGraph:
             parent_id=None,
             children=[],
             text_content=standard_data['title'],
-            embedding=None,
             keywords=self._extract_keywords(standard_data['title']),
             version='2024',
             effective_date=datetime(2024, 1, 1),
-            evidence_requirements=[]
+            evidence_requirements=[],
         )
         self.nodes[standard_node.node_id] = standard_node
         self.accreditor_roots.setdefault(accreditor, []).append(standard_node.node_id)
-        
-        # Add clauses and indicators
+        self._index_node_keywords(standard_node)
+
+        # Clauses
         for clause in standard_data.get('clauses', []):
             clause_node = StandardNode(
                 node_id=clause['id'],
@@ -389,16 +307,16 @@ class StandardsGraph:
                 parent_id=standard_data['id'],
                 children=[],
                 text_content=f"{clause['title']}: {clause['description']}",
-                embedding=None,
                 keywords=self._extract_keywords(f"{clause['title']} {clause['description']}"),
                 version='2024',
                 effective_date=datetime(2024, 1, 1),
-                evidence_requirements=clause.get('indicators', [])
+                evidence_requirements=clause.get('indicators', []),
             )
             self.nodes[clause_node.node_id] = clause_node
             standard_node.children.append(clause_node.node_id)
-            
-            # Add indicators
+            self._index_node_keywords(clause_node)
+
+            # Indicators
             for idx, indicator in enumerate(clause.get('indicators', [])):
                 indicator_id = f"{clause['id']}_ind_{idx+1}"
                 indicator_node = StandardNode(
@@ -411,86 +329,111 @@ class StandardsGraph:
                     parent_id=clause['id'],
                     children=[],
                     text_content=indicator,
-                    embedding=None,
                     keywords=self._extract_keywords(indicator),
                     version='2024',
                     effective_date=datetime(2024, 1, 1),
-                    evidence_requirements=[indicator]
+                    evidence_requirements=[indicator],
                 )
                 self.nodes[indicator_id] = indicator_node
                 clause_node.children.append(indicator_id)
-    
+                self._index_node_keywords(indicator_node)
+
+    # ------------------------ Keyword indexing/search ------------------------
     def _extract_keywords(self, text: str) -> Set[str]:
-        """Extract keywords from text for sparse retrieval"""
-        # Simple keyword extraction - in production would use NLP
         import re
-        words = re.findall(r'\b[a-z]+\b', text.lower())
-        stopwords = {'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'is', 'are', 'was', 'were', 'has', 'have', 'had'}
-        keywords = {w for w in words if len(w) > 3 and w not in stopwords}
-        
-        # Update keyword index
-        for keyword in keywords:
-            self.keyword_index.setdefault(keyword, set())
-        
-        return keywords
-    
-    def get_node(self, node_id: str) -> Optional[StandardNode]:
-        """Get a node by ID"""
-        return self.nodes.get(node_id)
-    
-    def get_accreditor_standards(self, accreditor: str) -> List[StandardNode]:
-        """Get all standards for an accreditor"""
-        root_ids = self.accreditor_roots.get(accreditor, [])
-        standards = []
-        for root_id in root_ids:
-            node = self.nodes.get(root_id)
+        words = re.findall(r"\b[a-z]+\b", (text or '').lower())
+        stop = {
+            'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'is', 'are', 'was', 'were', 'has', 'have', 'had'
+        }
+        return {w for w in words if len(w) > 3 and w not in stop}
+
+    def _index_node_keywords(self, node: StandardNode) -> None:
+        for kw in node.keywords:
+            self.keyword_index.setdefault(kw, set()).add(node.node_id)
+
+    def search_by_keywords(self, keywords: Set[str], limit: int = 10) -> List[Tuple[StandardNode, float]]:
+        scores: Dict[str, int] = {}
+        for kw in keywords:
+            for node_id in self.keyword_index.get(kw, set()):
+                scores[node_id] = scores.get(node_id, 0) + 1
+        results: List[Tuple[StandardNode, float]] = []
+        total = float(len(keywords) or 1)
+        for node_id, sc in scores.items():
+            node = self.nodes.get(node_id)
             if node:
-                standards.append(node)
-        return standards
-    
+                results.append((node, sc / total))
+        results.sort(key=lambda x: x[1], reverse=True)
+        return results[:limit]
+
+    # ------------------------ Traversal ------------------------
+    def get_node(self, node_id: str) -> Optional[StandardNode]:
+        return self.nodes.get(node_id)
+
+    def get_accreditor_standards(self, accreditor: str) -> List[StandardNode]:
+        root_ids = self.accreditor_roots.get(accreditor, [])
+        return [self.nodes[r] for r in root_ids if r in self.nodes]
+
+    def get_nodes_by_accreditor(self, accreditor: str, levels: Optional[Set[str]] = None) -> List[StandardNode]:
+        if levels is None:
+            levels = {'standard', 'clause', 'indicator'}
+        return [n for n in self.nodes.values() if n.accreditor == accreditor and n.level in levels]
+
     def get_children(self, node_id: str) -> List[StandardNode]:
-        """Get all children of a node"""
         node = self.nodes.get(node_id)
         if not node:
             return []
-        return [self.nodes[child_id] for child_id in node.children if child_id in self.nodes]
-    
+        return [self.nodes[c] for c in node.children if c in self.nodes]
+
     def get_path_to_root(self, node_id: str) -> List[StandardNode]:
-        """Get the path from a node to the root"""
-        path = []
-        current_id = node_id
-        while current_id:
-            node = self.nodes.get(current_id)
-            if not node:
-                break
-            path.append(node)
-            current_id = node.parent_id
+        path: List[StandardNode] = []
+        current = self.nodes.get(node_id)
+        while current:
+            path.append(current)
+            current = self.nodes.get(current.parent_id) if current.parent_id else None
         return list(reversed(path))
-    
-    def search_by_keywords(self, keywords: Set[str], limit: int = 10) -> List[Tuple[StandardNode, float]]:
-        """Search nodes by keywords with relevance scoring"""
-        scores = {}
-        for keyword in keywords:
-            if keyword in self.keyword_index:
-                for node_id in self.keyword_index[keyword]:
-                    scores[node_id] = scores.get(node_id, 0) + 1
-        
-        # Normalize scores and sort
-        results = []
-        for node_id, score in scores.items():
-            node = self.nodes.get(node_id)
-            if node:
-                normalized_score = score / len(keywords)
-                results.append((node, normalized_score))
-        
-        results.sort(key=lambda x: x[1], reverse=True)
-        return results[:limit]
-    
+
+    # ------------------------ Cross-accreditor matching ------------------------
+    def _jaccard(self, a: Set[str], b: Set[str]) -> float:
+        if not a or not b:
+            return 0.0
+        inter = len(a & b)
+        union = len(a | b)
+        return float(inter) / float(union) if union else 0.0
+
+    def find_cross_accreditor_matches(self, source: str, target: str, threshold: float = 0.3, top_k: int = 3) -> List[Dict[str, Any]]:
+        src_nodes = [n for n in self.get_nodes_by_accreditor(source, {'standard'})]
+        tgt_nodes = [n for n in self.get_nodes_by_accreditor(target, {'standard'})]
+
+        def kwset(node: StandardNode) -> Set[str]:
+            base = set(node.keywords)
+            base |= self._extract_keywords(node.title or '')
+            base |= self._extract_keywords(node.description or '')
+            return base
+
+        tgt_kw = [(t, kwset(t)) for t in tgt_nodes]
+        results: List[Dict[str, Any]] = []
+        for s in src_nodes:
+            s_kw = kwset(s)
+            scored: List[Tuple[StandardNode, float]] = []
+            for (t, tkw) in tgt_kw:
+                sc = self._jaccard(s_kw, tkw)
+                if sc >= threshold:
+                    scored.append((t, sc))
+            scored.sort(key=lambda x: x[1], reverse=True)
+            for t, sc in scored[:max(1, top_k)]:
+                results.append({
+                    'source_id': s.node_id,
+                    'source_title': s.title,
+                    'target_id': t.node_id,
+                    'target_title': t.title,
+                    'score': round(float(sc), 3),
+                })
+        results.sort(key=lambda d: d['score'], reverse=True)
+        return results
+
+    # ------------------------ Stats/Export ------------------------
     def get_graph_stats(self) -> Dict[str, Any]:
-        """Get basic statistics about the standards graph"""
-        # Count edges (parent-child relationships)
-        total_edges = sum(len(node.children) for node in self.nodes.values())
-        
+        total_edges = sum(len(n.children) for n in self.nodes.values())
         return {
             'total_nodes': len(self.nodes),
             'total_edges': total_edges,
@@ -498,21 +441,20 @@ class StandardsGraph:
             'by_level': {
                 'standards': len([n for n in self.nodes.values() if n.level == 'standard']),
                 'clauses': len([n for n in self.nodes.values() if n.level == 'clause']),
-                'indicators': len([n for n in self.nodes.values() if n.level == 'indicator'])
-            }
+                'indicators': len([n for n in self.nodes.values() if n.level == 'indicator']),
+            },
         }
-    
+
     def export_graph_structure(self) -> Dict[str, Any]:
-        """Export the graph structure for visualization"""
         return {
-            'nodes': [node.to_dict() for node in self.nodes.values()],
+            'nodes': [n.to_dict() for n in self.nodes.values()],
             'accreditors': list(self.accreditor_roots.keys()),
             'total_nodes': len(self.nodes),
             'by_level': {
                 'standards': len([n for n in self.nodes.values() if n.level == 'standard']),
                 'clauses': len([n for n in self.nodes.values() if n.level == 'clause']),
-                'indicators': len([n for n in self.nodes.values() if n.level == 'indicator'])
-            }
+                'indicators': len([n for n in self.nodes.values() if n.level == 'indicator']),
+            },
         }
 
 

@@ -3,11 +3,12 @@
 Test script for User Intelligence API endpoints
 """
 import requests
+import os
 import json
 
 # Test configuration
 BASE_URL = "http://localhost:8000"
-JWT_TOKEN = "7UKtJWo1jG6Yji-Fw-0t1HRC6y8QsPojrWkEJhEXXTQV0myYJIJ183xEPLcT6vDcPjLR_mB9tBQsGejvTxg-QA"
+JWT_TOKEN = os.getenv("TEST_JWT_TOKEN", "")
 
 headers = {
     "Authorization": f"Bearer {JWT_TOKEN}",

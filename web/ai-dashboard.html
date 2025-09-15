@@ -226,10 +226,12 @@
                     <div>
                         <h2 class="text-xl font-semibold mb-2" id="welcomeMessage">Welcome to your AI Dashboard!</h2>
                         <p class="opacity-90" id="institutionInfo">Your compliance intelligence platform is ready.</p>
+                        <div id="aiProvidersInline" class="mt-2 text-xs opacity-90"></div>
                     </div>
                     <div class="text-right">
                         <div class="text-2xl font-bold" id="complianceScore">--</div>
                         <div class="text-sm opacity-90">Compliance Score</div>
+                        <div id="aiProvidersBadge" class="mt-2 text-[11px]"></div>
                     </div>
                 </div>
             </div>
@@ -528,6 +530,8 @@
                 await loadDashboard();
                 // Preload integrations for settings modal
                 ensureIntegrations();
+                // Load AI provider badge
+                try { await loadAiProvidersBadge(); } catch(_) {}
             });
             
             // Set up file upload handler
@@ -594,6 +598,34 @@
             } catch (error) {
                 console.error('Dashboard load error:', error);
                 showError(`Failed to load dashboard: ${error.message}`);
+            }
+        }
+
+        // AI Providers badge
+        async function loadAiProvidersBadge(){
+            const badge = document.getElementById('aiProvidersBadge');
+            const inline = document.getElementById('aiProvidersInline');
+            if (!badge && !inline) return;
+            const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+            try {
+                const res = await fetch(`${API_BASE}/api/v1/ai/status`, { headers: token ? { 'Authorization': `Bearer ${token}` } : {} });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+                const st = (data && data.data) || {};
+                const providers = [];
+                if (st.anthropic_available) providers.push({ name: 'Claude', role: st.primary_provider==='anthropic'?'primary':(st.fallback_provider==='anthropic'?'fallback':'active') });
+                if (st.openai_available) providers.push({ name: 'OpenAI', role: st.primary_provider==='openai'?'primary':(st.fallback_provider==='openai'?'fallback':'active') });
+                const chips = providers.map(p => {
+                    const c = p.name === 'OpenAI' ? 'bg-emerald-100 text-emerald-800' : 'bg-indigo-100 text-indigo-800';
+                    const r = p.role==='primary' ? ' (primary)' : p.role==='fallback' ? ' (fallback)' : '';
+                    return `<span class="inline-block px-2 py-0.5 rounded ${c} mr-1 mb-1">${p.name}${r}</span>`;
+                }).join('');
+                const line = st.ai_enabled ? (chips || '<span class="text-gray-200">No providers</span>') : '<span class="text-gray-200">AI disabled</span>';
+                if (badge) badge.innerHTML = line;
+                if (inline) inline.innerHTML = `Providers: ${line}`;
+            } catch(_) {
+                if (badge) badge.innerHTML = '<span class="opacity-70">AI status unavailable</span>';
+                if (inline) inline.innerHTML = '';
             }
         }
 
@@ -1180,6 +1212,24 @@
                     <div class="mt-2 text-xs text-gray-500">Click to switch accreditor; selection will be saved to your settings.</div>
                 </div>
 
+                <div class="mb-4" id="crossAccPanelWrapper">
+                    <div class="border rounded bg-gray-50 p-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <h5 class="font-medium">Cross‑accreditor equivalents</h5>
+                                <span class="text-xs text-gray-500">Source: <span class="font-semibold">${data.accreditor}</span></span>
+                            </div>
+                            <div class="flex items-center gap-2 text-sm">
+                                <label for="crossAccTargetSelect" class="text-gray-700">Target</label>
+                                <select id="crossAccTargetSelect" class="border rounded px-2 py-1"></select>
+                                <button id="crossAccShowBtn" class="bg-gray-800 text-white px-3 py-1 rounded">Show</button>
+                            </div>
+                        </div>
+                        <div id="crossAccStatus" class="text-xs text-gray-500 mt-2"></div>
+                        <div id="crossAccResults" class="mt-2 text-sm"></div>
+                    </div>
+                </div>
+
                 <div>
                     <div class="flex items-center justify-between mb-2">
                         <h5 class="font-medium">Standards (<span id="standardsShowing"></span> of ${data.total_standards})</h5>
@@ -1207,6 +1257,74 @@
                     }
                 });
             });
+
+            // Wire up Cross‑accreditor equivalents panel
+            try {
+                const sel = document.getElementById('crossAccTargetSelect');
+                const btn = document.getElementById('crossAccShowBtn');
+                const resEl = document.getElementById('crossAccResults');
+                const statusEl = document.getElementById('crossAccStatus');
+                const panelWrap = document.getElementById('crossAccPanelWrapper');
+                const allAccs = (data.available_accreditors || []).filter(a => a && a !== data.accreditor);
+                if (!allAccs.length) {
+                    if (panelWrap) panelWrap.classList.add('hidden');
+                } else {
+                    if (sel) sel.innerHTML = allAccs.map(a => `<option value="${a}">${a}</option>`).join('');
+                    const runQuery = async () => {
+                        const target = sel ? sel.value : '';
+                        if (!target) { resEl.innerHTML = '<div class="text-gray-500">No target accreditor available.</div>'; return; }
+                        statusEl.textContent = 'Finding equivalents…';
+                        resEl.innerHTML = '';
+                        try {
+                            const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+                            const url = `${API_BASE}/api/user/intelligence-simple/standards/cross-accreditor-matches?source=${encodeURIComponent(data.accreditor)}&target=${encodeURIComponent(target)}&threshold=0.3&top_k=5`;
+                            const r = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+                            if (!r.ok) throw new Error(`HTTP ${r.status}`);
+                            const out = await r.json();
+                            const matches = out.matches || [];
+                            if (!matches.length) {
+                                resEl.innerHTML = '<div class="text-gray-500">No strong equivalents found at this threshold.</div>';
+                            } else {
+                                resEl.innerHTML = `
+                                    <div class="overflow-x-auto">
+                                        <table class="min-w-full text-xs border">
+                                            <thead>
+                                                <tr class="bg-gray-100">
+                                                    <th class="text-left px-2 py-1 border">Source (${data.accreditor})</th>
+                                                    <th class="text-left px-2 py-1 border">Target (${target})</th>
+                                                    <th class="text-left px-2 py-1 border">Score</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                ${matches.map(m => `
+                                                    <tr>
+                                                        <td class="px-2 py-1 border align-top">
+                                                            <div class="font-medium">${(m.source_id||'').replace(/&/g,'&amp;')}</div>
+                                                            ${m.source_title ? `<div class="text-gray-600">${String(m.source_title).replace(/&/g,'&amp;')}</div>` : ''}
+                                                        </td>
+                                                        <td class="px-2 py-1 border align-top">
+                                                            <div class="font-medium">${(m.target_id||'').replace(/&/g,'&amp;')}</div>
+                                                            ${m.target_title ? `<div class="text-gray-600">${String(m.target_title).replace(/&/g,'&amp;')}</div>` : ''}
+                                                        </td>
+                                                        <td class="px-2 py-1 border">${typeof m.score==='number' ? (m.score*100).toFixed(0)+'%' : ''}</td>
+                                                    </tr>
+                                                `).join('')}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                `;
+                            }
+                            statusEl.textContent = `Top ${matches.length} equivalents`;
+                        } catch (e) {
+                            statusEl.textContent = '';
+                            resEl.innerHTML = '<div class="text-red-600">Failed to load equivalents.</div>';
+                        }
+                    };
+                    if (btn) btn.addEventListener('click', runQuery);
+                    // Auto-run once
+                    runQuery();
+                }
+            } catch (_) { /* no-op */ }
 
             // Search & pagination handlers
             const searchInput = document.getElementById('standardsSearch');

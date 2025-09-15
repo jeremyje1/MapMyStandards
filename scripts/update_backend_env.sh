@@ -28,7 +28,7 @@ railway variables --set STRIPE_PRICE_MULTI_CAMPUS_YEARLY=price_1RyVQrK8PKpLCKDZU
 railway variables --set STRIPE_PUBLISHABLE_KEY=pk_live_51Rr4dNK8PKpLCKDZH9u9mOEqmPVSR946uGYKSdk73mmNjBR4i9Ibon3wvDLNpYPRzsXmaAXTrwSPKKxNolArj8G200tZyrr6qE
 
 # Ensure webhook endpoint secret is set (if not already present)
-# railway variables --set STRIPE_WEBHOOK_SECRET=whsec_YOUR_WEBHOOK_SECRET_HERE
+# export STRIPE_WEBHOOK_SECRET=whsec_...   # set before running
 
 # Update CORS origins to include all production domains
 railway variables --set "CORS_ORIGINS=https://platform.mapmystandards.ai,https://api.mapmystandards.ai,https://mapmystandards.ai,https://*.railway.app,https://mapmystandards-prod-production.up.railway.app"

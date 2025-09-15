@@ -11,7 +11,7 @@
 **Problem**: Webhook requests from Stripe were being rejected with "Invalid webhook signature"
 **Root Cause**: Wrong webhook secret in Railway environment
 **Solution**: 
-- Updated STRIPE_WEBHOOK_SECRET in Railway to: `whsec_IrKVrLesP6FOD2wo08nYf6FmOf9zULTU`
+- Updated STRIPE_WEBHOOK_SECRET in Railway to: `whsec_****************`
 - Updated railway.env file for consistency
 
 ### 2. Database Schema Conflict

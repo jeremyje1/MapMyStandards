@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Quick API test with known working token"""
 import requests
+import os
 import json
 
 # Use the token we know worked before
-WORKING_TOKEN = "7UKtJWo1jG6Yji-Fw-0t1HRC6y8QsPojrWkEJhEXXTQV0myYJIJ183xEPLcT6vDcPjLR_mB9tBQsGejvTxg-QA"
+WORKING_TOKEN = os.getenv("TEST_JWT_TOKEN", "")
 
 def test_api():
     """Test the dashboard API endpoint"""

@@ -317,3 +317,11 @@ mailersend_api.env
 railway.env
 *.railway.env
 *railway*.env
+
+# Frontend env and any plain .env files
+.env
+.env.*
+frontend/.env
+frontend/.env.*
+web/.env
+web/.env.*

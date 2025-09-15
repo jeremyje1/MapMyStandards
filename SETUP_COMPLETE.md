@@ -158,8 +158,8 @@ The platform is now ready for development and testing! 🚀
 ### ✅ Stripe CLI & API Configuration
 - **Account**: AI Blueprint (acct_1Rxag5RMpSG47vNm)
 - **Test Mode**: Fully configured with test keys
-- **API Key**: sk_test_... (configured in .env.local)
-- **Webhook Secret**: whsec_b4dc6a99fa351c7891f876b828f89f1f8a1fca947c1f4709a66b1a033228e72e
+- **API Key**: sk_test_... (configured in environment)
+- **Webhook Secret**: whsec_**************** (stored only in env)
 
 ### 📦 Products & Pricing
 1. **Team Plan Monthly**: $995.00/month

@@ -948,7 +948,7 @@
         "SECURITY_ALERT_IMMEDIATE.md"
       ],
       "keyRevocationRequired": [
-        "Postmark API Token: 6a45e155-5e3c-4f9f-9cff-45528a162248",
+  "Postmark API Token: [REDACTED_FOR_SECURITY]",
         "MailerSend API Key: mlsn.bf729c75ae03d2593c0ed22b2f699cc41cf4637c671bf295562a6a9d97f8aa1e"
       ],
       "note": "Repository sanitized, but exposed keys must be revoked in service dashboards"

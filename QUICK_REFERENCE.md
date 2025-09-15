@@ -37,7 +37,7 @@ python3 test_webhook_and_db.py
 ## Key Fixes Applied Today (Sept 4, 2025)
 
 1. **Webhook Secret Updated**
-   - New secret: whsec_IrKVrLesP6FOD2wo08nYf6FmOf9zULTU
+   - New secret: whsec_**************** (rotated; value stored only in env)
    - Set in Railway environment
 
 2. **Database Schema Fixed**

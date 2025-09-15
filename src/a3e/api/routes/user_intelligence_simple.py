@@ -1055,6 +1055,32 @@ async def get_standard_detail(standard_id: str, current_user: Dict[str, Any] = D
         raise HTTPException(status_code=500, detail="Failed to fetch standard detail")
 
 
+@router.get("/standards/cross-accreditor-matches")
+async def get_cross_accreditor_matches(
+    source: str,
+    target: str,
+    threshold: float = 0.3,
+    top_k: int = 3,
+    current_user: Dict[str, Any] = Depends(get_current_user_simple)
+):
+    """Find likely equivalent standards across two accreditors using keyword overlap.
+
+    Returns a list of {source_id, source_title, target_id, target_title, score}.
+    """
+    try:
+        source = (source or '').strip().upper()
+        target = (target or '').strip().upper()
+        if not source or not target or source == target:
+            raise HTTPException(status_code=400, detail="Provide distinct source and target accreditors")
+        matches = standards_graph.find_cross_accreditor_matches(source, target, threshold=threshold, top_k=top_k)
+        return {"source": source, "target": target, "threshold": threshold, "top_k": top_k, "matches": matches}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Cross-accreditor matches error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to compute cross-accreditor matches")
+
+
 @router.get("/standards/categories")
 async def get_standards_categories(
     current_user: Dict[str, Any] = Depends(get_current_user_simple), accreditor: Optional[str] = None
