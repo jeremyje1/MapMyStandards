@@ -3,7 +3,7 @@ Simplified User Dashboard API Integration Service
 Bypasses complex database queries to provide direct access to AI features
 """
 
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form
 from fastapi.responses import JSONResponse, PlainTextResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import List, Dict, Any, Optional
@@ -34,6 +34,7 @@ JWT_ALGORITHM = "HS256"
 # ------------------------------
 SETTINGS_STORE = os.getenv("USER_SETTINGS_STORE", "user_settings_store.json")
 REVIEWS_STORE = os.getenv("USER_REVIEWS_STORE", "user_reviews_store.json")
+UPLOADS_STORE = os.getenv("USER_UPLOADS_STORE", "user_uploads_store.json")
 
 
 def _safe_load_json(path: str) -> Dict[str, Any]:
@@ -108,6 +109,7 @@ def _merge_claims_with_settings(claims: Dict[str, Any]) -> Dict[str, Any]:
         "term_system": claims.get("term_system") or "semester",
         "state": claims.get("state") or "",
         "institution_size": claims.get("institution_size") or "",
+        "document_types": claims.get("document_types") or [],
         "document_sources": claims.get("document_sources") or [],
     }
     saved = _get_user_settings(claims)
@@ -115,7 +117,48 @@ def _merge_claims_with_settings(claims: Dict[str, Any]) -> Dict[str, Any]:
     # Normalize lists
     if not isinstance(merged.get("document_sources"), list):
         merged["document_sources"] = []
+    if not isinstance(merged.get("document_types"), list):
+        # Accept legacy key 'doc_types' if present
+        dt = merged.get("doc_types")
+        if isinstance(dt, list):
+            merged["document_types"] = dt
+        else:
+            merged["document_types"] = []
     return merged
+
+
+def _get_user_uploads(claims: Dict[str, Any]) -> Dict[str, Any]:
+    all_u = _safe_load_json(UPLOADS_STORE)
+    return all_u.get(_user_key(claims), {"documents": [], "unique_standards": []})
+
+
+def _set_user_uploads(claims: Dict[str, Any], data: Dict[str, Any]) -> None:
+    all_u = _safe_load_json(UPLOADS_STORE)
+    all_u[_user_key(claims)] = data
+    _safe_save_json(UPLOADS_STORE, all_u)
+
+
+def _record_user_upload(
+    claims: Dict[str, Any], filename: str, standard_ids: List[str], doc_type: Optional[str] = None
+) -> Dict[str, Any]:
+    data = _get_user_uploads(claims)
+    docs = data.get("documents", [])
+    entry = {
+        "filename": filename,
+        "uploaded_at": datetime.utcnow().isoformat(),
+        "standards_mapped": list(standard_ids or []),
+        "doc_type": doc_type or "",
+    }
+    docs.append(entry)
+    # Update unique standards
+    uniq = set(data.get("unique_standards", []))
+    for sid in standard_ids or []:
+        if sid:
+            uniq.add(sid)
+    data["documents"] = docs[-50:]  # cap history
+    data["unique_standards"] = list(uniq)
+    _set_user_uploads(claims, data)
+    return data
 
 
 # ------------------------------
@@ -205,6 +248,16 @@ async def get_dashboard_overview(current_user: Dict[str, Any] = Depends(get_curr
         except Exception:
             score, standards_count, pending_actions, recent_activity = 0.0, 0, 0, []
 
+        # Fallback to uploads store for new users
+        uploads = _get_user_uploads(current_user)
+        if not standards_count:
+            standards_count = len(uploads.get("unique_standards", []))
+        if not recent_activity:
+            recent_activity = [
+                {"type": "upload", "filename": d.get("filename"), "at": d.get("uploaded_at")}
+                for d in uploads.get("documents", [])[-5:]
+            ][::-1]
+
         missing: List[str] = []
         if standards_count == 0:
             missing.append("Upload at least 1 evidence document to enable standards mapping")
@@ -228,15 +281,19 @@ async def get_dashboard_overview(current_user: Dict[str, Any] = Depends(get_curr
 
 @router.get("/metrics/summary")
 async def get_metrics_summary(current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+    # Reflect actual uploads where available
+    uploads = _get_user_uploads(current_user)
+    docs_uploaded = len(uploads.get("documents", []))
+    uniq_standards = len(uploads.get("unique_standards", []))
     return {
         "status": "success",
         "metrics": {
             # Immediate top-line count for UI; upgraded later when uploads exist
-            "documents_uploaded": 0,
+            "documents_uploaded": docs_uploaded,
             "ai_accuracy": 0.87,
             "time_savings": {"hours_saved": 32, "efficiency_gain": "4.2x"},
-            # Default coverage is zero for brand-new users; UI will show real values once uploads exist
-            "coverage": {"standards_analyzed": 0, "documents_processed": 0, "evidence_mapped": 0},
+            # Coverage reflects user uploads if present
+            "coverage": {"standards_analyzed": uniq_standards, "documents_processed": docs_uploaded, "evidence_mapped": 0},
             "algorithms_performance": {
                 "StandardsGraph™": {"accuracy": 0.92, "speed": "real-time"},
                 "EvidenceMapper™": {"accuracy": 0.87, "confidence": 0.85},
@@ -273,6 +330,7 @@ async def save_evidence_review(payload: Dict[str, Any], current_user: Dict[str, 
 @router.post("/analyze/evidence")
 async def analyze_evidence(
     file: UploadFile = File(...),
+    doc_type: Optional[str] = Form(None),
     current_user: Dict[str, Any] = Depends(get_current_user_simple),
 ):
     try:
@@ -286,7 +344,7 @@ async def analyze_evidence(
         doc = EvidenceDocument(
             doc_id=file.filename,
             text=text_content,
-            metadata={"uploaded_by": _user_key(current_user)},
+            metadata={"uploaded_by": _user_key(current_user), "doc_type": doc_type or "policy"},
             doc_type="policy",
             source_system="manual",
             upload_date=datetime.utcnow(),
@@ -339,6 +397,8 @@ async def analyze_evidence(
                     "note": review.get("note", ""),
                 }
             )
+        # Record upload for metrics/overview
+        _record_user_upload(current_user, file.filename, [m.standard_id for m in mappings], doc_type)
 
         return {
             "status": "success",
@@ -369,9 +429,10 @@ async def analyze_evidence(
 async def analyze_evidence_alias(
     file: UploadFile = File(...),
     current_user: Dict[str, Any] = Depends(get_current_user_simple),
+    doc_type: Optional[str] = Form(None),
 ):
     # Delegate to main handler (duplicate logic for clarity and isolation)
-    return await analyze_evidence(file=file, current_user=current_user)
+    return await analyze_evidence(file=file, doc_type=doc_type, current_user=current_user)
 
 
 # ------------------------------
@@ -398,7 +459,6 @@ async def get_gap_analysis(current_user: Dict[str, Any] = Depends(get_current_us
                         "standard": {
                             "code": code_val,
                             "title": getattr(standard, "title", ""),
-                            "category": getattr(standard, "level", "Standard").title(),
                         },
                         "risk_score": risk_score,
                         "risk_level": gap_risk_predictor.get_risk_level(risk_score),
