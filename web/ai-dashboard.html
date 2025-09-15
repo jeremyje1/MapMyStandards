@@ -439,6 +439,14 @@
                         const payload = {};
                         if (ob && ob.institution_name) payload.organization = ob.institution_name;
                         if (ob && ob.primary_accreditor) payload.primary_accreditor = ob.primary_accreditor;
+                        if (ob && ob.state) payload.state = ob.state;
+                        if (ob && ob.institution_size) payload.institution_size = ob.institution_size;
+                        if (ob && ob.launch_timing) payload.launch_timing = ob.launch_timing;
+                        if (ob && ob.success_definition) payload.success_definition = ob.success_definition;
+                        if (ob && Array.isArray(ob.goals)) payload.goals = ob.goals;
+                        if (ob && ob.doc_types) {
+                            payload.document_types = Array.isArray(ob.doc_types) ? ob.doc_types : String(ob.doc_types).split(',').map(s=>s.trim()).filter(Boolean);
+                        }
                         if (Object.keys(payload).length > 0 && token) {
                             await saveSettings(payload);
                             await fetchSettings();

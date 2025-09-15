@@ -111,6 +111,10 @@ def _merge_claims_with_settings(claims: Dict[str, Any]) -> Dict[str, Any]:
         "institution_size": claims.get("institution_size") or "",
         "document_types": claims.get("document_types") or [],
         "document_sources": claims.get("document_sources") or [],
+        # Onboarding fields
+        "goals": claims.get("goals") or [],
+        "launch_timing": claims.get("launch_timing") or "",
+        "success_definition": claims.get("success_definition") or "",
     }
     saved = _get_user_settings(claims)
     merged = {**defaults, **(saved or {})}
@@ -124,6 +128,8 @@ def _merge_claims_with_settings(claims: Dict[str, Any]) -> Dict[str, Any]:
             merged["document_types"] = dt
         else:
             merged["document_types"] = []
+    if not isinstance(merged.get("goals"), list):
+        merged["goals"] = []
     return merged
 
 

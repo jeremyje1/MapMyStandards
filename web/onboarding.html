@@ -476,14 +476,26 @@
       const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
       if (!token) { return; }
       try {
+        // Normalize document types into array
+        const docTypesRaw = state.data.doc_types || '';
+        const document_types = Array.isArray(docTypesRaw)
+          ? docTypesRaw
+          : (docTypesRaw ? docTypesRaw.split(',').map(s=>s.trim()).filter(Boolean) : []);
+
         const payload = {
+          // Personalization fields used by dashboard
           organization: state.data.institution_name || '',
           primary_accreditor: state.data.primary_accreditor || '',
           state: state.data.state || '',
           institution_size: state.data.institution_size || '',
+          // Additional onboarding fields (persisted for future features)
+          goals: Array.isArray(state.data.goals) ? state.data.goals : [],
+          document_types,
+          launch_timing: state.data.launch_timing || '',
+          success_definition: state.data.success_definition || ''
         };
         // Avoid no-op network calls
-        if (!(payload.organization || payload.primary_accreditor || payload.state || payload.institution_size)) return;
+        if (!(payload.organization || payload.primary_accreditor || payload.state || payload.institution_size || payload.document_types.length || payload.goals.length || payload.launch_timing || payload.success_definition)) return;
   const res = await fetch(`${API_BASE}/api/user/intelligence-simple/settings`, {
           method:'POST',
           headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
@@ -493,7 +505,7 @@
       } catch(e){ console.warn('Settings persist failed', e); }
     }
 
-    backBtn.addEventListener('click', ()=>{ if(state.step>1){ collectStep(); state.step--; showStep(); persist(true);} });
+  backBtn.addEventListener('click', ()=>{ if(state.step>1){ collectStep(); state.step--; showStep(); persist(true);} });
     nextBtn.addEventListener('click', async ()=>{
       collectStep();
       if(state.step < state.total){ state.step++; showStep(); persist(true); }
@@ -505,7 +517,7 @@
   setTimeout(()=>{ window.location.href='https://platform.mapmystandards.ai/ai-dashboard'; }, 1500);
       }
     });
-  skipBtn.addEventListener('click', ()=>{ window.location.href='https://platform.mapmystandards.ai/ai-dashboard'; });
+  skipBtn.addEventListener('click', async ()=>{ try{ collectStep(); await persist(true);}catch(_){} window.location.href='https://platform.mapmystandards.ai/ai-dashboard'; });
 
     // Initialize
     async function loadExisting(){
@@ -522,6 +534,28 @@
             if(settings.primary_accreditor) document.getElementById('primary_accreditor').value = settings.primary_accreditor;
             if(settings.institution_size) document.getElementById('institution_size').value = settings.institution_size;
             if(settings.state) document.getElementById('state').value = settings.state;
+            if(Array.isArray(settings.goals)){
+              // Pre-check any matching goal checkboxes
+              settings.goals.forEach(g=>{
+                const id = 'goal_' + String(g).replace(/[^a-z0-9]+/gi,'_').toLowerCase();
+                const el = document.getElementById(id);
+                if(el) el.checked = true;
+              });
+              // Prefill custom goal with any non-standard goal
+              const custom = settings.goals.find(g => !GOALS.includes(g));
+              if (custom) {
+                document.getElementById('other_goal').value = custom;
+              }
+            }
+            if(Array.isArray(settings.document_types)){
+              document.getElementById('doc_types').value = settings.document_types.join(', ');
+            }
+            if(settings.launch_timing){
+              document.getElementById('launch_timing').value = settings.launch_timing;
+            }
+            if(settings.success_definition){
+              document.getElementById('success_definition').value = settings.success_definition;
+            }
           }
         }
       }catch(e){ console.info('No existing settings data', e); }
