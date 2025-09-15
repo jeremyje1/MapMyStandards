@@ -414,6 +414,23 @@
             try {
                 showLoading();
                 
+                // Bridge: persist onboarding data into settings once
+                try {
+                    const persistedFlag = sessionStorage.getItem('a3e_onboarding_persisted');
+                    const onboardingRaw = sessionStorage.getItem('a3e_onboarding_data');
+                    if (!persistedFlag && onboardingRaw) {
+                        const ob = JSON.parse(onboardingRaw);
+                        const payload = {};
+                        if (ob && ob.institution_name) payload.organization = ob.institution_name;
+                        if (ob && ob.primary_accreditor) payload.primary_accreditor = ob.primary_accreditor;
+                        if (Object.keys(payload).length > 0 && token) {
+                            await saveSettings(payload);
+                            await fetchSettings();
+                            sessionStorage.setItem('a3e_onboarding_persisted', '1');
+                        }
+                    }
+                } catch (e) { console.warn('Onboarding-to-settings bridge failed', e); }
+
                 // Load dashboard overview
         const response = await fetch(`${API_BASE}/api/user/intelligence-simple/dashboard/overview`, {
                     headers: {
@@ -465,9 +482,12 @@
 
             // Update user info
             const user = (data && data.user) || {};
+            const s = (userSettings && userSettings.settings) || {};
+            const institutionName = user.institution_name || s.organization || 'A³E user';
+            const accreditorName = user.primary_accreditor || s.primary_accreditor || 'Accreditor';
             document.getElementById('userEmail').textContent = user.email || '—';
-            document.getElementById('welcomeMessage').textContent = `Welcome, ${user.institution_name || 'A³E user'}!`;
-            document.getElementById('institutionInfo').textContent = `${user.primary_accreditor || 'Accreditor'} Accreditation Management`;
+            document.getElementById('welcomeMessage').textContent = `Welcome, ${institutionName}!`;
+            document.getElementById('institutionInfo').textContent = `${accreditorName} Accreditation Management`;
 
             // Normalize compliance score percent (overview API returns metrics.compliance_score)
             const score = (data && data.metrics && typeof data.metrics.compliance_score === 'number') ? data.metrics.compliance_score : 0;
