@@ -360,6 +360,16 @@
       'Map standards quickly','Automate evidence tagging','Prep self-study','Mid-cycle review','Close assessment loop','Data for board','Accreditation visit prep','Track progress','AI narrative drafts','Gap analysis','Document organization','Expedite compliance'
     ];
     const state = { step:1, total:4, data:{}, email:null, apiKey:null, signupData:null };
+    // Resolve API base (match ai-dashboard behavior)
+    const API_BASE = (function() {
+      try {
+        const stored = localStorage.getItem('api_base');
+        if (stored) return stored.replace(/\/$/, '');
+      } catch {}
+      const host = location.hostname;
+      if (host.includes('platform.mapmystandards.ai')) return 'https://api.mapmystandards.ai';
+      return '';
+    })();
     // Pull pending trial context (email & api key) stored during signup
     try {
       state.email = sessionStorage.getItem('a3e_pending_email') || localStorage.getItem('a3e_user_email') || null;
@@ -474,7 +484,7 @@
         };
         // Avoid no-op network calls
         if (!(payload.organization || payload.primary_accreditor || payload.state || payload.institution_size)) return;
-        const res = await fetch('/api/user/intelligence-simple/settings', {
+  const res = await fetch(`${API_BASE}/api/user/intelligence-simple/settings`, {
           method:'POST',
           headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
@@ -503,7 +513,7 @@
       const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
       if (!token) return;
       try{
-        const res = await fetch('/api/user/intelligence-simple/settings', { headers: { 'Authorization': `Bearer ${token}` } });
+  const res = await fetch(`${API_BASE}/api/user/intelligence-simple/settings`, { headers: { 'Authorization': `Bearer ${token}` } });
         if(res.ok){
           const s = await res.json();
           const settings = (s && s.organization !== undefined) ? s : (s.settings || {});
