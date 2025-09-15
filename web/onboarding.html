@@ -322,7 +322,26 @@
     <section class="panel" data-step="3">
       <span class="step-badge">STEP 3</span>
       <h2 style="margin:0 0 6px;font-size:1.25rem;font-weight:600">Initial Documents</h2>
-      <p style="margin:0 0 18px;color:#94a3b8;font-size:.9rem">What will you upload or analyze first?</p>
+      <p style="margin:0 10px 14px 0;color:#94a3b8;font-size:.9rem">Start with high-value evidence that covers many standards. You can add more anytime from the dashboard.</p>
+
+      <div style="background:#0b1220;border:1px solid #334155;border-radius:12px;padding:14px 14px 8px;margin:0 0 16px">
+        <div style="font-size:.8rem;color:#e2e8f0;font-weight:600;margin-bottom:8px">Recommended Starter Documents</div>
+        <div id="docSuggestions" style="display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(240px,1fr))"></div>
+        <div style="margin-top:10px;color:#94a3b8;font-size:.8rem">Suggestions adapt to your accreditor. Pick a few to begin; you can upload others later in the dashboard.</div>
+      </div>
+
+      <div style="background:#112b1f;border:1px solid #14532d;border-radius:12px;padding:12px;margin:0 0 16px;color:#d1fae5">
+        <div style="font-weight:600;font-size:.85rem;margin-bottom:6px">What to gather now</div>
+        <ul style="margin-left:18px;font-size:.85rem;color:#bbf7d0;list-style:disc">
+          <li>Mission and Strategic Plan (latest)</li>
+          <li>Institutional Effectiveness / Assessment reports (2–3 years)</li>
+          <li>Faculty credentials or roster (sample)</li>
+          <li>Student achievement metrics (KPIs, dashboards)</li>
+          <li>Catalog and key academic policies (admissions, transfer, grading)</li>
+          <li>Governing Board or Senate minutes related to academic oversight</li>
+        </ul>
+      </div>
+
       <label for="doc_types">Document Types</label>
       <textarea id="doc_types" rows="3" placeholder="Strategic plan, Assessment reports, Faculty CVs..."></textarea>
       <label for="launch_timing" style="margin-top:18px">Launch Timing</label>
@@ -333,6 +352,7 @@
         <option value="this_quarter">This quarter</option>
         <option value="undecided">Not sure</option>
       </select>
+      <div style="margin-top:14px;color:#94a3b8;font-size:.85rem">Tip: After finishing onboarding, open your AI Dashboard to upload your first files. You’ll see suggested upload slots based on what you choose here.</div>
     </section>
 
     <!-- Step 4: Success Triggers -->
@@ -359,6 +379,56 @@
     const GOALS = [
       'Map standards quickly','Automate evidence tagging','Prep self-study','Mid-cycle review','Close assessment loop','Data for board','Accreditation visit prep','Track progress','AI narrative drafts','Gap analysis','Document organization','Expedite compliance'
     ];
+    const DOC_TEMPLATES = {
+      generic: [
+        'Mission & Strategic Plan',
+        'Institutional Effectiveness / Assessment Report',
+        'Student Achievement Metrics (KPIs)',
+        'Faculty Roster / Credentials Summary',
+        'Academic Catalog (Programs & Policies)',
+        'Board/Senate Minutes (Academic Oversight)'
+      ],
+      HLC: [
+        'Mission & Strategic Plan',
+        'Assessment Plan and Results (last 2–3 years)',
+        'General Education Outcomes & Assessment',
+        'Faculty Qualifications / HLC Roster',
+        'Student Achievement: retention, completion, licensure',
+        'Catalog (Transfer/Admissions/Grading Policies)'
+      ],
+      SACSCOC: [
+        'Institutional Effectiveness Plan & Results',
+        'QEP Overview (if applicable)',
+        'Student Achievement (Thresholds & Trends)',
+        'Faculty Roster (SACSCOC template if available)',
+        'Academic Policies & Catalog Excerpts',
+        'Governance Minutes (Curriculum, Assessment)'
+      ],
+      MSCHE: [
+        'Strategic Plan & Mission Alignment',
+        'Assessment of Student Learning (Sampling)',
+        'Institutional Assessment / Effectiveness Reports',
+        'Student Achievement KPIs',
+        'Faculty Credentials / CV Summaries',
+        'Catalog & Policy Compendium'
+      ],
+      WASC: [
+        'CFR Mapping Summary (if any)',
+        'Program Review Reports (recent cycle)',
+        'Assessment of PLOs & GE Outcomes',
+        'Student Success Dashboards',
+        'Faculty Qualifications & Development',
+        'Catalog & Key Academic Policies'
+      ],
+      ABET: [
+        'Program Educational Objectives (PEOs)',
+        'Student Outcomes & Assessment Evidence',
+        'Curriculum Mapping (Course → Outcome)',
+        'Continuous Improvement Records',
+        'Faculty CVs & Workload Summary',
+        'Syllabi and Course Materials (samples)'
+      ]
+    };
     const state = { step:1, total:4, data:{}, email:null, apiKey:null, signupData:null };
     // Resolve API base (match ai-dashboard behavior)
     const API_BASE = (function() {
@@ -441,6 +511,20 @@
       }
     }
 
+    function populateDocSuggestions(accreditor) {
+      const wrap = document.getElementById('docSuggestions');
+      if (!wrap) return;
+      const list = DOC_TEMPLATES[accreditor] || DOC_TEMPLATES[(accreditor||'').toUpperCase()] || DOC_TEMPLATES.generic;
+      wrap.innerHTML = '';
+      list.forEach(label => {
+        const id = 'doc_' + label.replace(/[^a-z0-9]+/gi,'_').toLowerCase();
+        const item = document.createElement('label');
+        item.className = 'checkbox-item';
+        item.innerHTML = `<input type="checkbox" id="${id}" value="${label}" style="accent-color:#16a34a;width:16px;height:16px"> <span style='font-size:.8rem;font-weight:500;'>${label}</span>`;
+        wrap.appendChild(item);
+      });
+    }
+
     function showStep(){
       document.querySelectorAll('.panel').forEach(p=>{
         p.classList.toggle('hidden', parseInt(p.dataset.step) !== state.step);
@@ -448,6 +532,11 @@
       backBtn.disabled = state.step === 1;
       nextBtn.textContent = state.step === state.total ? 'Finish' : 'Continue';
       updateProgress();
+      // Live-update suggestions when entering step 3
+      if (state.step === 3) {
+        const acc = (document.getElementById('primary_accreditor').value || '').trim();
+        populateDocSuggestions(acc);
+      }
     }
 
     function collectStep(){
@@ -461,7 +550,11 @@
         const other = document.getElementById('other_goal').value.trim();
         if(other) state.data.goals.push(other);
       } else if(state.step === 3){
-        state.data.doc_types = document.getElementById('doc_types').value.trim();
+  const selected = Array.from(document.querySelectorAll('#docSuggestions input:checked')).map(i=>i.value);
+  const freeform = document.getElementById('doc_types').value.trim();
+  // Merge selections and freeform list
+  const parts = freeform ? freeform.split(',').map(s=>s.trim()).filter(Boolean) : [];
+  state.data.doc_types = [...new Set([...selected, ...parts])];
         state.data.launch_timing = document.getElementById('launch_timing').value;
       } else if(state.step === 4){
         state.data.success_definition = document.getElementById('success_definition').value.trim();
@@ -549,6 +642,16 @@
             }
             if(Array.isArray(settings.document_types)){
               document.getElementById('doc_types').value = settings.document_types.join(', ');
+              // Pre-check suggestions
+              setTimeout(()=>{
+                const acc = (document.getElementById('primary_accreditor').value || '').trim();
+                populateDocSuggestions(acc);
+                (settings.document_types||[]).forEach(dt => {
+                  const id = 'doc_' + String(dt).replace(/[^a-z0-9]+/gi,'_').toLowerCase();
+                  const el = document.getElementById(id);
+                  if (el) el.checked = true;
+                });
+              }, 0);
             }
             if(settings.launch_timing){
               document.getElementById('launch_timing').value = settings.launch_timing;
