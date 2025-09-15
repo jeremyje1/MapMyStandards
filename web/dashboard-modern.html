@@ -967,6 +967,7 @@
                 const metrics = data.core_metrics;
                 const performance = data.performance_metrics;
                 const account = data.account_info;
+                const explain = (performance && performance.explanations) || {};
 
                 metricsGrid.innerHTML = `
                     <div class="metric-card success">
@@ -981,9 +982,9 @@
                         </div>
                     </div>
 
-                    <div class="metric-card info">
+                    <div class="metric-card info" title="${(explain.coverage || '').replace(/\"/g,'"')}">
                         <div class="metric-header">
-                            <div class="metric-label">Standards Mapped</div>
+                            <div class="metric-label">Standards Mapped <span style="cursor:help;font-size:14px" title="${(explain.coverage || '').replace(/\"/g,'"')}">ℹ️</span></div>
                             <div class="metric-icon info">🎯</div>
                         </div>
                         <div class="metric-value">${metrics.standards_mapped}/${metrics.total_standards}</div>
@@ -993,11 +994,12 @@
                                 ${performance.coverage_percentage}% coverage
                             </span>
                         </div>
+                        <div id="coverageSpark" style="margin-top:6px;height:36px"></div>
                     </div>
 
-                    <div class="metric-card warning">
+                    <div class="metric-card warning" title="${(explain.compliance || '').replace(/\"/g,'"')}">
                         <div class="metric-header">
-                            <div class="metric-label">Compliance Score</div>
+                            <div class="metric-label">Compliance Score <span style="cursor:help;font-size:14px" title="${(explain.compliance || '').replace(/\"/g,'"')}">ℹ️</span></div>
                             <div class="metric-icon warning">⚡</div>
                         </div>
                         <div class="metric-value">${performance.compliance_score}%</div>
@@ -1007,6 +1009,7 @@
                                 ${performance.compliance_score >= 75 ? 'Strong' : 'Needs improvement'}
                             </span>
                         </div>
+                        <div id="complianceSpark" style="margin-top:6px;height:36px"></div>
                     </div>
 
                     <div class="metric-card success">
@@ -1022,12 +1025,99 @@
                             </span>
                         </div>
                     </div>
+                    <div class="metric-card info" title="${(explain.average_trust || '').replace(/\"/g,'"')}">
+                        <div class="metric-header">
+                            <div class="metric-label">Evidence Trust <span style="cursor:help;font-size:14px" title="${(explain.average_trust || '').replace(/\"/g,'"')}">ℹ️</span></div>
+                            <div class="metric-icon info">🔒</div>
+                        </div>
+                        <div class="metric-value">${(performance.average_trust ?? 0).toFixed(2)}</div>
+                        <div class="metric-description">Mean EvidenceTrust score</div>
+                        <div class="metric-trend">
+                            <span class="trend-indicator trend-${(performance.average_trust ?? 0) >= 0.75 ? 'up' : ((performance.average_trust ?? 0) >= 0.55 ? 'neutral' : 'down')}">
+                                ${(performance.average_trust ?? 0) >= 0.75 ? 'Healthy' : ((performance.average_trust ?? 0) >= 0.55 ? 'Moderate' : 'Low')}
+                            </span>
+                        </div>
+                        <div id="trustSpark" style="margin-top:6px;height:36px"></div>
+                    </div>
+
+                    <div class="metric-card danger" title="${(explain.average_risk || '').replace(/\"/g,'"')}">
+                        <div class="metric-header">
+                            <div class="metric-label">Gap Risk <span style="cursor:help;font-size:14px" title="${(explain.average_risk || '').replace(/\"/g,'"')}">ℹ️</span></div>
+                            <div class="metric-icon danger">🛑</div>
+                        </div>
+                        <div class="metric-value">${(performance.average_risk ?? 0).toFixed(3)}</div>
+                        <div class="metric-description">Avg calibrated risk (0–1)</div>
+                        <div class="metric-trend">
+                            <span class="trend-indicator trend-${(performance.average_risk ?? 0) <= 0.25 ? 'up' : ((performance.average_risk ?? 0) <= 0.5 ? 'neutral' : 'down')}">
+                                ${(performance.average_risk ?? 0) <= 0.25 ? 'Low' : ((performance.average_risk ?? 0) <= 0.5 ? 'Moderate' : 'Elevated')}
+                            </span>
+                        </div>
+                        <div style="margin-top:8px">
+                            ${(() => {
+                                const dist = performance.risk_distribution || {};
+                                const order = ['critical','high','medium','low','minimal'];
+                                const total = order.reduce((s,k)=> s + (dist[k]||0),0) || 1;
+                                return `<div style='display:flex;gap:4px;align-items:flex-end;height:40px'>` +
+                                    order.map(k=>{
+                                        const v = dist[k]||0;const pct = (v/total)*100;
+                                        const color = k==='critical'? '#ef4444': k==='high'? '#f97316': k==='medium'? '#f59e0b': k==='low'? '#10b981':'#3b82f6';
+                                        return `<div title='${k}: ${v}' style='flex:1;display:flex;flex-direction:column;align-items:center;font-size:10px'>
+                                            <div style='width:100%;background:${color};height:${Math.max(4,Math.round(pct/4))}px;border-radius:3px'></div>
+                                            <div style='margin-top:2px;color:#555'>${v}</div>
+                                        </div>`;
+                                    }).join('') + `</div>`;
+                            })()}
+                        </div>
+                        <div id="riskSpark" style="margin-top:6px;height:36px"></div>
+                    </div>
                 `;
 
                 // Update trial days
                 if (account.trial_days_remaining !== undefined) {
                     document.getElementById('trialDays').textContent = account.trial_days_remaining;
                 }
+
+                // Render trend sparklines using timeseries endpoint (throttled)
+                this.ensureTimeseries(account.primary_accreditor).then(series => {
+                    try {
+                        const coverageVals = (series||[]).map(s => Number(s.coverage_percentage || 0));
+                        const complianceVals = (series||[]).map(s => Number(s.compliance_score || 0));
+                        const trustVals = (series||[]).map(s => Number(s.average_trust || 0));
+                        const riskVals = (series||[]).map(s => Number(s.average_risk || 0));
+                        const covEl = document.getElementById('coverageSpark');
+                        const compEl = document.getElementById('complianceSpark');
+                        const trustEl = document.getElementById('trustSpark');
+                        const riskEl = document.getElementById('riskSpark');
+                        // Build latest value labels for tooltips
+                        const last = (series && series.length) ? series[series.length-1] : null;
+                        const lastDate = last && last.timestamp ? new Date(last.timestamp) : null;
+                        const fmtDate = lastDate ? `${lastDate.toISOString().slice(0,19).replace('T',' ') }Z` : '';
+                        const covLabel = last ? `Latest coverage: ${Number(last.coverage_percentage||0).toFixed(1)}%${fmtDate? ' • '+fmtDate:''}` : 'Coverage trend';
+                        const compLabel = last ? `Latest compliance: ${Number(last.compliance_score||0).toFixed(1)}%${fmtDate? ' • '+fmtDate:''}` : 'Compliance trend';
+                        const trustLabel = last ? `Latest trust: ${(Number(last.average_trust||0)).toFixed(2)}${fmtDate? ' • '+fmtDate:''}` : 'Trust trend';
+                        const riskLabel = last ? `Latest risk: ${(Number(last.average_risk||0)).toFixed(3)}${fmtDate? ' • '+fmtDate:''}` : 'Risk trend';
+                        if (covEl){
+                            covEl.title = covLabel;
+                            covEl.setAttribute('aria-label', covLabel);
+                            covEl.innerHTML = this.renderSparkline(coverageVals, 220, 36, '#10b981', covLabel);
+                        }
+                        if (compEl){
+                            compEl.title = compLabel;
+                            compEl.setAttribute('aria-label', compLabel);
+                            compEl.innerHTML = this.renderSparkline(complianceVals, 220, 36, '#f59e0b', compLabel);
+                        }
+                        if (trustEl){
+                            trustEl.title = trustLabel;
+                            trustEl.setAttribute('aria-label', trustLabel);
+                            trustEl.innerHTML = this.renderSparkline(trustVals, 220, 36, '#3b82f6', trustLabel);
+                        }
+                        if (riskEl){
+                            riskEl.title = riskLabel;
+                            riskEl.setAttribute('aria-label', riskLabel);
+                            riskEl.innerHTML = this.renderSparkline(riskVals, 220, 36, '#ef4444', riskLabel);
+                        }
+                    } catch (e) { /* ignore */ }
+                }).catch(()=>{});
             }
 
             renderMetricsError() {
@@ -1140,6 +1230,51 @@
                 return localStorage.getItem('a3e_api_key') || 
                        sessionStorage.getItem('a3e_api_key') || 
                        'demo-token';
+            }
+
+            async ensureTimeseries(accreditor) {
+                const now = Date.now();
+                this._tsCache = this._tsCache || { acc: null, t: 0, series: [] };
+                const stale = (now - this._tsCache.t) > 5*60*1000; // 5 minutes
+                if (!stale && this._tsCache.acc === accreditor && (this._tsCache.series||[]).length) {
+                    return this._tsCache.series;
+                }
+                const url = `/api/user/intelligence-simple/metrics/timeseries/${encodeURIComponent(accreditor||'')}`;
+                const res = await fetch(url + '?days=30&limit=200', { headers: { 'Authorization': `Bearer ${this.getAuthToken()}` }});
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+                const series = (data && data.series) || [];
+                this._tsCache = { acc: accreditor, t: now, series };
+                return series;
+            }
+
+            renderSparkline(values, width=200, height=36, color='#3b82f6', tooltipLabel='') {
+                if (!values || values.length < 2) {
+                    return `<div style="font-size:12px;color:#6b7280">No trend yet</div>`;
+                }
+                const w = width, h = height, pad = 2;
+                const min = Math.min(...values);
+                const max = Math.max(...values);
+                const range = (max - min) || 1;
+                const stepX = (w - pad*2) / (values.length - 1);
+                const points = values.map((v, i) => {
+                    const x = pad + i * stepX;
+                    const y = pad + (h - pad*2) * (1 - (v - min) / range);
+                    return `${x.toFixed(1)},${y.toFixed(1)}`;
+                }).join(' ');
+                // Last value marker and gradient fill under line
+                const last = values[values.length - 1];
+                const lastX = pad + (values.length - 1) * stepX;
+                const lastY = pad + (h - pad*2) * (1 - (last - min) / range);
+                const areaPoints = ` ${pad},${h-pad} ` + points + ` ${lastX},${h-pad}`;
+                const fill = color === '#10b981' ? 'rgba(16,185,129,0.15)' : 'rgba(245,158,11,0.18)';
+                return `
+                <svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+                    ${tooltipLabel ? `<title>${tooltipLabel.replace(/</g,'&lt;')}</title>` : ''}
+                    <polyline points="${areaPoints}" fill="${fill}" stroke="none"></polyline>
+                    <polyline points="${points}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></polyline>
+                    <circle cx="${lastX.toFixed(1)}" cy="${lastY.toFixed(1)}" r="2.5" fill="${color}" />
+                </svg>`;
             }
         }
 

@@ -369,6 +369,23 @@
                         <button class="btn btn-primary" onclick="generateReport('gaps')">Generate Report</button>
                     </div>
                 </div>
+
+                <div class="report-card" id="narrative-card">
+                    <h3 class="report-title">CiteGuard Narrative</h3>
+                    <p class="report-description">Generate an accreditation narrative with inline citations derived from your mapped evidence.</p>
+                    <div class="report-actions">
+                        <button id="btn-generate-narrative" class="btn btn-primary" onclick="generateNarrative()">Generate</button>
+                        <button id="btn-export-narrative" class="btn btn-secondary" onclick="exportNarrative()" disabled>Export DOCX</button>
+                    </div>
+                    <div id="narrative-status" style="margin-top:8px;font-size:0.8rem;color:#6b7280;display:none"></div>
+                    <div id="narrative-preview" style="display:none;margin-top:12px;padding:12px;border:1px solid #e5e7eb;border-radius:6px;background:#fff;max-height:320px;overflow:auto">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                            <strong>Preview</strong>
+                            <span style="color:#9ca3af;font-size:0.7rem">Citations appear as [cite:filename]</span>
+                        </div>
+                        <div id="narrative-html" style="font-size:0.85rem;line-height:1.3"></div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -521,62 +538,60 @@
             document.getElementById('dashboardMetrics').innerHTML = html;
         }
 
-        async function generateReport(type) {
-            const apiKey = localStorage.getItem('a3e_api_key');
-            if (!apiKey) {
-                alert('API key not found. Please log in again.');
-                return;
-            }
-
-            const institutionId = dashboardData?.user?.institution || 'demo-institution';
-            let endpoint = '';
-            let payload = {
-                institution_id: institutionId,
-                accreditor_id: 'SACSCOC', // Default accreditor
-                requested_by: dashboardData?.user?.email || 'demo@example.com'
-            };
-
-            switch (type) {
-                case 'comprehensive':
-                    endpoint = '/api/v1/documents/reports/comprehensive';
-                    payload.report_type = 'comprehensive_compliance';
-                    break;
-                case 'qep':
-                    endpoint = '/api/v1/documents/reports/qep';
-                    payload.qep_focus_area = 'Student Learning Outcomes';
-                    break;
-                case 'evidence':
-                case 'gaps':
-                    // For now, use comprehensive endpoint with different parameters
-                    endpoint = '/api/v1/documents/reports/comprehensive';
-                    payload.report_type = type === 'evidence' ? 'evidence_mapping' : 'gap_analysis';
-                    break;
-            }
-
-            try {
-                const response = await fetch(endpoint, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-API-Key': apiKey
-                    },
-                    body: JSON.stringify(payload)
-                });
-
-                const result = await response.json();
-                
-                if (response.ok) {
-                    alert(`${type} report generation started! Report ID: ${result.report_id}`);
-                    // You could add logic here to track report status
-                } else {
-                    alert(`Error generating report: ${result.detail || 'Unknown error'}`);
-                }
-            } catch (error) {
-                console.error('Error generating report:', error);
-                alert('Error generating report. Please try again.');
+        async function generateNarrative(){
+            const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+            if(!token){ alert('Please log in to generate a narrative.'); return; }
+            const btnGen = document.getElementById('btn-generate-narrative');
+            const btnExport = document.getElementById('btn-export-narrative');
+            const status = document.getElementById('narrative-status');
+            const preview = document.getElementById('narrative-preview');
+            const htmlDiv = document.getElementById('narrative-html');
+            try{
+                btnGen.disabled = true; btnExport.disabled = true;
+                status.style.display = 'block';
+                status.textContent = 'Generating narrative...';
+                preview.style.display = 'none';
+                const res = await fetch('/api/user/intelligence-simple/narrative/generate', { headers: { 'Authorization': `Bearer ${token}` }});
+                if(!res.ok){ throw new Error('Failed to generate narrative'); }
+                const data = await res.json();
+                const html = data && data.html ? data.html : '<p>No mapped evidence available yet. Upload documents to generate a narrative.</p>';
+                htmlDiv.innerHTML = html;
+                preview.style.display = 'block';
+                status.textContent = 'Narrative ready.';
+                btnExport.disabled = !data || !data.html;
+            }catch(e){
+                status.textContent = 'Error: ' + e.message;
+            }finally{
+                btnGen.disabled = false;
+                setTimeout(()=>{ if(status.textContent.startsWith('Narrative ready')) status.style.display='none'; }, 2500);
             }
         }
 
+        async function exportNarrative(){
+            const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+            if(!token){ alert('Please log in to export a narrative.'); return; }
+            const btnGen = document.getElementById('btn-generate-narrative');
+            const btnExport = document.getElementById('btn-export-narrative');
+            const status = document.getElementById('narrative-status');
+            try{
+                btnGen.disabled = true; btnExport.disabled = true;
+                status.style.display = 'block';
+                status.textContent = 'Preparing DOCX export...';
+                const res = await fetch('/api/user/intelligence-simple/narrative/export.docx', { method:'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type':'application/json' }, body: JSON.stringify({}) });
+                if(!res.ok){ throw new Error('Failed to export DOCX'); }
+                const blob = await res.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url; a.download = 'narrative.docx'; a.click();
+                window.URL.revokeObjectURL(url);
+                status.textContent = 'Export complete.';
+            }catch(e){
+                status.textContent = 'Error: ' + e.message;
+            }finally{
+                btnGen.disabled = false; btnExport.disabled = false;
+                setTimeout(()=>{ if(status.textContent === 'Export complete.') status.style.display='none'; }, 2500);
+            }
+        }
         function loadRecentReports() {
             // Mock recent reports since we don't have a history API yet
             const html = `
@@ -616,6 +631,7 @@
             
             document.getElementById('recentReports').innerHTML = html;
         }
+
 
         function logout() {
             localStorage.clear();

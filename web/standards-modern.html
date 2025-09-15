@@ -570,6 +570,37 @@
                 gap: 0.75rem;
             }
         }
+
+        /* Risk Factor Modal */
+        .modal-backdrop { position: fixed; inset:0; background: rgba(0,0,0,0.4); display:none; align-items: flex-start; justify-content: center; overflow-y:auto; z-index: 3000; padding: 4rem 1rem 2rem; }
+        .modal { background: var(--bg-white); border-radius: 1rem; width: 100%; max-width: 860px; box-shadow: var(--shadow-xl); border: 1px solid var(--border-light); position: relative; animation: fadeIn 0.25s ease; }
+        .modal-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-light); background: var(--gradient-primary); color: #fff; border-top-left-radius:1rem; border-top-right-radius:1rem; }
+        .modal-title { font-size: 1.1rem; font-weight: 600; }
+        .modal-close { position: absolute; top:0.75rem; right:0.75rem; background: rgba(255,255,255,0.15); color:#fff; border:none; padding:0.4rem 0.65rem; border-radius: 0.5rem; cursor:pointer; font-weight:600; }
+        .modal-close:hover { background: rgba(255,255,255,0.3); }
+        .modal-body { padding: 1.25rem 1.5rem 1rem; }
+        .modal-footer { padding: 0.85rem 1.5rem 1.25rem; display:flex; justify-content: space-between; align-items:center; gap:1rem; border-top:1px solid var(--border-light); }
+        .factor-table { width:100%; border-collapse: collapse; font-size: 0.75rem; }
+        .factor-table th, .factor-table td { padding:6px 8px; border-bottom:1px solid var(--border-light); text-align:left; }
+        .factor-table th { background: var(--bg-light); font-weight:600; }
+        .badge-risk { display:inline-block; padding:2px 8px; border-radius:9999px; font-size:0.65rem; font-weight:600; letter-spacing:0.04em; }
+        .risk-critical { background:linear-gradient(135deg,#991b1b,#dc2626); color:#fff; }
+        .risk-high { background:linear-gradient(135deg,#b45309,#f59e0b); color:#fff; }
+        .risk-medium { background:linear-gradient(135deg,#92400e,#d97706); color:#fff; }
+        .risk-low { background:linear-gradient(135deg,#075985,#0ea5e9); color:#fff; }
+        .risk-minimal { background:linear-gradient(135deg,#065f46,#10b981); color:#fff; }
+        .pill { display:inline-block; padding:2px 6px; border-radius:6px; background:var(--bg-light); font-size:0.6rem; font-weight:600; }
+        .confidence-bar { height:6px; background:var(--bg-light); border-radius:4px; position:relative; overflow:hidden; }
+        .confidence-fill { position:absolute; inset:0; background: var(--gradient-accent); width:0%; transition: width 0.5s ease; }
+        .issues-list { margin:0.5rem 0 0; padding-left:1rem; }
+        .issues-list li { margin:0.25rem 0; font-size:0.7rem; }
+        .modal-meta-grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(150px,1fr)); gap:0.75rem; margin-bottom:1rem; }
+        .meta-box { background: var(--bg-light); border:1px solid var(--border-light); border-radius:0.65rem; padding:0.6rem 0.7rem; }
+        .meta-label { font-size:0.55rem; text-transform:uppercase; letter-spacing:0.06em; font-weight:600; color:var(--text-medium); }
+        .meta-value { font-size:0.8rem; font-weight:600; color:var(--text-dark); }
+        .loading-inline { font-size:0.75rem; color: var(--text-medium); }
+        @keyframes fadeIn { from { opacity:0; transform: translateY(6px);} to { opacity:1; transform: translateY(0);} }
+        @media (max-width: 640px){ .modal { margin-top:2rem; } .factor-table { font-size:0.65rem; } }
     </style>
 </head>
 <body>
@@ -596,6 +627,19 @@
         </div>
 
         <!-- Filters Section -->
+        <!-- Corpus Metadata Panel -->
+        <div class="filters-section" id="corpusMetadataSection" style="margin-bottom:2rem;display:none">
+            <div class="filters-header" style="background: var(--gradient-accent);">
+                <span>🧬</span>
+                <h2>Standards Corpus Metadata</h2>
+            </div>
+            <div class="filters-content" style="padding-top:1.5rem">
+                <div id="corpusMetaStatus" style="font-size:0.85rem;color:var(--text-medium);margin-bottom:0.75rem;">Loading corpus metadata...</div>
+                <div style="overflow:auto" id="corpusMetaTableWrapper"></div>
+                <div style="margin-top:0.75rem;text-align:right;font-size:0.7rem;color:var(--text-light)" id="corpusMetaGenerated"></div>
+            </div>
+        </div>
+
         <div class="filters-section">
             <div class="filters-header">
                 <span>🔍</span>
@@ -635,6 +679,40 @@
             </div>
         </div>
 
+        <!-- Cross-Accreditor Mapping Section -->
+        <div class="filters-section" style="margin-top:2rem">
+            <div class="filters-header" style="background: var(--gradient-accent);">
+                <span>🔗</span>
+                <h2>Cross-Accreditor Mapping</h2>
+            </div>
+            <div class="filters-content">
+                <div class="filters-grid">
+                    <div class="filter-group">
+                        <label class="filter-label">Source Accreditor</label>
+                        <select id="sourceAccSelect" class="filter-select"></select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Target Accreditor</label>
+                        <select id="targetAccSelect" class="filter-select"></select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Similarity Threshold</label>
+                        <input type="number" id="thresholdInput" class="filter-input" value="0.3" step="0.05" min="0" max="1">
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Top K Matches</label>
+                        <input type="number" id="topKInput" class="filter-input" value="3" min="1" max="10">
+                    </div>
+                </div>
+                <div class="search-controls">
+                    <button class="btn btn-primary" onclick="fetchCrossAccreditorMatches()">🔗 Find Mappings</button>
+                    <button class="btn btn-secondary" onclick="clearCrossAccreditor()">♻️ Reset</button>
+                </div>
+                <div id="crossAccreditorStatus" style="margin-top:1rem;font-size:0.85rem;color:var(--text-medium);"></div>
+                <div id="crossAccreditorResults" style="margin-top:1.5rem"></div>
+            </div>
+        </div>
+
         <!-- Content Area -->
         <div class="content-section" id="contentArea">
             <div class="loading-state">
@@ -648,6 +726,47 @@
         let accreditors = [];
         let currentStandards = [];
         let filteredStandards = [];
+        let accOptionsLoaded = false;
+        let corpusMetadata = [];
+        const RISK_CACHE_CAPACITY = 100;
+        let riskScoreCache = new Map(); // LRU: newest at the end
+        let currentRiskModalStandardId = null;
+
+        function cacheGetRiskScore(standardId){
+            if(!riskScoreCache.has(standardId)) return null;
+            const val = riskScoreCache.get(standardId);
+            // touch: move to end for LRU
+            riskScoreCache.delete(standardId);
+            riskScoreCache.set(standardId, val);
+            return val;
+        }
+
+        function cacheSetRiskScore(standardId, score){
+            if(riskScoreCache.has(standardId)){
+                riskScoreCache.delete(standardId);
+            }
+            riskScoreCache.set(standardId, score);
+            if(riskScoreCache.size > RISK_CACHE_CAPACITY){
+                // Evict LRU (first inserted)
+                const firstKey = riskScoreCache.keys().next().value;
+                if(firstKey !== undefined){ riskScoreCache.delete(firstKey); }
+            }
+        }
+
+        function populateCrossAccreditorSelects(){
+            const src = document.getElementById('sourceAccSelect');
+            const tgt = document.getElementById('targetAccSelect');
+            if(!src || !tgt) return;
+            src.innerHTML = '<option value="">Select source</option>';
+            tgt.innerHTML = '<option value="">Select target</option>';
+            accreditors.forEach(acc => {
+                const o1 = document.createElement('option');
+                o1.value = acc.acronym || acc.id; o1.textContent = acc.acronym || acc.id; src.appendChild(o1);
+                const o2 = document.createElement('option');
+                o2.value = acc.acronym || acc.id; o2.textContent = acc.acronym || acc.id; tgt.appendChild(o2);
+            });
+            accOptionsLoaded = true;
+        }
 
         // Logout function
         function logout() {
@@ -664,7 +783,10 @@
                 if (data.success) {
                     accreditors = data.data.accreditors;
                     populateAccreditorSelect();
+                    populateCrossAccreditorSelects();
                     showAccreditorSelection();
+                    // Also load corpus metadata once accreditors loaded
+                    fetchCorpusMetadata();
                 } else {
                     throw new Error('Failed to load accreditors');
                 }
@@ -672,6 +794,67 @@
                 console.error('Error loading accreditors:', error);
                 showErrorState('Error loading accreditors', 'Please try refreshing the page.');
             }
+        }
+
+        async function fetchCorpusMetadata(accreditorFilter=""){
+            const section = document.getElementById('corpusMetadataSection');
+            section.style.display='block';
+            const statusEl = document.getElementById('corpusMetaStatus');
+            const tableWrapper = document.getElementById('corpusMetaTableWrapper');
+            const genEl = document.getElementById('corpusMetaGenerated');
+            statusEl.textContent = accreditorFilter? `Loading metadata for ${accreditorFilter}...` : 'Loading corpus metadata...';
+            try{
+                const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+                const url = accreditorFilter? `/api/user/intelligence-simple/standards/corpus/metadata?accreditor=${encodeURIComponent(accreditorFilter)}` : '/api/user/intelligence-simple/standards/corpus/metadata';
+                const res = await fetch(url, { headers: token? { 'Authorization': `Bearer ${token}` } : {} });
+                if(!res.ok){
+                    const t = await res.text();
+                    throw new Error(`Request failed (${res.status}): ${t}`);
+                }
+                const data = await res.json();
+                if(!data || !data.success){
+                    throw new Error('Malformed corpus metadata response');
+                }
+                corpusMetadata = data.accreditors || [];
+                renderCorpusMetadataTable(corpusMetadata, data.total_accreditors, data.total_standards);
+                genEl.textContent = `Generated: ${data.generated_at}`;
+                statusEl.textContent = accreditorFilter? `Showing ${corpusMetadata.length} record for ${accreditorFilter}` : `Loaded ${data.total_accreditors} accreditors (${data.total_standards} standards)`;
+            }catch(e){
+                statusEl.textContent = 'Error loading corpus metadata: ' + e.message;
+            }
+        }
+
+        function renderCorpusMetadataTable(items, totalAccreditors, totalStandards){
+            const tableWrapper = document.getElementById('corpusMetaTableWrapper');
+            if(!items || !items.length){
+                tableWrapper.innerHTML = '<div style="padding:1rem;border:1px solid var(--border-light);border-radius:8px;background:var(--bg-white);color:var(--text-medium);">No corpus metadata available.</div>';
+                return;
+            }
+            let html = '<table style="width:100%;border-collapse:collapse;font-size:0.75rem;min-width:900px">';
+            html += '<thead><tr style="background:var(--bg-light)">'
+                + '<th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border-light)">Accreditor</th>'
+                + '<th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border-light)">Version</th>'
+                + '<th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border-light)">Effective Date</th>'
+                + '<th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border-light)">Loaded Nodes</th>'
+                + '<th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border-light)">Declared Standards</th>'
+                + '<th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border-light)">License</th>'
+                + '<th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border-light)">Last Updated</th>'
+                + '<th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border-light)">File</th>'
+                + '</tr></thead><tbody>';
+            items.forEach(m => {
+                html += '<tr>'
+                    + `<td style="padding:6px 8px;border-bottom:1px solid var(--border-light)"><strong>${escapeHtml(m.accreditor||'')}</strong>${m.name? '<br><span style=\"color:var(--text-medium)\">'+escapeHtml(m.name)+'</span>':''}</td>`
+                    + `<td style="padding:6px 8px;border-bottom:1px solid var(--border-light)">${escapeHtml(m.version||'—')}</td>`
+                    + `<td style="padding:6px 8px;border-bottom:1px solid var(--border-light)">${escapeHtml(m.effective_date||'—')}</td>`
+                    + `<td style="padding:6px 8px;border-bottom:1px solid var(--border-light)">${m.loaded_node_count ?? '—'}</td>`
+                    + `<td style="padding:6px 8px;border-bottom:1px solid var(--border-light)">${m.standard_count ?? '—'}</td>`
+                    + `<td style="padding:6px 8px;border-bottom:1px solid var(--border-light)">${escapeHtml(m.license||'—')}</td>`
+                    + `<td style="padding:6px 8px;border-bottom:1px solid var(--border-light)">${escapeHtml(m.last_updated||'—')}</td>`
+                    + `<td style="padding:6px 8px;border-bottom:1px solid var(--border-light)">${escapeHtml(m.file||'')}</td>`
+                    + '</tr>';
+            });
+            html += '</tbody></table>';
+            tableWrapper.innerHTML = html;
         }
 
         function populateAccreditorSelect() {
@@ -821,6 +1004,9 @@
                                     <span>${evidenceCount} Evidence Items</span>
                                 </div>
                                 ` : ''}
+                                <div class="meta-item">
+                                    <button class="btn btn-secondary" style="padding:0.4rem 0.8rem;font-size:0.7rem" onclick="openRiskModal('${standard.code || standard.id}')">Risk Factors</button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -873,11 +1059,85 @@
             }
         }
 
+            async function fetchCrossAccreditorMatches(){
+                const source = document.getElementById('sourceAccSelect').value.trim();
+                const target = document.getElementById('targetAccSelect').value.trim();
+                const threshold = parseFloat(document.getElementById('thresholdInput').value) || 0.3;
+                const topK = parseInt(document.getElementById('topKInput').value) || 3;
+                const statusEl = document.getElementById('crossAccreditorStatus');
+                const resultsEl = document.getElementById('crossAccreditorResults');
+                resultsEl.innerHTML='';
+                if(!source || !target || source===target){
+                    statusEl.textContent='Select distinct source and target accreditors.';
+                    return;
+                }
+                statusEl.textContent='Computing mappings...';
+                try{
+                    const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+                    const res = await fetch(`/api/user/intelligence-simple/standards/cross-accreditor-matches?source=${encodeURIComponent(source)}&target=${encodeURIComponent(target)}&threshold=${threshold}&top_k=${topK}`, { headers: token? { 'Authorization': `Bearer ${token}` } : {} });
+                    if(!res.ok){
+                        const t = await res.text();
+                        throw new Error(`Request failed (${res.status}): ${t}`);
+                    }
+                    const data = await res.json();
+                    renderCrossAccreditorResults(data.matches || [], data.source, data.target, threshold);
+                    statusEl.textContent=`${(data.matches||[]).length} candidate mappings found (threshold ${threshold}).`;
+                }catch(e){
+                    statusEl.textContent='Error: ' + e.message;
+                }
+            }
+
+            function renderCrossAccreditorResults(matches, source, target, threshold){
+                const container = document.getElementById('crossAccreditorResults');
+                if(!matches.length){
+                    container.innerHTML = '<div style="padding:1rem;border:1px solid var(--border-light);border-radius:8px;background:var(--bg-white);color:var(--text-medium);">No matches above the threshold.</div>';
+                    return;
+                }
+                let html = `<div style="overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
+                    <thead><tr style="background:var(--bg-light)">
+                        <th style="text-align:left;padding:8px;border-bottom:1px solid var(--border-light)">${source} Standard</th>
+                        <th style="text-align:left;padding:8px;border-bottom:1px solid var(--border-light)">${target} Candidate</th>
+                        <th style="text-align:left;padding:8px;border-bottom:1px solid var(--border-light)">Score</th>
+                        <th style="text-align:left;padding:8px;border-bottom:1px solid var(--border-light)">Rationale</th>
+                    </tr></thead><tbody>`;
+                matches.forEach(m => {
+                    const scorePct = (m.score * 100).toFixed(1) + '%';
+                    const rationale = (m.overlap_keywords && m.overlap_keywords.length) ? m.overlap_keywords.slice(0,6).join(', ') : '—';
+                    html += `<tr>
+                        <td style="padding:8px;border-bottom:1px solid var(--border-light)"><strong>${m.source_id}</strong><br><span style="color:var(--text-medium)">${escapeHtml(m.source_title||'')}</span></td>
+                        <td style="padding:8px;border-bottom:1px solid var(--border-light)"><strong>${m.target_id}</strong><br><span style="color:var(--text-medium)">${escapeHtml(m.target_title||'')}</span></td>
+                        <td style="padding:8px;border-bottom:1px solid var(--border-light)"><span style="background:var(--gradient-accent);color:#fff;padding:2px 6px;border-radius:4px;font-weight:600">${scorePct}</span></td>
+                        <td style="padding:8px;border-bottom:1px solid var(--border-light)">${escapeHtml(rationale)}</td>
+                    </tr>`;
+                });
+                html += '</tbody></table></div>';
+                container.innerHTML = html;
+            }
+
+            function clearCrossAccreditor(){
+                document.getElementById('sourceAccSelect').selectedIndex = 0;
+                document.getElementById('targetAccSelect').selectedIndex = 0;
+                document.getElementById('crossAccreditorResults').innerHTML='';
+                document.getElementById('crossAccreditorStatus').textContent='';
+            }
+
+            function escapeHtml(str){
+                return (str||'').replace(/[&<>"]/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
+            }
+
         // Event listeners
         document.getElementById('accreditorSelect').addEventListener('change', function() {
             const accreditorId = this.value;
             const institutionType = document.getElementById('institutionTypeSelect').value;
             loadStandards(accreditorId, institutionType);
+            if(accreditorId){
+                fetchCorpusMetadata(accreditorId);
+            } else {
+                fetchCorpusMetadata("");
+            }
+            // Clear cached risk scores on context change
+            riskScoreCache = new Map();
+            currentRiskModalStandardId = null;
         });
 
         document.getElementById('institutionTypeSelect').addEventListener('change', function() {
@@ -896,6 +1156,164 @@
         document.addEventListener('DOMContentLoaded', function() {
             loadAccreditors();
         });
+
+        // Risk Factor Modal Logic
+        function ensureModal(){
+            if(document.getElementById('riskModalBackdrop')) return;
+            const backdrop = document.createElement('div');
+            backdrop.id='riskModalBackdrop';
+            backdrop.className='modal-backdrop';
+            backdrop.innerHTML = `
+                <div class="modal" role="dialog" aria-modal="true" aria-labelledby="riskModalTitle">
+                    <div class="modal-header">
+                        <div class="modal-title" id="riskModalTitle">Risk Factor Breakdown</div>
+                        <button class="modal-close" onclick="closeRiskModal()">✕</button>
+                    </div>
+                    <div class="modal-body" id="riskModalBody">
+                        <div class="loading-inline">Select a standard to view risk factors.</div>
+                    </div>
+                    <div class="modal-footer">
+                        <div style="font-size:0.65rem;color:var(--text-medium)">Model outputs are indicative. See transparency doc for formulas.</div>
+                        <div style="display:flex;gap:0.5rem;align-items:center;">
+                            <button class="btn btn-primary" style="padding:0.45rem 0.9rem;font-size:0.7rem" onclick="refreshRiskModal()">Refresh</button>
+                            <a href="/TRANSPARENCY_METRICS.md" target="_blank" style="text-decoration:none;font-size:0.65rem;font-weight:600;color:var(--accent-green)">Transparency Reference ↗</a>
+                            <button class="btn btn-secondary" style="padding:0.45rem 0.9rem;font-size:0.7rem" onclick="closeRiskModal()">Close</button>
+                        </div>
+                    </div>
+                </div>`;
+            backdrop.addEventListener('click', (e)=>{ if(e.target===backdrop) closeRiskModal(); });
+            document.body.appendChild(backdrop);
+        }
+
+        function openRiskModal(standardId){
+            ensureModal();
+            const backdrop = document.getElementById('riskModalBackdrop');
+            const body = document.getElementById('riskModalBody');
+            backdrop.style.display='flex';
+            currentRiskModalStandardId = standardId;
+            // Serve from cache if available for instant response
+            const cached = cacheGetRiskScore(standardId);
+            if(cached){
+                renderRiskModal(cached);
+                return;
+            }
+            body.innerHTML = `<div class='loading-inline'>Scoring risk for <strong>${escapeHtml(standardId)}</strong>...</div>`;
+            // Derive naive inputs (coverage=0 if no evidence count; trust derived from placeholder)
+            // NOTE: In production tie into real mapping/trust data per standard if available client-side.
+            const payload = new URLSearchParams();
+            payload.append('standard_id', standardId);
+            // Provide neutral defaults letting backend compute risk mostly from lack of data.
+            payload.append('coverage', '0');
+            payload.append('avg_evidence_age_days', '365');
+            fetch('/api/user/intelligence-simple/risk/score-standard', {
+                method:'POST',
+                headers: {
+                    'Content-Type':'application/x-www-form-urlencoded',
+                    ...(localStorage.getItem('access_token') ? { 'Authorization': 'Bearer '+ localStorage.getItem('access_token') } : (localStorage.getItem('jwt_token') ? { 'Authorization': 'Bearer '+ localStorage.getItem('jwt_token') } : {}))
+                },
+                body: payload.toString()
+            }).then(async res => {
+                if(!res.ok){
+                    const t = await res.text();
+                    throw new Error(`HTTP ${res.status}: ${t}`);
+                }
+                return res.json();
+            }).then(data => {
+                if(!data.success){ throw new Error('Malformed response'); }
+                const score = data.data || {};
+                score._cachedUpdatedAt = new Date().toISOString();
+                cacheSetRiskScore(standardId, score);
+                renderRiskModal(score);
+            }).catch(err => {
+                body.innerHTML = `<div style='color:#dc2626;font-size:0.75rem;'>Failed to load risk factors: ${escapeHtml(err.message)}</div>`;
+            });
+        }
+
+        function closeRiskModal(){
+            const backdrop = document.getElementById('riskModalBackdrop');
+            if(backdrop) backdrop.style.display='none';
+        }
+
+        function refreshRiskModal(){
+            if(!currentRiskModalStandardId){ return; }
+            const body = document.getElementById('riskModalBody');
+            const standardId = currentRiskModalStandardId;
+            body.innerHTML = `<div class='loading-inline'>Refreshing score for <strong>${escapeHtml(standardId)}</strong>...</div>`;
+            const payload = new URLSearchParams();
+            payload.append('standard_id', standardId);
+            payload.append('coverage', '0');
+            payload.append('avg_evidence_age_days', '365');
+            fetch('/api/user/intelligence-simple/risk/score-standard', {
+                method:'POST',
+                headers: {
+                    'Content-Type':'application/x-www-form-urlencoded',
+                    ...(localStorage.getItem('access_token') ? { 'Authorization': 'Bearer '+ localStorage.getItem('access_token') } : (localStorage.getItem('jwt_token') ? { 'Authorization': 'Bearer '+ localStorage.getItem('jwt_token') } : {}))
+                },
+                body: payload.toString()
+            }).then(async res => {
+                if(!res.ok){
+                    const t = await res.text();
+                    throw new Error(`HTTP ${res.status}: ${t}`);
+                }
+                return res.json();
+            }).then(data => {
+                if(!data.success){ throw new Error('Malformed response'); }
+                const score = data.data || {};
+                score._cachedUpdatedAt = new Date().toISOString();
+                cacheSetRiskScore(standardId, score);
+                renderRiskModal(score);
+            }).catch(err => {
+                body.innerHTML = `<div style='color:#dc2626;font-size:0.75rem;'>Failed to refresh: ${escapeHtml(err.message)}</div>`;
+            });
+        }
+
+        function riskLevelBadge(level){
+            const cls = {
+                critical:'risk-critical', high:'risk-high', medium:'risk-medium', low:'risk-low', minimal:'risk-minimal'
+            }[level] || 'risk-low';
+            return `<span class='badge-risk ${cls}'>${level.toUpperCase()}</span>`;
+        }
+
+        function renderRiskModal(score){
+            const body = document.getElementById('riskModalBody');
+            if(!score){ body.innerHTML = '<div style="font-size:0.75rem;">No score available.</div>'; return; }
+            const issues = (score.predicted_issues||[]).map(i=>`<li>${escapeHtml(i)}</li>`).join('');
+            const factors = (score.factors||[]).sort((a,b)=> b.contribution - a.contribution);
+            let tableHtml = `<table class='factor-table'><thead><tr>
+                <th>Factor</th><th>Raw</th><th>Norm</th><th>Weight</th><th>Contribution</th><th>Description</th>
+            </tr></thead><tbody>`;
+            factors.forEach(f => {
+                tableHtml += `<tr>
+                    <td><strong>${escapeHtml(f.factor)}</strong></td>
+                    <td>${f.value}</td>
+                    <td>${f.normalized}</td>
+                    <td>${f.weight}</td>
+                    <td>${f.contribution}</td>
+                    <td style='max-width:240px;'>${escapeHtml(f.description||'')}</td>
+                </tr>`;
+            });
+            tableHtml += '</tbody></table>';
+            const lastScored = score._cachedUpdatedAt ? `<div class='meta-box'><div class='meta-label'>Last Scored</div><div class='meta-value'>${escapeHtml(score._cachedUpdatedAt)}</div></div>` : '';
+            body.innerHTML = `
+                <div class='modal-meta-grid'>
+                    <div class='meta-box'><div class='meta-label'>Standard</div><div class='meta-value'>${escapeHtml(score.standard_id)}</div></div>
+                    <div class='meta-box'><div class='meta-label'>Risk Score</div><div class='meta-value'>${(score.risk_score*100).toFixed(1)}%</div></div>
+                    <div class='meta-box'><div class='meta-label'>Risk Level</div><div class='meta-value'>${riskLevelBadge(score.risk_level)}</div></div>
+                    <div class='meta-box'><div class='meta-label'>Priority</div><div class='meta-value'>${score.remediation_priority}</div></div>
+                    <div class='meta-box'><div class='meta-label'>Time To Review</div><div class='meta-value'>${score.time_to_review}d</div></div>
+                    <div class='meta-box'><div class='meta-label'>Confidence</div><div class='meta-value'>${(score.confidence*100).toFixed(0)}%</div></div>
+                    ${lastScored}
+                </div>
+                <div style='margin-bottom:0.75rem;'>
+                    <div class='confidence-bar'><div class='confidence-fill' style='width:${(score.confidence*100).toFixed(0)}%'></div></div>
+                </div>
+                <div style='margin-bottom:0.75rem;'>${tableHtml}</div>
+                <div style='margin-top:0.5rem;'>
+                    <div style='font-size:0.65rem;font-weight:600;letter-spacing:0.05em;color:var(--text-medium);margin-bottom:0.25rem;'>Predicted Issues</div>
+                    ${issues ? `<ul class='issues-list'>${issues}</ul>` : `<div style="font-size:0.65rem;color:var(--text-light);">No specific issues predicted.</div>`}
+                </div>
+            `;
+        }
     </script>
 </body>
 </html>

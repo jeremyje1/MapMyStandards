@@ -16,9 +16,12 @@ import logging
 import jwt
 
 from ...services.standards_graph import standards_graph
+from ...services.standards_loader import get_corpus_metadata
 from ...services.evidence_mapper import evidence_mapper, EvidenceDocument
 from ...services.evidence_trust import evidence_trust_scorer, EvidenceType, SourceSystem
 from ...services.gap_risk_predictor import gap_risk_predictor
+from ...services.risk_explainer import risk_explainer, StandardEvidenceSnapshot
+from ...services.metrics_timeseries import maybe_snapshot, get_series
 from ...services.analytics_service import analytics_service
 from ...core.config import get_settings
 
@@ -304,6 +307,94 @@ async def get_dashboard_overview(current_user: Dict[str, Any] = Depends(get_curr
         raise HTTPException(status_code=500, detail="Failed to build overview")
 
 
+@router.get("/dashboard/metrics")
+async def get_dashboard_metrics_simple(current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+    """Return normalized dashboard metrics with coverage, compliance, trust, and risk transparency.
+
+    compliance_score = (coverage*0.7 + avg_trust*0.3)*100 where:
+      coverage = unique standards with evidence / total standards (for selected accreditor)
+      avg_trust = mean EvidenceTrust overall scores across uploaded documents (fallback 0.7)
+    average_risk and distribution come from RiskExplainer aggregated previously scored standards (process-local cache).
+    """
+    try:
+        settings_ = _merge_claims_with_settings(current_user)
+        uploads = _get_user_uploads(current_user)
+        acc = (settings_.get("primary_accreditor") or "HLC").upper()
+        total_roots = len(standards_graph.get_accreditor_standards(acc)) or 0
+        docs = uploads.get("documents", [])
+        uniq_standards = set(uploads.get("unique_standards", []) or [])
+
+        documents_analyzed = len(docs)
+        standards_mapped = len(uniq_standards)
+        total_standards = total_roots if total_roots > 0 else max(total_roots, standards_mapped)
+        coverage = (standards_mapped / total_standards) if total_standards else 0.0
+
+        trust_scores: List[float] = []
+        for d in docs:
+            ts = (d.get("trust_score") or {}).get("overall_score")
+            if isinstance(ts, (int, float)):
+                trust_scores.append(float(ts))
+        avg_trust = float(sum(trust_scores) / len(trust_scores)) if trust_scores else 0.7
+
+        compliance_score = 0.0
+        if total_standards > 0 and (standards_mapped > 0 or documents_analyzed > 0):
+            compliance_score = round((coverage * 0.7 + avg_trust * 0.3) * 100, 1)
+
+        risk_agg = risk_explainer.aggregate()
+        average_risk = risk_agg.get("average_risk", 0.0)
+        risk_distribution = risk_agg.get("risk_distribution", {})
+
+        data = {
+            "core_metrics": {
+                "documents_analyzed": documents_analyzed,
+                "documents_processing": 0,
+                "standards_mapped": standards_mapped,
+                "total_standards": total_standards,
+                "reports_generated": 0,
+                "reports_pending": 0,
+            },
+            "performance_metrics": {
+                "coverage_percentage": round(coverage * 100, 1),
+                "compliance_score": compliance_score,
+                "average_trust": round(avg_trust, 3),
+                "average_risk": round(average_risk, 4),
+                "risk_distribution": risk_distribution,
+                "explanations": {
+                    "coverage": "coverage = unique standards with any evidence / total standards for selected accreditor",
+                    "compliance": "compliance = (coverage*0.7 + avg_trust*0.3) * 100; trust from EvidenceTrust when available",
+                    "average_trust": "average_trust = mean of document EvidenceTrust overall scores (fallback 0.7 if none)",
+                    "average_risk": "average_risk = mean per-standard calibrated risk score (0-1) from GapRisk Predictor",
+                },
+            },
+            "account_info": {
+                "primary_accreditor": acc,
+                "trial_days_remaining": settings_.get("trial_days_remaining", 14),
+            },
+        }
+        try:
+            # Opportunistic snapshot (throttled) for time-series tracking
+            maybe_snapshot(
+                accreditor=acc,
+                payload={
+                    "coverage_percentage": data["performance_metrics"]["coverage_percentage"],
+                    "compliance_score": data["performance_metrics"]["compliance_score"],
+                    "average_trust": data["performance_metrics"]["average_trust"],
+                    "average_risk": data["performance_metrics"]["average_risk"],
+                    "documents_analyzed": data["core_metrics"]["documents_analyzed"],
+                    "standards_mapped": data["core_metrics"]["standards_mapped"],
+                    "total_standards": data["core_metrics"]["total_standards"],
+                },
+                min_interval_hours=6,
+                force=False,
+            )
+        except Exception:
+            pass
+        return {"success": True, **data}
+    except Exception as e:
+        logger.error(f"Dashboard metrics error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to compute dashboard metrics")
+
+
 # ------------------------------
 # Standards search (code/title/description)
 # ------------------------------
@@ -337,6 +428,40 @@ async def search_standards(q: str, current_user: Dict[str, Any] = Depends(get_cu
         raise HTTPException(status_code=500, detail="Failed to search standards")
 
 
+@router.get("/standards/corpus/metadata")
+async def get_corpus_metadata_api(accreditor: Optional[str] = None, current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+    """Expose cached corpus metadata gathered during standards load.
+
+    Returns summary counts plus per-accreditor metadata (version, effective_date, license, etc.).
+    Optionally filter to a single accreditor via query param 'accreditor'.
+    """
+    try:
+        raw = get_corpus_metadata() or {}
+        items: List[Dict[str, Any]] = []
+        total_standards = 0
+        for acc, meta in raw.items():
+            if accreditor and acc.lower() != accreditor.lower():
+                continue
+            loaded_nodes = len(standards_graph.get_accreditor_standards(acc))
+            standard_count = int(meta.get("standard_count") or loaded_nodes)
+            total_standards += standard_count
+            items.append({
+                **meta,
+                "loaded_node_count": loaded_nodes,
+                "standard_count": standard_count,
+            })
+        return {
+            "success": True,
+            "generated_at": datetime.utcnow().isoformat(),
+            "total_accreditors": len(items),
+            "total_standards": total_standards,
+            "accreditors": sorted(items, key=lambda x: x.get("accreditor", "")),
+        }
+    except Exception as e:
+        logger.error(f"Corpus metadata error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to load corpus metadata")
+
+
 @router.get("/metrics/summary")
 async def get_metrics_summary(current_user: Dict[str, Any] = Depends(get_current_user_simple)):
     # Reflect actual uploads where available
@@ -362,6 +487,26 @@ async def get_metrics_summary(current_user: Dict[str, Any] = Depends(get_current
     }
 
 
+@router.get("/metrics/timeseries")
+async def get_timeseries_all(days: int = 30, limit: int = 200, current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+    try:
+        series = get_series(None, days=days, limit=limit)
+        return {"success": True, "count": len(series), "series": series}
+    except Exception as e:
+        logger.error(f"Timeseries fetch error (all): {e}")
+        raise HTTPException(status_code=500, detail="Failed to get timeseries")
+
+
+@router.get("/metrics/timeseries/{accreditor}")
+async def get_timeseries_accreditor(accreditor: str, days: int = 30, limit: int = 200, current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+    try:
+        series = get_series(accreditor, days=days, limit=limit)
+        return {"success": True, "count": len(series), "accreditor": accreditor.upper(), "series": series}
+    except Exception as e:
+        logger.error(f"Timeseries fetch error ({accreditor}): {e}")
+        raise HTTPException(status_code=500, detail="Failed to get timeseries for accreditor")
+
+
 # ------------------------------
 # Risk model transparency
 # ------------------------------
@@ -380,6 +525,81 @@ async def get_risk_factors(current_user: Dict[str, Any] = Depends(get_current_us
     ]
     weights = (await get_risk_weights(current_user)).get("weights", {})  # type: ignore
     return {"factors": factors, "weights": weights, "formula": "overall_risk = weighted_mean(factors)"}
+
+
+# ------------------------------
+# Risk scoring endpoints
+# ------------------------------
+@router.post("/risk/score-standard")
+async def score_single_standard_risk(
+    standard_id: str,
+    coverage: float = 0.0,
+    avg_evidence_age_days: float = 365,
+    trust_scores: Optional[List[float]] = None,
+    overdue_tasks: int = 0,
+    total_tasks: int = 0,
+    recent_changes: int = 0,
+    historical_findings: int = 0,
+    days_to_review: int = 180,
+    current_user: Dict[str, Any] = Depends(get_current_user_simple),
+):
+    """Score a single standard's risk with transparent factor breakdown (non-persistent)."""
+    try:
+        snapshot = StandardEvidenceSnapshot(
+            standard_id=standard_id,
+            coverage_percent=max(0.0, min(100.0, coverage)),
+            trust_scores=trust_scores or [],
+            evidence_ages_days=[int(avg_evidence_age_days)],
+            overdue_tasks=overdue_tasks,
+            total_tasks=total_tasks,
+            recent_changes=recent_changes,
+            historical_findings=historical_findings,
+            days_to_review=days_to_review,
+        )
+        score = risk_explainer.compute_standard_risk(snapshot)
+        return {"success": True, "data": score.to_dict()}
+    except Exception as e:
+        logger.error(f"Risk score error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to score standard risk")
+
+
+@router.post("/risk/score-bulk")
+async def score_bulk_risk(payload: Dict[str, Any], current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+    """Bulk score list of standard snapshots: payload = { items: [ {standard_id, coverage_percent, trust_scores?, evidence_ages_days?, overdue_tasks?, total_tasks?, recent_changes?, historical_findings?, days_to_review?} ] }"""
+    try:
+        items = (payload or {}).get("items") or []
+        snapshots: List[StandardEvidenceSnapshot] = []
+        for it in items[:200]:  # cap
+            try:
+                snapshots.append(StandardEvidenceSnapshot(
+                    standard_id=str(it.get("standard_id")),
+                    coverage_percent=float(it.get("coverage_percent", 0.0)),
+                    trust_scores=[float(x) for x in (it.get("trust_scores") or []) if isinstance(x, (int, float))],
+                    evidence_ages_days=[int(x) for x in (it.get("evidence_ages_days") or []) if isinstance(x, (int, float))] or [365],
+                    overdue_tasks=int(it.get("overdue_tasks", 0)),
+                    total_tasks=int(it.get("total_tasks", 0)),
+                    recent_changes=int(it.get("recent_changes", 0)),
+                    historical_findings=int(it.get("historical_findings", 0)),
+                    days_to_review=int(it.get("days_to_review", 180)),
+                ))
+            except Exception:
+                continue
+        scores = risk_explainer.compute_bulk(snapshots)
+        return {"success": True, "count": len(scores), "data": [s.to_dict() for s in scores]}
+    except Exception as e:
+        logger.error(f"Bulk risk score error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to score bulk risk")
+
+
+@router.get("/risk/aggregate")
+async def aggregate_risk(current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+    """Aggregate statistics (distribution, average_risk, top factor contributions) over this process's scored standards."""
+    try:
+        agg = risk_explainer.aggregate()
+        return {"success": True, "data": agg}
+    except Exception as e:
+        logger.error(f"Risk aggregate error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to aggregate risk data")
 
 
 # ------------------------------

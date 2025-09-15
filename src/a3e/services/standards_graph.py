@@ -56,13 +56,71 @@ class StandardsGraph:
 
     # ------------------------ Initialization ------------------------
     def _initialize_graph(self) -> None:
-        self._add_sacscoc_standards()
-        self._add_hlc_standards()
-        self._add_msche_standards()
-        self._add_wasc_standards()
-        self._add_nwccu_standards()
-        self._add_neasc_standards()
-        logger.info("StandardsGraph initialized with %d nodes", len(self.nodes))
+        """Initialize from external corpus if present, otherwise seed sample data."""
+        loaded_any = False
+        try:
+            from .standards_loader import load_corpus  # type: ignore
+            from pathlib import Path
+            # Attempt to locate repo root → data/standards
+            repo_root = Path(__file__).resolve().parents[3]
+            corpus_dir = repo_root / "data" / "standards"
+            if corpus_dir.exists():
+                corpus = load_corpus(corpus_dir)
+                for accreditor, standards in corpus.items():
+                    for standard in standards:
+                        self._add_standard_hierarchy(accreditor, standard)
+                if self.nodes:
+                    loaded_any = True
+                    logger.info("StandardsGraph loaded from corpus at %s with %d nodes", corpus_dir, len(self.nodes))
+        except Exception as e:
+            logger.warning("Corpus load not available or failed: %s", e)
+
+        if not loaded_any:
+            # Fallback seeded content
+            self._add_sacscoc_standards()
+            self._add_hlc_standards()
+            self._add_msche_standards()
+            self._add_wasc_standards()
+            self._add_nwccu_standards()
+            self._add_neasc_standards()
+            logger.info("StandardsGraph initialized with %d nodes (seed data)", len(self.nodes))
+
+    def reload_from_corpus(self, corpus_dir: Optional[str] = None, fallback_to_seed: bool = True) -> Dict[str, Any]:
+        """Reload the graph from a corpus directory. Returns stats.
+
+        - corpus_dir: explicit path to data/standards; if None, try repo_root/data/standards
+        - fallback_to_seed: if no corpus found, optionally repopulate seed data
+        """
+        # Clear existing graph
+        self.nodes.clear()
+        self.accreditor_roots.clear()
+        self.keyword_index.clear()
+
+        loaded_any = False
+        try:
+            from .standards_loader import load_corpus  # type: ignore
+            from pathlib import Path
+            base = Path(corpus_dir) if corpus_dir else Path(__file__).resolve().parents[3] / "data" / "standards"
+            if base.exists():
+                corpus = load_corpus(base)
+                for accreditor, standards in corpus.items():
+                    for standard in standards:
+                        self._add_standard_hierarchy(accreditor, standard)
+                loaded_any = len(self.nodes) > 0
+                logger.info("Reloaded standards corpus from %s; nodes=%d", base, len(self.nodes))
+        except Exception as e:
+            logger.error("Failed to reload corpus: %s", e)
+
+        if not loaded_any and fallback_to_seed:
+            self._add_sacscoc_standards()
+            self._add_hlc_standards()
+            self._add_msche_standards()
+            self._add_wasc_standards()
+            self._add_nwccu_standards()
+            self._add_neasc_standards()
+            logger.info("Reloaded seed standards; nodes=%d", len(self.nodes))
+
+        return self.get_graph_stats()
 
     # ------------------------ Data seeding ------------------------
     def _add_sacscoc_standards(self) -> None:
@@ -275,20 +333,31 @@ class StandardsGraph:
 
     # ------------------------ Helpers ------------------------
     def _add_standard_hierarchy(self, accreditor: str, standard_data: Dict[str, Any]) -> None:
+        # Resolve metadata
+        version = str(standard_data.get('version', '2024'))
+        eff_raw = standard_data.get('effective_date')
+        if isinstance(eff_raw, datetime):
+            eff_dt = eff_raw
+        else:
+            try:
+                eff_dt = datetime.fromisoformat(str(eff_raw)) if eff_raw else datetime(2024, 1, 1)
+            except Exception:
+                eff_dt = datetime(2024, 1, 1)
+
         # Standard node
         standard_node = StandardNode(
             node_id=standard_data['id'],
             accreditor=accreditor,
             standard_id=standard_data['id'],
             title=standard_data['title'],
-            description=f"{accreditor} Standard: {standard_data['title']}",
+            description=standard_data.get('description', f"{accreditor} Standard: {standard_data['title']}"),
             level='standard',
             parent_id=None,
             children=[],
-            text_content=standard_data['title'],
-            keywords=self._extract_keywords(standard_data['title']),
-            version='2024',
-            effective_date=datetime(2024, 1, 1),
+            text_content=f"{standard_data.get('title','')} {standard_data.get('description','')}",
+            keywords=self._extract_keywords(standard_data.get('title', '')),
+            version=version,
+            effective_date=eff_dt,
             evidence_requirements=[],
         )
         self.nodes[standard_node.node_id] = standard_node
@@ -297,19 +366,20 @@ class StandardsGraph:
 
         # Clauses
         for clause in standard_data.get('clauses', []):
+            clause_desc = clause.get('description', '')
             clause_node = StandardNode(
                 node_id=clause['id'],
                 accreditor=accreditor,
                 standard_id=clause['id'],
-                title=clause['title'],
-                description=clause['description'],
+                title=clause.get('title', ''),
+                description=clause_desc,
                 level='clause',
                 parent_id=standard_data['id'],
                 children=[],
-                text_content=f"{clause['title']}: {clause['description']}",
-                keywords=self._extract_keywords(f"{clause['title']} {clause['description']}"),
-                version='2024',
-                effective_date=datetime(2024, 1, 1),
+                text_content=f"{clause.get('title','')}: {clause_desc}",
+                keywords=self._extract_keywords(f"{clause.get('title','')} {clause_desc}") | self._extract_keywords(standard_data.get('title', '')),
+                version=version,
+                effective_date=eff_dt,
                 evidence_requirements=clause.get('indicators', []),
             )
             self.nodes[clause_node.node_id] = clause_node
@@ -330,8 +400,8 @@ class StandardsGraph:
                     children=[],
                     text_content=indicator,
                     keywords=self._extract_keywords(indicator),
-                    version='2024',
-                    effective_date=datetime(2024, 1, 1),
+                    version=version,
+                    effective_date=eff_dt,
                     evidence_requirements=[indicator],
                 )
                 self.nodes[indicator_id] = indicator_node

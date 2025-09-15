@@ -85,8 +85,20 @@ async def get_standards_graph(
             return standards_graph.export_graph_structure()
     except Exception as e:
         logger.error(f"Error fetching standards graph: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    raise HTTPException(status_code=500, detail=str(e))
 
+@router.post("/standards/reload")
+async def reload_standards_corpus(
+    api_key: str = Depends(verify_api_key)
+) -> Dict[str, Any]:
+    """Reload standards from data/standards without restarting the service."""
+    try:
+        stats = standards_graph.reload_from_corpus()
+        return {"status": "ok", "stats": stats}
+    except Exception as e:
+        logger.error(f"Error reloading standards corpus: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    
 
 @router.post("/evidence/map", response_model=EvidenceMappingResponse)
 async def map_evidence_to_standards(
@@ -128,8 +140,8 @@ async def map_evidence_to_standards(
         
     except Exception as e:
         logger.error(f"Error mapping evidence: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
+    raise HTTPException(status_code=500, detail=str(e))
+    
 
 @router.post("/evidence/trust-score")
 async def calculate_trust_score(
@@ -153,7 +165,7 @@ async def calculate_trust_score(
         
     except Exception as e:
         logger.error(f"Error calculating trust score: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/gap/predict-risk")
@@ -248,8 +260,7 @@ async def get_compliance_status(
             "average_coverage": round(overall_coverage / len(standards), 1),
             "average_trust": round(sum(overall_trust) / len(overall_trust), 3) if overall_trust else 0,
             "high_risk_standards": high_risk_count,
-            "compliance_score": round((overall_coverage / len(standards)) * 0.7 + 
-                                     (sum(overall_trust) / len(overall_trust) * 100 if overall_trust else 0) * 0.3, 1)
+            "compliance_score": round((overall_coverage / len(standards)) * 0.7 + ((sum(overall_trust) / len(overall_trust) * 100) if overall_trust else 0) * 0.3, 1)
         }
         
         return status
