@@ -233,7 +233,8 @@ async def get_metrics_summary(current_user: Dict[str, Any] = Depends(get_current
             "documents_uploaded": 0,
             "ai_accuracy": 0.87,
             "time_savings": {"hours_saved": 32, "efficiency_gain": "4.2x"},
-            "coverage": {"standards_analyzed": 59, "documents_processed": 15, "evidence_mapped": 187},
+            # Default coverage is zero for brand-new users; UI will show real values once uploads exist
+            "coverage": {"standards_analyzed": 0, "documents_processed": 0, "evidence_mapped": 0},
             "algorithms_performance": {
                 "StandardsGraph™": {"accuracy": 0.92, "speed": "real-time"},
                 "EvidenceMapper™": {"accuracy": 0.87, "confidence": 0.85},

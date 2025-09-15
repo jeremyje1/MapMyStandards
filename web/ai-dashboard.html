@@ -507,10 +507,11 @@
                     document.getElementById('metricDocuments').textContent = m.documents_uploaded;
                 }
                 if (m.coverage) {
-                    if (m.coverage.documents_processed != null) {
+                    // Only override when coverage values are positive to avoid showing placeholder counts
+                    if (m.coverage.documents_processed != null && Number(m.coverage.documents_processed) > 0) {
                         document.getElementById('metricDocuments').textContent = m.coverage.documents_processed;
                     }
-                    if (m.coverage.standards_analyzed != null) {
+                    if (m.coverage.standards_analyzed != null && Number(m.coverage.standards_analyzed) > 0) {
                         document.getElementById('metricStandards').textContent = m.coverage.standards_analyzed;
                     }
                 }
