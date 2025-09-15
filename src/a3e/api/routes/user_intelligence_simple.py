@@ -547,7 +547,10 @@ async def get_timeseries_accreditor(accreditor: str, days: int = 30, limit: int 
 
 
 @router.post("/metrics/timeseries/force-snapshot")
-async def force_timeseries_snapshot(current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+async def force_timeseries_snapshot(
+    body: Optional[Dict[str, Any]] = None,
+    current_user: Dict[str, Any] = Depends(get_current_user_simple)
+):
     """Admin-only: Force a metrics snapshot for the caller's accreditor.
 
     Restricted to demo/testing accounts to avoid abuse in production.
@@ -557,9 +560,24 @@ async def force_timeseries_snapshot(current_user: Dict[str, Any] = Depends(get_c
         if not email or not (email.endswith("@mapmystandards.ai") or email.startswith("demo@") or email == "demo@example.com"):
             raise HTTPException(status_code=403, detail="forbidden")
 
-        metrics = _compute_dashboard_metrics_for_snapshot(current_user)
-        result = maybe_snapshot(metrics["accreditor"], metrics, min_interval_hours=0, force=True)
-        return {"success": True, **result}
+        body = body or {}
+        override_accr = str(body.get("accreditor") or "").upper().strip()
+        count = int(body.get("count", 1))
+        spacing_minutes = int(body.get("spacing_minutes", 360))  # default 6h spacing
+
+        base_metrics = _compute_dashboard_metrics_for_snapshot(current_user)
+        if override_accr:
+            base_metrics["accreditor"] = override_accr
+
+        from datetime import datetime, timedelta
+        stored = []
+        now = datetime.utcnow()
+        for i in range(max(1, count)):
+            snap = dict(base_metrics)
+            snap["timestamp"] = (now - timedelta(minutes=spacing_minutes * (count - 1 - i))).isoformat()
+            res = maybe_snapshot(snap["accreditor"], snap, min_interval_hours=0, force=True)
+            stored.append(res.get("snapshot") or res)
+        return {"success": True, "stored_count": len(stored), "accreditor": base_metrics["accreditor"], "samples": stored[-3:]}  # return last 3 for brevity
     except HTTPException:
         raise
     except Exception as e:
