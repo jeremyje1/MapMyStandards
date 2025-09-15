@@ -464,21 +464,29 @@
             document.getElementById('dashboardContent').classList.remove('hidden');
 
             // Update user info
-            document.getElementById('userEmail').textContent = data.user.email;
-            document.getElementById('welcomeMessage').textContent = `Welcome, ${data.user.institution_name}!`;
-            document.getElementById('institutionInfo').textContent = `${data.user.primary_accreditor} Accreditation Management`;
-            document.getElementById('complianceScore').textContent = `${data.compliance_overview.overall_score}%`;
+            const user = (data && data.user) || {};
+            document.getElementById('userEmail').textContent = user.email || '—';
+            document.getElementById('welcomeMessage').textContent = `Welcome, ${user.institution_name || 'A³E user'}!`;
+            document.getElementById('institutionInfo').textContent = `${user.primary_accreditor || 'Accreditor'} Accreditation Management`;
 
-            // Update basic metrics
-            document.getElementById('metricCompliance').textContent = `${data.compliance_overview.overall_score}%`;
-            document.getElementById('metricDocuments').textContent = data.compliance_overview.documents_uploaded;
-            document.getElementById('metricStandards').textContent = data.compliance_overview.standards_mapped;
-            document.getElementById('metricGaps').textContent = data.compliance_overview.gaps_identified;
+            // Normalize compliance score percent (overview API returns metrics.compliance_score)
+            const score = (data && data.metrics && typeof data.metrics.compliance_score === 'number') ? data.metrics.compliance_score : 0;
+            const scorePct = (score > 1 ? score : score * 100);
+            const scoreText = `${(isFinite(scorePct) ? scorePct.toFixed(1) : '0.0')}%`;
+            document.getElementById('complianceScore').textContent = scoreText;
+            document.getElementById('metricCompliance').textContent = scoreText;
+
+            // Basic metrics from overview
+            const standardsCount = (data && data.metrics && (data.metrics.standards_count ?? data.metrics.standards_mapped)) ?? '--';
+            const gapsOrPending = (data && data.metrics && (data.metrics.pending_actions ?? data.metrics.gaps_identified)) ?? '--';
+            document.getElementById('metricStandards').textContent = standardsCount;
+            document.getElementById('metricGaps').textContent = gapsOrPending;
+            // Documents will be filled by metrics summary if available
+            document.getElementById('metricDocuments').textContent = document.getElementById('metricDocuments').textContent || '--';
 
             // Show guidance if personalization is missing
             try {
-                const ds = data.data_status || {};
-                const missing = ds.missing_inputs || [];
+                const missing = (data && Array.isArray(data.missing_inputs)) ? data.missing_inputs : ((data && data.data_status && data.data_status.missing_inputs) || []);
                 const panel = document.getElementById('dataStatusPanel');
                 const list = document.getElementById('missingInputsList');
                 if (missing.length) {
@@ -491,12 +499,43 @@
         }
 
         function displayMetrics(data) {
-            // Update detailed metrics if available
-            if (data.compliance_metrics) {
-                document.getElementById('metricCompliance').textContent = `${data.compliance_metrics.overall_percentage}%`;
-                document.getElementById('metricDocuments').textContent = data.compliance_metrics.documents_analyzed;
-                document.getElementById('metricStandards').textContent = `${data.compliance_metrics.standards_covered}/${data.compliance_metrics.standards_total}`;
-                document.getElementById('metricGaps').textContent = data.compliance_metrics.gaps_identified;
+            // Prefer new metrics shape
+            const m = data && data.metrics ? data.metrics : null;
+            if (m) {
+                // Immediate documents count if provided
+                if (m.documents_uploaded != null) {
+                    document.getElementById('metricDocuments').textContent = m.documents_uploaded;
+                }
+                if (m.coverage) {
+                    if (m.coverage.documents_processed != null) {
+                        document.getElementById('metricDocuments').textContent = m.coverage.documents_processed;
+                    }
+                    if (m.coverage.standards_analyzed != null) {
+                        document.getElementById('metricStandards').textContent = m.coverage.standards_analyzed;
+                    }
+                }
+                // Do not overwrite compliance % unless a dedicated metric is provided
+                if (typeof m.overall_percentage === 'number') {
+                    document.getElementById('metricCompliance').textContent = `${m.overall_percentage}%`;
+                }
+                if (typeof m.gaps_identified === 'number') {
+                    document.getElementById('metricGaps').textContent = m.gaps_identified;
+                }
+            } else if (data && data.compliance_metrics) {
+                // Backward-compat support
+                const cm = data.compliance_metrics;
+                if (typeof cm.overall_percentage === 'number') {
+                    document.getElementById('metricCompliance').textContent = `${cm.overall_percentage}%`;
+                }
+                if (cm.documents_analyzed != null) {
+                    document.getElementById('metricDocuments').textContent = cm.documents_analyzed;
+                }
+                if (cm.standards_covered != null) {
+                    document.getElementById('metricStandards').textContent = (cm.standards_total != null) ? `${cm.standards_covered}/${cm.standards_total}` : cm.standards_covered;
+                }
+                if (cm.gaps_identified != null) {
+                    document.getElementById('metricGaps').textContent = cm.gaps_identified;
+                }
             }
         }
 

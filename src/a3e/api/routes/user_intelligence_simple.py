@@ -229,6 +229,8 @@ async def get_metrics_summary(current_user: Dict[str, Any] = Depends(get_current
     return {
         "status": "success",
         "metrics": {
+            # Immediate top-line count for UI; upgraded later when uploads exist
+            "documents_uploaded": 0,
             "ai_accuracy": 0.87,
             "time_savings": {"hours_saved": 32, "efficiency_gain": "4.2x"},
             "coverage": {"standards_analyzed": 59, "documents_processed": 15, "evidence_mapped": 187},
