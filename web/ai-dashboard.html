@@ -298,7 +298,7 @@
                             <p class="text-gray-600 text-sm mt-1">Upload documents for intelligent standards mapping</p>
                             <div class="mt-4">
                                 <input type="file" id="evidenceFile" accept=".pdf,.doc,.docx,.txt" class="hidden">
-                                <button onclick="document.getElementById('evidenceFile').click()" class="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700">
+                                <button onclick="beginGenericUpload()" class="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700">
                                     Upload & Analyze
                                 </button>
                             </div>
@@ -340,6 +340,18 @@
                             </button>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- Suggested Uploads (dynamic by settings.document_types) -->
+            <div id="suggestedUploads" class="hidden mb-8">
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-lg font-semibold">Suggested Uploads</h3>
+                        <div class="text-xs text-gray-500">Based on your onboarding</div>
+                    </div>
+                    <div id="suggestedUploadsChips" class="flex flex-wrap gap-2"></div>
+                    <div class="text-xs text-gray-500 mt-3">Pick a type to upload a matching document; more types can be added in Settings.</div>
                 </div>
             </div>
 
@@ -423,6 +435,11 @@
             // Set up file upload handler
             document.getElementById('evidenceFile').addEventListener('change', handleFileUpload);
         });
+
+    // Track selected doc_type for typed uploads
+    let __selectedDocType = null;
+    function beginGenericUpload(){ __selectedDocType = null; document.getElementById('evidenceFile').click(); }
+    function startTypedUpload(docType){ __selectedDocType = docType || null; document.getElementById('evidenceFile').click(); }
 
     async function loadDashboard() {
             const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
@@ -593,6 +610,7 @@
             const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
             const formData = new FormData();
             formData.append('file', file);
+            if (__selectedDocType) { formData.append('doc_type', __selectedDocType); }
 
             try {
                 showAnalysisLoading();
@@ -611,6 +629,7 @@
 
                 const result = await response.json();
                 displayAnalysisResults(result);
+                __selectedDocType = null;
                 
                 // Refresh dashboard metrics
                 await loadMetrics();
@@ -1333,6 +1352,7 @@
                 await fetchSettings();
                 closeSettingsModal();
                 await loadDashboard();
+                renderSuggestedUploads();
                 // If graph is open, reload it too
                 if (!document.getElementById('standardsGraphSection').classList.contains('hidden')) {
                     await loadStandardsGraph();
@@ -1342,6 +1362,27 @@
                 console.error(err);
             }
         });
+
+        // Render Suggested Uploads based on settings.document_types
+        function renderSuggestedUploads() {
+            try {
+                const el = document.getElementById('suggestedUploads');
+                const chips = document.getElementById('suggestedUploadsChips');
+                const types = (userSettings && userSettings.settings && Array.isArray(userSettings.settings.document_types)) ? userSettings.settings.document_types : [];
+                if (!types || types.length === 0) { el.classList.add('hidden'); return; }
+                const top = types.slice(0, 8);
+                chips.innerHTML = top.map(t => `
+                    <button class="px-3 py-1 rounded-full text-sm border bg-gray-100 hover:bg-gray-200" onclick="startTypedUpload(${JSON.stringify(t)})">Upload ${t}</button>
+                `).join('');
+                el.classList.remove('hidden');
+            } catch (e) { /* no-op */ }
+        }
+
+        // Initial suggestions render after settings load and dashboard init
+        (async function initSuggestions(){
+            // Wait a bit to allow fetchSettings to populate
+            setTimeout(renderSuggestedUploads, 400);
+        })();
     </script>
 </body>
 </html>
