@@ -345,7 +345,24 @@ async def analyze_evidence(
         is_pdf = (
             (getattr(file, "content_type", None) == "application/pdf") or filename_lower.endswith(".pdf") or (content[:4] == b"%PDF")
         )
-        text_content = "" if is_pdf else content.decode("utf-8", errors="ignore")
+        text_content = ""
+        if is_pdf:
+            # Try a lightweight extraction so we can map something
+            try:
+                import pypdf  # type: ignore
+                from io import BytesIO
+                reader = pypdf.PdfReader(BytesIO(content))
+                parts = []
+                for i, page in enumerate(reader.pages[:5]):  # cap pages for speed
+                    try:
+                        parts.append(page.extract_text() or "")
+                    except Exception:
+                        continue
+                text_content = "\n".join([p for p in parts if p]).strip()
+            except Exception:
+                text_content = ""  # fallback: no text
+        else:
+            text_content = content.decode("utf-8", errors="ignore")
 
         doc = EvidenceDocument(
             doc_id=file.filename,
@@ -421,7 +438,7 @@ async def analyze_evidence(
                 "standards_mapped": len(mappings),
                 "content_length": len(doc.text or ""),
                 "document_preview": (
-                    "[PDF detected: preview unavailable]" if is_pdf else (doc.text or "")[:2000]
+                    "[PDF detected: preview unavailable]" if (is_pdf and not (doc.text or "").strip()) else (doc.text or "")[:2000]
                 ),
             },
             "algorithms_used": ["EvidenceMapper™", "EvidenceTrust Score™", "StandardsGraph™"],

@@ -491,6 +491,8 @@
 
                 dashboardData = await response.json();
                 displayDashboard(dashboardData);
+                // ensure suggestions reflect latest settings
+                renderSuggestedUploads();
                 
                 // Load metrics
                 await loadMetrics();
@@ -634,14 +636,16 @@
 
                 const result = await response.json();
                 displayAnalysisResults(result);
+                // Capture the doc_type for toast before clearing
+                const justUploadedDocType = __selectedDocType;
                 __selectedDocType = null;
-                
+
                 // Refresh dashboard metrics
                 await loadMetrics();
                 // Light refresh of overview without flicker
                 await refreshOverview();
                 // Show confirmation toast (include doc type if provided)
-                const typed = __selectedDocType ? ` (${__selectedDocType})` : '';
+                const typed = justUploadedDocType ? ` (${justUploadedDocType})` : '';
                 const fname = (result && result.filename) ? `: ${result.filename}` : '';
                 showToast(`Upload complete${typed}${fname}. Metrics refreshed.`);
                 // Reset file input to allow same-file re-uploads
@@ -1410,7 +1414,7 @@
             }
         });
 
-        // Render Suggested Uploads based on settings.document_types
+        // Render Suggested Uploads based on settings.document_types (safe, no inline JSON in attrs)
         function renderSuggestedUploads() {
             try {
                 const el = document.getElementById('suggestedUploads');
@@ -1419,8 +1423,15 @@
                 if (!types || types.length === 0) { el.classList.add('hidden'); return; }
                 const top = types.slice(0, 8);
                 chips.innerHTML = top.map(t => `
-                    <button class="px-3 py-1 rounded-full text-sm border bg-gray-100 hover:bg-gray-200" onclick="startTypedUpload(${JSON.stringify(t)})">Upload ${t}</button>
+                    <button class="px-3 py-1 rounded-full text-sm border bg-gray-100 hover:bg-gray-200 suggested-chip" data-doc-type="${String(t).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}">Upload ${String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</button>
                 `).join('');
+                // Attach click handlers
+                chips.querySelectorAll('.suggested-chip').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const dt = e.currentTarget.getAttribute('data-doc-type') || '';
+                        startTypedUpload(dt);
+                    });
+                });
                 el.classList.remove('hidden');
             } catch (e) { /* no-op */ }
         }
