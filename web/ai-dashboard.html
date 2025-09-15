@@ -640,8 +640,10 @@
                 await loadMetrics();
                 // Light refresh of overview without flicker
                 await refreshOverview();
-                // Show confirmation toast
-                showToast('Upload complete. Metrics refreshed.');
+                // Show confirmation toast (include doc type if provided)
+                const typed = __selectedDocType ? ` (${__selectedDocType})` : '';
+                const fname = (result && result.filename) ? `: ${result.filename}` : '';
+                showToast(`Upload complete${typed}${fname}. Metrics refreshed.`);
                 // Reset file input to allow same-file re-uploads
                 try { event.target.value = ''; } catch (_) {}
 
