@@ -172,6 +172,45 @@ def _record_user_upload(
     return data
 
 
+def _compute_dashboard_metrics_for_snapshot(current_user: Dict[str, Any]) -> Dict[str, Any]:
+    settings_ = _merge_claims_with_settings(current_user)
+    uploads = _get_user_uploads(current_user)
+    acc = (settings_.get("primary_accreditor") or "HLC").upper()
+    total_roots = len(standards_graph.get_accreditor_standards(acc)) or 0
+    docs = uploads.get("documents", [])
+    uniq_standards = set(uploads.get("unique_standards", []) or [])
+
+    documents_analyzed = len(docs)
+    standards_mapped = len(uniq_standards)
+    total_standards = total_roots if total_roots > 0 else max(total_roots, standards_mapped)
+    coverage = (standards_mapped / total_standards) if total_standards else 0.0
+
+    trust_scores: List[float] = []
+    for d in docs:
+        ts = (d.get("trust_score") or {}).get("overall_score")
+        if isinstance(ts, (int, float)):
+            trust_scores.append(float(ts))
+    avg_trust = float(sum(trust_scores) / len(trust_scores)) if trust_scores else 0.7
+
+    compliance_score = 0.0
+    if total_standards > 0 and (standards_mapped > 0 or documents_analyzed > 0):
+        compliance_score = round((coverage * 0.7 + avg_trust * 0.3) * 100, 1)
+
+    risk_agg = risk_explainer.aggregate()
+    average_risk = float(risk_agg.get("average_risk", 0.0))
+
+    return {
+        "accreditor": acc,
+        "coverage_percentage": round(coverage * 100, 1),
+        "compliance_score": compliance_score,
+        "average_trust": round(avg_trust, 3),
+        "average_risk": round(average_risk, 4),
+        "documents_analyzed": documents_analyzed,
+        "standards_mapped": standards_mapped,
+        "total_standards": total_standards,
+    }
+
+
 # ------------------------------
 # Auth helpers
 # ------------------------------
@@ -505,6 +544,27 @@ async def get_timeseries_accreditor(accreditor: str, days: int = 30, limit: int 
     except Exception as e:
         logger.error(f"Timeseries fetch error ({accreditor}): {e}")
         raise HTTPException(status_code=500, detail="Failed to get timeseries for accreditor")
+
+
+@router.post("/metrics/timeseries/force-snapshot")
+async def force_timeseries_snapshot(current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+    """Admin-only: Force a metrics snapshot for the caller's accreditor.
+
+    Restricted to demo/testing accounts to avoid abuse in production.
+    """
+    try:
+        email = str(current_user.get("email") or current_user.get("sub") or "")
+        if not email or not (email.endswith("@mapmystandards.ai") or email.startswith("demo@") or email == "demo@example.com"):
+            raise HTTPException(status_code=403, detail="forbidden")
+
+        metrics = _compute_dashboard_metrics_for_snapshot(current_user)
+        result = maybe_snapshot(metrics["accreditor"], metrics, min_interval_hours=0, force=True)
+        return {"success": True, **result}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Force snapshot error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to force snapshot")
 
 
 # ------------------------------
