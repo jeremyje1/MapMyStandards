@@ -1089,7 +1089,7 @@
         }
 
         // Settings helpers
-        async function fetchSettings() {
+    async function fetchSettings() {
             const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
             try {
                 const res = await fetch(`${API_BASE}/api/user/intelligence-simple/settings`, {
@@ -1098,8 +1098,10 @@
                     }
                 });
                 if (res.ok) {
-                    userSettings = await res.json();
-                    return userSettings;
+            const data = await res.json();
+            // Normalize to always have { settings: {...} }
+            userSettings = (data && data.settings) ? data : { settings: data };
+            return userSettings;
                 }
             } catch (e) {
                 console.warn('Settings fetch failed', e);
