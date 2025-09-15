@@ -40,6 +40,7 @@
         </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         body { 
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
@@ -297,10 +298,14 @@
                             <h3 class="text-lg font-medium text-gray-900">AI Evidence Analysis</h3>
                             <p class="text-gray-600 text-sm mt-1">Upload documents for intelligent standards mapping</p>
                             <div class="mt-4">
-                                <input type="file" id="evidenceFile" accept=".pdf,.doc,.docx,.txt" class="hidden">
-                                <button onclick="beginGenericUpload()" class="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700">
-                                    Upload & Analyze
-                                </button>
+                                <input type="file" id="evidenceFile" accept=".pdf,.doc,.docx,.txt" class="hidden" multiple>
+                                <div id="dropZone" class="border-2 border-dashed border-gray-300 rounded p-4 text-sm text-gray-600" role="button" aria-label="Upload area" tabindex="0">
+                                    Drag & drop files here or
+                                    <button type="button" onclick="beginGenericUpload()" class="ml-1 bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700" aria-label="Upload and analyze">
+                                        Browse files
+                                    </button>
+                                    <div class="text-xs text-gray-500 mt-1">PDF, Word, Text. You can drop multiple files.</div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -383,6 +388,11 @@
                         </div>
                     </div>
                     <div id="categoryCoverage" class="mt-4 text-sm text-gray-700"></div>
+                    <div class="mt-4">
+                        <h4 class="font-medium mb-2">Interactive Graph</h4>
+                        <svg id="standardsGraphSvg" width="100%" height="360" role="img" aria-label="Interactive standards graph"></svg>
+                        <div class="text-xs text-gray-500 mt-1">Hover nodes to highlight links. Click accreditor chips to switch frameworks.</div>
+                    </div>
                 </div>
             </div>
 
@@ -395,6 +405,19 @@
                             <div class="loading-spinner mx-auto mb-4"></div>
                             <p class="text-gray-600">Analyzing compliance gaps...</p>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CrosswalkX Section -->
+            <div id="crosswalkSection" class="hidden mb-8">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-lg font-semibold">CrosswalkX – Evidence Reuse Matrix</h3>
+                        <div class="text-xs text-gray-500" id="crosswalkSummary"></div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-xs" id="crosswalkTable" aria-label="Crosswalk matrix"></table>
                     </div>
                 </div>
             </div>
@@ -439,6 +462,7 @@
             
             // Set up file upload handler
             document.getElementById('evidenceFile').addEventListener('change', handleFileUpload);
+            setupDragAndDrop();
         });
 
     // Track selected doc_type for typed uploads
@@ -611,18 +635,24 @@
         }
 
     async function handleFileUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
+            const files = event.target.files || [];
+            const count = files.length || 0;
+            if (!count) return;
 
             const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+            const single = count === 1;
             const formData = new FormData();
-            formData.append('file', file);
+            if (single) {
+                formData.append('file', files[0]);
+            } else {
+                for (const f of files) { formData.append('files', f); }
+            }
             if (__selectedDocType) { formData.append('doc_type', __selectedDocType); }
 
             try {
                 showAnalysisLoading();
 
-                const response = await fetch(`${API_BASE}/api/user/intelligence-simple/evidence/analyze`, {
+                const response = await fetch(`${API_BASE}/api/user/intelligence-simple/${single ? 'evidence/analyze' : 'evidence/analyze/bulk'}`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -635,7 +665,14 @@
                 }
 
                 const result = await response.json();
-                displayAnalysisResults(result);
+                if (single) {
+                    displayAnalysisResults(result);
+                } else {
+                    const ok = Array.isArray(result.results) ? result.results.filter(r => r.status === 'success') : [];
+                    const last = ok.length ? ok[ok.length - 1] : null;
+                    if (last) displayAnalysisResults(last);
+                    showToast(`Analyzed ${count} documents.`, { variant: ok.length === count ? 'success' : 'warn' });
+                }
                 // Capture the doc_type for toast before clearing
                 const justUploadedDocType = __selectedDocType;
                 __selectedDocType = null;
@@ -656,6 +693,32 @@
                 showAnalysisError(error.message);
             }
         }
+
+    function setupDragAndDrop(){
+        const dz = document.getElementById('dropZone');
+        if (!dz) return;
+        const prevent = (e) => { e.preventDefault(); e.stopPropagation(); };
+        ['dragenter','dragover','dragleave','drop'].forEach(evt => dz.addEventListener(evt, prevent));
+        dz.addEventListener('dragover', ()=> dz.classList.add('ring','ring-blue-300'));
+        dz.addEventListener('dragleave', ()=> dz.classList.remove('ring','ring-blue-300'));
+        dz.addEventListener('drop', async (e)=>{
+            dz.classList.remove('ring','ring-blue-300');
+            const dt = e.dataTransfer;
+            if (!dt || !dt.files || !dt.files.length) return;
+            const input = document.getElementById('evidenceFile');
+            try {
+                const dataT = new DataTransfer();
+                for (const f of dt.files) dataT.items.add(f);
+                input.files = dataT.files;
+                input.dispatchEvent(new Event('change'));
+            } catch(_) {
+                for (const f of dt.files) {
+                    const fakeEvt = { target: { files: [f] } };
+                    await handleFileUpload(fakeEvt);
+                }
+            }
+        });
+    }
 
     async function loadStandardsGraph() {
             const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
@@ -774,6 +837,13 @@
                         <input type="text" placeholder="Add note" value="${(mapping.note||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;')}" class="note-input text-xs border rounded px-2 py-1 flex-1" data-standard="${mapping.standard_id}" />
                         <button class="save-note text-xs bg-gray-800 text-white px-2 py-1 rounded" data-standard="${mapping.standard_id}">Save</button>
                     </div>
+                    <div class="mt-2">
+                        <label class="block text-xs text-gray-600">Rationale annotation</label>
+                        <textarea class="rationale-input w-full text-xs border rounded px-2 py-1" rows="2" data-standard="${mapping.standard_id}" placeholder="Add context or corrections to the rationale...">${(mapping.rationale_note||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
+                        <div class="mt-1">
+                            <button class="save-rationale text-xs bg-gray-700 text-white px-2 py-1 rounded" data-standard="${mapping.standard_id}">Save rationale</button>
+                        </div>
+                    </div>
                     ${Array.isArray(mapping.rationale_spans) && mapping.rationale_spans.length ? `
                         <details class="mt-2">
                             <summary class="text-xs text-gray-700 cursor-pointer">Show rationale excerpts</summary>
@@ -874,6 +944,18 @@
                         btn.textContent = 'Saved';
                         setTimeout(() => btn.textContent = 'Save', 1200);
                     } catch (err) { console.error('Save note failed', err); }
+                });
+            });
+            container.querySelectorAll('.save-rationale').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const standard = e.currentTarget.getAttribute('data-standard');
+                    const input = container.querySelector(`.rationale-input[data-standard="${standard}"]`);
+                    const rationale_note = (input && input.value) || '';
+                    try {
+                        await saveReview(data.filename, standard, { rationale_note });
+                        btn.textContent = 'Saved';
+                        setTimeout(() => btn.textContent = 'Save rationale', 1200);
+                    } catch (err) { console.error('Save rationale failed', err); }
                 });
             });
             // Mark all reviewed
@@ -1031,6 +1113,34 @@
 
             // Initial render
             renderList();
+
+            // Interactive force graph
+            try {
+                const svg = d3.select('#standardsGraphSvg');
+                if (svg.node()) {
+                    svg.selectAll('*').remove();
+                    const width = svg.node().clientWidth || 600;
+                    const height = +svg.attr('height') || 360;
+                    const nodes = Object.keys(data.standards).map((id) => ({ id }));
+                    const links = data.relationships.map(r => ({ source: r.source, target: r.target }));
+                    const sim = d3.forceSimulation(nodes)
+                        .force('link', d3.forceLink(links).id(d => d.id).distance(60))
+                        .force('charge', d3.forceManyBody().strength(-120))
+                        .force('center', d3.forceCenter(width/2, height/2));
+                    const link = svg.append('g').attr('stroke', '#d1d5db').selectAll('line').data(links).enter().append('line').attr('stroke-width', 1);
+                    const node = svg.append('g').selectAll('circle').data(nodes).enter().append('circle')
+                        .attr('r', 5).attr('fill', '#3b82f6').attr('aria-label','standard node')
+                        .call(d3.drag().on('start', dragstarted).on('drag', dragged).on('end', dragended));
+                    node.append('title').text(d => d.id);
+                    sim.on('tick', () => {
+                        link.attr('x1', d => d.source.x).attr('y1', d => d.source.y).attr('x2', d => d.target.x).attr('y2', d => d.target.y);
+                        node.attr('cx', d => d.x).attr('cy', d => d.y);
+                    });
+                    function dragstarted(event, d){ if (!event.active) sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; }
+                    function dragged(event, d){ d.fx = event.x; d.fy = event.y; }
+                    function dragended(event, d){ if (!event.active) sim.alphaTarget(0); d.fx = null; d.fy = null; }
+                }
+            } catch (_) { /* ignore graph errors */ }
         }
 
         function displayGapAnalysis(data) {
@@ -1201,7 +1311,7 @@
             return res.json();
         }
 
-        async function saveReview(filename, standard_id, { reviewed, note } = {}) {
+    async function saveReview(filename, standard_id, payload = {}) {
             const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
             const res = await fetch(`${API_BASE}/api/user/intelligence-simple/evidence/review`, {
                 method: 'POST',
@@ -1209,7 +1319,7 @@
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ filename, standard_id, reviewed, note })
+        body: JSON.stringify({ filename, standard_id, ...payload })
             });
             if (!res.ok) throw new Error('Failed to save review');
             return res.json();
@@ -1381,6 +1491,30 @@
                     }
                 }
             } catch (_) {}
+        }
+
+        // Crosswalk loader
+        async function loadCrosswalk(){
+            const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+            document.getElementById('crosswalkSection').classList.remove('hidden');
+            const table = document.getElementById('crosswalkTable');
+            table.innerHTML = '<tbody><tr><td class="py-8 text-gray-600">Loading crosswalk…</td></tr></tbody>';
+            try {
+                const res = await fetch(`${API_BASE}/api/user/intelligence-simple/evidence/crosswalk`, { headers: { 'Authorization': `Bearer ${token}` } });
+                if (!res.ok) throw new Error('Failed');
+                const data = await res.json();
+                const headers = ['Evidence'].concat(data.standards);
+                const thead = '<thead><tr>'+ headers.map(h=>`<th class="text-left border px-2 py-1 bg-gray-50">${h}</th>`).join('') + '</tr></thead>';
+                const rows = data.evidence.map(fname => {
+                    const cells = data.standards.map(sid => data.matrix[fname] && data.matrix[fname][sid] ? '<td class="border px-2 py-1 text-center">✓</td>' : '<td class="border px-2 py-1"></td>').join('');
+                    return `<tr><td class="border px-2 py-1 font-medium">${fname}</td>${cells}</tr>`;
+                }).join('');
+                table.innerHTML = thead + '<tbody>'+rows+'</tbody>';
+                const summary = document.getElementById('crosswalkSummary');
+                summary.textContent = `Reuse: ${data.reuse_percentage}% • Multi-use evidence: ${data.multi_use_count}`;
+            } catch (e) {
+                table.innerHTML = '<tbody><tr><td class="py-8 text-red-600">Failed to load crosswalk.</td></tr></tbody>';
+            }
         }
         document.addEventListener('click', (e) => {
             if (e.target && e.target.id === 'openSettingsBtn') openSettingsModal();
