@@ -401,6 +401,11 @@
         </div>
     </main>
 
+    <!-- Toast: Upload confirmation -->
+    <div id="uploadToast" class="hidden fixed bottom-4 right-4 z-50 px-4 py-2 rounded shadow-lg text-white text-sm" style="background:#16a34a;">
+        Upload complete. Metrics refreshed.
+    </div>
+
     <script>
         // Determine API base URL depending on where this page is hosted
         const API_BASE = (function() {
@@ -633,6 +638,12 @@
                 
                 // Refresh dashboard metrics
                 await loadMetrics();
+                // Light refresh of overview without flicker
+                await refreshOverview();
+                // Show confirmation toast
+                showToast('Upload complete. Metrics refreshed.');
+                // Reset file input to allow same-file re-uploads
+                try { event.target.value = ''; } catch (_) {}
 
             } catch (error) {
                 console.error('File analysis error:', error);
@@ -1092,6 +1103,40 @@
             document.getElementById('errorState').classList.remove('hidden');
             document.getElementById('dashboardContent').classList.add('hidden');
             document.getElementById('errorMessage').textContent = message;
+        }
+
+        // Light refresh of overview card (no loading state flicker)
+        async function refreshOverview() {
+            const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+            try {
+                const response = await fetch(`${API_BASE}/api/user/intelligence-simple/dashboard/overview`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    displayDashboard(data);
+                }
+            } catch (e) {
+                console.warn('Overview refresh failed', e);
+            }
+        }
+
+        // Toast helper
+        let __toastTimer = null;
+        function showToast(message, opts={}){
+            const el = document.getElementById('uploadToast');
+            if (!el) return;
+            el.textContent = message || 'Done';
+            // color variants (success|warn|error)
+            const v = (opts.variant||'success');
+            const bg = v==='error' ? '#dc2626' : v==='warn' ? '#ca8a04' : '#16a34a';
+            el.style.background = bg;
+            el.classList.remove('hidden');
+            clearTimeout(__toastTimer);
+            __toastTimer = setTimeout(()=>{ el.classList.add('hidden'); }, opts.duration || 2000);
         }
 
         function showAnalysisLoading() {
