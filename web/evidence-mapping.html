@@ -524,28 +524,23 @@
         let mappingsData = null;
         let selectedDocument = null;
         let selectedStandard = null;
+        let evidenceMap = null; // { mapping: { standard_id: [ {filename, confidence, accreditor} ] } }
+
+        function getSelectedStandards(){
+            try { return JSON.parse(localStorage.getItem('mms:selectedStandards') || '[]'); } catch { return []; }
+        }
 
         // Load evidence mappings
         async function loadMappings() {
             try {
-                const apiKey = localStorage.getItem('a3e_api_key');
-                const accreditor = document.getElementById('accreditorFilter').value;
-                
-                const response = await fetch(`/api/v1/evidence/mappings?accreditor=${accreditor}`, {
-                    headers: apiKey ? { 'X-API-Key': apiKey } : {}
-                });
-                
-                if (response.ok) {
-                    const result = await response.json();
-                    if (result.success) {
-                        mappingsData = result.data;
-                        displayMappings();
-                        updateStats();
-                        return;
-                    }
+                const base = (window.mmsAPI?.baseUrl || '');
+                const headers = window.mmsAPI?.getHeaders(true) || { 'Content-Type': 'application/json' };
+                const resp = await fetch(`${base}/api/user/intelligence-simple/standards/evidence-map`, { credentials: 'include', headers });
+                if (resp.ok) {
+                    evidenceMap = await resp.json();
+                    renderFromEvidenceMap();
+                    return;
                 }
-                
-                // Fallback to sample data
                 displaySampleMappings();
             } catch (error) {
                 console.error('Error loading mappings:', error);
@@ -553,60 +548,53 @@
             }
         }
 
-        function displayMappings() {
-            if (!mappingsData) return;
-            
-            // Display documents
+        function renderFromEvidenceMap() {
+            const mapping = evidenceMap?.mapping || {};
             const docsList = document.getElementById('documentsList');
-            docsList.innerHTML = '';
-            
-            const documents = mappingsData.mappings?.reduce((acc, m) => {
-                const doc = { id: m.document_id, name: `Document ${m.document_id}` };
-                if (!acc.find(d => d.id === doc.id)) {
-                    acc.push(doc);
-                }
-                return acc;
-            }, []) || [];
-            
-            documents.forEach(doc => {
-                const mappingCount = mappingsData.mappings?.filter(m => m.document_id === doc.id).length || 0;
-                const docItem = document.createElement('div');
-                docItem.className = 'document-item';
-                docItem.dataset.docId = doc.id;
-                docItem.innerHTML = `
-                    <div class="doc-name">${doc.name}</div>
-                    <div class="doc-date">Uploaded recently</div>
-                    <span class="doc-standards-count">${mappingCount} standards mapped</span>
-                `;
-                docItem.onclick = () => selectDocument(doc.id);
-                docsList.appendChild(docItem);
-            });
-            
-            // Display standards
             const stdsList = document.getElementById('standardsList');
+            docsList.innerHTML = '';
             stdsList.innerHTML = '';
-            
-            const standards = mappingsData.mappings?.reduce((acc, m) => {
-                const std = { id: m.standard_id, title: `Standard ${m.standard_id}` };
-                if (!acc.find(s => s.id === std.id)) {
-                    acc.push(std);
-                }
-                return acc;
-            }, []) || [];
-            
-            standards.forEach(std => {
-                const evidenceCount = mappingsData.mappings?.filter(m => m.standard_id === std.id).length || 0;
-                const stdItem = document.createElement('div');
-                stdItem.className = 'standard-item';
-                stdItem.dataset.stdId = std.id;
-                stdItem.innerHTML = `
-                    <div class="standard-id">${std.id}</div>
-                    <div class="standard-category">${std.title}</div>
-                    <span class="standard-evidence-count">${evidenceCount} evidence items</span>
-                `;
-                stdItem.onclick = () => selectStandard(std.id);
-                stdsList.appendChild(stdItem);
+
+            // Build documents from mappings
+            const docCounts = {};
+            Object.values(mapping).forEach(arr => {
+                (arr || []).forEach(m => { docCounts[m.filename] = (docCounts[m.filename] || 0) + 1; });
             });
+            const documents = Object.keys(docCounts).map(fn => ({ id: fn, name: fn, count: docCounts[fn] })).sort((a,b) => a.name.localeCompare(b.name));
+            documents.forEach(doc => {
+                const div = document.createElement('div');
+                div.className = 'document-item';
+                div.dataset.docId = doc.id;
+                div.innerHTML = `<div class="doc-name">${doc.name}</div><div class="doc-date">Uploaded</div><span class="doc-standards-count">${doc.count} standards mapped</span>`;
+                div.onclick = () => selectDocument(doc.id);
+                docsList.appendChild(div);
+            });
+
+            // Build standards list
+            const selected = new Set(getSelectedStandards());
+            const standards = Object.keys(mapping);
+            standards.sort();
+            standards.forEach(sid => {
+                const count = (mapping[sid] || []).length;
+                const div = document.createElement('div');
+                div.className = 'standard-item' + (selected.has(sid) ? ' selected' : '');
+                div.dataset.stdId = sid;
+                div.innerHTML = `<div class="standard-id">${sid}</div><div class="standard-category">Mapped evidence</div><span class="standard-evidence-count">${count} evidence items</span>`;
+                div.onclick = () => selectStandard(sid);
+                stdsList.appendChild(div);
+            });
+
+            // Update stats from mapping
+            const totalDocs = documents.length;
+            const totalStandards = standards.length;
+            const strong = Object.values(mapping).reduce((acc, arr) => acc + (arr || []).filter(m => (m.confidence || 0) >= 0.85).length, 0);
+            const statsHtml = `
+                <div class="stat-card"><div class="stat-value">${totalDocs}</div><div class="stat-label">Documents Analyzed</div></div>
+                <div class="stat-card"><div class="stat-value">${totalStandards}</div><div class="stat-label">Standards Mapped</div></div>
+                <div class="stat-card"><div class="stat-value">${Math.round((totalStandards/Math.max(totalStandards, 1))*100)}%</div><div class="stat-label">Coverage Rate</div></div>
+                <div class="stat-card"><div class="stat-value">${strong}</div><div class="stat-label">Strong Mappings</div></div>
+            `;
+            document.getElementById('statsGrid').innerHTML = statsHtml;
         }
 
         function displaySampleMappings() {
@@ -688,11 +676,20 @@
         function showMappingDetails(type, id) {
             const detailsDiv = document.getElementById('mappingDetails');
             
-            if (!mappingsData) return;
-            
-            const relevantMappings = mappingsData.mappings?.filter(m => 
-                type === 'document' ? m.document_id === id : m.standard_id === id
-            ) || [];
+            const relevantMappings = (() => {
+                if (evidenceMap && evidenceMap.mapping) {
+                    if (type === 'document') {
+                        const items = [];
+                        for (const [sid, arr] of Object.entries(evidenceMap.mapping)) {
+                            (arr || []).forEach(m => { if (m.filename === id) items.push({ document_id: id, standard_id: sid, relevance_score: Math.round((m.confidence || 0)*100), evidence_summary: `${m.filename}` }); });
+                        }
+                        return items;
+                    } else {
+                        return (evidenceMap.mapping[id] || []).map(m => ({ document_id: m.filename, standard_id: id, relevance_score: Math.round((m.confidence || 0)*100), evidence_summary: `${m.filename}` }));
+                    }
+                }
+                return [];
+            })();
             
             if (relevantMappings.length === 0) {
                 detailsDiv.innerHTML = '<p style="color: #64748b;">No mappings found</p>';
@@ -767,9 +764,7 @@
             });
         }
 
-        function refreshMappings() {
-            loadMappings();
-        }
+        function refreshMappings() { loadMappings(); }
 
         function logout() {
             localStorage.removeItem('a3e_api_key');
@@ -854,9 +849,7 @@
         }
 
         // Initialize on load
-        document.addEventListener('DOMContentLoaded', () => {
-            loadMappings();
-        });
+        document.addEventListener('DOMContentLoaded', () => { loadMappings(); });
     </script>
 </body>
 </html>

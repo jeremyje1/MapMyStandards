@@ -165,6 +165,11 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 16px rgba(0,0,0,0.15);
         }
+
+        .standard-card.selected-standard {
+            outline: 2px solid #10b981;
+            box-shadow: 0 4px 16px rgba(16,185,129,0.25);
+        }
         
         .standard-header {
             display: flex;
@@ -305,10 +310,26 @@
 
         <!-- Filters -->
         <div class="filters">
+            <div class="filter-group" style="flex:1; min-width: 240px;">
+                <label class="filter-label">Search Standards</label>
+                <input id="standardSearch" type="search" class="filter-select" placeholder="Search code, title, or description…" style="padding: 0.5rem;">
+            </div>
             <div class="filter-group">
                 <label class="filter-label">Accreditor</label>
                 <select id="accreditorSelect" class="filter-select">
                     <option value="">Loading accreditors...</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Category</label>
+                <select id="categorySelect" class="filter-select">
+                    <option value="">All Categories</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Compare To Accreditor</label>
+                <select id="compareAccreditorSelect" class="filter-select">
+                    <option value="">None</option>
                 </select>
             </div>
             <div class="filter-group">
@@ -335,6 +356,10 @@
     <script>
         let accreditors = [];
         let currentStandards = [];
+        let searchResults = [];
+        let currentMode = 'browse'; // 'browse' | 'search'
+        let searchTimer = null;
+    const crosswalkCache = {};
 
         // Load accreditors on page load
         async function loadAccreditors() {
@@ -363,6 +388,7 @@
                     throw new Error('Unexpected response');
                 }
                 populateAccreditorSelect();
+                populateCompareSelect();
                 showAccreditorSelection();
             } catch (error) {
                 console.error('Error loading accreditors:', error);
@@ -388,6 +414,23 @@
                 const acronym = acc.accreditor_acronym || acc.acronym || '';
                 option.textContent = acronym ? `${name} (${acronym})` : name;
                 select.appendChild(option);
+            });
+        }
+
+        function populateCompareSelect() {
+            const select = document.getElementById('compareAccreditorSelect');
+            const current = document.getElementById('accreditorSelect').value;
+            select.innerHTML = '<option value="">None</option>';
+            (accreditors || []).forEach(acc => {
+                const val = acc.accreditor_id || acc.id || acc.acronym;
+                if (!current || val !== current) {
+                    const name = acc.accreditor_name || acc.name || 'Unknown';
+                    const acronym = acc.accreditor_acronym || acc.acronym || '';
+                    const opt = document.createElement('option');
+                    opt.value = val;
+                    opt.textContent = acronym ? `${name} (${acronym})` : name;
+                    select.appendChild(opt);
+                }
             });
         }
 
@@ -433,6 +476,8 @@
                 const data = await resp.json();
                 if (data && data.success) {
                     currentStandards = data.data?.standards || [];
+                    currentMode = 'browse';
+                    updateCategoryOptions(currentStandards);
                     displayStandards({
                         accreditor: {
                             name: (data.data?.accreditor?.name) || accreditorId.toUpperCase(),
@@ -455,6 +500,23 @@
             }
         }
 
+        function updateCategoryOptions(standards) {
+            const select = document.getElementById('categorySelect');
+            const prev = select.value;
+            const cats = Array.from(new Set((standards || []).map(s => s.category || s.level || 'Standard'))).sort();
+            select.innerHTML = '<option value="">All Categories</option>';
+            cats.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c;
+                opt.textContent = c;
+                select.appendChild(opt);
+            });
+            // Try to preserve previous selection if still valid
+            if (prev && cats.includes(prev)) {
+                select.value = prev;
+            }
+        }
+
         function displayStandards(data) {
             const accreditor = data.accreditor;
             const standards = data.standards;
@@ -462,7 +524,7 @@
             let html = `
                 <div class="accreditor-info">
                     <div class="accreditor-name">${accreditor.name} (${accreditor.acronym})</div>
-                    <div class="standards-count">${standards.length} standards available</div>
+                    <div class="standards-count">${standards.length} ${currentMode === 'search' ? 'search result(s)' : 'standards available'}</div>
                 </div>
             `;
 
@@ -476,20 +538,29 @@
             } else {
                 html += '<div class="standards-grid">';
                 
+                const selectedSet = new Set(getSelectedStandards());
                 standards.forEach(standard => {
+                    const stdId = (standard.id || standard.code || '').toString();
+                    const isSelected = selectedSet.has(stdId);
                     html += `
-                        <div class="standard-card">
+                        <div class="standard-card ${isSelected ? 'selected-standard' : ''}" data-standard-id="${stdId}">
                             <div class="standard-header">
                                 <div class="standard-id">${standard.code || standard.id}</div>
+                                <div>
+                                    <button class="btn btn-secondary" data-select-toggle data-id="${stdId}">${isSelected ? 'Deselect' : 'Select'}</button>
+                                    ${document.getElementById('compareAccreditorSelect').value ? `<button class="btn btn-primary" data-equivalents data-id="${stdId}" style="margin-left:0.5rem;">Find equivalents</button>` : ''}
+                                </div>
                             </div>
-                            <h3 class="standard-title">${standard.title}</h3>
-                            <p class="standard-description">${standard.description}</p>
+                            <h3 class="standard-title">${standard.title || standard.name || ''}</h3>
+                            <p class="standard-description">${(currentMode === 'search' ? (standard.snippet || '') : (standard.description || ''))}</p>
                             <div class="standard-meta">
-                                <span>Category: ${standard.category}</span>
+                                <span>Category: ${standard.category || standard.level || 'Standard'}</span>
+                                ${standard.accreditor ? `<span>Accreditor: ${standard.accreditor}</span>` : ''}
                                 <span>Weight: ${standard.weight || 100}</span>
                                 ${standard.is_required ? '<span style="color: #dc2626;">Required</span>' : ''}
                                 ${standard.evidence_requirements ? `<span>Evidence: ${standard.evidence_requirements.length} items</span>` : ''}
                             </div>
+                            <div class="equivalents" id="equiv-${stdId}" style="margin-top:0.75rem;"></div>
                         </div>
                     `;
                 });
@@ -500,10 +571,59 @@
             document.getElementById('contentArea').innerHTML = html;
         }
 
+        async function performSearch(query) {
+            const q = (query || '').trim();
+            if (!q) {
+                currentMode = 'browse';
+                const accreditorId = document.getElementById('accreditorSelect').value;
+                if (!accreditorId) { showAccreditorSelection(); return; }
+                // Apply category filter to currentStandards
+                const filtered = filterByCategory(currentStandards);
+                displayStandards({
+                    accreditor: { name: accreditorId.toUpperCase(), acronym: accreditorId.toUpperCase() },
+                    standards: filtered
+                });
+                return;
+            }
+
+            try {
+                const base = (window.mmsAPI?.baseUrl || '');
+                const headers = window.mmsAPI?.getHeaders(true) || { 'Content-Type': 'application/json' };
+                const params = new URLSearchParams({ q });
+                const resp = await fetch(`${base}/api/user/intelligence-simple/standards/search?${params.toString()}`, { credentials: 'include', headers });
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const data = await resp.json();
+                searchResults = Array.isArray(data?.results) ? data.results : [];
+                currentMode = 'search';
+                // When in search mode, update categories from results (optional)
+                updateCategoryOptions(searchResults.map(r => ({ category: r.category })));
+                const filtered = filterByCategory(searchResults);
+                const accreditorId = document.getElementById('accreditorSelect').value || 'ALL';
+                displayStandards({
+                    accreditor: { name: accreditorId.toUpperCase(), acronym: accreditorId.toUpperCase() },
+                    standards: filtered
+                });
+            } catch (e) {
+                console.error('Search error:', e);
+            }
+        }
+
+        function filterByCategory(items) {
+            const cat = document.getElementById('categorySelect').value;
+            if (!cat) return items || [];
+            return (items || []).filter(s => (s.category || s.level || 'Standard') === cat);
+        }
+
         // Event listeners
         document.getElementById('accreditorSelect').addEventListener('change', function() {
             const accreditorId = this.value;
+            // Clear search and reset mode on accreditor change
+            const searchEl = document.getElementById('standardSearch');
+            if (searchEl) searchEl.value = '';
+            currentMode = 'browse';
+            searchResults = [];
             const institutionType = document.getElementById('institutionTypeSelect').value;
+            populateCompareSelect();
             loadStandards(accreditorId, institutionType);
         });
 
@@ -513,10 +633,93 @@
             loadStandards(accreditorId, institutionType);
         });
 
+        document.getElementById('categorySelect').addEventListener('change', function() {
+            if (currentMode === 'search') {
+                const filtered = filterByCategory(searchResults);
+                const accreditorId = document.getElementById('accreditorSelect').value || 'ALL';
+                displayStandards({ accreditor: { name: accreditorId.toUpperCase(), acronym: accreditorId.toUpperCase() }, standards: filtered });
+            } else {
+                const filtered = filterByCategory(currentStandards);
+                const accreditorId = document.getElementById('accreditorSelect').value || 'ALL';
+                displayStandards({ accreditor: { name: accreditorId.toUpperCase(), acronym: accreditorId.toUpperCase() }, standards: filtered });
+            }
+        });
+
+        document.getElementById('standardSearch').addEventListener('input', function(e) {
+            const q = e.target.value;
+            if (searchTimer) clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => performSearch(q), 300);
+        });
+
+        document.getElementById('compareAccreditorSelect').addEventListener('change', function() {
+            // Rerender to show or hide "Find equivalents" buttons
+            const accreditorId = document.getElementById('accreditorSelect').value || 'ALL';
+            const list = currentMode === 'search' ? searchResults : currentStandards;
+            displayStandards({ accreditor: { name: accreditorId.toUpperCase(), acronym: accreditorId.toUpperCase() }, standards: filterByCategory(list) });
+        });
+
+        document.getElementById('contentArea').addEventListener('click', async function(e) {
+            const btn = e.target.closest('button');
+            if (!btn) return;
+            if (btn.hasAttribute('data-select-toggle')) {
+                const id = btn.getAttribute('data-id');
+                toggleSelectedStandard(id);
+                // Re-render to reflect state
+                const accreditorId = document.getElementById('accreditorSelect').value || 'ALL';
+                const list = currentMode === 'search' ? searchResults : currentStandards;
+                displayStandards({ accreditor: { name: accreditorId.toUpperCase(), acronym: accreditorId.toUpperCase() }, standards: filterByCategory(list) });
+                return;
+            }
+            if (btn.hasAttribute('data-equivalents')) {
+                const id = btn.getAttribute('data-id');
+                const source = (document.getElementById('accreditorSelect').value || '').toUpperCase();
+                const target = (document.getElementById('compareAccreditorSelect').value || '').toUpperCase();
+                if (!source || !target || source === target) return;
+                const equivDiv = document.getElementById(`equiv-${id}`);
+                equivDiv.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+                const key = `${source}:${target}`;
+                try {
+                    if (!crosswalkCache[key]) {
+                        const base = (window.mmsAPI?.baseUrl || '');
+                        const headers = window.mmsAPI?.getHeaders(true) || { 'Content-Type': 'application/json' };
+                        const qs = new URLSearchParams({ source, target, threshold: '0.3', top_k: '3' });
+                        const resp = await fetch(`${base}/api/user/intelligence-simple/standards/cross-accreditor-matches?${qs.toString()}`, { credentials: 'include', headers });
+                        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                        const data = await resp.json();
+                        crosswalkCache[key] = Array.isArray(data?.matches) ? data.matches : [];
+                    }
+                    const matches = (crosswalkCache[key] || []).filter(m => m.source_id === id);
+                    if (matches.length === 0) {
+                        equivDiv.innerHTML = '<div style="color:#6b7280;">No close equivalents found.</div>';
+                    } else {
+                        equivDiv.innerHTML = matches.map(m => `<div style="margin-top:0.25rem;">→ <strong>${m.target_id}</strong>: ${m.target_title || ''} <span style="color:#6b7280;">(score ${m.score})</span></div>`).join('');
+                    }
+                } catch (err) {
+                    console.error('Cross-accreditor error', err);
+                    equivDiv.innerHTML = '<div style="color:#ef4444;">Failed to load equivalents.</div>';
+                }
+            }
+        });
+
+        function getSelectedStandards() {
+            try { return JSON.parse(localStorage.getItem('mms:selectedStandards') || '[]'); } catch { return []; }
+        }
+
+        function saveSelectedStandards(list) {
+            try { localStorage.setItem('mms:selectedStandards', JSON.stringify(Array.from(new Set(list)))); } catch {}
+        }
+
+        function toggleSelectedStandard(id) {
+            if (!id) return;
+            const curr = new Set(getSelectedStandards());
+            if (curr.has(id)) curr.delete(id); else curr.add(id);
+            saveSelectedStandards(Array.from(curr));
+        }
+
         function logout() {
             localStorage.clear();
             window.location.href = '/login';
         }
 
-        // Initialize
+    // Initialize
         loadAccreditors();

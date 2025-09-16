@@ -377,7 +377,8 @@
                     <div style="margin: 0 0 0.75rem 0">
                         <label for="narrativeIntro" style="display:block;font-size:0.85rem;color:#374151;margin-bottom:4px">Optional introduction</label>
                         <textarea id="narrativeIntro" rows="3" placeholder="Add an introductory paragraph or context (optional)..." style="width:100%;padding:8px;border:1px solid #e5e7eb;border-radius:6px;resize:vertical"></textarea>
-                        <div style="color:#9ca3af;font-size:0.75rem;margin-top:4px">Tip: Select standards in the page (elements with class <code>.selected-standard</code>) to target the narrative.</div>
+                        <div style="color:#9ca3af;font-size:0.75rem;margin-top:4px">Tip: Select standards on the Standards or Evidence Mapping pages; we’ll use them here automatically.</div>
+                        <div id="selected-count" style="color:#6b7280;font-size:0.8rem;margin-top:4px"></div>
                     </div>
                     <div class="report-actions">
                         <button id="btn-generate-narrative" class="btn btn-primary" onclick="generateNarrative()">Generate</button>
@@ -544,6 +545,16 @@
             document.getElementById('dashboardMetrics').innerHTML = html;
         }
 
+        function getSelectedStandards(){
+            try { return JSON.parse(localStorage.getItem('mms:selectedStandards') || '[]'); } catch { return []; }
+        }
+
+        function updateSelectedCount(){
+            const n = getSelectedStandards().length;
+            const el = document.getElementById('selected-count');
+            el.textContent = n > 0 ? `${n} standard${n===1?'':'s'} selected` : 'No standards selected — will use defaults.';
+        }
+
         async function generateNarrative(){
             const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
             const btnGen = document.getElementById('btn-generate-narrative');
@@ -551,7 +562,7 @@
             const status = document.getElementById('narrative-status');
             const preview = document.getElementById('narrative-preview');
             const htmlDiv = document.getElementById('narrative-html');
-            const standardIds = Array.from(document.querySelectorAll('.selected-standard')).map(el => el.dataset.id).filter(Boolean);
+            const standardIds = getSelectedStandards();
             const userBody = (document.getElementById('narrativeIntro')?.value || '').trim();
             try{
                 btnGen.disabled = true; btnExport.disabled = true;
@@ -660,6 +671,7 @@
         // Initialize
         loadDashboardMetrics();
         setTimeout(loadRecentReports, 1000); // Delay to show loading state
+        updateSelectedCount();
     </script>
 
     <script>
