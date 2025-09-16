@@ -278,7 +278,7 @@
             background: #d1d5db;
         }
     </style>
-    <script src="js/api-client.js"></script>
+    <script src="/js/api-client.js"></script>
     <script src="/js/global-nav.js"></script>
 </head>
 <body>
@@ -348,11 +348,10 @@
                 `;
             };
             try {
-                const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
-                const headers = { 'Content-Type': 'application/json' };
-                if (token) headers['Authorization'] = `Bearer ${token}`;
                 const base = (window.mmsAPI?.baseUrl || '');
-                const resp = await fetch(`${base}/api/v1/standards/accreditors`, { credentials: 'include', headers });
+                const headers = window.mmsAPI?.getHeaders(true) || { 'Content-Type': 'application/json' };
+                const resp = await fetch(`${base}/api/standards/accreditors`, { credentials: 'include', headers });
+                console.debug('accreditors status', resp.status);
                 if (resp.status === 401) { statusError('Authentication required'); return; }
                 if (!resp.ok) { throw new Error(`HTTP ${resp.status}`); }
                 const data = await resp.json();
@@ -371,6 +370,7 @@
                     <div style="text-align: center; padding: 3rem; color: #ef4444;">
                         <h3>Error loading accreditors</h3>
                         <p>Please try refreshing the page.</p>
+                        <p style="margin-top:0.5rem;color:#6b7280;">If this persists, you may be logged out or the endpoint is unavailable.</p>
                     </div>
                 `;
             }
@@ -414,13 +414,12 @@
             `;
 
             try {
-                const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
-                const headers = { 'Content-Type': 'application/json' };
-                if (token) headers['Authorization'] = `Bearer ${token}`;
                 const base = (window.mmsAPI?.baseUrl || '');
+                const headers = window.mmsAPI?.getHeaders(true) || { 'Content-Type': 'application/json' };
                 const params = new URLSearchParams({ accreditor: accreditorId.toUpperCase() });
                 if (institutionType) params.set('institution_type', institutionType);
-                const resp = await fetch(`${base}/api/v1/standards?${params.toString()}`, { credentials: 'include', headers });
+                const resp = await fetch(`${base}/api/standards?${params.toString()}`, { credentials: 'include', headers });
+                console.debug('standards status', resp.status);
                 if (resp.status === 401) {
                     document.getElementById('contentArea').innerHTML = `
                         <div style="text-align:center;padding:3rem;color:#ef4444;">
@@ -450,6 +449,7 @@
                     <div style="text-align: center; padding: 3rem; color: #ef4444;">
                         <h3>Error loading standards</h3>
                         <p>Please try again or select a different accreditor.</p>
+                        <p style="margin-top:0.5rem;color:#6b7280;">If this persists, check that your session is active.</p>
                     </div>
                 `;
             }

@@ -223,7 +223,7 @@
                         <div class="font-semibold mb-1">Complete setup to personalize your dashboard</div>
                         <ul id="missingInputsList" class="list-disc list-inside text-sm"></ul>
                         <div class="mt-2">
-                            <a href="https://platform.mapmystandards.ai/onboarding" class="inline-block bg-yellow-600 text-white px-3 py-1 rounded text-xs hover:bg-yellow-700">Go to Settings</a>
+                            <button type="button" id="dataStatusOpenSettings" class="inline-block bg-yellow-600 text-white px-3 py-1 rounded text-xs hover:bg-yellow-700">Open Settings</button>
                         </div>
                     </div>
                 </div>
@@ -540,6 +540,10 @@
                 ensureIntegrations();
                 // Load AI provider badge
                 try { await loadAiProvidersBadge(); } catch(_) {}
+                // Open settings if hash requests it
+                if (location.hash === '#open-settings') {
+                    try { openSettingsModal(); } catch(_) {}
+                }
             });
             
             // Set up file upload handler
@@ -1935,33 +1939,34 @@
         }
 
         async function ensureIntegrations() {
-            const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
             try {
-                const res = await fetch(`${API_BASE}/api/user/intelligence-simple/integrations/status`, { headers: { 'Authorization': `Bearer ${token}` } });
-                if (res.ok) {
-                    const data = await res.json();
-                    const modal = document.getElementById('settingsForm');
-                    const integrations = document.createElement('div');
-                    integrations.className = 'text-xs text-gray-600';
-                    integrations.innerHTML = `
-                        <div class="grid grid-cols-2 gap-2 pt-1">
-                            <div>Google Drive: <span class="${data.google_drive_available ? 'text-green-600' : 'text-gray-500'}">${data.google_drive_available ? 'Available' : 'Unavailable'}</span></div>
-                            <div>OneDrive: <span class="${data.onedrive_available ? 'text-green-600' : 'text-gray-500'}">${data.onedrive_available ? 'Available' : 'Unavailable'}</span></div>
-                            <div>Canvas: <span class="${data.canvas_available ? 'text-green-600' : 'text-gray-500'}">${data.canvas_available ? 'Available' : 'Unavailable'}</span></div>
-                            <div>Microsoft: <span class="${data.microsoft_available ? 'text-green-600' : 'text-gray-500'}">${data.microsoft_available ? 'Available' : 'Unavailable'}</span></div>
-                        </div>
-                    `;
-                    // Avoid duplicates
-                    if (!document.getElementById('integrationStatusBlock')) {
-                        const wrapper = document.createElement('div');
-                        wrapper.id = 'integrationStatusBlock';
-                        const label = document.createElement('div');
-                        label.className = 'text-sm font-medium text-gray-700';
-                        label.textContent = 'Integration Status';
-                        wrapper.appendChild(label);
-                        wrapper.appendChild(integrations);
-                        modal.appendChild(wrapper);
-                    }
+                const res = await fetch(`${API_BASE}/api/v1/integrations/status`);
+                if (!res.ok) return;
+                const status = await res.json();
+                const modal = document.getElementById('settingsForm');
+                const integrations = document.createElement('div');
+                integrations.className = 'text-xs text-gray-600';
+                const canvasConfigured = !!(status && status.integrations && status.integrations.canvas && status.integrations.canvas.configured);
+                const canvasConnected = !!(status && status.integrations && status.integrations.canvas && status.integrations.canvas.connected);
+                const msConfigured = !!(status && status.integrations && status.integrations.sharepoint && status.integrations.sharepoint.configured);
+                const msConnected = !!(status && status.integrations && status.integrations.sharepoint && status.integrations.sharepoint.connected);
+                const chip = (ok) => ok ? 'text-green-600' : 'text-gray-500';
+                const txt = (ok) => ok ? 'Configured' : 'Not configured';
+                integrations.innerHTML = `
+                    <div class="grid grid-cols-2 gap-2 pt-1">
+                        <div>Canvas: <span class="${chip(canvasConfigured)}">${txt(canvasConfigured)}${canvasConnected? ' • Connected' : ''}</span></div>
+                        <div>Microsoft (SharePoint): <span class="${chip(msConfigured)}">${txt(msConfigured)}${msConnected? ' • Connected' : ''}</span></div>
+                    </div>
+                `;
+                if (!document.getElementById('integrationStatusBlock')) {
+                    const wrapper = document.createElement('div');
+                    wrapper.id = 'integrationStatusBlock';
+                    const label = document.createElement('div');
+                    label.className = 'text-sm font-medium text-gray-700';
+                    label.textContent = 'Integration Status';
+                    wrapper.appendChild(label);
+                    wrapper.appendChild(integrations);
+                    modal.appendChild(wrapper);
                 }
             } catch (_) {}
         }
@@ -1991,6 +1996,7 @@
         }
         document.addEventListener('click', (e) => {
             if (e.target && e.target.id === 'openSettingsBtn') openSettingsModal();
+            if (e.target && e.target.id === 'dataStatusOpenSettings') openSettingsModal();
             if (e.target && (e.target.id === 'closeSettingsBtn' || e.target.id === 'cancelSettingsBtn')) closeSettingsModal();
             // backdrop click
             if (e.target && e.target.id === 'settingsModal') closeSettingsModal();
