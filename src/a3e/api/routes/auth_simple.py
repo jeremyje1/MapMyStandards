@@ -177,7 +177,9 @@ async def verify_token_endpoint(credentials: HTTPAuthorizationCredentials = Depe
         getattr(settings, 'jwt_secret_key', None) if settings else None,
         SECRET_KEY,
         os.getenv("JWT_SECRET_KEY", ""),
+        os.getenv("JWT_SECRET", ""),
         os.getenv("SECRET_KEY", ""),
+        "dev-secret-change",
     ]
     for idx, secret in enumerate(secrets_to_try):
         if not secret:
