@@ -951,14 +951,20 @@
                     });
                     
                     if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}`);
+                        const err = new Error(`HTTP ${response.status}`);
+                        // attach status for downstream UI
+                        err.status = response.status;
+                        throw err;
                     }
                     
                     const data = await response.json();
+                    this._metricsOk = true;
                     this.renderMetrics(data.data);
                 } catch (error) {
                     console.error('Failed to load metrics:', error);
-                    this.renderMetricsError();
+                    this._metricsOk = false;
+                    const status = (error && (error.status || error.code)) || '';
+                    this.renderMetricsError(status);
                 }
             }
 
@@ -1131,14 +1137,20 @@
                 }
             }
 
-            renderMetricsError() {
+            renderMetricsError(status) {
                 const metricsGrid = document.getElementById('metricsGrid');
+                const token = this.getAuthToken();
+                const code = String(status || '');
+                const needsLogin = code.includes('401') || code.includes('403') || token === 'demo-token' || !token;
+                const desc = needsLogin ? 'You may need to sign in to view your metrics.' : 'Please refresh the page to try again.';
+                const action = needsLogin ? `<a href="/login" class="action-btn" style="margin-top:8px">Sign In</a>` : '';
                 metricsGrid.innerHTML = `
                     <div class="metric-card">
                         <div class="empty-state">
                             <div class="empty-icon">⚠️</div>
-                            <div class="empty-title">Unable to load metrics</div>
-                            <div class="empty-description">Please refresh the page to try again.</div>
+                            <div class="empty-title">Unable to load metrics${code? ` (HTTP ${code})`: ''}</div>
+                            <div class="empty-description">${desc}</div>
+                            ${action}
                         </div>
                     </div>
                 `;
@@ -1179,7 +1191,8 @@
                     }
                 ];
 
-                activityList.innerHTML = activities.map(activity => `
+                const demoBadge = !this._metricsOk ? `<div style='font-size:11px;color:#6b7280;margin-bottom:4px'>Demo activity (no uploads yet)</div>` : '';
+                activityList.innerHTML = demoBadge + activities.map(activity => `
                     <div class="activity-item">
                         <div class="activity-icon ${activity.type}">
                             ${activity.type === 'upload' ? '📁' : activity.type === 'analysis' ? '🔍' : '📊'}
@@ -1222,7 +1235,8 @@
                     }
                 ];
 
-                progressOverview.innerHTML = progressItems.map(item => `
+                const demoBadge = !this._metricsOk ? `<div style='font-size:11px;color:#6b7280;margin-bottom:6px'>Demo progress (no uploads yet)</div>` : '';
+                progressOverview.innerHTML = demoBadge + progressItems.map(item => `
                     <div class="progress-item">
                         <div class="progress-header">
                             <div class="progress-label">${item.label}</div>
@@ -1240,6 +1254,7 @@
                 // Try multiple sources for auth token
                 return localStorage.getItem('a3e_api_key') ||
                        sessionStorage.getItem('a3e_api_key') ||
+                       localStorage.getItem('token') ||
                        localStorage.getItem('access_token') ||
                        localStorage.getItem('jwt_token') ||
                        'demo-token';
