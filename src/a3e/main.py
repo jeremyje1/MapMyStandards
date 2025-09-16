@@ -18,6 +18,7 @@ from pydantic import BaseModel, EmailStr
 import uvicorn
 import logging
 import os
+import asyncio
 import tempfile
 import os.path
 from pathlib import Path
@@ -396,8 +397,8 @@ async def lifespan(app: FastAPI):
         else:
             log_warning_once("⚠️ Agent orchestrator unavailable - missing dependencies (autogen)")
             agent_orchestrator = None
-
-        # Verify Tailwind build presence (non-fatal unless STRICT_FRONTEND_ASSETS enabled)
+        
+    # Verify Tailwind build presence (non-fatal unless STRICT_FRONTEND_ASSETS enabled)
         try:
             css_path = WEB_DIR / "static" / "css" / "tailwind.css"
             css_issue = None
@@ -423,9 +424,19 @@ async def lifespan(app: FastAPI):
                 raise
             logger.error(f"Non-fatal frontend asset verification error: {css_err}")
 
-            # Load accreditation standards into vector database
-        await _load_accreditation_standards()
-        logger.info("✅ Accreditation standards loaded")
+        # Load accreditation standards into vector database
+        fast_boot = os.getenv("FAST_BOOT", "0").strip() in ("1", "true", "True", "yes")
+        if fast_boot:
+            try:
+                asyncio.create_task(_load_accreditation_standards())
+                logger.info("⏩ FAST_BOOT enabled: deferring standards indexing to background task")
+            except Exception as e:
+                logger.warning(f"FAST_BOOT scheduling failed, falling back to inline indexing: {e}")
+                await _load_accreditation_standards()
+                logger.info("✅ Accreditation standards loaded")
+        else:
+            await _load_accreditation_standards()
+            logger.info("✅ Accreditation standards loaded")
         
         logger.info("🎉 A3E Application startup complete!")
         
