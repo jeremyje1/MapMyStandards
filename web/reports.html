@@ -559,7 +559,7 @@
                 preview.style.display = 'none';
                 const headers = { 'Content-Type': 'application/json' };
                 if (token) headers['Authorization'] = `Bearer ${token}`;
-                const res = await fetch('/api/user/intelligence-simple/narrative/generate', {
+                const res = await fetch((window.mmsAPI?.baseUrl || '') + '/api/user/intelligence-simple/narrative/generate', {
                     method: 'POST',
                     credentials: 'include',
                     headers,
@@ -594,7 +594,7 @@
                 status.textContent = 'Preparing DOCX export...';
                 const headers = { 'Content-Type': 'application/json' };
                 if (token) headers['Authorization'] = `Bearer ${token}`;
-                const res = await fetch('/api/user/intelligence-simple/narrative/export.docx', { method:'POST', credentials: 'include', headers, body: JSON.stringify({}) });
+                const res = await fetch((window.mmsAPI?.baseUrl || '') + '/api/user/intelligence-simple/narrative/export.docx', { method:'POST', credentials: 'include', headers, body: JSON.stringify({}) });
                 if (res.status === 401) { throw new Error('Please log in to export a narrative.'); }
                 if(!res.ok){ throw new Error('Failed to export DOCX'); }
                 const blob = await res.blob();

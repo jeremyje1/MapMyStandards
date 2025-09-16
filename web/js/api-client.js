@@ -16,8 +16,11 @@ const API_CONFIG = {
 };
 
 // Detect environment (you can also use environment variables)
-const isProduction = window.location.hostname === 'platform.mapmystandards.ai' || 
-                    window.location.hostname === 'www.mapmystandards.ai';
+const isProduction = (
+    window.location.hostname === 'platform.mapmystandards.ai' ||
+    window.location.hostname === 'www.mapmystandards.ai' ||
+    window.location.hostname.endsWith('.vercel.app')
+);
 
 // Current configuration
 const config = isProduction ? API_CONFIG.production : API_CONFIG.development;
