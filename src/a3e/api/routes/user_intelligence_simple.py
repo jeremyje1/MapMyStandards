@@ -220,6 +220,7 @@ def _candidate_secrets() -> List[str]:
         getattr(settings, "jwt_secret_key", None),
         getattr(settings, "secret_key", None),
         os.getenv("JWT_SECRET_KEY"),
+        os.getenv("JWT_SECRET"),
         os.getenv("SECRET_KEY"),
         os.getenv("ONBOARDING_SHARED_SECRET"),
         "your-secret-key-here-change-in-production",
