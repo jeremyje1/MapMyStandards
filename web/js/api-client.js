@@ -80,7 +80,12 @@ class MapMyStandardsAPI {
                 if (response.status === 401) {
                     // Try silent refresh if cookies available
                     try {
-                        const r = await fetch(`${this.baseUrl}/auth/refresh`, { method: 'POST', credentials: 'include' });
+                        // Prefer session auth refresh first
+                        let r = await fetch(`${this.baseUrl}/api/auth/refresh`, { method: 'POST', credentials: 'include' });
+                        if (!r.ok && r.status === 404) {
+                            // Fallback to enhanced auth refresh
+                            r = await fetch(`${this.baseUrl}/auth/refresh`, { method: 'POST', credentials: 'include' });
+                        }
                         if (r.ok) {
                             const j = await r.json().catch(()=>({}));
                             if (j && j.access_token) {

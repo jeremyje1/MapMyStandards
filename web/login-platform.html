@@ -254,8 +254,8 @@
     </div>
     
     <script>
-        // API configuration
-        const API_BASE_URL = 'https://api.mapmystandards.ai';
+    // API configuration
+    const API_BASE_URL = 'https://api.mapmystandards.ai';
 
         // Helper functions
         function showError(message) {
@@ -301,17 +301,28 @@
             setLoading(true);
 
             try {
-                // Primary enhanced auth endpoint (sets httpOnly cookies)
-                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                // Try session auth first (sets httpOnly cookies at /api/auth/login)
+                let response = await fetch(`${API_BASE_URL}/api/auth/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email: loginData.email, password: loginData.password, rememberMe: loginData.remember }),
                     credentials: 'include'
                 });
 
+                // Fallback to enhanced auth if session route not found
+                if (response.status === 404) {
+                    response = await fetch(`${API_BASE_URL}/auth/login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: loginData.email, password: loginData.password, rememberMe: loginData.remember }),
+                        credentials: 'include'
+                    });
+                }
+
                 const result = await response.json().catch(() => ({}));
 
-                if (response.ok && (result.success || result.access_token)) {
+                // Accept either shape: {access_token} or {data: {access_token}}
+                if (response.ok && (result.success || result.access_token || (result.data && result.data.access_token))) {
                     const token = (result.data && result.data.access_token) || result.access_token || '';
                     if (token) {
                         localStorage.setItem('a3e_api_key', token);
