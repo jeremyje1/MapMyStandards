@@ -29,6 +29,7 @@ class MapMyStandardsAPI {
     constructor() {
         this.baseUrl = config.baseUrl;
         this.authToken = this.getAuthToken();
+        this.cookieAuth = true; // leverage HttpOnly cookies if present
     }
 
     // Get authentication token from storage (check multiple keys for compatibility)
@@ -68,6 +69,7 @@ class MapMyStandardsAPI {
         const url = `${this.baseUrl}${endpoint}`;
         const defaultOptions = {
             headers: this.getHeaders(options.auth !== false),
+            credentials: 'include',
             ...options
         };
 
@@ -76,7 +78,19 @@ class MapMyStandardsAPI {
             
             if (!response.ok) {
                 if (response.status === 401) {
-                    // Unauthorized - clear token and redirect to login
+                    // Try silent refresh if cookies available
+                    try {
+                        const r = await fetch(`${this.baseUrl}/auth/refresh`, { method: 'POST', credentials: 'include' });
+                        if (r.ok) {
+                            const j = await r.json().catch(()=>({}));
+                            if (j && j.access_token) {
+                                this.setAuthToken(j.access_token);
+                            }
+                            // retry original request once
+                            const retry = await fetch(url, { ...defaultOptions, headers: this.getHeaders(options.auth !== false) });
+                            if (retry.ok) return await retry.json();
+                        }
+                    } catch (_) {}
                     this.clearAuth();
                     throw new Error('Authentication required');
                 }

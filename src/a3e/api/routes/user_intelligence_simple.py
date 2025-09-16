@@ -3,7 +3,7 @@ Simplified User Dashboard API Integration Service
 Bypasses complex database queries to provide direct access to AI features
 """
 
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form, Request, Header
 from fastapi.responses import JSONResponse, PlainTextResponse, Response
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import List, Dict, Any, Optional
@@ -239,9 +239,16 @@ def verify_simple_token(token: str) -> Optional[Dict[str, Any]]:
 
 
 async def get_current_user_simple(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    request: Request,
+    authorization: str | None = Header(default=None),
 ) -> Dict[str, Any]:
-    token = credentials.credentials
+    token: Optional[str] = None
+    if authorization and isinstance(authorization, str) and authorization.lower().startswith("bearer "):
+        token = authorization.split(" ", 1)[1].strip()
+    if not token:
+        token = request.cookies.get("access_token") or request.cookies.get("a3e_api_key") or request.cookies.get("jwt_token")
+    if not token:
+        raise HTTPException(status_code=401, detail="Authentication required")
     claims = verify_simple_token(token)
     if not claims:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
