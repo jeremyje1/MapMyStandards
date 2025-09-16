@@ -373,6 +373,11 @@
                 <div class="report-card" id="narrative-card">
                     <h3 class="report-title">CiteGuard Narrative</h3>
                     <p class="report-description">Generate an accreditation narrative with inline citations derived from your mapped evidence.</p>
+                    <div style="margin: 0 0 0.75rem 0">
+                        <label for="narrativeIntro" style="display:block;font-size:0.85rem;color:#374151;margin-bottom:4px">Optional introduction</label>
+                        <textarea id="narrativeIntro" rows="3" placeholder="Add an introductory paragraph or context (optional)..." style="width:100%;padding:8px;border:1px solid #e5e7eb;border-radius:6px;resize:vertical"></textarea>
+                        <div style="color:#9ca3af;font-size:0.75rem;margin-top:4px">Tip: Select standards in the page (elements with class <code>.selected-standard</code>) to target the narrative.</div>
+                    </div>
                     <div class="report-actions">
                         <button id="btn-generate-narrative" class="btn btn-primary" onclick="generateNarrative()">Generate</button>
                         <button id="btn-export-narrative" class="btn btn-secondary" onclick="exportNarrative()" disabled>Export DOCX</button>
@@ -540,18 +545,29 @@
 
         async function generateNarrative(){
             const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
-            if(!token){ alert('Please log in to generate a narrative.'); return; }
             const btnGen = document.getElementById('btn-generate-narrative');
             const btnExport = document.getElementById('btn-export-narrative');
             const status = document.getElementById('narrative-status');
             const preview = document.getElementById('narrative-preview');
             const htmlDiv = document.getElementById('narrative-html');
+            const standardIds = Array.from(document.querySelectorAll('.selected-standard')).map(el => el.dataset.id).filter(Boolean);
+            const userBody = (document.getElementById('narrativeIntro')?.value || '').trim();
             try{
                 btnGen.disabled = true; btnExport.disabled = true;
                 status.style.display = 'block';
                 status.textContent = 'Generating narrative...';
                 preview.style.display = 'none';
-                const res = await fetch('/api/user/intelligence-simple/narrative/generate', { headers: { 'Authorization': `Bearer ${token}` }});
+                const headers = { 'Content-Type': 'application/json' };
+                if (token) headers['Authorization'] = `Bearer ${token}`;
+                const res = await fetch('/api/user/intelligence-simple/narrative/generate', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers,
+                    body: JSON.stringify({ standard_ids: standardIds, body: userBody })
+                });
+                if (res.status === 401) {
+                    throw new Error('Please log in to generate a narrative.');
+                }
                 if(!res.ok){ throw new Error('Failed to generate narrative'); }
                 const data = await res.json();
                 const html = data && data.html ? data.html : '<p>No mapped evidence available yet. Upload documents to generate a narrative.</p>';
@@ -569,7 +585,6 @@
 
         async function exportNarrative(){
             const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
-            if(!token){ alert('Please log in to export a narrative.'); return; }
             const btnGen = document.getElementById('btn-generate-narrative');
             const btnExport = document.getElementById('btn-export-narrative');
             const status = document.getElementById('narrative-status');
@@ -577,7 +592,10 @@
                 btnGen.disabled = true; btnExport.disabled = true;
                 status.style.display = 'block';
                 status.textContent = 'Preparing DOCX export...';
-                const res = await fetch('/api/user/intelligence-simple/narrative/export.docx', { method:'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type':'application/json' }, body: JSON.stringify({}) });
+                const headers = { 'Content-Type': 'application/json' };
+                if (token) headers['Authorization'] = `Bearer ${token}`;
+                const res = await fetch('/api/user/intelligence-simple/narrative/export.docx', { method:'POST', credentials: 'include', headers, body: JSON.stringify({}) });
+                if (res.status === 401) { throw new Error('Please log in to export a narrative.'); }
                 if(!res.ok){ throw new Error('Failed to export DOCX'); }
                 const blob = await res.blob();
                 const url = window.URL.createObjectURL(blob);
