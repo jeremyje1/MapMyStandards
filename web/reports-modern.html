@@ -742,6 +742,15 @@
     </div>
 
     <script>
+        function getAuthToken() {
+            return localStorage.getItem('a3e_api_key') ||
+                   sessionStorage.getItem('a3e_api_key') ||
+                   localStorage.getItem('token') ||
+                   localStorage.getItem('access_token') ||
+                   localStorage.getItem('jwt_token') ||
+                   localStorage.getItem('authToken') ||
+                   'demo-token';
+        }
         let dashboardData = null;
         let reportStatuses = new Map();
 
@@ -754,7 +763,7 @@
         // Load dashboard metrics
         async function loadDashboardMetrics() {
             try {
-                const token = localStorage.getItem('authToken') || 'demo-token';
+                const token = getAuthToken();
                 const response = await fetch('/api/user/intelligence-simple/dashboard/metrics', {
                     method: 'GET',
                     headers: {
@@ -897,7 +906,7 @@
         }
 
         async function generateReport(type) {
-            const token = localStorage.getItem('authToken') || 'demo-token';
+            const token = getAuthToken();
             
             // Show loading state on button
             const buttons = document.querySelectorAll('.btn-primary');
@@ -908,54 +917,54 @@
             clickedButton.innerHTML = '<span class="spinner" style="width: 1rem; height: 1rem; border-width: 2px; margin-right: 0.5rem;"></span> Generating...';
 
             try {
-                let endpoint = '';
-                let payload = {
-                    institution_id: 'demo-institution',
-                    accreditor_id: 'SACSCOC',
-                    requested_by: 'demo@example.com'
-                };
-
-                switch (type) {
-                    case 'comprehensive':
-                        endpoint = '/api/reports/comprehensive';
-                        payload.report_type = 'comprehensive_compliance';
-                        break;
-                    case 'qep':
-                        endpoint = '/api/reports/qep';
-                        payload.qep_focus_area = 'Student Learning Outcomes';
-                        break;
-                    case 'evidence':
-                        endpoint = '/api/reports/evidence-mapping';
-                        payload.report_type = 'evidence_mapping';
-                        break;
-                    case 'gaps':
-                        endpoint = '/api/reports/gap-analysis';
-                        payload.report_type = 'gap_analysis';
-                        break;
-                }
-
-                const response = await fetch(endpoint, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify(payload)
-                });
-
-                if (response.ok) {
-                    const result = await response.json();
-                    
-                    // Show success message
-                    alert(`✅ ${type.charAt(0).toUpperCase() + type.slice(1)} report generation started!\n\n📊 Report ID: ${result.report_id || 'RPT-' + Date.now()}\n⏱️ Estimated completion: 2-5 minutes\n\nYou'll be notified when it's ready for download.`);
-                    
-                    // Refresh recent reports list
-                    setTimeout(() => {
-                        loadRecentReports();
-                    }, 1000);
-                } else {
-                    const error = await response.json();
-                    alert(`❌ Error generating report:\n${error.detail || 'Unknown error occurred'}`);
+                if (type === 'evidence') {
+                    // Evidence Mapping report from last analyzed doc (demo: build from metrics);
+                    // In a fuller UI, we'd pick a document and its analysis payload.
+                    const payload = { filename: 'latest_document', analysis: { mappings: [] } };
+                    const response = await fetch('/api/user/intelligence-simple/evidence/report', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify(payload)
+                    });
+                    if (response.ok) {
+                        const result = await response.json();
+                        const w = window.open('', '_blank');
+                        if (w) { w.document.write(result.html || '<p>No content</p>'); }
+                        alert('✅ Evidence Mapping report generated. Opened in a new tab.');
+                    } else {
+                        const error = await response.json().catch(()=>({}));
+                        alert(`❌ Error: ${error.detail || 'Failed to generate evidence report'}`);
+                    }
+                } else if (type === 'comprehensive' || type === 'gaps' || type === 'qep') {
+                    // Generate narrative HTML and offer DOCX export
+                    const gen = await fetch('/api/user/intelligence-simple/narrative/generate', {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({})
+                    });
+                    if (!gen.ok) throw new Error('narrative failed');
+                    const gj = await gen.json();
+                    const html = gj.html || '<p>No narrative yet. Upload evidence first.</p>';
+                    const w = window.open('', '_blank');
+                    if (w) { w.document.write(html); }
+                    // Prompt to export DOCX
+                    if (confirm('Export this narrative to DOCX?')) {
+                        const docx = await fetch('/api/user/intelligence-simple/narrative/export.docx', {
+                            method: 'POST',
+                            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ html })
+                        });
+                        if (docx.ok) {
+                            const blob = await docx.blob();
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url; a.download = 'accreditation_narrative.docx';
+                            document.body.appendChild(a); a.click(); a.remove();
+                            URL.revokeObjectURL(url);
+                        } else {
+                            alert('DOCX export failed');
+                        }
+                    }
                 }
             } catch (error) {
                 console.error('Error generating report:', error);
@@ -969,7 +978,7 @@
 
         async function loadRecentReports() {
             try {
-                const token = localStorage.getItem('authToken') || 'demo-token';
+                const token = getAuthToken();
                 const response = await fetch('/api/reports/recent', {
                     headers: {
                         'Authorization': `Bearer ${token}`,

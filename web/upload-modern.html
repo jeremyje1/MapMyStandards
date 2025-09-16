@@ -765,6 +765,16 @@
     <script>
         let selectedFiles = [];
 
+        function getAuthToken() {
+            return localStorage.getItem('a3e_api_key') ||
+                   sessionStorage.getItem('a3e_api_key') ||
+                   localStorage.getItem('token') ||
+                   localStorage.getItem('access_token') ||
+                   localStorage.getItem('jwt_token') ||
+                   localStorage.getItem('auth_token') ||
+                   'demo-token';
+        }
+
         // Logout function
         function logout() {
             localStorage.clear();
@@ -892,7 +902,7 @@
             const progressFill = document.getElementById('progressFill');
             const progressText = document.getElementById('progressText');
             const uploadBtn = document.getElementById('uploadBtn');
-            const token = localStorage.getItem('jwt_token') || localStorage.getItem('auth_token') || localStorage.getItem('a3e_api_key');
+            const token = getAuthToken();
 
             // Show progress section
             progressSection.classList.add('show');
@@ -901,51 +911,60 @@
 
             let uploaded = 0;
             for (const file of selectedFiles) {
-                progressText.textContent = `Uploading ${file.name}...`;
+                progressText.textContent = `Analyzing ${file.name}...`;
                 const formData = new FormData();
                 formData.append('file', file);
                 try {
-                    const resp = await fetch('/api/documents/upload', {
+                    const resp = await fetch('/api/user/intelligence-simple/evidence/analyze', {
                         method: 'POST',
                         headers: token ? { 'Authorization': 'Bearer ' + token } : {},
                         body: formData
                     });
                     if (resp.ok) {
                         uploaded++;
+                        try {
+                            const result = await resp.json();
+                            addToRecentFiles([{
+                                name: file.name,
+                                size: file.size,
+                                mapped: (result && result.analysis && result.analysis.standards_mapped) || 0
+                            }]);
+                        } catch (_) { /* ignore JSON errors */ }
                     } else {
-                        console.error('Upload failed', file.name, await resp.text());
+                        console.error('Analyze failed', file.name, await resp.text());
                     }
                 } catch (err) {
-                    console.error('Upload error', file.name, err);
+                    console.error('Analyze error', file.name, err);
                 }
                 const pct = Math.round((uploaded / selectedFiles.length) * 100);
                 progressFill.style.width = pct + '%';
-                progressText.textContent = `Uploaded ${uploaded} of ${selectedFiles.length}`;
+                progressText.textContent = `Processed ${uploaded} of ${selectedFiles.length}`;
             }
-            progressText.textContent = 'Uploads complete';
-            alert(`Uploaded ${uploaded} of ${selectedFiles.length} file(s)`);
-            addToRecentFiles();
+            progressText.textContent = 'Analysis complete';
+            alert(`Analyzed ${uploaded} of ${selectedFiles.length} file(s)`);
             clearFiles();
             uploadBtn.disabled = false;
             uploadBtn.innerHTML = '🚀 Start Analysis';
             setTimeout(() => { progressSection.classList.remove('show'); progressFill.style.width = '0%'; }, 1200);
         }
 
-        function addToRecentFiles() {
+        function addToRecentFiles(items) {
             const recentList = document.getElementById('recentList');
-            
-            selectedFiles.forEach(file => {
+            const arr = Array.isArray(items) && items.length ? items : selectedFiles.map(f => ({ name: f.name, size: f.size, mapped: null }));
+            arr.forEach(file => {
                 const fileSize = formatFileSize(file.size);
                 const recentItem = document.createElement('li');
                 recentItem.className = 'recent-item';
+                const mappedInfo = (file.mapped !== null && file.mapped !== undefined) ? `${file.mapped} standards mapped` : 'Analysis in progress';
+                const statusClass = (file.mapped && file.mapped > 0) ? 'status-complete' : 'status-processing';
+                const statusText = (file.mapped && file.mapped > 0) ? 'Complete' : 'Processing';
                 recentItem.innerHTML = `
                     <div class="recent-file-info">
                         <div class="recent-file-name">${file.name}</div>
-                        <div class="recent-file-meta">Just uploaded • ${fileSize} • Analysis in progress</div>
+                        <div class="recent-file-meta">Just processed • ${fileSize} • ${mappedInfo}</div>
                     </div>
-                    <span class="status-badge status-processing">Processing</span>
+                    <span class="status-badge ${statusClass}">${statusText}</span>
                 `;
-                
                 recentList.insertBefore(recentItem, recentList.firstChild);
             });
 
@@ -975,19 +994,14 @@
 
         async function loadRecentFiles() {
             try {
-                const token = localStorage.getItem('authToken') || 'demo-token';
-                const response = await fetch('/api/uploads/recent', {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
+                // Optional: hydrate counts from metrics summary
+                const token = getAuthToken();
+                const response = await fetch('/api/user/intelligence-simple/metrics/summary', {
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
-
                 if (response.ok) {
                     const result = await response.json();
-                    // Update recent files list with real data
-                    console.log('Recent files loaded:', result);
+                    console.log('Metrics summary:', result);
                 }
             } catch (error) {
                 console.error('Error loading recent files:', error);
