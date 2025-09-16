@@ -278,6 +278,7 @@
             background: #d1d5db;
         }
     </style>
+    <script src="js/api-client.js"></script>
     <script src="/js/global-nav.js"></script>
 </head>
 <body>
@@ -337,22 +338,33 @@
 
         // Load accreditors on page load
         async function loadAccreditors() {
+            const statusError = (message) => {
+                document.getElementById('contentArea').innerHTML = `
+                    <div style="text-align:center;padding:3rem;color:#ef4444;">
+                        <h3>${message}</h3>
+                        <p>Please log in and try again.</p>
+                        <p><a href="/login" style="color:#2563eb;text-decoration:underline;">Go to Login</a></p>
+                    </div>
+                `;
+            };
             try {
-                const response = await fetch('/api/v1/standards/accreditors');
-                const data = await response.json();
-                
-                // The API returns an array directly, not wrapped in success/data
+                const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+                const headers = { 'Content-Type': 'application/json' };
+                if (token) headers['Authorization'] = `Bearer ${token}`;
+                const base = (window.mmsAPI?.baseUrl || '');
+                const resp = await fetch(`${base}/api/v1/standards/accreditors`, { credentials: 'include', headers });
+                if (resp.status === 401) { statusError('Authentication required'); return; }
+                if (!resp.ok) { throw new Error(`HTTP ${resp.status}`); }
+                const data = await resp.json();
                 if (Array.isArray(data)) {
                     accreditors = data;
-                    populateAccreditorSelect();
-                    showAccreditorSelection();
-                } else if (data.success) {
-                    accreditors = data.data.accreditors || data.data || [];
-                    populateAccreditorSelect();
-                    showAccreditorSelection();
+                } else if (data && data.success) {
+                    accreditors = data.data?.accreditors || data.data || [];
                 } else {
-                    throw new Error('Failed to load accreditors');
+                    throw new Error('Unexpected response');
                 }
+                populateAccreditorSelect();
+                showAccreditorSelection();
             } catch (error) {
                 console.error('Error loading accreditors:', error);
                 document.getElementById('contentArea').innerHTML = `
@@ -402,22 +414,32 @@
             `;
 
             try {
-                let url = `/api/standards?accreditor=${accreditorId.toUpperCase()}`;
-                if (institutionType) {
-                    url += `&institution_type=${institutionType}`;
+                const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+                const headers = { 'Content-Type': 'application/json' };
+                if (token) headers['Authorization'] = `Bearer ${token}`;
+                const base = (window.mmsAPI?.baseUrl || '');
+                const params = new URLSearchParams({ accreditor: accreditorId.toUpperCase() });
+                if (institutionType) params.set('institution_type', institutionType);
+                const resp = await fetch(`${base}/api/v1/standards?${params.toString()}`, { credentials: 'include', headers });
+                if (resp.status === 401) {
+                    document.getElementById('contentArea').innerHTML = `
+                        <div style="text-align:center;padding:3rem;color:#ef4444;">
+                            <h3>Authentication required</h3>
+                            <p><a href="/login" style="color:#2563eb;text-decoration:underline;">Log in</a> to view standards.</p>
+                        </div>
+                    `;
+                    return;
                 }
-
-                const response = await fetch(url);
-                const data = await response.json();
-                
-                if (data.success) {
-                    currentStandards = data.data.standards;
+                if (!resp.ok) { throw new Error(`HTTP ${resp.status}`); }
+                const data = await resp.json();
+                if (data && data.success) {
+                    currentStandards = data.data?.standards || [];
                     displayStandards({
-                        accreditor: { 
-                            name: "Southern Association of Colleges and Schools Commission on Colleges", 
-                            acronym: accreditorId.toUpperCase() 
+                        accreditor: {
+                            name: (data.data?.accreditor?.name) || accreditorId.toUpperCase(),
+                            acronym: accreditorId.toUpperCase()
                         },
-                        standards: data.data.standards
+                        standards: currentStandards
                     });
                 } else {
                     throw new Error('Failed to load standards');
