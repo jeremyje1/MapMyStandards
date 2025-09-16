@@ -282,6 +282,32 @@
         .btn-secondary:hover {
             background: #d1d5db;
         }
+
+        .risk-overview {
+            background: #fff7ed;
+            border: 1px solid #fed7aa;
+            color: #7c2d12;
+            border-radius: 10px;
+            padding: 1rem;
+            margin: 1rem 0 2rem 0;
+            display: none;
+        }
+        .risk-stats { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; }
+        .chip { padding: 0.25rem 0.5rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
+        .chip.minimal { background:#ecfeff; color:#155e75; }
+        .chip.low { background:#ecfdf5; color:#065f46; }
+        .chip.medium { background:#fef9c3; color:#854d0e; }
+        .chip.high { background:#fee2e2; color:#991b1b; }
+        .chip.critical { background:#fecaca; color:#7f1d1d; }
+        .risk-badge { display:inline-block; padding:0.25rem 0.5rem; border-radius:6px; font-size:0.75rem; font-weight:600; }
+        .risk-badge.minimal { background:#ecfeff; color:#155e75; }
+        .risk-badge.low { background:#ecfdf5; color:#065f46; }
+        .risk-badge.medium { background:#fef9c3; color:#854d0e; }
+        .risk-badge.high { background:#fee2e2; color:#991b1b; }
+        .risk-badge.critical { background:#fecaca; color:#7f1d1d; }
+        .risk-details { background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; padding:0.75rem; margin-top:0.5rem; display:none; }
+        .risk-row { display:flex; justify-content:space-between; font-size:0.85rem; color:#374151; }
+        .risk-actions { display:flex; gap:0.5rem; align-items:center; }
     </style>
     <script src="/js/api-client.js"></script>
     <script src="/js/global-nav.js"></script>
@@ -342,6 +368,10 @@
                     <option value="graduate_school">Graduate School</option>
                 </select>
             </div>
+            <div class="filter-group">
+                <label class="filter-label">Risk & Trust</label>
+                <button id="btnRefreshRisk" class="filter-select" style="cursor:pointer;">Refresh Risk</button>
+            </div>
         </div>
 
         <!-- Content Area -->
@@ -360,6 +390,11 @@
         let currentMode = 'browse'; // 'browse' | 'search'
         let searchTimer = null;
     const crosswalkCache = {};
+        let evidenceMapCache = null;
+        let riskFactorsMeta = null;
+        let riskScores = {};
+        let riskAggregate = null;
+        let scoringInProgress = false;
 
         // Load accreditors on page load
         async function loadAccreditors() {
@@ -390,6 +425,7 @@
                 populateAccreditorSelect();
                 populateCompareSelect();
                 showAccreditorSelection();
+                ensureRiskFactors();
             } catch (error) {
                 console.error('Error loading accreditors:', error);
                 document.getElementById('contentArea').innerHTML = `
@@ -542,6 +578,10 @@
                 standards.forEach(standard => {
                     const stdId = (standard.id || standard.code || '').toString();
                     const isSelected = selectedSet.has(stdId);
+                    const r = riskScores[stdId];
+                    const riskClass = r ? (r.risk_level || '') : '';
+                    const riskPct = r && typeof r.risk_score === 'number' ? Math.round(r.risk_score * 100) : null;
+                    const riskLabel = r ? `${(r.risk_level || '').toUpperCase()} • ${riskPct}%` : 'No risk data';
                     html += `
                         <div class="standard-card ${isSelected ? 'selected-standard' : ''}" data-standard-id="${stdId}">
                             <div class="standard-header">
@@ -549,6 +589,7 @@
                                 <div>
                                     <button class="btn btn-secondary" data-select-toggle data-id="${stdId}">${isSelected ? 'Deselect' : 'Select'}</button>
                                     ${document.getElementById('compareAccreditorSelect').value ? `<button class="btn btn-primary" data-equivalents data-id="${stdId}" style="margin-left:0.5rem;">Find equivalents</button>` : ''}
+                                    <span class="risk-badge ${riskClass}" id="risk-${stdId}" style="margin-left:0.5rem;">${riskLabel}</span>
                                 </div>
                             </div>
                             <h3 class="standard-title">${standard.title || standard.name || ''}</h3>
@@ -561,6 +602,10 @@
                                 ${standard.evidence_requirements ? `<span>Evidence: ${standard.evidence_requirements.length} items</span>` : ''}
                             </div>
                             <div class="equivalents" id="equiv-${stdId}" style="margin-top:0.75rem;"></div>
+                            <div class="risk-details" id="risk-details-${stdId}"></div>
+                            <div class="risk-actions" style="margin-top:0.5rem;">
+                                <button class="btn btn-secondary" data-risk-details data-id="${stdId}">Risk factors</button>
+                            </div>
                         </div>
                     `;
                 });
@@ -569,6 +614,7 @@
             }
 
             document.getElementById('contentArea').innerHTML = html;
+            renderRiskOverview();
         }
 
         async function performSearch(query) {
@@ -699,6 +745,28 @@
                     equivDiv.innerHTML = '<div style="color:#ef4444;">Failed to load equivalents.</div>';
                 }
             }
+            if (btn.hasAttribute('data-risk-details')) {
+                const id = btn.getAttribute('data-id');
+                const panel = document.getElementById(`risk-details-${id}`);
+                if (!panel) return;
+                const r = riskScores[id];
+                if (!r) { panel.style.display = 'block'; panel.innerHTML = '<div style="color:#6b7280;">No risk data yet. Click Refresh Risk.</div>'; return; }
+                const factors = (r.factors || []).map(f => `
+                    <div class=\"risk-row\">
+                        <div>${f.factor}</div>
+                        <div style=\"color:#6b7280;\">w ${f.weight} • n ${f.normalized} • +${f.contribution}</div>
+                    </div>
+                    <div style=\"font-size:0.8rem;color:#6b7280;margin-bottom:0.25rem;\">${f.description || ''}</div>
+                `).join('');
+                panel.innerHTML = `
+                    <div style=\"display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;\">
+                        <strong>Risk breakdown</strong>
+                        <span style=\"font-size:0.8rem;color:#6b7280;\">confidence ${Math.round((r.confidence||0)*100)}%</span>
+                    </div>
+                    ${factors || '<div style="color:#6b7280;">No factor breakdown available.</div>'}
+                `;
+                panel.style.display = panel.style.display === 'none' || panel.style.display === '' ? 'block' : 'none';
+            }
         });
 
         function getSelectedStandards() {
@@ -723,3 +791,114 @@
 
     // Initialize
         loadAccreditors();
+
+        async function ensureEvidenceMap() {
+            if (evidenceMapCache) return evidenceMapCache;
+            try {
+                const base = (window.mmsAPI?.baseUrl || '');
+                const headers = window.mmsAPI?.getHeaders(true) || { 'Content-Type': 'application/json' };
+                const resp = await fetch(`${base}/api/user/intelligence-simple/standards/evidence-map`, { credentials: 'include', headers });
+                if (resp.ok) {
+                    evidenceMapCache = await resp.json();
+                } else {
+                    evidenceMapCache = { mapping: {} };
+                }
+            } catch {
+                evidenceMapCache = { mapping: {} };
+            }
+            return evidenceMapCache;
+        }
+
+        async function ensureRiskFactors() {
+            if (riskFactorsMeta) return riskFactorsMeta;
+            try {
+                const base = (window.mmsAPI?.baseUrl || '');
+                const headers = window.mmsAPI?.getHeaders(true) || { 'Content-Type': 'application/json' };
+                const resp = await fetch(`${base}/api/user/intelligence-simple/risk/factors`, { credentials: 'include', headers });
+                if (resp.ok) riskFactorsMeta = await resp.json();
+            } catch {}
+            return riskFactorsMeta;
+        }
+
+        function buildSnapshots(standards) {
+            const mapping = (evidenceMapCache && evidenceMapCache.mapping) || {};
+            return (standards || []).map(s => {
+                const sid = (s.id || s.code || '').toString();
+                const evid = mapping[sid] || [];
+                const trust = evid.map(m => typeof m.confidence === 'number' ? m.confidence : 0);
+                const coverage = Math.min(100, (evid.length || 0) * 25);
+                return {
+                    standard_id: sid,
+                    coverage_percent: coverage,
+                    trust_scores: trust,
+                    evidence_ages_days: [365],
+                    overdue_tasks: 0,
+                    total_tasks: 0,
+                    recent_changes: 0,
+                    historical_findings: 0,
+                    days_to_review: 180
+                };
+            });
+        }
+
+        async function scoreVisibleStandards() {
+            if (scoringInProgress) return;
+            const list = currentMode === 'search' ? searchResults : currentStandards;
+            if (!list || list.length === 0) return;
+            scoringInProgress = true;
+            try {
+                await ensureEvidenceMap();
+                const items = buildSnapshots(filterByCategory(list));
+                const base = (window.mmsAPI?.baseUrl || '');
+                const headers = window.mmsAPI?.getHeaders(true) || { 'Content-Type': 'application/json' };
+                const resp = await fetch(`${base}/api/user/intelligence-simple/risk/score-bulk`, { method: 'POST', credentials: 'include', headers, body: JSON.stringify({ items }) });
+                if (resp.ok) {
+                    const data = await resp.json();
+                    (data.data || []).forEach(d => { if (d && d.standard_id) riskScores[d.standard_id] = d; });
+                    try {
+                        const aggResp = await fetch(`${base}/api/user/intelligence-simple/risk/aggregate`, { credentials: 'include', headers });
+                        if (aggResp.ok) { const a = await aggResp.json(); riskAggregate = a.data || null; }
+                    } catch {}
+                    const accreditorId = document.getElementById('accreditorSelect').value || 'ALL';
+                    const list2 = currentMode === 'search' ? searchResults : currentStandards;
+                    displayStandards({ accreditor: { name: accreditorId.toUpperCase(), acronym: accreditorId.toUpperCase() }, standards: filterByCategory(list2) });
+                }
+            } catch (e) {
+                console.error('Risk scoring error:', e);
+            } finally {
+                scoringInProgress = false;
+            }
+        }
+
+        function renderRiskOverview() {
+            let el = document.getElementById('risk-overview');
+            if (!el) {
+                el = document.createElement('div');
+                el.id = 'risk-overview';
+                el.className = 'risk-overview';
+                const container = document.querySelector('.container');
+                if (container) container.insertBefore(el, document.getElementById('contentArea'));
+            }
+            const agg = riskAggregate;
+            if (!agg) { el.style.display = 'none'; return; }
+            const dist = agg.risk_distribution || {};
+            const avg = typeof agg.average_risk === 'number' ? Math.round(agg.average_risk * 100) : 0;
+            const cls = avg < 15 ? 'minimal' : avg < 30 ? 'low' : avg < 50 ? 'medium' : avg < 70 ? 'high' : 'critical';
+            el.innerHTML = `
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+                    <strong>Risk Overview</strong>
+                    <span>Average risk: <span class="chip ${cls}">${avg}%</span></span>
+                </div>
+                <div class="risk-stats">
+                    <span class="chip minimal">Minimal: ${dist.minimal || 0}</span>
+                    <span class="chip low">Low: ${dist.low || 0}</span>
+                    <span class="chip medium">Medium: ${dist.medium || 0}</span>
+                    <span class="chip high">High: ${dist.high || 0}</span>
+                    <span class="chip critical">Critical: ${dist.critical || 0}</span>
+                </div>
+            `;
+            el.style.display = 'block';
+        }
+
+        const btnRisk = document.getElementById('btnRefreshRisk');
+        if (btnRisk) btnRisk.addEventListener('click', () => { scoreVisibleStandards(); });
