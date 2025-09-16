@@ -22,6 +22,7 @@ from ...services.evidence_trust import evidence_trust_scorer, EvidenceType, Sour
 from ...services.gap_risk_predictor import gap_risk_predictor
 from ...services.risk_explainer import risk_explainer, StandardEvidenceSnapshot
 from ...services.metrics_timeseries import maybe_snapshot, get_series
+from ...services.narrative_service import generate_narrative_html
 from ...services.analytics_service import analytics_service
 from ...core.config import get_settings
 
@@ -38,6 +39,7 @@ JWT_ALGORITHM = "HS256"
 SETTINGS_STORE = os.getenv("USER_SETTINGS_STORE", "user_settings_store.json")
 REVIEWS_STORE = os.getenv("USER_REVIEWS_STORE", "user_reviews_store.json")
 UPLOADS_STORE = os.getenv("USER_UPLOADS_STORE", "user_uploads_store.json")
+SESSIONS_STORE = os.getenv("USER_SESSIONS_STORE", "user_sessions_store.json")
 
 
 def _safe_load_json(path: str) -> Dict[str, Any]:
@@ -697,48 +699,33 @@ async def aggregate_risk(current_user: Dict[str, Any] = Depends(get_current_user
 
 
 # ------------------------------
-# Narrative generation (CiteGuard-lite)
+# Narrative generation
 # ------------------------------
 @router.post("/narrative/generate")
-async def generate_narrative(payload: Dict[str, Any] = None, current_user: Dict[str, Any] = Depends(get_current_user_simple)):
-    """Generate a simple narrative with inline citations based on current uploads and reviews."""
+async def generate_narrative(payload: Dict[str, Any], current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+    """
+    Generate a narrative summary for the given standards. Expects JSON like:
+    {"standard_ids": ["SACSCOC_8.1_ind_4", "HLC_1"], "body": "<optional user intro>"}
+    """
     try:
-        uploads = _get_user_uploads(current_user)
-        org = _merge_claims_with_settings(current_user).get("organization") or "Your Institution"
-        accreditor = _merge_claims_with_settings(current_user).get("primary_accreditor") or "HLC"
-        sections = []
-        for d in uploads.get("documents", [])[:10]:
-            fname = d.get("filename")
-            for m in (d.get("mappings") or [])[:8]:
-                sid = m.get("standard_id")
-                title = m.get("title") or sid
-                rationale = "; ".join(m.get("rationale_spans") or [])
-                # include reviewer note if present
-                note = None
-                try:
-                    rv = _get_user_reviews(current_user, fname).get(sid)
-                    note = rv.get("rationale_note") or rv.get("note")
-                except Exception:
-                    note = None
-                para = f"For standard {sid} ({title}), the institution provides evidence in {fname} [cite:{fname}]. "
-                if rationale:
-                    para += f"Key rationale excerpts include: {rationale}. "
-                if note:
-                    para += f"Reviewer annotation: {note}. "
-                para += f"Confidence: {int((m.get('confidence') or 0)*100)}%."
-                sections.append(para)
-        if not sections:
-            sections = ["No mapped evidence available yet. Upload documents to generate a narrative."]
-        html = f"""
-        <div>
-            <h2 style='margin:0 0 8px 0'>Accreditation Narrative – {org}</h2>
-            <div style='color:#6b7280;margin-bottom:12px'>Framework: {accreditor}</div>
-            {''.join(f"<p style='margin:8px 0;line-height:1.5'>{s}</p>" for s in sections)}
-            <hr style='margin:12px 0;border:none;border-top:1px solid #e5e7eb' />
-            <div style='font-size:12px;color:#6b7280'>Citations: [cite:filename] refer to uploaded documents in your workspace.</div>
-        </div>
-        """
+        standard_ids = (payload or {}).get("standard_ids") or []
+        user_body = (payload or {}).get("body") or ""
+
+        if not isinstance(standard_ids, list):
+            raise HTTPException(status_code=400, detail="standard_ids must be a list")
+
+        # Call the narrative service to build HTML
+        html = generate_narrative_html(standard_ids, user_body)
+
+        # Persist the result to the user's session for later export
+        all_sessions = _safe_load_json(SESSIONS_STORE)
+        user_key = _user_key(current_user)
+        all_sessions.setdefault(user_key, {})["last_narrative"] = html
+        _safe_save_json(SESSIONS_STORE, all_sessions)
+
         return {"html": html}
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Narrative generation error: {e}")
         raise HTTPException(status_code=500, detail="Failed to generate narrative")
