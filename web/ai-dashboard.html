@@ -108,6 +108,7 @@
                     <span class="ai-badge ml-3">AI Powered</span>
                 </div>
                 <div class="flex items-center space-x-4">
+                    <span id="authIndicator" class="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600 hidden"></span>
                     <span class="text-sm text-gray-600" id="userEmail">Loading...</span>
                     <button id="openSettingsBtn" class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700 transition-colors">
                         Settings
@@ -2042,4 +2043,32 @@
         })();
     </script>
 </body>
+</html>
+<script>
+// Minimal auth indicator: checks /api/auth/me using cookies
+(function(){
+    const API_BASE = 'https://api.mapmystandards.ai';
+    const indicator = document.getElementById('authIndicator');
+    const emailSpan = document.getElementById('userEmail');
+    fetch(`${API_BASE}/api/auth/me`, { credentials: 'include' })
+        .then(r => r.json())
+        .then(j => {
+            if (j && j.ok) {
+                indicator.textContent = 'Session: active';
+                indicator.classList.remove('hidden');
+                indicator.classList.remove('bg-gray-100','text-gray-600');
+                indicator.classList.add('bg-green-100','text-green-700');
+                if (j.email) emailSpan.textContent = j.email;
+            } else {
+                indicator.textContent = 'Session: none';
+                indicator.classList.remove('hidden');
+                indicator.classList.remove('bg-green-100','text-green-700');
+                indicator.classList.add('bg-gray-100','text-gray-600');
+            }
+        })
+        .catch(() => {
+            // ignore errors; leave indicator hidden
+        });
+})();
+</script>
 </html>

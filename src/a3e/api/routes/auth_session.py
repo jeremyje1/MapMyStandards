@@ -122,6 +122,12 @@ class AuthSuccess(BaseModel):
     token_type: str = "bearer"
     expires_in: int
 
+class MeResponse(BaseModel):
+    ok: bool
+    user_id: str | None = None
+    email: str | None = None
+    exp: int | None = None
+
 
 def _issue_access_token(user_id: str, email: str) -> tuple[str, datetime]:
     now = datetime.now(timezone.utc)
@@ -268,3 +274,15 @@ async def logout(response: Response, request: Request):
     for name in ("access_token", "refresh_token"):
         response.delete_cookie(name, domain=COOKIE_DOMAIN, path="/")
     return {"success": True}
+
+
+@router.get("/me", response_model=MeResponse)
+async def me(request: Request):
+    token = request.cookies.get("access_token")
+    if not token:
+        return MeResponse(ok=False)
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALG])
+        return MeResponse(ok=True, user_id=str(payload.get("sub")), email=payload.get("email"), exp=payload.get("exp"))
+    except Exception:
+        return MeResponse(ok=False)
