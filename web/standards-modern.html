@@ -723,6 +723,34 @@
     </div>
 
     <script>
+        (function bootstrapTokenFromUrl(){
+            try {
+                const u = new URL(window.location.href);
+                const t = u.searchParams.get('token') || u.searchParams.get('api_key') || u.searchParams.get('access_token');
+                if (t) {
+                    localStorage.setItem('a3e_api_key', t);
+                    sessionStorage.setItem('a3e_api_key', t);
+                    localStorage.setItem('access_token', t);
+                    localStorage.setItem('jwt_token', t);
+                    u.searchParams.delete('token');
+                    u.searchParams.delete('api_key');
+                    u.searchParams.delete('access_token');
+                    history.replaceState({}, '', u.toString());
+                }
+            } catch (_) {}
+        })();
+        function getApiBase(){
+            return (window.mmsAPI && window.mmsAPI.getBaseUrl && window.mmsAPI.getBaseUrl()) ||
+                   (location.hostname.includes('api.mapmystandards.ai') ? '' : 'https://api.mapmystandards.ai');
+        }
+        function getAuthToken(){
+            return localStorage.getItem('a3e_api_key') ||
+                   sessionStorage.getItem('a3e_api_key') ||
+                   localStorage.getItem('access_token') ||
+                   localStorage.getItem('jwt_token') ||
+                   localStorage.getItem('token') ||
+                   localStorage.getItem('auth_token') || '';
+        }
         let accreditors = [];
         let currentStandards = [];
         let filteredStandards = [];
@@ -775,9 +803,9 @@
         }
 
         // Load accreditors on page load
-        async function loadAccreditors() {
+    async function loadAccreditors() {
             try {
-                const response = await fetch('/api/standards/accreditors');
+        const response = await fetch(getApiBase() + '/api/standards/accreditors');
                 const data = await response.json();
                 
                 if (data.success) {
@@ -796,7 +824,7 @@
             }
         }
 
-        async function fetchCorpusMetadata(accreditorFilter=""){
+    async function fetchCorpusMetadata(accreditorFilter=""){
             const section = document.getElementById('corpusMetadataSection');
             section.style.display='block';
             const statusEl = document.getElementById('corpusMetaStatus');
@@ -804,8 +832,8 @@
             const genEl = document.getElementById('corpusMetaGenerated');
             statusEl.textContent = accreditorFilter? `Loading metadata for ${accreditorFilter}...` : 'Loading corpus metadata...';
             try{
-                const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
-                const url = accreditorFilter? `/api/user/intelligence-simple/standards/corpus/metadata?accreditor=${encodeURIComponent(accreditorFilter)}` : '/api/user/intelligence-simple/standards/corpus/metadata';
+                const token = localStorage.getItem('a3e_api_key') || localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+                const url = accreditorFilter? (getApiBase() + `/api/user/intelligence-simple/standards/corpus/metadata?accreditor=${encodeURIComponent(accreditorFilter)}`) : (getApiBase() + '/api/user/intelligence-simple/standards/corpus/metadata');
                 const res = await fetch(url, { headers: token? { 'Authorization': `Bearer ${token}` } : {} });
                 if(!res.ok){
                     const t = await res.text();
@@ -911,7 +939,7 @@
             `;
         }
 
-        async function loadStandards(accreditorId, institutionType = null) {
+    async function loadStandards(accreditorId, institutionType = null) {
             if (!accreditorId) {
                 showAccreditorSelection();
                 return;
@@ -920,7 +948,7 @@
             showLoadingState('Loading standards...');
 
             try {
-                let url = `/api/standards?accreditor=${accreditorId.toUpperCase()}`;
+                let url = getApiBase() + `/api/standards?accreditor=${accreditorId.toUpperCase()}`;
                 if (institutionType) {
                     url += `&institution_type=${institutionType}`;
                 }
@@ -1073,8 +1101,8 @@
                 }
                 statusEl.textContent='Computing mappings...';
                 try{
-                    const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
-                    const res = await fetch(`/api/user/intelligence-simple/standards/cross-accreditor-matches?source=${encodeURIComponent(source)}&target=${encodeURIComponent(target)}&threshold=${threshold}&top_k=${topK}`, { headers: token? { 'Authorization': `Bearer ${token}` } : {} });
+                    const token = localStorage.getItem('a3e_api_key') || localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+                    const res = await fetch(getApiBase() + `/api/user/intelligence-simple/standards/cross-accreditor-matches?source=${encodeURIComponent(source)}&target=${encodeURIComponent(target)}&threshold=${threshold}&top_k=${topK}`, { headers: token? { 'Authorization': `Bearer ${token}` } : {} });
                     if(!res.ok){
                         const t = await res.text();
                         throw new Error(`Request failed (${res.status}): ${t}`);
@@ -1205,14 +1233,14 @@
             // Provide neutral defaults letting backend compute risk mostly from lack of data.
             payload.append('coverage', '0');
             payload.append('avg_evidence_age_days', '365');
-            fetch('/api/user/intelligence-simple/risk/score-standard', {
-                method:'POST',
-                headers: {
-                    'Content-Type':'application/x-www-form-urlencoded',
-                    ...(localStorage.getItem('access_token') ? { 'Authorization': 'Bearer '+ localStorage.getItem('access_token') } : (localStorage.getItem('jwt_token') ? { 'Authorization': 'Bearer '+ localStorage.getItem('jwt_token') } : {}))
-                },
-                body: payload.toString()
-            }).then(async res => {
+            (function(){
+                const token = getAuthToken();
+                const headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
+                if (token) headers['Authorization'] = 'Bearer ' + token;
+                return fetch(getApiBase() + '/api/user/intelligence-simple/risk/score-standard', {
+                    method:'POST', headers, body: payload.toString()
+                });
+            })().then(async res => {
                 if(!res.ok){
                     const t = await res.text();
                     throw new Error(`HTTP ${res.status}: ${t}`);
@@ -1243,14 +1271,14 @@
             payload.append('standard_id', standardId);
             payload.append('coverage', '0');
             payload.append('avg_evidence_age_days', '365');
-            fetch('/api/user/intelligence-simple/risk/score-standard', {
-                method:'POST',
-                headers: {
-                    'Content-Type':'application/x-www-form-urlencoded',
-                    ...(localStorage.getItem('access_token') ? { 'Authorization': 'Bearer '+ localStorage.getItem('access_token') } : (localStorage.getItem('jwt_token') ? { 'Authorization': 'Bearer '+ localStorage.getItem('jwt_token') } : {}))
-                },
-                body: payload.toString()
-            }).then(async res => {
+            (function(){
+                const token = getAuthToken();
+                const headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
+                if (token) headers['Authorization'] = 'Bearer ' + token;
+                return fetch(getApiBase() + '/api/user/intelligence-simple/risk/score-standard', {
+                    method:'POST', headers, body: payload.toString()
+                });
+            })().then(async res => {
                 if(!res.ok){
                     const t = await res.text();
                     throw new Error(`HTTP ${res.status}: ${t}`);

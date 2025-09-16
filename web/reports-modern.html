@@ -742,6 +742,22 @@
     </div>
 
     <script>
+        (function bootstrapTokenFromUrl(){
+            try {
+                const u = new URL(window.location.href);
+                const t = u.searchParams.get('token') || u.searchParams.get('api_key') || u.searchParams.get('access_token');
+                if (t) {
+                    localStorage.setItem('a3e_api_key', t);
+                    sessionStorage.setItem('a3e_api_key', t);
+                    localStorage.setItem('access_token', t);
+                    localStorage.setItem('jwt_token', t);
+                    u.searchParams.delete('token');
+                    u.searchParams.delete('api_key');
+                    u.searchParams.delete('access_token');
+                    history.replaceState({}, '', u.toString());
+                }
+            } catch (_) {}
+        })();
         function getAuthToken() {
             return localStorage.getItem('a3e_api_key') ||
                    sessionStorage.getItem('a3e_api_key') ||
