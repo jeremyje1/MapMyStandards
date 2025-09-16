@@ -927,7 +927,9 @@
         // Dashboard functionality
         class Dashboard {
             constructor() {
-                this.metricsEndpoint = '/api/user/intelligence-simple/dashboard/metrics';
+                this.API_BASE = (window.mmsAPI && window.mmsAPI.getBaseUrl && window.mmsAPI.getBaseUrl()) ||
+                                 (location.hostname.includes('api.mapmystandards.ai') ? '' : 'https://api.mapmystandards.ai');
+                this.metricsEndpoint = `${this.API_BASE}/api/user/intelligence-simple/dashboard/metrics`;
                 this.init();
             }
 
@@ -1267,7 +1269,7 @@
                 if (!stale && this._tsCache.acc === accreditor && (this._tsCache.series||[]).length) {
                     return this._tsCache.series;
                 }
-                const url = `/api/user/intelligence-simple/metrics/timeseries/${encodeURIComponent(accreditor||'')}`;
+                const url = `${this.API_BASE}/api/user/intelligence-simple/metrics/timeseries/${encodeURIComponent(accreditor||'')}`;
                 const res = await fetch(url + '?days=30&limit=200', { headers: { 'Authorization': `Bearer ${this.getAuthToken()}` }});
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const data = await res.json();
@@ -1340,8 +1342,8 @@
             body.innerHTML = '<div>Loading factors…</div>';
             const auth = token || localStorage.getItem('a3e_api_key') || sessionStorage.getItem('a3e_api_key') || localStorage.getItem('access_token') || localStorage.getItem('jwt_token') || 'demo-token';
             Promise.all([
-                fetch('/api/user/intelligence-simple/risk/aggregate', { headers: { 'Authorization': `Bearer ${auth}` }}).then(r=>r.json()).catch(()=>({})),
-                fetch('/api/user/intelligence-simple/risk/factors', { headers: { 'Authorization': `Bearer ${auth}` }}).then(r=>r.json()).catch(()=>({}))
+                fetch(((window.mmsAPI&&window.mmsAPI.getBaseUrl&&window.mmsAPI.getBaseUrl())||(location.hostname.includes('api.mapmystandards.ai')?'':'https://api.mapmystandards.ai')) + '/api/user/intelligence-simple/risk/aggregate', { headers: { 'Authorization': `Bearer ${auth}` }}).then(r=>r.json()).catch(()=>({})),
+                fetch(((window.mmsAPI&&window.mmsAPI.getBaseUrl&&window.mmsAPI.getBaseUrl())||(location.hostname.includes('api.mapmystandards.ai')?'':'https://api.mapmystandards.ai')) + '/api/user/intelligence-simple/risk/factors', { headers: { 'Authorization': `Bearer ${auth}` }}).then(r=>r.json()).catch(()=>({}))
             ]).then(([agg, fac])=>{
                 const data = (agg && agg.data) || {};
                 const weights = (fac && fac.weights) || {};

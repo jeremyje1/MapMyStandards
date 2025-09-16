@@ -751,6 +751,11 @@
                    localStorage.getItem('authToken') ||
                    'demo-token';
         }
+
+        function getApiBase() {
+            return (window.mmsAPI && window.mmsAPI.getBaseUrl && window.mmsAPI.getBaseUrl()) ||
+                   (location.hostname.includes('api.mapmystandards.ai') ? '' : 'https://api.mapmystandards.ai');
+        }
         let dashboardData = null;
         let reportStatuses = new Map();
 
@@ -764,7 +769,7 @@
         async function loadDashboardMetrics() {
             try {
                 const token = getAuthToken();
-                const response = await fetch('/api/user/intelligence-simple/dashboard/metrics', {
+                const response = await fetch(getApiBase() + '/api/user/intelligence-simple/dashboard/metrics', {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -921,7 +926,7 @@
                     // Evidence Mapping report from last analyzed doc (demo: build from metrics);
                     // In a fuller UI, we'd pick a document and its analysis payload.
                     const payload = { filename: 'latest_document', analysis: { mappings: [] } };
-                    const response = await fetch('/api/user/intelligence-simple/evidence/report', {
+                    const response = await fetch(getApiBase() + '/api/user/intelligence-simple/evidence/report', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                         body: JSON.stringify(payload)
@@ -937,7 +942,7 @@
                     }
                 } else if (type === 'comprehensive' || type === 'gaps' || type === 'qep') {
                     // Generate narrative HTML and offer DOCX export
-                    const gen = await fetch('/api/user/intelligence-simple/narrative/generate', {
+                    const gen = await fetch(getApiBase() + '/api/user/intelligence-simple/narrative/generate', {
                         method: 'POST',
                         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
                         body: JSON.stringify({})
@@ -949,7 +954,7 @@
                     if (w) { w.document.write(html); }
                     // Prompt to export DOCX
                     if (confirm('Export this narrative to DOCX?')) {
-                        const docx = await fetch('/api/user/intelligence-simple/narrative/export.docx', {
+                        const docx = await fetch(getApiBase() + '/api/user/intelligence-simple/narrative/export.docx', {
                             method: 'POST',
                             headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
                             body: JSON.stringify({ html })
@@ -979,7 +984,7 @@
         async function loadRecentReports() {
             try {
                 const token = getAuthToken();
-                const response = await fetch('/api/reports/recent', {
+                const response = await fetch(getApiBase() + '/api/reports/recent', {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'

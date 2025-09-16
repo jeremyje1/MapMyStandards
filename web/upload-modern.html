@@ -775,6 +775,11 @@
                    'demo-token';
         }
 
+        function getApiBase() {
+            return (window.mmsAPI && window.mmsAPI.getBaseUrl && window.mmsAPI.getBaseUrl()) ||
+                   (location.hostname.includes('api.mapmystandards.ai') ? '' : 'https://api.mapmystandards.ai');
+        }
+
         // Logout function
         function logout() {
             localStorage.clear();
@@ -915,7 +920,7 @@
                 const formData = new FormData();
                 formData.append('file', file);
                 try {
-                    const resp = await fetch('/api/user/intelligence-simple/evidence/analyze', {
+                    const resp = await fetch(getApiBase() + '/api/user/intelligence-simple/evidence/analyze', {
                         method: 'POST',
                         headers: token ? { 'Authorization': 'Bearer ' + token } : {},
                         body: formData
@@ -996,7 +1001,7 @@
             try {
                 // Optional: hydrate counts from metrics summary
                 const token = getAuthToken();
-                const response = await fetch('/api/user/intelligence-simple/metrics/summary', {
+                const response = await fetch(getApiBase() + '/api/user/intelligence-simple/metrics/summary', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (response.ok) {
