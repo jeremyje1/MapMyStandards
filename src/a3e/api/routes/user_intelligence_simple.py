@@ -224,6 +224,8 @@ def _candidate_secrets() -> List[str]:
         os.getenv("SECRET_KEY"),
         os.getenv("ONBOARDING_SHARED_SECRET"),
         "your-secret-key-here-change-in-production",
+        # Session router fallback default (only if env not set)
+        "dev-secret-change",
     ]
     return [c for c in candidates if c]
 
