@@ -316,7 +316,13 @@ async def get_dashboard_overview(current_user: Dict[str, Any] = Depends(get_curr
                     if isinstance(ts, (int, float)):
                         trust_scores.append(float(ts))
                 avg_trust = float(sum(trust_scores) / len(trust_scores)) if trust_scores else 0.7
-                score = round((coverage * 0.7 + avg_trust * 0.3) * 100, 1)
+                # Gate compliance: require at least one mapped standard or one analyzed document
+                documents_analyzed = len(uploads.get("documents", []))
+                standards_mapped = covered
+                if (total > 0) and (standards_mapped > 0 or documents_analyzed > 0):
+                    score = round((coverage * 0.7 + avg_trust * 0.3) * 100, 1)
+                else:
+                    score = 0.0
             except Exception:
                 score = 0.0
         if not recent_activity:

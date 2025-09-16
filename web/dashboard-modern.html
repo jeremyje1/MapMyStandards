@@ -1052,6 +1052,12 @@
                                 ${(performance.average_risk ?? 0) <= 0.25 ? 'Low' : ((performance.average_risk ?? 0) <= 0.5 ? 'Moderate' : 'Elevated')}
                             </span>
                         </div>
+                        <div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                            <button id="openRiskFactorsBtn" class="user-button" style="padding:6px 10px;background:#fee2e2;color:#991b1b;border:1px solid #fecaca" title="View factor breakdown">
+                                🔎 Risk Factors
+                            </button>
+                            <a href="/TRANSPARENCY_METRICS.md" target="_blank" style="font-size:12px;color:#2563eb;text-decoration:none">Transparency ↗</a>
+                        </div>
                         <div style="margin-top:8px">
                             ${(() => {
                                 const dist = performance.risk_distribution || {};
@@ -1118,6 +1124,11 @@
                         }
                     } catch (e) { /* ignore */ }
                 }).catch(()=>{});
+                // Wire Risk Factors button
+                const rfBtn = document.getElementById('openRiskFactorsBtn');
+                if (rfBtn) {
+                    rfBtn.addEventListener('click', () => openDashboardRiskModal(this.getAuthToken()));
+                }
             }
 
             renderMetricsError() {
@@ -1227,8 +1238,10 @@
 
             getAuthToken() {
                 // Try multiple sources for auth token
-                return localStorage.getItem('a3e_api_key') || 
-                       sessionStorage.getItem('a3e_api_key') || 
+                return localStorage.getItem('a3e_api_key') ||
+                       sessionStorage.getItem('a3e_api_key') ||
+                       localStorage.getItem('access_token') ||
+                       localStorage.getItem('jwt_token') ||
                        'demo-token';
             }
 
@@ -1276,6 +1289,72 @@
                     <circle cx="${lastX.toFixed(1)}" cy="${lastY.toFixed(1)}" r="2.5" fill="${color}" />
                 </svg>`;
             }
+        }
+
+        // Risk Factors Modal (Dashboard)
+        function ensureDashboardRiskModal(){
+            if(document.getElementById('dashRiskModalBackdrop')) return;
+            const backdrop = document.createElement('div');
+            backdrop.id = 'dashRiskModalBackdrop';
+            backdrop.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.35);display:none;align-items:center;justify-content:center;z-index:1000;';
+            backdrop.innerHTML = `
+                <div role="dialog" aria-modal="true" aria-labelledby="dashRiskTitle" style="background:#fff;width:min(720px,92vw);max-height:88vh;border-radius:12px;box-shadow:0 20px 40px rgba(0,0,0,0.2);overflow:hidden">
+                    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid #eee;background:#f8fafc">
+                        <div id="dashRiskTitle" style="font-weight:700;color:#111827">Gap Risk – Factor Breakdown</div>
+                        <button id="dashRiskClose" style="background:#f3f4f6;border:1px solid #e5e7eb;border-radius:8px;padding:6px 10px;cursor:pointer">Close</button>
+                    </div>
+                    <div id="dashRiskBody" style="padding:12px 14px;font-size:14px;color:#111827">
+                        <div>Loading factors…</div>
+                    </div>
+                    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-top:1px solid #eee;background:#f9fafb">
+                        <a href="/TRANSPARENCY_METRICS.md" target="_blank" style="font-size:12px;color:#2563eb;text-decoration:none">Transparency Reference ↗</a>
+                        <button id="dashRiskRefresh" style="background:#2563eb;color:#fff;border:none;border-radius:8px;padding:6px 10px;cursor:pointer">Refresh</button>
+                    </div>
+                </div>`;
+            backdrop.addEventListener('click', (e)=>{ if(e.target===backdrop) closeDashboardRiskModal(); });
+            document.body.appendChild(backdrop);
+            document.getElementById('dashRiskClose').onclick = closeDashboardRiskModal;
+            document.getElementById('dashRiskRefresh').onclick = () => openDashboardRiskModal();
+        }
+
+        function openDashboardRiskModal(token){
+            ensureDashboardRiskModal();
+            const el = document.getElementById('dashRiskModalBackdrop');
+            const body = document.getElementById('dashRiskBody');
+            el.style.display = 'flex';
+            body.innerHTML = '<div>Loading factors…</div>';
+            const auth = token || localStorage.getItem('a3e_api_key') || sessionStorage.getItem('a3e_api_key') || localStorage.getItem('access_token') || localStorage.getItem('jwt_token') || 'demo-token';
+            Promise.all([
+                fetch('/api/user/intelligence-simple/risk/aggregate', { headers: { 'Authorization': `Bearer ${auth}` }}).then(r=>r.json()).catch(()=>({})),
+                fetch('/api/user/intelligence-simple/risk/factors', { headers: { 'Authorization': `Bearer ${auth}` }}).then(r=>r.json()).catch(()=>({}))
+            ]).then(([agg, fac])=>{
+                const data = (agg && agg.data) || {};
+                const weights = (fac && fac.weights) || {};
+                const factors = (fac && fac.factors) || [];
+                const top = (data.top_factors || []).slice(0,5);
+                const items = top.length ? top : factors.map(f=>({ name: f.name, contribution: 0 }));
+                const list = items.map(it=>{
+                    const w = weights[it.name] ?? weights[it.key] ?? 0;
+                    const contrib = (it.contribution ?? 0);
+                    const pct = Math.round(Math.min(100, Math.max(0, contrib*100)));
+                    return `<div style='display:flex;align-items:center;justify-content:space-between;margin:6px 0'>
+                        <div style='min-width:180px'>${it.name || it.key}</div>
+                        <div style='flex:1;height:8px;background:#f3f4f6;border-radius:999px;overflow:hidden;margin:0 10px'><div style='width:${pct}%;height:100%;background:#f59e0b'></div></div>
+                        <div style='min-width:60px;text-align:right;color:#6b7280'>${pct}%</div>
+                    </div>`;
+                }).join('');
+                body.innerHTML = `
+                    <div style='margin-bottom:8px;color:#374151'>Top factor contributions across scored standards</div>
+                    ${list || '<div style="color:#6b7280">No factor data yet. Score some standards to populate.</div>'}
+                `;
+            }).catch(()=>{
+                body.innerHTML = '<div style="color:#dc2626">Failed to load risk data.</div>';
+            });
+        }
+
+        function closeDashboardRiskModal(){
+            const el = document.getElementById('dashRiskModalBackdrop');
+            if (el) el.style.display = 'none';
         }
 
         // Initialize dashboard when DOM is loaded
