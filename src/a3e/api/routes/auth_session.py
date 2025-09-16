@@ -124,9 +124,9 @@ class AuthSuccess(BaseModel):
 
 class MeResponse(BaseModel):
     ok: bool
-    user_id: str | None = None
-    email: str | None = None
-    exp: int | None = None
+    user_id: Optional[str] = None
+    email: Optional[str] = None
+    exp: Optional[int] = None
 
 
 def _issue_access_token(user_id: str, email: str) -> tuple[str, datetime]:
