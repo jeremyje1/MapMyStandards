@@ -149,6 +149,24 @@ class MapMyStandardsAPI {
     // ORGANIZATION CHART API METHODS
     // ===============================
 
+    // Simple endpoints (intelligence-simple)
+    async saveOrgChartSimple(chartData) {
+        return await this.request('/api/user/intelligence-simple/org-chart', {
+            method: 'POST',
+            body: JSON.stringify({
+                name: chartData.name,
+                description: chartData.description,
+                nodes: chartData.nodes || [],
+                edges: chartData.edges || [],
+                metadata: chartData.metadata || {}
+            })
+        });
+    }
+
+    async loadOrgChartSimple() {
+        return await this.request('/api/user/intelligence-simple/org-chart');
+    }
+
     // Create new organization chart
     async createOrgChart(chartData) {
         return await this.request('/api/v1/org-chart', {

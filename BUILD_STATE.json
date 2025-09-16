@@ -1,6 +1,6 @@
 {
   "current_phase": "CUSTOMER_SYSTEMS_DEPLOYED",
-  "last_updated": "2025-09-10T16:45:00Z",
+  "last_updated": "2025-09-16T00:00:00Z",
   "version": "4.0.0",
   "build_status": "customer_ready_production",
   "completion_percentage": 100,
@@ -116,6 +116,62 @@
       }
     }
   },
+
+  "recent_deployment_context_2025_09_16": {
+    "date": "2025-09-16",
+    "status": "Production deploy: Risk badges extended + Gap Analysis live",
+    "frontend": {
+      "platform": "Vercel",
+      "alias": "platform.mapmystandards.ai",
+      "deployment": "Latest production deployed and aliased",
+      "health": {
+        "root": 200,
+        "docs": 307,
+        "frontend_health": 200,
+        "notes": "Occasional Railway warmup 502s auto-resolve"
+      }
+    },
+    "backend": {
+      "platform": "Railway",
+      "status": "Unchanged in this deploy; API healthy",
+      "api_base": "https://api.mapmystandards.ai"
+    },
+    "features": {
+      "standards_enhancements": [
+        "Search + filters aligned to /api/user/intelligence-simple/standards/search",
+        "Cross-accreditor equivalents rendering",
+        "Per-standard risk badges with factors and aggregate overview"
+      ],
+      "evidence_mapping_updates": [
+        "Risk badges rendered per standard",
+        "Refresh Risk triggers /risk/score-bulk + /risk/aggregate"
+      ],
+      "reports_updates": [
+        "Narrative generation wired to selections",
+        "Gap Analysis: avg risk, distribution, top risks, CSV export"
+      ]
+    },
+    "endpoints_used": [
+      "/api/standards",
+      "/api/user/intelligence-simple/standards/search",
+      "/api/user/intelligence-simple/standards/evidence-map",
+      "/api/user/intelligence-simple/standards/cross-accreditor-matches",
+      "/api/user/intelligence-simple/risk/score-bulk",
+      "/api/user/intelligence-simple/risk/aggregate",
+      "/api/user/intelligence-simple/risk/factors",
+      "/api/user/intelligence-simple/narrative/generate"
+    ],
+    "verification": {
+      "task": "Check prod deployment",
+      "script": "./check_deployment.sh",
+      "result": "Deployment verified; all checks passed"
+    },
+    "notes": [
+      "Selections persist via localStorage key mms:selectedStandards",
+      "Auth tokens read from access_token/jwt_token and a3e_api_key",
+      "No Railway deployment required (frontend-only changes)"
+    ]
+  },
   
   "customer_systems_implementation": {
     "deployment_date": "2025-09-10",
@@ -167,6 +223,7 @@
       "subscription_management": "✅ Automated handling of trial conversions and renewals"
     }
   },
+  "pricing": {
     "model": "Single tier - all inclusive",
     "price": "$199/month",
     "stripe_price_id": "price_1S2yYNK8PKpLCKDZ6zgFu2ay",
@@ -292,6 +349,9 @@
     "sso_settings": "web/sso-settings.html - SSO configuration management",
     "advanced_reporting": "web/advanced-reporting.html - Enterprise reporting interface",
     "enterprise_settings": "web/enterprise-settings.html - Enterprise settings management",
+    "standards": "web/standards.html - Enhanced: search, filters, crosswalks, risk badges",
+    "evidence_mapping": "web/evidence-mapping.html - Evidence map with risk badges + Refresh Risk",
+    "reports": "web/reports.html - Narrative generation + Gap Analysis with CSV export",
     "all_pages_updated": true,
     "api_client_configured": "web/js/api-client.js points to production endpoints"
   },
@@ -301,8 +361,35 @@
     "frontend_deploy": "cd /Users/jeremy.estrella/Desktop/MapMyStandards-main && vercel --prod",
     "git_workflow": "git add . && git commit -m 'message' && git push origin main",
     "check_backend": "railway logs",
-    "vercel_config": "vercel.json configured with cleanUrls and rewrites"
+    "vercel_config": "vercel.json configured with cleanUrls and rewrites",
+    "health_check_task": "VS Code task 'Check prod deployment' runs ./check_deployment.sh"
   },
+
+  "smoke_testing": {
+    "status": "READY",
+    "scripts": {
+      "runner": "scripts/run_smoke_test.sh",
+      "playwright": "scripts/prod_smoke_test.mjs",
+      "docs": "scripts/README.md"
+    },
+    "capabilities": [
+      "Authenticated UI clickthrough on production",
+      "Screenshots and CSV artifact capture",
+      "Optional S3 uploads for artifacts (Railway-compatible)"
+    ],
+    "env_vars": [
+      "MMS_API_KEY or A3E_API_KEY",
+      "MMS_JWT or ACCESS_TOKEN/JWT_TOKEN",
+      "TEST_USER_EMAIL and TEST_USER_PASSWORD (UI login fallback)",
+      "MMS_ARTIFACTS_BUCKET or S3_BUCKET (optional)"
+    ]
+  },
+
+  "pending_work": [
+    "Org chart save/load (backend endpoints + web/org-chart.html wiring)",
+    "Upload flow refresh & success feedback on web/upload.html",
+    "UX/A11y improvements: tooltips, no-data states, placeholder prevention"
+  ],
   
   "critical_files": {
     "vercel_config": "vercel.json - Frontend routing configuration",
@@ -471,3 +558,4 @@
       }
     }
   }
+}

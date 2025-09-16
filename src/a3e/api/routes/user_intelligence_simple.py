@@ -40,6 +40,7 @@ SETTINGS_STORE = os.getenv("USER_SETTINGS_STORE", "user_settings_store.json")
 REVIEWS_STORE = os.getenv("USER_REVIEWS_STORE", "user_reviews_store.json")
 UPLOADS_STORE = os.getenv("USER_UPLOADS_STORE", "user_uploads_store.json")
 SESSIONS_STORE = os.getenv("USER_SESSIONS_STORE", "user_sessions_store.json")
+ORG_CHART_STORE = os.getenv("ORG_CHART_STORE", "user_org_charts.json")
 
 
 def _safe_load_json(path: str) -> Dict[str, Any]:
@@ -58,6 +59,17 @@ def _safe_save_json(path: str, data: Dict[str, Any]) -> None:
             json.dump(data, f, ensure_ascii=False, indent=2)
     except Exception as e:
         logger.error(f"Failed to save JSON to {path}: {e}")
+
+
+def _get_user_org_chart(claims: Dict[str, Any]) -> Dict[str, Any]:
+    all_c = _safe_load_json(ORG_CHART_STORE)
+    return all_c.get(_user_key(claims), {})
+
+
+def _save_user_org_chart(claims: Dict[str, Any], chart: Dict[str, Any]) -> None:
+    all_c = _safe_load_json(ORG_CHART_STORE)
+    all_c[_user_key(claims)] = chart
+    _safe_save_json(ORG_CHART_STORE, all_c)
 
 
 def _user_key(claims: Dict[str, Any]) -> str:
@@ -274,6 +286,51 @@ async def save_settings(payload: Dict[str, Any], current_user: Dict[str, Any] = 
     updated = {**existing, **(payload or {})}
     _save_user_settings(current_user, updated)
     return {"status": "saved", "settings": updated}
+
+
+# ------------------------------
+# Org Chart: save/load (per-user JSON store)
+# ------------------------------
+@router.get("/org-chart")
+async def load_org_chart(current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+    try:
+        chart = _get_user_org_chart(current_user) or {}
+        exists = bool(chart)
+        return {
+            "exists": exists,
+            "chart": chart,
+            "last_updated": chart.get("updated_at") if isinstance(chart, dict) else None,
+        }
+    except Exception as e:
+        logger.error(f"Load org chart error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to load org chart")
+
+
+@router.post("/org-chart")
+async def save_org_chart(payload: Dict[str, Any], current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+    try:
+        existing = _get_user_org_chart(current_user) or {}
+        nodes = payload.get("nodes") or payload.get("data", {}).get("nodes") or []
+        edges = payload.get("edges") or payload.get("data", {}).get("edges") or []
+        metadata = payload.get("metadata") or payload.get("data", {}).get("metadata") or {}
+        name = payload.get("name") or existing.get("name") or "My Organization Chart"
+        description = payload.get("description") or existing.get("description") or ""
+        now = datetime.utcnow().isoformat()
+
+        chart = {
+            "name": name,
+            "description": description,
+            "nodes": nodes,
+            "edges": edges,
+            "metadata": metadata,
+            "created_at": existing.get("created_at") or now,
+            "updated_at": now,
+        }
+        _save_user_org_chart(current_user, chart)
+        return {"status": "saved", "chart": chart}
+    except Exception as e:
+        logger.error(f"Save org chart error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to save org chart")
 
 
 @router.get("/integrations/status")
@@ -517,6 +574,12 @@ async def get_corpus_metadata_api(accreditor: Optional[str] = None, current_user
     except Exception as e:
         logger.error(f"Corpus metadata error: {e}")
         raise HTTPException(status_code=500, detail="Failed to load corpus metadata")
+
+
+@router.get("/standards/metadata")
+async def get_corpus_metadata_alias(accreditor: Optional[str] = None, current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+    """Alias for standards corpus metadata to match frontend expectations."""
+    return await get_corpus_metadata_api(accreditor=accreditor, current_user=current_user)  # type: ignore
 
 
 @router.get("/metrics/summary")

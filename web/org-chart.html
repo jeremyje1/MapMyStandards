@@ -322,7 +322,12 @@
             };
             
             try {
-                const result = await window.mmsAPI.createOrgChart(chartData);
+                // Try simple endpoint first
+                let result = await window.mmsAPI.saveOrgChartSimple(chartData);
+                if (!result || result.status !== 'saved') {
+                    // Fallback to v1 endpoint if present
+                    result = await window.mmsAPI.createOrgChart(chartData);
+                }
                 window.mmsAPI.showSuccess('Organization chart saved successfully!');
                 console.log('Saved chart:', result);
             } catch (error) {
@@ -331,9 +336,41 @@
             }
         });
         
+        async function loadExistingChart() {
+            try {
+                const res = await window.mmsAPI.loadOrgChartSimple();
+                if (res && res.chart && (res.chart.nodes || res.chart.edges)) {
+                    const c = res.chart;
+                    nodes.clear();
+                    edges.clear();
+                    if (Array.isArray(c.nodes)) nodes.add(c.nodes);
+                    if (Array.isArray(c.edges)) edges.add(c.edges);
+                    updateParentDropdown();
+                    updateStats();
+                    return;
+                }
+            } catch (e) {
+                // ignore and try v1 below
+            }
+            try {
+                const list = await window.mmsAPI.getOrgCharts();
+                if (Array.isArray(list) && list.length > 0) {
+                    const first = list[0];
+                    const data = first.data || first;
+                    const n = (data.nodes) ? data.nodes : (first.nodes || []);
+                    const e = (data.edges) ? data.edges : (first.edges || []);
+                    nodes.clear();
+                    edges.clear();
+                    if (Array.isArray(n)) nodes.add(n);
+                    if (Array.isArray(e)) edges.add(e);
+                }
+            } catch (_) {}
+            updateParentDropdown();
+            updateStats();
+        }
+
         // Initialize
-        updateParentDropdown();
-        updateStats();
+        loadExistingChart();
     </script>
 </body>
 </html>
