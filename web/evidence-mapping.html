@@ -384,6 +384,15 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
         }
+
+        /* Risk Badges */
+        .risk-badge { display:inline-flex; align-items:center; gap:6px; padding:2px 8px; border-radius:999px; font-size:12px; font-weight:600; }
+        .risk-dot { width:8px; height:8px; border-radius:50%; background:currentColor; }
+        .risk-minimal { color:#0e7490; background:#ecfeff; border:1px solid #cffafe; }
+        .risk-low { color:#15803d; background:#ecfdf5; border:1px solid #bbf7d0; }
+        .risk-medium { color:#a16207; background:#fffbeb; border:1px solid #fde68a; }
+        .risk-high { color:#b91c1c; background:#fef2f2; border:1px solid #fecaca; }
+        .risk-critical { color:#7f1d1d; background:#fef2f2; border:1px solid #fecaca; box-shadow:0 0 0 2px rgba(127,29,29,0.05) inset; }
     </style>
     <script src="/js/global-nav.js"></script>
 </head>
@@ -449,6 +458,7 @@
                 </select>
             </div>
             <button class="btn btn-primary" onclick="refreshMappings()">Refresh</button>
+            <button class="btn" style="background:#f1f5f9;color:#0f172a;border:1px solid #e2e8f0" id="btn-refresh-risk">Refresh Risk</button>
         </div>
 
         <!-- Mapping Grid -->
@@ -525,6 +535,9 @@
         let selectedDocument = null;
         let selectedStandard = null;
         let evidenceMap = null; // { mapping: { standard_id: [ {filename, confidence, accreditor} ] } }
+        let riskScoresByStandard = {}; // { standard_id: { risk_score, risk_level, ... } }
+        let riskAggregate = null;
+        let riskFactorsMeta = null;
 
         function getSelectedStandards(){
             try { return JSON.parse(localStorage.getItem('mms:selectedStandards') || '[]'); } catch { return []; }
@@ -539,6 +552,9 @@
                 if (resp.ok) {
                     evidenceMap = await resp.json();
                     renderFromEvidenceMap();
+                    // After rendering, compute risk for listed standards
+                    await scoreEvidenceRisk();
+                    renderRiskIntoStandardsList();
                     return;
                 }
                 displaySampleMappings();
@@ -579,7 +595,14 @@
                 const div = document.createElement('div');
                 div.className = 'standard-item' + (selected.has(sid) ? ' selected' : '');
                 div.dataset.stdId = sid;
-                div.innerHTML = `<div class="standard-id">${sid}</div><div class="standard-category">Mapped evidence</div><span class="standard-evidence-count">${count} evidence items</span>`;
+                div.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+                    <div>
+                        <div class="standard-id">${sid}</div>
+                        <div class="standard-category">Mapped evidence</div>
+                    </div>
+                    <div class="risk-slot" data-risk-slot="${sid}"></div>
+                </div>
+                <span class="standard-evidence-count">${count} evidence items</span>`;
                 div.onclick = () => selectStandard(sid);
                 stdsList.appendChild(div);
             });
@@ -595,6 +618,66 @@
                 <div class="stat-card"><div class="stat-value">${strong}</div><div class="stat-label">Strong Mappings</div></div>
             `;
             document.getElementById('statsGrid').innerHTML = statsHtml;
+        }
+
+        function riskLevelFromScore(score){
+            if (score == null) return 'unknown';
+            if (score < 0.15) return 'minimal';
+            if (score < 0.35) return 'low';
+            if (score < 0.6) return 'medium';
+            if (score < 0.85) return 'high';
+            return 'critical';
+        }
+
+        function renderRiskBadge(level, score){
+            const pct = Math.round((score || 0)*100);
+            const cls = `risk-badge risk-${level}`;
+            const label = level.charAt(0).toUpperCase() + level.slice(1);
+            return `<span class="${cls}"><span class="risk-dot"></span>${label} • ${pct}%</span>`;
+        }
+
+        async function ensureRiskFactors(){
+            if (riskFactorsMeta) return;
+            try{
+                const base = (window.mmsAPI?.baseUrl || '');
+                const headers = window.mmsAPI?.getHeaders(true) || { 'Content-Type': 'application/json' };
+                const res = await fetch(`${base}/api/user/intelligence-simple/risk/factors`, { credentials:'include', headers });
+                if(res.ok){ riskFactorsMeta = await res.json(); }
+            }catch(e){ console.warn('Risk factors meta unavailable:', e); }
+        }
+
+        async function scoreEvidenceRisk(){
+            try{
+                await ensureRiskFactors();
+                const mapping = evidenceMap?.mapping || {};
+                const standardIds = Object.keys(mapping);
+                if (standardIds.length === 0) return;
+                const base = (window.mmsAPI?.baseUrl || '');
+                const headers = window.mmsAPI?.getHeaders(true) || { 'Content-Type': 'application/json' };
+                const body = { standard_ids: standardIds, evidence_map: evidenceMap };
+                const res = await fetch(`${base}/api/user/intelligence-simple/risk/score-bulk`, { method:'POST', credentials:'include', headers, body: JSON.stringify(body) });
+                if(res.ok){
+                    const data = await res.json();
+                    riskScoresByStandard = data?.scores || {};
+                } else {
+                    console.warn('Bulk risk scoring failed');
+                }
+                // Aggregate
+                const ag = await fetch(`${base}/api/user/intelligence-simple/risk/aggregate`, { credentials:'include', headers });
+                if (ag.ok) { riskAggregate = await ag.json(); }
+            }catch(e){ console.error('Error scoring risk:', e); }
+        }
+
+        function renderRiskIntoStandardsList(){
+            const mapping = evidenceMap?.mapping || {};
+            Object.keys(mapping).forEach(sid => {
+                const slot = document.querySelector(`[data-risk-slot="${sid}"]`);
+                if (!slot) return;
+                const scoreObj = riskScoresByStandard[sid];
+                const score = scoreObj?.risk_score;
+                const level = scoreObj?.risk_level || riskLevelFromScore(score);
+                slot.innerHTML = renderRiskBadge(level, score);
+            });
         }
 
         function displaySampleMappings() {
@@ -765,6 +848,11 @@
         }
 
         function refreshMappings() { loadMappings(); }
+
+        document.getElementById('btn-refresh-risk').addEventListener('click', async () => {
+            await scoreEvidenceRisk();
+            renderRiskIntoStandardsList();
+        });
 
         function logout() {
             localStorage.removeItem('a3e_api_key');

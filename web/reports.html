@@ -300,6 +300,20 @@
         .btn-secondary:hover {
             background: #d1d5db;
         }
+
+        /* Gap Analysis */
+        .risk-chip { display:inline-flex; align-items:center; gap:6px; padding:2px 8px; border-radius:999px; font-size:12px; font-weight:600; }
+        .risk-dot { width:8px; height:8px; border-radius:50%; background:currentColor; }
+        .risk-minimal { color:#0e7490; background:#ecfeff; border:1px solid #cffafe; }
+        .risk-low { color:#15803d; background:#ecfdf5; border:1px solid #bbf7d0; }
+        .risk-medium { color:#a16207; background:#fffbeb; border:1px solid #fde68a; }
+        .risk-high { color:#b91c1c; background:#fef2f2; border:1px solid #fecaca; }
+        .risk-critical { color:#7f1d1d; background:#fef2f2; border:1px solid #fecaca; box-shadow:0 0 0 2px rgba(127,29,29,0.05) inset; }
+        .gap-list { display:grid; gap:10px; margin-top:10px; }
+        .gap-item { border:1px solid #e5e7eb; border-radius:8px; padding:10px; display:flex; justify-content:space-between; align-items:center; }
+        .gap-item-left { display:flex; flex-direction:column; gap:2px; }
+        .gap-title { font-weight:600; color:#1e3c72; }
+        .gap-sub { color:#6b7280; font-size:12px; }
     </style>
     <script src="js/api-client.js"></script>
     <script src="/js/global-nav.js"></script>
@@ -396,6 +410,17 @@
             </div>
         </div>
 
+        <!-- Gap Analysis -->
+        <div class="reports-section">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+                <h2 class="section-title" style="margin:0">Gap Analysis</h2>
+                <div style="display:flex;gap:8px;align-items:center">
+                    <button id="btn-refresh-gap" class="btn btn-secondary">Refresh Gap Analysis</button>
+                </div>
+            </div>
+            <div id="gapAnalysis" style="min-height:60px;color:#6b7280">Computing gap analysis...</div>
+        </div>
+
         <!-- Recent Reports -->
         <div class="reports-section">
             <h2 class="section-title">Recent Reports</h2>
@@ -411,6 +436,9 @@
     <script>
         let dashboardData = null;
         let reportStatuses = new Map();
+    let gapScores = {};
+    let gapAggregate = null;
+    let evidenceMap = null;
 
         // Load dashboard metrics
         async function loadDashboardMetrics() {
@@ -662,6 +690,88 @@
             document.getElementById('recentReports').innerHTML = html;
         }
 
+        function riskLevelFromScore(score){
+            if (score == null) return 'unknown';
+            if (score < 0.15) return 'minimal';
+            if (score < 0.35) return 'low';
+            if (score < 0.6) return 'medium';
+            if (score < 0.85) return 'high';
+            return 'critical';
+        }
+
+        function renderRiskChip(level, score){
+            const pct = Math.round((score || 0)*100);
+            const cls = `risk-chip risk-${level}`;
+            const label = level.charAt(0).toUpperCase() + level.slice(1);
+            return `<span class="${cls}"><span class="risk-dot"></span>${label} • ${pct}%</span>`;
+        }
+
+        async function ensureEvidenceMap(){
+            if (evidenceMap) return;
+            try{
+                const base = (window.mmsAPI?.baseUrl || '');
+                const headers = window.mmsAPI?.getHeaders(true) || { 'Content-Type': 'application/json' };
+                const resp = await fetch(`${base}/api/user/intelligence-simple/standards/evidence-map`, { credentials:'include', headers });
+                if (resp.ok) evidenceMap = await resp.json();
+            }catch(e){ console.warn('Evidence map unavailable:', e); }
+        }
+
+        async function computeGapAnalysis(){
+            try{
+                await ensureEvidenceMap();
+                const base = (window.mmsAPI?.baseUrl || '');
+                const headers = window.mmsAPI?.getHeaders(true) || { 'Content-Type': 'application/json' };
+                let standardIds = getSelectedStandards();
+                if (!standardIds || standardIds.length === 0) {
+                    standardIds = Object.keys(evidenceMap?.mapping || {});
+                }
+                if (!standardIds || standardIds.length === 0) return;
+                const body = { standard_ids: standardIds, evidence_map: evidenceMap };
+                const res = await fetch(`${base}/api/user/intelligence-simple/risk/score-bulk`, { method:'POST', credentials:'include', headers, body: JSON.stringify(body) });
+                if (res.ok) {
+                    const data = await res.json();
+                    gapScores = data?.scores || {};
+                }
+                const ag = await fetch(`${base}/api/user/intelligence-simple/risk/aggregate`, { credentials:'include', headers });
+                if (ag.ok) gapAggregate = await ag.json();
+                renderGapAnalysis();
+            }catch(e){ console.error('Gap analysis error:', e); }
+        }
+
+        function renderGapAnalysis(){
+            const container = document.getElementById('gapAnalysis');
+            if (!container) return;
+            if (!gapScores || Object.keys(gapScores).length === 0) {
+                container.innerHTML = '<div style="color:#6b7280">No risk data yet. Click "Refresh Gap Analysis".</div>';
+                return;
+            }
+            const scoresArr = Object.entries(gapScores).map(([sid, obj]) => ({ sid, score: obj?.risk_score || 0, level: obj?.risk_level || riskLevelFromScore(obj?.risk_score), priority: obj?.remediation_priority || 'medium' }));
+            const avg = scoresArr.reduce((a,b)=>a+b.score,0)/scoresArr.length;
+            const counts = scoresArr.reduce((acc, it)=>{ acc[it.level]=(acc[it.level]||0)+1; return acc; }, {});
+            scoresArr.sort((a,b)=> (b.score - a.score));
+            const top = scoresArr.slice(0, Math.min(10, scoresArr.length));
+            const chips = ['critical','high','medium','low','minimal'].filter(k=>counts[k]).map(k=>`<span class="risk-chip risk-${k}"><span class="risk-dot"></span>${k.charAt(0).toUpperCase()+k.slice(1)}: ${counts[k]}</span>`).join(' ');
+            const list = top.map(item => `<div class="gap-item"><div class="gap-item-left"><div class="gap-title">Standard ${item.sid}</div><div class="gap-sub">Remediation priority: ${item.priority}</div></div><div>${renderRiskChip(item.level, item.score)}</div></div>`).join('');
+            container.innerHTML = `
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+                    <div><strong>Average Risk:</strong> ${renderRiskChip(riskLevelFromScore(avg), avg)}</div>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap">${chips}</div>
+                    <button id="btn-export-gaps" class="btn btn-secondary">Export CSV</button>
+                </div>
+                <div class="gap-list">${list}</div>
+            `;
+            const exp = document.getElementById('btn-export-gaps');
+            if (exp) exp.onclick = () => exportGapsCSV(scoresArr);
+        }
+
+        function exportGapsCSV(scoresArr){
+            const rows = [['standard_id','risk_score','risk_level','remediation_priority']].concat(scoresArr.map(it=>[it.sid, it.score, it.level, it.priority]));
+            const csv = rows.map(r=>r.join(',')).join('\n');
+            const blob = new Blob([csv], { type:'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = 'gap-analysis.csv'; a.click(); URL.revokeObjectURL(url);
+        }
+
 
         function logout() {
             localStorage.clear();
@@ -670,8 +780,12 @@
 
         // Initialize
         loadDashboardMetrics();
-        setTimeout(loadRecentReports, 1000); // Delay to show loading state
+    setTimeout(loadRecentReports, 1000); // Delay to show loading state
         updateSelectedCount();
+        // Auto compute initial Gap Analysis
+        setTimeout(computeGapAnalysis, 300);
+    const btnRefreshGap = document.getElementById('btn-refresh-gap');
+    if (btnRefreshGap) btnRefreshGap.addEventListener('click', computeGapAnalysis);
     </script>
 
     <script>
