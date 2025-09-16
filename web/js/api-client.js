@@ -73,8 +73,22 @@ class MapMyStandardsAPI {
             ...options
         };
 
+        const backoffOnce = async () => {
+            let delay = 500;
+            try {
+                return await fetch(url, defaultOptions);
+            } catch (e) {
+                await new Promise(r=>setTimeout(r, delay));
+                return await fetch(url, defaultOptions);
+            }
+        };
+
         try {
-            const response = await fetch(url, defaultOptions);
+            let response = await fetch(url, defaultOptions);
+            if ((response.status >= 500 && response.status <= 504) || response.status === 0) {
+                await new Promise(r=>setTimeout(r, 500));
+                response = await backoffOnce();
+            }
             
             if (!response.ok) {
                 if (response.status === 401) {

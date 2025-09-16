@@ -107,12 +107,18 @@
                     <h1 class="text-xl font-semibold text-gray-900">MapMyStandards A³E</h1>
                     <span class="ai-badge ml-3">AI Powered</span>
                 </div>
-                <div class="flex items-center space-x-4">
+                <div class="flex items-center space-x-4 relative">
                     <span id="authIndicator" class="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600 hidden"></span>
                     <span class="text-sm text-gray-600" id="userEmail">Loading...</span>
-                    <button id="openSettingsBtn" class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700 transition-colors">
-                        Settings
-                    </button>
+                    <div class="relative" id="authMenu">
+                        <button id="authMenuButton" class="px-3 py-2 text-sm border rounded hover:bg-gray-50">Auth ▾</button>
+                        <div id="authMenuPanel" class="hidden absolute right-0 mt-2 w-56 bg-white border rounded shadow z-50">
+                            <div class="px-3 py-2 border-b text-xs text-gray-600" id="authMenuEmail">—</div>
+                            <button id="authRefreshBtn" class="w-full text-left px-3 py-2 text-sm hover:bg-gray-50">Refresh token</button>
+                            <button id="authLogoutBtn" class="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50">Log out</button>
+                        </div>
+                    </div>
+                    <button id="openSettingsBtn" class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700 transition-colors">Settings</button>
                 </div>
             </div>
         </div>
@@ -2042,32 +2048,100 @@
             setTimeout(renderSuggestedUploads, 400);
         })();
     </script>
-    <script>
-// Minimal auth indicator: checks /api/auth/me using cookies
+        <script>
+// Minimal auth indicator + dropdown + backoff
 (function(){
     const API_BASE = 'https://api.mapmystandards.ai';
     const indicator = document.getElementById('authIndicator');
     const emailSpan = document.getElementById('userEmail');
-    fetch(`${API_BASE}/api/auth/me`, { credentials: 'include' })
-        .then(r => r.json())
-        .then(j => {
+    const authMenuBtn = document.getElementById('authMenuButton');
+    const authMenuPanel = document.getElementById('authMenuPanel');
+    const authMenuEmail = document.getElementById('authMenuEmail');
+    const authRefreshBtn = document.getElementById('authRefreshBtn');
+    const authLogoutBtn = document.getElementById('authLogoutBtn');
+
+    function toggleMenu(){ authMenuPanel.classList.toggle('hidden'); }
+    document.addEventListener('click',(e)=>{
+        if (authMenuBtn.contains(e.target)) { toggleMenu(); return; }
+        if (!authMenuPanel.contains(e.target)) authMenuPanel.classList.add('hidden');
+    });
+
+    async function backoffFetch(url, opts={}, retries=3){
+        let attempt = 0, delay = 500;
+        while (true) {
+            try {
+                const res = await fetch(url, opts);
+                if (res.status >= 500 && res.status <= 504 && attempt < retries) {
+                    await new Promise(r=>setTimeout(r, delay));
+                    attempt++; delay = Math.min(delay*2, 3000);
+                    continue;
+                }
+                return res;
+            } catch (e) {
+                if (attempt >= retries) throw e;
+                await new Promise(r=>setTimeout(r, delay));
+                attempt++; delay = Math.min(delay*2, 3000);
+            }
+        }
+    }
+
+    async function probeSession(){
+        try {
+            const r = await backoffFetch(`${API_BASE}/api/auth/me`, { credentials: 'include' }, 3);
+            const j = await r.json().catch(()=>({}));
             if (j && j.ok) {
                 indicator.textContent = 'Session: active';
                 indicator.classList.remove('hidden');
                 indicator.classList.remove('bg-gray-100','text-gray-600');
                 indicator.classList.add('bg-green-100','text-green-700');
-                if (j.email) emailSpan.textContent = j.email;
+                if (j.email) { emailSpan.textContent = j.email; authMenuEmail.textContent = j.email; }
+                return true;
             } else {
                 indicator.textContent = 'Session: none';
                 indicator.classList.remove('hidden');
                 indicator.classList.remove('bg-green-100','text-green-700');
                 indicator.classList.add('bg-gray-100','text-gray-600');
+                authMenuEmail.textContent = 'Not signed in';
+                return false;
             }
-        })
-        .catch(() => {
-            // ignore errors; leave indicator hidden
-        });
+        } catch (_) {
+            authMenuEmail.textContent = 'Unavailable';
+            return false;
+        }
+    }
+
+    authRefreshBtn.addEventListener('click', async ()=>{
+        authMenuPanel.classList.add('hidden');
+        try {
+            // Try session refresh, then enhanced as fallback
+            let r = await backoffFetch(`${API_BASE}/api/auth/refresh`, { method: 'POST', credentials: 'include' }, 2);
+            if (!r.ok && r.status === 404) {
+                r = await backoffFetch(`${API_BASE}/auth/refresh`, { method: 'POST', credentials: 'include' }, 2);
+            }
+            if (r.ok) {
+                await probeSession();
+            } else {
+                alert('Refresh failed');
+            }
+        } catch (e) { alert('Refresh failed'); }
+    });
+
+    authLogoutBtn.addEventListener('click', async ()=>{
+        authMenuPanel.classList.add('hidden');
+        try {
+            await backoffFetch(`${API_BASE}/api/auth/logout`, { method: 'POST', credentials: 'include' }, 2);
+        } catch (_) {}
+        // Clear local tokens for compatibility paths
+        ['access_token','auth_token','token','a3e_api_key'].forEach(k=>localStorage.removeItem(k));
+        indicator.textContent = 'Session: none';
+        indicator.classList.remove('bg-green-100','text-green-700');
+        indicator.classList.add('bg-gray-100','text-gray-600');
+        emailSpan.textContent = 'Signed out';
+    });
+
+    // Initial probe with backoff to ride over deploy flaps
+    probeSession();
 })();
-    </script>
+        </script>
 </body>
 </html>
