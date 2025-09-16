@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/auth", tags=["auth-session"])
 
-JWT_SECRET = os.getenv("JWT_SECRET", "dev-secret-change")
+JWT_SECRET = os.getenv("JWT_SECRET", os.getenv("JWT_SECRET_KEY", "dev-secret-change"))
 JWT_ALG = "HS256"
 ACCESS_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "15"))
 REFRESH_DAYS = int(os.getenv("REFRESH_TOKEN_DAYS", "7"))
