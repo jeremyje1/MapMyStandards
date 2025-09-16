@@ -240,7 +240,7 @@ def verify_simple_token(token: str) -> Optional[Dict[str, Any]]:
 
 async def get_current_user_simple(
     request: Request,
-    authorization: str | None = Header(default=None),
+    authorization: Optional[str] = Header(default=None),
 ) -> Dict[str, Any]:
     token: Optional[str] = None
     if authorization and isinstance(authorization, str) and authorization.lower().startswith("bearer "):
