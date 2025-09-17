@@ -410,15 +410,21 @@
             try {
                 const base = (window.mmsAPI?.baseUrl || '');
                 const headers = window.mmsAPI?.getHeaders(true) || { 'Content-Type': 'application/json' };
-                const resp = await fetch(`${base}/api/standards/accreditors`, { credentials: 'include', headers });
+                // Use intelligence-simple standards metadata to populate accreditor list
+                const resp = await fetch(`${base}/api/user/intelligence-simple/standards/metadata`, { credentials: 'include', headers });
                 console.debug('accreditors status', resp.status);
                 if (resp.status === 401) { statusError('Authentication required'); return; }
                 if (!resp.ok) { throw new Error(`HTTP ${resp.status}`); }
                 const data = await resp.json();
-                if (Array.isArray(data)) {
+                if (data && data.success && Array.isArray(data.accreditors)) {
+                    // Normalize to expected shape
+                    accreditors = data.accreditors.map(a => ({
+                        id: a.accreditor || a.id || a.acronym,
+                        name: a.name || a.accreditor || a.id,
+                        acronym: (a.accreditor || a.id || '').toUpperCase()
+                    }));
+                } else if (Array.isArray(data)) {
                     accreditors = data;
-                } else if (data && data.success) {
-                    accreditors = data.data?.accreditors || data.data || [];
                 } else {
                     throw new Error('Unexpected response');
                 }
@@ -496,8 +502,7 @@
                 const base = (window.mmsAPI?.baseUrl || '');
                 const headers = window.mmsAPI?.getHeaders(true) || { 'Content-Type': 'application/json' };
                 const params = new URLSearchParams({ accreditor: accreditorId.toUpperCase() });
-                if (institutionType) params.set('institution_type', institutionType);
-                const resp = await fetch(`${base}/api/standards?${params.toString()}`, { credentials: 'include', headers });
+                const resp = await fetch(`${base}/api/user/intelligence-simple/standards/list?${params.toString()}`, { credentials: 'include', headers });
                 console.debug('standards status', resp.status);
                 if (resp.status === 401) {
                     document.getElementById('contentArea').innerHTML = `
@@ -511,12 +516,12 @@
                 if (!resp.ok) { throw new Error(`HTTP ${resp.status}`); }
                 const data = await resp.json();
                 if (data && data.success) {
-                    currentStandards = data.data?.standards || [];
+                    currentStandards = data.standards || data.data?.standards || [];
                     currentMode = 'browse';
                     updateCategoryOptions(currentStandards);
                     displayStandards({
                         accreditor: {
-                            name: (data.data?.accreditor?.name) || accreditorId.toUpperCase(),
+                            name: (data.accreditor?.name) || (data.data?.accreditor?.name) || accreditorId.toUpperCase(),
                             acronym: accreditorId.toUpperCase()
                         },
                         standards: currentStandards
@@ -635,7 +640,11 @@
             try {
                 const base = (window.mmsAPI?.baseUrl || '');
                 const headers = window.mmsAPI?.getHeaders(true) || { 'Content-Type': 'application/json' };
+                const searchAccreditor = (document.getElementById('accreditorSelect').value || '').toUpperCase();
+                const category = document.getElementById('categorySelect').value || '';
                 const params = new URLSearchParams({ q });
+                if (searchAccreditor) params.set('accreditor', searchAccreditor);
+                if (category) params.set('category', category);
                 const resp = await fetch(`${base}/api/user/intelligence-simple/standards/search?${params.toString()}`, { credentials: 'include', headers });
                 if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
                 const data = await resp.json();
@@ -682,8 +691,8 @@
         document.getElementById('categorySelect').addEventListener('change', function() {
             if (currentMode === 'search') {
                 const filtered = filterByCategory(searchResults);
-                const accreditorId = document.getElementById('accreditorSelect').value || 'ALL';
-                displayStandards({ accreditor: { name: accreditorId.toUpperCase(), acronym: accreditorId.toUpperCase() }, standards: filtered });
+                const aid = document.getElementById('accreditorSelect').value || 'ALL';
+                displayStandards({ accreditor: { name: aid.toUpperCase(), acronym: aid.toUpperCase() }, standards: filtered });
             } else {
                 const filtered = filterByCategory(currentStandards);
                 const accreditorId = document.getElementById('accreditorSelect').value || 'ALL';
@@ -769,19 +778,36 @@
             }
         });
 
-        function getSelectedStandards() {
+        async function getSelectedStandards() {
+            try {
+                const base = (window.mmsAPI?.baseUrl || '');
+                const headers = window.mmsAPI?.getHeaders(true) || { 'Content-Type': 'application/json' };
+                const resp = await fetch(`${base}/api/user/intelligence-simple/standards/selection/load`, { credentials: 'include', headers });
+                if (resp.ok) {
+                    const data = await resp.json();
+                    return Array.isArray(data.selected) ? data.selected : [];
+                }
+            } catch {}
             try { return JSON.parse(localStorage.getItem('mms:selectedStandards') || '[]'); } catch { return []; }
         }
 
-        function saveSelectedStandards(list) {
-            try { localStorage.setItem('mms:selectedStandards', JSON.stringify(Array.from(new Set(list)))); } catch {}
+        async function saveSelectedStandards(list) {
+            const unique = Array.from(new Set(list));
+            try { localStorage.setItem('mms:selectedStandards', JSON.stringify(unique)); } catch {}
+            try {
+                const base = (window.mmsAPI?.baseUrl || '');
+                const headers = window.mmsAPI?.getHeaders(true) || { 'Content-Type': 'application/json' };
+                await fetch(`${base}/api/user/intelligence-simple/standards/selection/save`, {
+                    method: 'POST', credentials: 'include', headers, body: JSON.stringify({ selected: unique })
+                });
+            } catch {}
         }
 
-        function toggleSelectedStandard(id) {
+        async function toggleSelectedStandard(id) {
             if (!id) return;
-            const curr = new Set(getSelectedStandards());
+            const curr = new Set(await getSelectedStandards());
             if (curr.has(id)) curr.delete(id); else curr.add(id);
-            saveSelectedStandards(Array.from(curr));
+            await saveSelectedStandards(Array.from(curr));
         }
 
         function logout() {
@@ -790,7 +816,7 @@
         }
 
     // Initialize
-        loadAccreditors();
+    loadAccreditors();
 
         async function ensureEvidenceMap() {
             if (evidenceMapCache) return evidenceMapCache;

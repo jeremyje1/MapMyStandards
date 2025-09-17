@@ -510,31 +510,78 @@ async def get_dashboard_metrics_simple(current_user: Dict[str, Any] = Depends(ge
 
 
 # ------------------------------
-# Standards search (code/title/description)
+# Standards list and search
 # ------------------------------
+@router.get("/standards/list")
+async def list_standards(
+    accreditor: Optional[str] = None,
+    current_user: Dict[str, Any] = Depends(get_current_user_simple)
+):
+    """List all top-level standards for the given accreditor."""
+    try:
+        acc = (accreditor or _merge_claims_with_settings(current_user).get("primary_accreditor") or "HLC").upper()
+        nodes = standards_graph.get_nodes_by_accreditor(acc, {"standard"})
+        items = [
+            {
+                "id": getattr(n, "node_id", ""),
+                "code": getattr(n, "standard_id", getattr(n, "node_id", "")),
+                "title": getattr(n, "title", ""),
+                "description": getattr(n, "description", ""),
+                "level": getattr(n, "level", "standard"),
+                "accreditor": getattr(n, "accreditor", acc),
+                "evidence_requirements": getattr(n, "evidence_requirements", []),
+            }
+            for n in nodes
+        ]
+        return {
+            "success": True,
+            "accreditor": {"name": acc, "acronym": acc},
+            "count": len(items),
+            "standards": items,
+        }
+    except Exception as e:
+        logger.error(f"Standards list error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to list standards")
+
+
 @router.get("/standards/search")
-async def search_standards(q: str, current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+async def search_standards(
+    q: str,
+    accreditor: Optional[str] = None,
+    category: Optional[str] = None,
+    current_user: Dict[str, Any] = Depends(get_current_user_simple),
+):
     try:
         ql = (q or "").strip().lower()
         if not ql:
             return {"results": []}
+        acc = (accreditor or "").strip().upper()
+        cat = (category or "").strip().lower()
+
+        # Candidate nodes: restrict to accreditor if provided
+        candidates = list(standards_graph.nodes.values())
+        if acc:
+            candidates = [n for n in candidates if getattr(n, "accreditor", "").upper() == acc]
+
         results: List[Dict[str, Any]] = []
-        # Light search across all nodes
-        for n in list(standards_graph.nodes.values())[:5000]:
+        for n in candidates[:10000]:
             code = str(getattr(n, "standard_id", getattr(n, "code", getattr(n, "node_id", ""))) or "")
             title = str(getattr(n, "title", "") or "")
             desc = str(getattr(n, "description", "") or "")
             hay = " ".join([code, title, desc]).lower()
             if ql in hay:
+                level = str(getattr(n, "level", "standard") or "standard")
+                if cat and level.lower() != cat:
+                    continue
                 results.append({
                     "id": getattr(n, "node_id", code),
                     "code": code,
                     "title": title,
                     "snippet": (desc[:180] + ("…" if len(desc) > 180 else "")) if desc else "",
-                    "category": getattr(n, "level", "Standard"),
-                    "accreditor": getattr(n, "accreditor", "")
+                    "category": level,
+                    "accreditor": getattr(n, "accreditor", ""),
                 })
-                if len(results) >= 50:
+                if len(results) >= 100:
                     break
         return {"results": results}
     except Exception as e:
@@ -1460,6 +1507,40 @@ async def get_standards_categories(
     except Exception as e:
         logger.error(f"Standards categories error: {e}")
         raise HTTPException(status_code=500, detail="Failed to load categories")
+
+
+# ------------------------------
+# Selected standards persistence (session store)
+# ------------------------------
+@router.post("/standards/selection/save")
+async def save_selected_standards(payload: Dict[str, Any], current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+    try:
+        ids = payload.get("selected") or payload.get("standard_ids") or []
+        if not isinstance(ids, list):
+            raise HTTPException(status_code=400, detail="selected must be a list")
+        all_sessions = _safe_load_json(SESSIONS_STORE)
+        uk = _user_key(current_user)
+        sess = all_sessions.get(uk, {})
+        sess["selected_standards"] = list(dict.fromkeys([str(x) for x in ids]))
+        all_sessions[uk] = sess
+        _safe_save_json(SESSIONS_STORE, all_sessions)
+        return {"status": "saved", "count": len(sess["selected_standards"])}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Save selected standards error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to save selection")
+
+
+@router.get("/standards/selection/load")
+async def load_selected_standards(current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+    try:
+        all_sessions = _safe_load_json(SESSIONS_STORE)
+        ids = (all_sessions.get(_user_key(current_user), {}) or {}).get("selected_standards", [])
+        return {"selected": ids, "count": len(ids)}
+    except Exception as e:
+        logger.error(f"Load selected standards error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to load selection")
 
 
 # ------------------------------
