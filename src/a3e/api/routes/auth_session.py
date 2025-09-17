@@ -21,6 +21,7 @@ import hashlib
 import logging
 from typing import Optional
 import jwt  # PyJWT
+from contextlib import asynccontextmanager
 
 logger = logging.getLogger(__name__)
 
@@ -79,9 +80,67 @@ def _init_tables():
 
 _init_tables()
 
+# Optional integration with primary database to bridge existing users
+try:  # Lazy import to avoid hard dependency during local runs
+    from ...core.config import settings  # type: ignore
+    from ...models import User  # type: ignore
+    from ...services.database_service import DatabaseService  # type: ignore
+    _db_available = True
+except Exception as _e:  # pragma: no cover
+    settings = None  # type: ignore
+    User = None  # type: ignore
+    DatabaseService = None  # type: ignore
+    _db_available = False
+
+_db_service = None
+
+def _get_db_service():
+    global _db_service
+    if not _db_available or not settings or not DatabaseService:
+        return None
+    if _db_service is None:
+        try:
+            _db_service = DatabaseService(settings.database_url)
+        except Exception as e:  # pragma: no cover
+            logger.error(f"DatabaseService init failed: {e}")
+            return None
+    return _db_service
+
+@asynccontextmanager
+async def _maybe_session():
+    svc = _get_db_service()
+    if not svc:
+        yield None
+        return
+    try:
+        async with svc.get_session() as session:  # type: ignore
+            yield session
+    except Exception as e:  # pragma: no cover
+        logger.error(f"Primary DB session unavailable: {e}")
+        yield None
+
+def _ensure_sqlite_user_record(user_id: str, email: str, password_hash: str):
+    try:
+        c = _conn()
+        cur = c.cursor()
+        cur.execute("SELECT user_id FROM users WHERE email=?", (email.lower(),))
+        row = cur.fetchone()
+        if row is None:
+            cur.execute(
+                "INSERT INTO users (id, user_id, email, password_hash, is_active) VALUES (?,?,?,?,1)",
+                (user_id, user_id, email.lower(), password_hash),
+            )
+        else:
+            cur.execute("UPDATE users SET password_hash=?, is_active=1 WHERE email=?", (password_hash, email.lower()))
+        c.commit()
+        c.close()
+    except Exception as e:  # pragma: no cover
+        logger.warning(f"Could not sync sqlite user record: {e}")
+
 
 try:
     from argon2 import PasswordHasher  # type: ignore
+    import bcrypt  # Support legacy bcrypt hashes alongside argon2
 
     _ph = PasswordHasher()
 
@@ -90,9 +149,20 @@ try:
 
     def verify_password(pw: str, hashed: str) -> bool:
         try:
+            # Normalize hashed value
+            if isinstance(hashed, bytes):
+                hashed = hashed.decode()
+            # If the stored hash is bcrypt, verify with bcrypt
+            if isinstance(hashed, str) and (hashed.startswith("$2a$") or hashed.startswith("$2b$") or hashed.startswith("$2y$")):
+                return bcrypt.checkpw(pw.encode(), hashed.encode())
+            # Otherwise use argon2
             return _ph.verify(hashed, pw)
         except Exception:
-            return False
+            # As a last resort, try bcrypt
+            try:
+                return bcrypt.checkpw(pw.encode(), (hashed.encode() if isinstance(hashed, str) else hashed))
+            except Exception:
+                return False
 except Exception:  # pragma: no cover - fallback
     import bcrypt
 
@@ -101,7 +171,7 @@ except Exception:  # pragma: no cover - fallback
 
     def verify_password(pw: str, hashed: str) -> bool:
         try:
-            return bcrypt.checkpw(pw.encode(), hashed.encode())
+            return bcrypt.checkpw(pw.encode(), (hashed.encode() if isinstance(hashed, str) else hashed))
         except Exception:
             return False
 
@@ -211,7 +281,38 @@ async def login(req: LoginRequest, response: Response):
 
     user = _get_user_by_email(req.email)
     if not user or not user["is_active"] or not verify_password(req.password, user["password_hash"]):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+        # Fallback: try primary DB (users table managed by ORM) to support existing paid users
+        async with _maybe_session() as session:
+            if session and User is not None:
+                try:
+                    from sqlalchemy import select as _select  # type: ignore
+                    result = await session.execute(_select(User).where(User.email == req.email.lower()))
+                    db_user = result.scalar_one_or_none()
+                    if db_user and getattr(db_user, 'password_hash', None):
+                        # db_user.password_hash likely bcrypt
+                        ph = db_user.password_hash
+                        ph_bytes = ph if isinstance(ph, (bytes, bytearray)) else ph.encode('utf-8')
+                        try:
+                            import bcrypt as _bc
+                            if _bc.checkpw(req.password.encode('utf-8'), ph_bytes):
+                                # Provision sqlite mirror and continue
+                                _ensure_sqlite_user_record(str(db_user.id), db_user.email, ph if isinstance(ph, str) else ph_bytes.decode())
+                                user = {"user_id": str(db_user.id), "email": db_user.email, "password_hash": ph if isinstance(ph, str) else ph_bytes.decode(), "is_active": True}
+                            else:
+                                raise HTTPException(status_code=401, detail="Invalid credentials")
+                        except Exception:
+                            # If bcrypt check fails unexpectedly, do not expose details
+                            raise HTTPException(status_code=401, detail="Invalid credentials")
+                    else:
+                        raise HTTPException(status_code=401, detail="Invalid credentials")
+                except HTTPException:
+                    raise
+                except Exception as e:  # pragma: no cover
+                    logger.error(f"Fallback DB auth failed: {e}")
+                    raise HTTPException(status_code=401, detail="Invalid credentials")
+            else:
+                # No fallback available
+                raise HTTPException(status_code=401, detail="Invalid credentials")
     access, aexp = _issue_access_token(user["user_id"], user["email"])
     refresh_days = REFRESH_DAYS_REMEMBER if req.rememberMe else REFRESH_DAYS
     refresh, rexp = _new_refresh_token(user["user_id"], refresh_days)
