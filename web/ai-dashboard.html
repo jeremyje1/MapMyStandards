@@ -525,28 +525,32 @@
     <div id="graphTooltip" class="hidden fixed z-50 max-w-sm bg-white border border-gray-200 shadow-lg rounded p-3 text-xs text-gray-800"></div>
 
     <script>
-        // Determine API base URL depending on where this page is hosted
-        const API_BASE = (function() {
-            try {
-                const stored = localStorage.getItem('api_base');
-                if (stored) return stored.replace(/\/$/, '');
-            } catch {}
-            const host = location.hostname;
-            if (host.includes('platform.mapmystandards.ai')) return 'https://api.mapmystandards.ai';
-            // Same-origin by default (works when served from API domain)
-            return '';
-        })();
+        // Use unified config for API base
+        const API_BASE = (window.MMS_CONFIG && window.MMS_CONFIG.API_BASE_URL) || '';
+        function buildApiUrl(path){
+            if (typeof path !== 'string') return path;
+            if (path.startsWith('http')) return path;
+            if (!API_BASE) return path;
+            if (API_BASE.endsWith('/api') && path.startsWith('/api/')) return API_BASE + path.slice(4);
+            return API_BASE + path;
+        }
+        async function authFetch(path, options={}){
+            const url = buildApiUrl(path);
+            const opts = Object.assign({ credentials:'include' }, options);
+            let r = await fetch(url, opts);
+            if (r.status === 401 && window.MMS_AUTH && typeof window.MMS_AUTH.silentRefresh === 'function'){
+                await window.MMS_AUTH.silentRefresh();
+                r = await fetch(url, opts);
+            }
+            return r;
+        }
     let dashboardData = null;
     let userSettings = null;
 
         // Load dashboard on page load
         document.addEventListener('DOMContentLoaded', function() {
-            // Check authentication
-            const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
-            if (!token) {
-                window.location.href = 'https://platform.mapmystandards.ai/login';
-                return;
-            }
+            // With cookie-based auth, no bearer token is required; rely on cookies
+            // If session inactive, the nav/session menu will reflect it and users can login via /login-platform.html
 
             // Fetch settings first (used by graph defaults), then load dashboard
             fetchSettings().finally(async () => {
@@ -606,12 +610,7 @@
                 } catch (e) { console.warn('Onboarding-to-settings bridge failed', e); }
 
                 // Load dashboard overview
-        const response = await fetch(`${API_BASE}/api/user/intelligence-simple/dashboard/overview`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
+        const response = await authFetch(`/api/user/intelligence-simple/dashboard/overview`);
 
                 if (!response.ok) {
                     throw new Error(`Dashboard load failed: ${response.status}`);
@@ -638,7 +637,7 @@
             if (!badge && !inline) return;
             const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
             try {
-                const res = await fetch(`${API_BASE}/api/v1/ai/status`, { headers: token ? { 'Authorization': `Bearer ${token}` } : {} });
+                const res = await authFetch(`/api/v1/ai/status`);
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const data = await res.json();
                 const st = (data && data.data) || {};
@@ -663,12 +662,7 @@
             const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
             
             try {
-        const response = await fetch(`${API_BASE}/api/user/intelligence-simple/metrics/summary`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
+        const response = await authFetch(`/api/user/intelligence-simple/metrics/summary`);
 
                 if (response.ok) {
                     const metrics = await response.json();
@@ -687,9 +681,7 @@
             const distEl = document.getElementById('roDist');
             const factorsEl = document.getElementById('roTopFactors');
             try {
-                const res = await fetch(`${API_BASE}/api/user/intelligence-simple/risk/aggregate`, {
-                    headers: { 'Authorization': `Bearer ${token}` }, credentials: 'include'
-                });
+                const res = await authFetch(`/api/user/intelligence-simple/risk/aggregate`);
                 const j = res.ok ? await res.json() : null;
                 const data = j && (j.data || j) || null;
                 if (!data) throw new Error('no data');
@@ -890,12 +882,7 @@
             try {
                 document.getElementById('standardsGraphSection').classList.remove('hidden');
         const acc = (userSettings && userSettings.settings && userSettings.settings.primary_accreditor) ? `?accreditor=${encodeURIComponent(userSettings.settings.primary_accreditor)}` : '';
-        const response = await fetch(`${API_BASE}/api/user/intelligence-simple/standards/graph${acc}`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
+        const response = await authFetch(`/api/user/intelligence-simple/standards/graph${acc}`);
 
                 if (!response.ok) {
                     throw new Error(`Standards graph load failed: ${response.status}`);
@@ -905,7 +892,7 @@
                 displayStandardsGraph(graphData);
                 // Category coverage
                 try {
-                    const catRes = await fetch(`${API_BASE}/api/user/intelligence-simple/standards/categories${acc}`, { headers: { 'Authorization': `Bearer ${token}` } });
+                    const catRes = await authFetch(`/api/user/intelligence-simple/standards/categories${acc}`);
                     if (catRes.ok) {
                         const cat = await catRes.json();
                         renderCategoryCoverage(cat);
@@ -1805,13 +1792,8 @@
 
         // Settings helpers
     async function fetchSettings() {
-            const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
             try {
-                const res = await fetch(`${API_BASE}/api/user/intelligence-simple/settings`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
+                const res = await authFetch(`/api/user/intelligence-simple/settings`);
                 if (res.ok) {
             const data = await res.json();
             // Normalize to always have { settings: {...} }
@@ -1825,13 +1807,9 @@
         }
 
         async function saveSettings(payload) {
-            const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
-            const res = await fetch(`${API_BASE}/api/user/intelligence-simple/settings`, {
+            const res = await authFetch(`/api/user/intelligence-simple/settings`, {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
             if (!res.ok) throw new Error('Failed to save settings');
@@ -1839,13 +1817,9 @@
         }
 
     async function saveReview(filename, standard_id, payload = {}) {
-            const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
             const res = await fetch(`${API_BASE}/api/user/intelligence-simple/evidence/review`, {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ filename, standard_id, ...payload })
             });
             if (!res.ok) throw new Error('Failed to save review');
@@ -1972,11 +1946,8 @@
         }
         async function ensureAccreditors() {
             if (window.__availableAccreditors && Array.isArray(window.__availableAccreditors)) return window.__availableAccreditors;
-            const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
             try {
-                const res = await fetch(`${API_BASE}/api/user/intelligence-simple/standards/graph`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
+                const res = await authFetch(`/api/user/intelligence-simple/standards/graph`);
                 if (res.ok) {
                     const data = await res.json();
                     window.__availableAccreditors = data.available_accreditors || [];
@@ -1990,7 +1961,7 @@
 
         async function ensureIntegrations() {
             try {
-                const res = await fetch(`${API_BASE}/api/v1/integrations/status`);
+                const res = await authFetch(`/api/v1/integrations/status`);
                 if (!res.ok) return;
                 const status = await res.json();
                 const modal = document.getElementById('settingsForm');
