@@ -1,0 +1,15 @@
+name: Post-Deploy Smoke
+
+on:
+  workflow_dispatch:
+  deployment_status:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    env:
+      MMS_BASE: https://platform.mapmystandards.ai
+    steps:
+      - uses: actions/checkout@v4
+      - name: Quick page checks (no auth)
+        run: bash scripts/post_deploy_ci.sh

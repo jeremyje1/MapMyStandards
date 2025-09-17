@@ -252,10 +252,10 @@
             Don't have an account? <a href="https://platform.mapmystandards.ai/trial-signup-flow.html">Start Free Trial</a>
         </div>
     </div>
-    
+    <script src="/js/config.js"></script>
     <script>
     // API configuration
-    const API_BASE_URL = 'https://api.mapmystandards.ai';
+    const API_BASE_URL = (window.MMS_CONFIG && window.MMS_CONFIG.API_BASE_URL) || 'https://api.mapmystandards.ai';
 
         // Helper functions
         function showError(message) {
@@ -321,14 +321,8 @@
 
                 const result = await response.json().catch(() => ({}));
 
-                // Accept either shape: {access_token} or {data: {access_token}}
+                // Accept success based on HTTP + payload; rely on cookies set by server
                 if (response.ok && (result.success || result.access_token || (result.data && result.data.access_token))) {
-                    const token = (result.data && result.data.access_token) || result.access_token || '';
-                    if (token) {
-                        localStorage.setItem('a3e_api_key', token);
-                        localStorage.setItem('access_token', token);
-                        localStorage.setItem('user', JSON.stringify(result.user || result.data || {}));
-                    }
                     showSuccess('Login successful! Redirecting...');
                     setTimeout(() => { window.location.href = 'https://platform.mapmystandards.ai/ai-dashboard'; }, 800);
                 } else {
@@ -337,12 +331,8 @@
                 }
             } catch (error) {
                 console.error('Login error:', error);
-                // Demo fallback
+                // Demo fallback: simulate cookie-based session by redirecting without storing tokens client-side
                 if (loginData.email === 'demo@example.com' && loginData.password === 'demo123') {
-                    const demoToken = btoa(JSON.stringify({ email: 'demo@example.com', user_id: 'demo_user', exp: Date.now() + 86400000 }));
-                    localStorage.setItem('a3e_api_key', demoToken);
-                    localStorage.setItem('access_token', demoToken);
-                    localStorage.setItem('user', JSON.stringify({ email: 'demo@example.com', name: 'Demo User', user_id: 'demo_user' }));
                     showSuccess('Demo login successful! Redirecting...');
                     setTimeout(() => { window.location.href = 'https://platform.mapmystandards.ai/ai-dashboard'; }, 800);
                 } else {
@@ -359,4 +349,6 @@
         });
     </script>
 </body>
-</html>
+        <script src="/js/config.js"></script>
+        <script>
+            const API_BASE_URL = (window.MMS_CONFIG && window.MMS_CONFIG.API_BASE_URL) || 'https://api.mapmystandards.ai';

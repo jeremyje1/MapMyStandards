@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Organizational Chart Builder | MapMyStandards</title>
     <link rel="stylesheet" href="/web/static/css/tailwind.css">
+        <script src="/js/config.js"></script>
+        <link rel="stylesheet" href="/css/accessibility.css">
+        <script src="/js/ux.js"></script>
     <script>
         (function(){
             const link = document.querySelector('link[href="/web/static/css/tailwind.css"]');
@@ -371,6 +374,16 @@
 
         // Initialize
         loadExistingChart();
-    </script>
+        </script>
+        <script>
+            (function(){
+                const container = document.querySelector('main');
+                if (window.MMS_UX && MMS_UX.renderTutorialBanner) {
+                    MMS_UX.renderTutorialBanner(container);
+                }
+            })();
+        </script>
 </body>
+</html>
+
 </html>

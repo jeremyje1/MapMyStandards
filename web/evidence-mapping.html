@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Evidence Mapping | MapMyStandards A³E</title>
+    <script src="/js/config.js"></script>
+    <link rel="stylesheet" href="/css/accessibility.css">
+    <script src="/js/ux.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -531,10 +534,10 @@
     </div>
 
     <script>
-        let mappingsData = null;
-        let selectedDocument = null;
-        let selectedStandard = null;
-        let evidenceMap = null; // { mapping: { standard_id: [ {filename, confidence, accreditor} ] } }
+    let mappingsData = null;
+    let selectedDocument = null;
+    let selectedStandard = null;
+    let evidenceMap = null; // full API payload including mapping/documents/standards
         let riskScoresByStandard = {}; // { standard_id: { risk_score, risk_level, ... } }
         let riskAggregate = null;
         let riskFactorsMeta = null;
@@ -548,7 +551,10 @@
             try {
                 const base = (window.mmsAPI?.baseUrl || '');
                 const headers = window.mmsAPI?.getHeaders(true) || { 'Content-Type': 'application/json' };
-                const resp = await fetch(`${base}/api/user/intelligence-simple/standards/evidence-map`, { credentials: 'include', headers });
+                const acc = document.getElementById('accreditorFilter')?.value || '';
+                const url = new URL(`${base}/api/user/intelligence-simple/standards/evidence-map`, window.location.origin);
+                if (acc) url.searchParams.set('accreditor', acc);
+                const resp = await fetch(url.toString(), { credentials: 'include', headers });
                 if (resp.ok) {
                     evidenceMap = await resp.json();
                     renderFromEvidenceMap();
@@ -571,12 +577,15 @@
             docsList.innerHTML = '';
             stdsList.innerHTML = '';
 
-            // Build documents from mappings
+            // Documents from API payload when available
+            const documents = (evidenceMap?.documents || [])
+                .map(d => ({ id: d.filename, name: d.filename, count: 0, doc_type: d.doc_type, trust: d.trust_score }))
+                .sort((a,b) => a.name.localeCompare(b.name));
             const docCounts = {};
             Object.values(mapping).forEach(arr => {
                 (arr || []).forEach(m => { docCounts[m.filename] = (docCounts[m.filename] || 0) + 1; });
             });
-            const documents = Object.keys(docCounts).map(fn => ({ id: fn, name: fn, count: docCounts[fn] })).sort((a,b) => a.name.localeCompare(b.name));
+            documents.forEach(d => d.count = docCounts[d.id] || 0);
             documents.forEach(doc => {
                 const div = document.createElement('div');
                 div.className = 'document-item';
@@ -588,17 +597,18 @@
 
             // Build standards list
             const selected = new Set(getSelectedStandards());
-            const standards = Object.keys(mapping);
+            const standards = (evidenceMap?.standards || []).map(s => s.standard_id) || Object.keys(mapping);
             standards.sort();
             standards.forEach(sid => {
                 const count = (mapping[sid] || []).length;
+                const meta = (evidenceMap?.standards || []).find(s => s.standard_id === sid) || {};
                 const div = document.createElement('div');
                 div.className = 'standard-item' + (selected.has(sid) ? ' selected' : '');
                 div.dataset.stdId = sid;
                 div.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
                     <div>
                         <div class="standard-id">${sid}</div>
-                        <div class="standard-category">Mapped evidence</div>
+                        <div class="standard-category">${count} evidence • avg conf ${(meta.avg_confidence!=null?Math.round(meta.avg_confidence*100):'--')}%</div>
                     </div>
                     <div class="risk-slot" data-risk-slot="${sid}"></div>
                 </div>
@@ -611,11 +621,14 @@
             const totalDocs = documents.length;
             const totalStandards = standards.length;
             const strong = Object.values(mapping).reduce((acc, arr) => acc + (arr || []).filter(m => (m.confidence || 0) >= 0.85).length, 0);
+            const coverage = typeof evidenceMap?.coverage_percentage === 'number' ? evidenceMap.coverage_percentage : Math.round((totalStandards/Math.max(totalStandards, 1))*100);
+            const avgTrust = computeAverageTrust();
             const statsHtml = `
                 <div class="stat-card"><div class="stat-value">${totalDocs}</div><div class="stat-label">Documents Analyzed</div></div>
                 <div class="stat-card"><div class="stat-value">${totalStandards}</div><div class="stat-label">Standards Mapped</div></div>
-                <div class="stat-card"><div class="stat-value">${Math.round((totalStandards/Math.max(totalStandards, 1))*100)}%</div><div class="stat-label">Coverage Rate</div></div>
+                <div class="stat-card"><div class="stat-value">${coverage}%</div><div class="stat-label">Coverage Rate</div></div>
                 <div class="stat-card"><div class="stat-value">${strong}</div><div class="stat-label">Strong Mappings</div></div>
+                <div class="stat-card"><div class="stat-value">${avgTrust!=null?avgTrust+'%':'--'}</div><div class="stat-label" title="${trustTooltipHtml()}">Avg Trust (EvidenceTrust)</div></div>
             `;
             document.getElementById('statsGrid').innerHTML = statsHtml;
         }
@@ -650,21 +663,38 @@
             try{
                 await ensureRiskFactors();
                 const mapping = evidenceMap?.mapping || {};
-                const standardIds = Object.keys(mapping);
-                if (standardIds.length === 0) return;
+                const entries = Object.entries(mapping);
+                if (entries.length === 0) return;
+                const items = entries.map(([sid, arr]) => {
+                    const evid = Array.isArray(arr) ? arr : [];
+                    const trust = evid.map(m => typeof m.confidence === 'number' ? m.confidence : 0);
+                    const coverage = Math.min(100, (evid.length || 0) * 25);
+                    return {
+                        standard_id: sid,
+                        coverage_percent: coverage,
+                        trust_scores: trust,
+                        evidence_ages_days: [365],
+                        overdue_tasks: 0,
+                        total_tasks: 0,
+                        recent_changes: 0,
+                        historical_findings: 0,
+                        days_to_review: 180
+                    };
+                });
                 const base = (window.mmsAPI?.baseUrl || '');
                 const headers = window.mmsAPI?.getHeaders(true) || { 'Content-Type': 'application/json' };
-                const body = { standard_ids: standardIds, evidence_map: evidenceMap };
-                const res = await fetch(`${base}/api/user/intelligence-simple/risk/score-bulk`, { method:'POST', credentials:'include', headers, body: JSON.stringify(body) });
+                const res = await fetch(`${base}/api/user/intelligence-simple/risk/score-bulk`, { method:'POST', credentials:'include', headers, body: JSON.stringify({ items }) });
                 if(res.ok){
                     const data = await res.json();
-                    riskScoresByStandard = data?.scores || {};
+                    const list = data?.data || [];
+                    riskScoresByStandard = {};
+                    list.forEach(d => { if (d && d.standard_id) riskScoresByStandard[d.standard_id] = d; });
                 } else {
                     console.warn('Bulk risk scoring failed');
                 }
                 // Aggregate
                 const ag = await fetch(`${base}/api/user/intelligence-simple/risk/aggregate`, { credentials:'include', headers });
-                if (ag.ok) { riskAggregate = await ag.json(); }
+                if (ag.ok) { const a = await ag.json(); riskAggregate = a.data || null; }
             }catch(e){ console.error('Error scoring risk:', e); }
         }
 
@@ -803,6 +833,7 @@
                         </p>
                         <div style="margin-top: 0.5rem;">
                             <span style="font-size: 0.75rem; color: #94a3b8;">Confidence: ${confidence}</span>
+                            ${type !== 'document' ? `<button class="btn" style="margin-left:.5rem;background:#f1f5f9;color:#0f172a;border:1px solid #e2e8f0" data-risk-details data-id="${mapping.standard_id}">Risk factors</button>` : ''}
                         </div>
                     </div>
                 `;
@@ -813,6 +844,20 @@
             
             // Draw connection lines
             drawMappingLines(relevantMappings);
+        }
+
+        // Average trust score display in stats
+        function computeAverageTrust(){
+            const docs = (evidenceMap?.documents||[]) || [];
+            const vals = docs.map(d => (typeof d.trust_score === 'number') ? d.trust_score : null).filter(v => v!=null);
+            if (!vals.length) return null;
+            const avg = vals.reduce((a,b)=>a+b,0)/vals.length;
+            return Math.round(avg*100);
+        }
+
+        // Add a subtle tooltip for trust scoring
+        function trustTooltipHtml(){
+            return 'EvidenceTrust Score combines completeness, provenance, alignment, and reviewer verification signals.';
         }
 
         function drawMappingLines(mappings) {
@@ -828,6 +873,12 @@
                 line.setAttribute('x2', '90%');
                 line.setAttribute('y2', y);
                 line.setAttribute('class', 'mapping-line');
+                const conf = (mapping.relevance_score || 0) / 100;
+                const width = 1 + Math.max(0, Math.min(1, conf)) * 4; // 1-5px
+                const color = conf >= 0.9 ? '#10b981' : conf >= 0.7 ? '#f59e0b' : '#ef4444';
+                line.setAttribute('stroke-width', String(width));
+                line.setAttribute('stroke', color);
+                line.setAttribute('opacity', String(0.4 + Math.min(0.6, conf)));
                 svg.appendChild(line);
                 
                 // Add nodes
@@ -836,6 +887,7 @@
                 node1.setAttribute('cy', y);
                 node1.setAttribute('r', '8');
                 node1.setAttribute('class', 'mapping-node');
+                node1.setAttribute('fill', color);
                 svg.appendChild(node1);
                 
                 const node2 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
@@ -843,6 +895,7 @@
                 node2.setAttribute('cy', y);
                 node2.setAttribute('r', '8');
                 node2.setAttribute('class', 'mapping-node');
+                node2.setAttribute('fill', color);
                 svg.appendChild(node2);
             });
         }
@@ -853,6 +906,31 @@
             await scoreEvidenceRisk();
             renderRiskIntoStandardsList();
         });
+
+                // Risk factor modal click handler
+                document.addEventListener('click', (e) => {
+                        const btn = e.target.closest('[data-risk-details]');
+                        if (!btn) return;
+                        const sid = btn.getAttribute('data-id');
+                        const score = riskScoresByStandard[sid];
+                        const factors = (score && score.factors) || [];
+                        const lines = factors.map(f => `<li><strong>${f.factor_name || f.name || 'Factor'}</strong>: ${(f.contribution!=null?Math.round(f.contribution*100):'--')}% · ${f.description||''}</li>`).join('') || '<li>No factor data yet. Click Refresh Risk.</li>';
+                        const html = `
+                                <div style="position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:9998;display:flex;align-items:center;justify-content:center;" id="riskModal">
+                                    <div style="background:#fff;border-radius:12px;max-width:560px;width:92%;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,0.2);">
+                                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                                            <h3 style="margin:0;font-size:16px;">Risk Factors • ${sid}</h3>
+                                            <button id="riskModalClose" class="btn">Close</button>
+                                        </div>
+                                        <ul style="font-size:14px;color:#1f2937;line-height:1.5;margin-left:16px;">${lines}</ul>
+                                    </div>
+                                </div>`;
+                        const wrap = document.createElement('div');
+                        wrap.innerHTML = html;
+                        document.body.appendChild(wrap);
+                        wrap.querySelector('#riskModalClose').addEventListener('click', ()=> wrap.remove());
+                        wrap.addEventListener('click', (evt)=>{ if (evt.target.id === 'riskModal') wrap.remove(); });
+                });
 
         function logout() {
             localStorage.removeItem('a3e_api_key');
@@ -937,7 +1015,74 @@
         }
 
         // Initialize on load
-        document.addEventListener('DOMContentLoaded', () => { loadMappings(); });
+        document.addEventListener('DOMContentLoaded', () => {
+            // Cross-page toast and optional metrics refresh flag handling
+            const toastMsg = localStorage.getItem('mms:toast');
+            if (toastMsg) { showToast(toastMsg); localStorage.removeItem('mms:toast'); }
+            if (localStorage.getItem('mms:refreshMetrics') === '1') {
+                localStorage.removeItem('mms:refreshMetrics');
+            }
+            loadMappings();
+        });
+
+        // Toast utility
+        function showToast(message){
+            const div = document.createElement('div');
+            div.textContent = message;
+            div.style.position = 'fixed';
+            div.style.right = '16px';
+            div.style.bottom = '16px';
+            div.style.background = '#0ea5e9';
+            div.style.color = '#fff';
+            div.style.padding = '10px 14px';
+            div.style.borderRadius = '8px';
+            div.style.boxShadow = '0 6px 16px rgba(0,0,0,0.2)';
+            div.style.zIndex = '9999';
+            document.body.appendChild(div);
+            setTimeout(()=>{ div.remove(); }, 4500);
+        }
     </script>
+
+        <script>
+            // Ensure consistent logout behavior
+            function logout(){
+                try { window.mmsAPI && window.mmsAPI.logout && window.mmsAPI.logout(); } catch(_){ }
+                try { localStorage.clear(); sessionStorage.clear(); } catch(_){ }
+                window.location.href = '/login-platform.html';
+            }
+            // UX init: tooltips + tutorial banner
+            (function initUx(){
+                const container = document.querySelector('.container');
+                if (window.MMS_UX && MMS_UX.renderTutorialBanner) {
+                    MMS_UX.renderTutorialBanner(container);
+                }
+                async function fetchHelp(){
+                    try{
+                        const base = (window.MMS_CONFIG && MMS_CONFIG.API_BASE_URL) || '';
+                        const r = await fetch(`${base}/api/user/intelligence-simple/ui/help`, { credentials:'include' });
+                        if (!r.ok) return null; return await r.json();
+                    }catch{ return null; }
+                }
+                (async () => {
+                    const help = await fetchHelp();
+                    const tipCov = help && help.formulas && help.formulas.coverage ? help.formulas.coverage : 'Coverage estimates how much evidence supports a standard.';
+                    const tipRisk = help && help.formulas && help.formulas.avg_risk ? help.formulas.avg_risk : 'Average risk is computed from weighted factors per standard.';
+                    const attach = () => {
+                        if (!window.MMS_UX || !MMS_UX.attachTooltip) return;
+                        const stats = document.querySelectorAll('.stat-card .stat-value');
+                        stats.forEach((el, i) => {
+                            const text = i===2? tipCov : null;
+                            if (text && !el.__mms_tip) { MMS_UX.attachTooltip(el, text); el.__mms_tip = true; }
+                        });
+                        const riskBtn = document.getElementById('btn-refresh-risk');
+                        if (riskBtn && !riskBtn.__mms_tip) { MMS_UX.attachTooltip(riskBtn, tipRisk); riskBtn.__mms_tip = true; }
+                        document.querySelectorAll('.risk-badge').forEach(el => { if (!el.__mms_tip) { MMS_UX.attachTooltip(el, tipRisk); el.__mms_tip = true; } });
+                    };
+                    const obs = new MutationObserver(() => attach());
+                    obs.observe(document.body, { childList:true, subtree:true });
+                    attach();
+                })();
+            })();
+        </script>
 </body>
 </html>

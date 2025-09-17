@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reports & Analytics - A³E | MapMyStandards.ai</title>
+    <script src="/js/config.js"></script>
+    <link rel="stylesheet" href="/css/accessibility.css">
+    <script src="/js/ux.js"></script>
     
     <style>
         :root {
@@ -634,6 +637,38 @@
                 <div class="loading-text">Loading analytics...</div>
             </div>
         </div>
+        <div class="metrics-section" id="riskOverviewSection" style="display:none;">
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-content">
+                        <span class="metric-icon">⚠️</span>
+                        <div class="metric-value" id="rvAvgRisk">—</div>
+                        <div class="metric-label">Average Risk</div>
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-content">
+                        <span class="metric-icon">🤝</span>
+                        <div class="metric-value" id="rvAvgTrust">—</div>
+                        <div class="metric-label">Average Trust</div>
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-content">
+                        <span class="metric-icon">📊</span>
+                        <div class="metric-value" id="rvDist">—</div>
+                        <div class="metric-label">Risk Distribution</div>
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-content">
+                        <span class="metric-icon">🔎</span>
+                        <div class="metric-value" id="rvTopFactors" style="font-size:1.25rem;line-height:1.2;">—</div>
+                        <div class="metric-label">Top Factors</div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- Report Generation Section -->
         <div class="report-generation">
@@ -781,6 +816,23 @@
             window.location.href = '/login';
         }
 
+        // Toast utility for cross-page messaging
+        function showToast(message){
+            const div = document.createElement('div');
+            div.textContent = message;
+            div.style.position = 'fixed';
+            div.style.right = '16px';
+            div.style.bottom = '16px';
+            div.style.background = '#10b981';
+            div.style.color = '#fff';
+            div.style.padding = '10px 14px';
+            div.style.borderRadius = '8px';
+            div.style.boxShadow = '0 6px 16px rgba(0,0,0,0.2)';
+            div.style.zIndex = '9999';
+            document.body.appendChild(div);
+            setTimeout(()=>{ div.remove(); }, 4500);
+        }
+
         // Load dashboard metrics
         async function loadDashboardMetrics() {
             try {
@@ -866,6 +918,8 @@
             `;
             
             document.getElementById('metricsSection').innerHTML = html;
+            // After core metrics, load risk overview
+            try { refreshRiskOverview(); } catch(_) {}
         }
 
         function displayMockMetrics() {
@@ -924,6 +978,36 @@
             `;
             
             document.getElementById('metricsSection').innerHTML = html;
+            try { refreshRiskOverview(); } catch(_) {}
+        }
+
+        // Risk Overview aggregate
+        async function refreshRiskOverview(){
+            const token = getAuthToken();
+            const base = getApiBase();
+            const sec = document.getElementById('riskOverviewSection');
+            try {
+                const res = await fetch(base + '/api/user/intelligence-simple/risk/aggregate', {
+                    headers: { 'Authorization': `Bearer ${token}` }, credentials: 'include'
+                });
+                const j = res.ok ? await res.json() : null;
+                const data = j && (j.data || j) || null;
+                if (!data) throw new Error('no data');
+                const ar = Math.round(((data.average_risk || 0) * 100));
+                const at = Math.round(((data.average_trust || 0) * 100));
+                document.getElementById('rvAvgRisk').textContent = ar + '%';
+                const trustEl = document.getElementById('rvAvgTrust');
+                trustEl.textContent = at + '%';
+                trustEl.title = 'Average trust score across all mapped evidence. Higher is better.';
+                const dist = data.risk_distribution || {};
+                const distStr = ['Low','Medium','High'].map(k=>`${k}:${dist[k.toLowerCase()]??0}`).join(' · ');
+                document.getElementById('rvDist').textContent = distStr;
+                const tf = (data.top_factors||[]).slice(0,3).map(f=>f.name||f.factor_name).join(', ') || '—';
+                document.getElementById('rvTopFactors').textContent = tf;
+                sec.style.display = 'block';
+            } catch (_) {
+                sec.style.display = 'none';
+            }
         }
 
         async function generateReport(type) {
@@ -1131,11 +1215,43 @@
 
         // Initialize page
         document.addEventListener('DOMContentLoaded', function() {
+            // Cross-page toast and refresh flag
+            const t = localStorage.getItem('mms:toast');
+            if (t) { showToast(t); localStorage.removeItem('mms:toast'); }
+            if (localStorage.getItem('mms:refreshMetrics') === '1') {
+                localStorage.removeItem('mms:refreshMetrics');
+            }
             loadDashboardMetrics();
             setTimeout(() => {
                 loadRecentReports();
             }, 2000);
+            // Try risk overview after initial load as well
+            setTimeout(() => { try { refreshRiskOverview(); } catch(_) {} }, 1200);
         });
     </script>
 </body>
+<script>
+    (async function(){
+        try{
+            const res = await fetch(`${MMS_CONFIG.API_BASE_URL}/api/user/intelligence-simple/ui/help`, { credentials:'include' });
+            if(res.ok){
+                const h = await res.json();
+                const sec = document.getElementById('riskOverviewSection');
+                if (sec) {
+                    const coverage = sec.querySelector('[data-metric="coverage"]');
+                    const avgTrust = sec.querySelector('[data-metric="avg_trust"]');
+                    const avgRisk = sec.querySelector('[data-metric="avg_risk"]');
+                    if (coverage && h.formulas.coverage_rate) MMS_UX.attachTooltip(coverage, `${h.formulas.coverage_rate.label}: ${h.formulas.coverage_rate.formula}`);
+                    if (avgTrust && h.formulas.avg_trust) MMS_UX.attachTooltip(avgTrust, `${h.formulas.avg_trust.label}: ${h.formulas.avg_trust.formula}`);
+                    if (avgRisk && h.formulas.avg_risk) MMS_UX.attachTooltip(avgRisk, `${h.formulas.avg_risk.label}: ${h.formulas.avg_risk.formula}`);
+                }
+            }
+        } catch {}
+        const bannerMount = document.createElement('div');
+        bannerMount.id = 'tutorialBanner';
+        const container = document.querySelector('.container, main, body');
+        if (container) container.insertAdjacentElement('afterbegin', bannerMount);
+        MMS_UX.renderTutorialBanner(bannerMount);
+    })();
+</script>
 </html>

@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reports - A³E | MapMyStandards.ai</title>
+    <script src="/js/config.js"></script>
+    <link rel="stylesheet" href="/css/accessibility.css">
+    <script src="/js/ux.js"></script>
     
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -573,14 +576,25 @@
             document.getElementById('dashboardMetrics').innerHTML = html;
         }
 
-        function getSelectedStandards(){
+        async function getSelectedStandards(){
+            // Prefer server-side selection; fallback to localStorage
+            try {
+                const base = (window.mmsAPI?.baseUrl || '');
+                const headers = window.mmsAPI?.getHeaders(true) || { 'Content-Type': 'application/json' };
+                const resp = await fetch(`${base}/api/user/intelligence-simple/standards/selection/load`, { credentials: 'include', headers });
+                if (resp.ok) {
+                    const data = await resp.json();
+                    if (Array.isArray(data.selected)) return data.selected;
+                }
+            } catch {}
             try { return JSON.parse(localStorage.getItem('mms:selectedStandards') || '[]'); } catch { return []; }
         }
 
-        function updateSelectedCount(){
-            const n = getSelectedStandards().length;
+        async function updateSelectedCount(){
+            const selected = await getSelectedStandards();
+            const n = Array.isArray(selected) ? selected.length : 0;
             const el = document.getElementById('selected-count');
-            el.textContent = n > 0 ? `${n} standard${n===1?'':'s'} selected` : 'No standards selected — will use defaults.';
+            el.textContent = n > 0 ? `${n} standard${n===1?'':'s'} selected` : 'No standards selected.';
         }
 
         async function generateNarrative(){
@@ -590,11 +604,17 @@
             const status = document.getElementById('narrative-status');
             const preview = document.getElementById('narrative-preview');
             const htmlDiv = document.getElementById('narrative-html');
-            const standardIds = getSelectedStandards();
+            const standardIds = await getSelectedStandards();
             const userBody = (document.getElementById('narrativeIntro')?.value || '').trim();
             try{
                 btnGen.disabled = true; btnExport.disabled = true;
                 status.style.display = 'block';
+                // Validate selection
+                if (!Array.isArray(standardIds) || standardIds.length === 0) {
+                    status.textContent = 'Please select at least one standard via the Standards or Evidence Mapping page';
+                    setTimeout(()=>{ status.style.display='none'; }, 3500);
+                    return;
+                }
                 status.textContent = 'Generating narrative...';
                 preview.style.display = 'none';
                 const headers = { 'Content-Type': 'application/json' };
@@ -640,7 +660,7 @@
                 const blob = await res.blob();
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
-                a.href = url; a.download = 'narrative.docx'; a.click();
+                a.href = url; a.download = `narrative_${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.docx`; a.click();
                 window.URL.revokeObjectURL(url);
                 status.textContent = 'Export complete.';
             }catch(e){
@@ -648,6 +668,56 @@
             }finally{
                 btnGen.disabled = false; btnExport.disabled = false;
                 setTimeout(()=>{ if(status.textContent === 'Export complete.') status.style.display='none'; }, 2500);
+            }
+        }
+
+        async function generateReport(type){
+            const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+            const el = (window.event && window.event.target) ? window.event.target : null;
+            if (el) { el.disabled = true; el.dataset._text = el.innerHTML; el.innerHTML = '<span class="spinner" style="width: 1rem; height: 1rem; border-width: 2px; margin-right: 0.5rem;"></span> Generating...'; }
+            try {
+                const base = (window.mmsAPI?.baseUrl || '');
+                const headers = token ? { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
+                if (type === 'evidence') {
+                    // Minimal evidence report using mapping summary
+                    const payload = { filename: 'evidence_mapping_summary', analysis: { mappings: [] } };
+                    const r = await fetch(`${base}/api/user/intelligence-simple/evidence/report`, { method: 'POST', headers, body: JSON.stringify(payload) });
+                    if (!r.ok) throw new Error('Failed to generate Evidence Mapping summary');
+                    const out = await r.json();
+                    const w = window.open('', '_blank');
+                    if (w) { w.document.write(out.html || '<p>No content</p>'); w.document.close(); }
+                } else if (type === 'comprehensive' || type === 'gaps' || type === 'qep') {
+                    const selected = await getSelectedStandards();
+                    const intro = (document.getElementById('narrativeIntro')?.value || '').trim();
+                    if (!Array.isArray(selected) || selected.length === 0) {
+                        alert('Please select at least one standard via the Standards or Evidence Mapping page');
+                        return;
+                    }
+                    const r = await fetch(`${base}/api/user/intelligence-simple/narrative/generate`, { method: 'POST', headers, credentials:'include', body: JSON.stringify({ standard_ids: selected, body: intro }) });
+                    if (!r.ok) throw new Error('Failed to generate narrative');
+                    const j = await r.json();
+                    const html = j && j.html ? j.html : '<p>No content</p>';
+                    const w = window.open('', '_blank');
+                    if (w) { w.document.write(html); w.document.close(); }
+                    // Offer DOCX export with meaningful name
+                    if (confirm('Export this narrative to DOCX?')) {
+                        const ex = await fetch(`${base}/api/user/intelligence-simple/narrative/export.docx`, { method: 'POST', headers, credentials:'include', body: JSON.stringify({}) });
+                        if (ex.ok) {
+                            const blob = await ex.blob();
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            const stamp = new Date().toISOString().slice(0,10);
+                            const name = type === 'comprehensive' ? `compliance_report_${stamp}.docx` : type === 'gaps' ? `gap_analysis_${stamp}.docx` : `qep_impact_${stamp}.docx`;
+                            a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+                        } else {
+                            alert('DOCX export failed');
+                        }
+                    }
+                }
+            } catch (e) {
+                alert(e.message || 'Report generation failed');
+            } finally {
+                if (el) { el.disabled = false; el.innerHTML = el.dataset._text || 'Generate'; }
             }
         }
         function loadRecentReports() {
@@ -774,24 +844,58 @@
 
 
         function logout() {
-            localStorage.clear();
-            window.location.href = '/login';
+            try { window.mmsAPI && window.mmsAPI.logout && window.mmsAPI.logout(); } catch(_){ }
+            try { localStorage.clear(); sessionStorage.clear(); } catch(_){ }
+            window.location.href = '/login-platform.html';
         }
 
         // Initialize
         loadDashboardMetrics();
     setTimeout(loadRecentReports, 1000); // Delay to show loading state
-        updateSelectedCount();
+    updateSelectedCount();
         // Auto compute initial Gap Analysis
         setTimeout(computeGapAnalysis, 300);
     const btnRefreshGap = document.getElementById('btn-refresh-gap');
     if (btnRefreshGap) btnRefreshGap.addEventListener('click', computeGapAnalysis);
+
+    // UX init: tutorial and tooltips
+    (function initUx(){
+        const container = document.querySelector('.container');
+        if (window.MMS_UX && MMS_UX.renderTutorialBanner) {
+            MMS_UX.renderTutorialBanner(container);
+        }
+        async function fetchHelp(){
+            try{
+                const base = (window.MMS_CONFIG && MMS_CONFIG.API_BASE_URL) || '';
+                const r = await fetch(`${base}/api/user/intelligence-simple/ui/help`, { credentials:'include' });
+                if (!r.ok) return null; return await r.json();
+            }catch{ return null; }
+        }
+        (async () => {
+            const help = await fetchHelp();
+            const tipTrust = help && help.formulas && help.formulas.avg_trust ? help.formulas.avg_trust : 'Average trust is computed from evidence confidence values.';
+            const tipRisk = help && help.formulas && help.formulas.avg_risk ? help.formulas.avg_risk : 'Average risk is computed from weighted factors per standard.';
+            const attach = () => {
+                if (!window.MMS_UX || !MMS_UX.attachTooltip) return;
+                document.querySelectorAll('.metric-card .metric-value').forEach((el, i) => {
+                    const text = i === 0 ? tipTrust : (i === 3 ? tipRisk : null);
+                    if (text && !el.__mms_tip) { MMS_UX.attachTooltip(el, text); el.__mms_tip = true; }
+                });
+                const gapBtn = document.getElementById('btn-refresh-gap');
+                if (gapBtn && !gapBtn.__mms_tip) { MMS_UX.attachTooltip(gapBtn, 'Recompute risk and gap analysis'); gapBtn.__mms_tip = true; }
+            };
+            const obs = new MutationObserver(() => attach());
+            obs.observe(document.getElementById('dashboardMetrics'), { childList:true, subtree:true });
+            attach();
+        })();
+    })();
     </script>
 
     <script>
         function logout() {
-            localStorage.clear();
-            window.location.href = '/login';
+            try { window.mmsAPI && window.mmsAPI.logout && window.mmsAPI.logout(); } catch(_){ }
+            try { localStorage.clear(); sessionStorage.clear(); } catch(_){ }
+            window.location.href = '/login-platform.html';
         }
     </script>
 </body>

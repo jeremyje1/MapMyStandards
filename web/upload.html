@@ -416,6 +416,19 @@
             }
 
             progressContainer.style.display = 'block';
+            // Baseline metrics for delta
+            const API_BASE = (window.mmsAPI && window.mmsAPI.getBaseUrl && window.mmsAPI.getBaseUrl()) || '';
+            let baselineMapped = 0;
+            try {
+                const m1 = await fetch(`${API_BASE}/api/user/intelligence-simple/dashboard/metrics`, {
+                    headers: token ? { 'Authorization': 'Bearer ' + token } : {}
+                });
+                if (m1.ok) {
+                    const data = await m1.json();
+                    const cm = (data && data.core_metrics) || (data && data.data && data.data.core_metrics) || {};
+                    baselineMapped = cm.standards_mapped || 0;
+                }
+            } catch(_) {}
             let uploadedCount = 0;
 
             for (const file of selectedFiles) {
@@ -439,6 +452,27 @@
                 } catch (err) {
                     console.error('Error uploading', file.name, err);
                 }
+            }
+
+            // Post metrics and compute delta
+            let deltaMapped = 0;
+            try {
+                const m2 = await fetch(`${API_BASE}/api/user/intelligence-simple/dashboard/metrics`, {
+                    headers: token ? { 'Authorization': 'Bearer ' + token } : {}
+                });
+                if (m2.ok) {
+                    const data2 = await m2.json();
+                    const cm2 = (data2 && data2.core_metrics) || (data2 && data2.data && data2.data.core_metrics) || {};
+                    const afterMapped = cm2.standards_mapped || 0;
+                    deltaMapped = Math.max(0, afterMapped - baselineMapped);
+                }
+            } catch(_) {}
+
+            try { localStorage.setItem('mms:refreshMetrics', '1'); } catch(_) {}
+            if (deltaMapped > 0) {
+                try { localStorage.setItem('mms:toast', `${deltaMapped} new standards mapped from your uploads`); } catch(_) {}
+            } else {
+                try { localStorage.setItem('mms:toast', `Uploads complete. Metrics refreshed.`); } catch(_) {}
             }
 
             alert(`Uploaded ${uploadedCount} of ${selectedFiles.length} file(s)`);

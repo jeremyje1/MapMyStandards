@@ -332,6 +332,48 @@ async def save_org_chart(payload: Dict[str, Any], current_user: Dict[str, Any] =
         logger.error(f"Save org chart error: {e}")
         raise HTTPException(status_code=500, detail="Failed to save org chart")
 
+# Aliases for explicit save/load paths
+@router.get("/org-chart/load")
+async def load_org_chart_alias(current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+    try:
+        chart = _get_user_org_chart(current_user) or {}
+        exists = bool(chart)
+        return {
+            "exists": exists,
+            "chart": chart,
+            "last_updated": chart.get("updated_at") if isinstance(chart, dict) else None,
+        }
+    except Exception as e:
+        logger.error(f"Load org chart (alias) error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to load org chart")
+
+
+@router.post("/org-chart/save")
+async def save_org_chart_alias(payload: Dict[str, Any], current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+    try:
+        existing = _get_user_org_chart(current_user) or {}
+        nodes = payload.get("nodes") or payload.get("data", {}).get("nodes") or []
+        edges = payload.get("edges") or payload.get("data", {}).get("edges") or []
+        metadata = payload.get("metadata") or payload.get("data", {}).get("metadata") or {}
+        name = payload.get("name") or existing.get("name") or "My Organization Chart"
+        description = payload.get("description") or existing.get("description") or ""
+        now = datetime.utcnow().isoformat()
+
+        chart = {
+            "name": name,
+            "description": description,
+            "nodes": nodes,
+            "edges": edges,
+            "metadata": metadata,
+            "created_at": existing.get("created_at") or now,
+            "updated_at": now,
+        }
+        _save_user_org_chart(current_user, chart)
+        return {"status": "saved", "chart": chart}
+    except Exception as e:
+        logger.error(f"Save org chart (alias) error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to save org chart")
+
 
 @router.get("/integrations/status")
 async def get_integrations_status(current_user: Dict[str, Any] = Depends(get_current_user_simple)):
@@ -339,6 +381,71 @@ async def get_integrations_status(current_user: Dict[str, Any] = Depends(get_cur
         "document_sources": _merge_claims_with_settings(current_user).get("document_sources", []),
         "canvas_available": bool(os.getenv("CANVAS_CLIENT_ID")),
         "microsoft_available": bool(os.getenv("MS_CLIENT_ID")),
+    }
+# ------------------------------
+# UI Help and Tutorial metadata
+# ------------------------------
+@router.get("/ui/help")
+async def get_ui_help(current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+    return {
+        "formulas": {
+            "coverage_rate": {
+                "label": "Coverage Rate",
+                "description": "Percentage of standards with at least one mapped evidence item.",
+                "formula": "(Mapped ÷ Total) × 100%",
+                "aliases": ["Coverage", "Evidence Coverage"],
+            },
+            "avg_trust": {
+                "label": "Average Trust",
+                "description": "Mean confidence across evidence mappings for selected standards.",
+                "formula": "Σ(confidence) ÷ N",
+                "range": "0.0–1.0",
+            },
+            "avg_risk": {
+                "label": "Average Risk",
+                "description": "Mean predicted risk across selected standards.",
+                "formula": "Σ(risk_score) ÷ N",
+                "range": "0–100",
+            }
+        },
+        "docs": {
+            "faq": "https://platform.mapmystandards.ai/faq",
+            "documentation": "https://platform.mapmystandards.ai/docs",
+            "contact": "mailto:support@mapmystandards.ai"
+        }
+    }
+
+
+@router.get("/ui/tutorial")
+async def get_ui_tutorial(current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+    return {
+        "steps": [
+            {
+                "id": "standards-select",
+                "title": "Select Standards",
+                "text": "Use search and filters to find relevant standards. Click the checkbox to select standards for analysis and reporting.",
+                "target": "#standardsList"
+            },
+            {
+                "id": "evidence-map",
+                "title": "Map Evidence",
+                "text": "Upload documents or use existing content to map evidence to selected standards. Confidence indicates match strength.",
+                "target": "#evidencePanel"
+            },
+            {
+                "id": "risk-review",
+                "title": "Review Risk",
+                "text": "Open the Risk Overview to see aggregate risk and top contributing factors.",
+                "target": "#riskOverview"
+            },
+            {
+                "id": "generate-narrative",
+                "title": "Generate Narrative",
+                "text": "On Reports, add an optional introduction and click Generate Narrative. Export DOCX once the preview is ready.",
+                "target": "#narrativeSection"
+            }
+        ],
+        "dismiss_key": "mms_tutorial_dismissed_v1"
     }
 
 
@@ -1079,6 +1186,28 @@ async def analyze_evidence(
         # Record upload for metrics/overview
         _record_user_upload(current_user, file.filename, [m.standard_id for m in mappings], doc_type, mapping_details)
 
+        # Seed risk model with per-standard scores (transparent, lightweight)
+        try:
+            overall_trust = float(trust_dict.get("overall_score", 0.7) or 0.7)
+            # Use a simple coverage heuristic: one document contributes up to 25% coverage for a standard
+            for md in mapping_details[:50]:  # cap to avoid extreme loops
+                sid = str(md.get("standard_id"))
+                conf = float(md.get("confidence") or 0.0)
+                snapshot = StandardEvidenceSnapshot(
+                    standard_id=sid,
+                    coverage_percent=25.0,
+                    trust_scores=[overall_trust, conf],
+                    evidence_ages_days=[365],
+                    overdue_tasks=0,
+                    total_tasks=0,
+                    recent_changes=0,
+                    historical_findings=0,
+                    days_to_review=180,
+                )
+                risk_explainer.compute_standard_risk(snapshot)
+        except Exception:
+            pass
+
         return {
             "status": "success",
             "filename": file.filename,
@@ -1137,23 +1266,79 @@ async def analyze_evidence_bulk(
 # Evidence map and crosswalk
 # ------------------------------
 @router.get("/standards/evidence-map")
-async def get_evidence_map(current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+async def get_evidence_map(
+    accreditor: Optional[str] = None,
+    current_user: Dict[str, Any] = Depends(get_current_user_simple),
+):
+    """Return evidence-to-standard mappings for the current user.
+
+    - Optionally filter to a specific accreditor via `accreditor`
+    - Returns the original `mapping` shape plus summary fields to power UI stats
+    """
     uploads = _get_user_uploads(current_user)
+    acc = (accreditor or _merge_claims_with_settings(current_user).get("primary_accreditor") or "HLC").upper()
+
     mapping: Dict[str, List[Dict[str, Any]]] = {}
+    documents_meta: Dict[str, Dict[str, Any]] = {}
+
     for d in uploads.get("documents", []):
         fname = d.get("filename")
         dt = d.get("doc_type")
+        trust_overall = (d.get("trust_score") or {}).get("overall_score")
+        if fname and fname not in documents_meta:
+            documents_meta[fname] = {
+                "filename": fname,
+                "doc_type": dt,
+                "trust_score": trust_overall if isinstance(trust_overall, (int, float)) else None,
+                "uploaded_at": d.get("uploaded_at"),
+            }
         for md in d.get("mappings", []):
             sid = md.get("standard_id")
             if not sid:
                 continue
+            m_acc = (md.get("accreditor") or acc).upper()
+            if acc and m_acc != acc:
+                continue
             mapping.setdefault(sid, []).append({
                 "filename": fname,
                 "doc_type": dt,
-                "accreditor": md.get("accreditor"),
+                "accreditor": m_acc,
                 "confidence": md.get("confidence"),
             })
-    return {"mapping": mapping}
+
+    # Build standards summary with average confidence and evidence counts
+    standards_list: List[Dict[str, Any]] = []
+    for sid, arr in mapping.items():
+        if not arr:
+            continue
+        confs = [float(m.get("confidence") or 0.0) for m in arr if isinstance(m.get("confidence"), (int, float))]
+        avg_conf = float(sum(confs) / len(confs)) if confs else 0.0
+        standards_list.append({
+            "standard_id": sid,
+            "evidence_count": len(arr),
+            "avg_confidence": round(avg_conf, 4),
+        })
+
+    # Total standards for coverage
+    try:
+        total_roots = len(standards_graph.get_accreditor_standards(acc))
+    except Exception:
+        total_roots = 0
+    standards_mapped = len(standards_list)
+    coverage_pct = round((standards_mapped / total_roots) * 100, 1) if total_roots else 0.0
+
+    return {
+        "accreditor": acc,
+        "documents": list(documents_meta.values()),
+        "standards": standards_list,
+        "counts": {
+            "documents": len(documents_meta),
+            "standards_mapped": standards_mapped,
+            "total_standards": total_roots,
+        },
+        "coverage_percentage": coverage_pct,
+        "mapping": mapping,
+    }
 
 
 @router.get("/evidence/crosswalk")

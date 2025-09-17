@@ -4,26 +4,8 @@
  */
 
 // Configuration object for different environments
-const API_CONFIG = {
-    development: {
-        baseUrl: 'http://localhost:8000',
-        domain: 'localhost:8000'
-    },
-    production: {
-        baseUrl: 'https://api.mapmystandards.ai',
-        domain: 'api.mapmystandards.ai'
-    }
-};
-
-// Detect environment (you can also use environment variables)
-const isProduction = (
-    window.location.hostname === 'platform.mapmystandards.ai' ||
-    window.location.hostname === 'www.mapmystandards.ai' ||
-    window.location.hostname.endsWith('.vercel.app')
-);
-
-// Current configuration
-const config = isProduction ? API_CONFIG.production : API_CONFIG.development;
+// Use shared config.js for API base
+const config = { baseUrl: (window.MMS_CONFIG && window.MMS_CONFIG.API_BASE_URL) || 'https://api.mapmystandards.ai' };
 
 /**
  * API Client for MapMyStandards Backend
@@ -31,27 +13,8 @@ const config = isProduction ? API_CONFIG.production : API_CONFIG.development;
 class MapMyStandardsAPI {
     constructor() {
         this.baseUrl = config.baseUrl;
-        this.authToken = this.getAuthToken();
-        this.cookieAuth = true; // leverage HttpOnly cookies if present
-    }
-
-    // Get authentication token from storage (check multiple keys for compatibility)
-    getAuthToken() {
-        return localStorage.getItem('access_token') || 
-               localStorage.getItem('auth_token') || 
-               localStorage.getItem('token') ||
-               localStorage.getItem('a3e_api_key') ||
-               sessionStorage.getItem('access_token') ||
-               sessionStorage.getItem('auth_token');
-    }
-
-    // Set authentication token
-    setAuthToken(token) {
-        // Store with multiple keys for compatibility
-        localStorage.setItem('access_token', token);
-        localStorage.setItem('auth_token', token);
-        localStorage.setItem('token', token);
-        this.authToken = token;
+        this.cookieAuth = true; // leverage HttpOnly cookies only
+        this._refreshInFlight = null;
     }
 
     // Common headers for API requests
@@ -59,11 +22,7 @@ class MapMyStandardsAPI {
         const headers = {
             'Content-Type': 'application/json'
         };
-        
-        if (includeAuth && this.authToken) {
-            headers['Authorization'] = `Bearer ${this.authToken}`;
-        }
-        
+        // No Authorization header; rely on HttpOnly cookies
         return headers;
     }
 
@@ -76,55 +35,40 @@ class MapMyStandardsAPI {
             ...options
         };
 
-        const backoffOnce = async () => {
-            let delay = 500;
-            try {
-                return await fetch(url, defaultOptions);
-            } catch (e) {
-                await new Promise(r=>setTimeout(r, delay));
-                return await fetch(url, defaultOptions);
+        const attemptWithRetry = async (tries = 3) => {
+            let last;
+            for (let i = 0; i < tries; i++) {
+                try {
+                    const r = await fetch(url, defaultOptions);
+                    if (r.status >= 500 && r.status <= 504) throw new Error(`upstream_${r.status}`);
+                    return r;
+                } catch (e) {
+                    last = e;
+                    await new Promise(r => setTimeout(r, 300 * Math.pow(2, i))); // 300ms, 600ms, 1200ms
+                }
             }
+            if (last) throw last;
         };
 
         try {
-            let response = await fetch(url, defaultOptions);
-            if ((response.status >= 500 && response.status <= 504) || response.status === 0) {
-                await new Promise(r=>setTimeout(r, 500));
-                response = await backoffOnce();
+            let response = await attemptWithRetry(3);
+
+            // Handle 401 with coordinated refresh and single retry
+            if (response.status === 401) {
+                await this._ensureRefreshed();
+                const retry = await attemptWithRetry(2);
+                if (retry.ok) return await retry.json();
+                if (retry.status === 401) throw new Error('Authentication required');
+                if (retry.status === 404) throw new Error('Resource not found');
+                if (retry.status === 402) throw new Error('Active subscription required');
+                throw new Error(`API Error: ${retry.status} ${retry.statusText}`);
             }
-            
+
             if (!response.ok) {
-                if (response.status === 401) {
-                    // Try silent refresh if cookies available
-                    try {
-                        // Prefer session auth refresh first
-                        let r = await fetch(`${this.baseUrl}/api/auth/refresh`, { method: 'POST', credentials: 'include' });
-                        if (!r.ok && r.status === 404) {
-                            // Fallback to enhanced auth refresh
-                            r = await fetch(`${this.baseUrl}/auth/refresh`, { method: 'POST', credentials: 'include' });
-                        }
-                        if (r.ok) {
-                            const j = await r.json().catch(()=>({}));
-                            if (j && j.access_token) {
-                                this.setAuthToken(j.access_token);
-                            }
-                            // retry original request once
-                            const retry = await fetch(url, { ...defaultOptions, headers: this.getHeaders(options.auth !== false) });
-                            if (retry.ok) return await retry.json();
-                        }
-                    } catch (_) {}
-                    this.clearAuth();
-                    throw new Error('Authentication required');
-                }
-                if (response.status === 402) {
-                    throw new Error('Active subscription required');
-                }
-                if (response.status === 404) {
-                    throw new Error('Resource not found');
-                }
+                if (response.status === 402) throw new Error('Active subscription required');
+                if (response.status === 404) throw new Error('Resource not found');
                 throw new Error(`API Error: ${response.status} ${response.statusText}`);
             }
-            
             const data = await response.json();
             return data;
         } catch (error) {
@@ -133,16 +77,54 @@ class MapMyStandardsAPI {
         }
     }
 
-    // Clear authentication
+    // Coordinate refresh calls to avoid stampede
+    async _ensureRefreshed() {
+        if (this._refreshInFlight) return this._refreshInFlight;
+        this._refreshInFlight = (async () => {
+            try {
+                let r = await fetch(`${this.baseUrl}/api/auth/refresh`, { method: 'POST', credentials: 'include' });
+                if (!r.ok && r.status === 404) {
+                    r = await fetch(`${this.baseUrl}/auth/refresh`, { method: 'POST', credentials: 'include' });
+                }
+                if (!r.ok) throw new Error('refresh_failed');
+                await r.json().catch(()=>({}));
+            } finally {
+                this._refreshInFlight = null;
+            }
+        })();
+        return this._refreshInFlight;
+    }
+
+    // Clear authentication (UI-only state)
     clearAuth() {
-        // Clear all possible token keys
+        // Do not store tokens; clear any legacy keys for safety
         localStorage.removeItem('access_token');
         localStorage.removeItem('auth_token');
         localStorage.removeItem('token');
         localStorage.removeItem('a3e_api_key');
         sessionStorage.removeItem('access_token');
         sessionStorage.removeItem('auth_token');
-        this.authToken = null;
+    }
+
+    // ===============
+    // AUTH HELPERS
+    // ===============
+    async me() {
+        // Prefer session me endpoint
+        try {
+            const r = await fetch(`${this.baseUrl}/api/auth/me`, { credentials: 'include' });
+            if (r.ok) return await r.json();
+        } catch (_) {}
+        return { ok: false };
+    }
+
+    async logout() {
+        // Prefer session logout
+        try {
+            const r = await fetch(`${this.baseUrl}/api/auth/logout`, { method: 'POST', credentials: 'include' });
+            if (r.ok) return await r.json();
+        } catch (_) {}
+        return { success: false };
     }
 
     // ===============================
@@ -151,20 +133,38 @@ class MapMyStandardsAPI {
 
     // Simple endpoints (intelligence-simple)
     async saveOrgChartSimple(chartData) {
-        return await this.request('/api/user/intelligence-simple/org-chart', {
-            method: 'POST',
-            body: JSON.stringify({
-                name: chartData.name,
-                description: chartData.description,
-                nodes: chartData.nodes || [],
-                edges: chartData.edges || [],
-                metadata: chartData.metadata || {}
-            })
-        });
+        const payload = {
+            name: chartData.name,
+            description: chartData.description,
+            nodes: chartData.nodes || [],
+            edges: chartData.edges || [],
+            metadata: chartData.metadata || {}
+        };
+        try {
+            return await this.request('/api/user/intelligence-simple/org-chart/save', {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+        } catch (e) {
+            if ((e && e.message && e.message.includes('Resource not found')) || (e && e.message && e.message.includes('404'))) {
+                return await this.request('/api/user/intelligence-simple/org-chart', {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+            }
+            throw e;
+        }
     }
 
     async loadOrgChartSimple() {
-        return await this.request('/api/user/intelligence-simple/org-chart');
+        try {
+            return await this.request('/api/user/intelligence-simple/org-chart/load');
+        } catch (e) {
+            if ((e && e.message && e.message.includes('Resource not found')) || (e && e.message && e.message.includes('404'))) {
+                return await this.request('/api/user/intelligence-simple/org-chart');
+            }
+            throw e;
+        }
     }
 
     // Create new organization chart

@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Standards - A³E | MapMyStandards.ai</title>
+    <script src="/js/config.js"></script>
+    <link rel="stylesheet" href="/css/accessibility.css">
+    <script src="/js/ux.js"></script>
     
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -700,6 +703,33 @@
             }
         });
 
+                // Risk factor modal
+                (function setupRiskDetails(){
+                        document.addEventListener('click', async (e) => {
+                                const btn = e.target.closest('[data-risk-details]');
+                                if (!btn) return;
+                                const stdId = btn.getAttribute('data-id');
+                                const score = riskScores[stdId];
+                                const factors = (score && score.factors) || [];
+                                const lines = factors.map(f => `<li><strong>${f.factor_name || f.name || 'Factor'}</strong>: ${(f.contribution!=null?Math.round(f.contribution*100):'--')}% · ${f.description||''}</li>`).join('') || '<li>No factor data yet. Refresh risk scoring.</li>';
+                                const html = `
+                                        <div style="position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:9998;display:flex;align-items:center;justify-content:center;" id="riskModal">
+                                            <div style="background:#fff;border-radius:12px;max-width:560px;width:92%;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,0.2);">
+                                                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                                                    <h3 style="margin:0;font-size:16px;">Risk Factors • ${stdId}</h3>
+                                                    <button id="riskModalClose" class="btn btn-secondary">Close</button>
+                                                </div>
+                                                <ul style="font-size:14px;color:#1f2937;line-height:1.5;margin-left:16px;">${lines}</ul>
+                                            </div>
+                                        </div>`;
+                                const wrap = document.createElement('div');
+                                wrap.innerHTML = html;
+                                document.body.appendChild(wrap);
+                                wrap.querySelector('#riskModalClose').addEventListener('click', ()=> wrap.remove());
+                                wrap.addEventListener('click', (evt)=>{ if (evt.target.id === 'riskModal') wrap.remove(); });
+                        });
+                })();
+
         document.getElementById('standardSearch').addEventListener('input', function(e) {
             const q = e.target.value;
             if (searchTimer) clearTimeout(searchTimer);
@@ -811,8 +841,9 @@
         }
 
         function logout() {
-            localStorage.clear();
-            window.location.href = '/login';
+            try { window.mmsAPI && window.mmsAPI.logout && window.mmsAPI.logout(); } catch(_){ }
+            try { localStorage.clear(); sessionStorage.clear(); } catch(_){ }
+            window.location.href = '/login-platform.html';
         }
 
     // Initialize
@@ -928,3 +959,35 @@
 
         const btnRisk = document.getElementById('btnRefreshRisk');
         if (btnRisk) btnRisk.addEventListener('click', () => { scoreVisibleStandards(); });
+
+        // UX: tutorial banner and tooltips
+        (function initUx(){
+            const container = document.querySelector('.container');
+            if (window.MMS_UX && MMS_UX.renderTutorialBanner) {
+                MMS_UX.renderTutorialBanner(container);
+            }
+            async function fetchHelp(){
+                try{
+                    const base = (window.MMS_CONFIG && MMS_CONFIG.API_BASE_URL) || '';
+                    const r = await fetch(`${base}/api/user/intelligence-simple/ui/help`, { credentials:'include' });
+                    if (!r.ok) return null; return await r.json();
+                }catch{ return null; }
+            }
+            (async () => {
+                const help = await fetchHelp();
+                const tipRisk = help && help.formulas && help.formulas.avg_risk ? help.formulas.avg_risk : 'Average risk is computed from weighted factors per standard.';
+                const tipCov = help && help.formulas && help.formulas.coverage ? help.formulas.coverage : 'Coverage estimates how much evidence supports a standard.';
+                const attachAll = () => {
+                    if (!window.MMS_UX || !MMS_UX.attachTooltip) return;
+                    const riskOverviewAvg = document.querySelector('#risk-overview .chip');
+                    if (riskOverviewAvg && !riskOverviewAvg.__mms_tip) { MMS_UX.attachTooltip(riskOverviewAvg, tipRisk); riskOverviewAvg.__mms_tip = true; }
+                    document.querySelectorAll('.risk-badge').forEach(el => { if (!el.__mms_tip) { MMS_UX.attachTooltip(el, tipRisk); el.__mms_tip = true; } });
+                    const btn = document.getElementById('btnRefreshRisk');
+                    if (btn && !btn.__mms_tip) { MMS_UX.attachTooltip(btn, tipCov); btn.__mms_tip = true; }
+                };
+                const target = document.getElementById('contentArea') || document.body;
+                const obs = new MutationObserver(() => attachAll());
+                obs.observe(target, { childList:true, subtree:true });
+                attachAll();
+            })();
+        })();

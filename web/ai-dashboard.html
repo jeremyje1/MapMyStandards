@@ -295,6 +295,20 @@
                 </div>
             </div>
 
+            <!-- Risk Overview -->
+            <div id="riskOverview" class="bg-white p-6 rounded-lg shadow card-hover mb-8">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-lg font-semibold">Risk Overview</h3>
+                    <button id="btnRefreshRiskOverview" class="text-sm border rounded px-3 py-1">Refresh</button>
+                </div>
+                <div id="riskOverviewSummary" class="flex flex-wrap items-center gap-3 text-sm">
+                    <span id="roAvgRisk" class="px-2 py-1 rounded-full bg-gray-100">Avg Risk: —</span>
+                    <span id="roAvgTrust" class="px-2 py-1 rounded-full bg-gray-100" title="Average trust score across all mapped evidence.">Avg Trust: —</span>
+                    <span id="roDist" class="px-2 py-1 rounded-full bg-gray-100">Distribution: —</span>
+                    <span id="roTopFactors" class="px-2 py-1 rounded-full bg-gray-100">Top Factors: —</span>
+                </div>
+            </div>
+
             <!-- AI Actions -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                 <div class="bg-white p-6 rounded-lg shadow card-hover">
@@ -545,6 +559,9 @@
                     try { openSettingsModal(); } catch(_) {}
                 }
             });
+            // Initial risk overview fetch
+            try { refreshRiskOverview(); } catch(_) {}
+            document.getElementById('btnRefreshRiskOverview')?.addEventListener('click', refreshRiskOverview);
             
             // Set up file upload handler
             document.getElementById('evidenceFile').addEventListener('change', handleFileUpload);
@@ -658,6 +675,38 @@
                 }
             } catch (error) {
                 console.error('Metrics load error:', error);
+            }
+        }
+
+        // Risk Overview aggregate
+        async function refreshRiskOverview(){
+            const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+            const avgRiskEl = document.getElementById('roAvgRisk');
+            const avgTrustEl = document.getElementById('roAvgTrust');
+            const distEl = document.getElementById('roDist');
+            const factorsEl = document.getElementById('roTopFactors');
+            try {
+                const res = await fetch(`${API_BASE}/api/user/intelligence-simple/risk/aggregate`, {
+                    headers: { 'Authorization': `Bearer ${token}` }, credentials: 'include'
+                });
+                const j = res.ok ? await res.json() : null;
+                const data = j && (j.data || j) || null;
+                if (!data) throw new Error('no data');
+                const ar = Math.round(((data.average_risk || 0) * 100));
+                const at = Math.round(((data.average_trust || 0) * 100));
+                avgRiskEl.textContent = `Avg Risk: ${ar}%`;
+                avgTrustEl.textContent = `Avg Trust: ${at}%`;
+                avgTrustEl.title = 'Average trust score across all mapped evidence. Higher is better.';
+                const dist = data.risk_distribution || {};
+                const distStr = ['low','medium','high'].map(k=>`${k[0].toUpperCase()+k.slice(1)}:${dist[k]??0}`).join(' · ');
+                distEl.textContent = `Distribution: ${distStr}`;
+                const tf = (data.top_factors||[]).slice(0,3).map(f=>f.name||f.factor_name).join(', ') || '—';
+                factorsEl.textContent = `Top Factors: ${tf}`;
+            } catch (_) {
+                avgRiskEl.textContent = 'Avg Risk: —';
+                avgTrustEl.textContent = 'Avg Trust: —';
+                distEl.textContent = 'Distribution: —';
+                factorsEl.textContent = 'Top Factors: —';
             }
         }
 

@@ -42,7 +42,7 @@
     ensureStyle();
     const bar = document.createElement('div');
     bar.className = 'mms-global-nav';
-    bar.innerHTML = '<div class="mms-gn-inner"><nav class="mms-gn-nav" id="globalNavContainer"></nav></div>';
+    bar.innerHTML = '<div class="mms-gn-inner" style="display:flex;align-items:center;justify-content:space-between;gap:12px;"><nav class="mms-gn-nav" id="globalNavContainer"></nav><div id="mmsSessionArea" style="font-size:12px;color:#374151;position:relative;"></div></div>';
     const header = document.querySelector('header');
     if (header && header.parentNode) {
       header.parentNode.insertBefore(bar, header.nextSibling);
@@ -51,6 +51,75 @@
     }
     const nav = bar.querySelector('#globalNavContainer');
     links.forEach(l => nav.appendChild(makeLink(l)));
+
+    const sess = bar.querySelector('#mmsSessionArea');
+  const renderSession = (info) => {
+      const email = (info && (info.email || (info.user && info.user.email))) || '';
+      const active = info && (info.ok === true || info.success === true);
+      sess.innerHTML = `
+        <div id="mmsSessBtn" style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;padding:6px 10px;border:1px solid #e5e7eb;border-radius:6px;background:#f9fafb;">
+          <span style="font-weight:600;color:#111827;">${email || 'Guest'}</span>
+          <span style="color:${active ? '#065f46' : '#92400e'};background:${active ? '#ecfdf5' : '#fffbeb'};border:1px solid ${active ? '#a7f3d0' : '#fde68a'};padding:2px 6px;border-radius:999px;">Session: ${active ? 'active' : 'inactive'}</span>
+          <span aria-hidden="true" style="color:#6b7280;">▾</span>
+        </div>
+        <div id="mmsSessMenu" style="display:none;position:absolute;right:0;top:36px;background:#fff;border:1px solid #e5e7eb;border-radius:6px;box-shadow:0 10px 15px -3px rgba(0,0,0,0.1);min-width:200px;z-index:50;">
+          <button id="mmsToggleContrast" style="display:block;width:100%;text-align:left;padding:8px 12px;font-size:13px;color:#111827;background:#fff;border:none;cursor:pointer;">Toggle High Contrast</button>
+          <button id="mmsRefreshToken" style="display:block;width:100%;text-align:left;padding:8px 12px;font-size:13px;color:#111827;background:#fff;border:none;cursor:pointer;">Refresh Token</button>
+          <button id="mmsLogout" style="display:block;width:100%;text-align:left;padding:8px 12px;font-size:13px;color:#b91c1c;background:#fff;border:none;cursor:pointer;">Log out</button>
+        </div>
+      `;
+  const toggle = sess.querySelector('#mmsToggleContrast');
+  if (toggle) toggle.addEventListener('click', () => { try { window.MMS_UX && MMS_UX.toggleHighContrast && MMS_UX.toggleHighContrast(); } catch(_){} menu.style.display='none'; });
+      const btn = sess.querySelector('#mmsSessBtn');
+      const menu = sess.querySelector('#mmsSessMenu');
+      btn.addEventListener('click', () => {
+        menu.style.display = (menu.style.display === 'none' || !menu.style.display) ? 'block' : 'none';
+      });
+      document.addEventListener('click', (e) => {
+        if (!sess.contains(e.target)) menu.style.display = 'none';
+      });
+      sess.querySelector('#mmsRefreshToken').addEventListener('click', async () => {
+        try {
+          let r = await fetch(`${config.baseUrl}/api/auth/refresh`, { method: 'POST', credentials: 'include' });
+          if (!r.ok && r.status === 404) {
+            r = await fetch(`${config.baseUrl}/auth/refresh`, { method: 'POST', credentials: 'include' });
+          }
+          if (r.ok) {
+            if (window.mmsAPI && window.mmsAPI.showSuccess) window.mmsAPI.showSuccess('Session refreshed');
+          } else {
+            if (window.mmsAPI && window.mmsAPI.showError) window.mmsAPI.showError(new Error('Unable to refresh session'));
+          }
+        } catch (e) {
+          if (window.mmsAPI && window.mmsAPI.showError) window.mmsAPI.showError(e);
+        }
+        menu.style.display = 'none';
+      });
+      sess.querySelector('#mmsLogout').addEventListener('click', async () => {
+        try {
+          await (window.mmsAPI ? window.mmsAPI.logout() : fetch(`${config.baseUrl}/api/auth/logout`, { method: 'POST', credentials: 'include' }));
+          if (window.mmsAPI) window.mmsAPI.clearAuth && window.mmsAPI.clearAuth();
+          window.location.href = origin + '/login-platform.html';
+        } catch (e) {
+          if (window.mmsAPI && window.mmsAPI.showError) window.mmsAPI.showError(e);
+        }
+      });
+    };
+
+    // Load session info
+    (async () => {
+      try {
+        let info = { ok: false };
+        if (window.mmsAPI && window.mmsAPI.me) {
+          info = await window.mmsAPI.me();
+        } else {
+          const r = await fetch(`${config.baseUrl}/api/auth/me`, { credentials: 'include' });
+          if (r.ok) info = await r.json();
+        }
+        renderSession(info);
+      } catch (_) {
+        renderSession({ ok: false });
+      }
+    })();
   };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', renderNav);
