@@ -63,7 +63,7 @@
       <div id="successMessage" class="alert" role="status"></div>
       <form id="loginForm" novalidate>
         <label for="email">Email</label>
-        <div class="field"><input type="email" id="email" name="email" autocomplete="username" required placeholder="you@example.edu" aria-required="true"></div>
+  <div class="field"><input type="email" id="email" name="email" autocomplete="username" required placeholder="you@example.edu" aria-required="true" autofocus></div>
         <label for="password">Password</label>
         <div class="field">
           <input type="password" id="password" name="password" autocomplete="current-password" required placeholder="Enter your password" aria-required="true">
@@ -73,7 +73,7 @@
           <label style="display:inline-flex;gap:8px;align-items:center"><input type="checkbox" id="remember" name="remember"><span>Remember me</span></label>
           <a href="/forgot-password.html">Forgot password?</a>
         </div>
-        <button type="submit" class="btn" id="loginButton"><span id="buttonText">Sign In</span></button>
+  <button type="submit" class="btn" id="loginButton"><span id="buttonText">Sign in</span></button>
         <div class="divider">or continue with</div>
         <div class="sso">
           <button type="button" aria-disabled="true" title="Coming soon">Google</button>
@@ -91,7 +91,7 @@
     const okEl = document.getElementById('successMessage');
     function showError(message){ errEl.textContent = message; errEl.className = 'alert error show'; }
     function showSuccess(message){ okEl.textContent = message; okEl.className = 'alert success show'; }
-    function setLoading(loading){ const b=document.getElementById('loginButton'); const t=document.getElementById('buttonText'); b.disabled=!!loading; t.textContent = loading?'Signing in…':'Sign In'; }
+  function setLoading(loading){ const b=document.getElementById('loginButton'); const t=document.getElementById('buttonText'); b.disabled=!!loading; t.textContent = loading?'Signing in…':'Sign in'; }
 
     document.getElementById('togglePwd').addEventListener('click', ()=>{
       const input = document.getElementById('password');
@@ -102,6 +102,12 @@
       btn.setAttribute('aria-label', vis === 'password' ? 'Show password' : 'Hide password');
     });
 
+    // Clear error when user edits fields
+    ;['email','password'].forEach(id=>{
+      const el = document.getElementById(id);
+      el.addEventListener('input', ()=>{ errEl.className='alert'; errEl.textContent=''; });
+    });
+
     document.getElementById('loginForm').addEventListener('submit', async (e)=>{
       e.preventDefault(); errEl.className='alert'; okEl.className='alert';
       const fd = new FormData(e.currentTarget);
@@ -109,9 +115,10 @@
       if (!email || !password) { showError('Please enter your email and password.'); return; }
       setLoading(true);
       try{
-        let response = await fetch(`${API_BASE_URL}/api/auth/login`, { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify({ email, password, rememberMe: remember })});
-        if (response.status === 404){
-          response = await fetch(`${API_BASE_URL}/auth/login`, { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify({ email, password, rememberMe: remember })});
+        // Prefer `${API_BASE_URL}/auth/login` so when API_BASE_URL='/api' this resolves to '/api/auth/login'
+        let response = await fetch(`${API_BASE_URL}/auth/login`, { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify({ email, password, rememberMe: remember })});
+        if (response.status === 404 || response.status === 405 || response.status === 422){
+          response = await fetch(`${API_BASE_URL}/api/auth/login`, { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify({ email, password, rememberMe: remember })});
         }
         const result = await response.json().catch(()=>({}));
         if (response.ok && (result.success || result.access_token || (result.data && result.data.access_token))){
@@ -120,7 +127,10 @@
           const ret = params.get('return');
           let dest = '/ai-dashboard';
           if (ret){
-            try { dest = (new URL(ret, window.location.origin)).toString(); } catch(_) { /* ignore invalid return */ }
+            try {
+              const u = new URL(ret, window.location.origin);
+              dest = (u.origin === window.location.origin) ? u.toString() : dest;
+            } catch(_) { /* ignore invalid return */ }
           }
           setTimeout(()=>{ window.location.href = dest; }, 500);
         } else {
