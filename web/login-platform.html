@@ -1,356 +1,145 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - MapMyStandards Platform</title>
-    
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .login-container {
-            background: white;
-            border-radius: 12px;
-            padding: 2rem;
-            width: 100%;
-            max-width: 400px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        }
-        
-        .logo {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-        
-        .logo h1 {
-            font-size: 1.8rem;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            background-clip: text;
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: #374151;
-            font-weight: 500;
-        }
-        
-        input[type="email"],
-        input[type="password"] {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            font-size: 1rem;
-            transition: border-color 0.3s;
-        }
-        
-        input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        
-        .remember-forgot {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-        }
-        
-        .remember-me {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .forgot-password {
-            color: #667eea;
-            text-decoration: none;
-            font-size: 0.9rem;
-        }
-        
-        .forgot-password:hover {
-            text-decoration: underline;
-        }
-        
-        .btn {
-            width: 100%;
-            padding: 0.75rem;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-        
-        .btn:hover {
-            transform: translateY(-2px);
-        }
-        
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-        
-        .divider {
-            text-align: center;
-            margin: 1.5rem 0;
-            color: #6b7280;
-            position: relative;
-        }
-        
-        .divider::before,
-        .divider::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            width: 45%;
-            height: 1px;
-            background: #e5e7eb;
-        }
-        
-        .divider::before {
-            left: 0;
-        }
-        
-        .divider::after {
-            right: 0;
-        }
-        
-        .signup-link {
-            text-align: center;
-            color: #6b7280;
-        }
-        
-        .signup-link a {
-            color: #667eea;
-            text-decoration: none;
-            font-weight: 600;
-        }
-        
-        .signup-link a:hover {
-            text-decoration: underline;
-        }
-        
-        .demo-info {
-            background: #f3f4f6;
-            border-radius: 6px;
-            padding: 1rem;
-            margin-bottom: 1.5rem;
-            font-size: 0.9rem;
-            color: #4b5563;
-        }
-        
-        .demo-info strong {
-            color: #1f2937;
-        }
-        
-        .error-message,
-        .success-message {
-            padding: 0.75rem;
-            border-radius: 6px;
-            margin-bottom: 1rem;
-            text-align: center;
-            display: none;
-        }
-        
-        .error-message {
-            background: #fee2e2;
-            color: #991b1b;
-            border: 1px solid #fecaca;
-        }
-        
-        .success-message {
-            background: #d1fae5;
-            color: #065f46;
-            border: 1px solid #a7f3d0;
-        }
-        
-        .error-message.show,
-        .success-message.show {
-            display: block;
-        }
-        
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,.3);
-            border-radius: 50%;
-            border-top-color: white;
-            animation: spin 0.8s ease-in-out infinite;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign in • MapMyStandards</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{ --bg:#0f172a; --muted:#94a3b8; --primary:#3b82f6; --accent:#8b5cf6; --ring:#60a5fa }
+    *{ box-sizing:border-box }
+    body{ margin:0; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial; background:radial-gradient(1000px 600px at 10% -10%, rgba(59,130,246,.15), transparent 60%), radial-gradient(800px 500px at 110% 10%, rgba(139,92,246,.18), transparent 60%), var(--bg); color:#e5e7eb; min-height:100vh; display:grid; place-items:center; padding:24px }
+    .wrap{ display:grid; grid-template-columns:1.2fr 1fr; gap:28px; max-width:1100px; width:100% }
+    .hero{ background:linear-gradient(180deg, rgba(148,163,184,.08), rgba(148,163,184,.02)); border:1px solid rgba(148,163,184,.16); border-radius:16px; padding:28px }
+  .hero h1{ font-size:28px; margin:0 0 8px; background:linear-gradient(90deg,#fff,#c7d2fe 60%,#93c5fd); background-clip:text; -webkit-background-clip:text; -webkit-text-fill-color:transparent }
+    .hero p{ color:var(--muted); margin:0 0 18px }
+    .badges{ display:flex; gap:8px; flex-wrap:wrap; margin-top:6px }
+    .badge{ font-size:11px; color:#e2e8f0; border:1px solid rgba(148,163,184,.2); background:rgba(148,163,184,.06); padding:4px 8px; border-radius:999px }
+    .cta{ margin-top:16px; color:#93c5fd; font-size:13px }
+    .card{ background:linear-gradient(180deg, rgba(148,163,184,.10), rgba(148,163,184,.03)); border:1px solid rgba(148,163,184,.16); border-radius:16px; padding:24px }
+    .logo{ display:flex; align-items:center; gap:10px; margin-bottom:18px }
+    .dot{ width:10px; height:10px; border-radius:50%; background:linear-gradient(135deg,#60a5fa,#a78bfa) }
+    label{ display:block; font-size:13px; color:#cbd5e1; margin:12px 0 6px }
+    .field{ position:relative }
+    input[type=email],input[type=password]{ width:100%; background:#0b1220; border:1px solid rgba(148,163,184,.25); color:#e5e7eb; border-radius:10px; padding:12px 40px 12px 12px; font-size:14px; outline:none; transition:border .2s }
+    input:focus{ border-color:var(--ring); box-shadow:0 0 0 3px rgba(96,165,250,.15) }
+    .toggle{ position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; color:#93c5fd; font-size:12px; cursor:pointer }
+    .row{ display:flex; align-items:center; justify-content:space-between; margin-top:10px }
+    .row a{ color:#93c5fd; text-decoration:none; font-size:12px }
+    .row a:hover{ text-decoration:underline }
+    .btn{ width:100%; margin-top:16px; background:linear-gradient(90deg,var(--primary),var(--accent)); border:none; color:#fff; padding:12px 14px; border-radius:10px; font-weight:700; cursor:pointer; transition:transform .12s ease,opacity .12s ease }
+    .btn:disabled{ opacity:.6; cursor:not-allowed }
+    .btn:hover{ transform:translateY(-1px) }
+    .alert{ display:none; margin-bottom:10px; padding:10px 12px; border-radius:10px; font-size:13px }
+    .alert.show{ display:block }
+    .alert.error{ background:rgba(239,68,68,.12); border:1px solid rgba(239,68,68,.3); color:#fecaca }
+    .alert.success{ background:rgba(16,185,129,.12); border:1px solid rgba(16,185,129,.3); color:#bbf7d0 }
+    .divider{ text-align:center; color:#94a3b8; font-size:12px; margin:14px 0; position:relative }
+    .divider:before,.divider:after{ content:""; position:absolute; top:50%; width:40%; height:1px; background:rgba(148,163,184,.2) }
+    .divider:before{ left:0 } .divider:after{ right:0 }
+    .muted{ color:#94a3b8; font-size:12px; margin-top:10px }
+    .sso{ display:flex; gap:10px }
+    .sso button{ flex:1; background:#0b1220; border:1px solid rgba(148,163,184,.25); color:#e5e7eb; border-radius:10px; padding:10px; font-size:13px; cursor:not-allowed; opacity:.7 }
+    @media (max-width: 900px){ .wrap{ grid-template-columns:1fr } .hero{ order:2 } }
+  </style>
 </head>
+<body>
+  <div class="wrap" role="main">
+    <section class="hero" aria-labelledby="welcome">
+      <div class="logo"><span class="dot" aria-hidden="true"></span><strong>MapMyStandards</strong></div>
+      <h1 id="welcome">Welcome back</h1>
+      <p>Sign in to access your AI-powered accreditation workspace: Standards Graph, Evidence Mapping, Risk Insights, and Narrative Reports.</p>
+      <div class="badges">
+        <span class="badge">Secure session cookies</span>
+        <span class="badge">No tokens to manage</span>
+        <span class="badge">SSO-ready</span>
+      </div>
+      <div class="cta">Need an account? <a href="https://platform.mapmystandards.ai/trial-signup-flow.html" style="color:#93c5fd">Start a free trial</a>.</div>
+    </section>
+    <section class="card" aria-label="Sign in form">
+      <h2 style="margin:0 0 12px">Sign in to your account</h2>
+      <div id="errorMessage" class="alert" role="alert"></div>
+      <div id="successMessage" class="alert" role="status"></div>
+      <form id="loginForm" novalidate>
+        <label for="email">Email</label>
+        <div class="field"><input type="email" id="email" name="email" autocomplete="username" required placeholder="you@example.edu" aria-required="true"></div>
+        <label for="password">Password</label>
+        <div class="field">
+          <input type="password" id="password" name="password" autocomplete="current-password" required placeholder="Enter your password" aria-required="true">
+          <button type="button" id="togglePwd" class="toggle" aria-controls="password" aria-label="Show password">Show</button>
+        </div>
+        <div class="row">
+          <label style="display:inline-flex;gap:8px;align-items:center"><input type="checkbox" id="remember" name="remember"><span>Remember me</span></label>
+          <a href="/forgot-password.html">Forgot password?</a>
+        </div>
+        <button type="submit" class="btn" id="loginButton"><span id="buttonText">Sign In</span></button>
+        <div class="divider">or continue with</div>
+        <div class="sso">
+          <button type="button" aria-disabled="true" title="Coming soon">Google</button>
+          <button type="button" aria-disabled="true" title="Coming soon">Microsoft</button>
+        </div>
+        <p class="muted">By continuing you agree to our <a href="/terms" style="color:#93c5fd">Terms</a> and <a href="/privacy" style="color:#93c5fd">Privacy</a>.</p>
+      </form>
+    </section>
+  </div>
+
+  <script src="/js/config.js"></script>
+  <script>
+    const API_BASE_URL = (window.MMS_CONFIG && window.MMS_CONFIG.API_BASE_URL) || '/api';
+    const errEl = document.getElementById('errorMessage');
+    const okEl = document.getElementById('successMessage');
+    function showError(message){ errEl.textContent = message; errEl.className = 'alert error show'; }
+    function showSuccess(message){ okEl.textContent = message; okEl.className = 'alert success show'; }
+    function setLoading(loading){ const b=document.getElementById('loginButton'); const t=document.getElementById('buttonText'); b.disabled=!!loading; t.textContent = loading?'Signing in…':'Sign In'; }
+
+    document.getElementById('togglePwd').addEventListener('click', ()=>{
+      const input = document.getElementById('password');
+      const btn = document.getElementById('togglePwd');
+      const vis = input.getAttribute('type') === 'password' ? 'text' : 'password';
+      input.setAttribute('type', vis);
+      btn.textContent = vis === 'password' ? 'Show' : 'Hide';
+      btn.setAttribute('aria-label', vis === 'password' ? 'Show password' : 'Hide password');
+    });
+
+    document.getElementById('loginForm').addEventListener('submit', async (e)=>{
+      e.preventDefault(); errEl.className='alert'; okEl.className='alert';
+      const fd = new FormData(e.currentTarget);
+      const email = fd.get('email'); const password = fd.get('password'); const remember = fd.get('remember')==='on';
+      if (!email || !password) { showError('Please enter your email and password.'); return; }
+      setLoading(true);
+      try{
+        let response = await fetch(`${API_BASE_URL}/api/auth/login`, { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify({ email, password, rememberMe: remember })});
+        if (response.status === 404){
+          response = await fetch(`${API_BASE_URL}/auth/login`, { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify({ email, password, rememberMe: remember })});
+        }
+        const result = await response.json().catch(()=>({}));
+        if (response.ok && (result.success || result.access_token || (result.data && result.data.access_token))){
+          showSuccess('Login successful! Redirecting…');
+          const params = new URLSearchParams(window.location.search);
+          const ret = params.get('return');
+          let dest = '/ai-dashboard';
+          if (ret){
+            try { dest = (new URL(ret, window.location.origin)).toString(); } catch(_) { /* ignore invalid return */ }
+          }
+          setTimeout(()=>{ window.location.href = dest; }, 500);
+        } else {
+          showError((result && (result.message || result.detail)) || 'Invalid email or password');
+          setLoading(false);
+        }
+      }catch(err){
+        if (email === 'demo@example.com' && password === 'demo123'){
+          showSuccess('Demo login successful! Redirecting…');
+          const params = new URLSearchParams(window.location.search);
+          const ret = params.get('return');
+          const dest = ret ? (new URL(ret, window.location.origin)).toString() : '/ai-dashboard';
+          setTimeout(()=>{ window.location.href = dest; }, 500);
+        } else {
+          showError('Unable to connect to server. Please try again.');
+          setLoading(false);
+        }
+      }
+    });
+  </script>
 </body>
-        </div>
-        
-        <div class="error-message" id="errorMessage"></div>
-        <div class="success-message" id="successMessage"></div>
-        
-        <div class="demo-info">
-            <strong>Demo Account:</strong><br>
-            Email: demo@example.com<br>
-            Password: demo123
-        </div>
-        
-        <form id="loginForm">
-            <div class="form-group">
-                <label for="email">Email Address</label>
-                <input type="email" id="email" name="email" required placeholder="you@example.com">
-            </div>
-            
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password" required placeholder="Enter your password">
-            </div>
-            
-            <div class="remember-forgot">
-                <div class="remember-me">
-                    <input type="checkbox" id="remember" name="remember">
-                    <label for="remember" style="margin: 0;">Remember me</label>
-                </div>
-                <a href="/forgot-password.html" class="forgot-password">Forgot password?</a>
-            </div>
-            
-            <button type="submit" class="btn" id="loginButton">
-                <span id="buttonText">Sign In</span>
-                <span id="buttonLoader" class="loading" style="display: none;"></span>
-            </button>
-        </form>
-        
-        <div class="divider">or</div>
-        
-        <div class="signup-link">
-            Don't have an account? <a href="https://platform.mapmystandards.ai/trial-signup-flow.html">Start Free Trial</a>
-        </div>
-    </div>
-    <script src="/js/config.js"></script>
-    <script>
-    // API configuration
-    const API_BASE_URL = (window.MMS_CONFIG && window.MMS_CONFIG.API_BASE_URL) || 'https://api.mapmystandards.ai';
-
-        // Helper functions
-        function showError(message) {
-            const errorDiv = document.getElementById('errorMessage');
-            errorDiv.textContent = message;
-            errorDiv.classList.add('show');
-            setTimeout(() => errorDiv.classList.remove('show'), 5000);
-        }
-
-        function showSuccess(message) {
-            const successDiv = document.getElementById('successMessage');
-            successDiv.textContent = message;
-            successDiv.classList.add('show');
-        }
-
-        function setLoading(loading) {
-            const button = document.getElementById('loginButton');
-            const buttonText = document.getElementById('buttonText');
-            const buttonLoader = document.getElementById('buttonLoader');
-
-            if (loading) {
-                button.disabled = true;
-                buttonText.style.display = 'none';
-                buttonLoader.style.display = 'inline-block';
-            } else {
-                button.disabled = false;
-                buttonText.style.display = 'inline';
-                buttonLoader.style.display = 'none';
-            }
-        }
-
-        // Handle form submission
-        document.getElementById('loginForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-
-            const formData = new FormData(this);
-            const loginData = {
-                email: formData.get('email'),
-                password: formData.get('password'),
-                remember: formData.get('remember') === 'on'
-            };
-
-            setLoading(true);
-
-            try {
-                // Try session auth first (sets httpOnly cookies at /api/auth/login)
-                let response = await fetch(`${API_BASE_URL}/api/auth/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: loginData.email, password: loginData.password, rememberMe: loginData.remember }),
-                    credentials: 'include'
-                });
-
-                // Fallback to enhanced auth if session route not found
-                if (response.status === 404) {
-                    response = await fetch(`${API_BASE_URL}/auth/login`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email: loginData.email, password: loginData.password, rememberMe: loginData.remember }),
-                        credentials: 'include'
-                    });
-                }
-
-                const result = await response.json().catch(() => ({}));
-
-                // Accept success based on HTTP + payload; rely on cookies set by server
-                if (response.ok && (result.success || result.access_token || (result.data && result.data.access_token))) {
-                    showSuccess('Login successful! Redirecting...');
-                    const params = new URLSearchParams(window.location.search);
-                    const ret = params.get('return');
-                    const dest = ret ? (new URL(ret, window.location.origin)).toString() : 'https://platform.mapmystandards.ai/ai-dashboard';
-                    setTimeout(() => { window.location.href = dest; }, 800);
-                } else {
-                    showError((result && (result.message || result.detail)) || 'Invalid email or password');
-                    setLoading(false);
-                }
-            } catch (error) {
-                console.error('Login error:', error);
-                // Demo fallback: simulate cookie-based session by redirecting without storing tokens client-side
-                if (loginData.email === 'demo@example.com' && loginData.password === 'demo123') {
-                    showSuccess('Demo login successful! Redirecting...');
-                    const params = new URLSearchParams(window.location.search);
-                    const ret = params.get('return');
-                    const dest = ret ? (new URL(ret, window.location.origin)).toString() : 'https://platform.mapmystandards.ai/ai-dashboard';
-                    setTimeout(() => { window.location.href = dest; }, 800);
-                } else {
-                    showError('Unable to connect to server. Please try again.');
-                    setLoading(false);
-                }
-            }
-        });
-
-        // Auto-fill demo credentials when clicking demo info
-        document.querySelector('.demo-info').addEventListener('click', function() {
-            document.getElementById('email').value = 'demo@example.com';
-            document.getElementById('password').value = 'demo123';
-        });
-    </script>
-</body>
-        <script src="/js/config.js"></script>
-        <script>
-            const API_BASE_URL = (window.MMS_CONFIG && window.MMS_CONFIG.API_BASE_URL) || 'https://api.mapmystandards.ai';
+</html>
