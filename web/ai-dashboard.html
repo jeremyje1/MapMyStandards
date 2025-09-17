@@ -579,8 +579,6 @@
     function startTypedUpload(docType){ __selectedDocType = docType || null; document.getElementById('evidenceFile').click(); }
 
     async function loadDashboard() {
-            const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
-            
             try {
                 showLoading();
                 
@@ -601,7 +599,7 @@
                         if (ob && ob.doc_types) {
                             payload.document_types = Array.isArray(ob.doc_types) ? ob.doc_types : String(ob.doc_types).split(',').map(s=>s.trim()).filter(Boolean);
                         }
-                        if (Object.keys(payload).length > 0 && token) {
+                        if (Object.keys(payload).length > 0) {
                             await saveSettings(payload);
                             await fetchSettings();
                             sessionStorage.setItem('a3e_onboarding_persisted', '1');
@@ -610,7 +608,7 @@
                 } catch (e) { console.warn('Onboarding-to-settings bridge failed', e); }
 
                 // Load dashboard overview
-        const response = await authFetch(`/api/user/intelligence-simple/dashboard/overview`);
+    const response = await authFetch(`/api/user/intelligence-simple/dashboard/overview`);
 
                 if (!response.ok) {
                     throw new Error(`Dashboard load failed: ${response.status}`);
@@ -635,7 +633,6 @@
             const badge = document.getElementById('aiProvidersBadge');
             const inline = document.getElementById('aiProvidersInline');
             if (!badge && !inline) return;
-            const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
             try {
                 const res = await authFetch(`/api/v1/ai/status`);
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -659,8 +656,6 @@
         }
 
     async function loadMetrics() {
-            const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
-            
             try {
         const response = await authFetch(`/api/user/intelligence-simple/metrics/summary`);
 
@@ -675,7 +670,6 @@
 
         // Risk Overview aggregate
         async function refreshRiskOverview(){
-            const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
             const avgRiskEl = document.getElementById('roAvgRisk');
             const avgTrustEl = document.getElementById('roAvgTrust');
             const distEl = document.getElementById('roDist');
@@ -795,7 +789,6 @@
             const count = files.length || 0;
             if (!count) return;
 
-            const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
             const single = count === 1;
             const formData = new FormData();
             if (single) {
@@ -808,11 +801,8 @@
             try {
                 showAnalysisLoading();
 
-                const response = await fetch(`${API_BASE}/api/user/intelligence-simple/${single ? 'evidence/analyze' : 'evidence/analyze/bulk'}`, {
+                const response = await authFetch(`/api/user/intelligence-simple/${single ? 'evidence/analyze' : 'evidence/analyze/bulk'}`, {
                     method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    },
                     body: formData
                 });
 
@@ -877,8 +867,6 @@
     }
 
     async function loadStandardsGraph() {
-            const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
-            
             try {
                 document.getElementById('standardsGraphSection').classList.remove('hidden');
         const acc = (userSettings && userSettings.settings && userSettings.settings.primary_accreditor) ? `?accreditor=${encodeURIComponent(userSettings.settings.primary_accreditor)}` : '';
@@ -924,17 +912,10 @@
         }
 
         async function loadGapAnalysis() {
-            const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
-            
             try {
                 document.getElementById('gapAnalysisSection').classList.remove('hidden');
                 
-                const response = await fetch(`${API_BASE}/api/user/intelligence-simple/compliance/gaps`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
+                const response = await authFetch(`/api/user/intelligence-simple/compliance/gaps`);
 
                 if (!response.ok) {
                     throw new Error(`Gap analysis failed: ${response.status}`);
@@ -1135,11 +1116,10 @@
                     const spanText = (sel || '').trim();
                     if (!spanText) { alert('Select text in the preview pane first.'); return; }
                     try {
-                        const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
-                        const res = await fetch(`${API_BASE}/api/user/intelligence-simple/evidence/annotate`, {
-                            method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ filename: data.filename, standard_id: standard, span: spanText })
-                        });
+                        const res = await authFetch(`/api/user/intelligence-simple/evidence/annotate`, {
+                                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ filename: data.filename, standard_id: standard, span: spanText })
+                            });
                         if (res.ok) {
                             e.currentTarget.textContent = 'Added';
                             setTimeout(() => e.currentTarget.textContent = 'Add selected text', 1200);
@@ -1164,10 +1144,9 @@
             const exportBtn = document.getElementById('exportReportBtn');
             exportBtn.onclick = async () => {
                 try {
-                    const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
-                    const res = await fetch(`${API_BASE}/api/user/intelligence-simple/evidence/report`, {
+                    const res = await authFetch(`/api/user/intelligence-simple/evidence/report`, {
                         method: 'POST',
-                        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ filename: data.filename, analysis: data.analysis })
                     });
                     if (!res.ok) throw new Error('Failed to generate report');
@@ -1184,10 +1163,9 @@
             const exportCsvBtn = document.getElementById('exportCsvBtn');
             exportCsvBtn.onclick = async () => {
                 try {
-                    const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
-                    const res = await fetch(`${API_BASE}/api/user/intelligence-simple/evidence/report.csv`, {
+                    const res = await authFetch(`/api/user/intelligence-simple/evidence/report.csv`, {
                         method: 'POST',
-                        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ filename: data.filename, analysis: data.analysis })
                     });
                     if (!res.ok) throw new Error('Failed to generate CSV');
@@ -1325,9 +1303,8 @@
                         statusEl.textContent = 'Finding equivalents…';
                         resEl.innerHTML = '';
                         try {
-                            const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
-                            const url = `${API_BASE}/api/user/intelligence-simple/standards/cross-accreditor-matches?source=${encodeURIComponent(data.accreditor)}&target=${encodeURIComponent(target)}&threshold=0.3&top_k=5`;
-                            const r = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+                            const url = `/api/user/intelligence-simple/standards/cross-accreditor-matches?source=${encodeURIComponent(data.accreditor)}&target=${encodeURIComponent(target)}&threshold=0.3&top_k=5`;
+                            const r = await authFetch(url);
                             if (!r.ok) throw new Error(`HTTP ${r.status}`);
                             const out = await r.json();
                             const matches = out.matches || [];
@@ -1404,8 +1381,7 @@
                     let accreditorsByStandard = {};
                     (async () => {
                         try {
-                            const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
-                            const emRes = await fetch(`${API_BASE}/api/user/intelligence-simple/standards/evidence-map`, { headers: { 'Authorization': `Bearer ${token}` } });
+                            const emRes = await authFetch(`/api/user/intelligence-simple/standards/evidence-map`);
                             if (emRes.ok) {
                                 const em = await emRes.json();
                                 evidenceMap = em && em.mapping ? em.mapping : {};
@@ -1548,8 +1524,7 @@
                     const q = (searchInput.value || '').trim();
                     if (!q) { searchOut.innerHTML = ''; return; }
                     try {
-                        const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
-                        const res = await fetch(`${API_BASE}/api/user/intelligence-simple/standards/search?q=${encodeURIComponent(q)}`, { headers: { 'Authorization': `Bearer ${token}` } });
+                        const res = await authFetch(`/api/user/intelligence-simple/standards/search?q=${encodeURIComponent(q)}`);
                         if (!res.ok) throw new Error(`HTTP ${res.status}`);
                         const data = await res.json();
                         searchOut.innerHTML = (data.results || []).map(r => `
@@ -1579,8 +1554,7 @@
                 genBtn.addEventListener('click', async () => {
                     narOut.innerHTML = '<div class="text-gray-500 text-sm">Generating narrative…</div>';
                     try {
-                        const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
-                        const res = await fetch(`${API_BASE}/api/user/intelligence-simple/narrative/generate`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: '{}' });
+                        const res = await authFetch(`/api/user/intelligence-simple/narrative/generate`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
                         if (!res.ok) throw new Error(`HTTP ${res.status}`);
                         const data = await res.json();
                         narOut.innerHTML = data.html || '<div class="text-sm text-gray-600">No content</div>';
@@ -1595,9 +1569,8 @@
             if (exportDocxBtn && narOut) {
                 exportDocxBtn.addEventListener('click', async () => {
                     try {
-                        const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
                         const payload = { html: narOut.innerHTML };
-                        const res = await fetch(`${API_BASE}/api/user/intelligence-simple/narrative/export.docx`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                        const res = await authFetch(`/api/user/intelligence-simple/narrative/export.docx`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                         if (!res.ok) throw new Error(`HTTP ${res.status}`);
                         const blob = await res.blob();
                         const url = window.URL.createObjectURL(blob);
@@ -1617,8 +1590,7 @@
             const loadRisk = async () => {
                 if (!riskOut) return;
                 try {
-                    const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
-                    const res = await fetch(`${API_BASE}/api/user/intelligence-simple/risk/factors`, { headers: { 'Authorization': `Bearer ${token}` } });
+                    const res = await authFetch(`/api/user/intelligence-simple/risk/factors`);
                     if (!res.ok) throw new Error(`HTTP ${res.status}`);
                     const data = await res.json();
                     const weights = data.weights || {};
@@ -1644,8 +1616,7 @@
                 editWeightsLink.addEventListener('click', async (e) => {
                     e.preventDefault();
                     try {
-                        const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
-                        const res = await fetch(`${API_BASE}/api/user/intelligence-simple/risk/weights`, { headers: { 'Authorization': `Bearer ${token}` } });
+                        const res = await authFetch(`/api/user/intelligence-simple/risk/weights`);
                         const data = await res.json();
                         const weights = data.weights || {};
                         const newVals = {};
@@ -1655,7 +1626,7 @@
                             const f = parseFloat(nv);
                             if (!isNaN(f)) newVals[k] = f;
                         }
-                        const save = await fetch(`${API_BASE}/api/user/intelligence-simple/risk/weights`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ weights: newVals }) });
+                        const save = await authFetch(`/api/user/intelligence-simple/risk/weights`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ weights: newVals }) });
                         if (save.ok) loadRisk();
                     } catch (_) {}
                 });
@@ -1737,14 +1708,8 @@
 
         // Light refresh of overview card (no loading state flicker)
         async function refreshOverview() {
-            const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
             try {
-                const response = await fetch(`${API_BASE}/api/user/intelligence-simple/dashboard/overview`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
+                const response = await authFetch(`/api/user/intelligence-simple/dashboard/overview`);
                 if (response.ok) {
                     const data = await response.json();
                     displayDashboard(data);
@@ -1817,10 +1782,10 @@
         }
 
     async function saveReview(filename, standard_id, payload = {}) {
-            const res = await fetch(`${API_BASE}/api/user/intelligence-simple/evidence/review`, {
+            const res = await authFetch(`/api/user/intelligence-simple/evidence/review`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ filename, standard_id, ...payload })
+                body: JSON.stringify({ filename, standard_id, ...payload })
             });
             if (!res.ok) throw new Error('Failed to save review');
             return res.json();
@@ -1878,14 +1843,13 @@
         }
 
         async function openMappingDetails(standardId) {
-            const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
             const modal = document.getElementById('mappingDetailsModal');
             const content = document.getElementById('mappingDetailsContent');
             modal.classList.remove('hidden');
             modal.classList.add('flex');
             content.innerHTML = `<div class='text-center py-6 text-gray-500'>Loading…</div>`;
             try {
-                const res = await fetch(`${API_BASE}/api/user/intelligence-simple/standards/detail?standard_id=${encodeURIComponent(standardId)}`, { headers: { 'Authorization': `Bearer ${token}` } });
+                const res = await authFetch(`/api/user/intelligence-simple/standards/detail?standard_id=${encodeURIComponent(standardId)}`);
                 if (res.ok) {
                     const d = await res.json();
                     content.innerHTML = `
@@ -1994,12 +1958,11 @@
 
         // Crosswalk loader
         async function loadCrosswalk(){
-            const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
             document.getElementById('crosswalkSection').classList.remove('hidden');
             const table = document.getElementById('crosswalkTable');
             table.innerHTML = '<tbody><tr><td class="py-8 text-gray-600">Loading crosswalk…</td></tr></tbody>';
             try {
-                const res = await fetch(`${API_BASE}/api/user/intelligence-simple/evidence/crosswalk`, { headers: { 'Authorization': `Bearer ${token}` } });
+                const res = await authFetch(`/api/user/intelligence-simple/evidence/crosswalk`);
                 if (!res.ok) throw new Error('Failed');
                 const data = await res.json();
                 const headers = ['Evidence'].concat(data.standards);
@@ -2079,7 +2042,6 @@
         <script>
 // Minimal auth indicator + dropdown + backoff
 (function(){
-    const API_BASE = 'https://api.mapmystandards.ai';
     const indicator = document.getElementById('authIndicator');
     const emailSpan = document.getElementById('userEmail');
     const authMenuBtn = document.getElementById('authMenuButton');
@@ -2098,7 +2060,9 @@
         let attempt = 0, delay = 500;
         while (true) {
             try {
-                const res = await fetch(url, opts);
+                const fullUrl = (typeof url === 'string') ? buildApiUrl(url) : url;
+                const merged = Object.assign({ credentials: 'include' }, opts);
+                const res = await fetch(fullUrl, merged);
                 if (res.status >= 500 && res.status <= 504 && attempt < retries) {
                     await new Promise(r=>setTimeout(r, delay));
                     attempt++; delay = Math.min(delay*2, 3000);
@@ -2115,7 +2079,7 @@
 
     async function probeSession(){
         try {
-            const r = await backoffFetch(`${API_BASE}/api/auth/me`, { credentials: 'include' }, 3);
+            const r = await backoffFetch(`/api/auth/me`, { credentials: 'include' }, 3);
             const j = await r.json().catch(()=>({}));
             if (j && j.ok) {
                 indicator.textContent = 'Session: active';
@@ -2142,9 +2106,9 @@
         authMenuPanel.classList.add('hidden');
         try {
             // Try session refresh, then enhanced as fallback
-            let r = await backoffFetch(`${API_BASE}/api/auth/refresh`, { method: 'POST', credentials: 'include' }, 2);
+            let r = await backoffFetch(`/api/auth/refresh`, { method: 'POST', credentials: 'include' }, 2);
             if (!r.ok && r.status === 404) {
-                r = await backoffFetch(`${API_BASE}/auth/refresh`, { method: 'POST', credentials: 'include' }, 2);
+                r = await backoffFetch(`/auth/refresh`, { method: 'POST', credentials: 'include' }, 2);
             }
             if (r.ok) {
                 await probeSession();
@@ -2157,7 +2121,7 @@
     authLogoutBtn.addEventListener('click', async ()=>{
         authMenuPanel.classList.add('hidden');
         try {
-            await backoffFetch(`${API_BASE}/api/auth/logout`, { method: 'POST', credentials: 'include' }, 2);
+            await backoffFetch(`/api/auth/logout`, { method: 'POST', credentials: 'include' }, 2);
         } catch (_) {}
         // Clear local tokens for compatibility paths
         ['access_token','auth_token','token','a3e_api_key'].forEach(k=>localStorage.removeItem(k));
