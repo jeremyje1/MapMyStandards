@@ -465,10 +465,13 @@
                         const mapped = (result && result.analysis && result.analysis.standards_mapped) || 0;
                         addToRecentUploads({ filename: result.filename || selectedFiles[0].name, file_size: selectedFiles[0].size, status: 'complete', mapped });
                     } else {
-                        console.error('Analyze failed for', selectedFiles[0].name, await response.text());
+                        const errorText = await response.text();
+                        console.error('Analyze failed for', selectedFiles[0].name, errorText);
+                        showToast(`Failed to analyze ${selectedFiles[0].name}. Please try again.`, 'error');
                     }
                 } catch (err) {
                     console.error('Error analyzing', selectedFiles[0].name, err);
+                    showToast(`Error uploading ${selectedFiles[0].name}. Please check your connection and try again.`, 'error');
                 }
             } else {
                 const formData = new FormData();
@@ -491,10 +494,13 @@
                             }
                         }
                     } else {
-                        console.error('Bulk analyze failed', await response.text());
+                        const errorText = await response.text();
+                        console.error('Bulk analyze failed', errorText);
+                        showToast('Failed to analyze some files. Please try again.', 'error');
                     }
                 } catch (err) {
                     console.error('Error in bulk analyze', err);
+                    showToast('Error uploading files. Please check your connection and try again.', 'error');
                 }
             }
 
@@ -517,11 +523,34 @@
                 try { localStorage.setItem('mms:toast', `Uploads complete. Metrics refreshed.`); } catch(_) {}
             }
 
-            alert(`Uploaded ${uploadedCount} of ${selectedFiles.length} file(s)`);
+            // Show toast instead of alert
+            if (deltaMapped > 0) {
+                showToast(`Analysis complete: ${deltaMapped} standards mapped`);
+            } else {
+                showToast(`Uploaded ${uploadedCount} of ${selectedFiles.length} file(s)`);
+            }
+            
             // Refresh Recent Uploads from evidence map
             try { await refreshRecentUploadsFromEvidenceMap(); } catch(_) {}
             clearFiles();
             progressContainer.style.display = 'none';
+        }
+
+        // Show toast notification
+        function showToast(message, type = 'success') {
+            const div = document.createElement('div');
+            div.textContent = message;
+            div.style.position = 'fixed';
+            div.style.right = '16px';
+            div.style.bottom = '16px';
+            div.style.background = type === 'error' ? '#ef4444' : '#0ea5e9';
+            div.style.color = '#fff';
+            div.style.padding = '10px 14px';
+            div.style.borderRadius = '8px';
+            div.style.boxShadow = '0 6px 16px rgba(0,0,0,0.2)';
+            div.style.zIndex = '9999';
+            document.body.appendChild(div);
+            setTimeout(()=>{ div.remove(); }, type === 'error' ? 6000 : 4500);
         }
 
         // Add uploaded file to recent uploads list
