@@ -376,6 +376,10 @@
                 <label class="filter-label">Risk & Trust</label>
                 <button id="btnRefreshRisk" class="filter-select" style="cursor:pointer;">Refresh Risk</button>
             </div>
+            <div class="filter-group">
+                <label class="filter-label">Selection</label>
+                <button id="btnClearSelection" class="filter-select" style="cursor:pointer;">Clear selection</button>
+            </div>
         </div>
 
         <!-- Content Area -->
@@ -425,7 +429,7 @@
                     <div style="text-align:center;padding:3rem;color:#ef4444;">
                         <h3>${message}</h3>
                         <p>Please log in and try again.</p>
-                        <p><a href="/login" style="color:#2563eb;text-decoration:underline;">Go to Login</a></p>
+                        <p><a href="/login-platform.html" style="color:#2563eb;text-decoration:underline;">Go to Login</a></p>
                     </div>
                 `;
             };
@@ -437,18 +441,19 @@
                 if (resp.status === 401) { statusError('Authentication required'); return; }
                 if (!resp.ok) { throw new Error(`HTTP ${resp.status}`); }
                 const data = await resp.json();
-                if (data && data.success && Array.isArray(data.accreditors)) {
-                    // Normalize to expected shape
-                    accreditors = data.accreditors.map(a => ({
-                        id: a.accreditor || a.id || a.acronym,
-                        name: a.name || a.accreditor || a.id,
-                        acronym: (a.accreditor || a.id || '').toUpperCase()
-                    }));
-                } else if (Array.isArray(data)) {
-                    accreditors = data;
-                } else {
-                    throw new Error('Unexpected response');
-                }
+                // Accept multiple shapes: {accreditors:[]}, {data:{accreditors:[]}}, {data:[]}, []
+                let list = null;
+                if (Array.isArray(data?.accreditors)) list = data.accreditors;
+                else if (Array.isArray(data?.data?.accreditors)) list = data.data.accreditors;
+                else if (Array.isArray(data?.data)) list = data.data;
+                else if (Array.isArray(data)) list = data;
+                if (!Array.isArray(list)) throw new Error('Unexpected response');
+                // Normalize to expected shape
+                accreditors = list.map(a => ({
+                    id: a.accreditor || a.id || a.acronym,
+                    name: a.name || a.accreditor || a.id || 'Unknown',
+                    acronym: ((a.accreditor || a.id || a.acronym || '') + '').toUpperCase()
+                }));
                 populateAccreditorSelect();
                 populateCompareSelect();
                 showAccreditorSelection();
@@ -528,27 +533,30 @@
                     document.getElementById('contentArea').innerHTML = `
                         <div style="text-align:center;padding:3rem;color:#ef4444;">
                             <h3>Authentication required</h3>
-                            <p><a href="/login" style="color:#2563eb;text-decoration:underline;">Log in</a> to view standards.</p>
+                            <p><a href="/login-platform.html" style="color:#2563eb;text-decoration:underline;">Log in</a> to view standards.</p>
                         </div>
                     `;
                     return;
                 }
                 if (!resp.ok) { throw new Error(`HTTP ${resp.status}`); }
                 const data = await resp.json();
-                if (data && data.success) {
-                    currentStandards = data.standards || data.data?.standards || [];
-                    currentMode = 'browse';
-                    updateCategoryOptions(currentStandards);
-                    displayStandards({
-                        accreditor: {
-                            name: (data.accreditor?.name) || (data.data?.accreditor?.name) || accreditorId.toUpperCase(),
-                            acronym: accreditorId.toUpperCase()
-                        },
-                        standards: currentStandards
-                    });
-                } else {
-                    throw new Error('Failed to load standards');
-                }
+                // Accept response shapes: {success, standards}, {data:{standards}}, {standards:[]}, {data:[]}
+                let standards = [];
+                if (Array.isArray(data?.standards)) standards = data.standards;
+                else if (Array.isArray(data?.data?.standards)) standards = data.data.standards;
+                else if (Array.isArray(data?.data)) standards = data.data;
+                else if (data && data.success) standards = data.standards || data.data?.standards || [];
+                currentStandards = standards || [];
+                currentMode = 'browse';
+                updateCategoryOptions(currentStandards);
+                const accName = (data?.accreditor?.name) || (data?.data?.accreditor?.name) || accreditorId.toUpperCase();
+                displayStandards({
+                    accreditor: {
+                        name: accName,
+                        acronym: accreditorId.toUpperCase()
+                    },
+                    standards: currentStandards
+                });
             } catch (error) {
                 console.error('Error loading standards:', error);
                 document.getElementById('contentArea').innerHTML = `
@@ -578,7 +586,7 @@
             }
         }
 
-        function displayStandards(data) {
+        async function displayStandards(data) {
             const accreditor = data.accreditor;
             const standards = data.standards;
 
@@ -599,7 +607,8 @@
             } else {
                 html += '<div class="standards-grid">';
                 
-                const selectedSet = new Set(getSelectedStandards());
+                const selected = await getSelectedStandards();
+                const selectedSet = new Set(selected);
                 standards.forEach(standard => {
                     const stdId = (standard.id || standard.code || '').toString();
                     const isSelected = selectedSet.has(stdId);
@@ -662,13 +671,22 @@
                 const headers = window.mmsAPI?.getHeaders(true) || { 'Content-Type': 'application/json' };
                 const searchAccreditor = (document.getElementById('accreditorSelect').value || '').toUpperCase();
                 const category = document.getElementById('categorySelect').value || '';
-                const params = new URLSearchParams({ q });
+                const params = new URLSearchParams({ query: q, q });
                 if (searchAccreditor) params.set('accreditor', searchAccreditor);
                 if (category) params.set('category', category);
-                    const resp = await authFetch(`/api/user/intelligence-simple/standards/search?${params.toString()}`, { headers });
+                const resp = await authFetch(`/api/user/intelligence-simple/standards/search?${params.toString()}`, { headers });
                 if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
                 const data = await resp.json();
-                searchResults = Array.isArray(data?.results) ? data.results : [];
+                const results = Array.isArray(data?.results)
+                    ? data.results
+                    : Array.isArray(data?.data?.results)
+                        ? data.data.results
+                        : Array.isArray(data?.data)
+                            ? data.data
+                            : Array.isArray(data)
+                                ? data
+                                : [];
+                searchResults = results;
                 currentMode = 'search';
                 // When in search mode, update categories from results (optional)
                 updateCategoryOptions(searchResults.map(r => ({ category: r.category })));
@@ -788,7 +806,16 @@
                             const resp = await authFetch(`/api/user/intelligence-simple/standards/cross-accreditor-matches?${qs.toString()}`, { headers });
                         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
                         const data = await resp.json();
-                        crosswalkCache[key] = Array.isArray(data?.matches) ? data.matches : [];
+                        const matches = Array.isArray(data?.matches)
+                            ? data.matches
+                            : Array.isArray(data?.data?.matches)
+                                ? data.data.matches
+                                : Array.isArray(data?.data)
+                                    ? data.data
+                                    : Array.isArray(data)
+                                        ? data
+                                        : [];
+                        crosswalkCache[key] = matches;
                     }
                     const matches = (crosswalkCache[key] || []).filter(m => m.source_id === id);
                     if (matches.length === 0) {
@@ -808,10 +835,10 @@
                 const r = riskScores[id];
                 if (!r) { panel.style.display = 'block'; panel.innerHTML = '<div style="color:#6b7280;">No risk data yet. Click Refresh Risk.</div>'; return; }
                 const factors = (r.factors || []).map(f => `
-                    <div class=\"risk-row\">
-                        <div>${f.factor}</div>
-                        <div style=\"color:#6b7280;\">w ${f.weight} • n ${f.normalized} • +${f.contribution}</div>
-                    </div>
+                    <div class=\"risk-row\">\
+                        <div>${f.factor_name || f.name || f.factor || 'Factor'}</div>\
+                        <div style=\"color:#6b7280;\">${f.weight!=null?`w ${f.weight}`:''}${f.normalized!=null?` • n ${f.normalized}`:''}${f.contribution!=null?` • +${f.contribution}`:''}</div>\
+                    </div>\
                     <div style=\"font-size:0.8rem;color:#6b7280;margin-bottom:0.25rem;\">${f.description || ''}</div>
                 `).join('');
                 panel.innerHTML = `
@@ -832,7 +859,12 @@
                     const resp = await authFetch('/api/user/intelligence-simple/standards/selection/load', { headers });
                 if (resp.ok) {
                     const data = await resp.json();
-                    return Array.isArray(data.selected) ? data.selected : [];
+                    const sel = Array.isArray(data?.selected)
+                        ? data.selected
+                        : Array.isArray(data?.data?.selected)
+                            ? data.data.selected
+                            : [];
+                    return sel;
                 }
             } catch {}
             try { return JSON.parse(localStorage.getItem('mms:selectedStandards') || '[]'); } catch { return []; }
@@ -846,13 +878,16 @@
                 const headers = window.mmsAPI?.getHeaders(true) || { 'Content-Type': 'application/json' };
                     await authFetch('/api/user/intelligence-simple/standards/selection/save', { method: 'POST', headers, body: JSON.stringify({ selected: unique }) });
             } catch {}
+            try { window.dispatchEvent(new CustomEvent('mms:selected-standards-updated', { detail: { selected: unique } })); } catch {}
         }
 
         async function toggleSelectedStandard(id) {
             if (!id) return;
             const curr = new Set(await getSelectedStandards());
             if (curr.has(id)) curr.delete(id); else curr.add(id);
-            await saveSelectedStandards(Array.from(curr));
+            const updated = Array.from(curr);
+            await saveSelectedStandards(updated);
+            try { window.dispatchEvent(new CustomEvent('mms:selected-standards-updated', { detail: { selected: updated } })); } catch {}
         }
 
         function logout() {
@@ -953,8 +988,9 @@
             }
             const agg = riskAggregate;
             if (!agg) { el.style.display = 'none'; return; }
-            const dist = agg.risk_distribution || {};
-            const avg = typeof agg.average_risk === 'number' ? Math.round(agg.average_risk * 100) : 0;
+            const dist = agg.distribution || agg.risk_distribution || {};
+            const avgRaw = (agg.average != null ? agg.average : agg.average_risk != null ? agg.average_risk : 0);
+            const avg = avgRaw > 1 ? Math.round(avgRaw) : Math.round(avgRaw * 100);
             const cls = avg < 15 ? 'minimal' : avg < 30 ? 'low' : avg < 50 ? 'medium' : avg < 70 ? 'high' : 'critical';
             el.innerHTML = `
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
@@ -974,6 +1010,13 @@
 
         const btnRisk = document.getElementById('btnRefreshRisk');
         if (btnRisk) btnRisk.addEventListener('click', () => { scoreVisibleStandards(); });
+        const btnClear = document.getElementById('btnClearSelection');
+        if (btnClear) btnClear.addEventListener('click', async () => {
+            await saveSelectedStandards([]);
+            const accreditorId = document.getElementById('accreditorSelect').value || 'ALL';
+            const list = currentMode === 'search' ? searchResults : currentStandards;
+            displayStandards({ accreditor: { name: accreditorId.toUpperCase(), acronym: accreditorId.toUpperCase() }, standards: filterByCategory(list) });
+        });
 
         // UX: tutorial banner and tooltips
         (function initUx(){

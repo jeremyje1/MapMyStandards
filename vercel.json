@@ -18,6 +18,28 @@
   ],
   "headers": [
     {
+      "source": "/",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, max-age=0, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/homepage-enhanced.html",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, max-age=0, must-revalidate" }
+      ]
+    },
+    { "source": "/about", "headers": [ { "key": "Cache-Control", "value": "no-cache, no-store, max-age=0, must-revalidate" } ] },
+    { "source": "/about/index.html", "headers": [ { "key": "Cache-Control", "value": "no-cache, no-store, max-age=0, must-revalidate" } ] },
+    { "source": "/services", "headers": [ { "key": "Cache-Control", "value": "no-cache, no-store, max-age=0, must-revalidate" } ] },
+    { "source": "/services/index.html", "headers": [ { "key": "Cache-Control", "value": "no-cache, no-store, max-age=0, must-revalidate" } ] },
+    { "source": "/contact", "headers": [ { "key": "Cache-Control", "value": "no-cache, no-store, max-age=0, must-revalidate" } ] },
+    { "source": "/contact/index.html", "headers": [ { "key": "Cache-Control", "value": "no-cache, no-store, max-age=0, must-revalidate" } ] },
+    { "source": "/privacy-policy", "headers": [ { "key": "Cache-Control", "value": "no-cache, no-store, max-age=0, must-revalidate" } ] },
+    { "source": "/privacy-policy/index.html", "headers": [ { "key": "Cache-Control", "value": "no-cache, no-store, max-age=0, must-revalidate" } ] },
+    { "source": "/user-guide", "headers": [ { "key": "Cache-Control", "value": "no-cache, no-store, max-age=0, must-revalidate" } ] },
+    { "source": "/user-guide/index.html", "headers": [ { "key": "Cache-Control", "value": "no-cache, no-store, max-age=0, must-revalidate" } ] },
+    {
       "source": "/:path*",
       "headers": [
         { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains; preload" },

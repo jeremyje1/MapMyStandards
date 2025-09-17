@@ -50,8 +50,12 @@
                 <h1 class="text-xl font-semibold text-gray-900">MapMyStandards - Org Chart Builder</h1>
                 <nav class="flex items-center gap-4">
                     <a href="https://platform.mapmystandards.ai/ai-dashboard" class="text-gray-600 hover:text-gray-900">Dashboard</a>
+                    <div id="lastSaved" class="text-xs text-gray-500"></div>
                     <button id="saveChart" class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700">
                         Save Chart
+                    </button>
+                    <button id="restoreLocal" class="border px-3 py-2 rounded-md text-sm hover:bg-gray-50">
+                        Restore Local
                     </button>
                 </nav>
             </div>
@@ -205,6 +209,27 @@
         };
         
         const network = new vis.Network(container, data, options);
+
+        // Local persistence helpers
+        function saveLocalChartSnapshot(extra={}){
+            try {
+                const snapshot = {
+                    name: extra.name || 'My Organization Chart',
+                    description: extra.description || '',
+                    nodes: nodes.get(),
+                    edges: edges.get(),
+                    metadata: Object.assign({ saved_with: 'org-chart-builder' }, extra.metadata||{}),
+                    saved_at: new Date().toISOString()
+                };
+                localStorage.setItem('mms:orgChart', JSON.stringify(snapshot));
+                const lbl = document.getElementById('lastSaved');
+                if (lbl) lbl.textContent = `Last saved: ${new Date(snapshot.saved_at).toLocaleString()}`;
+                return snapshot;
+            } catch(_) { return null; }
+        }
+        function loadLocalChartSnapshot(){
+            try { const s = localStorage.getItem('mms:orgChart'); return s ? JSON.parse(s) : null; } catch(_) { return null; }
+        }
         
         // Update parent dropdown
         function updateParentDropdown() {
@@ -332,12 +357,31 @@
                     // Fallback to v1 endpoint if present
                     result = await window.mmsAPI.createOrgChart(chartData);
                 }
+                // Also persist locally for offline resilience
+                saveLocalChartSnapshot(chartData);
                 window.mmsAPI.showSuccess('Organization chart saved successfully!');
                 console.log('Saved chart:', result);
             } catch (error) {
                 console.error('Error saving chart:', error);
-                window.mmsAPI.showError(error);
+                // Fallback: save locally if network/server fails
+                const snap = saveLocalChartSnapshot(chartData);
+                if (snap) {
+                    window.mmsAPI.showSuccess('Saved locally (offline). Will sync when online.');
+                } else {
+                    window.mmsAPI.showError(error);
+                }
             }
+        });
+
+        // Restore from local backup
+        document.getElementById('restoreLocal').addEventListener('click', () => {
+            const local = loadLocalChartSnapshot();
+            if (!local) { window.mmsAPI.showError(new Error('No local backup found')); return; }
+            nodes.clear(); edges.clear();
+            if (Array.isArray(local.nodes)) nodes.add(local.nodes);
+            if (Array.isArray(local.edges)) edges.add(local.edges);
+            updateParentDropdown(); updateStats();
+            window.mmsAPI.showSuccess('Restored from local backup');
         });
         
         async function loadExistingChart() {
@@ -351,6 +395,9 @@
                     if (Array.isArray(c.edges)) edges.add(c.edges);
                     updateParentDropdown();
                     updateStats();
+                    // last saved label
+                    const lbl = document.getElementById('lastSaved');
+                    if (lbl && res.last_updated) lbl.textContent = `Last saved: ${new Date(res.last_updated).toLocaleString()}`;
                     return;
                 }
             } catch (e) {
@@ -367,8 +414,19 @@
                     edges.clear();
                     if (Array.isArray(n)) nodes.add(n);
                     if (Array.isArray(e)) edges.add(e);
+                    updateParentDropdown();
+                    updateStats();
+                    return;
                 }
             } catch (_) {}
+            // Fallback: load local snapshot if present
+            const local = loadLocalChartSnapshot();
+            if (local && (Array.isArray(local.nodes) || Array.isArray(local.edges))) {
+                nodes.clear();
+                edges.clear();
+                if (Array.isArray(local.nodes)) nodes.add(local.nodes);
+                if (Array.isArray(local.edges)) edges.add(local.edges);
+            }
             updateParentDropdown();
             updateStats();
         }

@@ -34,7 +34,7 @@
   const makeLink = (l) => {
     const a = document.createElement('a');
     a.href = origin + l.path;
-    a.textContent = l.text;
+    a.innerHTML = `${l.text} ${l.path==='/standards'||l.path==='/evidence-mapping'?'<span class="mms-sel-badge" aria-label="Selected standards count" style="display:none;margin-left:6px;padding:0 6px;border-radius:999px;background:#1f2937;color:#fff;font-size:11px;line-height:18px;vertical-align:middle">0</span>':''}`;
     if (pathname === l.path) a.setAttribute('aria-current', 'page');
     return a;
   };
@@ -52,6 +52,30 @@
     }
     const nav = bar.querySelector('#globalNavContainer');
     links.forEach(l => nav.appendChild(makeLink(l)));
+
+    // Selection badge updater
+    const updateBadge = async (fromEvent) => {
+      try {
+        let selected = [];
+        // Prefer server-side selection if available
+        try {
+          const r = await fetch(`${API_BASE}/user/intelligence-simple/standards/selection/load`.replace(/\/api$/, '/api') , { credentials: 'include' });
+          if (r.ok) {
+            const j = await r.json();
+            if (Array.isArray(j.selected)) selected = j.selected;
+          }
+        } catch(_) {}
+        if (!Array.isArray(selected) || selected.length === 0) {
+          try { selected = JSON.parse(localStorage.getItem('mms:selectedStandards') || '[]') || []; } catch(_) { selected = []; }
+        }
+        const n = (selected && selected.length) || 0;
+        const badges = bar.querySelectorAll('.mms-sel-badge');
+        badges.forEach(b => { b.style.display = n>0?'inline-block':'none'; b.textContent = String(n); });
+      } catch(_) {}
+    };
+    updateBadge();
+    window.addEventListener('mms:selected-standards-updated', (e) => updateBadge(true));
+    window.addEventListener('storage', (e) => { if (e.key === 'mms:selectedStandards') updateBadge(true); });
 
     const sess = bar.querySelector('#mmsSessionArea');
   const renderSession = (info) => {

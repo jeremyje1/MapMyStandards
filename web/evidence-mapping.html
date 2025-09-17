@@ -463,6 +463,7 @@
             </div>
             <button class="btn btn-primary" onclick="refreshMappings()">Refresh</button>
             <button class="btn" style="background:#f1f5f9;color:#0f172a;border:1px solid #e2e8f0" id="btn-refresh-risk">Refresh Risk</button>
+            <button class="btn" style="background:#f1f5f9;color:#0f172a;border:1px solid #e2e8f0" id="btn-clear-selection">Clear Selection</button>
         </div>
 
         <!-- Mapping Grid -->
@@ -561,8 +562,30 @@
         let riskAggregate = null;
         let riskFactorsMeta = null;
 
-        function getSelectedStandards(){
+        async function getSelectedStandards(){
+            try {
+                const headers = window.mmsAPI?.getHeaders(true) || { 'Content-Type': 'application/json' };
+                const r = await authFetch('/api/user/intelligence-simple/standards/selection/load', { headers });
+                if (r.ok) { const d = await r.json(); return Array.isArray(d.selected) ? d.selected : []; }
+            } catch {}
             try { return JSON.parse(localStorage.getItem('mms:selectedStandards') || '[]'); } catch { return []; }
+        }
+
+        async function saveSelectedStandards(list){
+            const unique = Array.from(new Set(list));
+            try { localStorage.setItem('mms:selectedStandards', JSON.stringify(unique)); } catch {}
+            try {
+                const headers = window.mmsAPI?.getHeaders(true) || { 'Content-Type': 'application/json' };
+                await authFetch('/api/user/intelligence-simple/standards/selection/save', { method:'POST', headers, body: JSON.stringify({ selected: unique }) });
+            } catch {}
+            try { window.dispatchEvent(new CustomEvent('mms:selected-standards-updated', { detail: { selected: unique } })); } catch {}
+        }
+
+        async function toggleSelectedStandard(id){
+            if (!id) return;
+            const curr = new Set(await getSelectedStandards());
+            if (curr.has(id)) curr.delete(id); else curr.add(id);
+            await saveSelectedStandards(Array.from(curr));
         }
 
         // Load evidence mappings
@@ -573,7 +596,7 @@
                 const resp = await authFetch(`/api/user/intelligence-simple/standards/evidence-map${qs}`);
                 if (resp.ok) {
                     evidenceMap = await resp.json();
-                    renderFromEvidenceMap();
+                    await renderFromEvidenceMap();
                     await scoreEvidenceRisk();
                     renderRiskIntoStandardsList();
                     return;
@@ -585,7 +608,7 @@
             }
         }
 
-        function renderFromEvidenceMap() {
+        async function renderFromEvidenceMap() {
             const mapping = evidenceMap?.mapping || {};
             const docsList = document.getElementById('documentsList');
             const stdsList = document.getElementById('standardsList');
@@ -611,7 +634,8 @@
             });
 
             // Build standards list
-            const selected = new Set(getSelectedStandards());
+            // selection is async; render after fetch completes
+            const selected = new Set(await getSelectedStandards());
             const standards = (evidenceMap?.standards || []).map(s => s.standard_id) || Object.keys(mapping);
             standards.sort();
             standards.forEach(sid => {
@@ -625,7 +649,10 @@
                         <div class="standard-id">${sid}</div>
                         <div class="standard-category">${count} evidence • avg conf ${(meta.avg_confidence!=null?Math.round(meta.avg_confidence*100):'--')}%</div>
                     </div>
-                    <div class="risk-slot" data-risk-slot="${sid}"></div>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <button class="btn" data-select-toggle data-id="${sid}" style="background:#f1f5f9;color:#0f172a;border:1px solid #e2e8f0">${selected.has(sid)?'Deselect':'Select'}</button>
+                        <div class="risk-slot" data-risk-slot="${sid}"></div>
+                    </div>
                 </div>
                 <span class="standard-evidence-count">${count} evidence items</span>`;
                 div.onclick = () => selectStandard(sid);
@@ -922,6 +949,17 @@
             renderRiskIntoStandardsList();
         });
 
+        // Clear selection handler
+        document.getElementById('btn-clear-selection').addEventListener('click', async () => {
+            await saveSelectedStandards([]);
+            try { showToast('Selection cleared'); } catch {}
+            // Re-render standards list to reflect cleared selection state
+            try {
+                await renderFromEvidenceMap();
+                renderRiskIntoStandardsList();
+            } catch {}
+        });
+
                 // Risk factor modal click handler
                 document.addEventListener('click', (e) => {
                         const btn = e.target.closest('[data-risk-details]');
@@ -948,8 +986,9 @@
                 });
 
         function logout() {
-            localStorage.removeItem('a3e_api_key');
-            window.location.href = '/login';
+            try { window.mmsAPI && window.mmsAPI.logout && window.mmsAPI.logout(); } catch(_){ }
+            try { localStorage.clear(); sessionStorage.clear(); } catch(_){ }
+            window.location.href = '/login-platform.html';
         }
 
         // View mode switching
@@ -992,6 +1031,27 @@
                 displaySampleHeatmap();
             }
         }
+
+        // Handle click for Select/Deselect (event delegation)
+        document.addEventListener('click', async (e) => {
+            const btn = e.target.closest('[data-select-toggle]');
+            if (!btn) return;
+            e.stopPropagation();
+            const sid = btn.getAttribute('data-id');
+            await toggleSelectedStandard(sid);
+            // Re-render list selection state quickly
+            try {
+                const selected = new Set(await getSelectedStandards());
+                document.querySelectorAll('.standard-item').forEach(el => {
+                    const id = el.getAttribute('data-std-id');
+                    const active = selected.has(id);
+                    el.classList.toggle('selected', active);
+                    const sb = el.querySelector('[data-select-toggle]');
+                    if (sb) sb.textContent = active ? 'Deselect' : 'Select';
+                });
+                showToast(selected.has(sid) ? `Added ${sid} to selection` : `Removed ${sid} from selection`);
+            } catch {}
+        });
 
         function displayHeatmap(data) {
             const grid = document.getElementById('heatmapGrid');

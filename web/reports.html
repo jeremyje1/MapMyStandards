@@ -616,6 +616,15 @@
             el.textContent = n > 0 ? `${n} standard${n===1?'':'s'} selected` : 'No standards selected.';
         }
 
+        async function setNarrativeButtonState(){
+            try{
+                const selected = await getSelectedStandards();
+                const hasAny = Array.isArray(selected) && selected.length > 0;
+                const btn = document.getElementById('btn-generate-narrative');
+                if (btn) btn.disabled = !hasAny;
+            }catch{}
+        }
+
         async function generateNarrative(){
             const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
             const btnGen = document.getElementById('btn-generate-narrative');
@@ -653,6 +662,7 @@
                 preview.style.display = 'block';
                 status.textContent = 'Narrative ready.';
                 btnExport.disabled = !data || !data.html;
+                try { showToast('Narrative generated and saved to session'); } catch {}
             }catch(e){
                 status.textContent = 'Error: ' + e.message;
             }finally{
@@ -809,19 +819,37 @@
                 await ensureEvidenceMap();
                 const base = (window.mmsAPI?.baseUrl || '');
                 const headers = window.mmsAPI?.getHeaders(true) || { 'Content-Type': 'application/json' };
-                let standardIds = getSelectedStandards();
-                if (!standardIds || standardIds.length === 0) {
+                let standardIds = await getSelectedStandards();
+                if (!Array.isArray(standardIds) || standardIds.length === 0) {
                     standardIds = Object.keys(evidenceMap?.mapping || {});
                 }
-                if (!standardIds || standardIds.length === 0) return;
-                const body = { standard_ids: standardIds, evidence_map: evidenceMap };
-                const res = await authFetch('/api/user/intelligence-simple/risk/score-bulk', { method:'POST', headers, body: JSON.stringify(body) });
+                if (!Array.isArray(standardIds) || standardIds.length === 0) return;
+                const mapping = (evidenceMap && evidenceMap.mapping) || {};
+                const items = standardIds.map(sid => {
+                    const evid = Array.isArray(mapping[sid]) ? mapping[sid] : [];
+                    const trust = evid.map(m => typeof m.confidence === 'number' ? m.confidence : 0);
+                    const coverage = Math.min(100, (evid.length || 0) * 25);
+                    return {
+                        standard_id: sid,
+                        coverage_percent: coverage,
+                        trust_scores: trust,
+                        evidence_ages_days: [365],
+                        overdue_tasks: 0,
+                        total_tasks: 0,
+                        recent_changes: 0,
+                        historical_findings: 0,
+                        days_to_review: 180
+                    };
+                });
+                const res = await authFetch('/api/user/intelligence-simple/risk/score-bulk', { method:'POST', headers, body: JSON.stringify({ items }) });
                 if (res.ok) {
                     const data = await res.json();
-                    gapScores = data?.scores || {};
+                    const list = data?.data || [];
+                    gapScores = {};
+                    list.forEach(d => { if (d && d.standard_id) gapScores[d.standard_id] = d; });
                 }
                 const ag = await authFetch('/api/user/intelligence-simple/risk/aggregate', { headers });
-                if (ag.ok) gapAggregate = await ag.json();
+                if (ag.ok) { const a = await ag.json(); gapAggregate = a?.data || null; }
                 renderGapAnalysis();
             }catch(e){ console.error('Gap analysis error:', e); }
         }
@@ -860,6 +888,29 @@
             const a = document.createElement('a'); a.href = url; a.download = 'gap-analysis.csv'; a.click(); URL.revokeObjectURL(url);
         }
 
+        // Average Trust metric from evidence map
+        function computeAverageTrust(){
+            const docs = (evidenceMap?.documents||[]) || [];
+            const vals = docs.map(d => (typeof d.trust_score === 'number') ? d.trust_score : null).filter(v => v!=null);
+            if (!vals.length) return null;
+            const avg = vals.reduce((a,b)=>a+b,0)/vals.length;
+            return Math.round(avg*100);
+        }
+
+        async function maybeAppendTrustMetric(){
+            try {
+                await ensureEvidenceMap();
+                const avg = computeAverageTrust();
+                if (avg == null) return;
+                    const grid = document.getElementById('dashboardMetrics');
+                    if (!grid) return;
+                const card = document.createElement('div');
+                card.className = 'metric-card';
+                card.innerHTML = `<div class="metric-value">${avg}%</div><div class="metric-label">Average Trust</div>`;
+                grid.appendChild(card);
+            } catch {}
+        }
+
 
         function logout() {
             try { window.mmsAPI && window.mmsAPI.logout && window.mmsAPI.logout(); } catch(_){ }
@@ -868,13 +919,19 @@
         }
 
         // Initialize
-        loadDashboardMetrics();
+    loadDashboardMetrics();
+    setTimeout(maybeAppendTrustMetric, 200);
     setTimeout(loadRecentReports, 1000); // Delay to show loading state
     updateSelectedCount();
+    setNarrativeButtonState();
         // Auto compute initial Gap Analysis
         setTimeout(computeGapAnalysis, 300);
     const btnRefreshGap = document.getElementById('btn-refresh-gap');
     if (btnRefreshGap) btnRefreshGap.addEventListener('click', computeGapAnalysis);
+
+    // Keep selection-driven UI in sync
+    window.addEventListener('mms:selected-standards-updated', () => { updateSelectedCount(); setNarrativeButtonState(); });
+    window.addEventListener('storage', (e) => { if (e && e.key === 'mms:selectedStandards') { updateSelectedCount(); setNarrativeButtonState(); } });
 
     // UX init: tutorial and tooltips
     (function initUx(){
@@ -907,6 +964,25 @@
             attach();
         })();
     })();
+    </script>
+
+    <script>
+        // Lightweight toast helper
+        function showToast(message){
+            const div = document.createElement('div');
+            div.textContent = message;
+            div.style.position = 'fixed';
+            div.style.right = '16px';
+            div.style.bottom = '16px';
+            div.style.background = '#10b981';
+            div.style.color = '#fff';
+            div.style.padding = '10px 14px';
+            div.style.borderRadius = '8px';
+            div.style.boxShadow = '0 6px 16px rgba(0,0,0,0.2)';
+            div.style.zIndex = '9999';
+            document.body.appendChild(div);
+            setTimeout(()=>{ div.remove(); }, 3500);
+        }
     </script>
 
     <script>
