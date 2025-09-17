@@ -388,6 +388,24 @@
     </div>
 
     <script>
+        const API_BASE = (window.MMS_CONFIG && window.MMS_CONFIG.API_BASE_URL) || '';
+        function buildApiUrl(path){
+            if (typeof path !== 'string') return path;
+            if (path.startsWith('http')) return path;
+            if (!API_BASE) return path;
+            if (API_BASE.endsWith('/api') && path.startsWith('/api/')) return API_BASE + path.slice(4);
+            return API_BASE + path;
+        }
+        async function authFetch(path, options={}){
+            const url = buildApiUrl(path);
+            const opts = Object.assign({ credentials:'include' }, options);
+            let r = await fetch(url, opts);
+            if (r.status === 401 && window.MMS_AUTH && typeof window.MMS_AUTH.silentRefresh === 'function'){
+                await window.MMS_AUTH.silentRefresh();
+                r = await fetch(url, opts);
+            }
+            return r;
+        }
         let accreditors = [];
         let currentStandards = [];
         let searchResults = [];
@@ -412,10 +430,9 @@
                 `;
             };
             try {
-                const base = (window.mmsAPI?.baseUrl || '');
-                const headers = window.mmsAPI?.getHeaders(true) || { 'Content-Type': 'application/json' };
+                const headers = { 'Content-Type': 'application/json' };
                 // Use intelligence-simple standards metadata to populate accreditor list
-                const resp = await fetch(`${base}/api/user/intelligence-simple/standards/metadata`, { credentials: 'include', headers });
+                const resp = await authFetch('/api/user/intelligence-simple/standards/metadata', { headers });
                 console.debug('accreditors status', resp.status);
                 if (resp.status === 401) { statusError('Authentication required'); return; }
                 if (!resp.ok) { throw new Error(`HTTP ${resp.status}`); }
@@ -503,10 +520,9 @@
             `;
 
             try {
-                const base = (window.mmsAPI?.baseUrl || '');
-                const headers = window.mmsAPI?.getHeaders(true) || { 'Content-Type': 'application/json' };
+                const headers = { 'Content-Type': 'application/json' };
                 const params = new URLSearchParams({ accreditor: accreditorId.toUpperCase() });
-                const resp = await fetch(`${base}/api/user/intelligence-simple/standards/list?${params.toString()}`, { credentials: 'include', headers });
+                const resp = await authFetch(`/api/user/intelligence-simple/standards/list?${params.toString()}`, { headers });
                 console.debug('standards status', resp.status);
                 if (resp.status === 401) {
                     document.getElementById('contentArea').innerHTML = `
@@ -649,7 +665,7 @@
                 const params = new URLSearchParams({ q });
                 if (searchAccreditor) params.set('accreditor', searchAccreditor);
                 if (category) params.set('category', category);
-                const resp = await fetch(`${base}/api/user/intelligence-simple/standards/search?${params.toString()}`, { credentials: 'include', headers });
+                    const resp = await authFetch(`/api/user/intelligence-simple/standards/search?${params.toString()}`, { headers });
                 if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
                 const data = await resp.json();
                 searchResults = Array.isArray(data?.results) ? data.results : [];
@@ -769,7 +785,7 @@
                         const base = (window.mmsAPI?.baseUrl || '');
                         const headers = window.mmsAPI?.getHeaders(true) || { 'Content-Type': 'application/json' };
                         const qs = new URLSearchParams({ source, target, threshold: '0.3', top_k: '3' });
-                        const resp = await fetch(`${base}/api/user/intelligence-simple/standards/cross-accreditor-matches?${qs.toString()}`, { credentials: 'include', headers });
+                            const resp = await authFetch(`/api/user/intelligence-simple/standards/cross-accreditor-matches?${qs.toString()}`, { headers });
                         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
                         const data = await resp.json();
                         crosswalkCache[key] = Array.isArray(data?.matches) ? data.matches : [];
@@ -813,7 +829,7 @@
             try {
                 const base = (window.mmsAPI?.baseUrl || '');
                 const headers = window.mmsAPI?.getHeaders(true) || { 'Content-Type': 'application/json' };
-                const resp = await fetch(`${base}/api/user/intelligence-simple/standards/selection/load`, { credentials: 'include', headers });
+                    const resp = await authFetch('/api/user/intelligence-simple/standards/selection/load', { headers });
                 if (resp.ok) {
                     const data = await resp.json();
                     return Array.isArray(data.selected) ? data.selected : [];
@@ -828,9 +844,7 @@
             try {
                 const base = (window.mmsAPI?.baseUrl || '');
                 const headers = window.mmsAPI?.getHeaders(true) || { 'Content-Type': 'application/json' };
-                await fetch(`${base}/api/user/intelligence-simple/standards/selection/save`, {
-                    method: 'POST', credentials: 'include', headers, body: JSON.stringify({ selected: unique })
-                });
+                    await authFetch('/api/user/intelligence-simple/standards/selection/save', { method: 'POST', headers, body: JSON.stringify({ selected: unique }) });
             } catch {}
         }
 
@@ -855,7 +869,7 @@
             try {
                 const base = (window.mmsAPI?.baseUrl || '');
                 const headers = window.mmsAPI?.getHeaders(true) || { 'Content-Type': 'application/json' };
-                const resp = await fetch(`${base}/api/user/intelligence-simple/standards/evidence-map`, { credentials: 'include', headers });
+                    const resp = await authFetch('/api/user/intelligence-simple/standards/evidence-map', { headers });
                 if (resp.ok) {
                     evidenceMapCache = await resp.json();
                 } else {
@@ -872,7 +886,7 @@
             try {
                 const base = (window.mmsAPI?.baseUrl || '');
                 const headers = window.mmsAPI?.getHeaders(true) || { 'Content-Type': 'application/json' };
-                const resp = await fetch(`${base}/api/user/intelligence-simple/risk/factors`, { credentials: 'include', headers });
+                    const resp = await authFetch('/api/user/intelligence-simple/risk/factors', { headers });
                 if (resp.ok) riskFactorsMeta = await resp.json();
             } catch {}
             return riskFactorsMeta;
@@ -909,12 +923,12 @@
                 const items = buildSnapshots(filterByCategory(list));
                 const base = (window.mmsAPI?.baseUrl || '');
                 const headers = window.mmsAPI?.getHeaders(true) || { 'Content-Type': 'application/json' };
-                const resp = await fetch(`${base}/api/user/intelligence-simple/risk/score-bulk`, { method: 'POST', credentials: 'include', headers, body: JSON.stringify({ items }) });
+                    const resp = await authFetch('/api/user/intelligence-simple/risk/score-bulk', { method: 'POST', headers, body: JSON.stringify({ items }) });
                 if (resp.ok) {
                     const data = await resp.json();
                     (data.data || []).forEach(d => { if (d && d.standard_id) riskScores[d.standard_id] = d; });
                     try {
-                        const aggResp = await fetch(`${base}/api/user/intelligence-simple/risk/aggregate`, { credentials: 'include', headers });
+                            const aggResp = await authFetch('/api/user/intelligence-simple/risk/aggregate', { headers });
                         if (aggResp.ok) { const a = await aggResp.json(); riskAggregate = a.data || null; }
                     } catch {}
                     const accreditorId = document.getElementById('accreditorSelect').value || 'ALL';
@@ -970,7 +984,7 @@
             async function fetchHelp(){
                 try{
                     const base = (window.MMS_CONFIG && MMS_CONFIG.API_BASE_URL) || '';
-                    const r = await fetch(`${base}/api/user/intelligence-simple/ui/help`, { credentials:'include' });
+                        const r = await authFetch('/api/user/intelligence-simple/ui/help');
                     if (!r.ok) return null; return await r.json();
                 }catch{ return null; }
             }

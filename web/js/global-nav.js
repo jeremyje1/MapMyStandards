@@ -12,6 +12,7 @@
 
   const pathname = window.location.pathname.replace(/\/$/, '');
   const origin = window.location.origin;
+  const API_BASE = (window.MMS_CONFIG && window.MMS_CONFIG.API_BASE_URL) || '';
 
   const ensureStyle = () => {
     if (document.getElementById('mms-global-nav-style')) return;
@@ -84,9 +85,9 @@
             await window.MMS_AUTH.silentRefresh();
             if (window.mmsAPI && window.mmsAPI.showSuccess) window.mmsAPI.showSuccess('Session refreshed');
           } else {
-            let r = await fetch(`${config.baseUrl}/api/auth/refresh`, { method: 'POST', credentials: 'include' });
+            let r = await fetch(`${API_BASE}/auth/refresh`.replace(/\/\/$/, '/auth/refresh'), { method: 'POST', credentials: 'include' });
             if (!r.ok && r.status === 404) {
-              r = await fetch(`${config.baseUrl}/auth/refresh`, { method: 'POST', credentials: 'include' });
+              r = await fetch(`${API_BASE}/auth/refresh`.replace(/\/\/$/, '/auth/refresh'), { method: 'POST', credentials: 'include' });
             }
             if (r.ok) {
               if (window.mmsAPI && window.mmsAPI.showSuccess) window.mmsAPI.showSuccess('Session refreshed');
@@ -106,7 +107,7 @@
           } else if (window.mmsAPI) {
             await window.mmsAPI.logout();
           } else {
-            await fetch(`${config.baseUrl}/api/auth/logout`, { method: 'POST', credentials: 'include' });
+            await fetch(`${API_BASE}/auth/logout`.replace(/\/\/$/, '/auth/logout'), { method: 'POST', credentials: 'include' });
           }
           if (window.mmsAPI) window.mmsAPI.clearAuth && window.mmsAPI.clearAuth();
           window.location.href = origin + '/login-platform.html';
@@ -125,7 +126,7 @@
         } else if (window.mmsAPI && window.mmsAPI.me) {
           info = await window.mmsAPI.me();
         } else {
-          const r = await fetch(`${config.baseUrl}/api/auth/me`, { credentials: 'include' });
+          const r = await fetch(`${API_BASE}/auth/me`.replace(/\/\/$/, '/auth/me'), { credentials: 'include' });
           if (r.ok) info = await r.json();
         }
         renderSession(info);

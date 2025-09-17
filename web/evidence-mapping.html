@@ -535,6 +535,24 @@
     </div>
 
     <script>
+        const API_BASE = (window.MMS_CONFIG && window.MMS_CONFIG.API_BASE_URL) || '';
+        function buildApiUrl(path){
+            if (typeof path !== 'string') return path;
+            if (path.startsWith('http')) return path;
+            if (!API_BASE) return path;
+            if (API_BASE.endsWith('/api') && path.startsWith('/api/')) return API_BASE + path.slice(4);
+            return API_BASE + path;
+        }
+        async function authFetch(path, options={}){
+            const url = buildApiUrl(path);
+            const opts = Object.assign({ credentials:'include' }, options);
+            let r = await fetch(url, opts);
+            if (r.status === 401 && window.MMS_AUTH && typeof window.MMS_AUTH.silentRefresh === 'function'){
+                await window.MMS_AUTH.silentRefresh();
+                r = await fetch(url, opts);
+            }
+            return r;
+        }
     let mappingsData = null;
     let selectedDocument = null;
     let selectedStandard = null;
@@ -655,7 +673,7 @@
             try{
                 const base = (window.mmsAPI?.baseUrl || '');
                 const headers = window.mmsAPI?.getHeaders(true) || { 'Content-Type': 'application/json' };
-                const res = await fetch(`${base}/api/user/intelligence-simple/risk/factors`, { credentials:'include', headers });
+                const res = await authFetch('/api/user/intelligence-simple/risk/factors', { headers });
                 if(res.ok){ riskFactorsMeta = await res.json(); }
             }catch(e){ console.warn('Risk factors meta unavailable:', e); }
         }
@@ -684,7 +702,7 @@
                 });
                 const base = (window.mmsAPI?.baseUrl || '');
                 const headers = window.mmsAPI?.getHeaders(true) || { 'Content-Type': 'application/json' };
-                const res = await fetch(`${base}/api/user/intelligence-simple/risk/score-bulk`, { method:'POST', credentials:'include', headers, body: JSON.stringify({ items }) });
+                const res = await authFetch('/api/user/intelligence-simple/risk/score-bulk', { method:'POST', headers, body: JSON.stringify({ items }) });
                 if(res.ok){
                     const data = await res.json();
                     const list = data?.data || [];
@@ -694,7 +712,7 @@
                     console.warn('Bulk risk scoring failed');
                 }
                 // Aggregate
-                const ag = await fetch(`${base}/api/user/intelligence-simple/risk/aggregate`, { credentials:'include', headers });
+                const ag = await authFetch('/api/user/intelligence-simple/risk/aggregate', { headers });
                 if (ag.ok) { const a = await ag.json(); riskAggregate = a.data || null; }
             }catch(e){ console.error('Error scoring risk:', e); }
         }
@@ -957,7 +975,7 @@
                 const apiKey = localStorage.getItem('a3e_api_key');
                 const accreditor = document.getElementById('accreditorFilter').value;
                 
-                const response = await fetch(`/api/v1/evidence/coverage/heatmap?accreditor=${accreditor}`, {
+                const response = await authFetch(`/api/v1/evidence/coverage/heatmap?accreditor=${accreditor}`, {
                     headers: apiKey ? { 'X-API-Key': apiKey } : {}
                 });
                 
@@ -1060,7 +1078,7 @@
                 async function fetchHelp(){
                     try{
                         const base = (window.MMS_CONFIG && MMS_CONFIG.API_BASE_URL) || '';
-                        const r = await fetch(`${base}/api/user/intelligence-simple/ui/help`, { credentials:'include' });
+                        const r = await authFetch('/api/user/intelligence-simple/ui/help');
                         if (!r.ok) return null; return await r.json();
                     }catch{ return null; }
                 }

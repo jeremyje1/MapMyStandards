@@ -8,9 +8,11 @@
   };
 
   const host = window.location.hostname;
+  const isLocal = host === 'localhost' || host.endsWith('.local');
   const defaults = {
-    API_BASE_URL: host === 'localhost' ? 'http://localhost:8000' : 'https://api.mapmystandards.ai',
-    PLATFORM_BASE_URL: host === 'localhost' ? 'http://localhost:3000' : 'https://platform.mapmystandards.ai',
+    // Prefer relative '/api' base in production so Vercel rewrites handle origin and cookies are same-site
+    API_BASE_URL: isLocal ? 'http://localhost:8000' : '/api',
+    PLATFORM_BASE_URL: isLocal ? 'http://localhost:3000' : 'https://platform.mapmystandards.ai',
     FEATURE_FLAGS: {
       enableRiskOverview: true,
       enableNarrativeExport: true
@@ -18,7 +20,7 @@
   };
 
   window.MMS_CONFIG = Object.freeze({
-    API_BASE_URL: fromEnv.API_BASE_URL || defaults.API_BASE_URL,
+    API_BASE_URL: (fromEnv.API_BASE_URL || defaults.API_BASE_URL),
     PLATFORM_BASE_URL: fromEnv.PLATFORM_BASE_URL || defaults.PLATFORM_BASE_URL,
     FEATURE_FLAGS: defaults.FEATURE_FLAGS
   });

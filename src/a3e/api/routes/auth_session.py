@@ -180,7 +180,9 @@ def _create_user(email: str, password: str) -> str:
 
 def _set_auth_cookies(resp: Response, access_token: str, access_exp: datetime, refresh_token: str, refresh_exp: datetime):
     secure = True
-    common = {"httponly": True, "secure": secure, "samesite": "lax", "domain": COOKIE_DOMAIN, "path": "/"}
+    # For cross-site requests from platform.mapmystandards.ai to api.mapmystandards.ai
+    # we must use SameSite=None and Secure cookies.
+    common = {"httponly": True, "secure": secure, "samesite": "none", "domain": COOKIE_DOMAIN, "path": "/"}
     resp.set_cookie("access_token", access_token, expires=access_exp, **common)
     resp.set_cookie("refresh_token", refresh_token, expires=refresh_exp, **common)
 

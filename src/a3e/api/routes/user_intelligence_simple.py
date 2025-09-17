@@ -698,26 +698,52 @@ async def search_standards(
 
 @router.get("/standards/corpus/metadata")
 async def get_corpus_metadata_api(accreditor: Optional[str] = None, current_user: Dict[str, Any] = Depends(get_current_user_simple)):
-    """Expose cached corpus metadata gathered during standards load.
+    """Expose corpus/accreditor metadata for Standards.
 
-    Returns summary counts plus per-accreditor metadata (version, effective_date, license, etc.).
-    Optionally filter to a single accreditor via query param 'accreditor'.
+    Primary source is the cached corpus metadata gathered during standards load.
+    If no corpus metadata is available (e.g., running with seeded graph data),
+    fall back to deriving accreditors from StandardsGraph so the UI can populate
+    the accreditor list.
     """
     try:
         raw = get_corpus_metadata() or {}
         items: List[Dict[str, Any]] = []
         total_standards = 0
-        for acc, meta in raw.items():
-            if accreditor and acc.lower() != accreditor.lower():
-                continue
-            loaded_nodes = len(standards_graph.get_accreditor_standards(acc))
-            standard_count = int(meta.get("standard_count") or loaded_nodes)
-            total_standards += standard_count
-            items.append({
-                **meta,
-                "loaded_node_count": loaded_nodes,
-                "standard_count": standard_count,
-            })
+
+        if raw:
+            for acc, meta in raw.items():
+                if accreditor and acc.lower() != accreditor.lower():
+                    continue
+                loaded_nodes = len(standards_graph.get_accreditor_standards(acc))
+                standard_count = int(meta.get("standard_count") or loaded_nodes)
+                total_standards += standard_count
+                items.append({
+                    **meta,
+                    "loaded_node_count": loaded_nodes,
+                    "standard_count": standard_count,
+                })
+        else:
+            # Fallback: derive from StandardsGraph seed/corpus data
+            for acc in sorted(standards_graph.accreditor_roots.keys()):
+                if accreditor and acc.lower() != accreditor.lower():
+                    continue
+                loaded_nodes = len(standards_graph.get_accreditor_standards(acc))
+                standard_count = loaded_nodes
+                total_standards += standard_count
+                items.append({
+                    "accreditor": acc,
+                    "name": acc,
+                    "version": None,
+                    "effective_date": None,
+                    "last_updated": None,
+                    "source_url": None,
+                    "license": None,
+                    "disclaimer": None,
+                    "coverage_notes": None,
+                    "standard_count": standard_count,
+                    "loaded_node_count": loaded_nodes,
+                })
+
         return {
             "success": True,
             "generated_at": datetime.utcnow().isoformat(),
