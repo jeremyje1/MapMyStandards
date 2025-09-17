@@ -15,6 +15,7 @@ class MapMyStandardsAPI {
         this.baseUrl = config.baseUrl;
         this.cookieAuth = true; // leverage HttpOnly cookies only
         this._refreshInFlight = null;
+        this._auth = (typeof window !== 'undefined' && window.MMS_AUTH) ? window.MMS_AUTH : null;
     }
 
     // Common headers for API requests
@@ -28,6 +29,9 @@ class MapMyStandardsAPI {
 
     // Generic API request method
     async request(endpoint, options = {}) {
+        if (this._auth && typeof this._auth.request === 'function') {
+            return await this._auth.request(endpoint, options);
+        }
         const url = `${this.baseUrl}${endpoint}`;
         const defaultOptions = {
             headers: this.getHeaders(options.auth !== false),
@@ -79,6 +83,9 @@ class MapMyStandardsAPI {
 
     // Coordinate refresh calls to avoid stampede
     async _ensureRefreshed() {
+        if (this._auth && typeof this._auth.silentRefresh === 'function') {
+            return await this._auth.silentRefresh();
+        }
         if (this._refreshInFlight) return this._refreshInFlight;
         this._refreshInFlight = (async () => {
             try {
@@ -110,7 +117,7 @@ class MapMyStandardsAPI {
     // AUTH HELPERS
     // ===============
     async me() {
-        // Prefer session me endpoint
+        if (this._auth && typeof this._auth.me === 'function') return await this._auth.me();
         try {
             const r = await fetch(`${this.baseUrl}/api/auth/me`, { credentials: 'include' });
             if (r.ok) return await r.json();
@@ -119,7 +126,7 @@ class MapMyStandardsAPI {
     }
 
     async logout() {
-        // Prefer session logout
+        if (this._auth && typeof this._auth.logout === 'function') return await this._auth.logout();
         try {
             const r = await fetch(`${this.baseUrl}/api/auth/logout`, { method: 'POST', credentials: 'include' });
             if (r.ok) return await r.json();

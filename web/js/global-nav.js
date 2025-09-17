@@ -80,14 +80,19 @@
       });
       sess.querySelector('#mmsRefreshToken').addEventListener('click', async () => {
         try {
-          let r = await fetch(`${config.baseUrl}/api/auth/refresh`, { method: 'POST', credentials: 'include' });
-          if (!r.ok && r.status === 404) {
-            r = await fetch(`${config.baseUrl}/auth/refresh`, { method: 'POST', credentials: 'include' });
-          }
-          if (r.ok) {
+          if (window.MMS_AUTH && typeof window.MMS_AUTH.silentRefresh === 'function') {
+            await window.MMS_AUTH.silentRefresh();
             if (window.mmsAPI && window.mmsAPI.showSuccess) window.mmsAPI.showSuccess('Session refreshed');
           } else {
-            if (window.mmsAPI && window.mmsAPI.showError) window.mmsAPI.showError(new Error('Unable to refresh session'));
+            let r = await fetch(`${config.baseUrl}/api/auth/refresh`, { method: 'POST', credentials: 'include' });
+            if (!r.ok && r.status === 404) {
+              r = await fetch(`${config.baseUrl}/auth/refresh`, { method: 'POST', credentials: 'include' });
+            }
+            if (r.ok) {
+              if (window.mmsAPI && window.mmsAPI.showSuccess) window.mmsAPI.showSuccess('Session refreshed');
+            } else {
+              if (window.mmsAPI && window.mmsAPI.showError) window.mmsAPI.showError(new Error('Unable to refresh session'));
+            }
           }
         } catch (e) {
           if (window.mmsAPI && window.mmsAPI.showError) window.mmsAPI.showError(e);
@@ -96,7 +101,13 @@
       });
       sess.querySelector('#mmsLogout').addEventListener('click', async () => {
         try {
-          await (window.mmsAPI ? window.mmsAPI.logout() : fetch(`${config.baseUrl}/api/auth/logout`, { method: 'POST', credentials: 'include' }));
+          if (window.MMS_AUTH && typeof window.MMS_AUTH.logout === 'function') {
+            await window.MMS_AUTH.logout();
+          } else if (window.mmsAPI) {
+            await window.mmsAPI.logout();
+          } else {
+            await fetch(`${config.baseUrl}/api/auth/logout`, { method: 'POST', credentials: 'include' });
+          }
           if (window.mmsAPI) window.mmsAPI.clearAuth && window.mmsAPI.clearAuth();
           window.location.href = origin + '/login-platform.html';
         } catch (e) {
@@ -109,7 +120,9 @@
     (async () => {
       try {
         let info = { ok: false };
-        if (window.mmsAPI && window.mmsAPI.me) {
+        if (window.MMS_AUTH && typeof window.MMS_AUTH.me === 'function') {
+          info = await window.MMS_AUTH.me();
+        } else if (window.mmsAPI && window.mmsAPI.me) {
           info = await window.mmsAPI.me();
         } else {
           const r = await fetch(`${config.baseUrl}/api/auth/me`, { credentials: 'include' });
