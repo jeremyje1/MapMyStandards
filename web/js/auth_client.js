@@ -1,6 +1,14 @@
 // Unified auth + request client for cookie-based sessions
 (function(){
-  const BASE = (window.MMS_CONFIG && MMS_CONFIG.API_BASE_URL) || 'https://api.mapmystandards.ai';
+  const BASE = (window.MMS_CONFIG && MMS_CONFIG.API_BASE_URL) || '/api';
+  const PLATFORM_BASE = (window.MMS_CONFIG && MMS_CONFIG.PLATFORM_BASE_URL) || window.location.origin;
+  function redirectToLogin(withReturn=true){
+    try{
+      const ret = withReturn ? `?return=${encodeURIComponent(window.location.pathname + window.location.search)}` : '';
+      const dest = PLATFORM_BASE.replace(/\/$/, '') + '/login-platform.html' + ret;
+      window.location.replace(dest);
+    }catch(_){ window.location.href = '/login-platform.html'; }
+  }
   class AuthClient {
     constructor(){
       this.baseUrl = BASE;
@@ -29,10 +37,10 @@
 
       let res = await this._attemptWithBackoff(url, opts, 3);
       if (res.status === 401){
-        await this.silentRefresh();
+        try { await this.silentRefresh(); } catch(_){ redirectToLogin(true); throw new Error('Authentication required'); }
         const retry = await this._attemptWithBackoff(url, opts, 2);
         if (!retry.ok){
-          if (retry.status === 401) throw new Error('Authentication required');
+          if (retry.status === 401) { redirectToLogin(true); throw new Error('Authentication required'); }
           if (retry.status === 402) throw new Error('Active subscription required');
           if (retry.status === 404) throw new Error('Resource not found');
           throw new Error(`API Error: ${retry.status} ${retry.statusText}`);
@@ -51,11 +59,14 @@
       if (this._refreshInFlight) return this._refreshInFlight;
       this._refreshInFlight = (async ()=>{
         try{
-          let r = await fetch(`${this.baseUrl}/api/auth/refresh`, { method:'POST', credentials:'include' });
+          let r = await fetch(`${this.baseUrl}/auth/refresh`.replace(/\/auth\//, '/auth/refresh'), { method:'POST', credentials:'include' });
+          if (!r.ok && r.status === 404){
+            r = await fetch(`${this.baseUrl}/api/auth/refresh`, { method:'POST', credentials:'include' });
+          }
           if (!r.ok && r.status === 404){
             r = await fetch(`${this.baseUrl}/auth/refresh`, { method:'POST', credentials:'include' });
           }
-          if (!r.ok) throw new Error('refresh_failed');
+          if (!r.ok) { redirectToLogin(true); throw new Error('refresh_failed'); }
           await r.json().catch(()=>({}));
         } finally {
           this._refreshInFlight = null;

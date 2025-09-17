@@ -205,11 +205,7 @@
         }
     </style>
 </head>
-<body>
-    <div class="login-container">
-        <div class="logo">
-            <h1>MapMyStandards</h1>
-            <p style="color: #6b7280; margin-top: 0.5rem;">Platform Login</p>
+</body>
         </div>
         
         <div class="error-message" id="errorMessage"></div>
@@ -324,7 +320,10 @@
                 // Accept success based on HTTP + payload; rely on cookies set by server
                 if (response.ok && (result.success || result.access_token || (result.data && result.data.access_token))) {
                     showSuccess('Login successful! Redirecting...');
-                    setTimeout(() => { window.location.href = 'https://platform.mapmystandards.ai/ai-dashboard'; }, 800);
+                    const params = new URLSearchParams(window.location.search);
+                    const ret = params.get('return');
+                    const dest = ret ? (new URL(ret, window.location.origin)).toString() : 'https://platform.mapmystandards.ai/ai-dashboard';
+                    setTimeout(() => { window.location.href = dest; }, 800);
                 } else {
                     showError((result && (result.message || result.detail)) || 'Invalid email or password');
                     setLoading(false);
@@ -334,7 +333,10 @@
                 // Demo fallback: simulate cookie-based session by redirecting without storing tokens client-side
                 if (loginData.email === 'demo@example.com' && loginData.password === 'demo123') {
                     showSuccess('Demo login successful! Redirecting...');
-                    setTimeout(() => { window.location.href = 'https://platform.mapmystandards.ai/ai-dashboard'; }, 800);
+                    const params = new URLSearchParams(window.location.search);
+                    const ret = params.get('return');
+                    const dest = ret ? (new URL(ret, window.location.origin)).toString() : 'https://platform.mapmystandards.ai/ai-dashboard';
+                    setTimeout(() => { window.location.href = dest; }, 800);
                 } else {
                     showError('Unable to connect to server. Please try again.');
                     setLoading(false);
