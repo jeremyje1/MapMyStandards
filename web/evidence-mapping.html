@@ -568,16 +568,12 @@
         // Load evidence mappings
         async function loadMappings() {
             try {
-                const base = (window.mmsAPI?.baseUrl || '');
-                const headers = window.mmsAPI?.getHeaders(true) || { 'Content-Type': 'application/json' };
                 const acc = document.getElementById('accreditorFilter')?.value || '';
-                const url = new URL(`${base}/api/user/intelligence-simple/standards/evidence-map`, window.location.origin);
-                if (acc) url.searchParams.set('accreditor', acc);
-                const resp = await fetch(url.toString(), { credentials: 'include', headers });
+                const qs = acc ? `?accreditor=${encodeURIComponent(acc)}` : '';
+                const resp = await authFetch(`/api/user/intelligence-simple/standards/evidence-map${qs}`);
                 if (resp.ok) {
                     evidenceMap = await resp.json();
                     renderFromEvidenceMap();
-                    // After rendering, compute risk for listed standards
                     await scoreEvidenceRisk();
                     renderRiskIntoStandardsList();
                     return;
@@ -972,23 +968,25 @@
 
         async function loadHeatmap() {
             try {
-                const apiKey = localStorage.getItem('a3e_api_key');
                 const accreditor = document.getElementById('accreditorFilter').value;
-                
-                const response = await authFetch(`/api/v1/evidence/coverage/heatmap?accreditor=${accreditor}`, {
-                    headers: apiKey ? { 'X-API-Key': apiKey } : {}
-                });
-                
-                if (response.ok) {
-                    const result = await response.json();
-                    if (result.success) {
-                        displayHeatmap(result.data);
-                        return;
-                    }
+                let map = evidenceMap;
+                if (!map) {
+                    const qs = accreditor ? `?accreditor=${encodeURIComponent(accreditor)}` : '';
+                    const res = await authFetch(`/api/user/intelligence-simple/standards/evidence-map${qs}`);
+                    if (res.ok) map = await res.json();
                 }
-                
-                // Fallback to sample heatmap
-                displaySampleHeatmap();
+                if (!map) { displaySampleHeatmap(); return; }
+                const mapping = map.mapping || {};
+                const standards = (map.standards || []).map(s => s.standard_id) || Object.keys(mapping);
+                const heatmap = standards.map(sid => {
+                    const evidCount = (mapping[sid] || []).length;
+                    const coverage_score = Math.min(100, evidCount * 25);
+                    let status = 'gap';
+                    if (coverage_score >= 90) status = 'complete';
+                    else if (coverage_score >= 60) status = 'partial';
+                    return { standard_id: sid, coverage_score, evidence_count: evidCount, status };
+                });
+                displayHeatmap({ heatmap });
             } catch (error) {
                 console.error('Error loading heatmap:', error);
                 displaySampleHeatmap();
