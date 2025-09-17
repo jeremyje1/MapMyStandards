@@ -52,5 +52,11 @@
   "typescript.disableAutomaticTypeAcquisition": true,
   "python.analysis.autoImportCompletions": false,
   "python.analysis.indexing": false,
-  "python.defaultInterpreterPath": "/usr/bin/python3"
+  "python.defaultInterpreterPath": "/usr/bin/python3",
+  "python.analysis.extraPaths": [
+    "${workspaceFolder}/src"
+  ],
+  "python.autoComplete.extraPaths": [
+    "${workspaceFolder}/src"
+  ]
 }

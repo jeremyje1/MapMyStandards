@@ -565,9 +565,7 @@
     }
 
     async function persist(partial=false){
-      // Write directly to settings API when token is available
-      const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
-      if (!token) { return; }
+      // Write directly to settings API using cookie-based auth
       try {
         // Normalize document types into array
         const docTypesRaw = state.data.doc_types || '';
@@ -591,7 +589,8 @@
         if (!(payload.organization || payload.primary_accreditor || payload.state || payload.institution_size || payload.document_types.length || payload.goals.length || payload.launch_timing || payload.success_definition)) return;
   const res = await fetch(`${API_BASE}/api/user/intelligence-simple/settings`, {
           method:'POST',
-          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
         if(!res.ok){ console.warn('Settings persist not ok', res.status); }
@@ -615,10 +614,8 @@
     // Initialize
     async function loadExisting(){
       // Try pre-populate from settings if user is authenticated
-      const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
-      if (!token) return;
       try{
-  const res = await fetch(`${API_BASE}/api/user/intelligence-simple/settings`, { headers: { 'Authorization': `Bearer ${token}` } });
+  const res = await fetch(`${API_BASE}/api/user/intelligence-simple/settings`, { credentials: 'include' });
         if(res.ok){
           const s = await res.json();
           const settings = (s && s.organization !== undefined) ? s : (s.settings || {});

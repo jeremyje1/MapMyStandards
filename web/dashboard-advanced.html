@@ -345,14 +345,24 @@
     </div>
     
     <script>
-        // Get user data from localStorage
-        const userData = JSON.parse(localStorage.getItem('user') || '{}');
-        const token = localStorage.getItem('token');
+        // User data will be fetched via API
+        let userData = {};
         
-        // Check authentication
-        if (!token) {
-            window.location.href = 'https://platform.mapmystandards.ai/login.html';
+        // Check authentication via API call
+        async function checkAuth() {
+            try {
+                const response = await fetch('/api/auth/me', { credentials: 'include' });
+                if (!response.ok) {
+                    window.location.href = '/login-platform.html';
+                    return;
+                }
+                userData = await response.json();
+            } catch (error) {
+                window.location.href = '/login-platform.html';
+            }
         }
+        
+        checkAuth();
         
         // Display user information
         function displayUserInfo() {
@@ -384,10 +394,13 @@
         }
         
         // Logout function
-        function logout() {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            window.location.href = 'https://platform.mapmystandards.ai/login.html';
+        async function logout() {
+            try {
+                await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+            window.location.href = '/login-platform.html';
         }
         
         // Load dashboard data from API
@@ -396,8 +409,8 @@
             
             try {
                 const response = await fetch(`${apiUrl}/api/user/intelligence-simple/dashboard/overview`, {
+                    credentials: 'include',
                     headers: {
-                        'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
                     }
                 });

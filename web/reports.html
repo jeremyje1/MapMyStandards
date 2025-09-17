@@ -613,7 +613,13 @@
             const selected = await getSelectedStandards();
             const n = Array.isArray(selected) ? selected.length : 0;
             const el = document.getElementById('selected-count');
-            el.textContent = n > 0 ? `${n} standard${n===1?'':'s'} selected` : 'No standards selected.';
+            if (n > 0) {
+                el.innerHTML = `<span style="color:#059669">✓</span> ${n} standard${n===1?'':'s'} selected`;
+                el.style.color = '#059669';
+            } else {
+                el.innerHTML = '<span style="color:#dc2626">⚠️</span> No standards selected. Visit the Standards or Evidence Mapping page to select standards.';
+                el.style.color = '#dc2626';
+            }
         }
 
         async function setNarrativeButtonState(){
@@ -626,7 +632,6 @@
         }
 
         async function generateNarrative(){
-            const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
             const btnGen = document.getElementById('btn-generate-narrative');
             const btnExport = document.getElementById('btn-export-narrative');
             const status = document.getElementById('narrative-status');
@@ -639,17 +644,26 @@
                 status.style.display = 'block';
                 // Validate selection
                 if (!Array.isArray(standardIds) || standardIds.length === 0) {
-                    status.textContent = 'Please select at least one standard via the Standards or Evidence Mapping page';
-                    setTimeout(()=>{ status.style.display='none'; }, 3500);
+                    status.innerHTML = '<span style="color:#dc2626">⚠️ Please select at least one standard via the Standards or Evidence Mapping page</span>';
+                    status.style.background = '#fef2f2';
+                    status.style.padding = '8px 12px';
+                    status.style.borderRadius = '6px';
+                    status.style.border = '1px solid #fecaca';
+                    setTimeout(()=>{ 
+                        status.style.display='none'; 
+                        status.style.background = '';
+                        status.style.padding = '';
+                        status.style.borderRadius = '';
+                        status.style.border = '';
+                    }, 4000);
+                    btnGen.disabled = false;
                     return;
                 }
-                status.textContent = 'Generating narrative...';
+                status.innerHTML = '<span style="display:flex;align-items:center;gap:8px"><svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Generating narrative...</span>';
                 preview.style.display = 'none';
-                const headers = { 'Content-Type': 'application/json' };
-                if (token) headers['Authorization'] = `Bearer ${token}`;
                 const res = await authFetch('/api/user/intelligence-simple/narrative/generate', {
                     method: 'POST',
-                    headers,
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ standard_ids: standardIds, body: userBody })
                 });
                 if (res.status === 401) {
@@ -660,29 +674,37 @@
                 const html = data && data.html ? data.html : '<p>No mapped evidence available yet. Upload documents to generate a narrative.</p>';
                 htmlDiv.innerHTML = html;
                 preview.style.display = 'block';
-                status.textContent = 'Narrative ready.';
+                status.innerHTML = '<span style="color:#059669">✓ Narrative generated successfully!</span>';
+                status.style.color = '#059669';
                 btnExport.disabled = !data || !data.html;
                 try { showToast('Narrative generated and saved to session'); } catch {}
             }catch(e){
-                status.textContent = 'Error: ' + e.message;
+                status.innerHTML = `<span style="color:#dc2626">❌ Error: ${e.message}</span>`;
+                status.style.color = '#dc2626';
             }finally{
                 btnGen.disabled = false;
-                setTimeout(()=>{ if(status.textContent.startsWith('Narrative ready')) status.style.display='none'; }, 2500);
+                setTimeout(()=>{ 
+                    if(status.innerHTML.includes('Narrative generated successfully!')) {
+                        status.style.display='none'; 
+                        status.style.color = '';
+                    }
+                }, 2500);
             }
         }
 
         async function exportNarrative(){
-            const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
             const btnGen = document.getElementById('btn-generate-narrative');
             const btnExport = document.getElementById('btn-export-narrative');
             const status = document.getElementById('narrative-status');
             try{
                 btnGen.disabled = true; btnExport.disabled = true;
                 status.style.display = 'block';
-                status.textContent = 'Preparing DOCX export...';
-                const headers = { 'Content-Type': 'application/json' };
-                if (token) headers['Authorization'] = `Bearer ${token}`;
-                const res = await authFetch('/api/user/intelligence-simple/narrative/export.docx', { method:'POST', headers, body: JSON.stringify({}) });
+                status.innerHTML = '<span style="display:flex;align-items:center;gap:8px"><svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Preparing DOCX export...</span>';
+                const res = await authFetch('/api/user/intelligence-simple/narrative/export.docx', { 
+                    method:'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({}) 
+                });
                 if (res.status === 401) { throw new Error('Please log in to export a narrative.'); }
                 if(!res.ok){ throw new Error('Failed to export DOCX'); }
                 const blob = await res.blob();
@@ -690,22 +712,29 @@
                 const a = document.createElement('a');
                 a.href = url; a.download = `narrative_${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.docx`; a.click();
                 window.URL.revokeObjectURL(url);
-                status.textContent = 'Export complete.';
+                status.innerHTML = '<span style="color:#059669">✓ Export complete!</span>';
+                status.style.color = '#059669';
+                try { showToast('Document exported successfully'); } catch {}
             }catch(e){
-                status.textContent = 'Error: ' + e.message;
+                status.innerHTML = `<span style="color:#dc2626">❌ Error: ${e.message}</span>`;
+                status.style.color = '#dc2626';
             }finally{
                 btnGen.disabled = false; btnExport.disabled = false;
-                setTimeout(()=>{ if(status.textContent === 'Export complete.') status.style.display='none'; }, 2500);
+                setTimeout(()=>{ 
+                    if(status.innerHTML.includes('Export complete!')) {
+                        status.style.display='none'; 
+                        status.style.color = '';
+                    }
+                }, 2500);
             }
         }
 
         async function generateReport(type){
-            const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
             const el = (window.event && window.event.target) ? window.event.target : null;
             if (el) { el.disabled = true; el.dataset._text = el.innerHTML; el.innerHTML = '<span class="spinner" style="width: 1rem; height: 1rem; border-width: 2px; margin-right: 0.5rem;"></span> Generating...'; }
             try {
                 const base = (window.mmsAPI?.baseUrl || '');
-                const headers = token ? { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
+                const headers = { 'Content-Type': 'application/json' };
                 if (type === 'evidence') {
                     // Minimal evidence report using mapping summary
                     const payload = { filename: 'evidence_mapping_summary', analysis: { mappings: [] } };
@@ -841,6 +870,8 @@
                         days_to_review: 180
                     };
                 });
+                
+                // Use bulk scoring for efficiency
                 const res = await authFetch('/api/user/intelligence-simple/risk/score-bulk', { method:'POST', headers, body: JSON.stringify({ items }) });
                 if (res.ok) {
                     const data = await res.json();
@@ -848,10 +879,64 @@
                     gapScores = {};
                     list.forEach(d => { if (d && d.standard_id) gapScores[d.standard_id] = d; });
                 }
+                
+                // Always call aggregate after evidence analysis
                 const ag = await authFetch('/api/user/intelligence-simple/risk/aggregate', { headers });
-                if (ag.ok) { const a = await ag.json(); gapAggregate = a?.data || null; }
+                if (ag.ok) { 
+                    const a = await ag.json(); 
+                    gapAggregate = a?.data || null; 
+                }
+                
+                // For high-risk standards, optionally get more detailed individual scores
+                const highRiskIds = Object.entries(gapScores)
+                    .filter(([_, score]) => score.risk_level === 'critical' || score.risk_level === 'high')
+                    .map(([id, _]) => id);
+                
+                if (highRiskIds.length > 0 && highRiskIds.length < 20) {
+                    await loadDetailedRiskScores(highRiskIds);
+                }
+                
                 renderGapAnalysis();
             }catch(e){ console.error('Gap analysis error:', e); }
+        }
+        
+        async function loadDetailedRiskScores(standardIds) {
+            try {
+                const headers = { 'Content-Type': 'application/json' };
+                const detailedScores = await Promise.all(
+                    standardIds.map(async (stdId) => {
+                        try {
+                            const response = await authFetch(
+                                `/api/user/intelligence-simple/risk/score-standard?standard_id=${encodeURIComponent(stdId)}`,
+                                { headers }
+                            );
+                            if (response.ok) {
+                                const data = await response.json();
+                                return {
+                                    standard_id: stdId,
+                                    ...data
+                                };
+                            }
+                        } catch (e) {
+                            console.error(`Error getting detailed score for ${stdId}:`, e);
+                        }
+                        return null;
+                    })
+                );
+                
+                // Update gapScores with detailed information
+                detailedScores.filter(s => s !== null).forEach(score => {
+                    if (gapScores[score.standard_id]) {
+                        gapScores[score.standard_id] = {
+                            ...gapScores[score.standard_id],
+                            ...score,
+                            detailed: true
+                        };
+                    }
+                });
+            } catch (e) {
+                console.error('Error loading detailed risk scores:', e);
+            }
         }
 
         function renderGapAnalysis(){
@@ -861,23 +946,157 @@
                 container.innerHTML = '<div style="color:#6b7280">No risk data yet. Click "Refresh Gap Analysis".</div>';
                 return;
             }
-            const scoresArr = Object.entries(gapScores).map(([sid, obj]) => ({ sid, score: obj?.risk_score || 0, level: obj?.risk_level || riskLevelFromScore(obj?.risk_score), priority: obj?.remediation_priority || 'medium' }));
+            const scoresArr = Object.entries(gapScores).map(([sid, obj]) => ({ 
+                sid, 
+                score: obj?.risk_score || 0, 
+                level: obj?.risk_level || riskLevelFromScore(obj?.risk_score), 
+                priority: obj?.remediation_priority || 'medium',
+                factors: obj?.factors || [],
+                confidence: obj?.confidence || 0
+            }));
             const avg = scoresArr.reduce((a,b)=>a+b.score,0)/scoresArr.length;
             const counts = scoresArr.reduce((acc, it)=>{ acc[it.level]=(acc[it.level]||0)+1; return acc; }, {});
             scoresArr.sort((a,b)=> (b.score - a.score));
+            
+            // Separate high-risk standards (critical and high levels)
+            const highRiskStandards = scoresArr.filter(s => s.level === 'critical' || s.level === 'high');
             const top = scoresArr.slice(0, Math.min(10, scoresArr.length));
+            
             const chips = ['critical','high','medium','low','minimal'].filter(k=>counts[k]).map(k=>`<span class="risk-chip risk-${k}"><span class="risk-dot"></span>${k.charAt(0).toUpperCase()+k.slice(1)}: ${counts[k]}</span>`).join(' ');
+            
+            // Enhanced display with high-risk section
+            let highRiskSection = '';
+            if (highRiskStandards.length > 0) {
+                highRiskSection = `
+                    <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:1rem;margin:1rem 0">
+                        <h4 style="color:#dc2626;margin-bottom:0.5rem">⚠️ High-Risk Standards Requiring Immediate Attention</h4>
+                        <div style="display:grid;gap:0.5rem">
+                            ${highRiskStandards.map(item => `
+                                <div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem;background:white;border-radius:4px">
+                                    <div>
+                                        <div style="font-weight:600;color:#dc2626">${item.sid}</div>
+                                        <div style="font-size:0.8rem;color:#6b7280">
+                                            Priority: ${item.priority} | Confidence: ${Math.round(item.confidence * 100)}%
+                                        </div>
+                                    </div>
+                                    <div style="display:flex;align-items:center;gap:0.5rem">
+                                        ${renderRiskChip(item.level, item.score)}
+                                        <span class="tooltip-trigger" data-risk-factors='${JSON.stringify(item.factors)}' style="cursor:help;color:#3b82f6">ⓘ</span>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            
             const list = top.map(item => `<div class="gap-item"><div class="gap-item-left"><div class="gap-title">Standard ${item.sid}</div><div class="gap-sub">Remediation priority: ${item.priority}</div></div><div>${renderRiskChip(item.level, item.score)}</div></div>`).join('');
+            
             container.innerHTML = `
                 <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
-                    <div><strong>Average Risk:</strong> ${renderRiskChip(riskLevelFromScore(avg), avg)}</div>
+                    <div>
+                        <strong>Average Risk:</strong> ${renderRiskChip(riskLevelFromScore(avg), avg)}
+                        <span class="tooltip-trigger" id="riskTooltip" style="cursor:help;color:#3b82f6;margin-left:0.5rem">ⓘ</span>
+                    </div>
                     <div style="display:flex;gap:6px;flex-wrap:wrap">${chips}</div>
                     <button id="btn-export-gaps" class="btn btn-secondary">Export CSV</button>
                 </div>
+                ${highRiskSection}
+                <h4 style="margin-top:1rem;margin-bottom:0.5rem">Top Risk Standards</h4>
                 <div class="gap-list">${list}</div>
+                ${gapAggregate ? renderAggregateInsights() : ''}
             `;
             const exp = document.getElementById('btn-export-gaps');
             if (exp) exp.onclick = () => exportGapsCSV(scoresArr);
+            
+            // Add risk computation tooltip
+            addRiskTooltips();
+        }
+        
+        function renderAggregateInsights() {
+            if (!gapAggregate) return '';
+            const trustScore = Math.round((gapAggregate.average_trust || 0) * 100);
+            return `
+                <div style="margin-top:1rem;padding:1rem;background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px">
+                    <h4 style="margin-bottom:0.5rem;color:#0369a1">Aggregate Risk Insights</h4>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem">
+                        <div>
+                            <div style="font-size:0.875rem;color:#6b7280">Trust Score</div>
+                            <div style="font-size:1.5rem;font-weight:600;color:#10b981">${trustScore}%</div>
+                        </div>
+                        <div>
+                            <div style="font-size:0.875rem;color:#6b7280">Coverage Rate</div>
+                            <div style="font-size:1.5rem;font-weight:600">${Math.round((gapAggregate.coverage_rate || 0) * 100)}%</div>
+                        </div>
+                        <div>
+                            <div style="font-size:0.875rem;color:#6b7280">Standards at Risk</div>
+                            <div style="font-size:1.5rem;font-weight:600;color:#dc2626">${gapAggregate.standards_at_risk || 0}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function addRiskTooltips() {
+            // Main risk tooltip
+            const riskTooltip = document.getElementById('riskTooltip');
+            if (riskTooltip) {
+                riskTooltip.addEventListener('click', async () => {
+                    try {
+                        const response = await authFetch('/api/user/intelligence-simple/dashboard/metrics');
+                        if (response.ok) {
+                            const data = await response.json();
+                            const formula = data.risk_computation_details || {
+                                formula: 'Risk = (Coverage Gaps × Weight) + (Historical Findings × Impact) + (Days Since Review / Review Cycle)',
+                                factors: ['Evidence Coverage', 'Compliance History', 'Review Timeline', 'Document Trust Scores']
+                            };
+                            
+                            showTooltipModal('Risk Score Calculation', formula);
+                        }
+                    } catch (e) {
+                        console.error('Error loading risk details:', e);
+                    }
+                });
+            }
+            
+            // Individual factor tooltips
+            document.querySelectorAll('.tooltip-trigger[data-risk-factors]').forEach(el => {
+                el.addEventListener('click', function() {
+                    const factors = JSON.parse(this.dataset.riskFactors || '[]');
+                    showFactorsModal(factors);
+                });
+            });
+        }
+        
+        function showTooltipModal(title, content) {
+            const modal = document.createElement('div');
+            modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000';
+            modal.innerHTML = `
+                <div style="background:white;border-radius:8px;padding:2rem;max-width:500px;margin:1rem">
+                    <h3 style="margin-bottom:1rem">${title}</h3>
+                    <div style="color:#374151;line-height:1.6">
+                        <p style="margin-bottom:1rem">${content.formula || content}</p>
+                        ${content.factors ? `
+                            <h4 style="margin-bottom:0.5rem">Key Factors:</h4>
+                            <ul style="list-style:disc;padding-left:1.5rem">
+                                ${content.factors.map(f => `<li>${f}</li>`).join('')}
+                            </ul>
+                        ` : ''}
+                    </div>
+                    <button onclick="this.parentElement.parentElement.remove()" style="margin-top:1rem;background:#3b82f6;color:white;padding:0.5rem 1rem;border-radius:4px;border:none;cursor:pointer">
+                        Close
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+        
+        function showFactorsModal(factors) {
+            const content = factors.length > 0 
+                ? factors.map(f => `<div style="margin-bottom:0.5rem"><strong>${f.factor_name || f.name}:</strong> ${f.description || ''} (Weight: ${f.weight || 0})</div>`).join('')
+                : 'No detailed factor information available';
+                
+            showTooltipModal('Risk Factors Breakdown', content);
         }
 
         function exportGapsCSV(scoresArr){

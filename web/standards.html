@@ -298,6 +298,45 @@
         .risk-stats { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; }
         .chip { padding: 0.25rem 0.5rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
         .chip.minimal { background:#ecfeff; color:#155e75; }
+        
+        /* Selection bar */
+        .selection-bar {
+            position: sticky;
+            top: 0;
+            background: #1e3c72;
+            color: white;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            z-index: 10;
+            display: none;
+        }
+        
+        .selection-bar.visible {
+            display: flex;
+        }
+        
+        .selection-count {
+            font-weight: 600;
+        }
+        
+        .clear-selection-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .clear-selection-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
         .chip.low { background:#ecfdf5; color:#065f46; }
         .chip.medium { background:#fef9c3; color:#854d0e; }
         .chip.high { background:#fee2e2; color:#991b1b; }
@@ -332,10 +371,19 @@
     </header>
 
     <!-- Main Content -->
+        <!-- Content Area -->
     <div class="container">
         <div class="page-header">
-            <h1 class="page-title">📊 Accreditation Standards</h1>
-            <p class="page-subtitle">Browse and explore accreditation standards from multiple accreditors to understand requirements and plan your evidence collection.</p>
+            <h1 class="page-title">Standards Explorer</h1>
+            <p class="page-subtitle">Browse and select standards from various accrediting bodies</p>
+        </div>
+        
+        <!-- Selection Bar -->
+        <div class="selection-bar" id="selectionBar">
+            <div class="selection-count">
+                <span id="selectedCount">0</span> standards selected
+            </div>
+            <button class="clear-selection-btn" onclick="clearAllSelections()">Clear All</button>
         </div>
 
         <!-- Filters -->
@@ -433,13 +481,24 @@
                     </div>
                 `;
             };
+            
+            // Show loading spinner while fetching
+            document.getElementById('contentArea').innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 1rem;">Loading accreditors...</p>
+                </div>
+            `;
+            
             try {
                 const headers = { 'Content-Type': 'application/json' };
                 // Use intelligence-simple standards metadata to populate accreditor list
                 const resp = await authFetch('/api/user/intelligence-simple/standards/metadata', { headers });
                 console.debug('accreditors status', resp.status);
                 if (resp.status === 401) { statusError('Authentication required'); return; }
-                if (!resp.ok) { throw new Error(`HTTP ${resp.status}`); }
+                if (!resp.ok) { 
+                    throw new Error(`Failed to load accreditors: HTTP ${resp.status}`); 
+                }
                 const data = await resp.json();
                 // Accept multiple shapes: {accreditors:[]}, {data:{accreditors:[]}}, {data:[]}, []
                 let list = null;
@@ -447,24 +506,29 @@
                 else if (Array.isArray(data?.data?.accreditors)) list = data.data.accreditors;
                 else if (Array.isArray(data?.data)) list = data.data;
                 else if (Array.isArray(data)) list = data;
-                if (!Array.isArray(list)) throw new Error('Unexpected response');
-                // Normalize to expected shape
+                if (!Array.isArray(list)) throw new Error('Unexpected response format');
+                
+                // Normalize to expected shape with label, id, version
                 accreditors = list.map(a => ({
                     id: a.accreditor || a.id || a.acronym,
-                    name: a.name || a.accreditor || a.id || 'Unknown',
-                    acronym: ((a.accreditor || a.id || a.acronym || '') + '').toUpperCase()
+                    name: a.name || a.accreditor || a.label || 'Unknown',
+                    acronym: ((a.accreditor || a.id || a.acronym || '') + '').toUpperCase(),
+                    version: a.version || ''
                 }));
+                
                 populateAccreditorSelect();
                 populateCompareSelect();
                 showAccreditorSelection();
+                updateSelectionBar(); // Update selection count
                 ensureRiskFactors();
             } catch (error) {
                 console.error('Error loading accreditors:', error);
                 document.getElementById('contentArea').innerHTML = `
                     <div style="text-align: center; padding: 3rem; color: #ef4444;">
                         <h3>Error loading accreditors</h3>
-                        <p>Please try refreshing the page.</p>
-                        <p style="margin-top:0.5rem;color:#6b7280;">If this persists, you may be logged out or the endpoint is unavailable.</p>
+                        <p>${error.message}</p>
+                        <p style="margin-top:0.5rem;color:#6b7280;">Please try refreshing the page or contact support if this persists.</p>
+                        <button class="btn btn-primary" onclick="loadAccreditors()" style="margin-top:1rem;">Retry</button>
                     </div>
                 `;
             }
@@ -480,7 +544,8 @@
                 option.value = acc.accreditor_id || acc.id || acc.acronym;
                 const name = acc.accreditor_name || acc.name || 'Unknown';
                 const acronym = acc.accreditor_acronym || acc.acronym || '';
-                option.textContent = acronym ? `${name} (${acronym})` : name;
+                const version = acc.version ? ` - v${acc.version}` : '';
+                option.textContent = acronym ? `${name} (${acronym})${version}` : `${name}${version}`;
                 select.appendChild(option);
             });
         }
@@ -589,6 +654,9 @@
         async function displayStandards(data) {
             const accreditor = data.accreditor;
             const standards = data.standards;
+            
+            // Update selection bar whenever we display standards
+            updateSelectionBar();
 
             let html = `
                 <div class="accreditor-info">
@@ -819,9 +887,29 @@
                     }
                     const matches = (crosswalkCache[key] || []).filter(m => m.source_id === id);
                     if (matches.length === 0) {
-                        equivDiv.innerHTML = '<div style="color:#6b7280;">No close equivalents found.</div>';
+                        equivDiv.innerHTML = '<div style="color:#6b7280;padding:0.5rem;background:#f3f4f6;border-radius:6px;">No close equivalents found in the selected accreditor.</div>';
                     } else {
-                        equivDiv.innerHTML = matches.map(m => `<div style="margin-top:0.25rem;">→ <strong>${m.target_id}</strong>: ${m.target_title || ''} <span style="color:#6b7280;">(score ${m.score})</span></div>`).join('');
+                        equivDiv.innerHTML = `
+                            <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:1rem;margin-top:0.5rem;">
+                                <h4 style="margin-bottom:0.75rem;color:#0369a1;font-size:0.875rem;">Equivalent Standards:</h4>
+                                ${matches.map(m => {
+                                    const confidence = Math.round((m.score || m.confidence || 0) * 100);
+                                    const rationale = m.rationale || '';
+                                    return `
+                                        <div style="margin-bottom:0.75rem;padding:0.5rem;background:white;border-radius:6px;">
+                                            <div style="display:flex;justify-content:space-between;align-items:start;">
+                                                <div style="flex:1;">
+                                                    <strong style="color:#1e40af;">${m.target_id || m.target_standard_id}</strong>
+                                                    <div style="font-size:0.875rem;color:#374151;margin-top:0.25rem;">${m.target_title || m.target_name || ''}</div>
+                                                    ${rationale ? `<div style="font-size:0.75rem;color:#6b7280;margin-top:0.25rem;font-style:italic;">${rationale}</div>` : ''}
+                                                </div>
+                                                <span style="background:#dbeafe;color:#1e40af;padding:0.25rem 0.5rem;border-radius:999px;font-size:0.75rem;font-weight:600;">${confidence}%</span>
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        `;
                     }
                 } catch (err) {
                     console.error('Cross-accreditor error', err);
@@ -887,6 +975,7 @@
             if (curr.has(id)) curr.delete(id); else curr.add(id);
             const updated = Array.from(curr);
             await saveSelectedStandards(updated);
+            updateSelectionBar(); // Update the selection bar count
             try { window.dispatchEvent(new CustomEvent('mms:selected-standards-updated', { detail: { selected: updated } })); } catch {}
         }
 
@@ -895,9 +984,40 @@
             try { localStorage.clear(); sessionStorage.clear(); } catch(_){ }
             window.location.href = '/login-platform.html';
         }
+        
+        // Update selection bar visibility and count
+        async function updateSelectionBar() {
+            const selected = await getSelectedStandards();
+            const bar = document.getElementById('selectionBar');
+            const count = document.getElementById('selectedCount');
+            
+            if (selected && selected.length > 0) {
+                bar.classList.add('visible');
+                count.textContent = selected.length;
+            } else {
+                bar.classList.remove('visible');
+            }
+        }
+        
+        // Clear all selections
+        window.clearAllSelections = async function clearAllSelections() {
+            await saveSelectedStandards([]);
+            updateSelectionBar();
+            // Re-render current view
+            const accreditorId = document.getElementById('accreditorSelect').value || 'ALL';
+            const list = currentMode === 'search' ? searchResults : currentStandards;
+            displayStandards({ 
+                accreditor: { name: accreditorId.toUpperCase(), acronym: accreditorId.toUpperCase() }, 
+                standards: filterByCategory(list) 
+            });
+        }
 
     // Initialize
     loadAccreditors();
+    updateSelectionBar(); // Initialize selection bar visibility
+    
+    // Listen for selection updates from other pages
+    window.addEventListener('mms:selected-standards-updated', updateSelectionBar);
 
         async function ensureEvidenceMap() {
             if (evidenceMapCache) return evidenceMapCache;

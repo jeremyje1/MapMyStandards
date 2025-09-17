@@ -1510,8 +1510,259 @@
         }
 
         function displayGapAnalysis(data) {
-            const riskColor = data.risk_assessment.risk_level === 'Low' ? 'green' : 
-                            data.risk_assessment.risk_level === 'Medium' ? 'yellow' : 'red';
+            if (!data || !data.gaps) {
+                document.getElementById('gapContent').innerHTML = `
+                    <div class="text-gray-600">
+                        No gap analysis data available. Upload evidence documents to begin analysis.
+                    </div>
+                `;
+                return;
+            }
+
+            // Risk color mapping
+            const riskLevelToColor = {
+                'minimal': 'green',
+                'low': 'green', 
+                'medium': 'yellow',
+                'high': 'orange',
+                'critical': 'red'
+            };
+            
+            const riskLevel = data.risk_assessment?.risk_level?.toLowerCase() || 'medium';
+            const riskColor = riskLevelToColor[riskLevel] || 'yellow';
+            
+            // Display gap analysis with risk distribution
+            const html = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="font-semibold mb-3">Risk Overview</h4>
+                        <div class="space-y-2">
+                            <div class="flex justify-between items-center">
+                                <span>Overall Risk Level:</span>
+                                <span class="font-bold text-${riskColor}-600">${data.risk_assessment?.risk_level || 'Medium'}</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span>Risk Score:</span>
+                                <span class="font-bold">${Math.round((data.risk_assessment?.score || 0) * 100)}%</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span>Trust Score:</span>
+                                <span class="font-bold text-green-600">${Math.round((data.trust_score || 0) * 100)}%</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Risk Distribution Chart -->
+                        <div class="mt-4">
+                            <h5 class="text-sm font-medium mb-2">Risk Distribution</h5>
+                            <div id="riskDistributionChart" style="height: 200px;"></div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-semibold mb-3">High-Risk Standards</h4>
+                        <div class="space-y-2 max-h-64 overflow-y-auto" id="highRiskStandardsList">
+                            ${renderHighRiskStandards(data.high_risk_standards || [])}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-6">
+                    <h4 class="font-semibold mb-3">Gap Summary</h4>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="bg-gray-50 p-3 rounded">
+                            <div class="text-2xl font-bold text-red-600">${data.gaps?.critical || 0}</div>
+                            <div class="text-sm text-gray-600">Critical Gaps</div>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded">
+                            <div class="text-2xl font-bold text-orange-600">${data.gaps?.high || 0}</div>
+                            <div class="text-sm text-gray-600">High Priority</div>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded">
+                            <div class="text-2xl font-bold text-yellow-600">${data.gaps?.medium || 0}</div>
+                            <div class="text-sm text-gray-600">Medium Priority</div>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded">
+                            <div class="text-2xl font-bold text-green-600">${data.gaps?.low || 0}</div>
+                            <div class="text-sm text-gray-600">Low Priority</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4 text-sm text-gray-500 flex items-center gap-2">
+                    <i class="fas fa-info-circle"></i>
+                    <span id="riskComputationTooltip" class="cursor-help underline decoration-dotted">
+                        How are these scores calculated?
+                    </span>
+                </div>
+            `;
+            
+            document.getElementById('gapContent').innerHTML = html;
+            
+            // Render risk distribution chart
+            renderRiskDistributionChart(data.risk_distribution || {});
+            
+            // Add tooltip for risk computation
+            addRiskComputationTooltip();
+            
+            // Trigger dynamic risk scoring for mapped standards
+            loadDynamicRiskScores();
+        }
+        
+        function renderHighRiskStandards(standards) {
+            if (!standards || standards.length === 0) {
+                return '<div class="text-gray-500 text-sm">No high-risk standards identified</div>';
+            }
+            
+            return standards.map(std => `
+                <div class="border border-red-200 bg-red-50 p-2 rounded text-sm">
+                    <div class="font-medium text-red-800">${std.id || std.standard_id}</div>
+                    <div class="text-xs text-red-600">Risk Score: ${Math.round((std.risk_score || 0) * 100)}%</div>
+                    <div class="text-xs text-gray-600 mt-1">${std.title || 'No description'}</div>
+                </div>
+            `).join('');
+        }
+        
+        function renderRiskDistributionChart(distribution) {
+            const canvas = document.getElementById('riskDistributionChart');
+            if (!canvas) return;
+            
+            // Simple bar chart rendering
+            const data = {
+                minimal: distribution.minimal || 0,
+                low: distribution.low || 0,
+                medium: distribution.medium || 0,
+                high: distribution.high || 0,
+                critical: distribution.critical || 0
+            };
+            
+            const total = Object.values(data).reduce((a, b) => a + b, 0) || 1;
+            const colors = {
+                minimal: '#10b981',
+                low: '#34d399',
+                medium: '#fbbf24',
+                high: '#fb923c',
+                critical: '#ef4444'
+            };
+            
+            let html = '<div class="space-y-2">';
+            for (const [level, count] of Object.entries(data)) {
+                const percentage = Math.round((count / total) * 100);
+                html += `
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs w-16 text-gray-600">${level}:</span>
+                        <div class="flex-1 bg-gray-200 rounded-full h-4 relative">
+                            <div class="absolute inset-y-0 left-0 rounded-full" style="background-color: ${colors[level]}; width: ${percentage}%"></div>
+                        </div>
+                        <span class="text-xs w-12 text-right">${count}</span>
+                    </div>
+                `;
+            }
+            html += '</div>';
+            canvas.innerHTML = html;
+        }
+        
+        async function loadDynamicRiskScores() {
+            try {
+                // Get list of mapped standards
+                const mappedStandards = await getMappedStandards();
+                if (!mappedStandards || mappedStandards.length === 0) return;
+                
+                // Score each standard dynamically
+                const scores = await Promise.all(
+                    mappedStandards.map(async (stdId) => {
+                        try {
+                            const response = await authFetch(`/api/user/intelligence-simple/risk/score-standard?standard_id=${encodeURIComponent(stdId)}`);
+                            if (response.ok) {
+                                const data = await response.json();
+                                return {
+                                    standard_id: stdId,
+                                    risk_score: data.risk_score || 0,
+                                    risk_level: data.risk_level || 'medium',
+                                    factors: data.factors || []
+                                };
+                            }
+                        } catch (e) {
+                            console.error(`Error scoring standard ${stdId}:`, e);
+                        }
+                        return null;
+                    })
+                );
+                
+                // Filter out null results
+                const validScores = scores.filter(s => s !== null);
+                
+                // Update UI with dynamic scores
+                updateDynamicRiskDisplay(validScores);
+                
+            } catch (error) {
+                console.error('Error loading dynamic risk scores:', error);
+            }
+        }
+        
+        async function getMappedStandards() {
+            try {
+                const response = await authFetch('/api/user/intelligence-simple/standards/selection/load');
+                if (response.ok) {
+                    const data = await response.json();
+                    return data.selected || [];
+                }
+            } catch (e) {
+                console.error('Error getting mapped standards:', e);
+            }
+            return [];
+        }
+        
+        function updateDynamicRiskDisplay(scores) {
+            // Update risk metrics in UI based on dynamic scores
+            const avgRisk = scores.reduce((sum, s) => sum + s.risk_score, 0) / (scores.length || 1);
+            
+            // Update any risk display elements
+            const riskElements = document.querySelectorAll('[data-dynamic-risk]');
+            riskElements.forEach(el => {
+                const stdId = el.dataset.standardId;
+                const score = scores.find(s => s.standard_id === stdId);
+                if (score) {
+                    el.textContent = `${Math.round(score.risk_score * 100)}%`;
+                    el.className = `risk-score risk-${score.risk_level}`;
+                }
+            });
+        }
+        
+        function addRiskComputationTooltip() {
+            const tooltipEl = document.getElementById('riskComputationTooltip');
+            if (!tooltipEl) return;
+            
+            tooltipEl.addEventListener('click', async () => {
+                try {
+                    const response = await authFetch('/api/user/intelligence-simple/dashboard/metrics');
+                    if (response.ok) {
+                        const data = await response.json();
+                        const formula = data.risk_computation_formula || 'Risk scores are calculated based on evidence coverage, compliance gaps, and institutional factors.';
+                        
+                        // Show tooltip modal
+                        const modal = document.createElement('div');
+                        modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+                        modal.innerHTML = `
+                            <div class="bg-white rounded-lg p-6 max-w-lg mx-4">
+                                <h3 class="text-lg font-semibold mb-3">Risk Score Calculation</h3>
+                                <p class="text-gray-700 mb-4">${formula}</p>
+                                <div class="space-y-2 text-sm text-gray-600">
+                                    <div><strong>Trust Score:</strong> Based on evidence quality and mapping confidence</div>
+                                    <div><strong>Risk Factors:</strong> Coverage gaps, overdue reviews, historical findings</div>
+                                    <div><strong>Dynamic Scoring:</strong> Real-time calculation per standard</div>
+                                </div>
+                                <button class="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700" onclick="this.closest('.fixed').remove()">
+                                    Close
+                                </button>
+                            </div>
+                        `;
+                        document.body.appendChild(modal);
+                    }
+                } catch (e) {
+                    console.error('Error loading risk computation details:', e);
+                }
+            });
+        }
 
 
         // ----- Enhancements: Standards search, Narrative, Risk transparency -----
@@ -1633,66 +1884,6 @@
                 });
             }
         });
-            const categoriesHtml = Object.entries(data.category_risks).map(([category, risk]) => `
-                <div class="border rounded p-3 mb-2">
-                    <div class="flex justify-between items-center">
-                        <span class="font-medium">${category}</span>
-                        <span class="bg-${risk > 0.7 ? 'red' : risk > 0.4 ? 'yellow' : 'green'}-100 text-${risk > 0.7 ? 'red' : risk > 0.4 ? 'yellow' : 'green'}-800 px-2 py-1 rounded text-xs">
-                            ${(risk * 100).toFixed(1)}% Risk
-                        </span>
-                    </div>
-                </div>
-            `).join('');
-
-            document.getElementById('gapContent').innerHTML = `
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <div class="bg-${riskColor}-50 p-4 rounded border border-${riskColor}-200">
-                        <div class="text-2xl font-bold text-${riskColor}-600">${data.risk_assessment.risk_level}</div>
-                        <div class="text-sm text-gray-600">Overall Risk Level</div>
-                    </div>
-                    <div class="bg-blue-50 p-4 rounded">
-                        <div class="text-2xl font-bold text-blue-600">${(data.risk_assessment.confidence * 100).toFixed(1)}%</div>
-                        <div class="text-sm text-gray-600">Confidence</div>
-                    </div>
-                    <div class="bg-purple-50 p-4 rounded">
-                        <div class="text-2xl font-bold text-purple-600">${data.risk_assessment.timeline_months}</div>
-                        <div class="text-sm text-gray-600">Months to Address</div>
-                    </div>
-                </div>
-
-                <div class="mb-6">
-                    <h5 class="font-medium mb-3">Category Risk Assessment</h5>
-                    <div class="space-y-2">
-                        ${categoriesHtml}
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <h5 class="font-medium mb-3">Recommendations</h5>
-                        <ul class="space-y-2">
-                            ${data.recommendations.map(rec => `
-                                <li class="flex items-start">
-                                    <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
-                                    <span class="text-sm">${rec}</span>
-                                </li>
-                            `).join('')}
-                        </ul>
-                    </div>
-                    <div>
-                        <h5 class="font-medium mb-3">Next Actions</h5>
-                        <ul class="space-y-2">
-                            ${data.next_actions.map(action => `
-                                <li class="flex items-start">
-                                    <i class="fas fa-arrow-right text-blue-500 mt-1 mr-2"></i>
-                                    <span class="text-sm">${action}</span>
-                                </li>
-                            `).join('')}
-                        </ul>
-                    </div>
-                </div>
-            `;
-        }
 
         function showLoading() {
             document.getElementById('loadingState').classList.remove('hidden');

@@ -11,6 +11,14 @@
     
     <!-- Stripe JS -->
     <script src="https://js.stripe.com/v3/"></script>
+                    const response = await fetch(buildApiUrl('/api/v1/billing/trial/signup'), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({!-- Configuration -->
+    <script src="/js/config.js"></script>
     
     <!-- Tailwind CSS -->
     <link rel="stylesheet" href="/web/static/css/tailwind.css">
@@ -415,6 +423,16 @@
 
     <!-- JavaScript -->
     <script>
+        // Use unified config for API base
+        const API_BASE = (window.MMS_CONFIG && window.MMS_CONFIG.API_BASE_URL) || '';
+        function buildApiUrl(path){
+            if (typeof path !== 'string') return path;
+            if (path.startsWith('http')) return path;
+            if (!API_BASE) return path;
+            if (API_BASE.endsWith('/api') && path.startsWith('/api/')) return API_BASE + path.slice(4);
+            return API_BASE + path;
+        }
+        
         let stripe = null;
         let elements = null;
         let cardElement = null;
@@ -423,7 +441,7 @@
         // Initialize Stripe
         async function initializeStripe() {
             try {
-                const response = await fetch('/api/v1/billing/config/stripe-key');
+                const response = await fetch(buildApiUrl('/api/v1/billing/config/stripe-key'));
                 const data = await response.json();
                 
                 if (data.publishable_key) {
