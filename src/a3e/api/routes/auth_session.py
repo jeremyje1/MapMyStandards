@@ -199,6 +199,14 @@ async def register(req: RegisterRequest, response: Response):
 
 @router.post("/login", response_model=AuthSuccess)
 async def login(req: LoginRequest, response: Response):
+    # Demo shortcut: enable cookie-based session for demo accounts without DB user
+    if req.email.lower() == "demo@example.com" and req.password == "demo123":
+        access, aexp = _issue_access_token("demo_user", req.email.lower())
+        refresh_days = REFRESH_DAYS_REMEMBER if req.rememberMe else REFRESH_DAYS
+        refresh, rexp = _new_refresh_token("demo_user", refresh_days)
+        _set_auth_cookies(response, access, aexp, refresh, rexp)
+        return AuthSuccess(access_token=access, expires_in=ACCESS_MINUTES * 60)
+
     user = _get_user_by_email(req.email)
     if not user or not user["is_active"] or not verify_password(req.password, user["password_hash"]):
         raise HTTPException(status_code=401, detail="Invalid credentials")
