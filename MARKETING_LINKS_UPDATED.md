@@ -12,7 +12,7 @@ All links on the marketing page have been successfully updated to point to the c
 - Demo: `/contact` → `https://platform.mapmystandards.ai/contact`
 - About: `/about` → `https://platform.mapmystandards.ai/about`
 - Contact: `/contact` → `https://platform.mapmystandards.ai/contact`
-- Sign In: Already updated to `https://platform.mapmystandards.ai/login`
+- Sign In: Already updated to `https://platform.mapmystandards.ai/login-platform.html`
 - Start Free Trial: Already updated to `https://platform.mapmystandards.ai/trial-signup`
 
 ### Hero Section CTAs
@@ -62,7 +62,7 @@ All customer interactions now properly redirect to the platform domain:
 1. **Sign Up**: Customers click any trial/signup link → Redirected to `https://platform.mapmystandards.ai/trial-signup`
 2. **Purchase**: Stripe checkout happens on the platform domain
 3. **Access Dashboard**: After purchase, customers access their dashboard at `https://platform.mapmystandards.ai/dashboard`
-4. **Login**: Existing customers sign in at `https://platform.mapmystandards.ai/login`
+4. **Login**: Existing customers sign in at `https://platform.mapmystandards.ai/login-platform.html`
 
 ## Implementation Notes
 - All links use absolute URLs with the full domain

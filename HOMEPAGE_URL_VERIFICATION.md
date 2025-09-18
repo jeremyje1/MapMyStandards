@@ -6,7 +6,7 @@ All URLs in `homepage-enhanced.html` are correctly configured to use `platform.m
 ## Verification Results
 
 ### ✅ Platform Links (All Correct)
-- Login links: `https://platform.mapmystandards.ai/login-platform?return=...`
+- Login links: `https://platform.mapmystandards.ai/login-platform.html?return=...`
 - Trial signup: `https://platform.mapmystandards.ai/trial-signup-stripe.html`
 - Search action: `https://platform.mapmystandards.ai/standards?q={search_term_string}`
 
@@ -18,7 +18,7 @@ All URLs in `homepage-enhanced.html` are correctly configured to use `platform.m
 ## Link Categories Found
 
 1. **Authentication Links** (15 instances)
-   - Format: `https://platform.mapmystandards.ai/login-platform?return=%2F[page]`
+   - Format: `https://platform.mapmystandards.ai/login-platform.html?return=%2F[page]`
    - Examples: AI Dashboard, Org Chart, Scenario Modeling, etc.
 
 2. **Trial Signup Links** (5 instances)

@@ -26,7 +26,7 @@ This flow:
 - ✅ Is what's currently live and functional
 
 ### Login System:
-- **Login Page**: https://platform.mapmystandards.ai/login (or /login.html)
+- **Login Page**: https://platform.mapmystandards.ai/login-platform.html
 - **Authentication**: FastAPI JWT-based (not NextAuth)
 - **Backend Routes**: `/api/auth/login`, `/api/auth/register`
 
@@ -42,7 +42,7 @@ The URL `/auth/signin` is a **Next.js route** that would exist if the Next.js ap
 
 ### Working Pages:
 - `/` or `/index.html` - Homepage
-- `/login` or `/login.html` - Login page
+- `/login-platform.html` - Login page
 - `/dashboard` or `/dashboard.html` - Dashboard
 - `/stripe-checkout-redirect.html` - Stripe checkout flow (✅ Working)
 - `/trial-signup` - Trial signup page
@@ -100,7 +100,7 @@ The project has evolved through multiple iterations:
 
 To test the actual working authentication:
 
-1. **Visit Login Page**: https://platform.mapmystandards.ai/login
+1. **Visit Login Page**: https://platform.mapmystandards.ai/login-platform.html
 2. **Create Account**: Use the registration flow
 3. **Test Stripe Flow**: Use the working checkout redirect
 

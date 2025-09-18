@@ -66,7 +66,7 @@ const { access_token, user_id, email: userEmail, name, plan } = response.data.da
 5. **Verify**: Dashboard loads without 401 errors
 
 ### 2. Login Flow Test
-1. Visit: https://platform.mapmystandards.ai/login
+1. Visit: https://platform.mapmystandards.ai/login-platform.html
 2. Enter registered email and password
 3. Submit login form
 4. Should redirect to dashboard

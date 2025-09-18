@@ -50,7 +50,7 @@ https://your-app.vercel.app
 ## Quick Test
 
 1. Open a new incognito window
-2. Go to: `https://platform.mapmystandards.ai/login-platform`
+2. Go to: `https://platform.mapmystandards.ai/login-platform.html`
 3. Log in
 4. Click around to different pages
 5. You'll stay logged in! 🎉

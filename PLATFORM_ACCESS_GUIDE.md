@@ -20,7 +20,7 @@ When you access the platform via the Vercel URL, the browser cannot access cooki
 ## Quick Links
 
 ### Platform Access
-- **Login**: https://platform.mapmystandards.ai/login-platform
+- **Login**: https://platform.mapmystandards.ai/login-platform.html
 - **AI Dashboard**: https://platform.mapmystandards.ai/ai-dashboard
 - **Standards Explorer**: https://platform.mapmystandards.ai/standards
 - **Evidence Mapping**: https://platform.mapmystandards.ai/evidence-mapping
@@ -42,7 +42,7 @@ If you experience authentication issues:
 
 2. **Use an incognito/private window** to test fresh authentication
 
-3. **Always start from**: https://platform.mapmystandards.ai/login-platform
+3. **Always start from**: https://platform.mapmystandards.ai/login-platform.html
 
 4. **Verify the URL bar** shows `platform.mapmystandards.ai` (not `vercel.app`)
 
