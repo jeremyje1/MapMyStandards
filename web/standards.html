@@ -555,19 +555,36 @@
                 const headers = { 'Content-Type': 'application/json' };
                 // Use intelligence-simple standards corpus metadata to populate accreditor list
                 console.debug('Standards: fetching corpus metadata...');
-                const resp = await authFetch('/api/user/intelligence-simple/standards/corpus/metadata', { headers });
+                let resp = await authFetch('/api/user/intelligence-simple/standards/corpus/metadata', { headers });
                 console.debug('accreditors status', resp.status);
                 if (resp.status === 401) { statusError('Authentication required'); return; }
                 if (!resp.ok) { 
                     throw new Error(`Failed to load accreditors: HTTP ${resp.status}`); 
                 }
-                const data = await resp.json();
+                let data = await resp.json();
                 // Accept multiple shapes: {accreditors:[]}, {data:{accreditors:[]}}, {data:[]}, []
                 let list = null;
                 if (Array.isArray(data?.accreditors)) list = data.accreditors;
                 else if (Array.isArray(data?.data?.accreditors)) list = data.data.accreditors;
                 else if (Array.isArray(data?.data)) list = data.data;
                 else if (Array.isArray(data)) list = data;
+
+                // Fallback to public config accreditors if empty/unexpected
+                if (!Array.isArray(list) || list.length === 0) {
+                    console.debug('Standards: corpus metadata empty, falling back to /api/v1/config/accreditors');
+                    try {
+                        const cfgResp = await fetch('/api/v1/config/accreditors', { credentials: 'include' });
+                        if (cfgResp.ok) {
+                            const cfg = await cfgResp.json();
+                            if (Array.isArray(cfg)) list = cfg.map(a => ({
+                                id: a.id,
+                                name: a.name || a.full_name || a.id,
+                                acronym: (a.id || '').toUpperCase(),
+                                version: a.standards_version || ''
+                            }));
+                        }
+                    } catch(_) {}
+                }
                 if (!Array.isArray(list)) throw new Error('Unexpected response format');
                 
                 // Normalize to expected shape with label, id, version
