@@ -329,7 +329,7 @@ Sent from MapMyStandards.ai contact form
                 </div>
                 
                 <div style="text-align:center;margin:30px 0;">
-                    <a href="https://platform.mapmystandards.ai/login" style="display:inline-block;padding:12px 30px;background:#3b82f6;color:white;text-decoration:none;border-radius:5px;">Access Your Dashboard</a>
+                    <a href="https://platform.mapmystandards.ai/login-platform.html?return=%2Fai-dashboard" style="display:inline-block;padding:12px 30px;background:#3b82f6;color:white;text-decoration:none;border-radius:5px;">Access Your Dashboard</a>
                 </div>
                 
                 <h3 style="color:#1f2937;">Getting Started:</h3>

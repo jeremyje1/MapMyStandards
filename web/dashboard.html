@@ -284,7 +284,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
             if (!token) {
-                window.location.href = 'https://platform.mapmystandards.ai/login';
+                window.location.href = 'https://platform.mapmystandards.ai/login-platform.html';
             } else {
                 // Redirect to the new AI dashboard
                 window.location.href = 'https://platform.mapmystandards.ai/ai-dashboard';

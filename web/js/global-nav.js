@@ -150,7 +150,12 @@
             window.MMS_AUTH_BRIDGE.clearAuth();
           }
           
-          window.location.href = origin + '/login-platform.html';
+          try {
+            const PLATFORM_BASE = (window.MMS_CONFIG && window.MMS_CONFIG.PLATFORM_BASE_URL) || origin;
+            window.location.href = PLATFORM_BASE.replace(/\/$/, '') + '/login-platform.html';
+          } catch (_) {
+            window.location.href = origin + '/login-platform.html';
+          }
         } catch (e) {
           if (window.mmsAPI && window.mmsAPI.showError) window.mmsAPI.showError(e);
         }

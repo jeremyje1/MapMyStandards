@@ -8,6 +8,8 @@
 
   const APP_PATHS = new Set([
     '/login',
+    '/login-platform',
+    '/login-platform.html',
     '/subscribe',
     '/ai-dashboard',
     '/org-chart',
@@ -18,6 +20,10 @@
   ]);
 
   const toPlatform = (path) => `https://${PLATFORM_HOST}${path}`;
+  const CANONICAL = {
+    '/login': '/login-platform.html',
+    '/login-platform': '/login-platform.html',
+  };
 
   const rewriteLinks = () => {
     const anchors = document.querySelectorAll('a[href]');
@@ -29,7 +35,10 @@
         if (href.startsWith('/')) {
           const pathOnly = href.split('?')[0].split('#')[0];
           if (APP_PATHS.has(pathOnly)) {
-            a.setAttribute('href', toPlatform(href));
+            const canonicalPath = CANONICAL[pathOnly] || pathOnly;
+            const suffix = href.slice(pathOnly.length);
+            const newHref = canonicalPath + suffix;
+            a.setAttribute('href', toPlatform(newHref));
           }
         }
       } catch (_) {}

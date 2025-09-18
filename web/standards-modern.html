@@ -740,8 +740,7 @@
             } catch (_) {}
         })();
         function getApiBase(){
-            return (window.mmsAPI && window.mmsAPI.getBaseUrl && window.mmsAPI.getBaseUrl()) ||
-                   (location.hostname.includes('api.mapmystandards.ai') ? '' : 'https://api.mapmystandards.ai');
+            return '';
         }
         function getAuthToken(){
             return localStorage.getItem('a3e_api_key') ||
@@ -799,13 +798,13 @@
         // Logout function
         function logout() {
             localStorage.clear();
-            window.location.href = '/login';
+            window.location.href = '/login-platform.html';
         }
 
         // Load accreditors on page load
     async function loadAccreditors() {
             try {
-        const response = await fetch(getApiBase() + '/api/standards/accreditors');
+    const response = await fetch(getApiBase() + '/api/standards/accreditors', { credentials: 'include' });
                 const data = await response.json();
                 
                 if (data.success) {
@@ -834,7 +833,7 @@
             try{
                 const token = localStorage.getItem('a3e_api_key') || localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
                 const url = accreditorFilter? (getApiBase() + `/api/user/intelligence-simple/standards/corpus/metadata?accreditor=${encodeURIComponent(accreditorFilter)}`) : (getApiBase() + '/api/user/intelligence-simple/standards/corpus/metadata');
-                const res = await fetch(url, { headers: token? { 'Authorization': `Bearer ${token}` } : {} });
+                const res = await fetch(url, { headers: token? { 'Authorization': `Bearer ${token}` } : {}, credentials: 'include' });
                 if(!res.ok){
                     const t = await res.text();
                     throw new Error(`Request failed (${res.status}): ${t}`);
@@ -953,7 +952,7 @@
                     url += `&institution_type=${institutionType}`;
                 }
 
-                const response = await fetch(url);
+                const response = await fetch(url, { credentials: 'include' });
                 const data = await response.json();
                 
                 if (data.success) {
@@ -1102,7 +1101,7 @@
                 statusEl.textContent='Computing mappings...';
                 try{
                     const token = localStorage.getItem('a3e_api_key') || localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
-                    const res = await fetch(getApiBase() + `/api/user/intelligence-simple/standards/cross-accreditor-matches?source=${encodeURIComponent(source)}&target=${encodeURIComponent(target)}&threshold=${threshold}&top_k=${topK}`, { headers: token? { 'Authorization': `Bearer ${token}` } : {} });
+                    const res = await fetch(getApiBase() + `/api/user/intelligence-simple/standards/cross-accreditor-matches?source=${encodeURIComponent(source)}&target=${encodeURIComponent(target)}&threshold=${threshold}&top_k=${topK}`, { headers: token? { 'Authorization': `Bearer ${token}` } : {}, credentials: 'include' });
                     if(!res.ok){
                         const t = await res.text();
                         throw new Error(`Request failed (${res.status}): ${t}`);
@@ -1238,7 +1237,7 @@
                 const headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
                 if (token) headers['Authorization'] = 'Bearer ' + token;
                 return fetch(getApiBase() + '/api/user/intelligence-simple/risk/score-standard', {
-                    method:'POST', headers, body: payload.toString()
+                    method:'POST', headers, body: payload.toString(), credentials: 'include'
                 });
             })().then(async res => {
                 if(!res.ok){
@@ -1276,7 +1275,7 @@
                 const headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
                 if (token) headers['Authorization'] = 'Bearer ' + token;
                 return fetch(getApiBase() + '/api/user/intelligence-simple/risk/score-standard', {
-                    method:'POST', headers, body: payload.toString()
+                    method:'POST', headers, body: payload.toString(), credentials: 'include'
                 });
             })().then(async res => {
                 if(!res.ok){

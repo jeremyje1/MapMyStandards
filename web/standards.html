@@ -442,7 +442,7 @@
     </div>
 
     <script>
-        const API_BASE = (window.MMS_CONFIG && window.MMS_CONFIG.API_BASE_URL) || '';
+    const API_BASE = '/api';
         function buildApiUrl(path){
             if (typeof path !== 'string') return path;
             if (path.startsWith('http')) return path;
