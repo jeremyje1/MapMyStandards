@@ -1248,6 +1248,11 @@ async def evidence_upload_simple(
         raise HTTPException(status_code=500, detail="Failed to upload evidence")
 
 
+@router.get("/evidence/upload/debug", include_in_schema=False)
+async def evidence_upload_simple_debug():
+    return {"ok": True, "path": "/api/user/intelligence-simple/evidence/upload"}
+
+
 # ------------------------------
 # Evidence analysis
 # ------------------------------
