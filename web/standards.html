@@ -4,6 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Standards - A³E | MapMyStandards.ai</title>
+        <script>
+            (function redirectToModern(){
+                try{
+                    var u = new URL(window.location.href);
+                    // If accessed directly, redirect to modern page with a cache-buster
+                    var dest = '/standards-modern.html' + (u.search || '') + (u.search ? '&' : '?') + 'v=modern';
+                    window.location.replace(dest);
+                }catch(_){}
+            })();
+        </script>
     <script src="/js/config.js"></script>
     <link rel="stylesheet" href="/css/accessibility.css">
     <script src="/js/ux.js"></script>

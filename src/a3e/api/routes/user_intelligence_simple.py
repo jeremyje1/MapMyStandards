@@ -38,6 +38,8 @@ JWT_ALGORITHM = "HS256"
 # ------------------------------
 SETTINGS_STORE = os.getenv("USER_SETTINGS_STORE", "user_settings_store.json")
 REVIEWS_STORE = os.getenv("USER_REVIEWS_STORE", "user_reviews_store.json")
+# Per-standard reviewer notes/status (not tied to a specific evidence file)
+STANDARD_REVIEWS_STORE = os.getenv("USER_STANDARD_REVIEWS_STORE", "user_standard_reviews_store.json")
 UPLOADS_STORE = os.getenv("USER_UPLOADS_STORE", "user_uploads_store.json")
 SESSIONS_STORE = os.getenv("USER_SESSIONS_STORE", "user_sessions_store.json")
 ORG_CHART_STORE = os.getenv("ORG_CHART_STORE", "user_org_charts.json")
@@ -114,6 +116,58 @@ def _set_user_review(
     user_map[filename] = file_map
     all_r[uk] = user_map
     _safe_save_json(REVIEWS_STORE, all_r)
+    return entry
+
+
+def _get_user_standard_reviews(claims: Dict[str, Any], accreditor: Optional[str] = None) -> Dict[str, Any]:
+    """Return mapping of { standard_id: {status, note, assignee?, due_date?, updated_at} }.
+
+    If accreditor provided, returns only that accreditor's map; otherwise returns merged across accreditors.
+    Store structure: { user_key: { [accreditor]: { [standard_id]: entry } } }
+    """
+    all_r = _safe_load_json(STANDARD_REVIEWS_STORE)
+    user_map = all_r.get(_user_key(claims), {})
+    if accreditor:
+        return user_map.get(accreditor.upper(), {}) or {}
+    # Merge across accreditors (namespaces) into a single flat dict keyed by standard_id
+    merged: Dict[str, Any] = {}
+    for _, m in (user_map or {}).items():
+        if isinstance(m, dict):
+            merged.update(m)
+    return merged
+
+
+def _set_user_standard_review(
+    claims: Dict[str, Any],
+    accreditor: str,
+    standard_id: str,
+    status: Optional[str] = None,
+    note: Optional[str] = None,
+    assignee: Optional[str] = None,
+    due_date: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Upsert a per-standard review entry for the user and accreditor."""
+    accreditor = (accreditor or "").upper()
+    if not accreditor or not standard_id:
+        raise HTTPException(status_code=400, detail="accreditor and standard_id are required")
+    all_r = _safe_load_json(STANDARD_REVIEWS_STORE)
+    uk = _user_key(claims)
+    user_map = all_r.get(uk, {})
+    acc_map = user_map.get(accreditor, {})
+    entry = acc_map.get(standard_id, {})
+    if status is not None:
+        entry["status"] = str(status)
+    if note is not None:
+        entry["note"] = str(note)
+    if assignee is not None:
+        entry["assignee"] = str(assignee)
+    if due_date is not None:
+        entry["due_date"] = str(due_date)
+    entry["updated_at"] = datetime.utcnow().isoformat()
+    acc_map[standard_id] = entry
+    user_map[accreditor] = acc_map
+    all_r[uk] = user_map
+    _safe_save_json(STANDARD_REVIEWS_STORE, all_r)
     return entry
 
 
@@ -1738,6 +1792,49 @@ async def get_standards_categories(
     except Exception as e:
         logger.error(f"Standards categories error: {e}")
         raise HTTPException(status_code=500, detail="Failed to load categories")
+
+
+# ------------------------------
+# Reviewer: per-standard notes/status (server persistence)
+# ------------------------------
+@router.get("/reviews/standards")
+async def get_standard_reviews(
+    accreditor: Optional[str] = None,
+    current_user: Dict[str, Any] = Depends(get_current_user_simple)
+):
+    try:
+        data = _get_user_standard_reviews(current_user, accreditor=accreditor)
+        return {"success": True, "accreditor": (accreditor or None), "count": len(data), "reviews": data}
+    except Exception as e:
+        logger.error(f"Get standard reviews error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to load reviews")
+
+
+@router.post("/reviews/standard")
+async def save_standard_review(
+    payload: Dict[str, Any],
+    current_user: Dict[str, Any] = Depends(get_current_user_simple)
+):
+    try:
+        accreditor = (payload.get("accreditor") or payload.get("acc") or "").upper()
+        standard_id = str(payload.get("standard_id") or payload.get("code") or "").strip()
+        if not accreditor or not standard_id:
+            raise HTTPException(status_code=400, detail="accreditor and standard_id are required")
+        entry = _set_user_standard_review(
+            current_user,
+            accreditor=accreditor,
+            standard_id=standard_id,
+            status=payload.get("status"),
+            note=payload.get("note"),
+            assignee=payload.get("assignee"),
+            due_date=payload.get("due_date"),
+        )
+        return {"success": True, "entry": entry, "standard_id": standard_id, "accreditor": accreditor}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Save standard review error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to save review")
 
 
 # ------------------------------

@@ -1127,6 +1127,8 @@
                     name: accreditorId.toUpperCase(), 
                     acronym: accreditorId.toUpperCase() 
                 };
+                // Hydrate server reviews into local cache before rendering
+                await hydrateServerReviews(accreditor.acronym || accreditor.name);
                 displayStandards(accreditor, currentStandards);
                 persistFiltersToUrl();
             } catch (error) {
@@ -1200,19 +1202,23 @@
                                     <button class="btn btn-secondary" style="padding:0.4rem 0.8rem;font-size:0.7rem" onclick="openRiskModal('${standard.code || standard.id}')">Risk Factors</button>
                                 </div>
                                 ${isReviewerMode()?`
-                                <div class="meta-item" style="width:100%;margin-top:6px">
-                                    <select data-review-key="${reviewKey}" class="filter-select" style="padding:6px 8px;min-width:160px" onchange="saveReviewStatus(this)">
-                                        <option ${status==='Unreviewed'?'selected':''}>Unreviewed</option>
-                                        <option ${status==='In Progress'?'selected':''}>In Progress</option>
-                                        <option ${status==='Needs Evidence'?'selected':''}>Needs Evidence</option>
-                                        <option ${status==='Ready'?'selected':''}>Ready</option>
-                                        <option ${status==='Submitted'?'selected':''}>Submitted</option>
-                                    </select>
-                                </div>
-                                <div class="meta-item" style="width:100%">
-                                    <textarea data-review-key="${reviewKey}" class="filter-input" rows="2" placeholder="Reviewer notes…" style="width:100%" onblur="saveReviewNote(this)">${escapeHtml(note)}</textarea>
-                                </div>
-                                `:''}
+                                                <div class="meta-item" style="width:100%;margin-top:6px;gap:8px;align-items:stretch">
+                                                    <select data-review-key="${reviewKey}" data-standard-id="${standard.code || standard.id}" data-accreditor="${(accreditor.acronym||accreditor.name||'').toUpperCase()}" class="filter-select" style="padding:6px 8px;min-width:160px" onchange="saveReviewStatus(this)">
+                                                        <option ${status==='Unreviewed'?'selected':''}>Unreviewed</option>
+                                                        <option ${status==='In Progress'?'selected':''}>In Progress</option>
+                                                        <option ${status==='Needs Evidence'?'selected':''}>Needs Evidence</option>
+                                                        <option ${status==='Ready'?'selected':''}>Ready</option>
+                                                        <option ${status==='Submitted'?'selected':''}>Submitted</option>
+                                                    </select>
+                                                    <input type="text" placeholder="Assignee (email/name)" class="filter-input" data-review-assignee
+                                                        data-review-key="${reviewKey}" data-standard-id="${standard.code || standard.id}" data-accreditor="${(accreditor.acronym||accreditor.name||'').toUpperCase()}" style="padding:6px 8px;min-width:160px" onblur="saveReviewAssignee(this)">
+                                                    <input type="date" class="filter-input" data-review-due
+                                                        data-review-key="${reviewKey}" data-standard-id="${standard.code || standard.id}" data-accreditor="${(accreditor.acronym||accreditor.name||'').toUpperCase()}" style="padding:6px 8px;min-width:160px" onblur="saveReviewDueDate(this)">
+                                                </div>
+                                                <div class="meta-item" style="width:100%">
+                                                    <textarea data-review-key="${reviewKey}" data-standard-id="${standard.code || standard.id}" data-accreditor="${(accreditor.acronym||accreditor.name||'').toUpperCase()}" class="filter-input" rows="2" placeholder="Reviewer notes…" style="width:100%" onblur="saveReviewNote(this)">${escapeHtml(note)}</textarea>
+                                                </div>
+                                                `:''}
                             </div>
                         </div>
                     </div>
@@ -1379,8 +1385,45 @@
             hydrateSavedViews();
         });
 
-        function saveReviewStatus(sel){ const key=sel.getAttribute('data-review-key'); const existing=JSON.parse(localStorage.getItem(key)||'{}'); existing.status=sel.value; localStorage.setItem(key, JSON.stringify(existing)); }
-        function saveReviewNote(txt){ const key=txt.getAttribute('data-review-key'); const existing=JSON.parse(localStorage.getItem(key)||'{}'); existing.note=txt.value; localStorage.setItem(key, JSON.stringify(existing)); }
+        async function syncStandardReviewToServer(payload){
+            try {
+                const token = getAuthToken();
+                const headers = { 'Content-Type': 'application/json' };
+                if (isLikelyJwt(token)) headers['Authorization'] = 'Bearer ' + token;
+                const res = await fetch(getApiBase() + '/api/user/intelligence-simple/reviews/standard', {
+                    method: 'POST', headers, credentials: 'include', body: JSON.stringify(payload)
+                });
+                if (res.status === 401) { try { const b=document.getElementById('authBanner'); if(b) b.style.display='flex'; } catch(_){} }
+                // Non-blocking; ignore body for speed
+            } catch(_){}
+        }
+        function saveLocalReview(key, updater){ const existing=JSON.parse(localStorage.getItem(key)||'{}'); const updated = updater(existing)||existing; localStorage.setItem(key, JSON.stringify(updated)); return updated; }
+        function saveReviewStatus(sel){ const key=sel.getAttribute('data-review-key'); const standard_id=sel.getAttribute('data-standard-id'); const accreditor=sel.getAttribute('data-accreditor'); const updated = saveLocalReview(key, (e)=>{ e.status=sel.value; return e; }); syncStandardReviewToServer({ accreditor, standard_id, status: updated.status, note: updated.note, assignee: updated.assignee, due_date: updated.due_date }); }
+        function saveReviewNote(txt){ const key=txt.getAttribute('data-review-key'); const standard_id=txt.getAttribute('data-standard-id'); const accreditor=txt.getAttribute('data-accreditor'); const updated = saveLocalReview(key, (e)=>{ e.note=txt.value; return e; }); syncStandardReviewToServer({ accreditor, standard_id, status: updated.status, note: updated.note, assignee: updated.assignee, due_date: updated.due_date }); }
+        function saveReviewAssignee(inp){ const key=inp.getAttribute('data-review-key'); const standard_id=inp.getAttribute('data-standard-id'); const accreditor=inp.getAttribute('data-accreditor'); const updated = saveLocalReview(key, (e)=>{ e.assignee=inp.value; return e; }); syncStandardReviewToServer({ accreditor, standard_id, status: updated.status, note: updated.note, assignee: updated.assignee, due_date: updated.due_date }); }
+        function saveReviewDueDate(inp){ const key=inp.getAttribute('data-review-key'); const standard_id=inp.getAttribute('data-standard-id'); const accreditor=inp.getAttribute('data-accreditor'); const updated = saveLocalReview(key, (e)=>{ e.due_date=inp.value; return e; }); syncStandardReviewToServer({ accreditor, standard_id, status: updated.status, note: updated.note, assignee: updated.assignee, due_date: updated.due_date }); }
+
+        async function hydrateServerReviews(accreditor){
+            try{
+                if(!accreditor) return;
+                const token = getAuthToken();
+                const headers = {};
+                if (isLikelyJwt(token)) headers['Authorization'] = 'Bearer ' + token;
+                const res = await fetch(getApiBase() + `/api/user/intelligence-simple/reviews/standards?accreditor=${encodeURIComponent((accreditor||'').toUpperCase())}` , { credentials:'include', headers });
+                if(!res.ok) return;
+                const data = await res.json();
+                const reviews = data && data.reviews;
+                if(reviews && typeof reviews === 'object'){
+                    // Merge server entries into local cache by constructing the same keys used per standard
+                    Object.entries(reviews).forEach(([standard_id, entry])=>{
+                        const key = `mms:review:${(accreditor||'').toUpperCase()}:${standard_id}`;
+                        const existing = JSON.parse(localStorage.getItem(key)||'{}');
+                        const merged = { ...existing, ...entry };
+                        localStorage.setItem(key, JSON.stringify(merged));
+                    });
+                }
+            }catch(_){ }
+        }
 
         function exportStandardsCsv(){
             const rows = [['Accreditor','Code','Title','Level','Required','Weight']].concat((filteredStandards.length?filteredStandards:currentStandards).map(s=>[
