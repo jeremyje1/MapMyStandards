@@ -1510,6 +1510,21 @@
         }
         
         @media (max-width: 768px) {
+            /* Ensure all sections are visible on mobile */
+            .section, .hero, .algorithms-grid, .platform-features, .differentiators,
+            .faq-section, .updates-section, .pricing-section, .footer,
+            .hero-content, .section-header, .feature-card, .algorithm-card,
+            .differentiator-card, .faq-item, .update-card {
+                opacity: 1 !important;
+                visibility: visible !important;
+                transform: none !important;
+            }
+            
+            /* Reset any hidden states */
+            [style*="opacity: 0"] {
+                opacity: 1 !important;
+            }
+            
             .nav-links {
                 display: none;
             }
@@ -1589,7 +1604,7 @@
                 <a href="#platform-features">Features</a>
                 <a href="#pricing">Pricing</a>
                 <a href="https://platform.mapmystandards.ai/login-platform?return=%2Fai-dashboard">Login</a>
-                <a href="https://platform.mapmystandards.ai/trial-signup-stripe.html" class="btn btn-primary" style="color: white;">Get Started</a>
+                <a href="https://platform.mapmystandards.ai/subscribe" class="btn btn-primary" style="color: white;">Get Started</a>
             </div>
             <button class="mobile-menu-btn" aria-label="Menu" onclick="toggleMenu()">
                 <span></span>
@@ -1629,7 +1644,7 @@
                         </div>
                         
                         <div style="margin-top: 2rem;">
-                            <a href="https://platform.mapmystandards.ai/trial-signup-stripe.html" class="btn btn-primary" style="font-size: 1.125rem; padding: 1rem 2rem;">
+                            <a href="https://platform.mapmystandards.ai/subscribe" class="btn btn-primary" style="font-size: 1.125rem; padding: 1rem 2rem;">
                                 Start 7-Day Free Trial <i class="fas fa-arrow-right"></i>
                             </a>
                             <p style="font-size: 0.875rem; color: var(--text-tertiary); margin-top: 0.75rem;">
@@ -2220,7 +2235,7 @@
                 </div>
                 
                 <div style="text-align: center; margin-top: 3rem;">
-                    <a href="https://platform.mapmystandards.ai/trial-signup-stripe.html" class="btn btn-primary" style="font-size: 1.125rem; padding: 1rem 2.5rem;">
+                    <a href="https://platform.mapmystandards.ai/subscribe" class="btn btn-primary" style="font-size: 1.125rem; padding: 1rem 2.5rem;">
                         Get Everything for $199/month <i class="fas fa-arrow-right"></i>
                     </a>
                     <p style="color: var(--text-secondary); margin-top: 1rem;">Start with a 7-day free trial - card required, not charged until trial ends</p>
@@ -2313,7 +2328,7 @@
                         </div>
                     </div>
                     
-                    <a href="https://platform.mapmystandards.ai/trial-signup-stripe.html" class="btn btn-primary" style="width: 100%; margin-top: 2rem; font-size: 1.125rem; padding: 1rem;">
+                    <a href="https://platform.mapmystandards.ai/subscribe" class="btn btn-primary" style="width: 100%; margin-top: 2rem; font-size: 1.125rem; padding: 1rem;">
                         Start 7-Day Free Trial <i class="fas fa-arrow-right"></i>
                     </a>
                     <p style="font-size: 0.875rem; color: var(--text-tertiary); margin-top: 1rem; text-align: center;">
@@ -2330,7 +2345,7 @@
                 <p>Join institutions saving 32 hours weekly with compliance intelligence</p>
                 
                 <div class="cta-buttons">
-                    <a href="https://platform.mapmystandards.ai/trial-signup-stripe.html" class="btn btn-white">
+                    <a href="https://platform.mapmystandards.ai/subscribe" class="btn btn-white">
                         Start 7-Day Trial <i class="fas fa-arrow-right"></i>
                     </a>
                     <a href="https://calendly.com/jeremyestrella/30min" class="btn btn-outline">
@@ -2507,6 +2522,21 @@
             }
         }
         
+        // Check if mobile and make all elements visible immediately
+        const isMobile = window.innerWidth <= 768;
+        
+        // On mobile, ensure all sections are visible on load
+        if (isMobile) {
+            window.addEventListener('load', () => {
+                const sections = document.querySelectorAll('.section, .hero, .algorithms-grid, .platform-features, .differentiators, .faq-section, .updates-section, .pricing-section, .footer');
+                sections.forEach(section => {
+                    section.style.opacity = '1';
+                    section.style.visibility = 'visible';
+                    section.style.transform = 'none';
+                });
+            });
+        }
+        
         // Enhanced intersection observer for animations
         const observerOptions = {
             threshold: 0.1,
@@ -2516,9 +2546,15 @@
         const observer = new IntersectionObserver((entries) => {
             entries.forEach((entry, index) => {
                 if (entry.isIntersecting) {
-                    setTimeout(() => {
-                        entry.target.style.animation = 'fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards';
-                    }, index * 50); // Stagger animations
+                    // Only animate on desktop/tablet
+                    if (window.innerWidth > 767) {
+                        setTimeout(() => {
+                            entry.target.style.animation = 'fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards';
+                        }, index * 50); // Stagger animations
+                    } else {
+                        // On mobile, just make visible
+                        entry.target.style.opacity = '1';
+                    }
                     observer.unobserve(entry.target);
                 }
             });
@@ -2527,7 +2563,18 @@
         // Observe elements
         document.addEventListener('DOMContentLoaded', () => {
             const elements = document.querySelectorAll('.algorithm-card, .differentiator-card, .platform-card, .update-card, .metric-item');
-            elements.forEach(el => observer.observe(el));
+            
+            // On mobile, make everything visible immediately
+            if (isMobile) {
+                elements.forEach(el => {
+                    el.style.opacity = '1';
+                    el.style.transform = 'none';
+                    el.style.visibility = 'visible';
+                });
+            } else {
+                // On desktop, use the observer for animations
+                elements.forEach(el => observer.observe(el));
+            }
         });
         
         // Add animations
@@ -2544,8 +2591,18 @@
                 }
             }
             
-            .algorithm-card, .differentiator-card, .platform-card, .update-card, .metric-item {
-                opacity: 0;
+            @media (min-width: 768px) {
+                .algorithm-card, .differentiator-card, .platform-card, .update-card, .metric-item {
+                    opacity: 0;
+                }
+            }
+            
+            /* On mobile, ensure everything is visible by default */
+            @media (max-width: 767px) {
+                .algorithm-card, .differentiator-card, .platform-card, .update-card, .metric-item {
+                    opacity: 1 !important;
+                    transform: none !important;
+                }
             }
             
             .demo-content {
