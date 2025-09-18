@@ -872,11 +872,38 @@
             try{
                 const token = getAuthToken();
                 const url = accreditorFilter? (getApiBase() + `/api/user/intelligence-simple/standards/corpus/metadata?accreditor=${encodeURIComponent(accreditorFilter)}`) : (getApiBase() + '/api/user/intelligence-simple/standards/corpus/metadata');
-                const res = await fetch(url, {
+                let res = await fetch(url, {
                     headers: isLikelyJwt(token) ? { 'Authorization': `Bearer ${token}` } : {},
                     credentials: 'include'
                 });
                 if(!res.ok){
+                    if(res.status === 401 || res.status === 403){
+                        // Fallback: public accreditors endpoint to synthesize minimal metadata
+                        console.debug('[standards-modern] corpus metadata 401 — falling back to /api/v1/standards/accreditors');
+                        const pub = await fetch(getApiBase() + '/api/v1/standards/accreditors', { credentials: 'include' });
+                        if(pub.ok){
+                            const arr = await pub.json();
+                            const filtered = Array.isArray(arr) ? arr.filter(a => !accreditorFilter || (a.accreditor_acronym||a.accreditor_id||'').toUpperCase() === accreditorFilter.toUpperCase()) : [];
+                            const items = filtered.map(a => ({
+                                accreditor: (a.accreditor_acronym || a.accreditor_id || a.id || '').toUpperCase(),
+                                name: a.accreditor_name || a.name || a.full_name || '',
+                                version: null,
+                                effective_date: null,
+                                loaded_node_count: a.total_standards || 0,
+                                standard_count: a.total_standards || 0,
+                                license: null,
+                                last_updated: null,
+                                file: ''
+                            }));
+                            corpusMetadata = items;
+                            const totalAcc = items.length;
+                            const totalStd = items.reduce((s,x)=>s+(x.standard_count||0),0);
+                            renderCorpusMetadataTable(corpusMetadata, totalAcc, totalStd);
+                            genEl.textContent = `Generated: (public data)`;
+                            statusEl.textContent = accreditorFilter? `Showing ${corpusMetadata.length} record for ${accreditorFilter}` : `Loaded ${totalAcc} accreditors (${totalStd} standards)`;
+                            return;
+                        }
+                    }
                     const t = await res.text();
                     throw new Error(`Request failed (${res.status}): ${t}`);
                 }
