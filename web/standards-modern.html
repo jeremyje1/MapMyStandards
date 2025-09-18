@@ -1366,19 +1366,13 @@
                 return;
             }
             body.innerHTML = `<div class='loading-inline'>Scoring risk for <strong>${escapeHtml(standardId)}</strong>...</div>`;
-            // Derive naive inputs (coverage=0 if no evidence count; trust derived from placeholder)
-            // NOTE: In production tie into real mapping/trust data per standard if available client-side.
-            const payload = new URLSearchParams();
-            payload.append('standard_id', standardId);
-            // Provide neutral defaults letting backend compute risk mostly from lack of data.
-            payload.append('coverage', '0');
-            payload.append('avg_evidence_age_days', '365');
+            const q = new URLSearchParams({ standard_id: standardId, coverage: '0', avg_evidence_age_days: '365' }).toString();
             (function(){
                 const token = getAuthToken();
-                const headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
+                const headers = {};
                 if (isLikelyJwt(token)) headers['Authorization'] = 'Bearer ' + token;
-                return fetch(getApiBase() + '/api/user/intelligence-simple/risk/score-standard', {
-                    method:'POST', headers, body: payload.toString(), credentials: 'include'
+                return fetch(getApiBase() + '/api/user/intelligence-simple/risk/score-standard?' + q, {
+                    method:'POST', headers, credentials: 'include'
                 });
             })().then(async res => {
                 if(res.status === 401){ try { const b = document.getElementById('authBanner'); if (b) b.style.display = 'flex'; } catch(_) {}
@@ -1409,16 +1403,13 @@
             const body = document.getElementById('riskModalBody');
             const standardId = currentRiskModalStandardId;
             body.innerHTML = `<div class='loading-inline'>Refreshing score for <strong>${escapeHtml(standardId)}</strong>...</div>`;
-            const payload = new URLSearchParams();
-            payload.append('standard_id', standardId);
-            payload.append('coverage', '0');
-            payload.append('avg_evidence_age_days', '365');
+            const q2 = new URLSearchParams({ standard_id: standardId, coverage: '0', avg_evidence_age_days: '365' }).toString();
             (function(){
                 const token = getAuthToken();
-                const headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
+                const headers = {};
                 if (isLikelyJwt(token)) headers['Authorization'] = 'Bearer ' + token;
-                return fetch(getApiBase() + '/api/user/intelligence-simple/risk/score-standard', {
-                    method:'POST', headers, body: payload.toString(), credentials: 'include'
+                return fetch(getApiBase() + '/api/user/intelligence-simple/risk/score-standard?' + q2, {
+                    method:'POST', headers, credentials: 'include'
                 });
             })().then(async res => {
                 if(res.status === 401){ try { const b = document.getElementById('authBanner'); if (b) b.style.display = 'flex'; } catch(_) {}
