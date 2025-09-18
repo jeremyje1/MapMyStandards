@@ -116,10 +116,10 @@
       if (!email || !password) { showError('Please enter your email and password.'); return; }
       setLoading(true);
       try{
-        // Prefer `${API_BASE_URL}/auth/login` so when API_BASE_URL='/api' this resolves to '/api/auth/login'
-        let response = await fetch(`${API_BASE_URL}/auth/login`, { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify({ email, password, rememberMe: remember })});
+        // Prefer `${API_BASE_URL}/api/auth/login` to use the session auth router
+        let response = await fetch(`${API_BASE_URL}/api/auth/login`, { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify({ email, password, rememberMe: remember })});
         if (response.status === 404 || response.status === 405 || response.status === 422){
-          response = await fetch(`${API_BASE_URL}/api/auth/login`, { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify({ email, password, rememberMe: remember })});
+          response = await fetch(`${API_BASE_URL}/auth/login`, { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify({ email, password, rememberMe: remember })});
         }
         const result = await response.json().catch(()=>({}));
         if (response.ok && (result.success || result.access_token || (result.data && result.data.access_token))){

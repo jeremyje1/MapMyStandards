@@ -109,9 +109,10 @@
             await window.MMS_AUTH.silentRefresh();
             if (window.mmsAPI && window.mmsAPI.showSuccess) window.mmsAPI.showSuccess('Session refreshed');
           } else {
-            let r = await fetch(`${API_BASE}/auth/refresh`.replace(/\/\/$/, '/auth/refresh'), { method: 'POST', credentials: 'include' });
+            // Prefer /api/auth/refresh
+            let r = await fetch(`${API_BASE}/api/auth/refresh`, { method: 'POST', credentials: 'include' });
             if (!r.ok && r.status === 404) {
-              r = await fetch(`${API_BASE}/auth/refresh`.replace(/\/\/$/, '/auth/refresh'), { method: 'POST', credentials: 'include' });
+              r = await fetch(`${API_BASE}/auth/refresh`, { method: 'POST', credentials: 'include' });
             }
             if (r.ok) {
               if (window.mmsAPI && window.mmsAPI.showSuccess) window.mmsAPI.showSuccess('Session refreshed');
@@ -131,7 +132,8 @@
           } else if (window.mmsAPI) {
             await window.mmsAPI.logout();
           } else {
-            await fetch(`${API_BASE}/auth/logout`.replace(/\/\/$/, '/auth/logout'), { method: 'POST', credentials: 'include' });
+            // Prefer /api/auth/logout
+            await fetch(`${API_BASE}/api/auth/logout`, { method: 'POST', credentials: 'include' });
           }
           if (window.mmsAPI) window.mmsAPI.clearAuth && window.mmsAPI.clearAuth();
           
@@ -167,7 +169,8 @@
           } else if (window.mmsAPI && window.mmsAPI.me) {
             info = await window.mmsAPI.me();
           } else {
-            const r = await fetch(`${API_BASE}/auth/me`.replace(/\/\/$/, '/auth/me'), { credentials: 'include' });
+            // Prefer /api/auth/me
+            const r = await fetch(`${API_BASE}/api/auth/me`, { credentials: 'include' });
             if (r.ok) {
               info = await r.json();
               // Store successful auth for future use

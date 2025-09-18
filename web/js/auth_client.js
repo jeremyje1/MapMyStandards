@@ -55,14 +55,12 @@
       return await res.json();
     }
 
-    async silentRefresh(){
+  async silentRefresh(){
       if (this._refreshInFlight) return this._refreshInFlight;
       this._refreshInFlight = (async ()=>{
         try{
-          let r = await fetch(`${this.baseUrl}/auth/refresh`.replace(/\/auth\//, '/auth/refresh'), { method:'POST', credentials:'include' });
-          if (!r.ok && r.status === 404){
-            r = await fetch(`${this.baseUrl}/api/auth/refresh`, { method:'POST', credentials:'include' });
-          }
+          // Prefer /api/auth/refresh first (session router)
+          let r = await fetch(`${this.baseUrl}/api/auth/refresh`, { method:'POST', credentials:'include' });
           if (!r.ok && r.status === 404){
             r = await fetch(`${this.baseUrl}/auth/refresh`, { method:'POST', credentials:'include' });
           }
@@ -77,6 +75,7 @@
 
     async me(){
       try{
+        // Prefer /api/auth/me (session router)
         const r = await fetch(`${this.baseUrl}/api/auth/me`, { credentials:'include' });
         if (r.ok) return await r.json();
       }catch(_){ }
@@ -85,6 +84,7 @@
 
     async logout(){
       try{
+        // Prefer /api/auth/logout (session router)
         const r = await fetch(`${this.baseUrl}/api/auth/logout`, { method:'POST', credentials:'include' });
         if (r.ok) return await r.json();
       }catch(_){ }
