@@ -569,17 +569,17 @@
                 else if (Array.isArray(data?.data)) list = data.data;
                 else if (Array.isArray(data)) list = data;
 
-                // Fallback to public config accreditors if empty/unexpected
+                // Fallback to public accreditors if empty/unexpected
                 if (!Array.isArray(list) || list.length === 0) {
-                    console.debug('Standards: corpus metadata empty, falling back to /api/v1/config/accreditors');
+                    console.debug('Standards: corpus metadata empty, falling back to /api/v1/standards/accreditors');
                     try {
-                        const cfgResp = await fetch('/api/v1/config/accreditors', { credentials: 'include' });
+                        const cfgResp = await fetch('/api/v1/standards/accreditors', { credentials: 'include' });
                         if (cfgResp.ok) {
                             const cfg = await cfgResp.json();
                             if (Array.isArray(cfg)) list = cfg.map(a => ({
-                                id: a.id,
-                                name: a.name || a.full_name || a.id,
-                                acronym: (a.id || '').toUpperCase(),
+                                id: (a.accreditor_acronym || a.accreditor_id || a.id || '').toUpperCase(),
+                                name: a.accreditor_name || a.name || a.full_name || a.id || 'Unknown',
+                                acronym: (a.accreditor_acronym || a.accreditor_id || a.id || '').toUpperCase(),
                                 version: a.standards_version || ''
                             }));
                         }
