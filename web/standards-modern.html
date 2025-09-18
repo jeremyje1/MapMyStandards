@@ -689,9 +689,23 @@
                     <button class="btn btn-secondary" onclick="clearFilters()">
                         🔄 Clear Filters
                     </button>
-                    <label style="display:inline-flex;align-items:center;gap:8px;margin-left:8px;font-size:0.9rem;color:var(--text-medium)">
-                        <input type="checkbox" id="includeSubsectionsToggle"> Include subsections
-                    </label>
+                    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+                        <label class="filter-label" style="margin:0">Levels</label>
+                        <select id="levelsSelect" class="filter-select" style="padding:0.5rem 0.75rem">
+                            <option value="standard">Top-level only</option>
+                            <option value="standard,clause">Include subsections</option>
+                            <option value="standard,clause,indicator">All levels</option>
+                        </select>
+                        <label style="display:inline-flex;align-items:center;gap:8px;font-size:0.9rem;color:var(--text-medium)">
+                            <input type="checkbox" id="reviewerModeToggle"> Reviewer mode
+                        </label>
+                        <button class="btn btn-secondary" onclick="exportStandardsCsv()">⬇️ Export CSV</button>
+                        <button class="btn btn-secondary" onclick="saveCurrentView()">💾 Save View</button>
+                        <select id="savedViewsSelect" class="filter-select" style="padding:0.5rem 0.75rem;min-width:200px">
+                            <option value="">Load view…</option>
+                        </select>
+                        <button class="btn btn-secondary" onclick="window.print()">🖨️ Print</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -759,14 +773,41 @@
         function getApiBase(){
             return '';
         }
-        function getIncludeSubsections(){
-            try { return localStorage.getItem('mms:includeSubsections') === 'true'; } catch(_) { return false; }
-        }
-        function setIncludeSubsections(v){
-            try { localStorage.setItem('mms:includeSubsections', v ? 'true' : 'false'); } catch(_) {}
-        }
         function getLevelsParam(){
-            return getIncludeSubsections() ? 'standard,clause' : 'standard';
+            try { return localStorage.getItem('mms:levels') || 'standard'; } catch(_) { return 'standard'; }
+        }
+        function setLevelsParam(v){
+            try { localStorage.setItem('mms:levels', v); } catch(_) {}
+        }
+        function isReviewerMode(){ try { return localStorage.getItem('mms:reviewerMode') === 'true'; } catch(_) { return false; } }
+        function setReviewerMode(v){ try { localStorage.setItem('mms:reviewerMode', v?'true':'false'); } catch(_){} }
+        function persistFiltersToUrl(){
+            const u=new URL(window.location.href);
+            const acc=document.getElementById('accreditorSelect').value||'';
+            const it=document.getElementById('institutionTypeSelect').value||'';
+            const q=document.getElementById('searchInput').value||'';
+            const lv=getLevelsParam();
+            if(acc) u.searchParams.set('acc', acc); else u.searchParams.delete('acc');
+            if(it) u.searchParams.set('type', it); else u.searchParams.delete('type');
+            if(q) u.searchParams.set('q', q); else u.searchParams.delete('q');
+            if(lv) u.searchParams.set('levels', lv); else u.searchParams.delete('levels');
+            history.replaceState({},'',u.toString());
+        }
+        function loadFiltersFromUrl(){
+            try{
+                const u=new URL(window.location.href);
+                const acc=u.searchParams.get('acc')||'';
+                const it=u.searchParams.get('type')||'';
+                const q=u.searchParams.get('q')||'';
+                const lv=u.searchParams.get('levels')||getLevelsParam();
+                if(lv) setLevelsParam(lv);
+                setTimeout(()=>{
+                    if(acc) document.getElementById('accreditorSelect').value=acc;
+                    if(it) document.getElementById('institutionTypeSelect').value=it;
+                    if(q) document.getElementById('searchInput').value=q;
+                    const ls=document.getElementById('levelsSelect'); if(ls) ls.value=lv;
+                },0);
+            }catch(_){}
         }
         function getAuthToken(){
             return localStorage.getItem('a3e_api_key') ||
@@ -1087,6 +1128,7 @@
                     acronym: accreditorId.toUpperCase() 
                 };
                 displayStandards(accreditor, currentStandards);
+                persistFiltersToUrl();
             } catch (error) {
                 console.error('Error loading standards:', error);
                 showErrorState('Error loading standards', 'Please try again or select a different accreditor.');
@@ -1125,6 +1167,10 @@
             
             standards.forEach(standard => {
                 const evidenceCount = standard.evidence_requirements ? standard.evidence_requirements.length : 0;
+                const reviewKey = `mms:review:${accreditor.acronym||accreditor.name}:${standard.code||standard.id}`;
+                const existing = JSON.parse(localStorage.getItem(reviewKey) || '{}');
+                const status = existing.status || 'Unreviewed';
+                const note = existing.note || '';
                 
                 html += `
                     <div class="standard-card">
@@ -1153,6 +1199,20 @@
                                 <div class="meta-item">
                                     <button class="btn btn-secondary" style="padding:0.4rem 0.8rem;font-size:0.7rem" onclick="openRiskModal('${standard.code || standard.id}')">Risk Factors</button>
                                 </div>
+                                ${isReviewerMode()?`
+                                <div class="meta-item" style="width:100%;margin-top:6px">
+                                    <select data-review-key="${reviewKey}" class="filter-select" style="padding:6px 8px;min-width:160px" onchange="saveReviewStatus(this)">
+                                        <option ${status==='Unreviewed'?'selected':''}>Unreviewed</option>
+                                        <option ${status==='In Progress'?'selected':''}>In Progress</option>
+                                        <option ${status==='Needs Evidence'?'selected':''}>Needs Evidence</option>
+                                        <option ${status==='Ready'?'selected':''}>Ready</option>
+                                        <option ${status==='Submitted'?'selected':''}>Submitted</option>
+                                    </select>
+                                </div>
+                                <div class="meta-item" style="width:100%">
+                                    <textarea data-review-key="${reviewKey}" class="filter-input" rows="2" placeholder="Reviewer notes…" style="width:100%" onblur="saveReviewNote(this)">${escapeHtml(note)}</textarea>
+                                </div>
+                                `:''}
                             </div>
                         </div>
                     </div>
@@ -1191,6 +1251,7 @@
             };
             
             displayStandards(accreditor, filteredStandards);
+            persistFiltersToUrl();
         }
 
         function clearFilters() {
@@ -1308,22 +1369,58 @@
 
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
-            // Initialize toggle state and handler
-            (function initSubsectionsToggle(){
-                const tgl = document.getElementById('includeSubsectionsToggle');
-                if (!tgl) return;
-                tgl.checked = getIncludeSubsections();
-                tgl.addEventListener('change', ()=>{
-                    setIncludeSubsections(tgl.checked);
-                    const accreditorId = document.getElementById('accreditorSelect').value;
-                    if (accreditorId) {
-                        const institutionType = document.getElementById('institutionTypeSelect').value;
-                        loadStandards(accreditorId, institutionType);
-                    }
-                });
-            })();
+            // Initialize levels + reviewer mode
+            try{
+                const ls=document.getElementById('levelsSelect'); if(ls){ ls.value=getLevelsParam(); ls.addEventListener('change', ()=>{ setLevelsParam(ls.value); const acc=document.getElementById('accreditorSelect').value; if(acc){ loadStandards(acc, document.getElementById('institutionTypeSelect').value); } persistFiltersToUrl(); }); }
+                const rv=document.getElementById('reviewerModeToggle'); if(rv){ rv.checked=isReviewerMode(); rv.addEventListener('change', ()=>{ setReviewerMode(rv.checked); const acc=document.getElementById('accreditorSelect').value; if(acc){ displayStandards(accreditors.find(a=>a.id===acc)||{name:acc,acronym:acc}, filteredStandards.length?filteredStandards:currentStandards); } }); }
+            }catch(_){ }
+            loadFiltersFromUrl();
             loadAccreditors();
+            hydrateSavedViews();
         });
+
+        function saveReviewStatus(sel){ const key=sel.getAttribute('data-review-key'); const existing=JSON.parse(localStorage.getItem(key)||'{}'); existing.status=sel.value; localStorage.setItem(key, JSON.stringify(existing)); }
+        function saveReviewNote(txt){ const key=txt.getAttribute('data-review-key'); const existing=JSON.parse(localStorage.getItem(key)||'{}'); existing.note=txt.value; localStorage.setItem(key, JSON.stringify(existing)); }
+
+        function exportStandardsCsv(){
+            const rows = [['Accreditor','Code','Title','Level','Required','Weight']].concat((filteredStandards.length?filteredStandards:currentStandards).map(s=>[
+                document.getElementById('accreditorSelect').value, s.code||s.id, s.title||'', s.category||'', String(!!s.is_required), String(s.weight||'')
+            ]));
+            const csv = rows.map(r=>r.map(x=>`"${String(x).replace(/"/g,'""')}"`).join(',')).join('\n');
+            const blob = new Blob([csv], {type:'text/csv'});
+            const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='standards_export.csv'; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+        }
+        function getCurrentView(){
+            return {
+                acc: document.getElementById('accreditorSelect').value||'',
+                type: document.getElementById('institutionTypeSelect').value||'',
+                q: document.getElementById('searchInput').value||'',
+                levels: getLevelsParam()
+            };
+        }
+        function saveCurrentView(){
+            const name = prompt('Name this view:');
+            if(!name) return;
+            const v = getCurrentView();
+            const all = JSON.parse(localStorage.getItem('mms:savedViews')||'{}');
+            all[name]=v; localStorage.setItem('mms:savedViews', JSON.stringify(all)); hydrateSavedViews(); alert('View saved.');
+        }
+        function hydrateSavedViews(){
+            const sel=document.getElementById('savedViewsSelect'); if(!sel) return;
+            sel.innerHTML = '<option value="">Load view…</option>';
+            const all = JSON.parse(localStorage.getItem('mms:savedViews')||'{}');
+            Object.keys(all).forEach(k=>{ const o=document.createElement('option'); o.value=k; o.textContent=k; sel.appendChild(o); });
+            sel.onchange = ()=>{
+                const key=sel.value; if(!key) return;
+                const v=JSON.parse(localStorage.getItem('mms:savedViews')||'{}')[key]; if(!v) return;
+                setLevelsParam(v.levels||'standard'); const ls=document.getElementById('levelsSelect'); if(ls) ls.value=getLevelsParam();
+                document.getElementById('accreditorSelect').value=v.acc||'';
+                document.getElementById('institutionTypeSelect').value=v.type||'';
+                document.getElementById('searchInput').value=v.q||'';
+                if(v.acc){ loadStandards(v.acc, v.type||''); }
+                persistFiltersToUrl();
+            };
+        }
 
         // Risk Factor Modal Logic
         function ensureModal(){
