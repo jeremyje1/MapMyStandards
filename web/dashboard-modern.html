@@ -808,7 +808,7 @@
             
             <div class="header-nav">
                 <nav class="nav-links">
-                    <a href="/ai-dashboard" class="active">Dashboard</a>
+                    <a href="/dashboard-modern.html" class="active">Dashboard</a>
                     <a href="/upload">Upload</a>
                     <a href="/standards-modern.html">Standards</a>
                     <a href="/reports">Reports</a>
@@ -860,6 +860,22 @@
                     <a href="/reports" class="action-btn">
                         <span>📊</span>
                         Generate Report
+                    </a>
+                    <a href="#ai-evidence" class="action-btn">
+                        <span>🧠</span>
+                        AI Evidence Analysis
+                    </a>
+                    <a href="#standards-graph" class="action-btn">
+                        <span>🕸️</span>
+                        Standards Graph
+                    </a>
+                    <a href="#gap-analysis" class="action-btn">
+                        <span>⚠️</span>
+                        Gap Analysis
+                    </a>
+                    <a href="#narrative" class="action-btn">
+                        <span>📖</span>
+                        Narrative (CiteGuard)
                     </a>
                 </div>
             </div>
@@ -1055,8 +1071,8 @@
                             <div class="metric-label">Evidence Trust <span style="cursor:help;font-size:14px" title="${(explain.average_trust || '').replace(/\"/g,'"')}">ℹ️</span></div>
                             <div class="metric-icon info">🔒</div>
                         </div>
-                        <div class="metric-value">${(performance.average_trust ?? 0).toFixed(2)}</div>
-                        <div class="metric-description">Mean EvidenceTrust score</div>
+                        <div class="metric-value">${Math.round((performance.average_trust ?? 0) * 100)}%</div>
+                        <div class="metric-description">Mean EvidenceTrust (0–100%)</div>
                         <div class="metric-trend">
                             <span class="trend-indicator trend-${(performance.average_trust ?? 0) >= 0.75 ? 'up' : ((performance.average_trust ?? 0) >= 0.55 ? 'neutral' : 'down')}">
                                 ${(performance.average_trust ?? 0) >= 0.75 ? 'Healthy' : ((performance.average_trust ?? 0) >= 0.55 ? 'Moderate' : 'Low')}
@@ -1070,8 +1086,8 @@
                             <div class="metric-label">Gap Risk <span style="cursor:help;font-size:14px" title="${(explain.average_risk || '').replace(/\"/g,'"')}">ℹ️</span></div>
                             <div class="metric-icon danger">🛑</div>
                         </div>
-                        <div class="metric-value">${(performance.average_risk ?? 0).toFixed(3)}</div>
-                        <div class="metric-description">Avg calibrated risk (0–1)</div>
+                        <div class="metric-value">${Math.round((performance.average_risk ?? 0) * 100)}%</div>
+                        <div class="metric-description">Avg calibrated risk (0–100%)</div>
                         <div class="metric-trend">
                             <span class="trend-indicator trend-${(performance.average_risk ?? 0) <= 0.25 ? 'up' : ((performance.average_risk ?? 0) <= 0.5 ? 'neutral' : 'down')}">
                                 ${(performance.average_risk ?? 0) <= 0.25 ? 'Low' : ((performance.average_risk ?? 0) <= 0.5 ? 'Moderate' : 'Elevated')}
@@ -1097,6 +1113,15 @@
                                             <div style='margin-top:2px;color:#555'>${v}</div>
                                         </div>`;
                                     }).join('') + `</div>`;
+                            })()}
+                        </div>
+                        <div style="margin-top:6px;font-size:12px;color:#4b5563">
+                            ${(() => {
+                                const d = performance.risk_distribution || {};
+                                const label = (k)=>({critical:'Critical',high:'High',medium:'Medium',low:'Low',minimal:'Minimal'})[k]||k;
+                                const keys = ['low','medium','high'];
+                                const parts = keys.map(k=>`${label(k)}:${d[k]||0}`);
+                                return parts.join(' · ');
                             })()}
                         </div>
                         <div id="riskSpark" style="margin-top:6px;height:36px"></div>
@@ -1394,10 +1419,132 @@
             if (el) el.style.display = 'none';
         }
 
-        // Initialize dashboard when DOM is loaded
-        document.addEventListener('DOMContentLoaded', () => {
-            new Dashboard();
-        });
+                // Inject AI action sections near end of body
+                document.addEventListener('DOMContentLoaded', () => {
+                        new Dashboard();
+
+                        const container = document.querySelector('main');
+                        if (container && !document.getElementById('ai-evidence')) {
+                                const wrapper = document.createElement('div');
+                                wrapper.className = 'content-grid';
+                                wrapper.style.gridTemplateColumns = '1fr 1fr';
+                                                wrapper.innerHTML = `
+                                    <section id="ai-evidence" class="activity-section" aria-labelledby="aiEvidenceTitle">
+                                        <div class="section-header">
+                                            <h2 id="aiEvidenceTitle" class="section-title">AI Evidence Analysis</h2>
+                                        </div>
+                                        <div style="padding: var(--space-6);">
+                                            <p class="section-description">Upload documents for intelligent standards mapping</p>
+                                            <div id="dashDropZone" role="button" tabindex="0" aria-label="Upload area" style="margin-top:12px;border:2px dashed var(--gray-300);border-radius:12px;padding:20px;text-align:center;color:var(--gray-600)">
+                                                Drag & drop files here or
+                                                <button type="button" id="dashBrowseBtn" class="action-btn action-btn-primary" style="margin-left:8px">Browse files</button>
+                                                <div style="margin-top:6px;font-size:12px;color:var(--gray-500)">PDF, Word, Text. You can drop multiple files.</div>
+                                            </div>
+                                            <input type="file" id="dashFileInput" accept=".pdf,.doc,.docx,.txt" multiple style="display:none" />
+                                                            <div id="dashRecentUploadsContainer" style="margin-top:12px;text-align:left">
+                                                                <div style="font-weight:600;color:#1f2937">Recent uploads</div>
+                                                                <ul id="dashRecentUploads" style="margin-top:6px;list-style:none;padding:0;color:#374151"></ul>
+                                                            </div>
+                                        </div>
+                                    </section>
+                                    <section id="standards-graph" class="activity-section" aria-labelledby="standardsGraphTitle">
+                                        <div class="section-header">
+                                            <h2 id="standardsGraphTitle" class="section-title">Standards Graph™</h2>
+                                            <button id="dashViewGraph" class="section-action">View Graph</button>
+                                        </div>
+                                        <div style="padding: var(--space-6);">
+                                            <p class="section-description">Explore standards relationships</p>
+                                            <div style="margin-top:10px;display:flex;gap:8px">
+                                                <input id="dashStandardsSearch" type="text" placeholder="Search standard, clause, indicator" style="flex:1;border:1px solid var(--gray-300);border-radius:8px;padding:8px 10px" />
+                                                <button id="dashStandardsSearchBtn" class="action-btn">Search</button>
+                                            </div>
+                                        </div>
+                                    </section>
+                                    <section id="gap-analysis" class="activity-section" aria-labelledby="gapAnalysisTitle">
+                                        <div class="section-header">
+                                            <h2 id="gapAnalysisTitle" class="section-title">Gap Analysis</h2>
+                                        </div>
+                                        <div style="padding: var(--space-6);">
+                                            <p class="section-description">AI-powered compliance gap detection</p>
+                                            <button id="dashAnalyzeGaps" class="action-btn action-btn-primary" style="margin-top:10px">Analyze Gaps</button>
+                                        </div>
+                                    </section>
+                                    <section id="narrative" class="activity-section" aria-labelledby="narrativeTitle">
+                                        <div class="section-header">
+                                            <h2 id="narrativeTitle" class="section-title">Narrative (CiteGuard)</h2>
+                                        </div>
+                                        <div style="padding: var(--space-6);">
+                                            <p class="section-description">Generate and export your accreditation narrative</p>
+                                            <button id="dashOpenNarrative" class="action-btn" style="margin-top:10px">Open Narrative</button>
+                                        </div>
+                                    </section>`;
+                                container.appendChild(wrapper);
+                        }
+
+                        // Wire AI Evidence drag/drop
+                        const dz = document.getElementById('dashDropZone');
+                        const fi = document.getElementById('dashFileInput');
+                        const br = document.getElementById('dashBrowseBtn');
+                        if (br && fi) br.addEventListener('click', ()=> fi.click());
+                        if (dz) {
+                                ['dragenter','dragover'].forEach(evt => dz.addEventListener(evt, e=>{ e.preventDefault(); dz.style.background = '#f8fafc'; }));
+                                ['dragleave','drop'].forEach(evt => dz.addEventListener(evt, e=>{ e.preventDefault(); dz.style.background = ''; }));
+                                dz.addEventListener('drop', e=>{ const files = e.dataTransfer?.files; if (files && files.length) handleDashboardFiles(files); });
+                                dz.addEventListener('keydown', e=>{ if(e.key==='Enter' && fi) fi.click(); });
+                        }
+                        if (fi) fi.addEventListener('change', ()=> handleDashboardFiles(fi.files));
+                        // Render any stored recent uploads
+                        renderRecentUploads();
+
+                        // Wire Graph/Gaps/Narrative
+                        const vg = document.getElementById('dashViewGraph'); if (vg) vg.addEventListener('click', ()=> window.location.href='/standards-modern.html#graph');
+                        const sb = document.getElementById('dashStandardsSearchBtn');
+                        const si = document.getElementById('dashStandardsSearch');
+                        if (sb && si) sb.addEventListener('click', ()=> { const q=encodeURIComponent(si.value||''); window.location.href = '/standards-modern.html?q=' + q; });
+                        const gaps = document.getElementById('dashAnalyzeGaps'); if (gaps) gaps.addEventListener('click', ()=> window.location.href='/reports#gaps');
+                        const narr = document.getElementById('dashOpenNarrative'); if (narr) narr.addEventListener('click', ()=> window.location.href='/reports#narrative');
+                });
+
+                function getStoredRecentUploads(){
+                    try { return JSON.parse(localStorage.getItem('mms:recentUploads')||'[]') || []; } catch { return []; }
+                }
+
+                function setStoredRecentUploads(items){
+                    try { localStorage.setItem('mms:recentUploads', JSON.stringify(items.slice(0,5))); } catch {}
+                }
+
+                function renderRecentUploads(){
+                    const list = document.getElementById('dashRecentUploads');
+                    if (!list) return;
+                    const items = getStoredRecentUploads();
+                    list.innerHTML = items.length ? items.map(it=>`<li style='display:flex;justify-content:space-between;gap:8px;border:1px solid #e5e7eb;border-radius:8px;padding:6px 8px;margin-top:6px'>
+                        <span style='overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:70%'>${it.name}</span>
+                        <span style='font-size:12px;color:${it.status==='submitted'?'#92400e':'#065f46'};background:${it.status==='submitted'?'#fffbeb':'#ecfdf5'};border:1px solid ${it.status==='submitted'?'#fde68a':'#a7f3d0'};padding:2px 6px;border-radius:999px'>${it.status}</span>
+                    </li>`).join('') : `<li style='color:#6b7280;margin-top:6px'>No recent uploads</li>`;
+                }
+
+                async function handleDashboardFiles(fileList){
+                        try {
+                                if (!fileList || fileList.length===0) return;
+                                const form = new FormData();
+                        const recent = getStoredRecentUploads();
+                        for (const f of fileList) {
+                            form.append('files', f);
+                            recent.unshift({ name: f.name, status: 'submitted', ts: Date.now() });
+                        }
+                        setStoredRecentUploads(recent);
+                        renderRecentUploads();
+                                const guessJwt = (t)=>{ try{ return typeof t==='string' && t.split('.').length===3 && t.length>40; }catch{return false;} };
+                                const token = localStorage.getItem('a3e_api_key') || sessionStorage.getItem('a3e_api_key') || localStorage.getItem('access_token') || localStorage.getItem('jwt_token') || '';
+                                const headers = guessJwt(token) ? { 'Authorization': `Bearer ${token}` } : {};
+                                const res = await fetch('/api/user/intelligence-simple/evidence/upload', { method:'POST', body: form, headers, credentials:'include' });
+                                if (!res.ok) throw new Error('Upload failed');
+                        // Mark the most recent batch as submitted-ok
+                        const ok = getStoredRecentUploads().map((it,i)=> i<fileList.length ? { ...it, status: 'queued' } : it);
+                        setStoredRecentUploads(ok);
+                        renderRecentUploads();
+                        } catch (e) { alert('Unable to upload files. Please sign in and try again.'); }
+                }
 
         // Service worker registration for offline support
         if ('serviceWorker' in navigator) {

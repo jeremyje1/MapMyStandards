@@ -2,7 +2,7 @@
   if (document.getElementById('globalNavContainer')) return;
 
   const links = [
-    { text: 'AI Dashboard', path: '/ai-dashboard' },
+    { text: 'AI Dashboard', path: '/dashboard-modern.html' },
     { text: 'Standards', path: '/standards' },
     { text: 'Evidence Mapping', path: '/evidence-mapping' },
     { text: 'Reports', path: '/reports' },

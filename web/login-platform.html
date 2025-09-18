@@ -151,7 +151,7 @@
           
           const params = new URLSearchParams(window.location.search);
           const ret = params.get('return');
-          let dest = '/ai-dashboard';
+          let dest = '/dashboard-modern.html';
           if (ret){
             try {
               const u = new URL(ret, window.location.origin);
@@ -198,7 +198,7 @@
           
           const params = new URLSearchParams(window.location.search);
           const ret = params.get('return');
-          const dest = ret ? (new URL(ret, window.location.origin)).toString() : '/ai-dashboard';
+          const dest = ret ? (new URL(ret, window.location.origin)).toString() : '/dashboard-modern.html';
           setTimeout(()=>{ window.location.href = dest; }, 500);
         } else {
           showError('Unable to connect to server. Please try again.');

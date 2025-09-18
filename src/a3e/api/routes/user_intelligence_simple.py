@@ -25,6 +25,8 @@ from ...services.metrics_timeseries import maybe_snapshot, get_series
 from ...services.narrative_service import generate_narrative_html
 from ...services.analytics_service import analytics_service
 from ...core.config import get_settings
+import secrets
+from pathlib import Path
 
 router = APIRouter(prefix="/api/user/intelligence-simple", tags=["user-intelligence-simple"])
 security = HTTPBearer()
@@ -44,6 +46,10 @@ UPLOADS_STORE = os.getenv("USER_UPLOADS_STORE", "user_uploads_store.json")
 SESSIONS_STORE = os.getenv("USER_SESSIONS_STORE", "user_sessions_store.json")
 ORG_CHART_STORE = os.getenv("ORG_CHART_STORE", "user_org_charts.json")
 REVIEWS_AUDIT_LOG = os.getenv("USER_REVIEWS_AUDIT_LOG", "user_reviews_audit.jsonl")
+
+# Simple uploads directory used by the dashboard's drag/drop upload
+SIMPLE_UPLOADS_DIR = Path(os.getenv("SIMPLE_UPLOADS_DIR", "uploads/simple"))
+SIMPLE_UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def _safe_load_json(path: str) -> Dict[str, Any]:
@@ -729,7 +735,6 @@ async def list_standards(
                 "description": getattr(n, "description", ""),
                 "level": getattr(n, "level", "standard"),
                 "accreditor": getattr(n, "accreditor", acc),
-                "evidence_requirements": getattr(n, "evidence_requirements", []),
             }
             for n in nodes
         ]
@@ -1203,6 +1208,44 @@ async def save_evidence_review(payload: Dict[str, Any], current_user: Dict[str, 
         all_r[uk] = user_map
         _safe_save_json(REVIEWS_STORE, all_r)
     return {"status": "success", "filename": filename, "standard_id": standard_id, "entry": entry}
+
+
+# ------------------------------
+# Evidence upload (simple demo path to support dashboard drag/drop)
+# ------------------------------
+@router.post("/evidence/upload")
+async def evidence_upload_simple(
+    files: List[UploadFile] = File(...),
+    doc_type: Optional[str] = Form(None),
+    current_user: Dict[str, Any] = Depends(get_current_user_simple),
+):
+    try:
+        saved: List[Dict[str, Any]] = []
+        for f in files:
+            name = f.filename or "upload.bin"
+            # generate safe unique name
+            ext = ""
+            if "." in name:
+                ext = "." + name.rsplit(".", 1)[1]
+            safe_name = datetime.utcnow().strftime("%Y%m%d_%H%M%S") + "_" + secrets.token_hex(8) + ext
+            path = SIMPLE_UPLOADS_DIR / safe_name
+            content = await f.read()
+            with open(path, "wb") as out:
+                out.write(content)
+            # record minimal mapping info for metrics
+            _record_user_upload(current_user, name, standard_ids=[], doc_type=doc_type)
+            saved.append({
+                "original": name,
+                "saved_as": str(path),
+                "size": len(content),
+                "status": "queued",
+            })
+        return {"success": True, "files": saved}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Simple evidence upload error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to upload evidence")
 
 
 # ------------------------------

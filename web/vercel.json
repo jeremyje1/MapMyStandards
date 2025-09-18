@@ -3,5 +3,8 @@
   "buildCommand": "",
   "installCommand": "",
   "cleanUrls": true,
-  "trailingSlash": false
+  "trailingSlash": false,
+  "redirects": [
+    { "source": "/", "destination": "/homepage-enhanced.html", "permanent": false }
+  ]
 }

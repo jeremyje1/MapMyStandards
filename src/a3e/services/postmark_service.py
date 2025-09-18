@@ -177,7 +177,7 @@ class PostmarkEmailService:
                     
                     <!-- CTA Button -->
                     <div style="text-align: center; margin: 30px 0;">
-                        <a href="https://platform.mapmystandards.ai/ai-dashboard" 
+                        <a href="https://platform.mapmystandards.ai/dashboard-modern.html" 
                            style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #34d399 100%); color: #ffffff; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
                             🎯 Access Your Dashboard
                         </a>
@@ -406,7 +406,7 @@ class PostmarkEmailService:
                 "title": "Document Analysis Complete",
                 "description": f"We've finished analyzing your document: <strong>{document_name or 'Unknown Document'}</strong>",
                 "action_text": "View Analysis Results",
-                "action_url": "https://platform.mapmystandards.ai/ai-dashboard"
+                "action_url": "https://platform.mapmystandards.ai/dashboard-modern.html"
             },
             "report_generated": {
                 "icon": "📊", 
@@ -420,7 +420,7 @@ class PostmarkEmailService:
                 "title": "Standards Mapping Complete", 
                 "description": f"We've mapped {standards_mapped or 0} standards to your institutional evidence.",
                 "action_text": "View Standards Mapping",
-                "action_url": "https://platform.mapmystandards.ai/ai-dashboard#standards"
+                "action_url": "https://platform.mapmystandards.ai/dashboard-modern.html#standards"
             }
         }
         

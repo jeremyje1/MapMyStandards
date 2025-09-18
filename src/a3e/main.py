@@ -1909,13 +1909,17 @@ if WEB_DIR.exists():
 
     @app.get("/ai-dashboard", response_class=FileResponse, include_in_schema=False)
     async def ai_dashboard():  # noqa: D401
-        """AI-powered dashboard with real-time compliance insights."""
-        return FileResponse(str(WEB_DIR / "ai-dashboard.html"))
+        """AI-powered dashboard (modern)."""
+        modern = WEB_DIR / "dashboard-modern.html"
+        fallback = WEB_DIR / "ai-dashboard.html"
+        return FileResponse(str(modern if modern.exists() else fallback))
 
     @app.get("/ai-dashboard.html", response_class=FileResponse, include_in_schema=False)
     async def ai_dashboard_html():  # noqa: D401
-        """AI-powered dashboard with real-time compliance insights."""
-        return FileResponse(str(WEB_DIR / "ai-dashboard.html"))
+        """AI-powered dashboard (modern)."""
+        modern = WEB_DIR / "dashboard-modern.html"
+        fallback = WEB_DIR / "ai-dashboard.html"
+        return FileResponse(str(modern if modern.exists() else fallback))
 
     @app.get("/upload-ai.html", response_class=FileResponse, include_in_schema=False)
     async def upload_ai_html():  # noqa: D401
@@ -2007,18 +2011,24 @@ if WEB_DIR.exists():
     
     @app.get("/standards", response_class=FileResponse, include_in_schema=False)
     async def standards_page():  # noqa: D401
-        """Serve standards page."""
-        return FileResponse(str(WEB_DIR / "standards.html"))
+        """Serve standards page (modern)."""
+        modern = WEB_DIR / "standards-modern.html"
+        legacy = WEB_DIR / "standards.html"
+        return FileResponse(str(modern if modern.exists() else legacy))
     
     @app.get("/reports", response_class=FileResponse, include_in_schema=False)
     async def reports_page():  # noqa: D401
-        """Serve reports page."""
-        return FileResponse(str(WEB_DIR / "reports.html"))
+        """Serve reports page (modern)."""
+        modern = WEB_DIR / "reports-modern.html"
+        legacy = WEB_DIR / "reports.html"
+        return FileResponse(str(modern if modern.exists() else legacy))
     
     @app.get("/upload", response_class=FileResponse, include_in_schema=False)
     async def upload_page():  # noqa: D401
-        """Serve upload page."""
-        return FileResponse(str(WEB_DIR / "upload.html"))
+        """Serve upload page (modern)."""
+        modern = WEB_DIR / "upload-modern.html"
+        legacy = WEB_DIR / "upload.html"
+        return FileResponse(str(modern if modern.exists() else legacy))
         
 else:
     logger.warning(f"Web directory not found at: {WEB_DIR}")

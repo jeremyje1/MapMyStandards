@@ -15,8 +15,12 @@
       "destination": "https://platform.mapmystandards.ai/:path*",
       "permanent": true
     },
-    { "source": "/standards", "destination": "/standards-modern.html", "permanent": true },
-    { "source": "/standards.html", "destination": "/standards-modern.html", "permanent": true }
+    { "source": "/ai-dashboard", "destination": "/dashboard-modern.html", "permanent": true },
+    { "source": "/ai-dashboard.html", "destination": "/dashboard-modern.html", "permanent": true },
+  { "source": "/standards", "destination": "/standards-modern.html", "permanent": true },
+  { "source": "/standards.html", "destination": "/standards-modern.html", "permanent": true },
+  { "source": "/reports", "destination": "/reports-modern.html", "permanent": true },
+  { "source": "/upload", "destination": "/upload-modern.html", "permanent": true }
   ],
   "headers": [
     {
@@ -39,6 +43,24 @@
     },
     {
       "source": "/standards-modern.html",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, max-age=0, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/dashboard-modern.html",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, max-age=0, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/reports-modern.html",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, max-age=0, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/upload-modern.html",
       "headers": [
         { "key": "Cache-Control", "value": "no-cache, no-store, max-age=0, must-revalidate" }
       ]
@@ -96,7 +118,7 @@
     },
     {
       "source": "/dashboard",
-      "destination": "/dashboard-fixed.html"
+      "destination": "/dashboard-modern.html"
     },
     {
       "source": "/",
