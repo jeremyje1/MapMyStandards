@@ -475,10 +475,12 @@
         async function checkAuthentication(retries = 3) {
             // First check if we have stored auth from login
             if (window.MMS_AUTH_BRIDGE) {
-                const isAuthenticated = await window.MMS_AUTH_BRIDGE.checkAuth();
-                if (isAuthenticated) {
-                    return true;
-                }
+                try {
+                    const bridgeResult = await window.MMS_AUTH_BRIDGE.checkAuth();
+                    if (bridgeResult && (bridgeResult.ok === true || bridgeResult.success === true)) {
+                        return true;
+                    }
+                } catch(_) { /* noop */ }
             }
             
             // First, give the global nav time to establish session
@@ -551,8 +553,9 @@
             
             try {
                 const headers = { 'Content-Type': 'application/json' };
-                // Use intelligence-simple standards metadata to populate accreditor list
-                const resp = await authFetch('/api/user/intelligence-simple/standards/metadata', { headers });
+                // Use intelligence-simple standards corpus metadata to populate accreditor list
+                console.debug('Standards: fetching corpus metadata...');
+                const resp = await authFetch('/api/user/intelligence-simple/standards/corpus/metadata', { headers });
                 console.debug('accreditors status', resp.status);
                 if (resp.status === 401) { statusError('Authentication required'); return; }
                 if (!resp.ok) { 
