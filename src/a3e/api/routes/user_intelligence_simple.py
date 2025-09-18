@@ -43,6 +43,7 @@ STANDARD_REVIEWS_STORE = os.getenv("USER_STANDARD_REVIEWS_STORE", "user_standard
 UPLOADS_STORE = os.getenv("USER_UPLOADS_STORE", "user_uploads_store.json")
 SESSIONS_STORE = os.getenv("USER_SESSIONS_STORE", "user_sessions_store.json")
 ORG_CHART_STORE = os.getenv("ORG_CHART_STORE", "user_org_charts.json")
+REVIEWS_AUDIT_LOG = os.getenv("USER_REVIEWS_AUDIT_LOG", "user_reviews_audit.jsonl")
 
 
 def _safe_load_json(path: str) -> Dict[str, Any]:
@@ -168,6 +169,24 @@ def _set_user_standard_review(
     user_map[accreditor] = acc_map
     all_r[uk] = user_map
     _safe_save_json(STANDARD_REVIEWS_STORE, all_r)
+    # Audit trail
+    try:
+        prev = entry.copy()
+        audit_entry = {
+            "ts": datetime.utcnow().isoformat(),
+            "user": _user_key(claims),
+            "email": claims.get("email") or claims.get("sub"),
+            "accreditor": accreditor,
+            "standard_id": standard_id,
+            "status": entry.get("status"),
+            "assignee": entry.get("assignee"),
+            "due_date": entry.get("due_date"),
+            "note_len": len(entry.get("note") or ""),
+        }
+        with open(REVIEWS_AUDIT_LOG, "a", encoding="utf-8") as f:
+            f.write(json.dumps(audit_entry, ensure_ascii=False) + "\n")
+    except Exception:
+        pass
     return entry
 
 

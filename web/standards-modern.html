@@ -690,6 +690,19 @@
                         🔄 Clear Filters
                     </button>
                     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+                        <label class="filter-label" style="margin:0">Status</label>
+                        <select id="statusFilter" class="filter-select" style="padding:0.5rem 0.75rem">
+                            <option value="">All</option>
+                            <option>Unreviewed</option>
+                            <option>In Progress</option>
+                            <option>Needs Evidence</option>
+                            <option>Ready</option>
+                            <option>Submitted</option>
+                        </select>
+                        <label class="filter-label" style="margin:0">Assignee</label>
+                        <input type="text" id="assigneeFilter" class="filter-input" placeholder="Filter by assignee">
+                    </div>
+                    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
                         <label class="filter-label" style="margin:0">Levels</label>
                         <select id="levelsSelect" class="filter-select" style="padding:0.5rem 0.75rem">
                             <option value="standard">Top-level only</option>
@@ -787,10 +800,14 @@
             const it=document.getElementById('institutionTypeSelect').value||'';
             const q=document.getElementById('searchInput').value||'';
             const lv=getLevelsParam();
+            const st=document.getElementById('statusFilter')?document.getElementById('statusFilter').value:'';
+            const asg=document.getElementById('assigneeFilter')?document.getElementById('assigneeFilter').value:'';
             if(acc) u.searchParams.set('acc', acc); else u.searchParams.delete('acc');
             if(it) u.searchParams.set('type', it); else u.searchParams.delete('type');
             if(q) u.searchParams.set('q', q); else u.searchParams.delete('q');
             if(lv) u.searchParams.set('levels', lv); else u.searchParams.delete('levels');
+            if(st) u.searchParams.set('status', st); else u.searchParams.delete('status');
+            if(asg) u.searchParams.set('assignee', asg); else u.searchParams.delete('assignee');
             history.replaceState({},'',u.toString());
         }
         function loadFiltersFromUrl(){
@@ -800,12 +817,16 @@
                 const it=u.searchParams.get('type')||'';
                 const q=u.searchParams.get('q')||'';
                 const lv=u.searchParams.get('levels')||getLevelsParam();
+                const st=u.searchParams.get('status')||'';
+                const asg=u.searchParams.get('assignee')||'';
                 if(lv) setLevelsParam(lv);
                 setTimeout(()=>{
                     if(acc) document.getElementById('accreditorSelect').value=acc;
                     if(it) document.getElementById('institutionTypeSelect').value=it;
                     if(q) document.getElementById('searchInput').value=q;
                     const ls=document.getElementById('levelsSelect'); if(ls) ls.value=lv;
+                    if(document.getElementById('statusFilter')) document.getElementById('statusFilter').value=st;
+                    if(document.getElementById('assigneeFilter')) document.getElementById('assigneeFilter').value=asg;
                 },0);
             }catch(_){}
         }
@@ -1173,6 +1194,9 @@
                 const existing = JSON.parse(localStorage.getItem(reviewKey) || '{}');
                 const status = existing.status || 'Unreviewed';
                 const note = existing.note || '';
+                const assignee = existing.assignee || '';
+                const due_date = existing.due_date || '';
+                const statusBadge = status ? `<span class="pill" style="background:${status==='Ready'?'#dcfce7':status==='Submitted'?'#e0e7ff':status==='Needs Evidence'?'#fee2e2':status==='In Progress'?'#fef9c3':'#f1f5f9'};border:1px solid var(--border-light)">${status}</span>` : '';
                 
                 html += `
                     <div class="standard-card">
@@ -1198,6 +1222,7 @@
                                     <span>${evidenceCount} Evidence Items</span>
                                 </div>
                                 ` : ''}
+                                <div class="meta-item">${statusBadge}</div>
                                 <div class="meta-item">
                                     <button class="btn btn-secondary" style="padding:0.4rem 0.8rem;font-size:0.7rem" onclick="openRiskModal('${standard.code || standard.id}')">Risk Factors</button>
                                 </div>
@@ -1210,9 +1235,9 @@
                                                         <option ${status==='Ready'?'selected':''}>Ready</option>
                                                         <option ${status==='Submitted'?'selected':''}>Submitted</option>
                                                     </select>
-                                                    <input type="text" placeholder="Assignee (email/name)" class="filter-input" data-review-assignee
+                                                    <input type="text" placeholder="Assignee (email/name)" class="filter-input" data-review-assignee value="${escapeHtml(assignee)}"
                                                         data-review-key="${reviewKey}" data-standard-id="${standard.code || standard.id}" data-accreditor="${(accreditor.acronym||accreditor.name||'').toUpperCase()}" style="padding:6px 8px;min-width:160px" onblur="saveReviewAssignee(this)">
-                                                    <input type="date" class="filter-input" data-review-due
+                                                    <input type="date" class="filter-input" data-review-due value="${escapeHtml(due_date)}"
                                                         data-review-key="${reviewKey}" data-standard-id="${standard.code || standard.id}" data-accreditor="${(accreditor.acronym||accreditor.name||'').toUpperCase()}" style="padding:6px 8px;min-width:160px" onblur="saveReviewDueDate(this)">
                                                 </div>
                                                 <div class="meta-item" style="width:100%">
@@ -1248,6 +1273,20 @@
                 });
             }
 
+            // Apply reviewer filters using local cache entries
+            const st = document.getElementById('statusFilter')?document.getElementById('statusFilter').value:'';
+            const asg = document.getElementById('assigneeFilter')?document.getElementById('assigneeFilter').value.trim().toLowerCase():'';
+            if (st || asg){
+                const accSel = document.getElementById('accreditorSelect').value;
+                filtered = filtered.filter(standard => {
+                    const key = `mms:review:${(accSel||'').toUpperCase()}:${standard.code||standard.id}`;
+                    const r = JSON.parse(localStorage.getItem(key)||'{}');
+                    const statusOk = st ? (r.status === st) : true;
+                    const assigneeOk = asg ? ((r.assignee||'').toLowerCase().includes(asg)) : true;
+                    return statusOk && assigneeOk;
+                });
+            }
+
             filteredStandards = filtered;
             
             const accreditorId = document.getElementById('accreditorSelect').value;
@@ -1263,6 +1302,8 @@
         function clearFilters() {
             document.getElementById('searchInput').value = '';
             document.getElementById('institutionTypeSelect').value = '';
+            if(document.getElementById('statusFilter')) document.getElementById('statusFilter').value='';
+            if(document.getElementById('assigneeFilter')) document.getElementById('assigneeFilter').value='';
             
             const accreditorId = document.getElementById('accreditorSelect').value;
             if (accreditorId) {
