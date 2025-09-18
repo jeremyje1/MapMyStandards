@@ -14,10 +14,12 @@
   const origin = window.location.origin;
   const API_BASE = (window.MMS_CONFIG && window.MMS_CONFIG.API_BASE_URL) || '';
   const buildUrl = (path) => {
+    if (typeof path !== 'string') return path;
     if (path.startsWith('http')) return path;
+    // Always prefer same-origin for API calls to carry cookies
+    if (path.startsWith('/api/')) return path;
     const base = API_BASE || '';
     if (!base) return path;
-    if (base === '/api' && path.startsWith('/api/')) return path;
     if (base.endsWith('/api') && path.startsWith('/api/')) return base + path.slice(4);
     return base + (path.startsWith('/') ? path : '/' + path);
   };
@@ -61,18 +63,23 @@
     const nav = bar.querySelector('#globalNavContainer');
     links.forEach(l => nav.appendChild(makeLink(l)));
 
+    // Track session readiness to avoid premature 401s
+    let sessionOk = false;
+
     // Selection badge updater
     const updateBadge = async (fromEvent) => {
       try {
         let selected = [];
-        // Prefer server-side selection if available
-        try {
-          const r = await fetch(buildUrl('/api/user/intelligence-simple/standards/selection/load'), { credentials: 'include' });
-          if (r.ok) {
-            const j = await r.json();
-            if (Array.isArray(j.selected)) selected = j.selected;
-          }
-        } catch(_) {}
+        // Prefer server-side selection if session is active
+        if (sessionOk) {
+          try {
+            const r = await fetch(buildUrl('/api/user/intelligence-simple/standards/selection/load'), { credentials: 'include' });
+            if (r.ok) {
+              const j = await r.json();
+              if (Array.isArray(j.selected)) selected = j.selected;
+            }
+          } catch(_) {}
+        }
         if (!Array.isArray(selected) || selected.length === 0) {
           try { selected = JSON.parse(localStorage.getItem('mms:selectedStandards') || '[]') || []; } catch(_) { selected = []; }
         }
@@ -193,8 +200,10 @@
             }
           }
         }
-        
+        sessionOk = !!(info && (info.ok === true || info.success === true));
         renderSession(info);
+        // Now that session is known, refresh the badge from server if possible
+        updateBadge(true);
       } catch (_) {
         renderSession({ ok: false });
       }
