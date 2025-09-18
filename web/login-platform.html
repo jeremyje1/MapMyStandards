@@ -144,8 +144,26 @@
           if (ret){
             try {
               const u = new URL(ret, window.location.origin);
-              dest = (u.origin === window.location.origin) ? u.toString() : dest;
+              if (u.origin === window.location.origin) {
+                // Map legacy standards routes to modern page
+                const p = u.pathname.replace(/\/index\.html$/,'');
+                if (p === '/standards' || p === '/standards.html') {
+                  dest = '/standards-modern.html?v=now5';
+                } else if (p === '/standards-modern' || p === '/standards-modern.html') {
+                  dest = '/standards-modern.html?v=now5';
+                } else {
+                  dest = u.toString();
+                }
+              }
             } catch(_) { /* ignore invalid return */ }
+          } else {
+            // No explicit return: if user came from standards-modern, send them back there
+            try {
+              const ref = document.referrer ? new URL(document.referrer) : null;
+              if (ref && ref.origin === window.location.origin && /\/standards-modern(\.html)?/.test(ref.pathname)) {
+                dest = '/standards-modern.html?v=now5';
+              }
+            } catch(_) { /* ignore */ }
           }
           setTimeout(()=>{ window.location.href = dest; }, 500);
         } else {

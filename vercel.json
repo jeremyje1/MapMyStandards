@@ -14,7 +14,9 @@
       ],
       "destination": "https://platform.mapmystandards.ai/:path*",
       "permanent": true
-    }
+    },
+    { "source": "/standards", "destination": "/standards-modern.html", "permanent": true },
+    { "source": "/standards.html", "destination": "/standards-modern.html", "permanent": true }
   ],
   "headers": [
     {
