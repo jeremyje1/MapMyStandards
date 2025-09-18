@@ -4,18 +4,21 @@
  */
 
 (function() {
-    // Skip auth bridge on production domain - cookies work natively there
-    if (window.location.hostname === 'platform.mapmystandards.ai') {
-        console.log('[Auth Bridge] Skipped - running on production domain');
-        return;
+    // Check if we're on production domain where cookies work natively
+    const isProductionDomain = window.location.hostname === 'platform.mapmystandards.ai';
+    
+    if (isProductionDomain) {
+        console.log('[Auth Bridge] Running on production domain - using native cookie auth');
+    } else {
+        console.log('[Auth Bridge] Activated - running on', window.location.hostname);
     }
     
-    console.log('[Auth Bridge] Activated - running on', window.location.hostname);
-    // Store auth state in sessionStorage as a backup
+    // Always define the auth bridge interface
     window.MMS_AUTH_BRIDGE = {
         // Store authentication info when successful
         storeAuth: function(authData) {
-            if (authData && authData.ok) {
+            // Only store in sessionStorage on non-production domains
+            if (!isProductionDomain && authData && authData.ok) {
                 sessionStorage.setItem('mms:auth:email', authData.email || '');
                 sessionStorage.setItem('mms:auth:active', 'true');
                 sessionStorage.setItem('mms:auth:time', new Date().toISOString());
@@ -24,6 +27,11 @@
         
         // Get stored auth info
         getStoredAuth: function() {
+            // On production, we don't use sessionStorage
+            if (isProductionDomain) {
+                return null;
+            }
+            
             const email = sessionStorage.getItem('mms:auth:email');
             const active = sessionStorage.getItem('mms:auth:active') === 'true';
             const time = sessionStorage.getItem('mms:auth:time');
@@ -45,38 +53,55 @@
         
         // Clear stored auth
         clearAuth: function() {
-            sessionStorage.removeItem('mms:auth:email');
-            sessionStorage.removeItem('mms:auth:active');
-            sessionStorage.removeItem('mms:auth:time');
+            if (!isProductionDomain) {
+                sessionStorage.removeItem('mms:auth:email');
+                sessionStorage.removeItem('mms:auth:active');
+                sessionStorage.removeItem('mms:auth:time');
+            }
         },
         
         // Enhanced auth check that tries multiple methods
         checkAuth: async function() {
             // First try the regular auth check
             try {
-                const resp = await fetch(buildApiUrl('/api/auth/me'), {
+                // Build the API URL properly
+                const apiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+                    ? 'http://localhost:8001/api/auth/me'
+                    : 'https://api.mapmystandards.ai/api/auth/me';
+                
+                console.log('[Auth Bridge] Checking auth at:', apiUrl);
+                    
+                const resp = await fetch(apiUrl, {
                     credentials: 'include',
                     headers: { 'Accept': 'application/json' }
                 });
                 
+                console.log('[Auth Bridge] Auth check response:', resp.status);
+                
                 if (resp.ok) {
                     const data = await resp.json();
+                    console.log('[Auth Bridge] Auth data:', data);
                     if (data && data.ok) {
                         this.storeAuth(data);
                         return data;
                     }
                 }
+                
+                // If not OK, log the response
+                const errorData = await resp.text();
+                console.log('[Auth Bridge] Auth check failed:', errorData);
             } catch (e) {
-                console.error('Primary auth check failed:', e);
+                console.error('[Auth Bridge] Primary auth check error:', e);
             }
             
-            // Fall back to stored auth if available
+            // Fall back to stored auth if available (non-production only)
             const stored = this.getStoredAuth();
             if (stored) {
-                console.log('Using stored authentication');
+                console.log('[Auth Bridge] Using stored authentication');
                 return stored;
             }
             
+            console.log('[Auth Bridge] No authentication found');
             return { ok: false };
         }
     };
