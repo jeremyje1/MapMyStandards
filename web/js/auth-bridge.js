@@ -66,7 +66,15 @@
             try {
                 // Build the API URL properly using global config
                 const BASE = (window.MMS_CONFIG && window.MMS_CONFIG.API_BASE_URL) || '/api';
-                const apiUrl = `${BASE.replace(/\/$/, '')}/auth/me`;
+                const buildUrl = (path) => {
+                    if (path.startsWith('http')) return path;
+                    const base = BASE || '';
+                    if (!base) return path;
+                    if (base === '/api' && path.startsWith('/api/')) return path;
+                    if (base.endsWith('/api') && path.startsWith('/api/')) return base + path.slice(4);
+                    return base + (path.startsWith('/') ? path : '/' + path);
+                };
+                const apiUrl = buildUrl('/api/auth/me');
                 
                 console.log('[Auth Bridge] Checking auth at:', apiUrl);
                     

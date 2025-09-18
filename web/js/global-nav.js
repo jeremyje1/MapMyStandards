@@ -13,6 +13,14 @@
   const pathname = window.location.pathname.replace(/\/$/, '');
   const origin = window.location.origin;
   const API_BASE = (window.MMS_CONFIG && window.MMS_CONFIG.API_BASE_URL) || '';
+  const buildUrl = (path) => {
+    if (path.startsWith('http')) return path;
+    const base = API_BASE || '';
+    if (!base) return path;
+    if (base === '/api' && path.startsWith('/api/')) return path;
+    if (base.endsWith('/api') && path.startsWith('/api/')) return base + path.slice(4);
+    return base + (path.startsWith('/') ? path : '/' + path);
+  };
 
   const ensureStyle = () => {
     if (document.getElementById('mms-global-nav-style')) return;
@@ -59,7 +67,7 @@
         let selected = [];
         // Prefer server-side selection if available
         try {
-          const r = await fetch(`${API_BASE}/user/intelligence-simple/standards/selection/load`.replace(/\/api$/, '/api') , { credentials: 'include' });
+          const r = await fetch(buildUrl('/api/user/intelligence-simple/standards/selection/load'), { credentials: 'include' });
           if (r.ok) {
             const j = await r.json();
             if (Array.isArray(j.selected)) selected = j.selected;
@@ -110,9 +118,9 @@
             if (window.mmsAPI && window.mmsAPI.showSuccess) window.mmsAPI.showSuccess('Session refreshed');
           } else {
             // Prefer /api/auth/refresh
-            let r = await fetch(`${API_BASE}/api/auth/refresh`, { method: 'POST', credentials: 'include' });
+            let r = await fetch(buildUrl('/api/auth/refresh'), { method: 'POST', credentials: 'include' });
             if (!r.ok && r.status === 404) {
-              r = await fetch(`${API_BASE}/auth/refresh`, { method: 'POST', credentials: 'include' });
+              r = await fetch(buildUrl('/auth/refresh'), { method: 'POST', credentials: 'include' });
             }
             if (r.ok) {
               if (window.mmsAPI && window.mmsAPI.showSuccess) window.mmsAPI.showSuccess('Session refreshed');
@@ -133,7 +141,7 @@
             await window.mmsAPI.logout();
           } else {
             // Prefer /api/auth/logout
-            await fetch(`${API_BASE}/api/auth/logout`, { method: 'POST', credentials: 'include' });
+            await fetch(buildUrl('/api/auth/logout'), { method: 'POST', credentials: 'include' });
           }
           if (window.mmsAPI) window.mmsAPI.clearAuth && window.mmsAPI.clearAuth();
           
@@ -170,7 +178,7 @@
             info = await window.mmsAPI.me();
           } else {
             // Prefer /api/auth/me
-            const r = await fetch(`${API_BASE}/api/auth/me`, { credentials: 'include' });
+            const r = await fetch(buildUrl('/api/auth/me'), { credentials: 'include' });
             if (r.ok) {
               info = await r.json();
               // Store successful auth for future use

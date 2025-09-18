@@ -88,6 +88,14 @@
   <script src="/js/auth-bridge.js"></script>
   <script>
     const API_BASE_URL = (window.MMS_CONFIG && window.MMS_CONFIG.API_BASE_URL) || '/api';
+    const buildUrl = (path) => {
+      if (path.startsWith('http')) return path;
+      const base = API_BASE_URL || '';
+      if (!base) return path;
+      if (base === '/api' && path.startsWith('/api/')) return path;
+      if (base.endsWith('/api') && path.startsWith('/api/')) return base + path.slice(4);
+      return base + (path.startsWith('/') ? path : '/' + path);
+    };
     const errEl = document.getElementById('errorMessage');
     const okEl = document.getElementById('successMessage');
     function showError(message){ errEl.textContent = message; errEl.className = 'alert error show'; }
@@ -117,9 +125,9 @@
       setLoading(true);
       try{
         // Prefer `${API_BASE_URL}/api/auth/login` to use the session auth router
-        let response = await fetch(`${API_BASE_URL}/api/auth/login`, { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify({ email, password, rememberMe: remember })});
+        let response = await fetch(buildUrl('/api/auth/login'), { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify({ email, password, rememberMe: remember })});
         if (response.status === 404 || response.status === 405 || response.status === 422){
-          response = await fetch(`${API_BASE_URL}/auth/login`, { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify({ email, password, rememberMe: remember })});
+          response = await fetch(buildUrl('/auth/login'), { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify({ email, password, rememberMe: remember })});
         }
         const result = await response.json().catch(()=>({}));
         if (response.ok && (result.success || result.access_token || (result.data && result.data.access_token))){

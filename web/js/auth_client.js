@@ -15,6 +15,15 @@
       this._refreshInFlight = null;
     }
 
+    buildUrl(path){
+      if (path.startsWith('http')) return path;
+      const base = this.baseUrl || '';
+      if (!base) return path;
+      if (base === '/api' && path.startsWith('/api/')) return path;
+      if (base.endsWith('/api') && path.startsWith('/api/')) return base + path.slice(4);
+      return base + (path.startsWith('/') ? path : '/' + path);
+    }
+
     headers(extra){
       return Object.assign({ 'Content-Type': 'application/json' }, extra||{});
     }
@@ -32,7 +41,7 @@
     }
 
     async request(path, options={}){
-      const url = path.startsWith('http') ? path : `${this.baseUrl}${path}`;
+      const url = this.buildUrl(path);
       const opts = Object.assign({ credentials:'include', headers: this.headers(options.headers) }, options);
 
       let res = await this._attemptWithBackoff(url, opts, 3);
@@ -60,9 +69,9 @@
       this._refreshInFlight = (async ()=>{
         try{
           // Prefer /api/auth/refresh first (session router)
-          let r = await fetch(`${this.baseUrl}/api/auth/refresh`, { method:'POST', credentials:'include' });
+          let r = await fetch(this.buildUrl('/api/auth/refresh'), { method:'POST', credentials:'include' });
           if (!r.ok && r.status === 404){
-            r = await fetch(`${this.baseUrl}/auth/refresh`, { method:'POST', credentials:'include' });
+            r = await fetch(this.buildUrl('/auth/refresh'), { method:'POST', credentials:'include' });
           }
           if (!r.ok) { redirectToLogin(true); throw new Error('refresh_failed'); }
           await r.json().catch(()=>({}));
@@ -76,7 +85,7 @@
     async me(){
       try{
         // Prefer /api/auth/me (session router)
-        const r = await fetch(`${this.baseUrl}/api/auth/me`, { credentials:'include' });
+  const r = await fetch(this.buildUrl('/api/auth/me'), { credentials:'include' });
         if (r.ok) return await r.json();
       }catch(_){ }
       return { ok:false };
@@ -85,7 +94,7 @@
     async logout(){
       try{
         // Prefer /api/auth/logout (session router)
-        const r = await fetch(`${this.baseUrl}/api/auth/logout`, { method:'POST', credentials:'include' });
+  const r = await fetch(this.buildUrl('/api/auth/logout'), { method:'POST', credentials:'include' });
         if (r.ok) return await r.json();
       }catch(_){ }
       return { success:false };
