@@ -6,7 +6,7 @@ Bypasses complex database queries to provide direct access to AI features
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form, Request, Header
 from fastapi.responses import JSONResponse, PlainTextResponse, Response
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Tuple, Set
 from datetime import datetime
 import os
 import io
@@ -622,12 +622,32 @@ async def get_dashboard_metrics_simple(current_user: Dict[str, Any] = Depends(ge
 @router.get("/standards/list")
 async def list_standards(
     accreditor: Optional[str] = None,
+    levels: Optional[str] = None,
     current_user: Dict[str, Any] = Depends(get_current_user_simple)
 ):
-    """List all top-level standards for the given accreditor."""
+    """List standards for the given accreditor.
+
+    By default returns only top-level items (level == 'standard').
+    Optionally include deeper levels via `levels` query, e.g.:
+    - levels=standard,clause
+    - levels=standard,clause,indicator
+    - levels=all (or "*") to include all levels
+    """
     try:
         acc = (accreditor or _merge_claims_with_settings(current_user).get("primary_accreditor") or "HLC").upper()
-        nodes = standards_graph.get_nodes_by_accreditor(acc, {"standard"})
+        allowed = {"standard", "clause", "indicator"}
+        levels_set: Optional[Set[str]] = {"standard"}
+        lv = (levels or "").strip().lower()
+        if lv:
+            # normalize tokens and validate
+            tokens = [t.strip() for t in lv.replace(" ", "").split(",") if t.strip()]
+            if any(t in {"all", "*"} for t in tokens):
+                levels_set = None  # None => all levels in graph
+            else:
+                chosen = {t for t in tokens if t in allowed}
+                if chosen:
+                    levels_set = chosen
+        nodes = standards_graph.get_nodes_by_accreditor(acc, levels_set)
         items = [
             {
                 "id": getattr(n, "node_id", ""),

@@ -810,7 +810,7 @@
                 <nav class="nav-links">
                     <a href="/ai-dashboard" class="active">Dashboard</a>
                     <a href="/upload">Upload</a>
-                    <a href="/standards">Standards</a>
+                    <a href="/standards-modern.html">Standards</a>
                     <a href="/reports">Reports</a>
                 </nav>
                 
@@ -853,7 +853,7 @@
                         <span>📁</span>
                         Upload Documents
                     </a>
-                    <a href="/standards" class="action-btn">
+                    <a href="/standards-modern.html" class="action-btn">
                         <span>📋</span>
                         View Standards
                     </a>
@@ -1357,10 +1357,13 @@
             const body = document.getElementById('dashRiskBody');
             el.style.display = 'flex';
             body.innerHTML = '<div>Loading factors…</div>';
-            const auth = token || localStorage.getItem('a3e_api_key') || sessionStorage.getItem('a3e_api_key') || localStorage.getItem('access_token') || localStorage.getItem('jwt_token') || 'demo-token';
+            const guessJwt = (t)=>{ try{ return typeof t==='string' && t.split('.').length===3 && t.length>40; }catch{return false;} };
+            const auth = token || localStorage.getItem('a3e_api_key') || sessionStorage.getItem('a3e_api_key') || localStorage.getItem('access_token') || localStorage.getItem('jwt_token') || '';
+            const hdrs = guessJwt(auth) ? { 'Authorization': `Bearer ${auth}` } : {};
+            const base = ((window.mmsAPI&&window.mmsAPI.getBaseUrl&&window.mmsAPI.getBaseUrl())||(location.hostname.includes('api.mapmystandards.ai')?'':'https://api.mapmystandards.ai'));
             Promise.all([
-                fetch(((window.mmsAPI&&window.mmsAPI.getBaseUrl&&window.mmsAPI.getBaseUrl())||(location.hostname.includes('api.mapmystandards.ai')?'':'https://api.mapmystandards.ai')) + '/api/user/intelligence-simple/risk/aggregate', { headers: { 'Authorization': `Bearer ${auth}` }}).then(r=>r.json()).catch(()=>({})),
-                fetch(((window.mmsAPI&&window.mmsAPI.getBaseUrl&&window.mmsAPI.getBaseUrl())||(location.hostname.includes('api.mapmystandards.ai')?'':'https://api.mapmystandards.ai')) + '/api/user/intelligence-simple/risk/factors', { headers: { 'Authorization': `Bearer ${auth}` }}).then(r=>r.json()).catch(()=>({}))
+                fetch(base + '/api/user/intelligence-simple/risk/aggregate', { credentials:'include', headers: hdrs }).then(async r=>{ if(r.status===401) throw new Error('401 Unauthorized'); return r.json(); }).catch(()=>({})),
+                fetch(base + '/api/user/intelligence-simple/risk/factors', { credentials:'include', headers: hdrs }).then(async r=>{ if(r.status===401) throw new Error('401 Unauthorized'); return r.json(); }).catch(()=>({}))
             ]).then(([agg, fac])=>{
                 const data = (agg && agg.data) || {};
                 const weights = (fac && fac.weights) || {};

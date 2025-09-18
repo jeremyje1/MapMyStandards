@@ -251,6 +251,12 @@
             min-height: 400px;
         }
 
+        /* Auth Banner */
+        .auth-banner { display:none; align-items:center; justify-content:space-between; gap:1rem; background:#fff7ed; border:1px solid #fdba74; color:#7c2d12; padding:0.75rem 1rem; border-radius:0.5rem; box-shadow: var(--shadow-sm); margin-bottom: 1rem; }
+        .auth-banner .banner-text { font-size:0.95rem; }
+        .auth-banner .banner-actions a { display:inline-block; background:#f97316; color:white; padding:0.4rem 0.75rem; border-radius:0.4rem; text-decoration:none; font-weight:600; }
+        .auth-banner .banner-actions a:hover { background:#ea580c; }
+
         .loading-state {
             display: flex;
             flex-direction: column;
@@ -611,7 +617,7 @@
             <nav class="nav-links">
                 <a href="/ai-dashboard">Dashboard</a>
                 <a href="/upload">Upload</a>
-                <a href="/standards" class="active">Standards</a>
+                <a href="/standards-modern.html" class="active">Standards</a>
                 <a href="/reports">Reports</a>
                 <a href="#" onclick="logout()">Logout</a>
             </nav>
@@ -624,6 +630,14 @@
         <div class="page-header">
             <h1 class="page-title">Standards Browser</h1>
             <p class="page-subtitle">Explore comprehensive accreditation standards from multiple accreditors to understand requirements and plan your evidence collection strategy</p>
+        </div>
+
+        <!-- Sign-in Banner (shown when unauthenticated) -->
+        <div id="authBanner" class="auth-banner" role="status" aria-live="polite">
+            <div class="banner-text">🔐 Sign in to see cross-accreditor matches and enhanced metadata.</div>
+            <div class="banner-actions">
+                <a id="authBannerLogin" href="/login-platform.html">Sign in</a>
+            </div>
         </div>
 
         <!-- Filters Section -->
@@ -878,6 +892,8 @@
                 });
                 if(!res.ok){
                     if(res.status === 401 || res.status === 403){
+                        // Show login banner subtly
+                        try { const b = document.getElementById('authBanner'); if (b) b.style.display = 'flex'; } catch(_) {}
                         // Fallback: public accreditors endpoint to synthesize minimal metadata
                         console.debug('[standards-modern] corpus metadata 401 — falling back to /api/v1/standards/accreditors');
                         const pub = await fetch(getApiBase() + '/api/v1/standards/accreditors', { credentials: 'include' });
@@ -1017,7 +1033,7 @@
 
             try {
                 const token = getAuthToken();
-                let url = getApiBase() + `/api/user/intelligence-simple/standards/list?accreditor=${encodeURIComponent(accreditorId.toUpperCase())}`;
+                let url = getApiBase() + `/api/user/intelligence-simple/standards/list?accreditor=${encodeURIComponent(accreditorId.toUpperCase())}&levels=standard,clause`;
                 if (institutionType) {
                     url += `&institution_type=${encodeURIComponent(institutionType)}`;
                 }
@@ -1027,6 +1043,7 @@
                     headers: isLikelyJwt(token) ? { 'Authorization': `Bearer ${token}` } : {}
                 });
                 if (response.status === 401) {
+                    try { const b = document.getElementById('authBanner'); if (b) b.style.display = 'flex'; } catch(_) {}
                     showErrorState('Authentication required', 'Please log in to view standards.');
                     return;
                 }
@@ -1195,6 +1212,7 @@
                         credentials: 'include'
                     });
                     if(res.status === 401){
+                        try { const b = document.getElementById('authBanner'); if (b) b.style.display = 'flex'; } catch(_) {}
                         statusEl.textContent='Authentication required — please log in to compute mappings.';
                         return;
                     }
@@ -1331,11 +1349,13 @@
             (function(){
                 const token = getAuthToken();
                 const headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
-                if (token) headers['Authorization'] = 'Bearer ' + token;
+                if (isLikelyJwt(token)) headers['Authorization'] = 'Bearer ' + token;
                 return fetch(getApiBase() + '/api/user/intelligence-simple/risk/score-standard', {
                     method:'POST', headers, body: payload.toString(), credentials: 'include'
                 });
             })().then(async res => {
+                if(res.status === 401){ try { const b = document.getElementById('authBanner'); if (b) b.style.display = 'flex'; } catch(_) {}
+                }
                 if(!res.ok){
                     const t = await res.text();
                     throw new Error(`HTTP ${res.status}: ${t}`);
@@ -1369,11 +1389,13 @@
             (function(){
                 const token = getAuthToken();
                 const headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
-                if (token) headers['Authorization'] = 'Bearer ' + token;
+                if (isLikelyJwt(token)) headers['Authorization'] = 'Bearer ' + token;
                 return fetch(getApiBase() + '/api/user/intelligence-simple/risk/score-standard', {
                     method:'POST', headers, body: payload.toString(), credentials: 'include'
                 });
             })().then(async res => {
+                if(res.status === 401){ try { const b = document.getElementById('authBanner'); if (b) b.style.display = 'flex'; } catch(_) {}
+                }
                 if(!res.ok){
                     const t = await res.text();
                     throw new Error(`HTTP ${res.status}: ${t}`);
