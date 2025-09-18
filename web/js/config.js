@@ -13,7 +13,8 @@
   const isPlatform = host === 'platform.mapmystandards.ai';
   const defaults = {
     // Use appropriate API URL based on deployment environment
-    API_BASE_URL: isLocal ? 'http://localhost:8000' : (isPlatform ? 'https://api.mapmystandards.ai' : (isVercel ? 'https://api.mapmystandards.ai' : '/api')),
+  // Prefer same-origin /api on platform/vite/vercel to avoid third-party cookie issues; Vercel rewrites proxy to backend
+  API_BASE_URL: isLocal ? 'http://localhost:8000' : (isPlatform ? '/api' : (isVercel ? '/api' : '/api')),
     PLATFORM_BASE_URL: isLocal ? 'http://localhost:3000' : 'https://platform.mapmystandards.ai',
     FEATURE_FLAGS: {
       enableRiskOverview: true,

@@ -64,10 +64,9 @@
         checkAuth: async function() {
             // First try the regular auth check
             try {
-                // Build the API URL properly
-                const apiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-                    ? 'http://localhost:8001/api/auth/me'
-                    : 'https://api.mapmystandards.ai/api/auth/me';
+                // Build the API URL properly using global config
+                const BASE = (window.MMS_CONFIG && window.MMS_CONFIG.API_BASE_URL) || '/api';
+                const apiUrl = `${BASE.replace(/\/$/, '')}/auth/me`;
                 
                 console.log('[Auth Bridge] Checking auth at:', apiUrl);
                     
