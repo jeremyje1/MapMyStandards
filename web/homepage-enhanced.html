@@ -54,7 +54,7 @@
       "name": "MapMyStandards",
       "applicationCategory": "BusinessApplication",
       "operatingSystem": "Web",
-            "url": "https://mapmystandards.ai/",
+      "url": "https://mapmystandards.ai/",
       "offers": {
         "@type": "Offer",
         "price": "199.00",
@@ -81,27 +81,27 @@
       }
     }
     </script>
-        <script type="application/ld+json">
-        {
-            "@context": "https://schema.org",
-            "@type": "WebSite",
-            "name": "MapMyStandards",
-            "url": "https://mapmystandards.ai/",
-            "potentialAction": {
-                "@type": "SearchAction",
-                "target": "https://platform.mapmystandards.ai/standards?q={search_term_string}",
-                "query-input": "required name=search_term_string"
-            }
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "MapMyStandards",
+        "url": "https://mapmystandards.ai/",
+        "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://platform.mapmystandards.ai/standards?q={search_term_string}",
+            "query-input": "required name=search_term_string"
         }
-        </script>
+    }
+    </script>
     
     <!-- Font Awesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
     <!-- Professional Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <style>
         * {
@@ -111,224 +111,332 @@
         }
         
         :root {
-            /* Brand */
+            /* Enhanced Brand Colors */
             --primary: #6366f1;
             --primary-dark: #4f46e5;
+            --primary-light: #818cf8;
             --secondary: #8b5cf6;
+            --secondary-dark: #7c3aed;
 
-            /* Light theme surface colors */
-            --bg-darker: #f8fafc; /* page background */
-            --bg-dark: #ffffff;   /* kept for compatibility */
-            --bg-card: #ffffff;   /* cards */
-            --bg-card-hover: #f9fafb;
-            --border-color: #e5e7eb;
+            /* Modern Surface Colors */
+            --bg-base: #fafbfc;
+            --bg-surface: #ffffff;
+            --bg-hover: #f8f9fa;
+            --bg-accent: #f1f5f9;
+            --border-default: #e2e8f0;
+            --border-light: #f1f5f9;
 
-            /* Text colors */
-            --text-primary: #0f172a;   /* slate-900 */
-            --text-secondary: #475569; /* slate-600 */
-            --text-muted: #64748b;     /* slate-500 */
+            /* Enhanced Text Hierarchy */
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-tertiary: #64748b;
+            --text-muted: #94a3b8;
+            --text-white: #ffffff;
 
-            /* Status */
-            --success: #22c55e;
+            /* Status Colors */
+            --success: #10b981;
+            --success-light: #34d399;
             --warning: #f59e0b;
+            --warning-light: #fbbf24;
             --danger: #ef4444;
+            --info: #3b82f6;
 
-            /* Utility vars used inline */
-            --white: #ffffff;
-            --gray: #64748b;
-            --light: #f3f4f6;
-
-            /* Gradients */
+            /* Modern Gradients */
             --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-            --gradient-dark: linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(255,255,255,1) 100%);
+            --gradient-hero: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #6366f1 100%);
+            --gradient-subtle: linear-gradient(180deg, rgba(99,102,241,0.03) 0%, rgba(139,92,246,0.03) 100%);
 
-            /* Elevation */
-            --shadow-sm: 0 1px 2px rgba(2, 6, 23, 0.05), 0 1px 1px rgba(2, 6, 23, 0.04);
-            --shadow-md: 0 6px 16px rgba(2, 6, 23, 0.08);
-            --shadow-lg: 0 12px 28px rgba(2, 6, 23, 0.12);
+            /* Enhanced Shadows */
+            --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+            --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+            --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -1px rgba(15, 23, 42, 0.04);
+            --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -2px rgba(15, 23, 42, 0.04);
+            --shadow-xl: 0 20px 25px -5px rgba(15, 23, 42, 0.08), 0 10px 10px -5px rgba(15, 23, 42, 0.04);
+            --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.15);
+
+            /* Transitions */
+            --transition-base: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-spring: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+            /* Border Radius */
+            --radius-sm: 0.375rem;
+            --radius-md: 0.5rem;
+            --radius-lg: 0.75rem;
+            --radius-xl: 1rem;
+            --radius-full: 9999px;
+
+            /* Spacing */
+            --spacing-xs: 0.5rem;
+            --spacing-sm: 1rem;
+            --spacing-md: 1.5rem;
+            --spacing-lg: 2rem;
+            --spacing-xl: 3rem;
         }
         
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             line-height: 1.6;
             color: var(--text-primary);
-            background-color: var(--bg-darker);
-            /* Light theme: remove dark image background */
-            background-image: none;
+            background-color: var(--bg-base);
             overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+            font-weight: 700;
+            line-height: 1.2;
         }
         
         .container {
-            max-width: 1200px;
+            max-width: 1280px;
             margin: 0 auto;
-            padding: 0 20px;
+            padding: 0 24px;
         }
         
-        /* Scrollbar styling */
+        /* Enhanced Scrollbar */
         ::-webkit-scrollbar {
-            width: 10px;
-            height: 10px;
+            width: 12px;
+            height: 12px;
         }
         
         ::-webkit-scrollbar-track {
-            background: var(--bg-darker);
+            background: var(--bg-accent);
         }
         
         ::-webkit-scrollbar-thumb {
-            background: var(--border-color);
-            border-radius: 5px;
+            background: var(--border-default);
+            border-radius: var(--radius-lg);
+            border: 3px solid var(--bg-accent);
+            transition: var(--transition-base);
         }
         
         ::-webkit-scrollbar-thumb:hover {
-            background: var(--primary);
+            background: var(--primary-light);
         }
         
-        /* Selection styling */
+        /* Selection */
         ::selection {
             background: var(--primary);
-            color: #ffffff;
+            color: var(--text-white);
         }
         
-        ::-moz-selection {
-            background: var(--primary);
-            color: #ffffff;
-        }
-        
-        /* Focus styles */
+        /* Focus States */
         *:focus {
+            outline: none;
+        }
+        
+        *:focus-visible {
             outline: 2px solid var(--primary);
             outline-offset: 2px;
         }
         
-        button:focus,
-        a:focus {
-            outline-offset: 4px;
+        /* Skip Link */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: var(--primary);
+            color: var(--text-white);
+            padding: var(--spacing-xs) var(--spacing-sm);
+            text-decoration: none;
+            z-index: 9999;
+            border-radius: var(--radius-md);
         }
         
-        /* Navigation */
+        .skip-link:focus {
+            top: 10px;
+        }
+        
+        /* Enhanced Navigation */
         nav {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--border-color);
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid var(--border-light);
             position: sticky;
             top: 0;
             z-index: 1000;
-            transition: all 0.3s ease;
+            transition: var(--transition-smooth);
+            box-shadow: var(--shadow-xs);
+        }
+        
+        nav.scrolled {
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: var(--shadow-md);
         }
         
         nav .container {
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
-            padding: 1rem 20px;
+            padding: 1.125rem 24px;
         }
         
         .logo {
-            height: 50px;
             display: flex;
             align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            transition: var(--transition-base);
         }
         
         .logo img {
-            height: 100%;
+            height: 42px;
             width: auto;
             object-fit: contain;
         }
         
+        .logo:hover {
+            transform: translateY(-1px);
+        }
+        
         .nav-links {
             display: flex;
-            gap: 2.5rem;
+            gap: 2rem;
             align-items: center;
         }
         
         .nav-links a {
             color: var(--text-secondary);
             text-decoration: none;
-            transition: all 0.3s ease;
+            transition: var(--transition-base);
             font-weight: 500;
-            font-size: 0.95rem;
-            letter-spacing: 0.01em;
+            font-size: 0.9375rem;
             position: relative;
+            padding: 0.5rem 0;
         }
         
-        .nav-links a:not(.btn):after {
+        .nav-links a:not(.btn)::after {
             content: '';
             position: absolute;
-            bottom: -5px;
+            bottom: 0;
             left: 0;
             width: 0;
             height: 2px;
             background: var(--gradient-primary);
-            transition: width 0.3s ease;
+            transition: var(--transition-smooth);
         }
         
         .nav-links a:not(.btn):hover {
-            color: var(--text-primary);
+            color: var(--primary);
         }
         
-        .nav-links a:not(.btn):hover:after {
+        .nav-links a:not(.btn):hover::after {
             width: 100%;
         }
         
+        /* Mobile Menu Button */
+        .mobile-menu-btn {
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            padding: 8px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .mobile-menu-btn span {
+            width: 24px;
+            height: 2px;
+            background: var(--text-primary);
+            transition: var(--transition-base);
+        }
+        
+        /* Enhanced Button Styles */
         .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
             padding: 0.75rem 1.75rem;
-            border-radius: 4px;
+            border-radius: var(--radius-md);
             text-decoration: none;
-            display: inline-block;
-            transition: all 0.3s ease;
             font-weight: 600;
-            font-size: 0.95rem;
-            letter-spacing: 0.02em;
-            text-transform: uppercase;
+            font-size: 0.9375rem;
+            transition: var(--transition-base);
             position: relative;
             overflow: hidden;
+            cursor: pointer;
+            border: 2px solid transparent;
         }
         
         .btn-primary {
             background: var(--gradient-primary);
-            color: #ffffff;
-            border: none;
+            color: var(--text-white);
+            box-shadow: var(--shadow-sm);
         }
         
         .btn-primary:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.25);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md), var(--shadow-glow);
         }
         
         .btn-primary:active {
             transform: translateY(0);
         }
         
-        /* Hero Section with Intelligence Focus */
+        .btn-secondary {
+            background: var(--bg-surface);
+            color: var(--primary);
+            border-color: var(--border-default);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--bg-hover);
+            border-color: var(--primary);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .btn-white {
+            background: var(--text-white);
+            color: var(--primary-dark);
+        }
+        
+        .btn-white:hover {
+            background: var(--bg-hover);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--text-white);
+            color: var(--text-white);
+        }
+        
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+        }
+        
+        /* Enhanced Hero Section */
         .hero {
-            padding: 8rem 0 6rem;
+            padding: 7rem 0 5rem;
             position: relative;
             overflow: hidden;
-            background: transparent;
+            background: var(--gradient-subtle);
         }
         
         .hero::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: radial-gradient(ellipse at center, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
-            pointer-events: none;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 30% 50%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+                        radial-gradient(circle at 70% 50%, rgba(139, 92, 246, 0.08) 0%, transparent 50%);
+            animation: float 20s ease-in-out infinite;
         }
-
-        /* soft light gradient band at top of hero for depth */
-        .hero::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 140px;
-            background: linear-gradient(180deg, rgba(99,102,241,0.06), transparent);
-            pointer-events: none;
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
         }
         
         .hero-content {
@@ -341,62 +449,66 @@
         }
         
         .hero-text h1 {
-            font-size: 3.75rem;
+            font-size: clamp(2.5rem, 5vw, 4rem);
             font-weight: 900;
-            line-height: 1.1;
             margin-bottom: 1.5rem;
-            letter-spacing: -0.02em;
             background: var(--gradient-primary);
-            background-clip: text;
             -webkit-background-clip: text;
-            background-clip: text;
             -webkit-text-fill-color: transparent;
+            background-clip: text;
+            color: transparent;
         }
         
         .hero-text .subtitle {
             font-size: 1.25rem;
             color: var(--text-secondary);
             margin-bottom: 1rem;
-            line-height: 1.6;
-            font-weight: 400;
+            line-height: 1.7;
         }
         
         .intelligence-badge {
             display: inline-flex;
             align-items: center;
-            gap: 0.5rem;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
+            gap: 0.75rem;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-default);
+            padding: 0.625rem 1.25rem;
+            border-radius: var(--radius-full);
             font-size: 0.875rem;
             margin-bottom: 2rem;
             color: var(--text-secondary);
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
+            font-weight: 600;
+            box-shadow: var(--shadow-sm);
+            animation: badge-float 3s ease-in-out infinite;
+        }
+        
+        @keyframes badge-float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
         }
         
         .intelligence-badge i {
             color: var(--primary);
+            font-size: 1.125rem;
         }
         
+        /* Enhanced Metrics */
         .metrics-row {
             display: flex;
-            gap: 3rem;
-            margin: 3rem 0 2rem;
+            gap: 1.5rem;
+            margin: 3rem 0 2.5rem;
         }
         
         .metric-item {
-            text-align: left;
+            flex: 1;
             padding: 1.5rem;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            min-width: 160px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-lg);
             position: relative;
             overflow: hidden;
-            transition: all 0.3s ease;
+            transition: var(--transition-smooth);
+            box-shadow: var(--shadow-sm);
         }
         
         .metric-item::before {
@@ -404,47 +516,137 @@
             position: absolute;
             top: 0;
             left: 0;
-            width: 4px;
-            height: 100%;
+            width: 100%;
+            height: 4px;
             background: var(--gradient-primary);
+            opacity: 0;
+            transition: var(--transition-base);
         }
         
         .metric-item:hover {
-            background: var(--bg-card-hover);
-            transform: translateY(-2px);
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary-light);
+        }
+        
+        .metric-item:hover::before {
+            opacity: 1;
         }
         
         .metric-value {
-            font-size: 2.25rem;
+            font-size: 2.5rem;
             font-weight: 800;
             color: var(--text-primary);
             margin-bottom: 0.25rem;
+            font-family: 'Plus Jakarta Sans', sans-serif;
         }
         
         .metric-label {
             font-size: 0.875rem;
-            color: var(--text-secondary);
+            color: var(--text-tertiary);
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            font-weight: 500;
+            font-weight: 600;
         }
         
-        /* Intelligence Features Section */
-        .intelligence-section {
-            padding: 6rem 0;
-            background: transparent;
+        /* Enhanced Hero Visual */
+        .hero-visual {
             position: relative;
         }
         
-        .intelligence-section::before {
+        .dashboard-preview {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-xl);
+            padding: 2rem;
+            box-shadow: var(--shadow-xl);
+            position: relative;
+            overflow: hidden;
+            transition: var(--transition-smooth);
+        }
+        
+        .dashboard-preview:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: var(--shadow-xl), 0 25px 50px -12px rgba(99, 102, 241, 0.15);
+        }
+        
+        .dashboard-preview::before {
             content: '';
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
-            height: 1px;
+            height: 60px;
             background: var(--gradient-primary);
-            opacity: 0.3;
+            opacity: 0.05;
+        }
+        
+        .dashboard-header {
+            position: relative;
+            z-index: 1;
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .dashboard-header::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .stat-card {
+            text-align: center;
+            padding: 1.5rem;
+            background: var(--bg-accent);
+            border-radius: var(--radius-md);
+            transition: var(--transition-base);
+        }
+        
+        .stat-card:hover {
+            background: var(--bg-hover);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .stat-card-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+        
+        .stat-card-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+        
+        /* Enhanced Section Headers */
+        .section {
+            padding: 5rem 0;
+            position: relative;
         }
         
         .section-header {
@@ -454,41 +656,37 @@
         }
         
         .section-header h2 {
-            font-size: 2.75rem;
+            font-size: clamp(2rem, 4vw, 3rem);
             font-weight: 800;
             margin-bottom: 1rem;
             color: var(--text-primary);
-            letter-spacing: -0.02em;
         }
         
         .section-header p {
-            color: var(--text-secondary);
             font-size: 1.125rem;
-            line-height: 1.6;
+            color: var(--text-secondary);
+            line-height: 1.7;
         }
         
-        .trademark {
-            font-size: 0.6em;
-            vertical-align: super;
-            opacity: 0.7;
-            font-weight: 400;
-        }
-        
+        /* Enhanced Algorithm Cards */
         .algorithm-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
         }
         
         .algorithm-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            padding: 2.5rem;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
             position: relative;
             overflow: hidden;
-            transition: all 0.25s ease;
+            transition: var(--transition-smooth);
             box-shadow: var(--shadow-sm);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
         }
         
         .algorithm-card::before {
@@ -497,73 +695,84 @@
             top: 0;
             left: 0;
             right: 0;
-            height: 2px;
+            height: 3px;
             background: var(--gradient-primary);
-            opacity: 0;
-            transition: opacity 0.3s ease;
+            transform: translateX(-100%);
+            transition: var(--transition-smooth);
         }
         
         .algorithm-card:hover {
-            background: var(--bg-card-hover);
-            border-color: var(--primary);
-            transform: translateY(-6px);
-            box-shadow: var(--shadow-lg);
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-xl);
+            border-color: var(--primary-light);
         }
         
         .algorithm-card:hover::before {
-            opacity: 1;
+            transform: translateX(0);
         }
         
         .algorithm-header {
             display: flex;
-            align-items: start;
-            gap: 1.25rem;
-            margin-bottom: 1.5rem;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1.25rem;
         }
         
         .algorithm-icon {
-            width: 56px;
-            height: 56px;
+            width: 48px;
+            height: 48px;
             background: var(--gradient-primary);
-            border-radius: 4px;
+            border-radius: var(--radius-md);
             display: flex;
             align-items: center;
             justify-content: center;
-            color: var(--text-primary);
-            font-size: 1.5rem;
+            color: var(--text-white);
+            font-size: 1.25rem;
             flex-shrink: 0;
+            box-shadow: var(--shadow-md);
         }
         
         .algorithm-name {
-            font-size: 1.375rem;
+            font-size: 1.25rem;
             font-weight: 700;
             color: var(--text-primary);
-            letter-spacing: -0.01em;
+            margin-bottom: 0.25rem;
+        }
+        
+        .trademark {
+            font-size: 0.7em;
+            vertical-align: super;
+            opacity: 0.7;
+            font-weight: 400;
         }
         
         .algorithm-description {
             color: var(--text-secondary);
             margin-bottom: 1.5rem;
             line-height: 1.6;
-            font-size: 0.95rem;
+            font-size: 0.9375rem;
+            flex-grow: 1;
         }
         
         .algorithm-stats {
-            display: flex;
-            gap: 2rem;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
             padding-top: 1.5rem;
-            border-top: 1px solid var(--border-color);
+            border-top: 1px solid var(--border-light);
+            margin-top: auto;
         }
         
         .stat-item {
-            flex: 1;
+            text-align: center;
         }
         
         .stat-value {
-            font-size: 1.375rem;
+            font-size: 1.25rem;
             font-weight: 700;
             color: var(--primary);
             margin-bottom: 0.25rem;
+            font-family: 'Plus Jakarta Sans', sans-serif;
         }
         
         .stat-label {
@@ -571,92 +780,82 @@
             color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            font-weight: 500;
+            font-weight: 600;
         }
         
-        /* Live Demo Section */
-        .demo-section {
-            padding: 6rem 0;
-            background: transparent;
-            position: relative;
-        }
-        
+        /* Enhanced Demo Section */
         .demo-container {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            padding: 3rem;
+            background: var(--bg-surface);
+            border-radius: var(--radius-xl);
+            padding: 0;
             overflow: hidden;
-            box-shadow: var(--shadow-sm);
+            box-shadow: var(--shadow-xl);
         }
         
         .demo-tabs {
             display: flex;
-            gap: 0;
-            margin-bottom: 2rem;
-            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-accent);
+            padding: 0.5rem;
+            gap: 0.5rem;
         }
         
         .demo-tab {
-            padding: 1rem 2rem;
-            background: none;
+            flex: 1;
+            padding: 1rem;
+            background: transparent;
             border: none;
+            border-radius: var(--radius-md);
             cursor: pointer;
             font-weight: 600;
-            color: var(--text-secondary);
-            position: relative;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
+            color: var(--text-tertiary);
+            transition: var(--transition-base);
             font-size: 0.875rem;
+            text-transform: uppercase;
             letter-spacing: 0.05em;
         }
         
         .demo-tab:hover {
-            color: var(--text-primary);
+            color: var(--text-secondary);
+            background: rgba(99, 102, 241, 0.05);
         }
         
         .demo-tab.active {
+            background: var(--bg-surface);
             color: var(--primary);
-        }
-        
-        .demo-tab.active::after {
-            content: '';
-            position: absolute;
-            bottom: -1px;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: var(--gradient-primary);
+            box-shadow: var(--shadow-sm);
         }
         
         .demo-content {
-            padding: 2rem;
-            background: var(--bg-darker);
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
+            padding: 2.5rem;
             min-height: 400px;
         }
         
         .demo-content h3 {
+            font-size: 1.125rem;
+            font-weight: 700;
             color: var(--text-primary);
             margin-bottom: 1.5rem;
-            font-size: 1.125rem;
-            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .demo-content h3::before {
+            content: '📄';
+            font-size: 1.5rem;
         }
         
         .demo-result {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
+            background: var(--bg-accent);
+            border-radius: var(--radius-md);
             padding: 1.5rem;
-            border-radius: 4px;
             margin-bottom: 1rem;
-            border-left: 3px solid var(--success);
-            transition: all 0.25s ease;
-            box-shadow: var(--shadow-sm);
+            border-left: 4px solid var(--success);
+            transition: var(--transition-smooth);
         }
         
         .demo-result:hover {
-            background: var(--bg-card-hover);
+            transform: translateX(4px);
             box-shadow: var(--shadow-md);
         }
         
@@ -664,128 +863,292 @@
             display: flex;
             align-items: center;
             gap: 1rem;
-            margin-top: 0.5rem;
+            margin-top: 0.75rem;
         }
         
         .confidence-progress {
             flex: 1;
-            height: 6px;
-            background: var(--bg-darker);
-            border-radius: 3px;
+            height: 8px;
+            background: var(--bg-hover);
+            border-radius: var(--radius-full);
             overflow: hidden;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
         }
         
         .confidence-fill {
             height: 100%;
             background: var(--gradient-primary);
-            transition: width 0.5s ease;
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: var(--shadow-sm);
         }
         
-        /* Value Differentiators */
-        .differentiators-section {
-            padding: 6rem 0;
-            background: transparent;
-            position: relative;
+        .match-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.375rem 0.875rem;
+            border-radius: var(--radius-full);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
         
-        .differentiators-section::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(180deg, transparent 0%, rgba(99,102,241,0.06) 50%, transparent 100%);
-            pointer-events: none;
+        .match-strong {
+            background: var(--success);
+            color: var(--text-white);
         }
         
+        .match-partial {
+            background: var(--primary);
+            color: var(--text-white);
+        }
+        
+        /* Enhanced Differentiators */
         .differentiator-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 2rem;
-            position: relative;
-            z-index: 1;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
         }
         
         .differentiator-card {
             text-align: center;
-            padding: 2.5rem 2rem;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            transition: all 0.25s ease;
+            padding: 2.5rem 1.5rem;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-lg);
+            transition: var(--transition-smooth);
             position: relative;
             overflow: hidden;
             box-shadow: var(--shadow-sm);
         }
         
-        .differentiator-card::before {
+        .differentiator-card::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 3px;
+            background: var(--gradient-primary);
+            opacity: 0;
+            transition: var(--transition-smooth);
+        }
+        
+        .differentiator-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-xl);
+        }
+        
+        .differentiator-card:hover::after {
+            opacity: 1;
+            width: 100px;
+        }
+        
+        .differentiator-icon {
+            width: 64px;
+            height: 64px;
+            background: var(--gradient-subtle);
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            font-size: 2rem;
+            color: var(--primary);
+            transition: var(--transition-spring);
+        }
+        
+        .differentiator-card:hover .differentiator-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+        
+        .differentiator-title {
+            font-size: 1.125rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            color: var(--text-primary);
+        }
+        
+        .differentiator-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        
+        .differentiator-card p {
+            color: var(--text-secondary);
+            font-size: 0.9375rem;
+            line-height: 1.5;
+        }
+        
+        /* Enhanced Platform Features */
+        .platform-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .platform-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            transition: var(--transition-smooth);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .platform-card::before {
             content: '';
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
-            height: 2px;
+            height: 100%;
             background: var(--gradient-primary);
             opacity: 0;
-            transition: opacity 0.3s ease;
+            transition: var(--transition-smooth);
+            transform: translateY(-100%);
         }
         
-        .differentiator-card:hover {
-            background: var(--bg-card-hover);
-            transform: translateY(-6px);
-            box-shadow: var(--shadow-lg);
+        .platform-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-xl);
+            border-color: var(--primary-light);
         }
         
-        .differentiator-card:hover::before {
-            opacity: 1;
+        .platform-card:hover::before {
+            opacity: 0.03;
+            transform: translateY(0);
         }
         
-        .differentiator-icon {
-            font-size: 2.5rem;
-            margin-bottom: 1.25rem;
+        .platform-icon {
+            width: 56px;
+            height: 56px;
+            background: var(--gradient-subtle);
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
             color: var(--primary);
+            margin-bottom: 1.5rem;
+            transition: var(--transition-spring);
         }
         
-        .differentiator-title {
-            font-size: 1.125rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
+        .platform-card:hover .platform-icon {
+            transform: scale(1.1) rotate(-5deg);
+            background: var(--gradient-primary);
+            color: var(--text-white);
+        }
+        
+        .platform-card h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
             color: var(--text-primary);
-            letter-spacing: -0.01em;
+            margin-bottom: 0.75rem;
         }
         
-        .differentiator-value {
-            font-size: 2rem;
-            font-weight: 800;
-            color: var(--primary);
-            margin-bottom: 0.5rem;
-        }
-        
-        .differentiator-card p {
+        .platform-card p {
             color: var(--text-secondary);
+            margin-bottom: 1.25rem;
+            line-height: 1.6;
+            font-size: 0.9375rem;
+        }
+        
+        .platform-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9375rem;
+            transition: var(--transition-base);
+        }
+        
+        .platform-link i {
             font-size: 0.875rem;
+            transition: var(--transition-base);
+        }
+        
+        .platform-link:hover {
+            gap: 0.75rem;
+        }
+        
+        /* Enhanced Updates Section */
+        .updates-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+        }
+        
+        .update-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            padding: 1.25rem;
+            transition: var(--transition-smooth);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .update-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .update-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .update-badge {
+            padding: 0.25rem 0.625rem;
+            border-radius: var(--radius-full);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .badge-new {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+        
+        .badge-improved {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary);
+        }
+        
+        .update-card strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+        
+        .update-card p {
+            color: var(--text-secondary);
+            font-size: 0.9375rem;
             line-height: 1.5;
         }
         
-        /* Pricing with ROI Calculator */
-        .pricing-section {
-            padding: 6rem 0;
-            background: transparent;
-            position: relative;
-        }
-        
+        /* Enhanced Pricing */
         .pricing-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
+            background: var(--bg-surface);
+            border: 2px solid var(--primary-light);
+            border-radius: var(--radius-xl);
             padding: 3rem;
-            text-align: center;
             max-width: 600px;
             margin: 0 auto;
             position: relative;
             overflow: hidden;
-            box-shadow: var(--shadow-sm);
+            box-shadow: var(--shadow-xl), var(--shadow-glow);
         }
         
         .pricing-card::before {
@@ -794,998 +1157,1334 @@
             top: 0;
             left: 0;
             right: 0;
-            height: 3px;
+            height: 5px;
             background: var(--gradient-primary);
         }
         
         .pricing-badge {
             display: inline-block;
             background: var(--gradient-primary);
-            color: var(--text-primary);
-            padding: 0.5rem 1.5rem;
+            color: var(--text-white);
+            padding: 0.625rem 1.5rem;
+            border-radius: var(--radius-full);
             font-size: 0.75rem;
-            font-weight: 600;
+            font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.1em;
             margin-bottom: 2rem;
+            box-shadow: var(--shadow-md);
         }
         
         .price {
-            font-size: 4rem;
-            font-weight: 800;
+            font-size: clamp(3rem, 6vw, 4.5rem);
+            font-weight: 900;
             color: var(--text-primary);
-            letter-spacing: -0.02em;
             margin-bottom: 0.5rem;
+            font-family: 'Plus Jakarta Sans', sans-serif;
         }
         
         .price span {
-            font-size: 1.5rem;
+            font-size: 0.4em;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+        
+        .feature-highlight {
+            margin: 2rem 0;
+            padding: 1.5rem;
+            background: var(--gradient-subtle);
+            border-left: 4px solid var(--primary);
+            border-radius: var(--radius-md);
+        }
+        
+        .feature-highlight p {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .feature-highlight p i {
+            color: var(--success);
+            font-size: 1.125rem;
+        }
+        
+        .feature-highlight span {
+            display: block;
+            margin-left: 2rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
             font-weight: 400;
-            color: var(--text-secondary);
         }
         
-        .pricing-card > p {
-            color: var(--text-secondary);
-            margin-bottom: 2rem;
-        }
-        
+        /* Enhanced ROI Calculator */
         .roi-calculator {
-            background: var(--bg-darker);
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
+            background: var(--bg-accent);
+            border-radius: var(--radius-lg);
             padding: 2rem;
             margin-top: 2rem;
-            text-align: left;
         }
         
         .roi-calculator h4 {
-            color: var(--text-primary);
-            font-weight: 600;
-            margin-bottom: 1.5rem;
             font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .roi-calculator h4::before {
+            content: '💰';
+            font-size: 1.5rem;
         }
         
         .roi-item {
             display: flex;
             justify-content: space-between;
+            align-items: center;
             padding: 1rem 0;
-            border-bottom: 1px solid var(--border-color);
-            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border-light);
+            transition: var(--transition-base);
+        }
+        
+        .roi-item:hover {
+            padding-left: 0.5rem;
         }
         
         .roi-item:last-of-type {
             border-bottom: none;
         }
         
+        .roi-item span:first-child {
+            color: var(--text-secondary);
+            font-size: 0.9375rem;
+        }
+        
         .roi-item span:last-child {
-            font-weight: 600;
+            font-weight: 700;
+            font-size: 1rem;
         }
         
         .roi-total {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--success);
+            margin-top: 1.5rem;
             padding-top: 1.5rem;
-            border-top: 2px solid var(--border-color);
-            margin-top: 0.5rem;
+            border-top: 2px solid var(--primary-light);
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: var(--success);
+            text-align: center;
+            font-family: 'Plus Jakarta Sans', sans-serif;
         }
         
-        /* Footer CTA */
+        /* Enhanced CTA Section */
         .cta-section {
             padding: 6rem 0;
-            background: var(--gradient-primary);
+            background: var(--gradient-hero);
+            color: var(--text-white);
             text-align: center;
             position: relative;
             overflow: hidden;
         }
         
-        .cta-section::before {
+        .cta-section::before,
+        .cta-section::after {
             content: '';
             position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-            animation: pulse 4s ease-in-out infinite;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
         }
         
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); opacity: 0.5; }
-            50% { transform: scale(1.1); opacity: 0.3; }
+        .cta-section::before {
+            top: -150px;
+            left: -150px;
+            animation: float-slow 15s ease-in-out infinite;
         }
         
-        .cta-section .container {
-            position: relative;
-            z-index: 1;
+        .cta-section::after {
+            bottom: -150px;
+            right: -150px;
+            animation: float-slow 15s ease-in-out infinite reverse;
+        }
+        
+        @keyframes float-slow {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-30px) scale(1.1); }
         }
         
         .cta-section h2 {
-            font-size: 2.75rem;
+            font-size: clamp(2.5rem, 5vw, 3.5rem);
+            font-weight: 900;
             margin-bottom: 1rem;
-            font-weight: 800;
-            letter-spacing: -0.02em;
+            position: relative;
+            z-index: 1;
         }
         
         .cta-section p {
             font-size: 1.25rem;
             opacity: 0.95;
-            margin-bottom: 2rem;
+            margin-bottom: 2.5rem;
+            position: relative;
+            z-index: 1;
         }
         
         .cta-buttons {
             display: flex;
             gap: 1.5rem;
             justify-content: center;
-            margin-top: 2rem;
             flex-wrap: wrap;
+            position: relative;
+            z-index: 1;
         }
         
-        .btn-white {
-            background: #ffffff;
-            color: var(--primary-dark);
-            font-weight: 600;
+        .cta-features {
+            margin-top: 3rem;
+            display: flex;
+            gap: 2.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            position: relative;
+            z-index: 1;
         }
         
-        .btn-white:hover {
-            background: #f8fafc;
-            box-shadow: 0 8px 24px rgba(2, 6, 23, 0.06);
+        .cta-feature {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9375rem;
         }
         
-        .btn-outline {
-            background: transparent;
-            border: 2px solid var(--text-primary);
+        .cta-feature i {
+            color: var(--text-white);
+            font-size: 1.125rem;
+        }
+        
+        /* Enhanced Footer */
+        footer {
+            background: var(--bg-surface);
+            border-top: 1px solid var(--border-light);
+            padding: 4rem 0 2rem;
+        }
+        
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 3rem;
+            margin-bottom: 3rem;
+        }
+        
+        .footer-brand img {
+            height: 40px;
+            margin-bottom: 1rem;
+        }
+        
+        .footer-brand p {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+            font-size: 0.9375rem;
+        }
+        
+        .footer-social {
+            display: flex;
+            gap: 0.75rem;
+        }
+        
+        .social-link {
+            width: 40px;
+            height: 40px;
+            background: var(--bg-accent);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: var(--transition-base);
+        }
+        
+        .social-link:hover {
+            background: var(--primary);
+            color: var(--text-white);
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+        
+        .footer-section h4 {
+            font-size: 0.875rem;
+            font-weight: 700;
             color: var(--text-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1.5rem;
         }
         
-        .btn-outline:hover {
-            background: rgba(99,102,241,0.06);
-            transform: translateY(-1px);
-        }
-
-        /* Ensure CTA section text/buttons are legible on gradient */
-        .cta-section { color: #ffffff; }
-        .cta-section .btn-outline { border-color: #ffffff; color: #ffffff; }
-        .cta-section .btn-outline:hover { background: rgba(255,255,255,0.12); }
-        
-        /* Platform card hover effects */
-        .platform-card {
-            cursor: pointer;
-            box-shadow: var(--shadow-sm);
-            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        .footer-section ul {
+            list-style: none;
         }
         
-        .platform-card:hover {
-            background: var(--bg-card-hover) !important;
-            transform: translateY(-6px);
-            box-shadow: var(--shadow-lg);
+        .footer-section li {
+            margin-bottom: 0.75rem;
         }
         
-        .platform-card:hover .platform-card-border {
-            opacity: 1 !important;
+        .footer-section a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9375rem;
+            transition: var(--transition-base);
+        }
+        
+        .footer-section a:hover {
+            color: var(--primary);
+            transform: translateX(2px);
+            display: inline-block;
+        }
+        
+        .footer-bottom {
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .footer-bottom p {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+        
+        .footer-badges {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .footer-badge {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .footer-badge i {
+            color: var(--primary);
+        }
+        
+        /* Loading State */
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: var(--gradient-primary);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.5s ease;
+            z-index: 9999;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .hero-content {
+                grid-template-columns: 1fr;
+                gap: 3rem;
+            }
+            
+            .algorithm-grid {
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            }
+            
+            .footer-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 2rem;
+            }
         }
         
         @media (max-width: 768px) {
-            .hero-content,
-            .algorithm-grid,
-            .differentiator-grid {
-                grid-template-columns: 1fr;
+            .nav-links {
+                display: none;
+            }
+            
+            .mobile-menu-btn {
+                display: flex;
+            }
+            
+            .hero {
+                padding: 5rem 0 3rem;
             }
             
             .hero-text h1 {
-                font-size: 2rem;
+                font-size: 2.5rem;
             }
             
             .metrics-row {
-                flex-wrap: wrap;
-            }
-            
-            .nav-links {
+                flex-direction: column;
                 gap: 1rem;
-                font-size: 0.875rem;
             }
             
-            .btn {
-                padding: 0.625rem 1.25rem;
-                font-size: 0.875rem;
+            .differentiator-grid,
+            .platform-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .footer-grid {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            
+            .footer-social {
+                justify-content: center;
+            }
+            
+            .footer-bottom {
+                flex-direction: column;
+                text-align: center;
             }
         }
-
-        /* Reduce motion preferences */
+        
         @media (prefers-reduced-motion: reduce) {
-            * { transition: none !important; animation: none !important; }
-            .platform-card:hover, .algorithm-card:hover, .differentiator-card:hover { transform: none !important; }
+            *, *::before, *::after {
+                animation: none !important;
+                transition: none !important;
+            }
+        }
+        
+        /* Print Styles */
+        @media print {
+            nav, .cta-section, footer, .btn {
+                display: none;
+            }
+            
+            body {
+                font-size: 12pt;
+                line-height: 1.5;
+            }
+            
+            h1, h2, h3 {
+                page-break-after: avoid;
+            }
         }
     </style>
     <script src="js/host-guard.js"></script>
 </head>
 <body>
+    <a href="#main" class="skip-link">Skip to main content</a>
+    
+    <!-- Loading Bar -->
+    <div class="loading" id="loading"></div>
+
     <!-- Navigation -->
-    <nav>
+    <nav id="nav">
         <div class="container">
-            <div class="logo">
-                <img src="https://mapmystandards.ai/wp-content/uploads/2025/07/Original-Logo.png" alt="MapMyStandards">
-            </div>
-            <div class="nav-links">
+            <div class="nav-links" style="margin-left: 0;">
                 <a href="#platform-features">Features</a>
                 <a href="#pricing">Pricing</a>
                 <a href="https://platform.mapmystandards.ai/login-platform?return=%2Fai-dashboard">Login</a>
-                <a href="https://platform.mapmystandards.ai/trial-signup-stripe.html" class="btn btn-primary">Get Started</a>
+                <a href="https://platform.mapmystandards.ai/trial-signup-stripe.html" class="btn btn-primary" style="color: white;">Get Started</a>
             </div>
+            <button class="mobile-menu-btn" aria-label="Menu" onclick="toggleMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
         </div>
     </nav>
 
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="container">
-            <div class="hero-content">
-                <div class="hero-text">
-                    <div class="intelligence-badge">
-                        <i class="fas fa-microchip"></i>
-                        <span>Powered by 6 Proprietary Algorithms</span>
+    <!-- Main Content -->
+    <main id="main">
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="container">
+                <div class="hero-content">
+                    <div class="hero-text">
+                        <div class="intelligence-badge">
+                            <i class="fas fa-microchip"></i>
+                            <span>Powered by 6 Proprietary Algorithms</span>
+                        </div>
+                        <h1>Not Just AI.<br>Compliance Intelligence.</h1>
+                        <p class="subtitle">Purpose-built algorithms delivering the "right evidence to the right standard" with auditable confidence</p>
+                        
+                        <div class="metrics-row">
+                            <div class="metric-item">
+                                <div class="metric-value">87%</div>
+                                <div class="metric-label">Mapping Accuracy</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-value">32hrs</div>
+                                <div class="metric-label">Saved Weekly</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-value">0.06</div>
+                                <div class="metric-label">Risk Reduction</div>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 2rem;">
+                            <a href="https://platform.mapmystandards.ai/trial-signup-stripe.html" class="btn btn-primary" style="font-size: 1.125rem; padding: 1rem 2rem;">
+                                Start 7-Day Free Trial <i class="fas fa-arrow-right"></i>
+                            </a>
+                            <p style="font-size: 0.875rem; color: var(--text-tertiary); margin-top: 0.75rem;">
+                                Card required • Not billed until trial ends • Cancel anytime
+                            </p>
+                        </div>
                     </div>
-                    <h1>Not Just AI.<br>Compliance Intelligence.</h1>
-                    <p class="subtitle">Purpose-built algorithms delivering the "right evidence to the right standard" with auditable confidence</p>
                     
-                    <div class="metrics-row">
-                        <div class="metric-item">
-                            <div class="metric-value">87%</div>
-                            <div class="metric-label">Mapping Accuracy</div>
+                    <div class="hero-visual">
+                        <!-- Logo above dashboard -->
+                        <div style="margin-bottom: 2rem; text-align: center;">
+                            <img src="https://mapmystandards.ai/wp-content/uploads/2025/07/Original-Logo.png" alt="MapMyStandards" style="max-width: 100%; width: 350px; height: auto;">
                         </div>
-                        <div class="metric-item">
-                            <div class="metric-value">32hrs</div>
-                            <div class="metric-label">Saved Weekly</div>
-                        </div>
-                        <div class="metric-item">
-                            <div class="metric-value">0.06</div>
-                            <div class="metric-label">Risk Reduction</div>
+                        <div class="dashboard-preview">
+                            <h3 class="dashboard-header">Real-Time Intelligence Dashboard</h3>
+                            <div class="stats-grid">
+                                <div class="stat-card">
+                                    <div class="stat-card-value" style="color: var(--success);">High</div>
+                                    <div class="stat-card-label">Trust Score</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-card-value" style="color: var(--primary);">92%</div>
+                                    <div class="stat-card-label">Confidence</div>
+                                </div>
+                            </div>
+                            <div style="padding: 1.25rem; background: var(--bg-accent); border-radius: var(--radius-md);">
+                                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                                    <i class="fas fa-check-circle" style="color: var(--success);"></i>
+                                    <span style="font-size: 0.875rem; color: var(--text-secondary);">SACSCOC 8.1 mapped with 3 rationale spans</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                                    <i class="fas fa-check-circle" style="color: var(--success);"></i>
+                                    <span style="font-size: 0.875rem; color: var(--text-secondary);">Evidence freshness: Current</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <i class="fas fa-check-circle" style="color: var(--success);"></i>
+                                    <span style="font-size: 0.875rem; color: var(--text-secondary);">Gap risk: Low (0.23)</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    
-                    <div style="margin-top: 2rem;">
-                        <a href="https://platform.mapmystandards.ai/trial-signup-stripe.html" class="btn btn-primary" style="font-size: 1.125rem; padding: 1rem 2rem;">
-                            Start 7-Day Free Trial
-                        </a>
-                        <p style="font-size: 0.875rem; opacity: 0.9; margin-top: 0.5rem;">
-                            Card required • Not billed until trial ends • Cancel anytime
-                        </p>
-                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Core Intelligence Algorithms -->
+        <section id="algorithms" class="section">
+            <div class="container">
+                <div class="section-header">
+                    <h2>6 Proprietary Intelligence Systems</h2>
+                    <p>Each algorithm solves a specific compliance pain point with measurable results</p>
                 </div>
                 
-                <div class="hero-visual">
-                    <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 2rem; border-radius: 4px; position: relative; overflow: hidden;">
-                        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 3px; background: var(--gradient-primary);"></div>
-                        <h3 style="font-size: 1.125rem; margin-bottom: 1.5rem; color: var(--text-primary); font-weight: 600;">Real-Time Intelligence Dashboard</h3>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
-                            <div style="text-align: center; padding: 1.25rem; background: var(--bg-darker); border: 1px solid var(--border-color); border-radius: 4px;">
-                                <div style="font-size: 1.5rem; font-weight: 700; color: var(--success); margin-bottom: 0.25rem;">High</div>
-                                <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Trust Score</div>
+                <div class="algorithm-grid">
+                    <!-- StandardsGraph -->
+                    <div class="algorithm-card">
+                        <div class="algorithm-header">
+                            <div class="algorithm-icon">
+                                <i class="fas fa-network-wired"></i>
                             </div>
-                            <div style="text-align: center; padding: 1.25rem; background: var(--bg-darker); border: 1px solid var(--border-color); border-radius: 4px;">
-                                <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary); margin-bottom: 0.25rem;">92%</div>
-                                <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Confidence</div>
+                            <div>
+                                <div class="algorithm-name">StandardsGraph<span class="trademark">™</span></div>
                             </div>
                         </div>
-                        <div style="padding: 1rem; background: var(--bg-darker); border: 1px solid var(--border-color); border-radius: 4px;">
-                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-                                <i class="fas fa-check" style="color: var(--success); font-size: 0.875rem;"></i>
-                                <span style="font-size: 0.875rem; color: var(--text-secondary);">SACSCOC 8.1 mapped with 3 rationale spans</span>
+                        <p class="algorithm-description">
+                            Living knowledge graph mapping accreditor → standard → clause → indicator. 
+                            Multi-granular indexing with semantic embeddings for instant retrieval.
+                        </p>
+                        <div class="algorithm-stats">
+                            <div class="stat-item">
+                                <div class="stat-value">6</div>
+                                <div class="stat-label">Accreditors</div>
                             </div>
-                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-                                <i class="fas fa-check" style="color: var(--success); font-size: 0.875rem;"></i>
-                                <span style="font-size: 0.875rem; color: var(--text-secondary);">Evidence freshness: Current</span>
+                            <div class="stat-item">
+                                <div class="stat-value">500+</div>
+                                <div class="stat-label">Standards</div>
                             </div>
-                            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <i class="fas fa-check" style="color: var(--success); font-size: 0.875rem;"></i>
-                                <span style="font-size: 0.875rem; color: var(--text-secondary);">Gap risk: Low (0.23)</span>
+                            <div class="stat-item">
+                                <div class="stat-value">&lt;100ms</div>
+                                <div class="stat-label">Retrieval</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- EvidenceMapper -->
+                    <div class="algorithm-card">
+                        <div class="algorithm-header">
+                            <div class="algorithm-icon">
+                                <i class="fas fa-crosshairs"></i>
+                            </div>
+                            <div>
+                                <div class="algorithm-name">EvidenceMapper<span class="trademark">™</span></div>
+                            </div>
+                        </div>
+                        <p class="algorithm-description">
+                            Dual-encoder retrieval + cross-encoder reranking. Maps documents to standards 
+                            with calibrated confidence scores and extracted rationale spans.
+                        </p>
+                        <div class="algorithm-stats">
+                            <div class="stat-item">
+                                <div class="stat-value">87%</div>
+                                <div class="stat-label">Top-1 Accuracy</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">95%</div>
+                                <div class="stat-label">Top-3 Accuracy</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">Instant</div>
+                                <div class="stat-label">Mapping</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- EvidenceTrust Score -->
+                    <div class="algorithm-card">
+                        <div class="algorithm-header">
+                            <div class="algorithm-icon">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <div>
+                                <div class="algorithm-name">EvidenceTrust Score<span class="trademark">™</span></div>
+                            </div>
+                        </div>
+                        <p class="algorithm-description">
+                            Multi-factor quality scoring: provenance, freshness, completeness, relevance, 
+                            alignment. Predicts audit acceptance probability.
+                        </p>
+                        <div class="algorithm-stats">
+                            <div class="stat-item">
+                                <div class="stat-value">6</div>
+                                <div class="stat-label">Trust Signals</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">Real-time</div>
+        <div class="stat-label">Scoring</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">Actionable</div>
+                                <div class="stat-label">Alerts</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- GapRisk Predictor -->
+                    <div class="algorithm-card">
+                        <div class="algorithm-header">
+                            <div class="algorithm-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div>
+                                <div class="algorithm-name">GapRisk Predictor<span class="trademark">™</span></div>
+                            </div>
+                        </div>
+                        <p class="algorithm-description">
+                            Forward-looking risk scoring that forecasts non-compliance probability. 
+                            8-factor model with calibrated thresholds and remediation priorities.
+                        </p>
+                        <div class="algorithm-stats">
+                            <div class="stat-item">
+                                <div class="stat-value">Predictive</div>
+                                <div class="stat-label">Analysis</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">8</div>
+                                <div class="stat-label">Risk Factors</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">Weekly</div>
+                                <div class="stat-label">Updates</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CrosswalkX -->
+                    <div class="algorithm-card">
+                        <div class="algorithm-header">
+                            <div class="algorithm-icon">
+                                <i class="fas fa-exchange-alt"></i>
+                            </div>
+                            <div>
+                                <div class="algorithm-name">CrosswalkX<span class="trademark">™</span></div>
+                            </div>
+                        </div>
+                        <p class="algorithm-description">
+                            Multi-accreditor cross-mapping showing where single artifacts satisfy 
+                            multiple standards. Semantic entailment with equivalence detection.
+                        </p>
+                        <div class="algorithm-stats">
+                            <div class="stat-item">
+                                <div class="stat-value">73%</div>
+                                <div class="stat-label">Reuse Rate</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">Automatic</div>
+                                <div class="stat-label">Mapping</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">6</div>
+                                <div class="stat-label">Accreditors</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CiteGuard -->
+                    <div class="algorithm-card">
+                        <div class="algorithm-header">
+                            <div class="algorithm-icon">
+                                <i class="fas fa-file-signature"></i>
+                            </div>
+                            <div>
+                                <div class="algorithm-name">CiteGuard<span class="trademark">™</span></div>
+                            </div>
+                        </div>
+                        <p class="algorithm-description">
+                            Generates accreditation narratives with mandatory evidence citations. 
+                            Contradiction detection ensures only supported claims.
+                        </p>
+                        <div class="algorithm-stats">
+                            <div class="stat-item">
+                                <div class="stat-value">100%</div>
+                                <div class="stat-label">Cited</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">Zero</div>
+                                <div class="stat-label">Hallucination</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">Traceable</div>
+                                <div class="stat-label">Claims</div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Core Intelligence Algorithms -->
-    <section id="algorithms" class="intelligence-section">
-        <div class="container">
-            <div class="section-header">
-                <h2>6 Proprietary Intelligence Systems</h2>
-                <p>Each algorithm solves a specific compliance pain point with measurable results</p>
+        <!-- Live Demo Section -->
+        <section id="demo" class="section" style="background: var(--gradient-subtle);">
+            <div class="container">
+                <div class="section-header">
+                    <h2>See Intelligence in Action</h2>
+                    <p>Watch how our algorithms process real evidence in real-time</p>
+                </div>
+                
+                <div class="demo-container">
+                    <div class="demo-tabs">
+                        <button class="demo-tab active" onclick="showDemo('mapping', event)">Evidence Mapping</button>
+                        <button class="demo-tab" onclick="showDemo('trust', event)">Trust Scoring</button>
+                        <button class="demo-tab" onclick="showDemo('risk', event)">Gap Prediction</button>
+                        <button class="demo-tab" onclick="showDemo('crosswalk', event)">CrosswalkX</button>
+                    </div>
+                    
+                    <div id="mapping-demo" class="demo-content">
+                        <h3>Upload: Faculty_Handbook_2024.pdf</h3>
+                        <div class="demo-result">
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                                <div style="flex: 1;">
+                                    <strong style="font-size: 1.125rem; color: var(--text-primary);">SACSCOC 8.1</strong> - Faculty Qualifications
+                                    <div class="confidence-bar">
+                                        <span style="font-size: 0.875rem; color: var(--text-tertiary);">Confidence</span>
+                                        <div class="confidence-progress">
+                                            <div class="confidence-fill" style="width: 92%;"></div>
+                                        </div>
+                                        <span style="font-weight: 700; color: var(--text-primary);">92%</span>
+                                    </div>
+                                </div>
+                                <span class="match-badge match-strong">STRONG MATCH</span>
+                            </div>
+                            <div style="font-size: 0.875rem; color: var(--text-secondary); background: var(--bg-surface); padding: 0.75rem; border-radius: var(--radius-md);">
+                                <strong>Rationale:</strong> "All faculty must hold <mark style="background: rgba(99,102,241,0.2); padding: 0.125rem 0.25rem; border-radius: 2px;">terminal degrees</mark> in their discipline... undergo <mark style="background: rgba(99,102,241,0.2); padding: 0.125rem 0.25rem; border-radius: 2px;">annual performance reviews</mark>... demonstrate <mark style="background: rgba(99,102,241,0.2); padding: 0.125rem 0.25rem; border-radius: 2px;">ongoing professional development</mark>"
+                            </div>
+                        </div>
+                        
+                        <div class="demo-result" style="border-left-color: var(--primary);">
+                            <div style="display: flex; justify-content: space-between; align-items: start;">
+                                <div style="flex: 1;">
+                                    <strong style="font-size: 1.125rem; color: var(--text-primary);">HLC 3.C</strong> - Faculty Roles and Qualifications
+                                    <div class="confidence-bar">
+                                        <span style="font-size: 0.875rem; color: var(--text-tertiary);">Confidence</span>
+                                        <div class="confidence-progress">
+                                            <div class="confidence-fill" style="width: 78%;"></div>
+                                        </div>
+                                        <span style="font-weight: 700; color: var(--text-primary);">78%</span>
+                                    </div>
+                                </div>
+                                <span class="match-badge match-partial">PARTIAL MATCH</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="trust-demo" class="demo-content" style="display: none;">
+                        <h3>Evidence Trust Analysis</h3>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem;">
+                            <div style="background: var(--bg-surface); border: 1px solid var(--border-light); padding: 1.75rem; border-radius: var(--radius-md); text-align: center; transition: var(--transition-smooth);" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+                                <i class="fas fa-file-alt" style="font-size: 2.5rem; color: var(--primary); margin-bottom: 1rem; display: block;"></i>
+                                <div style="font-weight: 600; margin: 0.5rem 0; color: var(--text-primary); font-size: 1.125rem;">Provenance</div>
+                                <div style="font-size: 2rem; color: var(--success); font-weight: 800; margin: 0.5rem 0;">0.85</div>
+                                <div style="font-size: 0.875rem; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.05em;">LMS Source</div>
+                            </div>
+                            <div style="background: var(--bg-surface); border: 1px solid var(--border-light); padding: 1.75rem; border-radius: var(--radius-md); text-align: center; transition: var(--transition-smooth);" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+                                <i class="fas fa-calendar-check" style="font-size: 2.5rem; color: var(--primary); margin-bottom: 1rem; display: block;"></i>
+                                <div style="font-weight: 600; margin: 0.5rem 0; color: var(--text-primary); font-size: 1.125rem;">Freshness</div>
+                                <div style="font-size: 2rem; color: var(--success); font-weight: 800; margin: 0.5rem 0;">0.95</div>
+                                <div style="font-size: 0.875rem; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.05em;">30 days old</div>
+                            </div>
+                            <div style="background: var(--bg-surface); border: 1px solid var(--border-light); padding: 1.75rem; border-radius: var(--radius-md); text-align: center; transition: var(--transition-smooth);" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+                                <i class="fas fa-check-double" style="font-size: 2.5rem; color: var(--primary); margin-bottom: 1rem; display: block;"></i>
+                                <div style="font-weight: 600; margin: 0.5rem 0; color: var(--text-primary); font-size: 1.125rem;">Completeness</div>
+                                <div style="font-size: 2rem; color: var(--warning); font-weight: 800; margin: 0.5rem 0;">0.70</div>
+                                <div style="font-size: 0.875rem; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.05em;">Missing fields</div>
+                            </div>
+                        </div>
+                        <div style="background: var(--bg-surface); border: 2px solid var(--success-light); padding: 2rem; border-radius: var(--radius-lg); box-shadow: var(--shadow-md);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                                <strong style="color: var(--text-primary); font-size: 1.125rem;">Overall Trust Score:</strong> 
+                                <span style="font-size: 2rem; color: var(--success); font-weight: 800;">HIGH (0.83)</span>
+                            </div>
+                            <div style="background: var(--bg-accent); padding: 1.25rem; border-radius: var(--radius-md);">
+                                <strong style="color: var(--text-primary); display: block; margin-bottom: 1rem;">AI Recommendations:</strong>
+                                <div style="display: flex; align-items: start; gap: 0.75rem; margin-bottom: 0.75rem;">
+                                    <i class="fas fa-lightbulb" style="color: var(--warning); font-size: 1rem; margin-top: 0.125rem;"></i>
+                                    <span style="color: var(--text-secondary);">Add missing required fields for full compliance</span>
+                                </div>
+                                <div style="display: flex; align-items: start; gap: 0.75rem;">
+                                    <i class="fas fa-clock" style="color: var(--info); font-size: 1rem; margin-top: 0.125rem;"></i>
+                                    <span style="color: var(--text-secondary);">Schedule refresh in 60 days</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="risk-demo" class="demo-content" style="display: none;">
+                        <h3>Gap Risk Prediction - SACSCOC 10.1</h3>
+                        <div style="background: var(--bg-surface); padding: 2rem; border-radius: var(--radius-lg); box-shadow: var(--shadow-md);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                                <div>
+                                    <div style="font-size: 2rem; font-weight: 800; color: var(--warning);">Medium Risk</div>
+                                    <div style="color: var(--text-tertiary); margin-top: 0.25rem;">Risk Score: 0.42 | Confidence: 87%</div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary);">Priority 3</div>
+                                    <div style="color: var(--text-tertiary); margin-top: 0.25rem;">47 days to review</div>
+                                </div>
+                            </div>
+                            
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                                <div style="text-align: center; padding: 1.25rem; background: var(--bg-accent); border-radius: var(--radius-md);">
+                                    <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Coverage</div>
+                                    <div style="font-size: 1.75rem; font-weight: 800; color: var(--warning); margin-top: 0.5rem;">68%</div>
+                                </div>
+                                <div style="text-align: center; padding: 1.25rem; background: var(--bg-accent); border-radius: var(--radius-md);">
+                                    <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Trust</div>
+                                    <div style="font-size: 1.75rem; font-weight: 800; color: var(--primary); margin-top: 0.5rem;">0.71</div>
+                                </div>
+                                <div style="text-align: center; padding: 1.25rem; background: var(--bg-accent); border-radius: var(--radius-md);">
+                                    <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Staleness</div>
+                                    <div style="font-size: 1.75rem; font-weight: 800; color: var(--danger); margin-top: 0.5rem;">120d</div>
+                                </div>
+                                <div style="text-align: center; padding: 1.25rem; background: var(--bg-accent); border-radius: var(--radius-md);">
+                                    <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Tasks</div>
+                                    <div style="font-size: 1.75rem; font-weight: 800; color: var(--info); margin-top: 0.5rem;">2/5</div>
+                                </div>
+                            </div>
+                            
+                            <div style="padding: 1.5rem; background: var(--bg-accent); border-left: 4px solid var(--warning); border-radius: var(--radius-md);">
+                                <strong style="color: var(--text-primary); display: block; margin-bottom: 0.75rem;">Predicted Issues:</strong>
+                                <ul style="list-style: none; padding: 0;">
+                                    <li style="display: flex; align-items: start; gap: 0.75rem; margin-bottom: 0.5rem;">
+                                        <i class="fas fa-exclamation-triangle" style="color: var(--warning); margin-top: 0.125rem;"></i>
+                                        <span style="color: var(--text-secondary);">Insufficient evidence coverage - gaps likely in documentation</span>
+                                    </li>
+                                    <li style="display: flex; align-items: start; gap: 0.75rem;">
+                                        <i class="fas fa-exclamation-triangle" style="color: var(--warning); margin-top: 0.125rem;"></i>
+                                        <span style="color: var(--text-secondary);">Outdated evidence - requires immediate refresh</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="crosswalk-demo" class="demo-content" style="display: none;">
+                        <h3>CrosswalkX Multi-Accreditor Mapping</h3>
+                        <div style="background: linear-gradient(135deg, var(--success) 0%, var(--success-light) 100%); color: var(--text-white); padding: 1.25rem; border-radius: var(--radius-md); margin-bottom: 1.5rem; box-shadow: var(--shadow-md);">
+                            <strong style="font-size: 1.125rem;">73% of your SACSCOC evidence can satisfy HLC requirements</strong>
+                        </div>
+                        <div class="demo-result">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
+                                        <strong style="font-size: 1.125rem; color: var(--text-primary);">SACSCOC 1.1</strong>
+                                        <i class="fas fa-arrow-right" style="color: var(--primary);"></i>
+                                        <strong style="font-size: 1.125rem; color: var(--text-primary);">HLC 1.A</strong>
+                                    </div>
+                                    <div style="color: var(--text-secondary);">Mission Statement → Mission Articulation</div>
+                                </div>
+                                <span class="match-badge match-strong">89% MATCH</span>
+                            </div>
+                        </div>
+                        <div class="demo-result" style="border-left-color: var(--primary);">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
+                                        <strong style="font-size: 1.125rem; color: var(--text-primary);">SACSCOC 8.1</strong>
+                                        <i class="fas fa-arrow-right" style="color: var(--primary);"></i>
+                                        <strong style="font-size: 1.125rem; color: var(--text-primary);">HLC 3.C</strong>
+                                    </div>
+                                    <div style="color: var(--text-secondary);">Faculty → Faculty Roles</div>
+                                </div>
+                                <span class="match-badge match-partial">72% MATCH</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            
-            <div class="algorithm-grid">
-                <!-- StandardsGraph -->
-                <div class="algorithm-card">
-                    <div class="algorithm-header">
-                        <div class="algorithm-icon">
-                            <i class="fas fa-network-wired"></i>
+        </section>
+
+        <!-- Value Differentiators -->
+        <section class="section">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Why Not ChatGPT or Claude?</h2>
+                    <p>Purpose-built intelligence that generic AI can't match - all features included, no hidden costs</p>
+                </div>
+                
+                <div class="differentiator-grid">
+                    <div class="differentiator-card">
+                        <div class="differentiator-icon">
+                            <i class="fas fa-bullseye"></i>
                         </div>
-                        <div>
-                            <div class="algorithm-name">StandardsGraph<span class="trademark">™</span></div>
-                        </div>
+                        <div class="differentiator-title">Domain-Specific Models</div>
+                        <div class="differentiator-value">500+</div>
+                        <p>Accreditation standards indexed</p>
                     </div>
-                    <p class="algorithm-description">
-                        Living knowledge graph mapping accreditor → standard → clause → indicator. 
-                        Multi-granular indexing with semantic embeddings for instant retrieval.
-                    </p>
-                    <div class="algorithm-stats">
-                        <div class="stat-item">
-                            <div class="stat-value">6</div>
-                            <div class="stat-label">Accreditors</div>
+                    
+                    <div class="differentiator-card">
+                        <div class="differentiator-icon">
+                            <i class="fas fa-brain"></i>
                         </div>
-                        <div class="stat-item">
-                            <div class="stat-value">500+</div>
-                            <div class="stat-label">Standards</div>
+                        <div class="differentiator-title">Institutional Memory</div>
+                        <div class="differentiator-value">Persistent</div>
+                        <p>Your data compounds value over cycles</p>
+                    </div>
+                    
+                    <div class="differentiator-card">
+                        <div class="differentiator-icon">
+                            <i class="fas fa-certificate"></i>
                         </div>
-                        <div class="stat-item">
-                            <div class="stat-value">&lt;100ms</div>
-                            <div class="stat-label">Retrieval</div>
+                        <div class="differentiator-title">Audit-Ready</div>
+                        <div class="differentiator-value">100%</div>
+                        <p>Traceable with confidence scores</p>
+                    </div>
+                    
+                    <div class="differentiator-card">
+                        <div class="differentiator-icon">
+                            <i class="fas fa-crystal-ball"></i>
                         </div>
+                        <div class="differentiator-title">Predictive</div>
+                        <div class="differentiator-value">Forward</div>
+                        <p>Prevents gaps before they appear</p>
+                    </div>
+                    
+                    <div class="differentiator-card">
+                        <div class="differentiator-icon">
+                            <i class="fas fa-rocket"></i>
+                        </div>
+                        <div class="differentiator-title">Instant Mapping</div>
+                        <div class="differentiator-value">&lt;1s</div>
+                        <p>Real-time processing</p>
+                    </div>
+                    
+                    <div class="differentiator-card">
+                        <div class="differentiator-icon">
+                            <i class="fas fa-layer-group"></i>
+                        </div>
+                        <div class="differentiator-title">Multi-Accreditor</div>
+                        <div class="differentiator-value">6</div>
+                        <p>Regional accreditors supported</p>
                     </div>
                 </div>
+            </div>
+        </section>
 
-                <!-- EvidenceMapper -->
-                <div class="algorithm-card">
-                    <div class="algorithm-header">
-                        <div class="algorithm-icon">
-                            <i class="fas fa-crosshairs"></i>
-                        </div>
-                        <div>
-                            <div class="algorithm-name">EvidenceMapper<span class="trademark">™</span></div>
-                        </div>
-                    </div>
-                    <p class="algorithm-description">
-                        Dual-encoder retrieval + cross-encoder reranking. Maps documents to standards 
-                        with calibrated confidence scores and extracted rationale spans.
-                    </p>
-                    <div class="algorithm-stats">
-                        <div class="stat-item">
-                            <div class="stat-value">87%</div>
-                            <div class="stat-label">Top-1 Accuracy</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value">95%</div>
-                            <div class="stat-label">Top-3 Accuracy</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value">Instant</div>
-                            <div class="stat-label">Mapping</div>
-                        </div>
-                    </div>
+        <!-- Platform Features -->
+        <section id="platform-features" class="section" style="background: var(--gradient-subtle);">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Everything Included for $199/month</h2>
+                    <p>Complete compliance platform with all features - no hidden costs or upgrade paths</p>
                 </div>
-
-                <!-- EvidenceTrust Score -->
-                <div class="algorithm-card">
-                    <div class="algorithm-header">
-                        <div class="algorithm-icon">
-                            <i class="fas fa-shield-alt"></i>
+                
+                <div class="platform-grid">
+                    <!-- Dashboard -->
+                    <div class="platform-card">
+                        <div class="platform-icon">
+                            <i class="fas fa-tachometer-alt"></i>
                         </div>
-                        <div>
-                            <div class="algorithm-name">EvidenceTrust Score<span class="trademark">™</span></div>
-                        </div>
+                        <h3>Intelligent Dashboard</h3>
+                        <p>Real-time compliance metrics, predictive analytics, and actionable insights</p>
+                        <a href="https://platform.mapmystandards.ai/login-platform?return=%2Fai-dashboard" class="platform-link">
+                            Access Dashboard <i class="fas fa-arrow-right"></i>
+                        </a>
                     </div>
-                    <p class="algorithm-description">
-                        Multi-factor quality scoring: provenance, freshness, completeness, relevance, 
-                        alignment. Predicts audit acceptance probability.
-                    </p>
-                    <div class="algorithm-stats">
-                        <div class="stat-item">
-                            <div class="stat-value">6</div>
-                            <div class="stat-label">Trust Signals</div>
+                    
+                    <!-- Org Chart -->
+                    <div class="platform-card">
+                        <div class="platform-icon">
+                            <i class="fas fa-sitemap"></i>
                         </div>
-                        <div class="stat-item">
-                            <div class="stat-value">Real-time</div>
-                            <div class="stat-label">Scoring</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value">Actionable</div>
-                            <div class="stat-label">Alerts</div>
-                        </div>
+                        <h3>Dynamic Org Chart</h3>
+                        <p>Visual hierarchy with role-based compliance tracking and assignments</p>
+                        <a href="https://platform.mapmystandards.ai/login-platform?return=%2Forg-chart" class="platform-link">
+                            View Org Chart <i class="fas fa-arrow-right"></i>
+                        </a>
                     </div>
-                </div>
-
-                <!-- GapRisk Predictor -->
-                <div class="algorithm-card">
-                    <div class="algorithm-header">
-                        <div class="algorithm-icon">
+                    
+                    <!-- Scenario Modeling -->
+                    <div class="platform-card">
+                        <div class="platform-icon">
+                            <i class="fas fa-project-diagram"></i>
+                        </div>
+                        <h3>Scenario Modeling</h3>
+                        <p>ROI calculator and predictive compliance scenario planning</p>
+                        <a href="https://platform.mapmystandards.ai/login-platform?return=%2Fscenario-modeling.html" class="platform-link">
+                            Model Scenarios <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                    
+                    <!-- Power BI Integration -->
+                    <div class="platform-card">
+                        <div class="platform-icon">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        <h3>Power BI Reports</h3>
+                        <p>Enterprise-grade analytics and custom compliance reporting</p>
+                        <a href="https://platform.mapmystandards.ai/login-platform?return=%2Fpowerbi-dashboard.html" class="platform-link">
+                            View Reports <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                    
+                    <!-- Analytics -->
+                    <div class="platform-card">
+                        <div class="platform-icon">
                             <i class="fas fa-chart-line"></i>
                         </div>
-                        <div>
-                            <div class="algorithm-name">GapRisk Predictor<span class="trademark">™</span></div>
-                        </div>
+                        <h3>Advanced Analytics</h3>
+                        <p>Deep insights, trends, and predictive compliance intelligence</p>
+                        <a href="https://platform.mapmystandards.ai/login-platform?return=%2Fai-dashboard" class="platform-link">
+                            Explore AI Dashboard <i class="fas fa-arrow-right"></i>
+                        </a>
                     </div>
-                    <p class="algorithm-description">
-                        Forward-looking risk scoring that forecasts non-compliance probability. 
-                        8-factor model with calibrated thresholds and remediation priorities.
-                    </p>
-                    <div class="algorithm-stats">
-                        <div class="stat-item">
-                            <div class="stat-value">Predictive</div>
-                            <div class="stat-label">Analysis</div>
+                    
+                    <!-- Team Management -->
+                    <div class="platform-card">
+                        <div class="platform-icon">
+                            <i class="fas fa-users-cog"></i>
                         </div>
-                        <div class="stat-item">
-                            <div class="stat-value">8</div>
-                            <div class="stat-label">Risk Factors</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value">Weekly</div>
-                            <div class="stat-label">Updates</div>
-                        </div>
+                        <h3>Team Settings</h3>
+                        <p>User management, permissions, and collaboration tools</p>
+                        <a href="https://platform.mapmystandards.ai/login-platform?return=%2Fteam-settings.html" class="platform-link">
+                            Manage Team <i class="fas fa-arrow-right"></i>
+                        </a>
                     </div>
-                </div>
 
-                <!-- CrosswalkX -->
-                <div class="algorithm-card">
-                    <div class="algorithm-header">
-                        <div class="algorithm-icon">
-                            <i class="fas fa-exchange-alt"></i>
+                    <!-- Reports & Export -->
+                    <div class="platform-card">
+                        <div class="platform-icon">
+                            <i class="fas fa-file-export"></i>
                         </div>
-                        <div>
-                            <div class="algorithm-name">CrosswalkX<span class="trademark">™</span></div>
-                        </div>
+                        <h3>Reports & Export</h3>
+                        <p>Export HTML and CSV evidence reports directly from your dashboard</p>
+                        <a href="https://platform.mapmystandards.ai/login-platform?return=%2Fai-dashboard%23export" class="platform-link">
+                            Export Evidence <i class="fas fa-arrow-right"></i>
+                        </a>
                     </div>
-                    <p class="algorithm-description">
-                        Multi-accreditor cross-mapping showing where single artifacts satisfy 
-                        multiple standards. Semantic entailment with equivalence detection.
-                    </p>
-                    <div class="algorithm-stats">
-                        <div class="stat-item">
-                            <div class="stat-value">73%</div>
-                            <div class="stat-label">Reuse Rate</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value">Automatic</div>
-                            <div class="stat-label">Mapping</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value">6</div>
-                            <div class="stat-label">Accreditors</div>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- CiteGuard -->
-                <div class="algorithm-card">
-                    <div class="algorithm-header">
-                        <div class="algorithm-icon">
-                            <i class="fas fa-file-signature"></i>
+                    <!-- Standards Explorer -->
+                    <div class="platform-card">
+                        <div class="platform-icon">
+                            <i class="fas fa-search"></i>
                         </div>
-                        <div>
-                            <div class="algorithm-name">CiteGuard<span class="trademark">™</span></div>
-                        </div>
+                        <h3>Standards Explorer</h3>
+                        <p>Search standards and page through results with context and categories</p>
+                        <a href="https://platform.mapmystandards.ai/login-platform?return=%2Fai-dashboard%23standards" class="platform-link">
+                            Browse Standards <i class="fas fa-arrow-right"></i>
+                        </a>
                     </div>
-                    <p class="algorithm-description">
-                        Generates accreditation narratives with mandatory evidence citations. 
-                        Contradiction detection ensures only supported claims.
-                    </p>
-                    <div class="algorithm-stats">
-                        <div class="stat-item">
-                            <div class="stat-value">100%</div>
-                            <div class="stat-label">Cited</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value">Zero</div>
-                            <div class="stat-label">Hallucination</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value">Traceable</div>
-                            <div class="stat-label">Claims</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Live Demo Section -->
-    <section id="demo" class="demo-section">
-        <div class="container">
-            <div class="section-header">
-                <h2>See Intelligence in Action</h2>
-                <p>Watch how our algorithms process real evidence in real-time</p>
-            </div>
-            
-            <div class="demo-container">
-                <div class="demo-tabs">
-                    <button class="demo-tab active" onclick="showDemo('mapping', event)">Evidence Mapping</button>
-                    <button class="demo-tab" onclick="showDemo('trust', event)">Trust Scoring</button>
-                    <button class="demo-tab" onclick="showDemo('risk', event)">Gap Prediction</button>
-                    <button class="demo-tab" onclick="showDemo('crosswalk', event)">CrosswalkX</button>
                 </div>
                 
-                <div id="mapping-demo" class="demo-content">
-                    <h3 style="margin-bottom: 1rem;">Upload: Faculty_Handbook_2024.pdf</h3>
-                    <div class="demo-result">
-                        <div style="display: flex; justify-content: space-between; align-items: start;">
-                            <div>
-                                <strong>SACSCOC 8.1</strong> - Faculty Qualifications
-                                <div class="confidence-bar">
-                                    <span style="font-size: 0.875rem;">Confidence</span>
-                                    <div class="confidence-progress">
-                                        <div class="confidence-fill" style="width: 92%;"></div>
-                                    </div>
-                                    <span style="font-weight: 700;">92%</span>
-                                </div>
-                            </div>
-                            <span style="background: var(--success); color: var(--white); padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.75rem;">STRONG MATCH</span>
+                <div style="text-align: center; margin-top: 3rem;">
+                    <a href="https://platform.mapmystandards.ai/trial-signup-stripe.html" class="btn btn-primary" style="font-size: 1.125rem; padding: 1rem 2.5rem;">
+                        Get Everything for $199/month <i class="fas fa-arrow-right"></i>
+                    </a>
+                    <p style="color: var(--text-secondary); margin-top: 1rem;">Start with a 7-day free trial - card required, not charged until trial ends</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Latest Updates -->
+        <section id="updates" class="section">
+            <div class="container">
+                <div class="section-header" style="margin-bottom: 3rem;">
+                    <h2>Latest Updates</h2>
+                    <p>Recently shipped enhancements across dashboard and API</p>
+                </div>
+
+                <div class="updates-grid">
+                    <div class="update-card">
+                        <div class="update-header">
+                            <span class="update-badge badge-new">New</span>
+                            <strong>CSV Evidence Export</strong>
                         </div>
-                        <div style="margin-top: 1rem; font-size: 0.875rem; color: var(--gray);">
-                            <strong>Rationale:</strong> "All faculty must hold **terminal degrees** in their discipline... undergo **annual performance reviews**... demonstrate **ongoing professional development**"
+                        <p>Download evidence reports as CSV from the dashboard (and HTML too).</p>
+                    </div>
+                    <div class="update-card">
+                        <div class="update-header">
+                            <span class="update-badge badge-new">New</span>
+                            <strong>Standards Search + Pagination</strong>
+                        </div>
+                        <p>Quickly find standards and navigate results in the StandardsGraph view.</p>
+                    </div>
+                    <div class="update-card">
+                        <div class="update-header">
+                            <span class="update-badge badge-improved">Improved</span>
+                            <strong>Mark All Reviewed</strong>
+                        </div>
+                        <p>Batch-review mappings in one click to speed up audits and QA.</p>
+                    </div>
+                    <div class="update-card">
+                        <div class="update-header">
+                            <span class="update-badge badge-improved">Improved</span>
+                            <strong>Trust Score Tooltips</strong>
+                        </div>
+                        <p>Transparent scoring with hover tooltips for each evidence trust signal.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pricing with ROI -->
+        <section id="pricing" class="section" style="background: var(--gradient-subtle);">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Investment & Return</h2>
+                    <p>See exactly how MapMyStandards pays for itself</p>
+                </div>
+                
+                <div class="pricing-card">
+                    <div class="pricing-badge">ALL FEATURES INCLUDED</div>
+                    <div class="price">$199<span>/month</span></div>
+                    <p style="color: var(--text-secondary); margin: 1rem 0;">Complete access to all platform features - no tiers, no limits</p>
+                    
+                    <div class="feature-highlight">
+                        <p>
+                            <i class="fas fa-check-circle"></i>
+                            All 6 Intelligence Algorithms
+                        </p>
+                        <span>StandardsGraph™, EvidenceMapper™, EvidenceTrust Score™, GapRisk Predictor™, CrosswalkX™, CiteGuard™</span>
+                    </div>
+                    
+                    <div class="roi-calculator">
+                        <h4>Your Monthly ROI</h4>
+                        <div class="roi-item">
+                            <span>Hours saved on mapping</span>
+                            <span style="color: var(--success);">32 hrs × $75 = $2,400</span>
+                        </div>
+                        <div class="roi-item">
+                            <span>Reduced consultant hours</span>
+                            <span style="color: var(--success);">10 hrs × $150 = $1,500</span>
+                        </div>
+                        <div class="roi-item">
+                            <span>Prevented compliance issues</span>
+                            <span style="color: var(--success);">Risk reduction = $2,000</span>
+                        </div>
+                        <div class="roi-item">
+                            <span>Your investment</span>
+                            <span style="color: var(--danger);">-$199</span>
+                        </div>
+                        <div class="roi-total">
+                            Net Monthly Value: +$5,701
                         </div>
                     </div>
                     
-                    <div class="demo-result" style="border-left-color: var(--primary);">
-                        <div style="display: flex; justify-content: space-between; align-items: start;">
-                            <div>
-                                <strong>HLC 3.C</strong> - Faculty Roles and Qualifications
-                                <div class="confidence-bar">
-                                    <span style="font-size: 0.875rem;">Confidence</span>
-                                    <div class="confidence-progress">
-                                        <div class="confidence-fill" style="width: 78%;"></div>
-                                    </div>
-                                    <span style="font-weight: 700;">78%</span>
-                                </div>
-                            </div>
-                            <span style="background: var(--primary); color: var(--white); padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.75rem;">PARTIAL MATCH</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div id="trust-demo" class="demo-content" style="display: none;">
-                    <h3>Evidence Trust Analysis</h3>
-                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
-                        <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 4px; text-align: center;">
-                            <i class="fas fa-file-alt" style="font-size: 2rem; color: var(--primary); margin-bottom: 0.75rem;"></i>
-                            <div style="font-weight: 600; margin: 0.5rem 0; color: var(--text-primary);">Provenance</div>
-                            <div style="font-size: 1.5rem; color: var(--success); font-weight: 700;">0.85</div>
-                            <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">LMS Source</div>
-                        </div>
-                        <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 4px; text-align: center;">
-                            <i class="fas fa-calendar-check" style="font-size: 2rem; color: var(--primary); margin-bottom: 0.75rem;"></i>
-                            <div style="font-weight: 600; margin: 0.5rem 0; color: var(--text-primary);">Freshness</div>
-                            <div style="font-size: 1.5rem; color: var(--success); font-weight: 700;">0.95</div>
-                            <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">30 days old</div>
-                        </div>
-                        <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 4px; text-align: center;">
-                            <i class="fas fa-check-double" style="font-size: 2rem; color: var(--primary); margin-bottom: 0.75rem;"></i>
-                            <div style="font-weight: 600; margin: 0.5rem 0; color: var(--text-primary);">Completeness</div>
-                            <div style="font-size: 1.5rem; color: var(--warning); font-weight: 700;">0.70</div>
-                            <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Missing fields</div>
-                        </div>
-                    </div>
-                    <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 4px; margin-top: 1rem;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                            <strong style="color: var(--text-primary);">Overall Trust Score:</strong> 
-                            <span style="font-size: 1.5rem; color: var(--success); font-weight: 700;">HIGH (0.83)</span>
-                        </div>
-                        <div style="color: var(--text-secondary); font-size: 0.95rem;">
-                            <strong style="color: var(--text-primary); display: block; margin-bottom: 0.75rem;">Recommendations:</strong>
-                            <div style="display: flex; align-items: start; gap: 0.5rem; margin-bottom: 0.5rem;">
-                                <i class="fas fa-chevron-right" style="color: var(--primary); font-size: 0.75rem; margin-top: 0.25rem;"></i>
-                                <span>Add missing required fields for full compliance</span>
-                            </div>
-                            <div style="display: flex; align-items: start; gap: 0.5rem;">
-                                <i class="fas fa-chevron-right" style="color: var(--primary); font-size: 0.75rem; margin-top: 0.25rem;"></i>
-                                <span>Schedule refresh in 60 days</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div id="risk-demo" class="demo-content" style="display: none;">
-                    <h3 style="margin-bottom: 1rem;">Gap Risk Prediction - SACSCOC 10.1</h3>
-                    <div style="background: var(--white); padding: 2rem; border-radius: 8px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-                            <div>
-                                <div style="font-size: 2rem; font-weight: 700; color: var(--warning);">Medium Risk</div>
-                                <div style="color: var(--gray);">Risk Score: 0.42 | Confidence: 87%</div>
-                            </div>
-                            <div style="text-align: right;">
-                                <div style="font-size: 1.25rem; font-weight: 700;">Priority 3</div>
-                                <div style="color: var(--gray);">47 days to review</div>
-                            </div>
-                        </div>
-                        
-                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem;">
-                            <div style="text-align: center;">
-                                <div style="font-size: 0.75rem; color: var(--gray);">Coverage</div>
-                                <div style="font-size: 1.5rem; font-weight: 700;">68%</div>
-                            </div>
-                            <div style="text-align: center;">
-                                <div style="font-size: 0.75rem; color: var(--gray);">Trust</div>
-                                <div style="font-size: 1.5rem; font-weight: 700;">0.71</div>
-                            </div>
-                            <div style="text-align: center;">
-                                <div style="font-size: 0.75rem; color: var(--gray);">Staleness</div>
-                                <div style="font-size: 1.5rem; font-weight: 700;">120d</div>
-                            </div>
-                            <div style="text-align: center;">
-                                <div style="font-size: 0.75rem; color: var(--gray);">Tasks</div>
-                                <div style="font-size: 1.5rem; font-weight: 700;">2/5</div>
-                            </div>
-                        </div>
-                        
-                        <div style="padding: 1rem; background: var(--light); border-radius: 8px;">
-                            <strong>Predicted Issues:</strong><br>
-                            • Insufficient evidence coverage - gaps likely in documentation<br>
-                            • Outdated evidence - requires immediate refresh
-                        </div>
-                    </div>
-                </div>
-                
-                <div id="crosswalk-demo" class="demo-content" style="display: none;">
-                    <h3 style="margin-bottom: 1rem;">CrosswalkX Multi-Accreditor Mapping</h3>
-                    <div style="background: var(--success); color: var(--white); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
-                        <strong>73% of your SACSCOC evidence can satisfy HLC requirements</strong>
-                    </div>
-                    <div class="demo-result">
-                        <div style="display: flex; justify-content: space-between;">
-                            <div>
-                                <strong>SACSCOC 1.1</strong> Mission Statement<br>
-                                <span style="color: var(--gray);">→</span> <strong>HLC 1.A</strong> Mission Articulation
-                            </div>
-                            <span style="background: var(--success); color: var(--white); padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.75rem;">89% MATCH</span>
-                        </div>
-                    </div>
-                    <div class="demo-result">
-                        <div style="display: flex; justify-content: space-between;">
-                            <div>
-                                <strong>SACSCOC 8.1</strong> Faculty<br>
-                                <span style="color: var(--gray);">→</span> <strong>HLC 3.C</strong> Faculty Roles
-                            </div>
-                            <span style="background: var(--primary); color: var(--white); padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.75rem;">72% MATCH</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Value Differentiators -->
-    <section class="differentiators-section">
-        <div class="container">
-            <div class="section-header">
-                <h2>Why Not ChatGPT or Claude?</h2>
-                <p>Purpose-built intelligence that generic AI can't match - all features included, no hidden costs</p>
-            </div>
-            
-            <div class="differentiator-grid">
-                <div class="differentiator-card">
-                    <div class="differentiator-icon"><i class="fas fa-bullseye"></i></div>
-                    <div class="differentiator-title">Domain-Specific Models</div>
-                    <div class="differentiator-value">500+</div>
-                    <p>Accreditation standards indexed</p>
-                </div>
-                
-                <div class="differentiator-card">
-                    <div class="differentiator-icon"><i class="fas fa-lock"></i></div>
-                    <div class="differentiator-title">Institutional Memory</div>
-                    <div class="differentiator-value">Persistent</div>
-                    <p>Your data compounds value over cycles</p>
-                </div>
-                
-                <div class="differentiator-card">
-                    <div class="differentiator-icon"><i class="fas fa-check-circle"></i></div>
-                    <div class="differentiator-title">Audit-Ready</div>
-                    <div class="differentiator-value">100%</div>
-                    <p>Traceable with confidence scores</p>
-                </div>
-                
-                <div class="differentiator-card">
-                    <div class="differentiator-icon"><i class="fas fa-chart-area"></i></div>
-                    <div class="differentiator-title">Predictive</div>
-                    <div class="differentiator-value">Forward</div>
-                    <p>Prevents gaps before they appear</p>
-                </div>
-                
-                <div class="differentiator-card">
-                    <div class="differentiator-icon"><i class="fas fa-bolt"></i></div>
-                    <div class="differentiator-title">Instant Mapping</div>
-                    <div class="differentiator-value">&lt;1s</div>
-                    <p>Real-time processing</p>
-                </div>
-                
-                <div class="differentiator-card">
-                    <div class="differentiator-icon"><i class="fas fa-sync-alt"></i></div>
-                    <div class="differentiator-title">Multi-Accreditor</div>
-                    <div class="differentiator-value">6</div>
-                    <p>Regional accreditors supported</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Platform Features -->
-    <section id="platform-features" style="padding: 6rem 0; background: transparent; position: relative;">
-        <div class="container">
-            <div style="text-align: center; margin-bottom: 4rem;">
-                <h2 style="font-size: 2.75rem; margin-bottom: 1rem; font-weight: 800; color: var(--text-primary);">Everything Included for $199/month</h2>
-                <p style="font-size: 1.25rem; color: var(--text-secondary);">Complete compliance platform with all features - no hidden costs or upgrade paths</p>
-            </div>
-            
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem;">
-                <!-- Dashboard -->
-                <div class="platform-card" style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 2.5rem; border-radius: 4px; transition: all 0.3s ease; position: relative; overflow: hidden;">
-                    <div class="platform-card-border" style="position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: var(--gradient-primary); opacity: 0; transition: opacity 0.3s ease;"></div>
-                    <i class="fas fa-tachometer-alt" style="font-size: 2.25rem; color: var(--primary); margin-bottom: 1.25rem; display: block;"></i>
-                    <h3 style="color: var(--text-primary); margin-bottom: 0.75rem; font-size: 1.25rem; font-weight: 600;">Intelligent Dashboard</h3>
-                    <p style="color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.6;">Real-time compliance metrics, predictive analytics, and actionable insights</p>
-                    <a href="https://platform.mapmystandards.ai/login-platform?return=%2Fai-dashboard" style="color: var(--primary); text-decoration: none; font-weight: 500; display: inline-flex; align-items: center; gap: 0.5rem; transition: gap 0.3s ease;" onmouseover="this.style.gap='0.75rem'" onmouseout="this.style.gap='0.5rem'">Access Dashboard <i class="fas fa-arrow-right" style="font-size: 0.875rem;"></i></a>
-                </div>
-                
-                <!-- Org Chart -->
-                <div class="platform-card" style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 2.5rem; border-radius: 4px; transition: all 0.3s ease; position: relative; overflow: hidden;">
-                    <div class="platform-card-border" style="position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: var(--gradient-primary); opacity: 0; transition: opacity 0.3s ease;"></div>
-                    <i class="fas fa-sitemap" style="font-size: 2.25rem; color: var(--primary); margin-bottom: 1.25rem; display: block;"></i>
-                    <h3 style="color: var(--text-primary); margin-bottom: 0.75rem; font-size: 1.25rem; font-weight: 600;">Dynamic Org Chart</h3>
-                    <p style="color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.6;">Visual hierarchy with role-based compliance tracking and assignments</p>
-                    <a href="https://platform.mapmystandards.ai/login-platform?return=%2Forg-chart" style="color: var(--primary); text-decoration: none; font-weight: 500; display: inline-flex; align-items: center; gap: 0.5rem; transition: gap 0.3s ease;" onmouseover="this.style.gap='0.75rem'" onmouseout="this.style.gap='0.5rem'">View Org Chart <i class="fas fa-arrow-right" style="font-size: 0.875rem;"></i></a>
-                </div>
-                
-                <!-- Scenario Modeling -->
-                <div class="platform-card" style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 2.5rem; border-radius: 4px; transition: all 0.3s ease; position: relative; overflow: hidden;">
-                    <div class="platform-card-border" style="position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: var(--gradient-primary); opacity: 0; transition: opacity 0.3s ease;"></div>
-                    <i class="fas fa-project-diagram" style="font-size: 2.25rem; color: var(--primary); margin-bottom: 1.25rem; display: block;"></i>
-                    <h3 style="color: var(--text-primary); margin-bottom: 0.75rem; font-size: 1.25rem; font-weight: 600;">Scenario Modeling</h3>
-                    <p style="color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.6;">ROI calculator and predictive compliance scenario planning</p>
-                    <a href="https://platform.mapmystandards.ai/login-platform?return=%2Fscenario-modeling.html" style="color: var(--primary); text-decoration: none; font-weight: 500; display: inline-flex; align-items: center; gap: 0.5rem; transition: gap 0.3s ease;" onmouseover="this.style.gap='0.75rem'" onmouseout="this.style.gap='0.5rem'">Model Scenarios <i class="fas fa-arrow-right" style="font-size: 0.875rem;"></i></a>
-                </div>
-                
-                <!-- Power BI Integration -->
-                <div class="platform-card" style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 2.5rem; border-radius: 4px; transition: all 0.3s ease; position: relative; overflow: hidden;">
-                    <div class="platform-card-border" style="position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: var(--gradient-primary); opacity: 0; transition: opacity 0.3s ease;"></div>
-                    <i class="fas fa-chart-bar" style="font-size: 2.25rem; color: var(--primary); margin-bottom: 1.25rem; display: block;"></i>
-                    <h3 style="color: var(--text-primary); margin-bottom: 0.75rem; font-size: 1.25rem; font-weight: 600;">Power BI Reports</h3>
-                    <p style="color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.6;">Enterprise-grade analytics and custom compliance reporting</p>
-                    <a href="https://platform.mapmystandards.ai/login-platform?return=%2Fpowerbi-dashboard.html" style="color: var(--primary); text-decoration: none; font-weight: 500; display: inline-flex; align-items: center; gap: 0.5rem; transition: gap 0.3s ease;" onmouseover="this.style.gap='0.75rem'" onmouseout="this.style.gap='0.5rem'">View Reports <i class="fas fa-arrow-right" style="font-size: 0.875rem;"></i></a>
-                </div>
-                
-                <!-- Analytics -->
-                <div class="platform-card" style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 2.5rem; border-radius: 4px; transition: all 0.3s ease; position: relative; overflow: hidden;">
-                    <div class="platform-card-border" style="position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: var(--gradient-primary); opacity: 0; transition: opacity 0.3s ease;"></div>
-                    <i class="fas fa-chart-line" style="font-size: 2.25rem; color: var(--primary); margin-bottom: 1.25rem; display: block;"></i>
-                    <h3 style="color: var(--text-primary); margin-bottom: 0.75rem; font-size: 1.25rem; font-weight: 600;">Advanced Analytics</h3>
-                    <p style="color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.6;">Deep insights, trends, and predictive compliance intelligence</p>
-                    <a href="https://platform.mapmystandards.ai/login-platform?return=%2Fai-dashboard" style="color: var(--primary); text-decoration: none; font-weight: 500; display: inline-flex; align-items: center; gap: 0.5rem; transition: gap 0.3s ease;" onmouseover="this.style.gap='0.75rem'" onmouseout="this.style.gap='0.5rem'">Explore AI Dashboard <i class="fas fa-arrow-right" style="font-size: 0.875rem;"></i></a>
-                </div>
-                
-                <!-- Team Management -->
-                <div class="platform-card" style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 2.5rem; border-radius: 4px; transition: all 0.3s ease; position: relative; overflow: hidden;">
-                    <div class="platform-card-border" style="position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: var(--gradient-primary); opacity: 0; transition: opacity 0.3s ease;"></div>
-                    <i class="fas fa-users-cog" style="font-size: 2.25rem; color: var(--primary); margin-bottom: 1.25rem; display: block;"></i>
-                    <h3 style="color: var(--text-primary); margin-bottom: 0.75rem; font-size: 1.25rem; font-weight: 600;">Team Settings</h3>
-                    <p style="color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.6;">User management, permissions, and collaboration tools</p>
-                    <a href="https://platform.mapmystandards.ai/login-platform?return=%2Fteam-settings.html" style="color: var(--primary); text-decoration: none; font-weight: 500; display: inline-flex; align-items: center; gap: 0.5rem; transition: gap 0.3s ease;" onmouseover="this.style.gap='0.75rem'" onmouseout="this.style.gap='0.5rem'">Manage Team <i class="fas fa-arrow-right" style="font-size: 0.875rem;"></i></a>
-                </div>
-
-                <!-- Reports & Export -->
-                <div class="platform-card" style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 2.5rem; border-radius: 4px; transition: all 0.3s ease; position: relative; overflow: hidden;">
-                    <div class="platform-card-border" style="position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: var(--gradient-primary); opacity: 0; transition: opacity 0.3s ease;"></div>
-                    <i class="fas fa-file-arrow-down" style="font-size: 2.25rem; color: var(--primary); margin-bottom: 1.25rem; display: block;"></i>
-                    <h3 style="color: var(--text-primary); margin-bottom: 0.75rem; font-size: 1.25rem; font-weight: 600;">Reports & Export</h3>
-                    <p style="color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.6;">Export HTML and CSV evidence reports directly from your dashboard</p>
-                    <a href="https://platform.mapmystandards.ai/login-platform?return=%2Fai-dashboard%23export" style="color: var(--primary); text-decoration: none; font-weight: 500; display: inline-flex; align-items: center; gap: 0.5rem; transition: gap 0.3s ease;" onmouseover="this.style.gap='0.75rem'" onmouseout="this.style.gap='0.5rem'">Export Evidence <i class="fas fa-arrow-right" style="font-size: 0.875rem;"></i></a>
-                </div>
-
-                <!-- Standards Explorer -->
-                <div class="platform-card" style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 2.5rem; border-radius: 4px; transition: all 0.3s ease; position: relative; overflow: hidden;">
-                    <div class="platform-card-border" style="position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: var(--gradient-primary); opacity: 0; transition: opacity 0.3s ease;"></div>
-                    <i class="fas fa-magnifying-glass" style="font-size: 2.25rem; color: var(--primary); margin-bottom: 1.25rem; display: block;"></i>
-                    <h3 style="color: var(--text-primary); margin-bottom: 0.75rem; font-size: 1.25rem; font-weight: 600;">Standards Explorer</h3>
-                    <p style="color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.6;">Search standards and page through results with context and categories</p>
-                    <a href="https://platform.mapmystandards.ai/login-platform?return=%2Fai-dashboard%23standards" style="color: var(--primary); text-decoration: none; font-weight: 500; display: inline-flex; align-items: center; gap: 0.5rem; transition: gap 0.3s ease;" onmouseover="this.style.gap='0.75rem'" onmouseout="this.style.gap='0.5rem'">Browse Standards <i class="fas fa-arrow-right" style="font-size: 0.875rem;"></i></a>
-                </div>
-            
-            <div style="text-align: center; margin-top: 3rem;">
-                <a href="https://platform.mapmystandards.ai/trial-signup-stripe.html" class="btn btn-primary" style="font-size: 1.125rem; padding: 1rem 2.5rem;">
-                    Get Everything for $199/month <i class="fas fa-arrow-right" style="margin-left: 0.5rem;"></i>
-                </a>
-                <p style="color: var(--text-secondary); margin-top: 1rem; font-size: 0.95rem;">Start with a 7-day free trial - card required, not charged until trial ends</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- Latest Updates -->
-    <section id="updates" style="padding: 4rem 0; background: transparent;">
-        <div class="container">
-            <div class="section-header" style="margin-bottom: 2rem;">
-                <h2>Latest updates</h2>
-                <p>Recently shipped enhancements across dashboard and API</p>
-            </div>
-
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
-                <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 4px; padding: 1rem; box-shadow: var(--shadow-sm);">
-                    <div style="display:flex; align-items:center; gap:.5rem; margin-bottom:.25rem;">
-                        <span style="display:inline-block;padding:.125rem .5rem; border-radius:999px; background: rgba(34,197,94,0.12); color:#15803d; font-size:.75rem; font-weight:600;">New</span>
-                        <strong style="color: var(--text-primary);">CSV Evidence Export</strong>
-                    </div>
-                    <p style="color: var(--text-secondary); font-size:.95rem;">Download evidence reports as CSV from the dashboard (and HTML too).</p>
-                </div>
-                <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 4px; padding: 1rem; box-shadow: var(--shadow-sm);">
-                    <div style="display:flex; align-items:center; gap:.5rem; margin-bottom:.25rem;">
-                        <span style="display:inline-block;padding:.125rem .5rem; border-radius:999px; background: rgba(99,102,241,0.12); color:#4f46e5; font-size:.75rem; font-weight:600;">New</span>
-                        <strong style="color: var(--text-primary);">Standards Search + Pagination</strong>
-                    </div>
-                    <p style="color: var(--text-secondary); font-size:.95rem;">Quickly find standards and navigate results in the StandardsGraph view.</p>
-                </div>
-                <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 4px; padding: 1rem; box-shadow: var(--shadow-sm);">
-                    <div style="display:flex; align-items:center; gap:.5rem; margin-bottom:.25rem;">
-                        <span style="display:inline-block;padding:.125rem .5rem; border-radius:999px; background: rgba(2,132,199,0.12); color:#075985; font-size:.75rem; font-weight:600;">Improved</span>
-                        <strong style="color: var(--text-primary);">Mark All Reviewed</strong>
-                    </div>
-                    <p style="color: var(--text-secondary); font-size:.95rem;">Batch-review mappings in one click to speed up audits and QA.</p>
-                </div>
-                <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 4px; padding: 1rem; box-shadow: var(--shadow-sm);">
-                    <div style="display:flex; align-items:center; gap:.5rem; margin-bottom:.25rem;">
-                        <span style="display:inline-block;padding:.125rem .5rem; border-radius:999px; background: rgba(245,158,11,0.12); color:#a16207; font-size:.75rem; font-weight:600;">Improved</span>
-                        <strong style="color: var(--text-primary);">Trust Score Tooltips</strong>
-                    </div>
-                    <p style="color: var(--text-secondary); font-size:.95rem;">Transparent scoring with hover tooltips for each evidence trust signal.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Pricing with ROI -->
-    <section id="pricing" class="pricing-section">
-        <div class="container">
-            <div class="section-header">
-                <h2>Investment & Return</h2>
-                <p>See exactly how MapMyStandards pays for itself</p>
-            </div>
-            
-            <div class="pricing-card" data-stripe-price-id="price_1S2yYNK8PKpLCKDZ6zgFu2ay">
-                <div class="pricing-badge">ALL FEATURES INCLUDED</div>
-                <div class="price">$199<span style="font-size: 1.5rem; font-weight: 400;">/month</span></div>
-                <p style="color: var(--text-secondary); margin: 1rem 0;">Complete access to all platform features - no tiers, no limits</p>
-                <div style="margin: 1.5rem 0; padding: 1.25rem; background: var(--bg-darker); border: 1px solid var(--primary); border-radius: 4px;">
-                    <p style="font-weight: 600; margin-bottom: 0.5rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
-                        <i class="fas fa-check-circle" style="color: var(--success);"></i>
-                        All 6 Intelligence Algorithms
+                    <a href="https://platform.mapmystandards.ai/trial-signup-stripe.html" class="btn btn-primary" style="width: 100%; margin-top: 2rem; font-size: 1.125rem; padding: 1rem;">
+                        Start 7-Day Free Trial <i class="fas fa-arrow-right"></i>
+                    </a>
+                    <p style="font-size: 0.875rem; color: var(--text-tertiary); margin-top: 1rem; text-align: center;">
+                        Credit card required • Not charged during trial • Cancel anytime
                     </p>
-                    <p style="font-size: 0.875rem; color: var(--text-secondary); margin-left: 1.75rem;">StandardsGraph™, EvidenceMapper™, EvidenceTrust Score™, GapRisk Predictor™, CrosswalkX™, CiteGuard™</p>
                 </div>
-                
-                <div class="roi-calculator">
-                    <h4 style="margin-bottom: 1rem;">Your Monthly ROI</h4>
-                    <div class="roi-item">
-                        <span>Hours saved on mapping</span>
-                        <span style="color: var(--success);">32 hrs × $75 = $2,400</span>
-                    </div>
-                    <div class="roi-item">
-                        <span>Reduced consultant hours</span>
-                        <span style="color: var(--success);">10 hrs × $150 = $1,500</span>
-                    </div>
-                    <div class="roi-item">
-                        <span>Prevented compliance issues</span>
-                        <span style="color: var(--success);">Risk reduction = $2,000</span>
-                    </div>
-                    <div class="roi-item">
-                        <span>Your investment</span>
-                        <span style="color: var(--danger);">-$199</span>
-                    </div>
-                    <div class="roi-total">
-                        Net Monthly Value: +$5,701
-                    </div>
-                </div>
-                
-                <a href="https://platform.mapmystandards.ai/trial-signup-stripe.html" class="btn btn-primary" style="width: 100%; margin-top: 2rem;">
-                    Start 7-Day Free Trial
-                </a>
-                <p style="font-size: 0.875rem; color: var(--gray); margin-top: 1rem;">
-                    Credit card required • Not charged during trial • Cancel anytime
-                </p>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Final CTA -->
-    <section class="cta-section">
-        <div class="container">
-            <h2>Stop Reacting. Start Predicting.</h2>
-            <p style="font-size: 1.25rem; opacity: 0.95;">Join institutions saving 32 hours weekly with compliance intelligence</p>
-            
-            <div class="cta-buttons">
-                <a href="https://platform.mapmystandards.ai/trial-signup-stripe.html" class="btn btn-white">
-                    Start 7-Day Trial <i class="fas fa-arrow-right" style="margin-left: 0.5rem; font-size: 0.875rem;"></i>
-                </a>
-                <a href="https://calendly.com/jeremyestrella/30min" class="btn btn-outline">
-                    Book a Demo
-                </a>
+        <!-- Final CTA -->
+        <section class="cta-section">
+            <div class="container">
+                <h2>Stop Reacting. Start Predicting.</h2>
+                <p>Join institutions saving 32 hours weekly with compliance intelligence</p>
+                
+                <div class="cta-buttons">
+                    <a href="https://platform.mapmystandards.ai/trial-signup-stripe.html" class="btn btn-white">
+                        Start 7-Day Trial <i class="fas fa-arrow-right"></i>
+                    </a>
+                    <a href="https://calendly.com/jeremyestrella/30min" class="btn btn-outline">
+                        Book a Demo
+                    </a>
+                </div>
+                
+                <div class="cta-features">
+                    <div class="cta-feature">
+                        <i class="fas fa-check-circle"></i>
+                        <span>7-day free trial</span>
+                    </div>
+                    <div class="cta-feature">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Card required, not charged</span>
+                    </div>
+                    <div class="cta-feature">
+                        <i class="fas fa-check-circle"></i>
+                        <span>SOC 2 compliant</span>
+                    </div>
+                </div>
             </div>
-            
-        <div style="margin-top: 3rem; display: flex; gap: 3rem; justify-content: center; flex-wrap: wrap;">
-                <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <i class="fas fa-check-circle" style="color: #ffffff; opacity: 0.9;"></i>
-            <span style="opacity: 0.95; color: rgba(255,255,255,0.95);">7-day free trial</span>
-                </div>
-                <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <i class="fas fa-check-circle" style="color: #ffffff; opacity: 0.9;"></i>
-            <span style="opacity: 0.95; color: rgba(255,255,255,0.95);">Card required, not charged</span>
-                </div>
-                <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <i class="fas fa-check-circle" style="color: #ffffff; opacity: 0.9;"></i>
-            <span style="opacity: 0.95; color: rgba(255,255,255,0.95);">SOC 2 compliant</span>
-                </div>
-            </div>
-        </div>
-    </section>
+        </section>
+    </main>
     
     <!-- Footer -->
-    <footer style="background: var(--bg-darker); border-top: 1px solid var(--border-color); padding: 4rem 0;">
+    <footer>
         <div class="container">
-            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 3rem; margin-bottom: 3rem;">
+            <div class="footer-grid">
                 <!-- Company Info -->
-                <div>
-                    <img src="https://mapmystandards.ai/wp-content/uploads/2025/07/Original-Logo.png" alt="MapMyStandards" style="height: 40px; margin-bottom: 1rem;">
-                    <p style="color: var(--text-secondary); margin-bottom: 1.5rem; line-height: 1.6;">
+                <div class="footer-brand">
+                    <img src="https://mapmystandards.ai/wp-content/uploads/2025/07/Original-Logo.png" alt="MapMyStandards">
+                    <p>
                         Revolutionary compliance intelligence platform powered by proprietary algorithms. 
                         Not just another AI - purpose-built for accreditation excellence.
                     </p>
-                    <div style="display: flex; gap: 1rem;">
-                        <a href="#" style="width: 40px; height: 40px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 4px; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); transition: all 0.3s;" onmouseover="this.style.color='var(--primary)';this.style.borderColor='var(--primary)'" onmouseout="this.style.color='var(--text-secondary)';this.style.borderColor='var(--border-color)'">
+                    <div class="footer-social">
+                        <a href="#" class="social-link" aria-label="LinkedIn">
                             <i class="fab fa-linkedin-in"></i>
                         </a>
-                        <a href="#" style="width: 40px; height: 40px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 4px; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); transition: all 0.3s;" onmouseover="this.style.color='var(--primary)';this.style.borderColor='var(--primary)'" onmouseout="this.style.color='var(--text-secondary)';this.style.borderColor='var(--border-color)'">
+                        <a href="#" class="social-link" aria-label="Twitter">
                             <i class="fab fa-twitter"></i>
                         </a>
                     </div>
                 </div>
                 
                 <!-- Platform -->
-                <div>
-                    <h4 style="color: var(--text-primary); font-weight: 600; margin-bottom: 1.5rem; text-transform: uppercase; font-size: 0.875rem; letter-spacing: 0.05em;">Platform</h4>
-                    <ul style="list-style: none; padding: 0;">
-                        <li style="margin-bottom: 0.75rem;"><a href="#algorithms" style="color: var(--text-secondary); text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-secondary)'">Intelligence Algorithms</a></li>
-                        <li style="margin-bottom: 0.75rem;"><a href="#demo" style="color: var(--text-secondary); text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-secondary)'">Live Demo</a></li>
-                        <li style="margin-bottom: 0.75rem;"><a href="#platform-features" style="color: var(--text-secondary); text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-secondary)'">Features</a></li>
-                        <li style="margin-bottom: 0.75rem;"><a href="#pricing" style="color: var(--text-secondary); text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-secondary)'">Pricing</a></li>
+                <div class="footer-section">
+                    <h4>Platform</h4>
+                    <ul>
+                        <li><a href="#algorithms">Intelligence Algorithms</a></li>
+                        <li><a href="#demo">Live Demo</a></li>
+                        <li><a href="#platform-features">Features</a></li>
+                        <li><a href="#pricing">Pricing</a></li>
                     </ul>
                 </div>
                 
                 <!-- Resources -->
-                <div>
-                    <h4 style="color: var(--text-primary); font-weight: 600; margin-bottom: 1.5rem; text-transform: uppercase; font-size: 0.875rem; letter-spacing: 0.05em;">Resources</h4>
-                    <ul style="list-style: none; padding: 0;">
-                        <li style="margin-bottom: 0.75rem;"><a href="https://calendly.com/jeremyestrella/30min" style="color: var(--text-secondary); text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-secondary)'">Book a Demo</a></li>
+                <div class="footer-section">
+                    <h4>Resources</h4>
+                    <ul>
+                        <li><a href="https://calendly.com/jeremyestrella/30min">Book a Demo</a></li>
                     </ul>
                 </div>
                 
                 <!-- Legal -->
-                <div>
-                    <h4 style="color: var(--text-primary); font-weight: 600; margin-bottom: 1.5rem; text-transform: uppercase; font-size: 0.875rem; letter-spacing: 0.05em;">Legal</h4>
-                    <ul style="list-style: none; padding: 0;">
-                        <li style="margin-bottom: 0.75rem;"><a href="https://mapmystandards.ai/privacy-policy/" style="color: var(--text-secondary); text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-secondary)'">Privacy Policy</a></li>
-                        <li style="margin-bottom: 0.75rem;"><a href="https://mapmystandards.ai/terms/" style="color: var(--text-secondary); text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-secondary)'">Terms of Service</a></li>
+                <div class="footer-section">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="https://mapmystandards.ai/privacy-policy/">Privacy Policy</a></li>
+                        <li><a href="https://mapmystandards.ai/terms/">Terms of Service</a></li>
                     </ul>
                 </div>
             </div>
             
-            <div style="padding-top: 2rem; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-                <p style="color: var(--text-muted); font-size: 0.875rem;">
+            <div class="footer-bottom">
+                <p>
                     © 2025 MapMyStandards. All rights reserved. StandardsGraph™, EvidenceMapper™, EvidenceTrust Score™, GapRisk Predictor™, CrosswalkX™, and CiteGuard™ are trademarks of MapMyStandards.
                 </p>
-                <div style="display: flex; gap: 1.5rem; align-items: center;">
-                    <span style="color: var(--text-muted); font-size: 0.875rem;">Enterprise-grade security</span>
-                    <span style="color: var(--primary);">•</span>
-                    <span style="color: var(--text-muted); font-size: 0.875rem;">SOC 2 Type II</span>
-                    <span style="color: var(--primary);">•</span>
-                    <span style="color: var(--text-muted); font-size: 0.875rem;">GDPR Compliant</span>
+                <div class="footer-badges">
+                    <span class="footer-badge">
+                        <i class="fas fa-shield-alt"></i>
+                        Enterprise Security
+                    </span>
+                    <span class="footer-badge">
+                        <i class="fas fa-certificate"></i>
+                        SOC 2 Type II
+                    </span>
+                    <span class="footer-badge">
+                        <i class="fas fa-lock"></i>
+                        GDPR Compliant
+                    </span>
                 </div>
             </div>
         </div>
     </footer>
 
     <script>
-        // Smooth scroll behavior
+        // Enhanced smooth scrolling
         document.documentElement.style.scrollBehavior = 'smooth';
         
-        // Demo tab switching
-    function showDemo(type, event) {
-            // Hide all demos
+        // Loading animation
+        window.addEventListener('load', () => {
+            const loading = document.getElementById('loading');
+            loading.style.transform = 'scaleX(1)';
+            loading.style.transition = 'transform 0.5s ease';
+            
+            setTimeout(() => {
+                loading.style.opacity = '0';
+                loading.style.transition = 'opacity 0.5s ease';
+                setTimeout(() => {
+                    loading.style.display = 'none';
+                }, 500);
+            }, 500);
+        });
+        
+        // Sticky navigation with scroll effects
+        let lastScroll = 0;
+        const nav = document.getElementById('nav');
+        
+        window.addEventListener('scroll', () => {
+            const currentScroll = window.pageYOffset;
+            
+            // Add scrolled class
+            if (currentScroll > 50) {
+                nav.classList.add('scrolled');
+            } else {
+                nav.classList.remove('scrolled');
+            }
+            
+            // Hide/show on scroll
+            if (currentScroll > lastScroll && currentScroll > 100) {
+                nav.style.transform = 'translateY(-100%)';
+            } else {
+                nav.style.transform = 'translateY(0)';
+            }
+            
+            lastScroll = currentScroll;
+        });
+        
+        // Mobile menu toggle
+        function toggleMenu() {
+            const navLinks = document.querySelector('.nav-links');
+            navLinks.classList.toggle('active');
+        }
+        
+        // Demo tab switching with animations
+        function showDemo(type, event) {
+            // Hide all demos with fade out
             document.querySelectorAll('.demo-content').forEach(el => {
-                el.style.display = 'none';
+                el.style.opacity = '0';
+                setTimeout(() => {
+                    el.style.display = 'none';
+                }, 200);
             });
             
             // Remove active class from all tabs
@@ -1793,8 +2492,14 @@
                 el.classList.remove('active');
             });
             
-            // Show selected demo
-            document.getElementById(type + '-demo').style.display = 'block';
+            // Show selected demo with fade in
+            setTimeout(() => {
+                const selectedDemo = document.getElementById(type + '-demo');
+                selectedDemo.style.display = 'block';
+                setTimeout(() => {
+                    selectedDemo.style.opacity = '1';
+                }, 10);
+            }, 200);
             
             // Add active class to clicked tab
             if (event && event.target) {
@@ -1802,27 +2507,30 @@
             }
         }
         
-        // Animate elements on scroll
+        // Enhanced intersection observer for animations
         const observerOptions = {
             threshold: 0.1,
-            rootMargin: '0px'
+            rootMargin: '0px 0px -50px 0px'
         };
         
         const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
+            entries.forEach((entry, index) => {
                 if (entry.isIntersecting) {
-                    entry.target.style.animation = 'fadeInUp 0.6s ease-out';
-                    entry.target.style.animationFillMode = 'both';
+                    setTimeout(() => {
+                        entry.target.style.animation = 'fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards';
+                    }, index * 50); // Stagger animations
+                    observer.unobserve(entry.target);
                 }
             });
         }, observerOptions);
         
-        // Observe all cards
-        document.querySelectorAll('.algorithm-card, .differentiator-card, .platform-card').forEach(card => {
-            observer.observe(card);
+        // Observe elements
+        document.addEventListener('DOMContentLoaded', () => {
+            const elements = document.querySelectorAll('.algorithm-card, .differentiator-card, .platform-card, .update-card, .metric-item');
+            elements.forEach(el => observer.observe(el));
         });
         
-        // Add fadeInUp animation
+        // Add animations
         const style = document.createElement('style');
         style.textContent = `
             @keyframes fadeInUp {
@@ -1836,36 +2544,78 @@
                 }
             }
             
-            .algorithm-card, .differentiator-card, .platform-card {
+            .algorithm-card, .differentiator-card, .platform-card, .update-card, .metric-item {
                 opacity: 0;
+            }
+            
+            .demo-content {
+                transition: opacity 0.2s ease;
+            }
+            
+            /* Mobile menu styles */
+            @media (max-width: 768px) {
+                .nav-links {
+                    position: fixed;
+                    top: 70px;
+                    left: 0;
+                    right: 0;
+                    background: var(--bg-surface);
+                    flex-direction: column;
+                    padding: 2rem;
+                    gap: 1.5rem;
+                    box-shadow: var(--shadow-xl);
+                    transform: translateY(-120%);
+                    transition: transform 0.3s ease;
+                }
+                
+                .nav-links.active {
+                    transform: translateY(0);
+                }
             }
         `;
         document.head.appendChild(style);
         
-        // Sticky navigation enhancement
-        let lastScroll = 0;
-        const nav = document.querySelector('nav');
-        
-        window.addEventListener('scroll', () => {
-            const currentScroll = window.pageYOffset;
+        // Progress indicators for confidence bars
+        document.addEventListener('DOMContentLoaded', () => {
+            const confidenceBars = document.querySelectorAll('.confidence-fill');
             
-            if (currentScroll > lastScroll && currentScroll > 100) {
-                nav.style.transform = 'translateY(-100%)';
-            } else {
-                nav.style.transform = 'translateY(0)';
-            }
+            const fillObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const width = entry.target.style.width;
+                        entry.target.style.width = '0';
+                        setTimeout(() => {
+                            entry.target.style.width = width;
+                        }, 200);
+                        fillObserver.unobserve(entry.target);
+                    }
+                });
+            }, observerOptions);
             
-            lastScroll = currentScroll;
+            confidenceBars.forEach(bar => fillObserver.observe(bar));
         });
         
-        // Add loading animation
-        window.addEventListener('load', () => {
-            document.body.style.opacity = '0';
-            document.body.style.transition = 'opacity 0.5s ease';
-            setTimeout(() => {
-                document.body.style.opacity = '1';
-            }, 100);
+        // Add hover effects to interactive elements
+        document.querySelectorAll('a, button, .platform-card, .algorithm-card, .differentiator-card').forEach(el => {
+            el.addEventListener('mouseenter', function() {
+                this.style.cursor = 'pointer';
+            });
+        });
+        
+        // Smooth scroll to sections
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    const offsetTop = target.offsetTop - 80; // Account for sticky nav
+                    window.scrollTo({
+                        top: offsetTop,
+                        behavior: 'smooth'
+                    });
+                }
+            });
         });
     </script>
 </body>
-</html>
+</html>                          

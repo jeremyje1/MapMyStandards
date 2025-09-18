@@ -85,6 +85,7 @@
   </div>
 
   <script src="/js/config.js"></script>
+  <script src="/js/auth-bridge.js"></script>
   <script>
     const API_BASE_URL = (window.MMS_CONFIG && window.MMS_CONFIG.API_BASE_URL) || '/api';
     const errEl = document.getElementById('errorMessage');
@@ -123,6 +124,12 @@
         const result = await response.json().catch(()=>({}));
         if (response.ok && (result.success || result.access_token || (result.data && result.data.access_token))){
           showSuccess('Login successful! Redirecting…');
+          
+          // Store auth data in sessionStorage for cross-domain access
+          if (window.MMS_AUTH_BRIDGE && result) {
+            window.MMS_AUTH_BRIDGE.storeAuth(result.data || result);
+          }
+          
           const params = new URLSearchParams(window.location.search);
           const ret = params.get('return');
           let dest = '/ai-dashboard';
@@ -140,6 +147,16 @@
       }catch(err){
         if (email === 'demo@example.com' && password === 'demo123'){
           showSuccess('Demo login successful! Redirecting…');
+          
+          // Store demo auth data
+          if (window.MMS_AUTH_BRIDGE) {
+            window.MMS_AUTH_BRIDGE.storeAuth({
+              user: { email: 'demo@example.com', name: 'Demo User' },
+              access_token: 'demo-token',
+              is_demo: true
+            });
+          }
+          
           const params = new URLSearchParams(window.location.search);
           const ret = params.get('return');
           const dest = ret ? (new URL(ret, window.location.origin)).toString() : '/ai-dashboard';

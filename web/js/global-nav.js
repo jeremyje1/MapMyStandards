@@ -134,6 +134,12 @@
             await fetch(`${API_BASE}/auth/logout`.replace(/\/\/$/, '/auth/logout'), { method: 'POST', credentials: 'include' });
           }
           if (window.mmsAPI) window.mmsAPI.clearAuth && window.mmsAPI.clearAuth();
+          
+          // Clear auth-bridge stored session
+          if (window.MMS_AUTH_BRIDGE) {
+            window.MMS_AUTH_BRIDGE.clearAuth();
+          }
+          
           window.location.href = origin + '/login-platform.html';
         } catch (e) {
           if (window.mmsAPI && window.mmsAPI.showError) window.mmsAPI.showError(e);
@@ -145,14 +151,33 @@
     (async () => {
       try {
         let info = { ok: false };
-        if (window.MMS_AUTH && typeof window.MMS_AUTH.me === 'function') {
-          info = await window.MMS_AUTH.me();
-        } else if (window.mmsAPI && window.mmsAPI.me) {
-          info = await window.mmsAPI.me();
-        } else {
-          const r = await fetch(`${API_BASE}/auth/me`.replace(/\/\/$/, '/auth/me'), { credentials: 'include' });
-          if (r.ok) info = await r.json();
+        
+        // First check auth-bridge for stored session
+        if (window.MMS_AUTH_BRIDGE) {
+          const storedAuth = window.MMS_AUTH_BRIDGE.getStoredAuth();
+          if (storedAuth && storedAuth.user) {
+            info = { ok: true, data: storedAuth };
+          }
         }
+        
+        // If no stored auth, try the regular auth methods
+        if (!info.ok) {
+          if (window.MMS_AUTH && typeof window.MMS_AUTH.me === 'function') {
+            info = await window.MMS_AUTH.me();
+          } else if (window.mmsAPI && window.mmsAPI.me) {
+            info = await window.mmsAPI.me();
+          } else {
+            const r = await fetch(`${API_BASE}/auth/me`.replace(/\/\/$/, '/auth/me'), { credentials: 'include' });
+            if (r.ok) {
+              info = await r.json();
+              // Store successful auth for future use
+              if (info.ok && window.MMS_AUTH_BRIDGE && info.data) {
+                window.MMS_AUTH_BRIDGE.storeAuth(info.data);
+              }
+            }
+          }
+        }
+        
         renderSession(info);
       } catch (_) {
         renderSession({ ok: false });

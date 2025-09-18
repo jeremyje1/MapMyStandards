@@ -351,8 +351,10 @@
         .risk-row { display:flex; justify-content:space-between; font-size:0.85rem; color:#374151; }
         .risk-actions { display:flex; gap:0.5rem; align-items:center; }
     </style>
+    <script src="/js/config.js"></script>
     <script src="/js/auth_client.js"></script>
     <script src="/js/api-client.js"></script>
+    <script src="/js/auth-bridge.js"></script>
     <script src="/js/global-nav.js"></script>
 </head>
 <body>
@@ -445,8 +447,18 @@
             if (typeof path !== 'string') return path;
             if (path.startsWith('http')) return path;
             if (!API_BASE) return path;
-            if (API_BASE.endsWith('/api') && path.startsWith('/api/')) return API_BASE + path.slice(4);
-            return API_BASE + path;
+            
+            // Handle different API_BASE configurations
+            if (API_BASE === '/api') {
+                // If API_BASE is just '/api', use path as-is if it starts with /api/
+                return path.startsWith('/api/') ? path : '/api' + path;
+            } else if (API_BASE.endsWith('/api')) {
+                // If API_BASE ends with /api, strip /api from path if present
+                return API_BASE + (path.startsWith('/api/') ? path.slice(4) : path);
+            } else {
+                // For full URLs like https://api.mapmystandards.ai
+                return API_BASE + (path.startsWith('/') ? path : '/' + path);
+            }
         }
         async function authFetch(path, options={}){
             const url = buildApiUrl(path);
@@ -459,18 +471,48 @@
             return r;
         }
         
-        // Authentication check
-        async function checkAuthentication() {
-            try {
-                const resp = await authFetch('/api/auth/me', { 
-                    headers: { 'Accept': 'application/json' }
-                });
-                if (resp.ok) {
-                    const data = await resp.json();
-                    return data && data.ok === true;
+        // Authentication check with retry
+        async function checkAuthentication(retries = 3) {
+            // First check if we have stored auth from login
+            if (window.MMS_AUTH_BRIDGE) {
+                const isAuthenticated = await window.MMS_AUTH_BRIDGE.checkAuth();
+                if (isAuthenticated) {
+                    return true;
                 }
-            } catch (e) {
-                console.error('Auth check failed:', e);
+            }
+            
+            // First, give the global nav time to establish session
+            if (retries === 3) {
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+            
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const resp = await authFetch('/api/auth/me', { 
+                        headers: { 'Accept': 'application/json' }
+                    });
+                    if (resp.ok) {
+                        const data = await resp.json();
+                        if (data && data.ok === true) {
+                            // Store successful auth for future use
+                            if (window.MMS_AUTH_BRIDGE && data.data) {
+                                window.MMS_AUTH_BRIDGE.storeAuth(data.data);
+                            }
+                            return true;
+                        }
+                    }
+                    // If we get 401, wait a bit and retry
+                    if (resp.status === 401 && i < retries - 1) {
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                        continue;
+                    }
+                } catch (e) {
+                    console.error('Auth check failed:', e);
+                    if (i < retries - 1) {
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                        continue;
+                    }
+                }
             }
             return false;
         }

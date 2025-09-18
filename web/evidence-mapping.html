@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="/css/accessibility.css">
     <script src="/js/ux.js"></script>
     <script src="/js/auth_client.js"></script>
+    <script src="/js/auth-bridge.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -541,8 +542,18 @@
             if (typeof path !== 'string') return path;
             if (path.startsWith('http')) return path;
             if (!API_BASE) return path;
-            if (API_BASE.endsWith('/api') && path.startsWith('/api/')) return API_BASE + path.slice(4);
-            return API_BASE + path;
+            
+            // Handle different API_BASE configurations
+            if (API_BASE === '/api') {
+                // If API_BASE is just '/api', use path as-is if it starts with /api/
+                return path.startsWith('/api/') ? path : '/api' + path;
+            } else if (API_BASE.endsWith('/api')) {
+                // If API_BASE ends with /api, strip /api from path if present
+                return API_BASE + (path.startsWith('/api/') ? path.slice(4) : path);
+            } else {
+                // For full URLs like https://api.mapmystandards.ai
+                return API_BASE + (path.startsWith('/') ? path : '/' + path);
+            }
         }
         async function authFetch(path, options={}){
             const url = buildApiUrl(path);
@@ -557,13 +568,27 @@
         
         // Authentication check
         async function checkAuthentication() {
+            // First check if we have stored auth from login
+            if (window.MMS_AUTH_BRIDGE) {
+                const isAuthenticated = await window.MMS_AUTH_BRIDGE.checkAuth();
+                if (isAuthenticated) {
+                    return true;
+                }
+            }
+            
             try {
                 const resp = await authFetch('/api/auth/me', { 
                     headers: { 'Accept': 'application/json' }
                 });
                 if (resp.ok) {
                     const data = await resp.json();
-                    return data && data.ok === true;
+                    if (data && data.ok === true) {
+                        // Store successful auth for future use
+                        if (window.MMS_AUTH_BRIDGE && data.data) {
+                            window.MMS_AUTH_BRIDGE.storeAuth(data.data);
+                        }
+                        return true;
+                    }
                 }
             } catch (e) {
                 console.error('Auth check failed:', e);

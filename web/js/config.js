@@ -9,9 +9,11 @@
 
   const host = window.location.hostname;
   const isLocal = host === 'localhost' || host.endsWith('.local');
+  const isVercel = host.includes('vercel.app');
+  const isPlatform = host === 'platform.mapmystandards.ai';
   const defaults = {
-    // Prefer relative '/api' base in production so Vercel rewrites handle origin and cookies are same-site
-    API_BASE_URL: isLocal ? 'http://localhost:8000' : '/api',
+    // Use appropriate API URL based on deployment environment
+    API_BASE_URL: isLocal ? 'http://localhost:8000' : (isPlatform ? 'https://api.mapmystandards.ai' : (isVercel ? 'https://api.mapmystandards.ai' : '/api')),
     PLATFORM_BASE_URL: isLocal ? 'http://localhost:3000' : 'https://platform.mapmystandards.ai',
     FEATURE_FLAGS: {
       enableRiskOverview: true,
