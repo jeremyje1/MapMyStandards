@@ -1339,6 +1339,18 @@
                     </div>
                     <div class="modal-body" id="riskModalBody">
                         <div class="loading-inline">Select a standard to view risk factors.</div>
+                        <div id="riskControls" style="margin-top:0.75rem;display:none">
+                            <div class="modal-meta-grid">
+                                <div class="meta-box"><div class="meta-label">Coverage (%)</div><div><input id="riskInputCoverage" type="number" min="0" max="100" step="1" value="0" style="width:100%;padding:6px;border-radius:6px;border:1px solid var(--border-light);background:var(--bg-white);color:var(--text-dark)"></div></div>
+                                <div class="meta-box"><div class="meta-label">Avg Evidence Age (days)</div><div><input id="riskInputAge" type="number" min="0" step="1" value="365" style="width:100%;padding:6px;border-radius:6px;border:1px solid var(--border-light);background:var(--bg-white)"></div></div>
+                                <div class="meta-box"><div class="meta-label">Overdue Tasks</div><div><input id="riskInputOverdue" type="number" min="0" step="1" value="0" style="width:100%;padding:6px;border-radius:6px;border:1px solid var(--border-light);"></div></div>
+                                <div class="meta-box"><div class="meta-label">Total Tasks</div><div><input id="riskInputTotal" type="number" min="0" step="1" value="0" style="width:100%;padding:6px;border-radius:6px;border:1px solid var(--border-light);"></div></div>
+                                <div class="meta-box"><div class="meta-label">Recent Changes</div><div><input id="riskInputChanges" type="number" min="0" step="1" value="0" style="width:100%;padding:6px;border-radius:6px;border:1px solid var(--border-light);"></div></div>
+                                <div class="meta-box"><div class="meta-label">Findings (historical)</div><div><input id="riskInputFindings" type="number" min="0" step="1" value="0" style="width:100%;padding:6px;border-radius:6px;border:1px solid var(--border-light);"></div></div>
+                                <div class="meta-box"><div class="meta-label">Days To Review</div><div><input id="riskInputDays" type="number" min="0" step="1" value="180" style="width:100%;padding:6px;border-radius:6px;border:1px solid var(--border-light);"></div></div>
+                                <div class="meta-box"><div class="meta-label">Trust Scores (comma-separated)</div><div><input id="riskInputTrust" type="text" placeholder="e.g., 0.8,0.7,0.6" style="width:100%;padding:6px;border-radius:6px;border:1px solid var(--border-light);"></div></div>
+                            </div>
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <div style="font-size:0.65rem;color:var(--text-medium)">Model outputs are indicative. See transparency doc for formulas.</div>
@@ -1366,12 +1378,15 @@
                 return;
             }
             body.innerHTML = `<div class='loading-inline'>Scoring risk for <strong>${escapeHtml(standardId)}</strong>...</div>`;
-            const q = new URLSearchParams({ standard_id: standardId, coverage: '0', avg_evidence_age_days: '365' }).toString();
+            // Show controls
+            try { document.getElementById('riskControls').style.display='block'; } catch(_) {}
+            const q = new URLSearchParams({ standard_id: standardId, coverage: getRiskCoverage(), avg_evidence_age_days: getRiskAge(), overdue_tasks: getRiskOverdue(), total_tasks: getRiskTotal(), recent_changes: getRiskChanges(), historical_findings: getRiskFindings(), days_to_review: getRiskDays() });
+            getRiskTrust().forEach(v => q.append('trust_scores', v));
             (function(){
                 const token = getAuthToken();
                 const headers = {};
                 if (isLikelyJwt(token)) headers['Authorization'] = 'Bearer ' + token;
-                return fetch(getApiBase() + '/api/user/intelligence-simple/risk/score-standard?' + q, {
+                return fetch(getApiBase() + '/api/user/intelligence-simple/risk/score-standard?' + q.toString(), {
                     method:'POST', headers, credentials: 'include'
                 });
             })().then(async res => {
@@ -1403,12 +1418,13 @@
             const body = document.getElementById('riskModalBody');
             const standardId = currentRiskModalStandardId;
             body.innerHTML = `<div class='loading-inline'>Refreshing score for <strong>${escapeHtml(standardId)}</strong>...</div>`;
-            const q2 = new URLSearchParams({ standard_id: standardId, coverage: '0', avg_evidence_age_days: '365' }).toString();
+            const q2p = new URLSearchParams({ standard_id: standardId, coverage: getRiskCoverage(), avg_evidence_age_days: getRiskAge(), overdue_tasks: getRiskOverdue(), total_tasks: getRiskTotal(), recent_changes: getRiskChanges(), historical_findings: getRiskFindings(), days_to_review: getRiskDays() });
+            getRiskTrust().forEach(v => q2p.append('trust_scores', v));
             (function(){
                 const token = getAuthToken();
                 const headers = {};
                 if (isLikelyJwt(token)) headers['Authorization'] = 'Bearer ' + token;
-                return fetch(getApiBase() + '/api/user/intelligence-simple/risk/score-standard?' + q2, {
+                return fetch(getApiBase() + '/api/user/intelligence-simple/risk/score-standard?' + q2p.toString(), {
                     method:'POST', headers, credentials: 'include'
                 });
             })().then(async res => {
@@ -1476,6 +1492,20 @@
                     ${issues ? `<ul class='issues-list'>${issues}</ul>` : `<div style="font-size:0.65rem;color:var(--text-light);">No specific issues predicted.</div>`}
                 </div>
             `;
+        }
+
+        function qNum(id, def){ const el=document.getElementById(id); const v=el? parseFloat(el.value):NaN; return Number.isFinite(v)? String(v): String(def); }
+        function getRiskCoverage(){ return qNum('riskInputCoverage', 0); }
+        function getRiskAge(){ return qNum('riskInputAge', 365); }
+        function getRiskOverdue(){ return qNum('riskInputOverdue', 0); }
+        function getRiskTotal(){ return qNum('riskInputTotal', 0); }
+        function getRiskChanges(){ return qNum('riskInputChanges', 0); }
+        function getRiskFindings(){ return qNum('riskInputFindings', 0); }
+        function getRiskDays(){ return qNum('riskInputDays', 180); }
+        function getRiskTrust(){
+            const el=document.getElementById('riskInputTrust');
+            if(!el||!el.value) return [];
+            return el.value.split(',').map(x=>parseFloat(x.trim())).filter(x=>Number.isFinite(x)).map(x=>String(x));
         }
     </script>
 </body>
