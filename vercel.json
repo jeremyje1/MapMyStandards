@@ -61,6 +61,7 @@
     }
   ],
   "rewrites": [
+    { "source": "/login-platform", "destination": "/login-platform.html" },
     {
       "source": "/api/:path*",
       "destination": "https://api.mapmystandards.ai/api/:path*"
