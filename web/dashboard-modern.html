@@ -821,9 +821,9 @@
                     </div>
                     
                     <div class="user-menu">
-                        <button class="user-button">
-                            <div class="user-avatar">JD</div>
-                            <span>John Doe</span>
+                        <button class="user-button" id="userMenuButton">
+                            <div class="user-avatar" id="userAvatar">JD</div>
+                            <span id="userDisplayName">John Doe</span>
                         </button>
                     </div>
                 </div>
@@ -838,7 +838,7 @@
             <div class="welcome-content">
                 <div class="welcome-header">
                     <div class="welcome-text">
-                        <h1 class="welcome-title">Welcome back, John! 👋</h1>
+                        <h1 class="welcome-title" id="welcomeTitle">Welcome back! 👋</h1>
                         <p class="welcome-subtitle">Your accreditation analysis is running smoothly. Here's your progress overview.</p>
                     </div>
                     
@@ -992,9 +992,14 @@
                         throw err;
                     }
                     
-                    const data = await response.json();
+                    const payload = await response.json();
+                    if (!payload || !payload.data || !payload.data.core_metrics) {
+                        const err = new Error('Invalid metrics payload');
+                        err.status = 'InvalidPayload';
+                        throw err;
+                    }
                     this._metricsOk = true;
-                    this.renderMetrics(data.data);
+                    this.renderMetrics(payload.data);
                 } catch (error) {
                     console.error('Failed to load metrics:', error);
                     this._metricsOk = false;
@@ -1004,6 +1009,9 @@
             }
 
             renderMetrics(data) {
+                if (!data || !data.core_metrics || !data.performance_metrics || !data.account_info) {
+                    return this.renderMetricsError('Invalid');
+                }
                 const metricsGrid = document.getElementById('metricsGrid');
                 const metrics = data.core_metrics;
                 const performance = data.performance_metrics;
@@ -1185,7 +1193,7 @@
                 const metricsGrid = document.getElementById('metricsGrid');
                 const token = this.getAuthToken();
                 const code = String(status || '');
-                const needsLogin = code.includes('401') || code.includes('403') || token === 'demo-token' || !token;
+                const needsLogin = code.includes('401') || code.includes('403') || !token;
                 const desc = needsLogin ? 'You may need to sign in to view your metrics.' : 'Please refresh the page to try again.';
                 const action = needsLogin ? `<a href="/login" class="action-btn" style="margin-top:8px">Sign In</a>` : '';
                 metricsGrid.innerHTML = `
@@ -1202,106 +1210,33 @@
 
             async loadActivity() {
                 const activityList = document.getElementById('activityList');
-                
-                // Simulate activity data
-                const activities = [
-                    {
-                        type: 'upload',
-                        title: 'Document uploaded successfully',
-                        description: 'Faculty_Handbook_2024.pdf processed and analyzed',
-                        time: '2 minutes ago',
-                        status: 'completed'
-                    },
-                    {
-                        type: 'analysis',
-                        title: 'Standards mapping completed',
-                        description: '8 SACSCOC standards mapped with 92% confidence',
-                        time: '5 minutes ago',
-                        status: 'completed'
-                    },
-                    {
-                        type: 'report',
-                        title: 'Evidence mapping report generated',
-                        description: 'Compliance summary ready for download',
-                        time: '1 hour ago',
-                        status: 'completed'
-                    },
-                    {
-                        type: 'upload',
-                        title: 'Bulk document processing',
-                        description: '15 policy documents queued for analysis',
-                        time: '2 hours ago',
-                        status: 'processing'
-                    }
-                ];
-
-                const demoBadge = !this._metricsOk ? `<div style='font-size:11px;color:#6b7280;margin-bottom:4px'>Demo activity (no uploads yet)</div>` : '';
-                activityList.innerHTML = demoBadge + activities.map(activity => `
-                    <div class="activity-item">
-                        <div class="activity-icon ${activity.type}">
-                            ${activity.type === 'upload' ? '📁' : activity.type === 'analysis' ? '🔍' : '📊'}
-                        </div>
-                        <div class="activity-content">
-                            <div class="activity-title">${activity.title}</div>
-                            <div class="activity-description">${activity.description}</div>
-                            <div class="activity-meta">
-                                <span>${activity.time}</span>
-                                <span>•</span>
-                                <span style="color: ${activity.status === 'completed' ? 'var(--accent-green)' : 'var(--accent-orange)'}">${activity.status}</span>
-                            </div>
-                        </div>
-                    </div>
-                `).join('');
+                activityList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📁</div>
+                        <div class="empty-title">No recent activity</div>
+                        <div class="empty-description">Upload documents to see processing and mapping activity here.</div>
+                        <a class="empty-action" href="/upload">Upload Documents</a>
+                    </div>`;
             }
 
             async loadProgress() {
                 const progressOverview = document.getElementById('progressOverview');
-                
-                // Simulate progress data
-                const progressItems = [
-                    {
-                        label: 'Document Analysis',
-                        value: 85,
-                        description: '17 of 20 documents processed',
-                        type: 'success'
-                    },
-                    {
-                        label: 'Standards Coverage',
-                        value: 67,
-                        description: '8 of 12 SACSCOC standards mapped',
-                        type: 'info'
-                    },
-                    {
-                        label: 'Compliance Readiness',
-                        value: 42,
-                        description: 'Evidence gaps identified in 7 areas',
-                        type: 'warning'
-                    }
-                ];
-
-                const demoBadge = !this._metricsOk ? `<div style='font-size:11px;color:#6b7280;margin-bottom:6px'>Demo progress (no uploads yet)</div>` : '';
-                progressOverview.innerHTML = demoBadge + progressItems.map(item => `
-                    <div class="progress-item">
-                        <div class="progress-header">
-                            <div class="progress-label">${item.label}</div>
-                            <div class="progress-value">${item.value}%</div>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill ${item.type}" style="width: ${item.value}%"></div>
-                        </div>
-                        <div class="progress-description">${item.description}</div>
-                    </div>
-                `).join('');
+                progressOverview.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">🧭</div>
+                        <div class="empty-title">No progress to show yet</div>
+                        <div class="empty-description">Once your documents are analyzed, compliance progress will appear here.</div>
+                        <a class="empty-action" href="/upload">Start by Uploading</a>
+                    </div>`;
             }
 
             getAuthToken() {
-                // Try multiple sources for auth token
                 return localStorage.getItem('a3e_api_key') ||
                        sessionStorage.getItem('a3e_api_key') ||
                        localStorage.getItem('token') ||
                        localStorage.getItem('access_token') ||
                        localStorage.getItem('jwt_token') ||
-                       'demo-token';
+                       '';
             }
 
             async ensureTimeseries(accreditor) {
@@ -1420,8 +1355,23 @@
         }
 
                 // Inject AI action sections near end of body
-                document.addEventListener('DOMContentLoaded', () => {
-                        new Dashboard();
+        document.addEventListener('DOMContentLoaded', () => {
+            // Personalize header from local data
+            (function personalizeUser(){
+                function parseJwt(token){ try{ const p = JSON.parse(atob(token.split('.')[1])); return p||{}; }catch{return {}} }
+                const stored = (()=>{ try{return JSON.parse(localStorage.getItem('user')||'null')}catch{return null} })();
+                const email = localStorage.getItem('a3e_user_email') || stored?.email || '';
+                const token = localStorage.getItem('a3e_api_key') || localStorage.getItem('access_token') || localStorage.getItem('jwt_token') || '';
+                const claims = token && token.split('.').length===3 ? parseJwt(token) : {};
+                const fullName = stored?.name || claims.name || claims.full_name || claims.given_name && claims.family_name ? `${claims.given_name||''} ${claims.family_name||''}`.trim() : '';
+                const display = fullName || (email ? email.split('@')[0] : 'User');
+                const initials = (function(name){ const parts = (name||'').trim().split(/\s+/).filter(Boolean); if(!parts.length) return (email? email[0] : 'U').toUpperCase(); const first = parts[0][0]||''; const last = parts.length>1 ? parts[parts.length-1][0] : ''; return (first+last).toUpperCase(); })(fullName||display);
+                const avatar = document.getElementById('userAvatar'); if (avatar) avatar.textContent = initials;
+                const nameEl = document.getElementById('userDisplayName'); if (nameEl) nameEl.textContent = display;
+                const welcome = document.getElementById('welcomeTitle'); if (welcome) welcome.textContent = `Welcome back, ${display}! 👋`;
+            })();
+
+            new Dashboard();
 
                         const container = document.querySelector('main');
                         if (container && !document.getElementById('ai-evidence')) {
@@ -1564,7 +1514,10 @@
 
         // Service worker registration for offline support
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw.js').catch(console.error);
+            const swUrl = '/sw.js';
+            fetch(swUrl, { method: 'HEAD', cache: 'no-store' })
+                .then(r => { if (r && r.ok) return navigator.serviceWorker.register(swUrl); })
+                .catch(() => {});
         }
     </script>
 </body>

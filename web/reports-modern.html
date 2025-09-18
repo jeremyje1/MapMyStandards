@@ -114,10 +114,9 @@
         .container {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 2rem;
+            padding: 0 2rem;
         }
 
-        /* Page Header */
         .page-header {
             text-align: center;
             margin-bottom: 3rem;
@@ -800,7 +799,7 @@
                    localStorage.getItem('access_token') ||
                    localStorage.getItem('jwt_token') ||
                    localStorage.getItem('authToken') ||
-                   'demo-token';
+                   '';
         }
 
         function getApiBase() {
@@ -847,19 +846,27 @@
                 
                 if (response.ok) {
                     const result = await response.json();
-                    dashboardData = result.data;
-                    displayDashboardMetrics(dashboardData);
+                    if (result && result.data && result.data.core_metrics) {
+                        dashboardData = result.data;
+                        displayDashboardMetrics(dashboardData);
+                    } else {
+                        displayMetricsError('Invalid data');
+                    }
+                } else if (response.status === 401 || response.status === 403) {
+                    displayMetricsAuthRequired();
                 } else {
-                    // Fallback to mock data if API not available
-                    displayMockMetrics();
+                    displayMetricsError('HTTP ' + response.status);
                 }
             } catch (error) {
                 console.error('Error loading dashboard data:', error);
-                displayMockMetrics();
+                displayMetricsError('Network error');
             }
         }
 
         function displayDashboardMetrics(data) {
+            if (!data || !data.core_metrics || !data.performance_metrics) {
+                return displayMetricsError('Invalid');
+            }
             const metrics = data.core_metrics || {};
             const performance = data.performance_metrics || {};
             const account = data.account_info || {};
@@ -869,7 +876,7 @@
                     <div class="metric-card">
                         <div class="metric-content">
                             <span class="metric-icon">🎯</span>
-                            <div class="metric-value">${performance.compliance_score || 87}%</div>
+                            <div class="metric-value">${(performance.compliance_score ?? '—')}${(performance.compliance_score != null ? '%' : '')}</div>
                             <div class="metric-label">Compliance Score</div>
                             <div class="metric-trend">↗️ +3% this month</div>
                         </div>
@@ -877,7 +884,7 @@
                     <div class="metric-card">
                         <div class="metric-content">
                             <span class="metric-icon">📄</span>
-                            <div class="metric-value">${metrics.documents_analyzed || 42}</div>
+                            <div class="metric-value">${metrics.documents_analyzed ?? 0}</div>
                             <div class="metric-label">Documents Analyzed</div>
                             <div class="metric-trend">↗️ +12 this week</div>
                         </div>
@@ -885,7 +892,7 @@
                     <div class="metric-card">
                         <div class="metric-content">
                             <span class="metric-icon">📊</span>
-                            <div class="metric-value">${metrics.standards_mapped || 158}</div>
+                            <div class="metric-value">${metrics.standards_mapped ?? 0}</div>
                             <div class="metric-label">Standards Mapped</div>
                             <div class="metric-trend">↗️ +23 this month</div>
                         </div>
@@ -893,7 +900,7 @@
                     <div class="metric-card">
                         <div class="metric-content">
                             <span class="metric-icon">📈</span>
-                            <div class="metric-value">${metrics.reports_generated || 8}</div>
+                            <div class="metric-value">${metrics.reports_generated ?? 0}</div>
                             <div class="metric-label">Reports Generated</div>
                             <div class="metric-trend">↗️ +2 this week</div>
                         </div>
@@ -901,7 +908,7 @@
                     <div class="metric-card">
                         <div class="metric-content">
                             <span class="metric-icon">⏰</span>
-                            <div class="metric-value">${Math.round(performance.time_saved_hours || 127)}h</div>
+                            <div class="metric-value">${Math.round(performance.time_saved_hours ?? 0)}h</div>
                             <div class="metric-label">Time Saved</div>
                             <div class="metric-trend">↗️ +24h this month</div>
                         </div>
@@ -909,7 +916,7 @@
                     <div class="metric-card">
                         <div class="metric-content">
                             <span class="metric-icon">💰</span>
-                            <div class="metric-value">$${Math.round(performance.money_saved_usd || 15840).toLocaleString()}</div>
+                            <div class="metric-value">$${Math.round(performance.money_saved_usd ?? 0).toLocaleString()}</div>
                             <div class="metric-label">Money Saved</div>
                             <div class="metric-trend">↗️ +$3.2K this month</div>
                         </div>
@@ -922,63 +929,23 @@
             try { refreshRiskOverview(); } catch(_) {}
         }
 
-        function displayMockMetrics() {
-            // Use realistic mock data when API isn't available
-            const html = `
-                <div class="metrics-grid">
-                    <div class="metric-card">
-                        <div class="metric-content">
-                            <span class="metric-icon">🎯</span>
-                            <div class="metric-value">89%</div>
-                            <div class="metric-label">Compliance Score</div>
-                            <div class="metric-trend">↗️ +5% this month</div>
-                        </div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-content">
-                            <span class="metric-icon">📄</span>
-                            <div class="metric-value">56</div>
-                            <div class="metric-label">Documents Analyzed</div>
-                            <div class="metric-trend">↗️ +18 this week</div>
-                        </div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-content">
-                            <span class="metric-icon">📊</span>
-                            <div class="metric-value">142</div>
-                            <div class="metric-label">Standards Mapped</div>
-                            <div class="metric-trend">↗️ +31 this month</div>
-                        </div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-content">
-                            <span class="metric-icon">📈</span>
-                            <div class="metric-value">12</div>
-                            <div class="metric-label">Reports Generated</div>
-                            <div class="metric-trend">↗️ +4 this week</div>
-                        </div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-content">
-                            <span class="metric-icon">⏰</span>
-                            <div class="metric-value">156h</div>
-                            <div class="metric-label">Time Saved</div>
-                            <div class="metric-trend">↗️ +38h this month</div>
-                        </div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-content">
-                            <span class="metric-icon">💰</span>
-                            <div class="metric-value">$18,720</div>
-                            <div class="metric-label">Money Saved</div>
-                            <div class="metric-trend">↗️ +$4.8K this month</div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            document.getElementById('metricsSection').innerHTML = html;
-            try { refreshRiskOverview(); } catch(_) {}
+        function displayMetricsAuthRequired() {
+            document.getElementById('metricsSection').innerHTML = `
+                <div class="metric-card" style="padding:1.5rem;text-align:center">
+                    <div style="font-size:2rem">🔒</div>
+                    <div style="font-weight:700;margin-top:.5rem">Sign in to view metrics</div>
+                    <div style="color:#6b7280;margin-top:.25rem">Your session may have expired.</div>
+                    <a class="btn btn-secondary" href="/login" style="margin-top:1rem">Sign In</a>
+                </div>`;
+        }
+
+        function displayMetricsError(reason) {
+            document.getElementById('metricsSection').innerHTML = `
+                <div class="metric-card" style="padding:1.5rem;text-align:center">
+                    <div style="font-size:2rem">⚠️</div>
+                    <div style="font-weight:700;margin-top:.5rem">Unable to load metrics</div>
+                    <div style="color:#6b7280;margin-top:.25rem">${reason ? String(reason) : 'Please refresh and try again.'}</div>
+                </div>`;
         }
 
         // Risk Overview aggregate
@@ -1053,7 +1020,8 @@
                     const w = window.open('', '_blank');
                     if (w) { w.document.write(html); }
                     // Prompt to export DOCX
-                    if (confirm('Export this narrative to DOCX?')) {
+                    // Non-blocking export option: auto export if page is focused; otherwise show a toast
+                    if (document.hasFocus()) {
                         const docx = await fetch(getApiBase() + '/api/user/intelligence-simple/narrative/export.docx', {
                             method: 'POST',
                             headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
@@ -1067,8 +1035,10 @@
                             document.body.appendChild(a); a.click(); a.remove();
                             URL.revokeObjectURL(url);
                         } else {
-                            alert('DOCX export failed');
+                            showToast('DOCX export failed');
                         }
+                    } else {
+                        showToast('Narrative opened. Use Export to DOCX from the new tab.');
                     }
                 }
             } catch (error) {
@@ -1082,6 +1052,11 @@
         }
 
         async function loadRecentReports() {
+            if (!(window.MMS_CONFIG && MMS_CONFIG.FEATURE_FLAGS && MMS_CONFIG.FEATURE_FLAGS.enableRecentReports)) {
+                const container = document.querySelector('.recent-reports');
+                if (container) container.style.display = 'none';
+                return;
+            }
             try {
                 const token = getAuthToken();
                 const response = await fetch(getApiBase() + '/api/reports/recent', {
@@ -1095,12 +1070,12 @@
                     const result = await response.json();
                     displayRecentReports(result.data || []);
                 } else {
-                    // Fallback to mock data
-                    displayMockRecentReports();
+                    // Show empty state (no demo fallback)
+                    displayRecentReports([]);
                 }
             } catch (error) {
                 console.error('Error loading recent reports:', error);
-                displayMockRecentReports();
+                displayRecentReports([]);
             }
         }
 
@@ -1151,39 +1126,7 @@
             document.getElementById('recentReportsList').innerHTML = `<div class="recent-list">${html}</div>`;
         }
 
-        function displayMockRecentReports() {
-            const mockReports = [
-                {
-                    id: 'rpt-001',
-                    title: 'Comprehensive Compliance Report',
-                    type: 'comprehensive',
-                    status: 'completed',
-                    created_at: '2 hours ago',
-                    file_size: '3.8 MB',
-                    pages: 24
-                },
-                {
-                    id: 'rpt-002',
-                    title: 'Gap Analysis Report',
-                    type: 'gaps',
-                    status: 'completed',
-                    created_at: '1 day ago',
-                    file_size: '1.9 MB',
-                    pages: 12
-                },
-                {
-                    id: 'rpt-003',
-                    title: 'Evidence Mapping Summary',
-                    type: 'evidence',
-                    status: 'generating',
-                    created_at: '5 minutes ago',
-                    file_size: 'TBD',
-                    pages: 'TBD'
-                }
-            ];
-
-            displayRecentReports(mockReports);
-        }
+        // removed mock recent reports in production
 
         function getReportIcon(type) {
             const icons = {
@@ -1233,7 +1176,11 @@
 <script>
     (async function(){
         try{
-            const res = await fetch(`${MMS_CONFIG.API_BASE_URL}/api/user/intelligence-simple/ui/help`, { credentials:'include' });
+            const raw = (window.MMS_CONFIG && MMS_CONFIG.API_BASE_URL) || '';
+            const base = raw.startsWith('http') ? raw.replace(/\/$/, '') : ('/' + raw.replace(/^\/+|\/$/g, ''));
+            const prefix = base.endsWith('/api') ? '' : '/api';
+            const helpUrl = base + prefix + '/user/intelligence-simple/ui/help';
+            const res = await fetch(helpUrl, { credentials:'include' });
             if(res.ok){
                 const h = await res.json();
                 const sec = document.getElementById('riskOverviewSection');
@@ -1247,11 +1194,13 @@
                 }
             }
         } catch {}
-        const bannerMount = document.createElement('div');
-        bannerMount.id = 'tutorialBanner';
-        const container = document.querySelector('.container, main, body');
-        if (container) container.insertAdjacentElement('afterbegin', bannerMount);
-        MMS_UX.renderTutorialBanner(bannerMount);
+        if (window.MMS_CONFIG && MMS_CONFIG.FEATURE_FLAGS && MMS_CONFIG.FEATURE_FLAGS.enableTutorialBanner !== false) {
+            const bannerMount = document.createElement('div');
+            bannerMount.id = 'tutorialBanner';
+            const container = document.querySelector('.container, main, body');
+            if (container) container.insertAdjacentElement('afterbegin', bannerMount);
+            MMS_UX.renderTutorialBanner(bannerMount);
+        }
     })();
 </script>
 </html>

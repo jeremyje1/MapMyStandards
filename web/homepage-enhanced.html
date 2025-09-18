@@ -1590,6 +1590,32 @@
         }
     </style>
     <script src="js/host-guard.js"></script>
+        <script>
+            (function(){
+                function getToken(){
+                    return localStorage.getItem('a3e_api_key') ||
+                                 localStorage.getItem('token') ||
+                                 localStorage.getItem('access_token') ||
+                                 localStorage.getItem('jwt_token') ||
+                                 localStorage.getItem('authToken') || '';
+                }
+                function toPlatform(path){
+                    var base = (window.MMS_CONFIG && MMS_CONFIG.PLATFORM_BASE_URL) || 'https://platform.mapmystandards.ai';
+                    return base.replace(/\/$/, '') + path;
+                }
+                document.addEventListener('DOMContentLoaded', function(){
+                    var t = getToken();
+                    var navLogin = document.getElementById('navLoginLink');
+                    if (t && navLogin) navLogin.textContent = 'Open Dashboard';
+                    // Primary hero CTA: if logged in, point to dashboard-modern
+                    var ctas = document.querySelectorAll('a.btn.btn-primary[href*="/subscribe"]');
+                    if (t && ctas && ctas.length){
+                        ctas[0].setAttribute('href', toPlatform('/dashboard-modern'));
+                        ctas[0].firstChild && (ctas[0].firstChild.textContent = 'Open Your Dashboard ');
+                    }
+                });
+            })();
+        </script>
 </head>
 <body>
     <a href="#main" class="skip-link">Skip to main content</a>
@@ -1603,7 +1629,7 @@
             <div class="nav-links" style="margin-left: 0;">
                 <a href="#platform-features">Features</a>
                 <a href="#pricing">Pricing</a>
-                <a href="https://platform.mapmystandards.ai/login-platform.html?return=%2Fai-dashboard">Login</a>
+                <a id="navLoginLink" href="https://platform.mapmystandards.ai/login-platform.html?return=%2Fdashboard-modern">Login</a>
                 <a href="https://platform.mapmystandards.ai/subscribe" class="btn btn-primary" style="color: white;">Get Started</a>
             </div>
             <button class="mobile-menu-btn" aria-label="Menu" onclick="toggleMenu()">
@@ -2144,7 +2170,7 @@
                         </div>
                         <h3>Intelligent Dashboard</h3>
                         <p>Real-time compliance metrics, predictive analytics, and actionable insights</p>
-                        <a href="https://platform.mapmystandards.ai/login-platform.html?return=%2Fai-dashboard" class="platform-link">
+                        <a href="https://platform.mapmystandards.ai/login-platform.html?return=%2Fdashboard-modern" class="platform-link">
                             Access Dashboard <i class="fas fa-arrow-right"></i>
                         </a>
                     </div>
@@ -2192,7 +2218,7 @@
                         </div>
                         <h3>Advanced Analytics</h3>
                         <p>Deep insights, trends, and predictive compliance intelligence</p>
-                        <a href="https://platform.mapmystandards.ai/login-platform.html?return=%2Fai-dashboard" class="platform-link">
+                        <a href="https://platform.mapmystandards.ai/login-platform.html?return=%2Fdashboard-modern" class="platform-link">
                             Explore AI Dashboard <i class="fas fa-arrow-right"></i>
                         </a>
                     </div>
@@ -2216,8 +2242,8 @@
                         </div>
                         <h3>Reports & Export</h3>
                         <p>Export HTML and CSV evidence reports directly from your dashboard</p>
-                        <a href="https://platform.mapmystandards.ai/login-platform.html?return=%2Fai-dashboard%23export" class="platform-link">
-                            Export Evidence <i class="fas fa-arrow-right"></i>
+                        <a href="https://platform.mapmystandards.ai/login-platform.html?return=%2Freports-modern" class="platform-link">
+                            Reports & Exports <i class="fas fa-arrow-right"></i>
                         </a>
                     </div>
 
@@ -2228,7 +2254,7 @@
                         </div>
                         <h3>Standards Explorer</h3>
                         <p>Search standards and page through results with context and categories</p>
-                        <a href="https://platform.mapmystandards.ai/login-platform.html?return=%2Fai-dashboard%23standards" class="platform-link">
+                        <a href="https://platform.mapmystandards.ai/login-platform.html?return=%2Fstandards-modern" class="platform-link">
                             Browse Standards <i class="fas fa-arrow-right"></i>
                         </a>
                     </div>
@@ -2239,6 +2265,20 @@
                         Get Everything for $199/month <i class="fas fa-arrow-right"></i>
                     </a>
                     <p style="color: var(--text-secondary); margin-top: 1rem;">Start with a 7-day free trial - card required, not charged until trial ends</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Upload History (Auth-aware) -->
+        <section id="upload-history" class="section" style="display:none;">
+            <div class="container">
+                <div class="section-header" style="margin-bottom: 2rem;">
+                    <h2>Your Recent Uploads</h2>
+                    <p>Latest files you've uploaded and their processing status</p>
+                </div>
+                <div id="uploadHistoryList" class="updates-grid"></div>
+                <div id="uploadHistoryEmpty" style="display:none; text-align:center; color: var(--text-secondary);">
+                    No uploads yet. Head to the Uploads page to get started.
                 </div>
             </div>
         </section>
@@ -2673,6 +2713,104 @@
                 }
             });
         });
+    </script>
+    <script>
+        (function(){
+            function getToken(){
+                try {
+                    return localStorage.getItem('a3e_api_key') ||
+                           localStorage.getItem('token') ||
+                           localStorage.getItem('access_token') ||
+                           localStorage.getItem('jwt_token') ||
+                           localStorage.getItem('authToken') || '';
+                } catch(_) { return ''; }
+            }
+            function getApiBase(){
+                var host = window.location.hostname;
+                if (host === 'localhost' || host === '127.0.0.1') return 'http://localhost:8000/api';
+                return '/api';
+            }
+            function isPlatformHost(){
+                var h = window.location.hostname || '';
+                return h === 'platform.mapmystandards.ai' || h.endsWith('.platform.mapmystandards.ai') || h === 'localhost' || h === '127.0.0.1';
+            }
+            function formatBytes(bytes){
+                if (!bytes && bytes !== 0) return '';
+                var sizes = ['B','KB','MB','GB','TB'];
+                if (bytes === 0) return '0 B';
+                var i = Math.floor(Math.log(bytes)/Math.log(1024));
+                return (bytes/Math.pow(1024, i)).toFixed(1) + ' ' + sizes[i];
+            }
+            function timeAgo(iso){
+                try {
+                    var d = new Date(iso);
+                    var s = Math.floor((Date.now() - d.getTime())/1000);
+                    var intervals = [
+                        ['y', 31536000], ['mo', 2592000], ['d', 86400], ['h', 3600], ['m', 60], ['s', 1]
+                    ];
+                    for (var j=0;j<intervals.length;j++){
+                        var k = Math.floor(s/intervals[j][1]);
+                        if (k >= 1) return k + intervals[j][0] + ' ago';
+                    }
+                    return 'just now';
+                } catch(_) { return ''; }
+            }
+
+            async function loadUploadHistory(){
+                var section = document.getElementById('upload-history');
+                var list = document.getElementById('uploadHistoryList');
+                var empty = document.getElementById('uploadHistoryEmpty');
+                if (!section || !list || !empty) return;
+
+                var token = getToken();
+                if (!isPlatformHost() || !token) {
+                    // Only show on platform with an auth token
+                    section.style.display = 'none';
+                    return;
+                }
+                section.style.display = 'block';
+
+                try {
+                    var resp = await fetch(getApiBase() + '/uploads/recent?limit=5', {
+                        headers: { 'Authorization': 'Bearer ' + token }
+                    });
+                    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                    var items = await resp.json();
+                    if (!Array.isArray(items) || items.length === 0){
+                        empty.style.display = 'block';
+                        return;
+                    }
+                    items.forEach(function(it){
+                        var card = document.createElement('div');
+                        card.className = 'update-card';
+
+                        var status = (it.status || '').toUpperCase();
+                        var badgeClass = status === 'COMPLETED' ? 'badge-new' : 'badge-improved';
+                        var statusLabel = status || 'PENDING';
+
+                        card.innerHTML = `
+                            <div class="update-header">
+                                <span class="update-badge ${badgeClass}">${statusLabel}</span>
+                                <strong>${it.filename || 'Untitled'}</strong>
+                            </div>
+                            <p>${[formatBytes(it.file_size), timeAgo(it.updated_at || it.created_at)].filter(Boolean).join(' • ')}</p>
+                            <div style="margin-top: 0.5rem;">
+                                <a href="/upload-modern.html" class="platform-link">View in Uploads <i class="fas fa-arrow-right"></i></a>
+                            </div>`;
+                        list.appendChild(card);
+                    });
+                } catch (e) {
+                    // Hide section on errors (e.g., 401/404 when not deployed)
+                    section.style.display = 'none';
+                }
+            }
+
+            if (document.readyState === 'loading'){
+                document.addEventListener('DOMContentLoaded', loadUploadHistory);
+            } else {
+                loadUploadHistory();
+            }
+        })();
     </script>
 </body>
 </html>                          

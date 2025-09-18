@@ -277,12 +277,11 @@
             <p class="subtitle">Your password has been set successfully. You can now access all features of MapMyStandards.</p>
             
             <div class="action-buttons">
-                <button onclick="window.location.href='/onboarding'">
+                <button id="onboardingBtn" onclick="window.location.href='/onboarding'">
                     🚀 Start Guided Onboarding
                 </button>
-                <button class="btn-secondary" onclick="window.location.href='https://platform.mapmystandards.ai/ai-dashboard'">
-                    Skip to Dashboard →
-                </button>
+                <button id="dashboardBtn" class="btn-secondary" style="display:none" onclick="window.location.href='https://platform.mapmystandards.ai/ai-dashboard'">Skip to Dashboard →</button>
+                <button id="loginBtn" class="btn-secondary" style="display:none" onclick="window.location.href='/login'">Go to Login</button>
             </div>
         </div>
     </div>
@@ -488,10 +487,16 @@
                     document.getElementById('loadingState').style.display = 'none';
                     document.getElementById('successState').style.display = 'block';
                     
-                    // Auto-redirect after 3 seconds
-                    setTimeout(() => {
-                        window.location.href = 'https://platform.mapmystandards.ai/ai-dashboard';
-                    }, 3000);
+                    // Gated navigation based on token presence
+                    const dashBtn = document.getElementById('dashboardBtn');
+                    const loginBtn = document.getElementById('loginBtn');
+                    if (authToken) {
+                        dashBtn.style.display = 'block';
+                        setTimeout(() => { window.location.href = 'https://platform.mapmystandards.ai/ai-dashboard'; }, 3000);
+                    } else {
+                        loginBtn.style.display = 'block';
+                        // Do not auto-redirect to dashboard without a token
+                    }
                 } else if (response.status === 404) {
                     // User doesn't exist yet - redirect to payment-success.html to trigger provisioning
                     console.log('User not found, redirecting to payment-success for provisioning...');

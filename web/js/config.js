@@ -18,7 +18,9 @@
     PLATFORM_BASE_URL: isLocal ? 'http://localhost:3000' : 'https://platform.mapmystandards.ai',
     FEATURE_FLAGS: {
       enableRiskOverview: true,
-      enableNarrativeExport: true
+      enableNarrativeExport: true,
+      enableRecentReports: true,
+      enableTutorialBanner: true
     }
   };
 

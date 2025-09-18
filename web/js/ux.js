@@ -26,7 +26,11 @@
   async function renderTutorialBanner(container){
     if (!container) return;
     try {
-      const res = await fetch(`${(window.MMS_CONFIG&&MMS_CONFIG.API_BASE_URL)||''}/api/user/intelligence-simple/ui/tutorial`, { credentials: 'include' });
+      const raw = (window.MMS_CONFIG && MMS_CONFIG.API_BASE_URL) || '';
+      const base = raw.startsWith('http') ? raw.replace(/\/$/, '') : ('/' + raw.replace(/^\/+|\/$/g, ''));
+      const prefix = base.endsWith('/api') ? '' : '/api';
+      const url = base + prefix + '/user/intelligence-simple/ui/tutorial';
+      const res = await fetch(url, { credentials: 'include' });
       if (!res.ok) return;
       const data = await res.json();
       const key = data.dismiss_key || 'mms_tutorial_dismissed';

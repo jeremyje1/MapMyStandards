@@ -13,6 +13,8 @@ from datetime import datetime
 
 from ...database.services import FileService, JobService, UserService, StandardService
 from ..dependencies import get_current_user
+from ...database.connection import db_manager
+from sqlalchemy import text
 
 logger = logging.getLogger(__name__)
 
@@ -341,3 +343,44 @@ async def download_file(
     except Exception as e:
         logger.error(f"File download error: {e}")
         raise HTTPException(status_code=500, detail="Failed to download file")
+
+
+@router.get("/recent")
+async def list_recent_uploads(
+    limit: int = 10,
+    current_user: dict = Depends(get_current_user)
+):
+    """List recent uploads/jobs for the current user (DB-backed)."""
+    try:
+        user_id = current_user.get("user_id")
+        items = []
+        async with db_manager.get_session() as session:
+            query = text(
+                """
+                SELECT j.job_id, j.file_id, j.status, j.progress, j.created_at, j.updated_at,
+                       f.original_filename AS filename, f.file_size
+                FROM jobs j
+                JOIN files f ON j.file_id = f.file_id
+                WHERE j.user_id = :user_id
+                ORDER BY COALESCE(j.updated_at, j.created_at) DESC
+                LIMIT :limit
+                """
+            )
+            result = await session.execute(query, {"user_id": user_id, "limit": limit})
+            rows = result.fetchall()
+            for r in rows:
+                m = r._mapping
+                items.append({
+                    "job_id": m.get("job_id"),
+                    "file_id": m.get("file_id"),
+                    "filename": m.get("filename"),
+                    "file_size": m.get("file_size") or 0,
+                    "status": m.get("status"),
+                    "progress": m.get("progress") or 0,
+                    "uploaded_at": (m.get("created_at") or datetime.utcnow()).isoformat(),
+                    "updated_at": (m.get("updated_at") or m.get("created_at") or datetime.utcnow()).isoformat()
+                })
+        return {"success": True, "data": {"uploads": items}}
+    except Exception as e:
+        logger.error(f"List recent uploads error: {e}")
+    raise HTTPException(status_code=500, detail="Failed to list recent uploads")

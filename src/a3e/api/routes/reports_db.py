@@ -13,6 +13,8 @@ from datetime import datetime
 from pydantic import BaseModel
 
 from ...database.services import ReportService, UserService
+from ...database.connection import db_manager
+from sqlalchemy import text
 from ..dependencies import get_current_user
 
 logger = logging.getLogger(__name__)
@@ -350,3 +352,46 @@ async def list_reports(
     except Exception as e:
         logger.error(f"List reports error: {e}")
         raise HTTPException(status_code=500, detail="Failed to list reports")
+
+@router.get("/recent")
+async def list_recent_reports(
+    limit: int = 5,
+    current_user: dict = Depends(get_current_user)
+):
+    """Return the user's most recent reports from the database (safe fallback to empty list)."""
+    try:
+        user_id = current_user.get("user_id")
+        items = []
+        async with db_manager.get_session() as session:
+            result = await session.execute(
+                text(
+                    """
+                    SELECT id, report_type, title, status, progress,
+                           requested_at, completed_at, file_size
+                    FROM reports
+                    WHERE requested_by_id = :user_id
+                    ORDER BY COALESCE(completed_at, requested_at) DESC
+                    LIMIT :limit
+                    """
+                ),
+                {"user_id": user_id, "limit": int(max(1, min(limit, 25)))}
+            )
+            rows = result.fetchall()
+            for r in rows:
+                m = r._mapping
+                items.append({
+                    "report_id": m.get("id"),
+                    "type": m.get("report_type"),
+                    "title": m.get("title"),
+                    "status": m.get("status"),
+                    "progress": m.get("progress") or 0,
+                    "created_at": (m.get("requested_at").isoformat() if m.get("requested_at") else None),
+                    "completed_at": (m.get("completed_at").isoformat() if m.get("completed_at") else None),
+                    "file_size": m.get("file_size") or 0,
+                    "download_url": f"/api/reports/{m.get('id')}/download" if m.get("status") == "completed" else None
+                })
+        return {"success": True, "data": items}
+    except Exception as e:
+        logger.error(f"Recent reports error: {e}")
+        return {"success": True, "data": []}
+
