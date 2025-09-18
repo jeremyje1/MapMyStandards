@@ -30,6 +30,18 @@
       ]
     },
     {
+      "source": "/standards-modern",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, max-age=0, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/standards-modern.html",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, max-age=0, must-revalidate" }
+      ]
+    },
+    {
       "source": "/homepage-enhanced.html",
       "headers": [
         { "key": "Cache-Control", "value": "no-cache, no-store, max-age=0, must-revalidate" }
