@@ -750,6 +750,9 @@
                    localStorage.getItem('token') ||
                    localStorage.getItem('auth_token') || '';
         }
+        function isLikelyJwt(t){
+            return typeof t === 'string' && t.split('.').length === 3;
+        }
         let accreditors = [];
         let currentStandards = [];
         let filteredStandards = [];
@@ -808,7 +811,7 @@
                 const t = getAuthToken();
                 const r1 = await fetch(getApiBase() + '/api/user/intelligence-simple/standards/corpus/metadata', {
                     credentials: 'include',
-                    headers: t ? { 'Authorization': `Bearer ${t}` } : {}
+                    headers: isLikelyJwt(t) ? { 'Authorization': `Bearer ${t}` } : {}
                 });
                 if (r1.ok) {
                     const j1 = await r1.json();
@@ -867,9 +870,12 @@
             const genEl = document.getElementById('corpusMetaGenerated');
             statusEl.textContent = accreditorFilter? `Loading metadata for ${accreditorFilter}...` : 'Loading corpus metadata...';
             try{
-                const token = localStorage.getItem('a3e_api_key') || localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+                const token = getAuthToken();
                 const url = accreditorFilter? (getApiBase() + `/api/user/intelligence-simple/standards/corpus/metadata?accreditor=${encodeURIComponent(accreditorFilter)}`) : (getApiBase() + '/api/user/intelligence-simple/standards/corpus/metadata');
-                const res = await fetch(url, { headers: token? { 'Authorization': `Bearer ${token}` } : {}, credentials: 'include' });
+                const res = await fetch(url, {
+                    headers: isLikelyJwt(token) ? { 'Authorization': `Bearer ${token}` } : {},
+                    credentials: 'include'
+                });
                 if(!res.ok){
                     const t = await res.text();
                     throw new Error(`Request failed (${res.status}): ${t}`);
