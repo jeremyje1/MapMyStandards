@@ -465,6 +465,22 @@
                         progressFill.style.width = '100%';
                         const mapped = (result && result.analysis && result.analysis.standards_mapped) || 0;
                         addToRecentUploads({ filename: result.filename || selectedFiles[0].name, file_size: selectedFiles[0].size, status: 'complete', mapped });
+                    } else if (response.status === 404 || response.status === 405) {
+                        // Fallback to documents upload with Authorization header
+                        const token = localStorage.getItem('a3e_api_key') || sessionStorage.getItem('a3e_api_key') || localStorage.getItem('access_token') || localStorage.getItem('jwt_token') || '';
+                        const hasJwt = typeof token === 'string' && token.split('.').length === 3 && token.length > 40;
+                        if (!hasJwt) throw new Error('Fallback requires JWT');
+                        const fd = new FormData();
+                        fd.append('file', selectedFiles[0]);
+                        const base = (window.MMS_CONFIG && window.MMS_CONFIG.API_BASE_URL) || (location.hostname.includes('api.mapmystandards.ai') ? '' : 'https://api.mapmystandards.ai');
+                        const resp2 = await fetch(base + '/documents/upload', { method:'POST', body: fd, headers: { 'Authorization': `Bearer ${token}` }, credentials: 'include' });
+                        if (!resp2.ok) {
+                            const t = await resp2.text();
+                            throw new Error('Fallback upload failed: ' + t);
+                        }
+                        uploadedCount = 1;
+                        progressFill.style.width = '100%';
+                        addToRecentUploads({ filename: selectedFiles[0].name, file_size: selectedFiles[0].size, status: 'complete', mapped: 0 });
                     } else {
                         const errorText = await response.text();
                         console.error('Analyze failed for', selectedFiles[0].name, errorText);
@@ -493,6 +509,26 @@
                                 const mapped = (r.analysis && r.analysis.standards_mapped) || 0;
                                 addToRecentUploads({ filename: r.filename || 'Document', file_size: 0, status: 'complete', mapped });
                             }
+                        }
+                    } else if (response.status === 404 || response.status === 405) {
+                        // Fallback: upload each file via /documents/upload with Authorization
+                        const token = localStorage.getItem('a3e_api_key') || sessionStorage.getItem('a3e_api_key') || localStorage.getItem('access_token') || localStorage.getItem('jwt_token') || '';
+                        const hasJwt = typeof token === 'string' && token.split('.').length === 3 && token.length > 40;
+                        if (!hasJwt) throw new Error('Fallback requires JWT');
+                        const base = (window.MMS_CONFIG && window.MMS_CONFIG.API_BASE_URL) || (location.hostname.includes('api.mapmystandards.ai') ? '' : 'https://api.mapmystandards.ai');
+                        let i = 0;
+                        for (const f of selectedFiles) {
+                            const fd = new FormData();
+                            fd.append('file', f);
+                            const r2 = await fetch(base + '/documents/upload', { method:'POST', body: fd, headers: { 'Authorization': `Bearer ${token}` }, credentials: 'include' });
+                            if (!r2.ok) {
+                                const t = await r2.text();
+                                console.error('Fallback upload failed for', f.name, t);
+                                continue;
+                            }
+                            i += 1; uploadedCount = i;
+                            progressFill.style.width = `${Math.round((uploadedCount / selectedFiles.length) * 100)}%`;
+                            addToRecentUploads({ filename: f.name, file_size: f.size || 0, status: 'complete', mapped: 0 });
                         }
                     } else {
                         const errorText = await response.text();
