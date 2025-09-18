@@ -801,18 +801,46 @@
             window.location.href = '/login-platform.html';
         }
 
-        // Load accreditors on page load
+        // Load accreditors on page load (prefer corpus metadata; fallback to config)
     async function loadAccreditors() {
             try {
-    const response = await fetch(getApiBase() + '/api/standards/accreditors', { credentials: 'include' });
+                console.debug('[standards-modern] Fetching accreditors via corpus metadata');
+                const r1 = await fetch(getApiBase() + '/api/user/intelligence-simple/standards/corpus/metadata', { credentials: 'include' });
+                if (r1.ok) {
+                    const j1 = await r1.json();
+                    const list = Array.isArray(j1?.accreditors) ? j1.accreditors : (Array.isArray(j1?.data?.accreditors) ? j1.data.accreditors : []);
+                    if (Array.isArray(list) && list.length) {
+                        accreditors = list.map(a => ({ id: a.accreditor || a.id || a.acronym, acronym: (a.accreditor || a.id || a.acronym || '').toUpperCase(), name: a.name || a.accreditor || a.label || '' }));
+                        populateAccreditorSelect();
+                        populateCrossAccreditorSelects();
+                        showAccreditorSelection();
+                        fetchCorpusMetadata();
+                        return;
+                    }
+                }
+                console.debug('[standards-modern] Corpus metadata empty or unavailable, falling back to /api/v1/config/accreditors');
+                const r2 = await fetch(getApiBase() + '/api/v1/config/accreditors', { credentials: 'include' });
+                if (r2.ok) {
+                    const j2 = await r2.json();
+                    if (Array.isArray(j2) && j2.length) {
+                        accreditors = j2.map(a => ({ id: a.id, acronym: (a.id || '').toUpperCase(), name: a.name || a.full_name || a.id }));
+                        populateAccreditorSelect();
+                        populateCrossAccreditorSelects();
+                        showAccreditorSelection();
+                        fetchCorpusMetadata();
+                        return;
+                    }
+                }
+                // Last resort: original DB endpoint
+                console.debug('[standards-modern] Final fallback to /api/standards/accreditors');
+                const response = await fetch(getApiBase() + '/api/standards/accreditors', { credentials: 'include' });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const data = await response.json();
-                
-                if (data.success) {
+                if (data && data.success && data.data && Array.isArray(data.data.accreditors)) {
                     accreditors = data.data.accreditors;
                     populateAccreditorSelect();
                     populateCrossAccreditorSelects();
                     showAccreditorSelection();
-                    // Also load corpus metadata once accreditors loaded
                     fetchCorpusMetadata();
                 } else {
                     throw new Error('Failed to load accreditors');
