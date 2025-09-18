@@ -989,27 +989,47 @@
             showLoadingState('Loading standards...');
 
             try {
-                let url = getApiBase() + `/api/standards?accreditor=${accreditorId.toUpperCase()}`;
+                const token = getAuthToken();
+                let url = getApiBase() + `/api/user/intelligence-simple/standards/list?accreditor=${encodeURIComponent(accreditorId.toUpperCase())}`;
                 if (institutionType) {
-                    url += `&institution_type=${institutionType}`;
+                    url += `&institution_type=${encodeURIComponent(institutionType)}`;
                 }
-
-                const response = await fetch(url, { credentials: 'include' });
+                // Prefer simple list endpoint; rely on cookies and only add Authorization for real JWTs
+                let response = await fetch(url, {
+                    credentials: 'include',
+                    headers: isLikelyJwt(token) ? { 'Authorization': `Bearer ${token}` } : {}
+                });
+                if (response.status === 401) {
+                    showErrorState('Authentication required', 'Please log in to view standards.');
+                    return;
+                }
+                if (!response.ok) {
+                    // Fallback to DB endpoint as last resort
+                    let dbUrl = getApiBase() + `/api/standards?accreditor=${encodeURIComponent(accreditorId.toUpperCase())}`;
+                    response = await fetch(dbUrl, { credentials: 'include' });
+                }
                 const data = await response.json();
-                
-                if (data.success) {
-                    currentStandards = data.data.standards;
-                    filteredStandards = [...currentStandards];
-                    
-                    const accreditor = accreditors.find(acc => acc.id === accreditorId) || { 
-                        name: "Southern Association of Colleges and Schools Commission on Colleges", 
-                        acronym: accreditorId.toUpperCase() 
-                    };
-                    
-                    displayStandards(accreditor, currentStandards);
-                } else {
-                    throw new Error('Failed to load standards');
-                }
+                let list = [];
+                if (Array.isArray(data?.standards)) list = data.standards;
+                else if (Array.isArray(data?.data?.standards)) list = data.data.standards;
+                // Normalize fields for UI stability
+                currentStandards = (list || []).map(s => ({
+                    id: s.id || s.code,
+                    code: s.code || s.id,
+                    title: s.title || '',
+                    description: s.description || '',
+                    category: s.category || s.level || 'standard',
+                    is_required: typeof s.is_required === 'boolean' ? s.is_required : false,
+                    weight: typeof s.weight === 'number' ? s.weight : 100,
+                    evidence_requirements: Array.isArray(s.evidence_requirements) ? s.evidence_requirements : []
+                }));
+                filteredStandards = [...currentStandards];
+
+                const accreditor = accreditors.find(acc => acc.id === accreditorId) || { 
+                    name: accreditorId.toUpperCase(), 
+                    acronym: accreditorId.toUpperCase() 
+                };
+                displayStandards(accreditor, currentStandards);
             } catch (error) {
                 console.error('Error loading standards:', error);
                 showErrorState('Error loading standards', 'Please try again or select a different accreditor.');
@@ -1142,8 +1162,15 @@
                 }
                 statusEl.textContent='Computing mappings...';
                 try{
-                    const token = localStorage.getItem('a3e_api_key') || localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
-                    const res = await fetch(getApiBase() + `/api/user/intelligence-simple/standards/cross-accreditor-matches?source=${encodeURIComponent(source)}&target=${encodeURIComponent(target)}&threshold=${threshold}&top_k=${topK}`, { headers: token? { 'Authorization': `Bearer ${token}` } : {}, credentials: 'include' });
+                    const token = getAuthToken();
+                    const res = await fetch(getApiBase() + `/api/user/intelligence-simple/standards/cross-accreditor-matches?source=${encodeURIComponent(source)}&target=${encodeURIComponent(target)}&threshold=${threshold}&top_k=${topK}`, {
+                        headers: isLikelyJwt(token) ? { 'Authorization': `Bearer ${token}` } : {},
+                        credentials: 'include'
+                    });
+                    if(res.status === 401){
+                        statusEl.textContent='Authentication required — please log in to compute mappings.';
+                        return;
+                    }
                     if(!res.ok){
                         const t = await res.text();
                         throw new Error(`Request failed (${res.status}): ${t}`);
