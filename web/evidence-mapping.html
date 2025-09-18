@@ -554,6 +554,23 @@
             }
             return r;
         }
+        
+        // Authentication check
+        async function checkAuthentication() {
+            try {
+                const resp = await authFetch('/api/auth/me', { 
+                    headers: { 'Accept': 'application/json' }
+                });
+                if (resp.ok) {
+                    const data = await resp.json();
+                    return data && data.ok === true;
+                }
+            } catch (e) {
+                console.error('Auth check failed:', e);
+            }
+            return false;
+        }
+        
     let mappingsData = null;
     let selectedDocument = null;
     let selectedStandard = null;
@@ -1092,7 +1109,20 @@
         }
 
         // Initialize on load
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Check authentication first
+            const isAuth = await checkAuthentication();
+            if (!isAuth) {
+                document.getElementById('contentArea').innerHTML = `
+                    <div style="text-align:center;padding:3rem;background:white;border-radius:12px;margin:2rem;">
+                        <h3 style="color:#ef4444;margin-bottom:1rem;">Authentication Required</h3>
+                        <p style="color:#64748b;">Please log in to access evidence mapping.</p>
+                        <p style="margin-top:1rem;"><a href="/login-platform.html" style="color:#667eea;text-decoration:underline;">Go to Login</a></p>
+                    </div>
+                `;
+                return;
+            }
+            
             // Cross-page toast and optional metrics refresh flag handling
             const toastMsg = localStorage.getItem('mms:toast');
             if (toastMsg) { showToast(toastMsg); localStorage.removeItem('mms:toast'); }

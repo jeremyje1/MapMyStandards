@@ -458,6 +458,23 @@
             }
             return r;
         }
+        
+        // Authentication check
+        async function checkAuthentication() {
+            try {
+                const resp = await authFetch('/api/auth/me', { 
+                    headers: { 'Accept': 'application/json' }
+                });
+                if (resp.ok) {
+                    const data = await resp.json();
+                    return data && data.ok === true;
+                }
+            } catch (e) {
+                console.error('Auth check failed:', e);
+            }
+            return false;
+        }
+        
         let accreditors = [];
         let currentStandards = [];
         let searchResults = [];
@@ -1012,9 +1029,22 @@
             });
         }
 
-    // Initialize
-    loadAccreditors();
-    updateSelectionBar(); // Initialize selection bar visibility
+    // Initialize with authentication check
+    (async () => {
+        const isAuth = await checkAuthentication();
+        if (!isAuth) {
+            document.getElementById('contentArea').innerHTML = `
+                <div style="text-align:center;padding:3rem;color:#ef4444;">
+                    <h3>Authentication Required</h3>
+                    <p>Please log in to access the standards explorer.</p>
+                    <p><a href="/login-platform.html" style="color:#2563eb;text-decoration:underline;">Go to Login</a></p>
+                </div>
+            `;
+            return;
+        }
+        loadAccreditors();
+        updateSelectionBar(); // Initialize selection bar visibility
+    })();
     
     // Listen for selection updates from other pages
     window.addEventListener('mms:selected-standards-updated', updateSelectionBar);

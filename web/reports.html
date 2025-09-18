@@ -456,6 +456,23 @@
             }
             return r;
         }
+        
+        // Authentication check
+        async function checkAuthentication() {
+            try {
+                const resp = await authFetch('/api/auth/me', { 
+                    headers: { 'Accept': 'application/json' }
+                });
+                if (resp.ok) {
+                    const data = await resp.json();
+                    return data && data.ok === true;
+                }
+            } catch (e) {
+                console.error('Auth check failed:', e);
+            }
+            return false;
+        }
+        
         let dashboardData = null;
         let reportStatuses = new Map();
     let gapScores = {};
@@ -1137,14 +1154,28 @@
             window.location.href = '/login-platform.html';
         }
 
-        // Initialize
-    loadDashboardMetrics();
-    setTimeout(maybeAppendTrustMetric, 200);
-    setTimeout(loadRecentReports, 1000); // Delay to show loading state
-    updateSelectedCount();
-    setNarrativeButtonState();
+        // Initialize with authentication check
+    (async () => {
+        const isAuth = await checkAuthentication();
+        if (!isAuth) {
+            document.querySelector('.container').innerHTML = `
+                <div style="text-align:center;padding:3rem;background:white;border-radius:12px;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);margin:2rem auto;max-width:600px;">
+                    <h3 style="color:#ef4444;margin-bottom:1rem;font-size:1.5rem;">Authentication Required</h3>
+                    <p style="color:#64748b;margin-bottom:1.5rem;">Please log in to access reports and analytics.</p>
+                    <a href="/login-platform.html" style="display:inline-block;background:#4f46e5;color:white;padding:0.75rem 2rem;border-radius:0.5rem;text-decoration:none;">Go to Login</a>
+                </div>
+            `;
+            return;
+        }
+        
+        loadDashboardMetrics();
+        setTimeout(maybeAppendTrustMetric, 200);
+        setTimeout(loadRecentReports, 1000); // Delay to show loading state
+        updateSelectedCount();
+        setNarrativeButtonState();
         // Auto compute initial Gap Analysis
         setTimeout(computeGapAnalysis, 300);
+    })();
     const btnRefreshGap = document.getElementById('btn-refresh-gap');
     if (btnRefreshGap) btnRefreshGap.addEventListener('click', computeGapAnalysis);
 
