@@ -17,9 +17,19 @@
     window.MMS_AUTH_BRIDGE = {
         // Store authentication info when successful
         storeAuth: function(authData) {
-            // Only store in sessionStorage on non-production domains
-            if (!isProductionDomain && authData && authData.ok) {
-                sessionStorage.setItem('mms:auth:email', authData.email || '');
+            // Store minimal flags off-prod; also persist token if present
+            if (authData) {
+                try {
+                    const token = authData.access_token || (authData.data && authData.data.access_token) || '';
+                    if (token) {
+                        // Prefer localStorage for persistence; sessionStorage as fallback
+                        try { localStorage.setItem('access_token', token); localStorage.setItem('jwt_token', token); localStorage.setItem('a3e_api_key', token); } catch(_){}
+                        try { sessionStorage.setItem('access_token', token); sessionStorage.setItem('jwt_token', token); sessionStorage.setItem('a3e_api_key', token); } catch(_){}
+                    }
+                } catch(_){}
+            }
+            if (!isProductionDomain && authData && (authData.ok || authData.user)) {
+                sessionStorage.setItem('mms:auth:email', (authData.email || (authData.user && authData.user.email) || ''));
                 sessionStorage.setItem('mms:auth:active', 'true');
                 sessionStorage.setItem('mms:auth:time', new Date().toISOString());
             }

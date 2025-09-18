@@ -689,6 +689,9 @@
                     <button class="btn btn-secondary" onclick="clearFilters()">
                         🔄 Clear Filters
                     </button>
+                    <label style="display:inline-flex;align-items:center;gap:8px;margin-left:8px;font-size:0.9rem;color:var(--text-medium)">
+                        <input type="checkbox" id="includeSubsectionsToggle"> Include subsections
+                    </label>
                 </div>
             </div>
         </div>
@@ -755,6 +758,15 @@
         })();
         function getApiBase(){
             return '';
+        }
+        function getIncludeSubsections(){
+            try { return localStorage.getItem('mms:includeSubsections') === 'true'; } catch(_) { return false; }
+        }
+        function setIncludeSubsections(v){
+            try { localStorage.setItem('mms:includeSubsections', v ? 'true' : 'false'); } catch(_) {}
+        }
+        function getLevelsParam(){
+            return getIncludeSubsections() ? 'standard,clause' : 'standard';
         }
         function getAuthToken(){
             return localStorage.getItem('a3e_api_key') ||
@@ -1033,7 +1045,8 @@
 
             try {
                 const token = getAuthToken();
-                let url = getApiBase() + `/api/user/intelligence-simple/standards/list?accreditor=${encodeURIComponent(accreditorId.toUpperCase())}&levels=standard,clause`;
+                const levels = getLevelsParam();
+                let url = getApiBase() + `/api/user/intelligence-simple/standards/list?accreditor=${encodeURIComponent(accreditorId.toUpperCase())}&levels=${encodeURIComponent(levels)}`;
                 if (institutionType) {
                     url += `&institution_type=${encodeURIComponent(institutionType)}`;
                 }
@@ -1295,6 +1308,20 @@
 
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
+            // Initialize toggle state and handler
+            (function initSubsectionsToggle(){
+                const tgl = document.getElementById('includeSubsectionsToggle');
+                if (!tgl) return;
+                tgl.checked = getIncludeSubsections();
+                tgl.addEventListener('change', ()=>{
+                    setIncludeSubsections(tgl.checked);
+                    const accreditorId = document.getElementById('accreditorSelect').value;
+                    if (accreditorId) {
+                        const institutionType = document.getElementById('institutionTypeSelect').value;
+                        loadStandards(accreditorId, institutionType);
+                    }
+                });
+            })();
             loadAccreditors();
         });
 

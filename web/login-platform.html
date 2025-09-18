@@ -132,7 +132,18 @@
         const result = await response.json().catch(()=>({}));
         if (response.ok && (result.success || result.access_token || (result.data && result.data.access_token))){
           showSuccess('Login successful! Redirecting…');
-          
+          // Persist tokens if present
+          try {
+            const access = (result && (result.access_token || (result.data && result.data.access_token))) || '';
+            if (access) {
+              const store = remember ? localStorage : sessionStorage;
+              store.setItem('access_token', access);
+              store.setItem('jwt_token', access);
+              // compatibility with other pages
+              try { localStorage.setItem('a3e_api_key', access); } catch(_){}
+            }
+          } catch(_){}
+
           // Store auth data in sessionStorage for cross-domain access
           if (window.MMS_AUTH_BRIDGE && result) {
             window.MMS_AUTH_BRIDGE.storeAuth(result.data || result);
@@ -173,7 +184,9 @@
       }catch(err){
         if (email === 'demo@example.com' && password === 'demo123'){
           showSuccess('Demo login successful! Redirecting…');
-          
+          // Store demo token for header-based auth where supported
+          try { localStorage.setItem('access_token', 'demo-token'); localStorage.setItem('jwt_token', 'demo-token'); localStorage.setItem('a3e_api_key', 'demo-token'); } catch(_){}
+
           // Store demo auth data
           if (window.MMS_AUTH_BRIDGE) {
             window.MMS_AUTH_BRIDGE.storeAuth({
