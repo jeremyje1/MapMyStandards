@@ -34,6 +34,8 @@ class PostmarkEmailService:
         self.from_name = os.getenv('EMAIL_FROM_NAME', 'MapMyStandards A³E')
         self.admin_email = os.getenv('ADMIN_NOTIFICATION_EMAIL', 'info@northpathstrategies.org')
         self.api_url = "https://api.postmarkapp.com"
+        self.reply_to = os.getenv('EMAIL_REPLY_TO', os.getenv('ADMIN_NOTIFICATION_EMAIL', 'info@northpathstrategies.org'))
+        self.message_stream = os.getenv('POSTMARK_MESSAGE_STREAM', 'outbound')
         
         if not self.api_key:
             logger.warning("No Postmark API key found. Email notifications will be logged only.")
@@ -99,6 +101,12 @@ class PostmarkEmailService:
                 "Tag": tag or "general"
             }
             endpoint = f"{self.api_url}/email"
+
+        # Optional headers
+        if self.reply_to:
+            payload["ReplyTo"] = self.reply_to
+        if self.message_stream:
+            payload["MessageStream"] = self.message_stream
         
         try:
             response = requests.post(endpoint, headers=headers, json=payload, timeout=10)
@@ -110,6 +118,30 @@ class PostmarkEmailService:
             else:
                 error_data = response.json() if response.content else {}
                 logger.error(f"❌ Postmark API error {response.status_code}: {error_data}")
+                # Retry logic: try removing MessageStream, then fallback From
+                try:
+                    # Retry without MessageStream
+                    payload.pop("MessageStream", None)
+                    response2 = requests.post(endpoint, headers=headers, json=payload, timeout=10)
+                    if response2.status_code == 200:
+                        result2 = response2.json()
+                        logger.info(f"✅ Email sent to {to} after removing MessageStream (MessageID: {result2.get('MessageID')})")
+                        return True
+                except Exception as re1:
+                    logger.warning(f"Postmark retry without MessageStream failed: {re1}")
+
+                try:
+                    # Retry with fallback From
+                    fallback_from = os.getenv('EMAIL_FROM_FALLBACK', 'support@mapmystandards.ai')
+                    if fallback_from and (self.from_email != fallback_from):
+                        payload["From"] = f"{self.from_name} <{fallback_from}>"
+                        response3 = requests.post(endpoint, headers=headers, json=payload, timeout=10)
+                        if response3.status_code == 200:
+                            result3 = response3.json()
+                            logger.info(f"✅ Email sent to {to} using fallback From (MessageID: {result3.get('MessageID')})")
+                            return True
+                except Exception as re2:
+                    logger.warning(f"Postmark retry with fallback From failed: {re2}")
                 return False
                 
         except requests.exceptions.RequestException as e:

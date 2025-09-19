@@ -139,17 +139,73 @@ class ProfessionalEmailService:
         
         try:
             if self.provider == 'postmark':
-                response = self.postmark.emails.send(
+                # Build initial payload
+                kwargs = dict(
                     From=f"{self.from_name} <{self.from_email}>",
                     To=to_email,
                     Subject=subject,
                     HtmlBody=html_content,
                     TextBody=text_content or self._html_to_text(html_content),
-                    MessageStream=self.message_stream,
                     ReplyTo=self.reply_to
                 )
-                logger.info(f"✅ Email sent via Postmark to {to_email}")
-                return True
+                if self.message_stream:
+                    kwargs["MessageStream"] = self.message_stream
+
+                def _send_and_check(payload: Dict[str, Any]) -> bool:
+                    resp = self.postmark.emails.send(**payload)
+                    # postmarker returns dict with ErrorCode/Message
+                    try:
+                        error_code = resp.get('ErrorCode', 0)
+                    except AttributeError:
+                        error_code = 0
+                    if error_code and error_code != 0:
+                        raise Exception(f"Postmark error {error_code}: {resp.get('Message')}")
+                    return True
+
+                # Attempt 1: as-configured
+                try:
+                    if _send_and_check(kwargs):
+                        logger.info(f"✅ Email sent via Postmark to {to_email}")
+                        return True
+                except Exception as e1:
+                    logger.warning(f"Postmark send failed (stream={kwargs.get('MessageStream')}): {e1}")
+
+                # Attempt 2: force 'outbound' stream if different
+                try:
+                    if kwargs.get('MessageStream') != 'outbound':
+                        k2 = dict(kwargs)
+                        k2['MessageStream'] = 'outbound'
+                        if _send_and_check(k2):
+                            logger.info(f"✅ Email sent via Postmark to {to_email} on retry with 'outbound' stream")
+                            return True
+                except Exception as e2:
+                    logger.warning(f"Postmark retry with 'outbound' failed: {e2}")
+
+                # Attempt 3: remove MessageStream entirely
+                try:
+                    k3 = dict(kwargs)
+                    k3.pop('MessageStream', None)
+                    if _send_and_check(k3):
+                        logger.info(f"✅ Email sent via Postmark to {to_email} after removing MessageStream")
+                        return True
+                except Exception as e3:
+                    logger.warning(f"Postmark retry without MessageStream failed: {e3}")
+
+                # Attempt 4: fallback From to a verified sender
+                try:
+                    fallback_from = os.getenv('EMAIL_FROM_FALLBACK', 'support@mapmystandards.ai')
+                    if fallback_from and (self.from_email != fallback_from):
+                        k4 = dict(k3 if 'k3' in locals() else kwargs)
+                        k4['From'] = f"{self.from_name} <{fallback_from}>"
+                        k4.pop('MessageStream', None)
+                        if _send_and_check(k4):
+                            logger.info(f"✅ Email sent via Postmark to {to_email} using fallback From {fallback_from}")
+                            return True
+                except Exception as e4:
+                    logger.error(f"Postmark retry with fallback From failed: {e4}")
+                    # let it fall through to overall exception handler
+                # All retries failed
+                raise Exception("All Postmark send attempts failed")
                 
             elif self.provider == 'sendgrid':
                 message = Mail(
