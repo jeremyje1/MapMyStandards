@@ -5,6 +5,6 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "redirects": [
-    { "source": "/", "destination": "/homepage-enhanced.html", "permanent": false }
+    { "source": "/", "destination": "/homepage-enhanced", "permanent": false }
   ]
 }
