@@ -22,6 +22,8 @@ from ...services.evidence_trust import evidence_trust_scorer, EvidenceType, Sour
 from ...services.gap_risk_predictor import gap_risk_predictor
 from ...services.risk_explainer import risk_explainer, StandardEvidenceSnapshot
 from ...services.metrics_timeseries import maybe_snapshot, get_series
+from ...database.connection import db_manager
+from sqlalchemy import text
 from ...services.narrative_service import generate_narrative_html
 from ...services.analytics_service import analytics_service
 from ...core.config import get_settings
@@ -618,24 +620,93 @@ async def get_dashboard_metrics_simple(current_user: Dict[str, Any] = Depends(ge
     """
     try:
         settings_ = _merge_claims_with_settings(current_user)
-        uploads = _get_user_uploads(current_user)
         acc = (settings_.get("primary_accreditor") or "HLC").upper()
+        # Prefer graph count for total standards to avoid DB coupling
         total_roots = len(standards_graph.get_accreditor_standards(acc)) or 0
-        docs = uploads.get("documents", [])
-        uniq_standards = set(uploads.get("unique_standards", []) or [])
 
-        documents_analyzed = len(docs)
-        standards_mapped = len(uniq_standards)
+        # Attempt DB-backed metrics using jobs table
+        documents_analyzed = 0
+        documents_processing = 0
+        standards_mapped = 0
+        avg_trust = 0.7  # fallback
+
+        user_id = current_user.get("user_id") or current_user.get("sub") or current_user.get("email")
+        used_db = False
+        if user_id:
+            try:
+                async with db_manager.get_session() as session:
+                    # Counts from jobs table
+                    c1 = await session.execute(
+                        text("SELECT COUNT(*) FROM jobs WHERE user_id = :u AND status = 'completed'"),
+                        {"u": user_id},
+                    )
+                    documents_analyzed = int(c1.scalar() or 0)
+                    c2 = await session.execute(
+                        text("""
+                            SELECT COUNT(*) FROM jobs
+                            WHERE user_id = :u AND status IN ('queued','extracting','parsing','embedding','matching','analyzing')
+                        """),
+                        {"u": user_id},
+                    )
+                    documents_processing = int(c2.scalar() or 0)
+
+                    # Determine result column name
+                    col_sql = text(
+                        """
+                        SELECT column_name FROM information_schema.columns
+                        WHERE table_schema = 'public' AND table_name = 'jobs'
+                        """
+                    )
+                    cols = {r[0] for r in (await session.execute(col_sql)).fetchall()}
+                    result_col = 'result' if 'result' in cols else ('results' if 'results' in cols else None)
+
+                    uniq: Set[str] = set()
+                    if result_col:
+                        q = text(
+                            f"""
+                            SELECT {result_col} AS result
+                            FROM jobs
+                            WHERE user_id = :u AND status = 'completed' AND {result_col} IS NOT NULL
+                            ORDER BY COALESCE(completed_at, updated_at, created_at) DESC
+                            LIMIT 200
+                            """
+                        )
+                        rows = (await session.execute(q, {"u": user_id})).fetchall()
+                        for r in rows:
+                            raw = r._mapping.get("result")
+                            try:
+                                payload = json.loads(raw) if isinstance(raw, str) else raw
+                            except Exception:
+                                payload = None
+                            if isinstance(payload, dict):
+                                mapped = payload.get("mapped_standards") or payload.get("standards") or []
+                                for item in mapped:
+                                    sid = (item.get("standard_id") if isinstance(item, dict) else None) or (str(item) if item else None)
+                                    if sid:
+                                        uniq.add(str(sid))
+                    standards_mapped = len(uniq)
+                    used_db = True
+            except Exception as db_e:
+                logger.warning(f"DB metrics fallback: {db_e}")
+
+        # If DB not used/available, fall back to legacy JSON uploads store
+        if not used_db:
+            uploads = _get_user_uploads(current_user)
+            docs = uploads.get("documents", [])
+            uniq_standards = set(uploads.get("unique_standards", []) or [])
+            documents_analyzed = len(docs)
+            standards_mapped = len(uniq_standards)
+            # Optional trust scores from uploads JSON
+            trust_scores: List[float] = []
+            for d in docs:
+                ts = (d.get("trust_score") or {}).get("overall_score")
+                if isinstance(ts, (int, float)):
+                    trust_scores.append(float(ts))
+            if trust_scores:
+                avg_trust = float(sum(trust_scores) / len(trust_scores))
+
         total_standards = total_roots if total_roots > 0 else max(total_roots, standards_mapped)
         coverage = (standards_mapped / total_standards) if total_standards else 0.0
-
-        trust_scores: List[float] = []
-        for d in docs:
-            ts = (d.get("trust_score") or {}).get("overall_score")
-            if isinstance(ts, (int, float)):
-                trust_scores.append(float(ts))
-        avg_trust = float(sum(trust_scores) / len(trust_scores)) if trust_scores else 0.7
-
         compliance_score = 0.0
         if total_standards > 0 and (standards_mapped > 0 or documents_analyzed > 0):
             compliance_score = round((coverage * 0.7 + avg_trust * 0.3) * 100, 1)
@@ -647,7 +718,7 @@ async def get_dashboard_metrics_simple(current_user: Dict[str, Any] = Depends(ge
         data = {
             "core_metrics": {
                 "documents_analyzed": documents_analyzed,
-                "documents_processing": 0,
+                "documents_processing": documents_processing,
                 "standards_mapped": standards_mapped,
                 "total_standards": total_standards,
                 "reports_generated": 0,
@@ -671,8 +742,8 @@ async def get_dashboard_metrics_simple(current_user: Dict[str, Any] = Depends(ge
                 "trial_days_remaining": settings_.get("trial_days_remaining", 14),
             },
         }
+
         try:
-            # Opportunistic snapshot (throttled) for time-series tracking
             maybe_snapshot(
                 accreditor=acc,
                 payload={
@@ -689,7 +760,7 @@ async def get_dashboard_metrics_simple(current_user: Dict[str, Any] = Depends(ge
             )
         except Exception:
             pass
-        # Return metrics under both legacy shape (top-level keys) and canonical shape ({ data: ... })
+
         return {
             "success": True,
             "data": data,
