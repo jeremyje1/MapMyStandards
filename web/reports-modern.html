@@ -248,6 +248,7 @@
             padding: 2rem;
             text-align: center;
         }
+        .selected-summary { display:inline-flex; gap:0.5rem; align-items:center; background: rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3); padding:0.35rem 0.6rem; border-radius:9999px; font-weight:700; }
 
         .report-header h2 {
             font-size: 2rem;
@@ -674,6 +675,10 @@
             <div class="report-header">
                 <h2>📊 Generate Custom Reports</h2>
                 <p>Create detailed compliance reports tailored to your accreditation needs</p>
+                <div id="selectedSummary" class="selected-summary" style="display:none; margin-top:0.5rem;">
+                    <span>Selected standards:</span>
+                    <span id="selectedCountReports">0</span>
+                </div>
             </div>
             <div class="report-content">
                 <div class="report-grid">
@@ -981,6 +986,18 @@
             try{ const arr = JSON.parse(localStorage.getItem('mms:selectedStandards')||'[]'); return Array.isArray(arr)? arr : []; }catch(_){ return []; }
         }
 
+        function updateSelectedSummary(){
+            try{
+                const arr = getSelectedStandards();
+                const wrap = document.getElementById('selectedSummary');
+                const num = document.getElementById('selectedCountReports');
+                if(!wrap || !num) return;
+                const n = Array.isArray(arr) ? arr.length : 0;
+                if(n > 0){ wrap.style.display = 'inline-flex'; num.textContent = String(n); }
+                else { wrap.style.display = 'none'; num.textContent = '0'; }
+            }catch(_){ }
+        }
+
         async function generateReport(type) {
             const token = getAuthToken();
             
@@ -1175,7 +1192,10 @@
             }, 2000);
             // Try risk overview after initial load as well
             setTimeout(() => { try { refreshRiskOverview(); } catch(_) {} }, 1200);
+            updateSelectedSummary();
         });
+
+        window.addEventListener('storage', (e)=>{ if(e.key === 'mms:selectedStandards') updateSelectedSummary(); });
     </script>
 </body>
 <script>

@@ -246,6 +246,10 @@
             color: var(--text-dark);
         }
 
+        /* Selection Toolbar */
+        .selection-toolbar { display:flex; align-items:center; gap:0.75rem; padding:0.5rem 0.75rem; background: #f0fdf4; border:1px solid #bbf7d0; border-radius:0.5rem; box-shadow: var(--shadow-sm); }
+        .badge-selected { display:inline-block; padding:0.25rem 0.6rem; border-radius:9999px; background: var(--gradient-accent); color:#fff; font-weight:700; font-size:0.8rem; letter-spacing:0.03em; }
+
         /* Content Area */
         .content-section {
             min-height: 400px;
@@ -694,6 +698,10 @@
                     <button class="btn btn-secondary" onclick="clearFilters()">
                         🔄 Clear Filters
                     </button>
+                    <div id="selectionToolbar" class="selection-toolbar" style="display:none">
+                        <span id="selectedCountBadge" class="badge-selected">0 selected</span>
+                        <button id="clearSelectionBtn" class="btn btn-secondary" type="button">🧹 Clear selection</button>
+                    </div>
                     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
                         <label class="filter-label" style="margin:0">Status</label>
                         <select id="statusFilter" class="filter-select" style="padding:0.5rem 0.75rem">
@@ -901,7 +909,28 @@
         }
 
         function persistSelectedToStorage(){
-            try{ localStorage.setItem('mms:selectedStandards', JSON.stringify(Array.from(selectedStandards))); }catch(_){}
+                    try{ localStorage.setItem('mms:selectedStandards', JSON.stringify(Array.from(selectedStandards))); }catch(_){}
+                }
+
+                function updateSelectedBadge(){
+                    try{
+                        const bar = document.getElementById('selectionToolbar');
+                        const badge = document.getElementById('selectedCountBadge');
+                        if(!bar || !badge) return;
+                        const n = selectedStandards.size;
+                        if(n > 0){ bar.style.display='flex'; badge.textContent = n + ' selected'; }
+                        else { bar.style.display='none'; badge.textContent = '0 selected'; }
+                    }catch(_){ }
+                }
+
+                function clearSelectedStandards(){
+                    try{
+                        selectedStandards = new Set();
+                        persistSelectedToStorage();
+                        syncSelectionToServer();
+                        document.querySelectorAll('.standard-card.selected').forEach(el=>el.classList.remove('selected'));
+                        updateSelectedBadge();
+                    }catch(_){ }
         }
 
         async function syncSelectionToServer(){
@@ -1297,6 +1326,7 @@
             
             html += '</div>';
             document.getElementById('contentArea').innerHTML = html;
+            updateSelectedBadge();
         }
 
         window.toggleStandardSelection = function(e, sid){
@@ -1311,6 +1341,7 @@
                 // Toggle class on card
                 const card = e.currentTarget || e.target.closest('.standard-card');
                 if (card) card.classList.toggle('selected');
+                updateSelectedBadge();
             }catch(_){ }
         }
 
@@ -1483,9 +1514,25 @@
             }catch(_){ }
             loadSelectedFromStorage();
             hydrateSelectionFromServer();
+            try{ const btn = document.getElementById('clearSelectionBtn'); if(btn){ btn.addEventListener('click', clearSelectedStandards); } }catch(_){ }
+            updateSelectedBadge();
             loadFiltersFromUrl();
             loadAccreditors();
             hydrateSavedViews();
+        });
+
+        window.addEventListener('storage', (e)=>{
+            try{
+                if(e.key === 'mms:selectedStandards'){
+                    loadSelectedFromStorage();
+                    updateSelectedBadge();
+                    document.querySelectorAll('.standard-card').forEach(card=>{
+                        const sid = card.getAttribute('data-standard-id');
+                        if(!sid) return;
+                        if(selectedStandards.has(String(sid))) card.classList.add('selected'); else card.classList.remove('selected');
+                    });
+                }
+            }catch(_){ }
         });
 
         async function syncStandardReviewToServer(payload){
