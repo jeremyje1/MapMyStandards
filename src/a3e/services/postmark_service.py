@@ -32,7 +32,7 @@ class PostmarkEmailService:
         self.api_key = os.getenv('POSTMARK_SERVER_TOKEN') or os.getenv('POSTMARK_API_KEY')
         self.from_email = os.getenv('EMAIL_FROM', 'support@mapmystandards.ai')
         self.from_name = os.getenv('EMAIL_FROM_NAME', 'MapMyStandards A³E')
-        self.admin_email = os.getenv('ADMIN_NOTIFICATION_EMAIL', 'admin@mapmystandards.ai')
+        self.admin_email = os.getenv('ADMIN_NOTIFICATION_EMAIL', 'info@northpathstrategies.org')
         self.api_url = "https://api.postmarkapp.com"
         
         if not self.api_key:
