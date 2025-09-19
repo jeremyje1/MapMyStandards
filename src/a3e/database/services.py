@@ -48,9 +48,11 @@ class UserService:
         """
         try:
             async with db_manager.get_session() as session:
+                cols_users = await _get_table_columns(session, "users")
+                pk_col = "id" if "id" in cols_users else ("user_id" if "user_id" in cols_users else "id")
                 # Lookup existing
                 result = await session.execute(
-                    text("SELECT id, email, name FROM users WHERE id = :user_id"),
+                    text(f"SELECT {pk_col} AS id, email, name FROM users WHERE {pk_col} = :user_id"),
                     {"user_id": user_id}
                 )
                 row = result.fetchone()
@@ -58,24 +60,23 @@ class UserService:
                     m = row._mapping
                     return _Obj(id=m.get("id"), email=m.get("email"), name=m.get("name"))
 
-                # Create minimal row if not exists
-                pwd = "trial-placeholder-hash"
-                ins = await session.execute(
-                    text(
-                        """
-                        INSERT INTO users (id, email, name, password_hash, is_trial, created_at, updated_at)
-                        VALUES (:id, :email, :name, :password_hash, TRUE, NOW(), NOW())
-                        ON CONFLICT (id) DO NOTHING
-                        RETURNING id, email, name
-                        """
-                    ),
-                    {
-                        "id": user_id,
-                        "email": email or f"{user_id}@trial.mapmystandards.ai",
-                        "name": name or (email.split("@")[0] if email else user_id),
-                        "password_hash": pwd,
-                    }
-                )
+                # Create minimal row if not exists (schema-aware)
+                cols = cols_users
+                candidate = {
+                    (pk_col): user_id,
+                    "email": email or f"{user_id}@trial.mapmystandards.ai",
+                    "name": name or (email.split("@")[0] if email else user_id),
+                    "password_hash": "trial-placeholder-hash",
+                    "is_trial": True,
+                    "created_at": datetime.utcnow(),
+                    "updated_at": datetime.utcnow(),
+                }
+                use_cols = [k for k in candidate.keys() if (not cols) or (k in cols)]
+                column_list = ", ".join(use_cols)
+                placeholders = ", ".join([f":{c}" for c in use_cols])
+                on_conflict_target = pk_col
+                sql = f"INSERT INTO users ({column_list}) VALUES ({placeholders}) ON CONFLICT ({on_conflict_target}) DO NOTHING RETURNING {pk_col} AS id, email, name"
+                ins = await session.execute(text(sql), {k: candidate[k] for k in use_cols})
                 created = ins.fetchone()
                 await session.commit()
                 if created:
@@ -85,7 +86,7 @@ class UserService:
 
                 # Re-select in case of ON CONFLICT
                 result2 = await session.execute(
-                    text("SELECT id, email, name FROM users WHERE id = :user_id"),
+                    text(f"SELECT {pk_col} AS id, email, name FROM users WHERE {pk_col} = :user_id"),
                     {"user_id": user_id}
                 )
                 row2 = result2.fetchone()
