@@ -395,6 +395,11 @@
             border-color: var(--accent-green);
         }
 
+        .standard-card.selected {
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16,185,129,0.15), var(--shadow-xl);
+        }
+
         .standard-header {
             background: var(--bg-light);
             padding: 1.5rem;
@@ -846,6 +851,7 @@
         let filteredStandards = [];
         let accOptionsLoaded = false;
         let corpusMetadata = [];
+    let selectedStandards = new Set();
         const RISK_CACHE_CAPACITY = 100;
         let riskScoreCache = new Map(); // LRU: newest at the end
         let currentRiskModalStandardId = null;
@@ -884,6 +890,43 @@
                 o2.value = acc.acronym || acc.id; o2.textContent = acc.acronym || acc.id; tgt.appendChild(o2);
             });
             accOptionsLoaded = true;
+        }
+
+        function loadSelectedFromStorage(){
+            try{
+                const raw = localStorage.getItem('mms:selectedStandards');
+                const arr = raw ? JSON.parse(raw) : [];
+                if (Array.isArray(arr)) selectedStandards = new Set(arr.map(String));
+            }catch(_){ selectedStandards = new Set(); }
+        }
+
+        function persistSelectedToStorage(){
+            try{ localStorage.setItem('mms:selectedStandards', JSON.stringify(Array.from(selectedStandards))); }catch(_){}
+        }
+
+        async function syncSelectionToServer(){
+            try{
+                const token = getAuthToken();
+                const headers = { 'Content-Type': 'application/json' };
+                if (isLikelyJwt(token)) headers['Authorization'] = 'Bearer ' + token;
+                await fetch(getApiBase() + '/api/user/intelligence-simple/standards/selection/save', {
+                    method: 'POST', credentials: 'include', headers,
+                    body: JSON.stringify({ selected: Array.from(selectedStandards) })
+                });
+            }catch(_){ /* non-blocking */ }
+        }
+
+        async function hydrateSelectionFromServer(){
+            try{
+                const token = getAuthToken();
+                const headers = {};
+                if (isLikelyJwt(token)) headers['Authorization'] = 'Bearer ' + token;
+                const res = await fetch(getApiBase() + '/api/user/intelligence-simple/standards/selection/load', { credentials:'include', headers });
+                if(!res.ok) return;
+                const data = await res.json();
+                const arr = (data && data.selected) || [];
+                if (Array.isArray(arr) && arr.length){ selectedStandards = new Set(arr.map(String)); persistSelectedToStorage(); }
+            }catch(_){ }
         }
 
         // Logout function
@@ -1197,9 +1240,11 @@
                 const assignee = existing.assignee || '';
                 const due_date = existing.due_date || '';
                 const statusBadge = status ? `<span class="pill" style="background:${status==='Ready'?'#dcfce7':status==='Submitted'?'#e0e7ff':status==='Needs Evidence'?'#fee2e2':status==='In Progress'?'#fef9c3':'#f1f5f9'};border:1px solid var(--border-light)">${status}</span>` : '';
+                const sid = String(standard.code || standard.id);
+                const isSelected = selectedStandards.has(sid);
                 
                 html += `
-                    <div class="standard-card">
+                    <div class="standard-card ${isSelected ? 'selected' : ''}" data-standard-id="${sid}" onclick="toggleStandardSelection(event, '${sid}')">
                         <div class="standard-header">
                             <div class="standard-id">${standard.code || standard.id}</div>
                             <h3 class="standard-title">${standard.title}</h3>
@@ -1252,6 +1297,21 @@
             
             html += '</div>';
             document.getElementById('contentArea').innerHTML = html;
+        }
+
+        window.toggleStandardSelection = function(e, sid){
+            try{
+                // Avoid triggering when clicking form inputs inside reviewer mode
+                const tag = (e.target && e.target.tagName || '').toLowerCase();
+                if (['select','input','textarea','button','a','label'].includes(tag)) return;
+                const id = String(sid||''); if(!id) return;
+                if (selectedStandards.has(id)) selectedStandards.delete(id); else selectedStandards.add(id);
+                persistSelectedToStorage();
+                syncSelectionToServer();
+                // Toggle class on card
+                const card = e.currentTarget || e.target.closest('.standard-card');
+                if (card) card.classList.toggle('selected');
+            }catch(_){ }
         }
 
         function applyFilters() {
@@ -1421,6 +1481,8 @@
                 const ls=document.getElementById('levelsSelect'); if(ls){ ls.value=getLevelsParam(); ls.addEventListener('change', ()=>{ setLevelsParam(ls.value); const acc=document.getElementById('accreditorSelect').value; if(acc){ loadStandards(acc, document.getElementById('institutionTypeSelect').value); } persistFiltersToUrl(); }); }
                 const rv=document.getElementById('reviewerModeToggle'); if(rv){ rv.checked=isReviewerMode(); rv.addEventListener('change', ()=>{ setReviewerMode(rv.checked); const acc=document.getElementById('accreditorSelect').value; if(acc){ displayStandards(accreditors.find(a=>a.id===acc)||{name:acc,acronym:acc}, filteredStandards.length?filteredStandards:currentStandards); } }); }
             }catch(_){ }
+            loadSelectedFromStorage();
+            hydrateSelectionFromServer();
             loadFiltersFromUrl();
             loadAccreditors();
             hydrateSavedViews();

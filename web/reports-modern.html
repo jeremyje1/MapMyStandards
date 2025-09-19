@@ -977,6 +977,10 @@
             }
         }
 
+        function getSelectedStandards(){
+            try{ const arr = JSON.parse(localStorage.getItem('mms:selectedStandards')||'[]'); return Array.isArray(arr)? arr : []; }catch(_){ return []; }
+        }
+
         async function generateReport(type) {
             const token = getAuthToken();
             
@@ -1009,10 +1013,11 @@
                     }
                 } else if (type === 'comprehensive' || type === 'gaps' || type === 'qep') {
                     // Generate narrative HTML and offer DOCX export
+                    const stds = getSelectedStandards();
                     const gen = await fetch(getApiBase() + '/api/user/intelligence-simple/narrative/generate', {
                         method: 'POST',
                         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-                        body: JSON.stringify({})
+                        body: JSON.stringify({ standard_ids: stds, body: '' })
                     });
                     if (!gen.ok) throw new Error('narrative failed');
                     const gj = await gen.json();

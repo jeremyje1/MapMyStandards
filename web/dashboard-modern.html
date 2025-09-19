@@ -975,6 +975,14 @@
                 setInterval(() => {
                     this.loadMetrics();
                 }, 30000);
+
+                // Listen for upload/analysis events from other tabs
+                window.addEventListener('storage', (e) => {
+                    if (!e) return;
+                    if (e.key === 'mms:lastUploadAt' || e.key === 'mms:lastAnalysisCompleteAt') {
+                        this.loadMetrics().catch(()=>{});
+                    }
+                });
             }
 
             async loadMetrics() {

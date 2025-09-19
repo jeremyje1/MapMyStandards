@@ -689,7 +689,14 @@ async def get_dashboard_metrics_simple(current_user: Dict[str, Any] = Depends(ge
             )
         except Exception:
             pass
-        return {"success": True, **data}
+        # Return metrics under both legacy shape (top-level keys) and canonical shape ({ data: ... })
+        return {
+            "success": True,
+            "data": data,
+            "core_metrics": data.get("core_metrics", {}),
+            "performance_metrics": data.get("performance_metrics", {}),
+            "account_info": data.get("account_info", {}),
+        }
     except Exception as e:
         logger.error(f"Dashboard metrics error: {e}")
         raise HTTPException(status_code=500, detail="Failed to compute dashboard metrics")

@@ -971,6 +971,8 @@
             setTimeout(() => { progressSection.classList.remove('show'); progressFill.style.width = '0%'; }, 1200);
             // Refresh recent uploads
             loadRecentFiles();
+            // Notify other tabs (e.g., dashboard) to refresh metrics
+            try { localStorage.setItem('mms:lastUploadAt', String(Date.now())); } catch(_){}
         }
 
         async function pollJob(jobId, fileId, file) {
@@ -989,6 +991,8 @@
                     const progress = j?.data?.progress ?? 0;
                     updateRecentItemStatus(file.name, status, progress);
                     if (status === 'completed' || status === 'failed') {
+                        // On completion, trigger metrics refresh signal
+                        try { localStorage.setItem('mms:lastAnalysisCompleteAt', String(Date.now())); } catch(_){}
                         return;
                     }
                 } catch (_) { /* ignore transient errors */ }
