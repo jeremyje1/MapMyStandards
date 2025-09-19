@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - MapMyStandards AI</title>
+    <script src="/js/ux.js"></script>
     <meta name="description" content="Your AI-powered accreditation dashboard. Track compliance, analyze documents, and generate reports.">
     
     <style>
@@ -808,18 +809,13 @@
             
             <div class="header-nav">
                 <nav class="nav-links">
-                    <a href="/dashboard-modern.html" class="active">Dashboard</a>
-                    <a href="/upload">Upload</a>
-                    <a href="/standards-modern.html">Standards</a>
-                    <a href="/reports">Reports</a>
+                    <a href="/dashboard-modern" class="active">Dashboard</a>
+                    <a href="/upload-modern">Upload</a>
+                    <a href="/standards-modern">Standards</a>
+                    <a href="/reports-modern">Reports</a>
                 </nav>
                 
                 <div class="header-actions">
-                    <div class="trial-status">
-                        <span>✅</span>
-                        <span>Trial Active</span>
-                    </div>
-                    
                     <div class="user-menu">
                         <button class="user-button" id="userMenuButton">
                             <div class="user-avatar" id="userAvatar">JD</div>
@@ -842,22 +838,18 @@
                         <p class="welcome-subtitle">Your accreditation analysis is running smoothly. Here's your progress overview.</p>
                     </div>
                     
-                    <div class="trial-info">
-                        <div class="trial-days" id="trialDays">12</div>
-                        <div class="trial-label">days left in trial</div>
-                    </div>
                 </div>
                 
                 <div class="quick-actions">
-                    <a href="/upload" class="action-btn action-btn-primary">
+                    <a href="/upload-modern" class="action-btn action-btn-primary">
                         <span>📁</span>
                         Upload Documents
                     </a>
-                    <a href="/standards-modern.html" class="action-btn">
+                    <a href="/standards-modern" class="action-btn">
                         <span>📋</span>
                         View Standards
                     </a>
-                    <a href="/reports" class="action-btn">
+                    <a href="/reports-modern" class="action-btn">
                         <span>📊</span>
                         Generate Report
                     </a>
@@ -878,6 +870,16 @@
                         Narrative (CiteGuard)
                     </a>
                 </div>
+            </div>
+        </section>
+
+        <!-- Next Steps -->
+        <section class="activity-section" id="nextSteps" style="display:none">
+            <div class="section-header">
+                <h2 class="section-title">Next Steps</h2>
+            </div>
+            <div id="nextStepsBody" style="padding: var(--space-6);">
+                <ul id="nextStepsList" style="list-style:none; padding:0; display:grid; gap:8px"></ul>
             </div>
         </section>
 
@@ -936,10 +938,12 @@
                     </div>
                 </div>
             </section>
-        </div>
-    </main>
+        </main>
 
-    <script>
+        <script src="/js/onboarding.js"></script>
+
+        <script>
+            // Dashboard functionality
         // Dashboard functionality
         (function bootstrapTokenFromUrl(){
             try {
@@ -967,6 +971,8 @@
             }
 
             async init() {
+                try { if (window.MMS_ONBOARDING && window.MMS_ONBOARDING.maybePrompt) window.MMS_ONBOARDING.maybePrompt(); } catch(_){}
+                try { this.settings = window.MMS_ONBOARDING && window.MMS_ONBOARDING.loadSettings ? await window.MMS_ONBOARDING.loadSettings() : {}; } catch(_) { this.settings = {}; }
                 await this.loadMetrics();
                 await this.loadActivity();
                 await this.loadProgress();
@@ -981,6 +987,8 @@
                     if (!e) return;
                     if (e.key === 'mms:lastUploadAt' || e.key === 'mms:lastAnalysisCompleteAt') {
                         this.loadMetrics().catch(()=>{});
+                    } else if (e.key === 'mms:selectedStandards' || e.key === 'selectedStandards') {
+                        this.renderNextSteps();
                     }
                 });
             }
@@ -1007,12 +1015,16 @@
                         throw err;
                     }
                     this._metricsOk = true;
+                    this.lastMetrics = payload.data;
                     this.renderMetrics(payload.data);
+                    this.renderNextSteps();
                 } catch (error) {
                     console.error('Failed to load metrics:', error);
                     this._metricsOk = false;
                     const status = (error && (error.status || error.code)) || '';
                     this.renderMetricsError(status);
+                    this.lastMetrics = null;
+                    this.renderNextSteps();
                 }
             }
 
@@ -1144,10 +1156,7 @@
                     </div>
                 `;
 
-                // Update trial days
-                if (account.trial_days_remaining !== undefined) {
-                    document.getElementById('trialDays').textContent = account.trial_days_remaining;
-                }
+                
 
                 // Render trend sparklines using timeseries endpoint (throttled)
                 this.ensureTimeseries(account.primary_accreditor).then(series => {
@@ -1216,6 +1225,44 @@
                 `;
             }
 
+            selectedCount() {
+                try {
+                    const raw = localStorage.getItem('mms:selectedStandards') || localStorage.getItem('selectedStandards') || '[]';
+                    const arr = JSON.parse(raw); return Array.isArray(arr) ? arr.length : 0;
+                } catch(_) { return 0; }
+            }
+
+            renderNextSteps() {
+                const el = document.getElementById('nextSteps');
+                const list = document.getElementById('nextStepsList');
+                if (!el || !list) return;
+                const settings = this.settings || {};
+                const metrics = this.lastMetrics || null;
+                const core = metrics && metrics.core_metrics ? metrics.core_metrics : {};
+                const docs = Number(core.documents_analyzed || core.total_documents || 0);
+                const hasOrg = !!(settings.organization || settings.institution_name);
+                const hasAccr = !!(settings.primary_accreditor);
+                const sel = this.selectedCount();
+
+                const items = [];
+                if (!(hasOrg && hasAccr)) items.push({ id:'onboarding', text:'Complete onboarding to personalize your dashboard', href:'#', action: () => window.MMS_ONBOARDING && window.MMS_ONBOARDING.openWizard && window.MMS_ONBOARDING.openWizard(settings) });
+                if (!docs) items.push({ id:'upload', text:'Upload evidence documents', href:'/upload-modern' });
+                if (!sel) items.push({ id:'standards', text:'Browse and select standards to focus on', href:'/standards-modern' });
+                items.push({ id:'reports', text:'Generate reports when you’re ready', href:'/reports-modern' });
+
+                if (!items.length) { el.style.display = 'none'; return; }
+                list.innerHTML = '';
+                for (const it of items) {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<a class="section-action" href="${it.href||'#'}" aria-label="${it.text}">${it.text}</a>`;
+                    const a = li.querySelector('a');
+                    if (it.action) a.addEventListener('click', (e) => { e.preventDefault(); it.action(); });
+                    try { if (window.MMS_UX && MMS_UX.attachTooltip) MMS_UX.attachTooltip(a, it.text); } catch(_){ }
+                    list.appendChild(li);
+                }
+                el.style.display = '';
+            }
+
             async loadActivity() {
                 const activityList = document.getElementById('activityList');
                 activityList.innerHTML = `
@@ -1223,7 +1270,7 @@
                         <div class="empty-icon">📁</div>
                         <div class="empty-title">No recent activity</div>
                         <div class="empty-description">Upload documents to see processing and mapping activity here.</div>
-                        <a class="empty-action" href="/upload">Upload Documents</a>
+                        <a class="empty-action" href="/upload-modern">Upload Documents</a>
                     </div>`;
             }
 
@@ -1234,7 +1281,7 @@
                         <div class="empty-icon">🧭</div>
                         <div class="empty-title">No progress to show yet</div>
                         <div class="empty-description">Once your documents are analyzed, compliance progress will appear here.</div>
-                        <a class="empty-action" href="/upload">Start by Uploading</a>
+                        <a class="empty-action" href="/upload-modern">Start by Uploading</a>
                     </div>`;
             }
 
@@ -1455,10 +1502,10 @@
                         renderRecentUploads();
 
                         // Wire Graph/Gaps/Narrative
-                        const vg = document.getElementById('dashViewGraph'); if (vg) vg.addEventListener('click', ()=> window.location.href='/standards-modern.html#graph');
+                        const vg = document.getElementById('dashViewGraph'); if (vg) vg.addEventListener('click', ()=> window.location.href='/standards-modern#graph');
                         const sb = document.getElementById('dashStandardsSearchBtn');
                         const si = document.getElementById('dashStandardsSearch');
-                        if (sb && si) sb.addEventListener('click', ()=> { const q=encodeURIComponent(si.value||''); window.location.href = '/standards-modern.html?q=' + q; });
+                        if (sb && si) sb.addEventListener('click', ()=> { const q=encodeURIComponent(si.value||''); window.location.href = '/standards-modern?q=' + q; });
                         const gaps = document.getElementById('dashAnalyzeGaps'); if (gaps) gaps.addEventListener('click', ()=> window.location.href='/reports#gaps');
                         const narr = document.getElementById('dashOpenNarrative'); if (narr) narr.addEventListener('click', ()=> window.location.href='/reports#narrative');
                 });
