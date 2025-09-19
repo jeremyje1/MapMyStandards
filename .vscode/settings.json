@@ -1,62 +1,96 @@
 {
+  "workbench.startupEditor": "none",
+  "workbench.editor.enablePreview": false,
+  "workbench.editor.limit.enabled": true,
+  "workbench.editor.limit.value": 10,
+  "editor.minimap.enabled": false,
+  "editor.smoothScrolling": false,
+  "editor.semanticHighlighting.enabled": false,
+  "editor.bracketPairColorization.enabled": false,
+  "editor.codeLens": false,
+  "editor.hover.delay": 1000,
+  "editor.quickSuggestions": {"other": false, "comments": false, "strings": false},
+  "breadcrumbs.enabled": false,
+  "problems.autoReveal": false,
+  "files.autoSave": "onFocusChange",
+
+  // Limit searches to relevant code only
+  "search.exclude": {
+    "**/.git": true,
+    "**/node_modules": true,
+    "**/.venv": true,
+    "**/venv": true,
+    "**/env": true,
+    "**/__pycache__": true,
+    "**/.pytest_cache": true,
+    "**/.mypy_cache": true,
+    "**/dist": true,
+    "**/build": true,
+    "**/.cache": true,
+    "**/*.db": true,
+    "**/*.log": true,
+    "**/*.pyc": true,
+    "**/stripe_venv": true,
+    "**/bower_components": true,
+    "**/*.code-search": true
+  },
+
+  // Reduce file system watchers on large/irrelevant paths
   "files.watcherExclude": {
+    "**/.git/**": true,
     "**/.git/objects/**": true,
     "**/.git/subtree-cache/**": true,
     "**/node_modules/**": true,
-    "**/stripe_venv/**": true,
-    "**/__pycache__/**": true,
-    "**/.pytest_cache/**": true,
+    "**/.venv/**": true,
     "**/venv/**": true,
     "**/env/**": true,
-    "**/*.pyc": true,
-    "**/*.log": true,
+    "**/__pycache__/**": true,
+    "**/.pytest_cache/**": true,
+    "**/.mypy_cache/**": true,
     "**/dist/**": true,
-    "**/build/**": true
+    "**/build/**": true,
+    "**/.cache/**": true,
+    "**/stripe_venv/**": true,
+    "**/*.db": true,
+    "**/*.log": true,
+    "**/*.pyc": true
   },
+
+  // Hide clutter in Explorer
   "files.exclude": {
     "**/stripe_venv": true,
     "**/__pycache__": true,
-    "**/*.pyc": true,
     "**/.pytest_cache": true,
     "**/.coverage": true,
     "**/venv": true,
     "**/env": true
   },
-  "search.exclude": {
-    "**/node_modules": true,
-    "**/bower_components": true,
-    "**/*.code-search": true,
-    "**/stripe_venv": true,
-    "**/__pycache__": true,
-    "**/venv": true,
-    "**/env": true,
-    "**/*.pyc": true,
-    "**/dist": true,
-    "**/build": true
-  },
-  "files.autoSave": "onFocusChange",
-  "editor.semanticHighlighting.enabled": false,
-  "editor.bracketPairColorization.enabled": false,
-  "editor.minimap.enabled": false,
-  "editor.codeLens": false,
-  "editor.hover.delay": 1000,
-  "editor.quickSuggestions": {
-    "other": false,
-    "comments": false,
-    "strings": false
-  },
-  "extensions.autoUpdate": false,
-  "workbench.editor.enablePreview": false,
-  "workbench.editor.limit.enabled": true,
-  "workbench.editor.limit.value": 10,
+
+  // TypeScript/JavaScript tuning (safe even if TS not used)
   "typescript.disableAutomaticTypeAcquisition": true,
-  "python.analysis.autoImportCompletions": false,
+  "typescript.tsserver.watchOptions": {
+    "watchFile": "useFsEvents",
+    "watchDirectory": "useFsEvents",
+    "fallbackPolling": "dynamicPriorityPolling",
+    "synchronousWatchDirectory": false
+  },
+
+  // Python analysis (lighter indexing to reduce CPU)
   "python.analysis.indexing": false,
+  "python.analysis.autoImportCompletions": false,
   "python.defaultInterpreterPath": "/usr/bin/python3",
-  "python.analysis.extraPaths": [
-    "${workspaceFolder}/src"
-  ],
-  "python.autoComplete.extraPaths": [
-    "${workspaceFolder}/src"
-  ]
+  "python.analysis.extraPaths": ["${workspaceFolder}/src"],
+  "python.autoComplete.extraPaths": ["${workspaceFolder}/src"],
+
+  // Reduce background Git load in large repos
+  "git.autorefresh": false,
+  "git.untrackedChanges": "hidden",
+
+  // Disable non-critical background scans
+  "npm.autoDetect": "off",
+  "markdown.validate.enabled": false,
+  "extensions.autoUpdate": false,
+
+  // Privacy/perf
+  "telemetry.telemetryLevel": "off"
 }
