@@ -37,6 +37,8 @@ class ProfessionalEmailService:
         self.provider = None
         self.from_email = os.getenv('EMAIL_FROM', 'noreply@mapmystandards.ai')
         self.from_name = os.getenv('EMAIL_FROM_NAME', 'MapMyStandards')
+        self.reply_to = os.getenv('EMAIL_REPLY_TO', os.getenv('ADMIN_NOTIFICATION_EMAIL', 'info@northpathstrategies.org'))
+        self.message_stream = os.getenv('POSTMARK_MESSAGE_STREAM', 'outbound')
         
         # Try Postmark first
         if POSTMARK_AVAILABLE:
@@ -142,7 +144,9 @@ class ProfessionalEmailService:
                     To=to_email,
                     Subject=subject,
                     HtmlBody=html_content,
-                    TextBody=text_content or self._html_to_text(html_content)
+                    TextBody=text_content or self._html_to_text(html_content),
+                    MessageStream=self.message_stream,
+                    ReplyTo=self.reply_to
                 )
                 logger.info(f"✅ Email sent via Postmark to {to_email}")
                 return True
