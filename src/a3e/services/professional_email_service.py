@@ -179,26 +179,25 @@ class ProfessionalEmailService:
     
     async def send_welcome_email(self, to_email: str, user_name: str) -> bool:
         """Send welcome email to new users"""
-        subject = "Welcome to MapMyStandards!"
+        subject = "Welcome to MapMyStandards — Let’s get you set up"
         
         html_content = f"""
         <html>
             <body style="font-family: Arial, sans-serif; color: #333;">
                 <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-                    <h1 style="color: #2563eb;">Welcome to MapMyStandards!</h1>
+                    <h1 style="color: #2563eb;">Welcome to MapMyStandards</h1>
                     
                     <p>Hello {user_name},</p>
                     
-                    <p>Thank you for joining MapMyStandards. We're excited to help you streamline 
-                    your accreditation compliance process.</p>
+                    <p>Thanks for joining! We’ve personalized your experience based on onboarding and made it easy to get value fast.</p>
                     
-                    <h3>Getting Started</h3>
-                    <ul>
-                        <li>Complete your institution profile</li>
-                        <li>Upload your first evidence document</li>
-                        <li>View your compliance dashboard</li>
-                        <li>Generate your first compliance report</li>
-                    </ul>
+                    <h3>Quick Start</h3>
+                    <ol>
+                        <li><strong>Choose your accreditor</strong> on the Standards page — we’ll preselect from onboarding when possible.</li>
+                        <li><strong>Upload documents</strong> on the Upload page — narratives and Evidence Mapping unlock with mapped evidence.</li>
+                        <li><strong>Review your Dashboard</strong> for coverage and gaps tailored to your institution.</li>
+                        <li><strong>Generate a narrative</strong> in Reports with inline citations from your evidence.</li>
+                    </ol>
                     
                     <div style="margin: 30px 0;">
                         <a href="https://platform.mapmystandards.ai/dashboard-modern" 
@@ -212,7 +211,7 @@ class ProfessionalEmailService:
                         </a>
                     </div>
                     
-                    <p>If you have any questions, feel free to contact our support team.</p>
+                    <p>Need a hand? Reply to this email or reach us at support@mapmystandards.ai.</p>
                     
                     <p>Best regards,<br>
                     The MapMyStandards Team</p>
@@ -226,6 +225,63 @@ class ProfessionalEmailService:
             subject=subject,
             html_content=html_content
         )
+
+    # Compatibility helpers used by API routes
+    def send_customer_welcome_email(self, email: str, name: str, institution: Optional[str] = None, trial_days: int = 7) -> bool:
+        """Send a richer welcome email; synchronous wrapper for background tasks."""
+        try:
+            import asyncio
+            loop = None
+            try:
+                loop = asyncio.get_running_loop()
+            except RuntimeError:
+                loop = None
+            coro = self.send_welcome_email(email, name)
+            if loop and loop.is_running():
+                loop.create_task(coro)
+                return True
+            else:
+                return asyncio.run(coro)
+        except Exception as e:
+            logger.error(f"Failed to dispatch customer welcome email: {e}")
+            return False
+
+    def send_admin_notification(
+        self,
+        customer_email: str,
+        customer_name: str,
+        institution: Optional[str] = None,
+        signup_type: str = "trial",
+        additional_info: Optional[Dict[str, Any]] = None
+    ) -> bool:
+        """Notify admin of new signup or subscription."""
+        try:
+            admin_to = os.getenv('ADMIN_NOTIFICATION_EMAIL', 'info@northpathstrategies.org')
+            subject = f"New {signup_type.capitalize()} Signup: {customer_name} <{customer_email}>"
+            details = {
+                'customer_email': customer_email,
+                'customer_name': customer_name,
+                'institution': institution or '(not provided)',
+                'signup_type': signup_type,
+            }
+            if additional_info:
+                details.update(additional_info)
+            # Simple HTML summary
+            rows = ''.join([f"<tr><td style='padding:6px 8px;background:#f9fafb'><strong>{k}</strong></td><td style='padding:6px 8px'>{v}</td></tr>" for k, v in details.items()])
+            html = f"""
+            <div style="font-family:Arial,sans-serif">
+                <h2 style="margin:0 0 10px 0;color:#111827">New {signup_type.capitalize()} Signup</h2>
+                <table style="border-collapse:collapse">{rows}</table>
+            </div>
+            """
+            return self.send_email(
+                to_email=admin_to,
+                subject=subject,
+                html_content=html
+            ) or False
+        except Exception as e:
+            logger.error(f"Failed to send admin notification: {e}")
+            return False
 
 
 # Create singleton instance
