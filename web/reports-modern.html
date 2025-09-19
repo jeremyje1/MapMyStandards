@@ -795,6 +795,7 @@
                             <button id="btnGenNarrModern" class="btn btn-primary" title="Requires at least 1 selected standard">Generate</button>
                             <button id="btnExportNarrModern" class="btn btn-secondary" disabled>Export DOCX</button>
                         </div>
+                        <div id="narrAccreditorHint" style="margin-top:6px;font-size:0.75rem;color:#9ca3af;display:none"></div>
                         <div id="narrStatusModern" style="margin-top:8px;font-size:0.8rem;color:#6b7280;display:none"></div>
                         <div id="narrPreviewModern" style="display:none;margin-top:12px;padding:12px;border:1px solid #e5e7eb;border-radius:6px;background:#fff;max-height:320px;overflow:auto">
                             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
@@ -864,6 +865,23 @@
         // Onboarding helpers
         function getOnboardingSettings(){
             try { return JSON.parse(localStorage.getItem('mms:onboarding')||'{}') || {}; } catch(_) { return {}; }
+        }
+        function updateAccreditorHint(){
+            try{
+                const el = document.getElementById('narrAccreditorHint');
+                if (!el) return;
+                const s = getOnboardingSettings();
+                const onboardingAccr = String(s.primary_accreditor||'').toUpperCase();
+                const current = String(localStorage.getItem('mms:currentAccreditor')||'').toUpperCase();
+                const active = current || onboardingAccr || '';
+                if (active){
+                    const using = current ? 'Standards selection' : 'Onboarding';
+                    el.textContent = `Using accreditor context: ${active} (${using})`;
+                    el.style.display = 'block';
+                } else {
+                    el.style.display = 'none';
+                }
+            }catch(_){ }
         }
         function personalizeReportsHeader(){
             try{
@@ -1372,7 +1390,7 @@
             if (localStorage.getItem('mms:refreshMetrics') === '1') {
                 localStorage.removeItem('mms:refreshMetrics');
             }
-            try { personalizeReportsHeader(); maybeShowAccrSwitchBanner(); } catch(_) {}
+            try { personalizeReportsHeader(); maybeShowAccrSwitchBanner(); updateAccreditorHint(); } catch(_) {}
             loadDashboardMetrics();
             setTimeout(() => {
                 loadRecentReports();
@@ -1385,13 +1403,13 @@
             try { document.getElementById('btnExportNarrModern')?.addEventListener('click', handleExportNarrativeModern); } catch(_) {}
             try { checkEvidenceMappingBanner(); } catch(_) {}
         });
-        window.addEventListener('mms:onboarding-updated', ()=>{ try { personalizeReportsHeader(); maybeShowAccrSwitchBanner(); } catch(_) {} });
+    window.addEventListener('mms:onboarding-updated', ()=>{ try { personalizeReportsHeader(); maybeShowAccrSwitchBanner(); updateAccreditorHint(); } catch(_) {} });
         window.addEventListener('mms:selected-standards-updated', ()=>{ try { updateSelectedSummary(); updateNarrativeButtons(); } catch(_) {} });
         window.addEventListener('storage', (e)=>{
             try {
                 if(e.key === 'mms:selectedStandards' || e.key === 'selectedStandards') { updateSelectedSummary(); updateNarrativeButtons(); }
                 if(e.key === 'mms:lastUploadAt' || e.key === 'mms:lastAnalysisCompleteAt') { checkEvidenceMappingBanner(); }
-                if(e.key === 'mms:onboarding' || e.key === 'mms:currentAccreditor') { personalizeReportsHeader(); maybeShowAccrSwitchBanner(); }
+                if(e.key === 'mms:onboarding' || e.key === 'mms:currentAccreditor') { personalizeReportsHeader(); maybeShowAccrSwitchBanner(); updateAccreditorHint(); }
             } catch(_) {}
         });
 
