@@ -253,12 +253,13 @@ async def get_job_status(
         }
         
         # Add results if completed
-        if job.status == "completed" and job.results:
+        if job.status == "completed" and getattr(job, "result", None):
             import json
             try:
-                job_data["results"] = json.loads(job.results) if isinstance(job.results, str) else job.results
+                _raw = job.result
+                job_data["results"] = json.loads(_raw) if isinstance(_raw, str) else _raw
             except (json.JSONDecodeError, TypeError):
-                job_data["results"] = job.results
+                job_data["results"] = getattr(job, "result", None)
         
         # Add error if failed
         if job.status == "failed" and job.error_message:

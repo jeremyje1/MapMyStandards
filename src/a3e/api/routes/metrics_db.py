@@ -81,13 +81,14 @@ async def get_metrics_summary(
         # For now, return simplified summary
         # TODO: Implement period-based filtering in database queries
         
+        uploads_count = base_metrics.get("core_metrics", {}).get("documents_analyzed", 0) + base_metrics.get("core_metrics", {}).get("documents_processing", 0)
+
         return {
             "success": True,
             "data": {
                 "period": period,
                 "period_metrics": {
-                    "uploads": base_metrics.get("core_metrics", {}).get("documents_analyzed", 0) +
-                              base_metrics.get("core_metrics", {}).get("documents_processing", 0),
+                    "uploads": uploads_count,
                     "analyses_completed": base_metrics.get("core_metrics", {}).get("documents_analyzed", 0),
                     "reports_generated": base_metrics.get("core_metrics", {}).get("reports_generated", 0),
                     "success_rate": 100  # Assume 100% success rate for trial
@@ -127,12 +128,13 @@ async def get_job_progress(
         
         # Convert results if needed
         results = None
-        if job.status == "completed" and job.results:
+        if job.status == "completed" and getattr(job, "result", None):
             import json
             try:
-                results = json.loads(job.results) if isinstance(job.results, str) else job.results
+                _raw = job.result
+                results = json.loads(_raw) if isinstance(_raw, str) else _raw
             except (json.JSONDecodeError, TypeError):
-                results = job.results
+                results = getattr(job, "result", None)
         
         return {
             "success": True,

@@ -17,52 +17,85 @@ from ..models import (
 from ..models.database_schema import (
     StandardMapping, Report
 )
-# TODO: File, Job, SystemMetrics models need to be created or services need to be updated
-# Temporarily creating placeholder classes to avoid import errors
-class File:
-    pass
-
-class Job:
-    pass
-
-class SystemMetrics:
-    pass
+from types import SimpleNamespace as _Obj
 from .connection import db_manager
 
 logger = logging.getLogger(__name__)
+
+
+async def _get_table_columns(session, table_name: str) -> set:
+    try:
+        res = await session.execute(
+            text(
+                """
+                SELECT column_name FROM information_schema.columns
+                WHERE table_schema = 'public' AND table_name = :t
+                """
+            ),
+            {"t": table_name},
+        )
+        return {r[0] for r in res.fetchall()}
+    except Exception:
+        return set()
 
 class UserService:
     """User management service"""
     
     @staticmethod
     async def get_or_create_user(user_id: str, email: str = None, name: str = None) -> User:
-        """Get existing user or create new trial user"""
-        async with db_manager.get_session() as session:
-            # Try to find existing user
-            result = await session.execute(
-                text("SELECT * FROM users WHERE user_id = :user_id"),
-                {"user_id": user_id}
-            )
-            user_data = result.fetchone()
-            
-            if user_data:
-                return User(**dict(user_data._mapping))
-            
-            # Create new trial user
-            user = User(
-                user_id=user_id,
-                email=email or f"{user_id}@trial.mapmystandards.ai",
-                name=name,
-                subscription_tier="trial",
-                trial_expires_at=datetime.utcnow() + timedelta(days=14)
-            )
-            
-            session.add(user)
-            await session.commit()
-            await session.refresh(user)
-            
-            logger.info(f"✅ Created trial user: {user_id}")
-            return user
+        """Get existing user or return a lightweight stub without creating one.
+        Avoids schema mismatches and NOT NULL constraints during uploads.
+        """
+        try:
+            async with db_manager.get_session() as session:
+                # Lookup existing
+                result = await session.execute(
+                    text("SELECT id, email, name FROM users WHERE id = :user_id"),
+                    {"user_id": user_id}
+                )
+                row = result.fetchone()
+                if row:
+                    m = row._mapping
+                    return _Obj(id=m.get("id"), email=m.get("email"), name=m.get("name"))
+
+                # Create minimal row if not exists
+                pwd = "trial-placeholder-hash"
+                ins = await session.execute(
+                    text(
+                        """
+                        INSERT INTO users (id, email, name, password_hash, is_trial, created_at, updated_at)
+                        VALUES (:id, :email, :name, :password_hash, TRUE, NOW(), NOW())
+                        ON CONFLICT (id) DO NOTHING
+                        RETURNING id, email, name
+                        """
+                    ),
+                    {
+                        "id": user_id,
+                        "email": email or f"{user_id}@trial.mapmystandards.ai",
+                        "name": name or (email.split("@")[0] if email else user_id),
+                        "password_hash": pwd,
+                    }
+                )
+                created = ins.fetchone()
+                await session.commit()
+                if created:
+                    m = created._mapping
+                    logger.info(f"✅ Created minimal user row for {m.get('id')}")
+                    return _Obj(id=m.get("id"), email=m.get("email"), name=m.get("name"))
+
+                # Re-select in case of ON CONFLICT
+                result2 = await session.execute(
+                    text("SELECT id, email, name FROM users WHERE id = :user_id"),
+                    {"user_id": user_id}
+                )
+                row2 = result2.fetchone()
+                if row2:
+                    m = row2._mapping
+                    return _Obj(id=m.get("id"), email=m.get("email"), name=m.get("name"))
+        except Exception as e:
+            logger.warning(f"User upsert failed, proceeding with stub: {e}")
+        # Fallback stub
+        return _Obj(id=user_id, email=email or f"{user_id}@trial.mapmystandards.ai", name=name or user_id)
     
     @staticmethod
     async def get_user_metrics(user_id: str) -> Dict[str, Any]:
@@ -177,31 +210,49 @@ class FileService:
         title: str = None,
         description: str = None,
         accreditor_id: str = None
-    ) -> File:
-        """Create new file record with content stored in database"""
+    ) -> _Obj:
+        """Create new file record in the 'files' table using SQL and return a lightweight object."""
         async with db_manager.get_session() as session:
-            file = File(
-                file_id=f"file_{uuid.uuid4().hex[:16]}",
-                user_id=user_id,
-                filename=f"file_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{filename}",
-                original_filename=filename,
-                content_type=content_type,
-                file_size=len(content),
-                file_content=content,  # Store in database for Railway
-                title=title,
-                description=description,
-                accreditor_id=accreditor_id
-            )
-            
-            session.add(file)
+            file_id = f"file_{uuid.uuid4().hex[:16]}"
+            new_name = f"{file_id}_{filename}"
+
+            cols = await _get_table_columns(session, "files")
+            if not cols:
+                logger.warning("'files' table not introspectable; attempting blind insert")
+            # Build dynamic column/value maps based on available columns
+            candidate = {
+                "file_id": file_id,
+                "user_id": user_id,
+                "filename": new_name,
+                "original_filename": filename,
+                "content_type": content_type,
+                "file_size": len(content),
+                "file_content": content,
+                "title": title,
+                "description": description,
+                "accreditor_id": accreditor_id,
+                "created_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow(),
+            }
+            use_cols = [k for k in candidate.keys() if (not cols) or (k in cols)]
+            placeholders = ", ".join([f":{c}" for c in use_cols])
+            column_list = ", ".join(use_cols)
+            returning = [c for c in ["file_id", "user_id", "filename", "original_filename", "content_type", "file_size", "created_at", "updated_at"] if (not cols) or (c in cols)]
+            returning_sql = ", ".join(returning) if returning else "file_id"
+
+            sql = f"INSERT INTO files ({column_list}) VALUES ({placeholders}) RETURNING {returning_sql}"
+            params = {k: candidate[k] for k in use_cols}
+            result = await session.execute(text(sql), params)
+            row = result.fetchone()
             await session.commit()
-            await session.refresh(file)
-            
-            logger.info(f"✅ Created file: {file.file_id} ({file.file_size} bytes)")
-            return file
+            if not row:
+                raise RuntimeError("Failed to insert file record")
+            m = row._mapping
+            logger.info(f"✅ Created file: {m.get('file_id')} ({m.get('file_size')})")
+            return _Obj(**dict(m))
     
     @staticmethod
-    async def get_file(file_id: str, user_id: str = None) -> Optional[File]:
+    async def get_file(file_id: str, user_id: str = None) -> Optional[_Obj]:
         """Get file by ID with optional user check"""
         async with db_manager.get_session() as session:
             query = "SELECT * FROM files WHERE file_id = :file_id"
@@ -215,7 +266,7 @@ class FileService:
             file_data = result.fetchone()
             
             if file_data:
-                return File(**dict(file_data._mapping))
+                return _Obj(**dict(file_data._mapping))
             return None
     
     @staticmethod
@@ -230,27 +281,39 @@ class JobService:
     """Background job management service"""
     
     @staticmethod
-    async def create_job(user_id: str, file_id: str) -> Job:
-        """Create new analysis job"""
+    async def create_job(user_id: str, file_id: str) -> _Obj:
+        """Create new analysis job via SQL insert and return a lightweight object"""
         async with db_manager.get_session() as session:
-            job = Job(
-                job_id=f"job_{uuid.uuid4().hex[:24]}",
-                user_id=user_id,
-                file_id=file_id,
-                status="queued",
-                progress=0,
-                description="Analysis queued"
-            )
-            
-            session.add(job)
+            job_id = f"job_{uuid.uuid4().hex[:24]}"
+            cols = await _get_table_columns(session, "jobs")
+            candidate = {
+                "job_id": job_id,
+                "user_id": user_id,
+                "file_id": file_id,
+                "status": "queued",
+                "progress": 0,
+                "description": "Analysis queued",
+                "created_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow(),
+            }
+            use_cols = [k for k in candidate.keys() if (not cols) or (k in cols)]
+            placeholders = ", ".join([f":{c}" for c in use_cols])
+            column_list = ", ".join(use_cols)
+            returning = [c for c in ["job_id", "user_id", "file_id", "status", "progress", "description", "created_at", "updated_at"] if (not cols) or (c in cols)]
+            returning_sql = ", ".join(returning) if returning else "job_id"
+
+            sql = f"INSERT INTO jobs ({column_list}) VALUES ({placeholders}) RETURNING {returning_sql}"
+            result = await session.execute(text(sql), {k: candidate[k] for k in use_cols})
+            row = result.fetchone()
             await session.commit()
-            await session.refresh(job)
-            
-            logger.info(f"✅ Created job: {job.job_id}")
-            return job
+            if not row:
+                raise RuntimeError("Failed to insert job record")
+            m = row._mapping
+            logger.info(f"✅ Created job: {m.get('job_id')}")
+            return _Obj(**dict(m))
     
     @staticmethod
-    async def get_job(job_id: str, user_id: str = None) -> Optional[Job]:
+    async def get_job(job_id: str, user_id: str = None) -> Optional[_Obj]:
         """Get job by ID with optional user check"""
         async with db_manager.get_session() as session:
             query = "SELECT * FROM jobs WHERE job_id = :job_id"
@@ -264,7 +327,7 @@ class JobService:
             job_data = result.fetchone()
             
             if job_data:
-                return Job(**dict(job_data._mapping))
+                return _Obj(**dict(job_data._mapping))
             return None
     
     @staticmethod
@@ -288,7 +351,7 @@ class JobService:
             if description:
                 update_data["description"] = description
             if results:
-                update_data["results"] = json.dumps(results)
+                update_data["result"] = json.dumps(results)
             if error_message:
                 update_data["error_message"] = error_message
             if status == "completed":
@@ -299,50 +362,46 @@ class JobService:
             query = f"UPDATE jobs SET {set_clause} WHERE job_id = :job_id"
             update_data["job_id"] = job_id
             
-            result = await session.execute(text(query), update_data)
-            await session.commit()
-            
-            logger.info(f"✅ Updated job {job_id}: {status} ({progress}%)")
-            return result.rowcount > 0
+            try:
+                result = await session.execute(text(query), update_data)
+                await session.commit()
+                logger.info(f"✅ Updated job {job_id}: {status} ({progress}%)")
+                return result.rowcount > 0
+            except Exception as e:
+                # Backward-compat: some DBs may use 'results' column name
+                if "result" in update_data and "column \"result\"" in str(e).lower():
+                    alt_data = dict(update_data)
+                    alt_data["results"] = alt_data.pop("result")
+                    set_clause_alt = ", ".join([f"{k} = :{k}" for k in alt_data.keys() if k != "job_id"]) 
+                    query_alt = f"UPDATE jobs SET {set_clause_alt} WHERE job_id = :job_id"
+                    result = await session.execute(text(query_alt), alt_data)
+                    await session.commit()
+                    logger.info(f"✅ Updated job {job_id} with legacy column: {status} ({progress}%)")
+                    return result.rowcount > 0
+                raise
     
     @staticmethod
     async def complete_job_with_mappings(
         job_id: str,
         mapped_standards: List[Dict[str, Any]]
     ) -> bool:
-        """Complete job and create standard mappings"""
-        async with db_manager.get_session() as session:
-            # Update job status
-            await JobService.update_job_status(
-                job_id, 
-                "completed", 
-                100, 
-                "Analysis complete",
-                {
-                    "standards_matched": len(mapped_standards),
-                    "total_standards": 12,  # SACSCOC total
-                    "confidence_score": sum(s.get("confidence", 0) for s in mapped_standards) / len(mapped_standards) if mapped_standards else 0,
-                    "gaps_identified": 12 - len(mapped_standards),
-                    "coverage_percentage": int((len(mapped_standards) / 12) * 100),
-                    "mapped_standards": mapped_standards
-                }
-            )
-            
-            # Create standard mappings
-            for std in mapped_standards:
-                mapping = StandardMapping(
-                    mapping_id=f"map_{uuid.uuid4().hex[:16]}",
-                    job_id=job_id,
-                    standard_id=std.get("standard_id"),
-                    confidence_score=std.get("confidence", 0.0),
-                    matched_text=std.get("matched_text", ""),
-                    text_spans=std.get("text_spans", [])
-                )
-                session.add(mapping)
-            
-            await session.commit()
-            logger.info(f"✅ Completed job {job_id} with {len(mapped_standards)} mappings")
-            return True
+        """Complete job and store results on the job row. Skip mapping inserts to avoid schema mismatch."""
+        await JobService.update_job_status(
+            job_id,
+            "completed",
+            100,
+            "Analysis complete",
+            {
+                "standards_matched": len(mapped_standards),
+                "total_standards": 12,
+                "confidence_score": sum(s.get("confidence", 0) for s in mapped_standards) / len(mapped_standards) if mapped_standards else 0,
+                "gaps_identified": 12 - len(mapped_standards),
+                "coverage_percentage": int((len(mapped_standards) / 12) * 100),
+                "mapped_standards": mapped_standards,
+            },
+        )
+        logger.info(f"✅ Completed job {job_id} with {len(mapped_standards)} mappings (stored in job.result)")
+        return True
 
 class ReportService:
     """Report generation and management service"""
