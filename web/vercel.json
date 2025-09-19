@@ -1,4 +1,5 @@
 {
+  "version": 2,
   "outputDirectory": ".",
   "buildCommand": "",
   "installCommand": "",
@@ -6,5 +7,18 @@
   "trailingSlash": false,
   "redirects": [
     { "source": "/", "destination": "/homepage-enhanced", "permanent": false }
+  ],
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "https://api.mapmystandards.ai/api/$1" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+      ]
+    }
   ]
 }

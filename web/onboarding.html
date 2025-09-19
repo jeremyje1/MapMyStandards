@@ -606,10 +606,10 @@
         successMsg.style.display='block';
         fillEl.style.width='100%'; pctEl.textContent='100%';
     // Redirect to main dashboard
-  setTimeout(()=>{ window.location.href='https://platform.mapmystandards.ai/dashboard-modern.html'; }, 1500);
+  setTimeout(()=>{ window.location.href='https://platform.mapmystandards.ai/dashboard-modern'; }, 1500);
       }
     });
-  skipBtn.addEventListener('click', async ()=>{ try{ collectStep(); await persist(true);}catch(_){} window.location.href='https://platform.mapmystandards.ai/dashboard-modern.html'; });
+  skipBtn.addEventListener('click', async ()=>{ try{ collectStep(); await persist(true);}catch(_){} window.location.href='https://platform.mapmystandards.ai/dashboard-modern'; });
 
     // Initialize
     async function loadExisting(){

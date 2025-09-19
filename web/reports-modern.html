@@ -7,6 +7,7 @@
     <script src="/js/config.js"></script>
     <link rel="stylesheet" href="/css/accessibility.css">
     <script src="/js/ux.js"></script>
+    <script src="/js/onboarding.js"></script>
     
     <style>
         :root {
@@ -405,6 +406,23 @@
             transform: none !important;
         }
 
+        /* Info Banner */
+        .info-banner {
+            display: none;
+            background: #fffbeb;
+            border: 1px solid #f59e0b33;
+            color: #92400e;
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin: 14px 0 0 0;
+            box-shadow: var(--shadow-sm);
+        }
+        .info-banner a {
+            color: #7c2d12;
+            text-decoration: underline;
+            font-weight: 600;
+        }
+
         /* Recent Reports Section */
         .recent-reports {
             background: var(--bg-white);
@@ -613,10 +631,10 @@
         <div class="header-content">
             <a href="/" class="logo">A³E</a>
             <nav class="nav-links">
-                <a href="/ai-dashboard">Dashboard</a>
-                <a href="/upload">Upload</a>
-                <a href="/standards-modern.html">Standards</a>
-                <a href="/reports" class="active">Reports</a>
+                <a href="/dashboard-modern">Dashboard</a>
+                <a href="/upload-modern">Upload</a>
+                <a href="/standards-modern">Standards</a>
+                <a href="/reports-modern" class="active">Reports</a>
                 <a href="#" onclick="logout()">Logout</a>
             </nav>
         </div>
@@ -675,12 +693,17 @@
             <div class="report-header">
                 <h2>📊 Generate Custom Reports</h2>
                 <p>Create detailed compliance reports tailored to your accreditation needs</p>
-                <div id="selectedSummary" class="selected-summary" style="display:none; margin-top:0.5rem;">
+                <div id="selectedSummary" class="selected-summary" style="display:none; margin-top:0.5rem;" role="status" aria-live="polite" aria-atomic="true">
                     <span>Selected standards:</span>
                     <span id="selectedCountReports">0</span>
                 </div>
+                <div id="noSelectionHint" style="display:none;margin-top:.5rem;font-weight:600;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);padding:.35rem .6rem;border-radius:9999px;" role="status" aria-live="polite" aria-atomic="true">Tip: select standards on the <a href="/standards-modern" style="color:#fff;text-decoration:underline">Standards</a> page to enable more reports.</div>
             </div>
             <div class="report-content">
+                <div id="noEvidenceBanner" class="info-banner" role="status" aria-live="polite" aria-atomic="true">
+                    <strong>Heads up:</strong> no mapped evidence found yet. Upload documents on the <a href="/upload-modern">Upload</a> page to unlock narratives and the Evidence Mapping report.
+                    <a href="/upload-modern" class="btn btn-primary" style="margin-left:.75rem;padding:.35rem .7rem;display:inline-block;line-height:1;" aria-label="Upload documents now">Upload now</a>
+                </div>
                 <div class="report-grid">
                     <div class="report-card">
                         <span class="report-icon">📋</span>
@@ -695,7 +718,7 @@
                             </ul>
                         </div>
                         <div class="report-actions">
-                            <button class="btn btn-primary" onclick="generateReport('comprehensive')">
+                            <button class="btn btn-primary" data-report-btn="comprehensive" onclick="generateReport('comprehensive')" title="Requires at least 1 selected standard" aria-label="Generate comprehensive report">
                                 🚀 Generate Report
                             </button>
                         </div>
@@ -714,7 +737,7 @@
                             </ul>
                         </div>
                         <div class="report-actions">
-                            <button class="btn btn-primary" onclick="generateReport('qep')">
+                            <button class="btn btn-primary" data-report-btn="qep" onclick="generateReport('qep')" title="Requires at least 1 selected standard" aria-label="Generate QEP report">
                                 🎯 Generate QEP Report
                             </button>
                         </div>
@@ -733,7 +756,7 @@
                             </ul>
                         </div>
                         <div class="report-actions">
-                            <button class="btn btn-primary" onclick="generateReport('evidence')">
+                            <button class="btn btn-primary" data-report-btn="evidence" onclick="generateReport('evidence')" title="Runs without selection; uses all mapped evidence" aria-label="Generate evidence mapping summary">
                                 🔍 Generate Mapping Report
                             </button>
                         </div>
@@ -752,9 +775,33 @@
                             </ul>
                         </div>
                         <div class="report-actions">
-                            <button class="btn btn-primary" onclick="generateReport('gaps')">
+                            <button class="btn btn-primary" data-report-btn="gaps" onclick="generateReport('gaps')" title="Requires at least 1 selected standard" aria-label="Generate gap analysis">
                                 🔧 Generate Gap Analysis
                             </button>
+                        </div>
+                    </div>
+
+                    <div class="report-card" id="narrativeSection">
+                        <span class="report-icon">📝</span>
+                        <h3 class="report-title">CiteGuard Narrative</h3>
+                        <p class="report-description">Generate an accreditation narrative with inline citations derived from your mapped evidence.</p>
+                        <div style="margin: 0 0 0.75rem 0">
+                            <label for="narrativeIntroModern" style="display:block;font-size:0.85rem;color:#374151;margin-bottom:4px">Optional introduction</label>
+                            <textarea id="narrativeIntroModern" rows="3" placeholder="Add an introductory paragraph or context (optional)..." style="width:100%;padding:8px;border:1px solid #e5e7eb;border-radius:6px;resize:vertical"></textarea>
+                            <div style="color:#9ca3af;font-size:0.75rem;margin-top:4px">Tip: Select standards on the Standards page; we’ll use them here automatically.</div>
+                            <div id="selectedCountModern" style="color:#6b7280;font-size:0.8rem;margin-top:4px"></div>
+                        </div>
+                        <div class="report-actions">
+                            <button id="btnGenNarrModern" class="btn btn-primary" title="Requires at least 1 selected standard">Generate</button>
+                            <button id="btnExportNarrModern" class="btn btn-secondary" disabled>Export DOCX</button>
+                        </div>
+                        <div id="narrStatusModern" style="margin-top:8px;font-size:0.8rem;color:#6b7280;display:none"></div>
+                        <div id="narrPreviewModern" style="display:none;margin-top:12px;padding:12px;border:1px solid #e5e7eb;border-radius:6px;background:#fff;max-height:320px;overflow:auto">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                                <strong>Preview</strong>
+                                <span style="color:#9ca3af;font-size:0.7rem">Citations appear as [cite:filename]</span>
+                            </div>
+                            <div id="narrHtmlModern" style="font-size:0.85rem;line-height:1.3"></div>
                         </div>
                     </div>
                 </div>
@@ -813,6 +860,46 @@
         }
         let dashboardData = null;
         let reportStatuses = new Map();
+
+        // Onboarding helpers
+        function getOnboardingSettings(){
+            try { return JSON.parse(localStorage.getItem('mms:onboarding')||'{}') || {}; } catch(_) { return {}; }
+        }
+        function personalizeReportsHeader(){
+            try{
+                const s = getOnboardingSettings();
+                const title = document.querySelector('.report-header h2');
+                const sub = document.querySelector('.report-header p');
+                if (title && (s.primary_accreditor || s.organization || s.institution_name)) {
+                    title.textContent = `📊 ${s.primary_accreditor ? (s.primary_accreditor + ' ') : ''}Reports`;
+                }
+                if (sub && (s.organization || s.institution_name)) {
+                    sub.textContent = `Tailored for ${(s.organization||s.institution_name)}${s.primary_accreditor ? ' • ' + s.primary_accreditor : ''}`;
+                }
+            }catch(_){ }
+        }
+        function maybeShowAccrSwitchBanner(){
+            try{
+                let banner = document.getElementById('reportsAccrSwitchBanner');
+                if (!banner) {
+                    const hdr = document.querySelector('.report-header');
+                    if (hdr) {
+                        const div = document.createElement('div');
+                        div.id = 'reportsAccrSwitchBanner';
+                        div.style.cssText = 'display:none;background:#fffbeb;border:1px solid #f59e0b33;color:#92400e;border-radius:10px;padding:8px 10px;margin:8px 0;';
+                        div.innerHTML = `<strong>Heads up:</strong> Your onboarding accreditor differs from the current Standards selection. <button id="reportsApplyAccr" class="btn btn-primary" style="margin-left:.5rem;padding:.25rem .6rem;line-height:1">Use onboarding accreditor</button>`;
+                        hdr.insertAdjacentElement('afterend', div);
+                        const btn = div.querySelector('#reportsApplyAccr');
+                        if (btn) btn.addEventListener('click', ()=>{ try{ const s = getOnboardingSettings(); if (s.primary_accreditor){ localStorage.setItem('mms:currentAccreditor', String(s.primary_accreditor).toUpperCase()); window.location.href = '/standards-modern'; } }catch(_){ } });
+                    }
+                    banner = document.getElementById('reportsAccrSwitchBanner');
+                }
+                const s = getOnboardingSettings();
+                const onboardingAccr = String(s.primary_accreditor||'').toUpperCase();
+                const current = String(localStorage.getItem('mms:currentAccreditor')||'').toUpperCase();
+                banner.style.display = (onboardingAccr && current && onboardingAccr !== current) ? 'block' : 'none';
+            }catch(_){ }
+        }
 
         // Logout function
         function logout() {
@@ -993,13 +1080,112 @@
                 const num = document.getElementById('selectedCountReports');
                 if(!wrap || !num) return;
                 const n = Array.isArray(arr) ? arr.length : 0;
-                if(n > 0){ wrap.style.display = 'inline-flex'; num.textContent = String(n); }
-                else { wrap.style.display = 'none'; num.textContent = '0'; }
+                const hint = document.getElementById('noSelectionHint');
+                if(n > 0){
+                    wrap.style.display = 'inline-flex'; num.textContent = String(n);
+                    if (hint) hint.style.display = 'none';
+                } else {
+                    wrap.style.display = 'none'; num.textContent = '0';
+                    if (hint) hint.style.display = '';
+                }
+                // Gate buttons except Evidence Mapping which can work without selection
+                document.querySelectorAll('[data-report-btn]')
+                    .forEach(btn => {
+                        const type = btn.getAttribute('data-report-btn');
+                        const requiresSelection = (type !== 'evidence');
+                        btn.disabled = requiresSelection && n === 0;
+                        btn.title = btn.disabled ? 'Select at least one standard on the Standards page' : btn.title || '';
+                        try { if (window.MMS_UX && MMS_UX.attachTooltip && !btn.__mms_tip) { MMS_UX.attachTooltip(btn, btn.title || 'Generate report'); btn.__mms_tip = true; } } catch(_){ }
+                    });
             }catch(_){ }
+        }
+
+        function getSelectedStandardsModern(){
+            try{ const arr = JSON.parse(localStorage.getItem('mms:selectedStandards')||'[]'); return Array.isArray(arr)? arr : []; }catch(_){ return []; }
+        }
+        function updateNarrativeButtons(){
+            const sel = getSelectedStandardsModern();
+            const hasAny = Array.isArray(sel) && sel.length>0;
+            const gen = document.getElementById('btnGenNarrModern');
+            if (gen) gen.disabled = !hasAny;
+            const cnt = document.getElementById('selectedCountModern');
+            if (cnt) cnt.innerHTML = hasAny ? (`<span style="color:#059669">✓</span> ${sel.length} selected`) : ('<span style="color:#dc2626">⚠️</span> No standards selected');
+        }
+    async function handleGenerateNarrativeModern(){
+            const btnGen = document.getElementById('btnGenNarrModern');
+            const btnExport = document.getElementById('btnExportNarrModern');
+            const status = document.getElementById('narrStatusModern');
+            const preview = document.getElementById('narrPreviewModern');
+            const htmlDiv = document.getElementById('narrHtmlModern');
+            const token = getAuthToken();
+            const stds = getSelectedStandardsModern();
+            const intro = (document.getElementById('narrativeIntroModern')?.value || '').trim();
+            try{
+                if (!Array.isArray(stds) || !stds.length) { updateNarrativeButtons(); return; }
+                btnGen.disabled = true; btnExport.disabled = true; status.style.display='block';
+                status.innerHTML = 'Generating narrative…'; preview.style.display='none';
+                // Build a richer narrative using v1 comprehensive endpoint for the first selected standard
+                const evidenceMapRes = await fetch(getApiBase() + '/api/user/intelligence-simple/standards/evidence-map', { headers:{ 'Authorization': `Bearer ${token}` }, credentials:'include' });
+                let evidenceDocs = [];
+                if (evidenceMapRes.ok) {
+                    const m = await evidenceMapRes.json();
+                    const mapping = m?.mapping || {};
+                    const sid = String(stds[0]);
+                    const items = Array.isArray(mapping[sid]) ? mapping[sid] : [];
+                    evidenceDocs = items.slice(0, 8).map(it => ({ title: it.filename || 'Evidence', summary: (it.text || it.snippet || '').slice(0, 140) }));
+                }
+                const s = getOnboardingSettings();
+                const standardMeta = { standard_id: String(stds[0]||''), standard_title: String(stds[0]||'Selected Standard'), accreditor: (s.primary_accreditor||'') };
+                const inst = { name: (s.organization||s.institution_name||localStorage.getItem('org_name')||'Your Institution'), type: (s.institution_type||localStorage.getItem('org_type')||'Institution'), enrollment_size: (s.institution_size||s.enrollment||null), mission_focus: (s.mission_focus||null), programs: (s.programs||s.program_list||[]) };
+                const v1 = await fetch(getApiBase() + '/api/v1/narratives/comprehensive', {
+                    method:'POST', headers:{ 'Authorization': `Bearer ${token}`, 'Content-Type':'application/json' },
+                    body: JSON.stringify({ standard_id: standardMeta.standard_id, standard_title: standardMeta.standard_title, accreditor: standardMeta.accreditor, evidence_documents: evidenceDocs, institution_data: inst })
+                });
+                if (!v1.ok) throw new Error('HTTP '+v1.status);
+                const v1data = await v1.json();
+                const narrative = v1data?.narrative || '';
+                const meta = v1data?.metadata || {};
+                let html = '';
+                if (intro) html += `<p>${intro.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</p>`;
+                html += narrative ? `<p>${narrative.replace(/\n/g,'</p><p>')}</p>` : '<p>No mapped evidence available yet. Upload documents to generate a narrative.</p>';
+                if (meta && meta.structured_sections) {
+                    html += '<hr><h4>Structured Sections</h4>';
+                    try { Object.entries(meta.structured_sections).forEach(([k,v])=>{ html += `<h5>${k}</h5><p>${String(v||'')}</p>`; }); } catch(_) {}
+                }
+                htmlDiv.innerHTML = html; preview.style.display='block';
+                status.innerHTML = '<span style="color:#059669">✓ Narrative generated</span>';
+                btnExport.disabled = !html;
+                btnExport.__lastHtml = html;
+            }catch(e){ status.innerHTML = `<span style="color:#dc2626">❌ Error: ${e.message||e}</span>`; }
+            finally{ btnGen.disabled = false; setTimeout(()=>{ if(status.innerHTML.includes('Narrative generated')) status.style.display='none'; }, 2500); }
+        }
+    async function handleExportNarrativeModern(){
+            const btnGen = document.getElementById('btnGenNarrModern');
+            const btnExport = document.getElementById('btnExportNarrModern');
+            const status = document.getElementById('narrStatusModern');
+            const token = getAuthToken();
+            try{
+                btnGen.disabled = true; btnExport.disabled = true; status.style.display='block'; status.textContent='Preparing DOCX…';
+                const html = document.getElementById('btnExportNarrModern').__lastHtml || document.getElementById('narrHtmlModern').innerHTML || '';
+                const res = await fetch(getApiBase() + '/api/user/intelligence-simple/narrative/export.docx', { method:'POST', headers:{ 'Authorization': `Bearer ${token}`, 'Content-Type':'application/json' }, body: JSON.stringify({ html }) });
+                if (!res.ok) throw new Error('HTTP '+res.status);
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a'); a.href = url; a.download = `narrative_${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.docx`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+                status.innerHTML = '<span style="color:#059669">✓ Export complete</span>';
+            }catch(e){ status.innerHTML = `<span style=\"color:#dc2626\">❌ Export failed: ${e.message||e}</span>`; }
+            finally{ btnGen.disabled = false; btnExport.disabled = false; setTimeout(()=>{ if(status.innerHTML.includes('Export complete')) status.style.display='none'; }, 2500); }
         }
 
         async function generateReport(type) {
             const token = getAuthToken();
+            if (type !== 'evidence'){
+                const sel = getSelectedStandards();
+                if (!Array.isArray(sel) || sel.length === 0){
+                    alert('Please select at least one standard on the Standards page.');
+                    return;
+                }
+            }
             
             // Show loading state on button
             const buttons = document.querySelectorAll('.btn-primary');
@@ -1186,6 +1372,7 @@
             if (localStorage.getItem('mms:refreshMetrics') === '1') {
                 localStorage.removeItem('mms:refreshMetrics');
             }
+            try { personalizeReportsHeader(); maybeShowAccrSwitchBanner(); } catch(_) {}
             loadDashboardMetrics();
             setTimeout(() => {
                 loadRecentReports();
@@ -1193,9 +1380,38 @@
             // Try risk overview after initial load as well
             setTimeout(() => { try { refreshRiskOverview(); } catch(_) {} }, 1200);
             updateSelectedSummary();
+            try { updateNarrativeButtons(); } catch(_) {}
+            try { document.getElementById('btnGenNarrModern')?.addEventListener('click', handleGenerateNarrativeModern); } catch(_) {}
+            try { document.getElementById('btnExportNarrModern')?.addEventListener('click', handleExportNarrativeModern); } catch(_) {}
+            try { checkEvidenceMappingBanner(); } catch(_) {}
+        });
+        window.addEventListener('mms:onboarding-updated', ()=>{ try { personalizeReportsHeader(); maybeShowAccrSwitchBanner(); } catch(_) {} });
+        window.addEventListener('mms:selected-standards-updated', ()=>{ try { updateSelectedSummary(); updateNarrativeButtons(); } catch(_) {} });
+        window.addEventListener('storage', (e)=>{
+            try {
+                if(e.key === 'mms:selectedStandards' || e.key === 'selectedStandards') { updateSelectedSummary(); updateNarrativeButtons(); }
+                if(e.key === 'mms:lastUploadAt' || e.key === 'mms:lastAnalysisCompleteAt') { checkEvidenceMappingBanner(); }
+                if(e.key === 'mms:onboarding' || e.key === 'mms:currentAccreditor') { personalizeReportsHeader(); maybeShowAccrSwitchBanner(); }
+            } catch(_) {}
         });
 
-        window.addEventListener('storage', (e)=>{ if(e.key === 'mms:selectedStandards') updateSelectedSummary(); });
+        async function checkEvidenceMappingBanner(){
+            const banner = document.getElementById('noEvidenceBanner');
+            if (!banner) return;
+            try{
+                const token = getAuthToken();
+                const res = await fetch(getApiBase() + '/api/user/intelligence-simple/standards/evidence-map', {
+                    headers: { 'Authorization': `Bearer ${token}` }, credentials: 'include'
+                });
+                if(!res.ok){ banner.style.display = 'none'; return; }
+                const data = await res.json();
+                const docCount = (data?.counts && typeof data.counts.documents === 'number') ? data.counts.documents : (Array.isArray(data?.documents) ? data.documents.length : 0);
+                const mappedKeys = data?.mapping ? Object.keys(data.mapping) : [];
+                const mappedCount = Array.isArray(mappedKeys) ? mappedKeys.length : 0;
+                const show = (docCount <= 0) || (mappedCount <= 0);
+                banner.style.display = show ? 'block' : 'none';
+            }catch(_){ banner.style.display = 'none'; }
+        }
     </script>
 </body>
 <script>

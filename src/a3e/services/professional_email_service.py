@@ -201,7 +201,7 @@ class ProfessionalEmailService:
                     </ul>
                     
                     <div style="margin: 30px 0;">
-                        <a href="https://platform.mapmystandards.ai/dashboard-modern.html" 
+                        <a href="https://platform.mapmystandards.ai/dashboard-modern" 
                            style="background-color: #2563eb; 
                                   color: white; 
                                   padding: 12px 30px; 

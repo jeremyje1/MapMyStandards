@@ -1,0 +1,48 @@
+{
+  "name": "a3e-mapmystandards",
+  "displayName": "A3E — MapMyStandards",
+  "description": "Standards gaps tree, evidence CodeLens, and WebView for A3E.",
+  "version": "0.0.1",
+  "publisher": "mapmystandards",
+  "engines": { "vscode": ">=1.84.0" },
+  "categories": ["Other"],
+  "activationEvents": [
+    "onStartupFinished",
+    "onView:A3E.showGaps",
+    "onLanguage:markdown"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "views": {
+      "explorer": [
+        { "type": "tree", "id": "A3E.showGaps", "name": "A3E Gaps" }
+      ]
+    },
+    "commands": [
+      { "command": "a3e.refreshGaps", "title": "A3E: Refresh Gaps" },
+      { "command": "a3e.insertEvidenceSnippet", "title": "A3E: Insert Evidence Snippet…" },
+      { "command": "a3e.openGapsWebView", "title": "A3E: Open Gaps Dashboard" }
+    ],
+    "menus": {
+      "view/title": [
+        { "command": "a3e.refreshGaps", "when": "view == A3E.showGaps", "group": "navigation@1" },
+        { "command": "a3e.openGapsWebView", "when": "view == A3E.showGaps", "group": "navigation@2" }
+      ]
+    },
+    "languages": [
+      { "id": "markdown", "extensions": [".md", ".markdown"], "aliases": ["Markdown"] }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^18.19.0",
+    "@types/vscode": "^1.84.0",
+    "typescript": "^5.4.0",
+    "vsce": "^2.15.0"
+  }
+}

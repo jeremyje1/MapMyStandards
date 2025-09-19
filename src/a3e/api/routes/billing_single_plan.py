@@ -118,7 +118,7 @@ def _build_checkout_session(request: CreateCheckoutRequest, current_user: Option
         }],
         'success_url': request.success_url or os.getenv(
             "STRIPE_SUCCESS_URL",
-            "https://platform.mapmystandards.ai/dashboard-modern.html?success=true&plan=single&session_id={CHECKOUT_SESSION_ID}"
+            "https://platform.mapmystandards.ai/dashboard-modern?success=true&plan=single&session_id={CHECKOUT_SESSION_ID}"
         ),
         'cancel_url': request.cancel_url or os.getenv(
             "STRIPE_CANCEL_URL",

@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Standards Browser - A³E | MapMyStandards.ai</title>
+    <script src="/js/ux.js"></script>
+    <script src="/js/onboarding.js"></script>
     
     <style>
         :root {
@@ -624,10 +626,10 @@
         <div class="header-content">
             <a href="/" class="logo">A³E</a>
             <nav class="nav-links">
-                <a href="/dashboard-modern.html">Dashboard</a>
-                <a href="/upload">Upload</a>
-                <a href="/standards-modern.html" class="active">Standards</a>
-                <a href="/reports">Reports</a>
+                <a href="/dashboard-modern">Dashboard</a>
+                <a href="/upload-modern">Upload</a>
+                <a href="/standards-modern" class="active">Standards</a>
+                <a href="/reports-modern">Reports</a>
                 <a href="#" onclick="logout()">Logout</a>
             </nav>
         </div>
@@ -638,7 +640,7 @@
         <!-- Page Header -->
         <div class="page-header">
             <h1 class="page-title">Standards Browser</h1>
-            <p class="page-subtitle">Explore comprehensive accreditation standards from multiple accreditors to understand requirements and plan your evidence collection strategy</p>
+            <p class="page-subtitle" id="standardsSubtitle">Explore comprehensive accreditation standards from multiple accreditors to understand requirements and plan your evidence collection strategy</p>
         </div>
 
         <!-- Sign-in Banner (shown when unauthenticated) -->
@@ -699,8 +701,8 @@
                         🔄 Clear Filters
                     </button>
                     <div id="selectionToolbar" class="selection-toolbar" style="display:none">
-                        <span id="selectedCountBadge" class="badge-selected">0 selected</span>
-                        <button id="clearSelectionBtn" class="btn btn-secondary" type="button">🧹 Clear selection</button>
+                        <span id="selectedCountBadge" class="badge-selected" role="status" aria-live="polite" aria-atomic="true">0 selected</span>
+                        <button id="clearSelectionBtn" class="btn btn-secondary" type="button" title="Remove all selected standards" aria-label="Remove all selected standards">🧹 Clear selection</button>
                     </div>
                     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
                         <label class="filter-label" style="margin:0">Status</label>
@@ -717,7 +719,7 @@
                     </div>
                     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
                         <label class="filter-label" style="margin:0">Levels</label>
-                        <select id="levelsSelect" class="filter-select" style="padding:0.5rem 0.75rem">
+                        <select id="levelsSelect" class="filter-select" style="padding:0.5rem 0.75rem" title="Choose which levels of the standards hierarchy to include" aria-label="Levels to include">
                             <option value="standard">Top-level only</option>
                             <option value="standard,clause">Include subsections</option>
                             <option value="standard,clause,indicator">All levels</option>
@@ -725,12 +727,12 @@
                         <label style="display:inline-flex;align-items:center;gap:8px;font-size:0.9rem;color:var(--text-medium)">
                             <input type="checkbox" id="reviewerModeToggle"> Reviewer mode
                         </label>
-                        <button class="btn btn-secondary" onclick="exportStandardsCsv()">⬇️ Export CSV</button>
-                        <button class="btn btn-secondary" onclick="saveCurrentView()">💾 Save View</button>
+                        <button class="btn btn-secondary" onclick="exportStandardsCsv()" title="Download visible standards as CSV" aria-label="Download visible standards as CSV">⬇️ Export CSV</button>
+                        <button class="btn btn-secondary" onclick="saveCurrentView()" title="Save current filters and selections" aria-label="Save current filters and selections">💾 Save View</button>
                         <select id="savedViewsSelect" class="filter-select" style="padding:0.5rem 0.75rem;min-width:200px">
                             <option value="">Load view…</option>
                         </select>
-                        <button class="btn btn-secondary" onclick="window.print()">🖨️ Print</button>
+                        <button class="btn btn-secondary" onclick="window.print()" title="Print current view" aria-label="Print current view">🖨️ Print</button>
                     </div>
                 </div>
             </div>
@@ -762,10 +764,10 @@
                     </div>
                 </div>
                 <div class="search-controls">
-                    <button class="btn btn-primary" onclick="fetchCrossAccreditorMatches()">🔗 Find Mappings</button>
-                    <button class="btn btn-secondary" onclick="clearCrossAccreditor()">♻️ Reset</button>
+                    <button class="btn btn-primary" onclick="fetchCrossAccreditorMatches()" title="Find similar standards across accreditors" aria-label="Find similar standards across accreditors">🔗 Find Mappings</button>
+                    <button class="btn btn-secondary" onclick="clearCrossAccreditor()" title="Clear mapping inputs and results" aria-label="Clear mapping inputs and results">♻️ Reset</button>
                 </div>
-                <div id="crossAccreditorStatus" style="margin-top:1rem;font-size:0.85rem;color:var(--text-medium);"></div>
+                <div id="crossAccreditorStatus" style="margin-top:1rem;font-size:0.85rem;color:var(--text-medium);" role="status" aria-live="polite" aria-atomic="true"></div>
                 <div id="crossAccreditorResults" style="margin-top:1.5rem"></div>
             </div>
         </div>
@@ -797,7 +799,20 @@
             } catch (_) {}
         })();
         function getApiBase(){
-            return '';
+            return (window.MMS_CONFIG && MMS_CONFIG.API_BASE_URL) || '';
+        }
+        function buildApiUrl(path){
+            const base = getApiBase() || '';
+            if (!path || typeof path !== 'string') return path;
+            if (path.startsWith('http')) return path;
+            if (!base) return path;
+            if (base === '/api') {
+                return path.startsWith('/api/') ? path : '/api' + (path.startsWith('/') ? path : '/' + path);
+            }
+            if (base.endsWith('/api')) {
+                return base + (path.startsWith('/api/') ? path.slice(4) : (path.startsWith('/') ? path : '/' + path));
+            }
+            return base + (path.startsWith('/') ? path : '/' + path);
         }
         function getLevelsParam(){
             try { return localStorage.getItem('mms:levels') || 'standard'; } catch(_) { return 'standard'; }
@@ -930,6 +945,7 @@
                         syncSelectionToServer();
                         document.querySelectorAll('.standard-card.selected').forEach(el=>el.classList.remove('selected'));
                         updateSelectedBadge();
+                        try { window.dispatchEvent(new CustomEvent('mms:selected-standards-updated', { detail: { selected: [] } })); } catch(_) {}
                     }catch(_){ }
         }
 
@@ -938,7 +954,7 @@
                 const token = getAuthToken();
                 const headers = { 'Content-Type': 'application/json' };
                 if (isLikelyJwt(token)) headers['Authorization'] = 'Bearer ' + token;
-                await fetch(getApiBase() + '/api/user/intelligence-simple/standards/selection/save', {
+                await fetch(buildApiUrl('/api/user/intelligence-simple/standards/selection/save'), {
                     method: 'POST', credentials: 'include', headers,
                     body: JSON.stringify({ selected: Array.from(selectedStandards) })
                 });
@@ -950,11 +966,11 @@
                 const token = getAuthToken();
                 const headers = {};
                 if (isLikelyJwt(token)) headers['Authorization'] = 'Bearer ' + token;
-                const res = await fetch(getApiBase() + '/api/user/intelligence-simple/standards/selection/load', { credentials:'include', headers });
+                const res = await fetch(buildApiUrl('/api/user/intelligence-simple/standards/selection/load'), { credentials:'include', headers });
                 if(!res.ok) return;
                 const data = await res.json();
                 const arr = (data && data.selected) || [];
-                if (Array.isArray(arr) && arr.length){ selectedStandards = new Set(arr.map(String)); persistSelectedToStorage(); }
+                if (Array.isArray(arr) && arr.length){ selectedStandards = new Set(arr.map(String)); persistSelectedToStorage(); try { window.dispatchEvent(new CustomEvent('mms:selected-standards-updated', { detail: { selected: Array.from(selectedStandards) } })); } catch(_) {} }
             }catch(_){ }
         }
 
@@ -969,7 +985,7 @@
             try {
                 console.debug('[standards-modern] Fetching accreditors via corpus metadata');
                 const t = getAuthToken();
-                const r1 = await fetch(getApiBase() + '/api/user/intelligence-simple/standards/corpus/metadata', {
+                const r1 = await fetch(buildApiUrl('/api/user/intelligence-simple/standards/corpus/metadata'), {
                     credentials: 'include',
                     headers: isLikelyJwt(t) ? { 'Authorization': `Bearer ${t}` } : {}
                 });
@@ -986,7 +1002,7 @@
                     }
                 }
                 console.debug('[standards-modern] Corpus metadata empty or unavailable, falling back to /api/v1/standards/accreditors');
-                const r2 = await fetch(getApiBase() + '/api/v1/standards/accreditors', { credentials: 'include' });
+                const r2 = await fetch(buildApiUrl('/api/v1/standards/accreditors'), { credentials: 'include' });
                 if (r2.ok) {
                     const j2 = await r2.json();
                     if (Array.isArray(j2) && j2.length) {
@@ -1004,7 +1020,7 @@
                 }
                 // Last resort: original DB endpoint
                 console.debug('[standards-modern] Final fallback to /api/standards/accreditors');
-                const response = await fetch(getApiBase() + '/api/standards/accreditors', { credentials: 'include' });
+                const response = await fetch(buildApiUrl('/api/standards/accreditors'), { credentials: 'include' });
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const data = await response.json();
                 if (data && data.success && data.data && Array.isArray(data.data.accreditors)) {
@@ -1031,7 +1047,7 @@
             statusEl.textContent = accreditorFilter? `Loading metadata for ${accreditorFilter}...` : 'Loading corpus metadata...';
             try{
                 const token = getAuthToken();
-                const url = accreditorFilter? (getApiBase() + `/api/user/intelligence-simple/standards/corpus/metadata?accreditor=${encodeURIComponent(accreditorFilter)}`) : (getApiBase() + '/api/user/intelligence-simple/standards/corpus/metadata');
+                const url = accreditorFilter? (buildApiUrl(`/api/user/intelligence-simple/standards/corpus/metadata?accreditor=${encodeURIComponent(accreditorFilter)}`)) : (buildApiUrl('/api/user/intelligence-simple/standards/corpus/metadata'));
                 let res = await fetch(url, {
                     headers: isLikelyJwt(token) ? { 'Authorization': `Bearer ${token}` } : {},
                     credentials: 'include'
@@ -1042,7 +1058,7 @@
                         try { const b = document.getElementById('authBanner'); if (b) b.style.display = 'flex'; } catch(_) {}
                         // Fallback: public accreditors endpoint to synthesize minimal metadata
                         console.debug('[standards-modern] corpus metadata 401 — falling back to /api/v1/standards/accreditors');
-                        const pub = await fetch(getApiBase() + '/api/v1/standards/accreditors', { credentials: 'include' });
+                        const pub = await fetch(buildApiUrl('/api/v1/standards/accreditors'), { credentials: 'include' });
                         if(pub.ok){
                             const arr = await pub.json();
                             const filtered = Array.isArray(arr) ? arr.filter(a => !accreditorFilter || (a.accreditor_acronym||a.accreditor_id||'').toUpperCase() === accreditorFilter.toUpperCase()) : [];
@@ -1180,7 +1196,7 @@
             try {
                 const token = getAuthToken();
                 const levels = getLevelsParam();
-                let url = getApiBase() + `/api/user/intelligence-simple/standards/list?accreditor=${encodeURIComponent(accreditorId.toUpperCase())}&levels=${encodeURIComponent(levels)}`;
+                let url = buildApiUrl(`/api/user/intelligence-simple/standards/list?accreditor=${encodeURIComponent(accreditorId.toUpperCase())}&levels=${encodeURIComponent(levels)}`);
                 if (institutionType) {
                     url += `&institution_type=${encodeURIComponent(institutionType)}`;
                 }
@@ -1196,7 +1212,7 @@
                 }
                 if (!response.ok) {
                     // Fallback to DB endpoint as last resort
-                    let dbUrl = getApiBase() + `/api/standards?accreditor=${encodeURIComponent(accreditorId.toUpperCase())}`;
+                    let dbUrl = buildApiUrl(`/api/standards?accreditor=${encodeURIComponent(accreditorId.toUpperCase())}`);
                     response = await fetch(dbUrl, { credentials: 'include' });
                 }
                 const data = await response.json();
@@ -1298,7 +1314,7 @@
                                 ` : ''}
                                 <div class="meta-item">${statusBadge}</div>
                                 <div class="meta-item">
-                                    <button class="btn btn-secondary" style="padding:0.4rem 0.8rem;font-size:0.7rem" onclick="openRiskModal('${standard.code || standard.id}')">Risk Factors</button>
+                                    <button class="btn btn-secondary" data-risk-btn="1" style="padding:0.4rem 0.8rem;font-size:0.7rem" onclick="openRiskModal('${standard.code || standard.id}')" title="View risk factor breakdown" aria-label="Open risk factors for ${standard.code || standard.id}">Risk Factors</button>
                                 </div>
                                 ${isReviewerMode()?`
                                                 <div class="meta-item" style="width:100%;margin-top:6px;gap:8px;align-items:stretch">
@@ -1326,6 +1342,7 @@
             
             html += '</div>';
             document.getElementById('contentArea').innerHTML = html;
+            try { attachStandardsTooltips(); } catch(_){ }
             updateSelectedBadge();
         }
 
@@ -1342,6 +1359,7 @@
                 const card = e.currentTarget || e.target.closest('.standard-card');
                 if (card) card.classList.toggle('selected');
                 updateSelectedBadge();
+                try { window.dispatchEvent(new CustomEvent('mms:selected-standards-updated', { detail: { selected: Array.from(selectedStandards) } })); } catch(_) {}
             }catch(_){ }
         }
 
@@ -1419,7 +1437,7 @@
                 statusEl.textContent='Computing mappings...';
                 try{
                     const token = getAuthToken();
-                    const res = await fetch(getApiBase() + `/api/user/intelligence-simple/standards/cross-accreditor-matches?source=${encodeURIComponent(source)}&target=${encodeURIComponent(target)}&threshold=${threshold}&top_k=${topK}`, {
+                    const res = await fetch(buildApiUrl(`/api/user/intelligence-simple/standards/cross-accreditor-matches?source=${encodeURIComponent(source)}&target=${encodeURIComponent(target)}&threshold=${threshold}&top_k=${topK}`), {
                         headers: isLikelyJwt(token) ? { 'Authorization': `Bearer ${token}` } : {},
                         credentials: 'include'
                     });
@@ -1491,6 +1509,8 @@
             // Clear cached risk scores on context change
             riskScoreCache = new Map();
             currentRiskModalStandardId = null;
+            try { localStorage.setItem('mms:currentAccreditor', String(accreditorId||'')); } catch(_){ }
+            try { maybeShowSwitchBanner(); } catch(_){ }
         });
 
         document.getElementById('institutionTypeSelect').addEventListener('change', function() {
@@ -1505,8 +1525,17 @@
             }
         });
 
+        // Switch banner container
+        const switchBannerHtml = `<div id="accrSwitchBanner" style="display:none;margin:10px 0;padding:10px;border:1px solid #fde68a;background:#fffbeb;color:#92400e;border-radius:8px">
+            <strong>Heads up:</strong> Your onboarding accreditor differs from the current selection.
+            <button id="applyOnboardingAccr" class="btn" style="margin-left:.5rem;padding:.25rem .6rem;border:1px solid #f59e0b;background:#fff3;cursor:pointer">Switch to onboarding accreditor</button>
+        </div>`;
+        // Insert banner under filters header when available
+        function mountSwitchBanner(){ try{ const filters = document.querySelector('.filters-section'); if (filters && !document.getElementById('accrSwitchBanner')) { filters.insertAdjacentHTML('afterbegin', switchBannerHtml); const btn=document.getElementById('applyOnboardingAccr'); if(btn) btn.addEventListener('click', async ()=>{ try{ const s = await (window.MMS_ONBOARDING && window.MMS_ONBOARDING.loadSettings ? window.MMS_ONBOARDING.loadSettings() : {}); const v = (s && s.primary_accreditor) ? String(s.primary_accreditor).toUpperCase() : ''; if (v) { const sel=document.getElementById('accreditorSelect'); sel.value=v; sel.dispatchEvent(new Event('change')); } document.getElementById('accrSwitchBanner').style.display='none'; }catch(_){}}); } }catch(_){}}
+        function maybeShowSwitchBanner(){ try{ const sel = String(document.getElementById('accreditorSelect').value||'').toUpperCase(); const s = JSON.parse(localStorage.getItem('mms:onboarding')||'{}')||{}; const ob = String((s.primary_accreditor||'')).toUpperCase(); const banner = document.getElementById('accrSwitchBanner'); if (!banner) return; banner.style.display = (ob && sel && ob !== sel) ? 'block' : 'none'; }catch(_){}}
+
         // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
             // Initialize levels + reviewer mode
             try{
                 const ls=document.getElementById('levelsSelect'); if(ls){ ls.value=getLevelsParam(); ls.addEventListener('change', ()=>{ setLevelsParam(ls.value); const acc=document.getElementById('accreditorSelect').value; if(acc){ loadStandards(acc, document.getElementById('institutionTypeSelect').value); } persistFiltersToUrl(); }); }
@@ -1514,11 +1543,51 @@
             }catch(_){ }
             loadSelectedFromStorage();
             hydrateSelectionFromServer();
-            try{ const btn = document.getElementById('clearSelectionBtn'); if(btn){ btn.addEventListener('click', clearSelectedStandards); } }catch(_){ }
+            try{ const btn = document.getElementById('clearSelectionBtn'); if(btn){ btn.addEventListener('click', clearSelectedStandards); if(window.MMS_UX && MMS_UX.attachTooltip) MMS_UX.attachTooltip(btn, 'Clear all selected standards'); } }catch(_){ }
             updateSelectedBadge();
             loadFiltersFromUrl();
-            loadAccreditors();
+            // Personalize using onboarding settings if available
+            try{
+                const s = (window.MMS_ONBOARDING && window.MMS_ONBOARDING.loadSettings) ? await window.MMS_ONBOARDING.loadSettings() : {};
+                const sub = document.getElementById('standardsSubtitle');
+                if (sub && (s.organization || s.institution_name)) {
+                    sub.textContent = `Standards tailored for ${(s.organization||s.institution_name)}${s.primary_accreditor ? ' • ' + s.primary_accreditor : ''}`;
+                }
+                // Attempt to preselect accreditor if present
+                if (s.primary_accreditor) {
+                    // Load accreditors first, then select and load standards
+                    await loadAccreditors();
+                    const accSel = document.getElementById('accreditorSelect');
+                    if (accSel) {
+                        accSel.value = (s.primary_accreditor||'').toUpperCase();
+                        try { localStorage.setItem('mms:currentAccreditor', String(accSel.value||'')); } catch(_){ }
+                        const instSel = document.getElementById('institutionTypeSelect');
+                        const instType = (s.institution_type || '').toLowerCase();
+                        if (instSel && instType) instSel.value = instType;
+                        // Trigger standards load based on selection
+                        loadStandards(accSel.value, instSel ? instSel.value : '');
+                        fetchCorpusMetadata(accSel.value);
+                    }
+                } else {
+                    // Fallback: original flow
+                    loadAccreditors();
+                }
+                mountSwitchBanner();
+                maybeShowSwitchBanner();
+            }catch(_){ loadAccreditors(); }
             hydrateSavedViews();
+        });
+
+        window.addEventListener('mms:onboarding-updated', (e)=>{
+            try{
+                const s = (e && e.detail) || {};
+                const sub = document.getElementById('standardsSubtitle');
+                if (sub && (s.organization || s.institution_name)) {
+                    sub.textContent = `Standards tailored for ${(s.organization||s.institution_name)}${s.primary_accreditor ? ' • ' + s.primary_accreditor : ''}`;
+                }
+                mountSwitchBanner();
+                maybeShowSwitchBanner();
+            }catch(_){ }
         });
 
         window.addEventListener('storage', (e)=>{
@@ -1540,7 +1609,7 @@
                 const token = getAuthToken();
                 const headers = { 'Content-Type': 'application/json' };
                 if (isLikelyJwt(token)) headers['Authorization'] = 'Bearer ' + token;
-                const res = await fetch(getApiBase() + '/api/user/intelligence-simple/reviews/standard', {
+                const res = await fetch(buildApiUrl('/api/user/intelligence-simple/reviews/standard'), {
                     method: 'POST', headers, credentials: 'include', body: JSON.stringify(payload)
                 });
                 if (res.status === 401) { try { const b=document.getElementById('authBanner'); if(b) b.style.display='flex'; } catch(_){} }
@@ -1559,7 +1628,7 @@
                 const token = getAuthToken();
                 const headers = {};
                 if (isLikelyJwt(token)) headers['Authorization'] = 'Bearer ' + token;
-                const res = await fetch(getApiBase() + `/api/user/intelligence-simple/reviews/standards?accreditor=${encodeURIComponent((accreditor||'').toUpperCase())}` , { credentials:'include', headers });
+                const res = await fetch(buildApiUrl(`/api/user/intelligence-simple/reviews/standards?accreditor=${encodeURIComponent((accreditor||'').toUpperCase())}`) , { credentials:'include', headers });
                 if(!res.ok) return;
                 const data = await res.json();
                 const reviews = data && data.reviews;
@@ -1613,6 +1682,32 @@
                 if(v.acc){ loadStandards(v.acc, v.type||''); }
                 persistFiltersToUrl();
             };
+        }
+
+        function attachStandardsTooltips(){
+            if (!window.MMS_UX || !MMS_UX.attachTooltip) return;
+            const tipSelect = 'Click to select/deselect this standard';
+            const tipRisk = 'AI-assisted risk score and key contributing factors';
+            const tipSave = 'Save current filters and selections';
+            const tipCsv = 'Export the current list to CSV';
+            const tipPrint = 'Print the current view';
+
+            document.querySelectorAll('.standard-card').forEach(el => {
+                if (!el.__mms_tip) { MMS_UX.attachTooltip(el, tipSelect); el.__mms_tip = true; }
+            });
+            document.querySelectorAll('[data-risk-btn="1"]').forEach(el => {
+                if (!el.__mms_tip) { MMS_UX.attachTooltip(el, tipRisk); el.__mms_tip = true; }
+            });
+            const saveBtn = document.querySelector('button[onclick="saveCurrentView()"]');
+            if (saveBtn && !saveBtn.__mms_tip) { MMS_UX.attachTooltip(saveBtn, tipSave); saveBtn.__mms_tip = true; }
+            const csvBtn = document.querySelector('button[onclick="exportStandardsCsv()"]');
+            if (csvBtn && !csvBtn.__mms_tip) { MMS_UX.attachTooltip(csvBtn, tipCsv); csvBtn.__mms_tip = true; }
+            const printBtn = document.querySelector('button[onclick="window.print()"]');
+            if (printBtn && !printBtn.__mms_tip) { MMS_UX.attachTooltip(printBtn, tipPrint); printBtn.__mms_tip = true; }
+            const findMapBtn = document.querySelector('button[onclick="fetchCrossAccreditorMatches()"]');
+            if (findMapBtn && !findMapBtn.__mms_tip) { MMS_UX.attachTooltip(findMapBtn, 'Find similar standards across accreditors'); findMapBtn.__mms_tip = true; }
+            const resetMapBtn = document.querySelector('button[onclick="clearCrossAccreditor()"]');
+            if (resetMapBtn && !resetMapBtn.__mms_tip) { MMS_UX.attachTooltip(resetMapBtn, 'Clear mapping inputs and results'); resetMapBtn.__mms_tip = true; }
         }
 
         // Risk Factor Modal Logic
@@ -1676,7 +1771,7 @@
                 const token = getAuthToken();
                 const headers = {};
                 if (isLikelyJwt(token)) headers['Authorization'] = 'Bearer ' + token;
-                return fetch(getApiBase() + '/api/user/intelligence-simple/risk/score-standard?' + q.toString(), {
+                return fetch(buildApiUrl('/api/user/intelligence-simple/risk/score-standard?' + q.toString()), {
                     method:'POST', headers, credentials: 'include'
                 });
             })().then(async res => {
@@ -1714,7 +1809,7 @@
                 const token = getAuthToken();
                 const headers = {};
                 if (isLikelyJwt(token)) headers['Authorization'] = 'Bearer ' + token;
-                return fetch(getApiBase() + '/api/user/intelligence-simple/risk/score-standard?' + q2p.toString(), {
+                return fetch(buildApiUrl('/api/user/intelligence-simple/risk/score-standard?' + q2p.toString()), {
                     method:'POST', headers, credentials: 'include'
                 });
             })().then(async res => {

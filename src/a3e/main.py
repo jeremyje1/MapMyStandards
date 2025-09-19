@@ -78,6 +78,14 @@ try:
 except Exception as e:
     logger.error(f"❌ Billing router import failed: {e}")
     billing_router = None
+
+# Admin vector router
+try:
+    from .api.routes.vector_admin import router as vector_admin_router
+    vector_admin_router_available = True
+except Exception as e:
+    vector_admin_router_available = False
+    _vector_admin_import_exception = e
 try:
     from .api.routes.onboarding import router as onboarding_router
     _onboarding_available = True
@@ -819,6 +827,14 @@ if db_init_router_available:
     logger.info("✅ Database init router loaded")
 else:
     logger.warning("⚠️ Database init router not available")
+
+# Mount admin vector router (requires ADMIN_API_TOKEN)
+if 'vector_admin_router_available' in globals() and vector_admin_router_available:
+    try:
+        app.include_router(vector_admin_router)
+        logger.info("✅ Admin vector router loaded")
+    except Exception as _e:
+        logger.warning(f"⚠️ Could not mount admin vector router: {_e}")
 
 # Include database-powered routers (production-ready)
 try:

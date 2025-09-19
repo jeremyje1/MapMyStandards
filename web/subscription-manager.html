@@ -201,9 +201,9 @@
         function goToDashboard() {
             const trialId = localStorage.getItem('a3e_trial_id');
             if (trialId) {
-                window.location.href = `https://platform.mapmystandards.ai/dashboard-modern.html?trial_id=${trialId}`;
+                window.location.href = `https://platform.mapmystandards.ai/dashboard-modern?trial_id=${trialId}`;
             } else {
-                window.location.href = '/dashboard-modern.html';
+                window.location.href = '/dashboard-modern';
             }
         }
 

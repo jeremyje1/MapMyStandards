@@ -16,7 +16,7 @@
     '/reports',
     '/standards',
     '/evidence-mapping',
-    '/upload',
+  '/upload-modern',
   ]);
 
   const toPlatform = (path) => `https://${PLATFORM_HOST}${path}`;

@@ -940,7 +940,7 @@
             </section>
         </main>
 
-        <script src="/js/onboarding.js"></script>
+    <script src="/js/onboarding.js"></script>
 
         <script>
             // Dashboard functionality
@@ -970,9 +970,27 @@
                 this.init();
             }
 
+            applyPersonalization() {
+                try {
+                    const s = this.settings || {};
+                    const el = document.getElementById('welcomeTitle');
+                    if (!el) return;
+                    const org = s.organization || s.institution_name || '';
+                    const accr = s.primary_accreditor || s.accreditor || '';
+                    if (org && accr) {
+                        el.textContent = `Welcome back, ${org} • ${accr} 👋`;
+                    } else if (org) {
+                        el.textContent = `Welcome back, ${org} 👋`;
+                    } else if (accr) {
+                        el.textContent = `Welcome back • ${accr} 👋`;
+                    }
+                } catch(_) { /* ignore */ }
+            }
+
             async init() {
                 try { if (window.MMS_ONBOARDING && window.MMS_ONBOARDING.maybePrompt) window.MMS_ONBOARDING.maybePrompt(); } catch(_){}
                 try { this.settings = window.MMS_ONBOARDING && window.MMS_ONBOARDING.loadSettings ? await window.MMS_ONBOARDING.loadSettings() : {}; } catch(_) { this.settings = {}; }
+                try { this.applyPersonalization(); } catch(_) {}
                 await this.loadMetrics();
                 await this.loadActivity();
                 await this.loadProgress();
@@ -990,6 +1008,19 @@
                     } else if (e.key === 'mms:selectedStandards' || e.key === 'selectedStandards') {
                         this.renderNextSteps();
                     }
+                });
+                // Same-tab selection updates
+                window.addEventListener('mms:selected-standards-updated', () => {
+                    try { this.renderNextSteps(); } catch(_) {}
+                });
+                // Onboarding updates should update personalization immediately
+                window.addEventListener('mms:onboarding-updated', async (e) => {
+                    try {
+                        this.settings = (e && e.detail) ? e.detail : (await (window.MMS_ONBOARDING && window.MMS_ONBOARDING.loadSettings ? window.MMS_ONBOARDING.loadSettings() : {}));
+                    } catch(_) { /* ignore */ }
+                    try { this.applyPersonalization(); } catch(_) {}
+                    try { if (this.lastMetrics) this.renderMetrics(this.lastMetrics); } catch(_) {}
+                    try { this.renderNextSteps(); } catch(_) {}
                 });
             }
 
@@ -1037,6 +1068,7 @@
                 const performance = data.performance_metrics;
                 const account = data.account_info;
                 const explain = (performance && performance.explanations) || {};
+                const accName = (account && (account.primary_accreditor || account.accreditor)) || (this.settings && (this.settings.primary_accreditor || this.settings.accreditor)) || 'Standards';
 
                 metricsGrid.innerHTML = `
                     <div class="metric-card success">
@@ -1057,7 +1089,7 @@
                             <div class="metric-icon info">🎯</div>
                         </div>
                         <div class="metric-value">${metrics.standards_mapped}/${metrics.total_standards}</div>
-                        <div class="metric-description">SACSCOC standards coverage achieved</div>
+                        <div class="metric-description">${accName} standards coverage achieved</div>
                         <div class="metric-trend">
                             <span class="trend-indicator trend-${performance.coverage_percentage >= 75 ? 'up' : 'neutral'}">
                                 ${performance.coverage_percentage}% coverage
@@ -1159,7 +1191,7 @@
                 
 
                 // Render trend sparklines using timeseries endpoint (throttled)
-                this.ensureTimeseries(account.primary_accreditor).then(series => {
+                this.ensureTimeseries(account.primary_accreditor || (this.settings && this.settings.primary_accreditor)).then(series => {
                     try {
                         const coverageVals = (series||[]).map(s => Number(s.coverage_percentage || 0));
                         const complianceVals = (series||[]).map(s => Number(s.compliance_score || 0));
@@ -1242,13 +1274,17 @@
                 const docs = Number(core.documents_analyzed || core.total_documents || 0);
                 const hasOrg = !!(settings.organization || settings.institution_name);
                 const hasAccr = !!(settings.primary_accreditor);
+                const size = settings.institution_size || settings.enrollment || '';
+                const programs = settings.programs || settings.program_list || [];
+                const progCount = Array.isArray(programs) ? programs.length : (typeof programs === 'string' ? programs.split(',').filter(Boolean).length : 0);
                 const sel = this.selectedCount();
 
                 const items = [];
                 if (!(hasOrg && hasAccr)) items.push({ id:'onboarding', text:'Complete onboarding to personalize your dashboard', href:'#', action: () => window.MMS_ONBOARDING && window.MMS_ONBOARDING.openWizard && window.MMS_ONBOARDING.openWizard(settings) });
-                if (!docs) items.push({ id:'upload', text:'Upload evidence documents', href:'/upload-modern' });
+                if (!docs) items.push({ id:'upload', text:`Upload evidence documents${size? ` • target ${size}+ pages or key policies`:''}`, href:'/upload-modern' });
                 if (!sel) items.push({ id:'standards', text:'Browse and select standards to focus on', href:'/standards-modern' });
-                items.push({ id:'reports', text:'Generate reports when you’re ready', href:'/reports-modern' });
+                const reportHint = progCount ? `Generate reports • include ${progCount} program${progCount>1?'s':''}` : 'Generate reports when you’re ready';
+                items.push({ id:'reports', text: reportHint, href:'/reports-modern' });
 
                 if (!items.length) { el.style.display = 'none'; return; }
                 list.innerHTML = '';

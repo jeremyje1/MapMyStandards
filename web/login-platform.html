@@ -151,7 +151,7 @@
           
           const params = new URLSearchParams(window.location.search);
           const ret = params.get('return');
-          let dest = '/dashboard-modern.html';
+          let dest = '/dashboard-modern';
           if (ret){
             try {
               const u = new URL(ret, window.location.origin);
@@ -159,9 +159,9 @@
                 // Map legacy standards routes to modern page
                 const p = u.pathname.replace(/\/index\.html$/,'');
                 if (p === '/standards' || p === '/standards.html') {
-                  dest = '/standards-modern.html?v=now5';
+                  dest = '/standards-modern?v=now5';
                 } else if (p === '/standards-modern' || p === '/standards-modern.html') {
-                  dest = '/standards-modern.html?v=now5';
+                  dest = '/standards-modern?v=now5';
                 } else {
                   dest = u.toString();
                 }
@@ -172,7 +172,7 @@
             try {
               const ref = document.referrer ? new URL(document.referrer) : null;
               if (ref && ref.origin === window.location.origin && /\/standards-modern(\.html)?/.test(ref.pathname)) {
-                dest = '/standards-modern.html?v=now5';
+                dest = '/standards-modern?v=now5';
               }
             } catch(_) { /* ignore */ }
           }
@@ -198,7 +198,7 @@
           
           const params = new URLSearchParams(window.location.search);
           const ret = params.get('return');
-          const dest = ret ? (new URL(ret, window.location.origin)).toString() : '/dashboard-modern.html';
+          const dest = ret ? (new URL(ret, window.location.origin)).toString() : '/dashboard-modern';
           setTimeout(()=>{ window.location.href = dest; }, 500);
         } else {
           showError('Unable to connect to server. Please try again.');

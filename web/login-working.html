@@ -180,7 +180,7 @@
                 if (response.ok) {
                     localStorage.setItem('a3e_trial_id', trialId);
                     localStorage.setItem('a3e_user_type', 'trial');
-                    window.location.href = `https://platform.mapmystandards.ai/dashboard-modern.html?trial_id=${trialId}`;
+                    window.location.href = `https://platform.mapmystandards.ai/dashboard-modern?trial_id=${trialId}`;
                 } else if (response.status === 404) {
                     throw new Error('Trial not found. Please check your trial ID or start a new trial.');
                 } else {

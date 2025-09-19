@@ -2,12 +2,12 @@
   if (document.getElementById('globalNavContainer')) return;
 
   const links = [
-    { text: 'AI Dashboard', path: '/dashboard-modern.html' },
+  { text: 'AI Dashboard', path: '/dashboard-modern' },
     { text: 'Standards', path: '/standards' },
     { text: 'Evidence Mapping', path: '/evidence-mapping' },
     { text: 'Reports', path: '/reports' },
     { text: 'Org Chart', path: '/org-chart' },
-    { text: 'Upload', path: '/upload' }
+  { text: 'Upload', path: '/upload-modern' }
   ];
 
   const pathname = window.location.pathname.replace(/\/$/, '');

@@ -285,7 +285,11 @@ def _compute_dashboard_metrics_for_snapshot(current_user: Dict[str, Any]) -> Dic
         ts = (d.get("trust_score") or {}).get("overall_score")
         if isinstance(ts, (int, float)):
             trust_scores.append(float(ts))
-    avg_trust = float(sum(trust_scores) / len(trust_scores)) if trust_scores else 0.7
+        # Normalize average trust to 0-1
+        avg_trust = float(sum(trust_scores) / len(trust_scores)) if trust_scores else 0.7
+        if avg_trust > 1:
+            avg_trust = avg_trust / 100.0
+        avg_trust = max(0.0, min(1.0, avg_trust))
 
     compliance_score = 0.0
     if total_standards > 0 and (standards_mapped > 0 or documents_analyzed > 0):
@@ -704,12 +708,17 @@ async def get_dashboard_metrics_simple(current_user: Dict[str, Any] = Depends(ge
                     trust_scores.append(float(ts))
             if trust_scores:
                 avg_trust = float(sum(trust_scores) / len(trust_scores))
+                if avg_trust > 1:
+                    avg_trust = avg_trust / 100.0
+                avg_trust = max(0.0, min(1.0, avg_trust))
 
         total_standards = total_roots if total_roots > 0 else max(total_roots, standards_mapped)
         coverage = (standards_mapped / total_standards) if total_standards else 0.0
+        coverage = max(0.0, min(1.0, coverage))
         compliance_score = 0.0
         if total_standards > 0 and (standards_mapped > 0 or documents_analyzed > 0):
-            compliance_score = round((coverage * 0.7 + avg_trust * 0.3) * 100, 1)
+            compliance_score = (coverage * 0.7 + avg_trust * 0.3) * 100
+            compliance_score = round(max(0.0, min(100.0, compliance_score)), 1)
 
         risk_agg = risk_explainer.aggregate()
         average_risk = risk_agg.get("average_risk", 0.0)
