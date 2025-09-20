@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>CrosswalkX</title>
+  <style>
+    body { font-family: -apple-system, Inter, sans-serif; margin:0; background:#f8fafc; color:#0f172a; }
+    header { background:#0f172a; color:white; padding:12px 16px; }
+    .container { max-width: 1100px; margin: 20px auto; padding: 0 16px; }
+    .card { background:white; border:1px solid #e2e8f0; border-radius:10px; box-shadow:0 1px 2px rgba(0,0,0,0.05); padding:16px; margin-bottom:16px; }
+    .row { display:flex; gap:8px; align-items:center; }
+    .input { padding:8px; border:1px solid #cbd5e1; border-radius:8px; }
+    .btn { padding:8px 12px; border-radius:8px; border:1px solid #0ea5e9; background:#0ea5e9; color:white; cursor:pointer; }
+    .list { max-height:70vh; overflow:auto; }
+    .pill { background:#f1f5f9; border:1px solid #e2e8f0; padding:4px 8px; border-radius:999px; font-size:12px; }
+    .muted { color:#475569; font-size:13px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <h2>CrosswalkX <span class="muted">Find overlap across accreditors</span></h2>
+    </div>
+  </header>
+  <div class="container">
+    <div class="card">
+      <div class="row">
+        <input id="a" class="input" placeholder="Accreditor A e.g., SACSCOC"/>
+        <input id="b" class="input" placeholder="Accreditor B e.g., MSCHE"/>
+        <button id="go" class="btn">Compute</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Matches</h3>
+      <div id="out" class="list"></div>
+    </div>
+  </div>
+  <script>
+    const API = '/api/user/intelligence-simple';
+
+    function ensureTokenFromQuery(){
+      try {
+        const u = new URL(window.location.href);
+        const t = u.searchParams.get('token') || u.searchParams.get('api_key') || u.searchParams.get('access_token');
+        if (t) {
+          try { localStorage.setItem('a3e_api_key', t); sessionStorage.setItem('a3e_api_key', t); localStorage.setItem('access_token', t); localStorage.setItem('jwt_token', t); } catch(_e) {}
+          u.searchParams.delete('token'); u.searchParams.delete('api_key'); u.searchParams.delete('access_token');
+          history.replaceState(null, '', u.toString());
+        }
+      } catch(_e) {}
+    }
+
+    function getToken(){
+      return localStorage.getItem('a3e_api_key') || sessionStorage.getItem('a3e_api_key') || localStorage.getItem('access_token') || localStorage.getItem('jwt_token') || '';
+    }
+
+    function authHeaders(extra){
+      const h = Object.assign({}, extra || {});
+      const t = getToken();
+      if (t) h['Authorization'] = `Bearer ${t}`;
+      return h;
+    }
+
+    async function compute() {
+      const a = document.getElementById('a').value.trim();
+      const b = document.getElementById('b').value.trim();
+      if (!a || !b) return alert('Enter both accreditors');
+      let j;
+      try {
+        const r = await fetch(`${API}/standards/cross-accreditor-matches?accreditorA=${encodeURIComponent(a)}&accreditorB=${encodeURIComponent(b)}`, { headers: authHeaders() });
+        if (!r.ok) {
+          j = { error: `Request failed (${r.status}) - ensure you're logged in and corpus is loaded.` };
+        } else {
+          j = await r.json();
+        }
+      } catch(e){ j = { error: String(e) }; }
+      render(j);
+    }
+    function render(j) {
+      const out = document.getElementById('out');
+      out.innerHTML = '';
+      (j.matches || []).forEach(m => {
+        const div = document.createElement('div');
+        div.className = 'row';
+        div.style.borderBottom = '1px solid #f1f5f9';
+        div.style.padding = '8px 0';
+        div.innerHTML = `<div style='min-width:200px'><strong>${m.standardA.id}</strong><div class='muted'>${m.standardA.title || ''}</div></div>
+                         <div class='pill'>~${Math.round((m.similarity||0)*100)}% similar</div>
+                         <div style='min-width:200px'><strong>${m.standardB.id}</strong><div class='muted'>${m.standardB.title || ''}</div></div>`;
+        out.appendChild(div);
+      });
+      if (!j.matches || !j.matches.length) out.innerHTML = '<div class="muted">No overlaps found or corpus unavailable.</div>';
+    }
+    document.getElementById('go').addEventListener('click', compute);
+    ensureTokenFromQuery();
+  </script>
+</body>
+</html>

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Admin • Standards Loader</title>
+  <style>
+    body { font-family: -apple-system, Inter, sans-serif; margin:0; background:#f8fafc; color:#0f172a; }
+    header { background:#0f172a; color:white; padding:12px 16px; }
+    .container { max-width: 960px; margin: 20px auto; padding: 0 16px; }
+    .card { background:white; border:1px solid #e2e8f0; border-radius:10px; box-shadow:0 1px 2px rgba(0,0,0,0.05); padding:16px; margin-bottom:16px; }
+    .row { display:flex; gap:10px; align-items:center; }
+    .muted { color:#475569; font-size:13px; }
+    .btn { padding:8px 12px; border-radius:8px; border:1px solid #0ea5e9; background:#0ea5e9; color:white; cursor:pointer; }
+    .input { padding:8px; border:1px solid #cbd5e1; border-radius:8px }
+    pre { white-space: pre-wrap; background:#0f172a; color:#e2e8f0; padding:12px; border-radius:8px; font-size:12px; overflow:auto; }
+    .grid { display:grid; grid-template-columns: 1fr 1fr; gap:16px; }
+    .badge { background:#eef2ff; color:#3730a3; padding:2px 8px; border-radius:999px; font-size:12px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <h2>Admin • Standards Loader <span class="badge" id="displayMode">...</span></h2>
+    </div>
+  </header>
+  <div class="container">
+
+    <div class="card">
+      <h3 style="margin-top:0">Upload Standards (YAML/JSON)</h3>
+      <div class="row" style="margin:8px 0">
+        <input class="input" id="accr" placeholder="Primary accreditor code e.g., SACSCOC" style="flex:1"/>
+        <input class="input" id="org" placeholder="Organization slug (optional)" style="flex:1"/>
+      </div>
+      <div class="row" style="margin:8px 0">
+        <input class="input" type="file" id="file" multiple accept=".yaml,.yml,.json"/>
+        <button class="btn" id="uploadBtn">Upload</button>
+      </div>
+      <p class="muted">Files are stored under <code>byol/standards/&lt;ACCR&gt;/</code> and can be reloaded into memory.</p>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h3 style="margin-top:0">Reload Graph</h3>
+        <div class="row">
+          <input class="input" id="path" placeholder="Optional corpus path (defaults to byol/standards)" style="flex:1"/>
+          <button class="btn" id="reloadBtn">Reload</button>
+        </div>
+        <pre id="reloadOut">Waiting…</pre>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">Corpus Status</h3>
+        <button class="btn" id="statusBtn">Refresh</button>
+        <pre id="statusOut">Waiting…</pre>
+      </div>
+    </div>
+
+  </div>
+  <script>
+    const API = '/api/user/intelligence-simple';
+
+    function ensureTokenFromQuery() {
+      try {
+        const u = new URL(window.location.href);
+        const t = u.searchParams.get('token') || u.searchParams.get('api_key') || u.searchParams.get('access_token');
+        if (t) {
+          try {
+            localStorage.setItem('a3e_api_key', t);
+            sessionStorage.setItem('a3e_api_key', t);
+            localStorage.setItem('access_token', t);
+            localStorage.setItem('jwt_token', t);
+          } catch(_e) {}
+          u.searchParams.delete('token');
+          u.searchParams.delete('api_key');
+          u.searchParams.delete('access_token');
+          history.replaceState(null, '', u.toString());
+        }
+      } catch(_e) {}
+    }
+
+    function getToken() {
+      return localStorage.getItem('a3e_api_key') ||
+             sessionStorage.getItem('a3e_api_key') ||
+             localStorage.getItem('access_token') ||
+             localStorage.getItem('jwt_token') || '';
+    }
+
+    function authHeaders(extra) {
+      const t = getToken();
+      const h = Object.assign({}, extra || {});
+      if (t) h['Authorization'] = `Bearer ${t}`;
+      return h;
+    }
+
+    async function currentDisplayMode() {
+      try {
+        const r = await fetch(`${API}/standards/list?limit=1`, { headers: authHeaders() });
+        const j = await r.json();
+        document.getElementById('displayMode').textContent = j.display_mode ? `display: ${j.display_mode}` : 'display: full';
+      } catch {}
+    }
+
+    async function uploadFiles() {
+      const files = document.getElementById('file').files;
+      const accreditor = document.getElementById('accr').value.trim();
+      const org = document.getElementById('org').value.trim();
+      if (!files.length) return alert('Select at least one file');
+      const results = [];
+      for (const f of files) {
+        const fd = new FormData();
+        fd.append('file', f);
+        if (accreditor) fd.append('accreditor', accreditor);
+        if (org) fd.append('organization', org);
+        const r = await fetch(`${API}/standards/byol/upload`, { method: 'POST', body: fd, headers: authHeaders() });
+        const j = await r.json();
+        results.push(j);
+      }
+      alert(`Uploaded ${results.length} file(s).`);
+    }
+
+    async function reloadGraph() {
+      const path = document.getElementById('path').value.trim();
+      let res, j;
+      try {
+        res = await fetch(`${API}/standards/byol/reload`, {
+          method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }),
+          body: JSON.stringify(path ? { path } : {})
+        });
+        if (res.status === 405) {
+          // Fallback to GET alias for environments blocking POST
+          const qs = path ? `?path=${encodeURIComponent(path)}` : '';
+          res = await fetch(`${API}/standards/byol/reload${qs}`, { headers: authHeaders() });
+        }
+        if (res.status === 404) {
+          j = { ok: false, error: 'Reload endpoint not available on this deployment. Please redeploy backend with BYOL reload support.' };
+        } else {
+          j = await res.json();
+        }
+      } catch (e) {
+        j = { ok: false, error: String(e) };
+      }
+      document.getElementById('reloadOut').textContent = JSON.stringify(j, null, 2);
+    }
+
+    async function refreshStatus() {
+      let r, j;
+      try {
+        r = await fetch(`${API}/standards/corpus/status`, { headers: authHeaders() });
+        if (r.status === 404) {
+          r = await fetch(`${API}/standards/status`, { headers: authHeaders() });
+        }
+        if (r.status === 404) {
+          r = await fetch(`${API}/standards/corpusstatus`, { headers: authHeaders() });
+        }
+        // Fallback to metadata endpoints used in older/simple deployments
+        if (r.status === 404) {
+          r = await fetch(`${API}/standards/metadata`, { headers: authHeaders() });
+        }
+        if (r.status === 404) {
+          r = await fetch(`${API}/standards/corpus/metadata`, { headers: authHeaders() });
+        }
+        j = await r.json();
+      } catch (e) {
+        j = { error: String(e) };
+      }
+      document.getElementById('statusOut').textContent = JSON.stringify(j, null, 2);
+    }
+
+    document.getElementById('uploadBtn').addEventListener('click', uploadFiles);
+    document.getElementById('reloadBtn').addEventListener('click', reloadGraph);
+    document.getElementById('statusBtn').addEventListener('click', refreshStatus);
+
+    ensureTokenFromQuery();
+    currentDisplayMode();
+    refreshStatus();
+  </script>
+</body>
+</html>

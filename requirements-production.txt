@@ -40,6 +40,10 @@ emails==0.6  # For email templates
 httpx==0.28.1  # Updated to match pyautogen requirement
 aiohttp==3.9.1
 
+# AWS S3 Storage
+boto3==1.34.0
+botocore==1.34.0
+
 # AI/LLM Services (Required for startup)
 # Bumped OpenAI to a newer SDK compatible with httpx 0.28.x to avoid 'proxies' init errors
 openai==1.40.6

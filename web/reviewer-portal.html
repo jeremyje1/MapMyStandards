@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Reviewer Portal</title>
+  <style>
+    body { font-family: -apple-system, Inter, sans-serif; margin:0; background:#f8fafc; color:#0f172a; }
+    header { background:#0f172a; color:white; padding:12px 16px; }
+    .container { max-width: 1100px; margin: 20px auto; padding: 0 16px; }
+    .card { background:white; border:1px solid #e2e8f0; border-radius:10px; box-shadow:0 1px 2px rgba(0,0,0,0.05); padding:16px; margin-bottom:16px; }
+    .grid { display:grid; grid-template-columns: 320px 1fr; gap:16px; }
+    .badge { background:#eef2ff; color:#3730a3; padding:2px 8px; border-radius:999px; font-size:12px; }
+    .muted { color:#475569; font-size:13px; }
+    .pill { background:#f1f5f9; border:1px solid #e2e8f0; padding:4px 8px; border-radius:999px; font-size:12px; }
+    .doc { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px; border-bottom:1px solid #f1f5f9; }
+    .doc:last-child { border-bottom:none; }
+    .link { color:#0ea5e9; text-decoration:none; }
+    .row { display:flex; gap:8px; align-items:center; }
+    .list { max-height: 70vh; overflow:auto; }
+    pre { white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <h2>Reviewer Portal <span class="badge">Read-only</span></h2>
+    </div>
+  </header>
+  <div class="container">
+    <div class="card">
+      <div class="row">
+        <input id="packUrl" style="flex:1; padding:8px; border:1px solid #cbd5e1; border-radius:8px" placeholder="Paste Reviewer Pack URL or path (zip)"/>
+        <button id="loadBtn" style="padding:8px 12px; border-radius:8px; border:1px solid #0ea5e9; background:#0ea5e9; color:white">Load</button>
+      </div>
+      <p class="muted" style="margin-top:8px">If hosted, provide a public URL; otherwise upload the pack to a web-accessible location and paste its link.</p>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <h3 style="margin-bottom:8px">Standards & Citations</h3>
+        <div id="standards" class="list"></div>
+      </div>
+      <div>
+        <div class="card">
+          <h3 style="margin-bottom:8px">Narrative</h3>
+          <iframe id="narrativeFrame" style="width:100%; height:60vh; border:1px solid #e2e8f0; border-radius:8px"></iframe>
+        </div>
+        <div class="card">
+          <h3 style="margin-bottom:8px">Artifacts</h3>
+          <div id="artifacts" class="list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    async function loadPack(url) {
+      try {
+        // We can’t read ZIPs client-side without JS unzip; expect a static host serving pack contents
+        // Convention: narrative at `${url}/narrative.html` and `citation_map.json` alongside.
+        const cmapUrl = url.replace(/\.zip$/, '') + '/citation_map.json';
+        const narrativeUrl = url.replace(/\.zip$/, '') + '/narrative.html';
+        document.getElementById('narrativeFrame').src = narrativeUrl;
+        const res = await fetch(cmapUrl);
+        const cmap = await res.json();
+        renderCitations(cmap, url);
+      } catch (e) {
+        alert('Failed to load Reviewer Pack. Ensure it is hosted and CORS-accessible.');
+      }
+    }
+    function renderCitations(cmap, baseUrl) {
+      const sdiv = document.getElementById('standards');
+      sdiv.innerHTML = '';
+      const adiv = document.getElementById('artifacts');
+      adiv.innerHTML = '';
+      const files = new Set();
+      Object.entries(cmap || {}).forEach(([sid, cites]) => {
+        const section = document.createElement('div');
+        section.className = 'doc';
+        section.innerHTML = `<div><strong>${sid}</strong><div class='muted'>${(cites||[]).length} citations</div></div>`;
+        const list = document.createElement('div');
+        list.style.marginTop = '6px';
+        (cites||[]).forEach(c => {
+          const row = document.createElement('div');
+          row.className = 'row';
+          const page = (c.page_anchors||[])[0]?.page || '';
+          const fname = (c.filename||'');
+          const saved = (c.saved_path||'');
+          const basename = saved ? saved.split('/').pop() : fname;
+          const href = basename ? `${baseUrl}/artifacts/${basename}${page?`#page=${page}`:''}` : '#';
+          row.innerHTML = `<span class='pill'>p.${page||'?'}</span><a class='link' href='${href}' target='_blank'>${fname||basename||'artifact'}</a>`;
+          list.appendChild(row);
+          if (saved) files.add(saved)
+        });
+        section.appendChild(list);
+        sdiv.appendChild(section);
+      });
+      Array.from(files).forEach(f => {
+        const row = document.createElement('div');
+        row.className = 'doc';
+        const name = (''+f).split('/').pop();
+        row.innerHTML = `<div class='row'><span>${name}</span></div><a class='link' href='${baseUrl}/artifacts/${name}' target='_blank'>Open</a>`;
+        adiv.appendChild(row);
+      })
+    }
+    document.getElementById('loadBtn').addEventListener('click', () => {
+      const url = document.getElementById('packUrl').value.trim();
+      if (!url) return;
+      loadPack(url);
+    });
+  </script>
+</body>
+</html>
