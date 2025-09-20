@@ -4,12 +4,14 @@ S3 presign smoke test: requests a presigned upload URL from the API and prints
 ready-to-run curl commands to complete the upload. Does not require jq.
 
 Usage:
-  python scripts/s3_presign_smoke.py --base-url https://api.mapmystandards.ai \
-      --token <JWT> --filename hello.txt --content-type text/plain --size 12
+    python scripts/s3_presign_smoke.py --base-url https://api.mapmystandards.ai \
+            --token <JWT> --filename hello.txt --content-type text/plain --size 12
 
 Optional:
-  --folder <prefix>     Organize under a subfolder (default: smoke)
-  --write-file          Writes a small sample file with the given filename
+    --folder <prefix>     Organize under a subfolder (default: smoke)
+    --write-file          Writes a small sample file with the given filename
+    --auto-upload         Perform the S3 form POST automatically (uses curl)
+    --save-key PATH       Save the returned file_key to PATH for later use
 
 Note: This script does not perform the actual S3 upload to avoid extra deps.
       It prints the exact curl command you can copy/paste to complete it.
@@ -21,6 +23,7 @@ import os
 import sys
 import textwrap
 from urllib import request as urlreq
+import subprocess
 
 
 def http_post_json(url: str, payload: dict, headers: dict) -> tuple[int, dict]:
@@ -56,6 +59,8 @@ def main():
     ap.add_argument("--size", type=int, required=True)
     ap.add_argument("--folder", default="smoke")
     ap.add_argument("--write-file", action="store_true")
+    ap.add_argument("--auto-upload", action="store_true")
+    ap.add_argument("--save-key")
     args = ap.parse_args()
 
     if args.write_file:
@@ -91,13 +96,28 @@ def main():
         # S3 form POST style
         print("\nS3 Upload (form POST) — copy/paste:")
         parts = ["curl -s -X POST "]
-        parts.append(f"'{upload_url}' ")
+        parts.append(f"{upload_url!r} ")
         for k, v in fields.items():
             # Escape single quotes in values
             vstr = str(v).replace("'", "'\"'\"'")
             parts.append(f"-F '{k}={vstr}' ")
         parts.append(f"-F 'file=@{args.filename};type={args.content_type}'")
-        print("".join(parts))
+        curl_cmd = "".join(parts)
+        print(curl_cmd)
+
+        if args.auto_upload:
+            # Build argv form to avoid shell quoting issues
+            argv = ["curl", "-s", "-X", "POST", upload_url]
+            for k, v in fields.items():
+                argv += ["-F", f"{k}={v}"]
+            argv += ["-F", f"file=@{args.filename};type={args.content_type}"]
+            print("\nRunning S3 upload via curl...", flush=True)
+            result = subprocess.run(argv, capture_output=True, text=True)
+            if result.returncode != 0:
+                print("S3 upload failed:", result.stderr or result.stdout)
+                sys.exit(2)
+            # S3 typically returns 204 or 201 with no body for form POST
+            print("S3 upload complete (HTTP 2xx).")
     else:
         # PUT style
         print("\nS3 Upload (PUT) — copy/paste:")
@@ -107,7 +127,14 @@ def main():
 
     # Optionally print a download hint if your API exposes it later
     if file_key:
-        print("\nAfter upload, your file key will be:", file_key)
+        print("\nFILE_KEY=", file_key)
+        if args.save_key:
+            try:
+                with open(args.save_key, "w") as f:
+                    f.write(file_key)
+                print(f"Saved file key to: {args.save_key}")
+            except Exception as e:
+                print(f"Warning: couldn't save file key: {e}")
 
 
 if __name__ == "__main__":

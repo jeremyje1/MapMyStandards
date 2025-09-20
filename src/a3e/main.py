@@ -929,20 +929,30 @@ try:
 except ImportError as e:
     logger.warning(f"⚠️ Enhanced Auth router not available: {e}")
 
-# Include S3 Upload router
+# Include Upload routers (prefer secure S3/presigned, keep legacy/local as fallback)
 try:
-    from .api.routes.upload import router as s3_upload_router
-    app.include_router(s3_upload_router)
-    logger.info("✅ S3 Upload router loaded (presigned URLs)")
+    # Primary: secure upload API that supports S3 presigned URLs via StorageService
+    from .api.routes.upload_secure import router as upload_secure_router
+    app.include_router(upload_secure_router)
+    logger.info("✅ Upload router loaded (secure, presigned; S3/local via StorageService)")
 except ImportError as e:
-    logger.warning(f"⚠️ S3 Upload router not available: {e}")
-    # Try local storage fallback
-    try:
-        from .api.routes.upload_local import router as local_upload_router
-        app.include_router(local_upload_router)
-        logger.info("✅ Local Upload router loaded (fallback)")
-    except ImportError as e2:
-        logger.warning(f"⚠️ No upload router available: {e2}")
+    logger.warning(f"⚠️ Secure upload router not available: {e}")
+
+# Include legacy upload routes for backward compatibility (stores to local disk)
+try:
+    from .api.routes.upload import router as legacy_upload_router
+    app.include_router(legacy_upload_router)
+    logger.info("✅ Legacy upload router loaded (local disk, backward-compatible)")
+except ImportError as e:
+    logger.warning(f"⚠️ Legacy upload router not available: {e}")
+
+# Final fallback to explicit local-only router if present
+try:
+    from .api.routes.upload_local import router as local_upload_router
+    app.include_router(local_upload_router)
+    logger.info("✅ Local upload router loaded (explicit fallback)")
+except ImportError as e2:
+    logger.warning(f"⚠️ Local upload router not available: {e2}")
 
 # Include Personalization router
 try:
@@ -1110,10 +1120,12 @@ async def health_check():
             # Simple heartbeat attribute/method optional
             orchestrator_status = "healthy"
 
-        # Determine overall status: 
-        # - If no services initialized yet (startup), return "starting"
-        # - If core services (db) available, determine healthy/degraded/unhealthy
-        # Check if either db_manager or db_service is available
+        # Determine overall status:
+        # - If no DB available yet (startup), return "starting" (200)
+        # - If DB unhealthy, return "unhealthy" (503)
+        # - If DB healthy but optional deps (LLM/vector/orchestrator) not ready, return "degraded" (200)
+        # - If all core OK, return "healthy" (200)
+        # Check if either db_manager or legacy db_service is available
         db_available = False
         try:
             from .database.connection import db_manager
@@ -1124,18 +1136,22 @@ async def health_check():
             db_available = db_service is not None
             
         if not db_available:
+            # App is starting up; don't fail platform health checks yet
             overall = "starting"
-            status_code = 200  # Allow health checks during startup
+            status_code = 200
         else:
-            core_services_ok = all([db_ok, llm_ok])
-            degraded = core_services_ok and not all([vector_ok, orchestrator_status == "healthy"])
-            if core_services_ok and not degraded:
-                overall = "healthy"
-            elif core_services_ok and degraded:
-                overall = "degraded"
-            else:
+            if not db_ok:
+                # Database is required; fail health until it recovers
                 overall = "unhealthy"
-            status_code = 200 if overall in ("healthy", "degraded") else 503
+                status_code = 503
+            else:
+                # DB is healthy; treat other services as optional for readiness
+                optional_ok = llm_ok and vector_ok and (orchestrator_status == "healthy")
+                if llm_ok and (vector_ok or orchestrator_status == "healthy"):
+                    overall = "healthy"
+                else:
+                    overall = "degraded"
+                status_code = 200
 
         body: Dict[str, Any] = {
             "status": overall,
@@ -1375,6 +1391,29 @@ async def list_accreditors(
     except Exception as e:
         logger.error(f"Error listing accreditors: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
+
+# Lightweight router presence debug (avoid large route dumps)
+@app.get("/debug/router-presence", include_in_schema=False)
+async def debug_router_presence():  # noqa: D401
+    try:
+        flags = {
+            "user_intelligence": bool(globals().get("user_intelligence_router_available")),
+            "user_intelligence_simple": bool(globals().get("user_intelligence_simple_router_available")),
+            "compliance_intelligence": bool(globals().get("intelligence_router_available")),
+            "documents": bool(globals().get("documents_router_available")),
+            "dashboard": bool(globals().get("dashboard_router_available")),
+        }
+        # Sample key paths to quickly verify deployment without full route list
+        sample_paths = []
+        for r in app.router.routes:
+            p = getattr(r, 'path', '')
+            if "/api/user/intelligence-simple" in p and any(s in p for s in ("/standards/", "/dashboard/", "/evidence/")):
+                sample_paths.append(p)
+                if len(sample_paths) >= 8:
+                    break
+        return {"routers": flags, "sample_paths": sorted(sample_paths)}
+    except Exception as e:
+        return {"error": str(e)}
 
 @app.get(f"{settings.api_prefix}/accreditors/{{accreditor_id}}/standards")
 async def get_accreditor_standards(
@@ -2045,6 +2084,22 @@ if WEB_DIR.exists():
         modern = WEB_DIR / "upload-modern.html"
         legacy = WEB_DIR / "upload.html"
         return FileResponse(str(modern if modern.exists() else legacy))
+
+    # New pages: Reviewer Portal, Admin Standards, CrosswalkX (extensionless + .html)
+    @app.get("/reviewer-portal", response_class=FileResponse, include_in_schema=False)
+    @app.get("/reviewer-portal.html", response_class=FileResponse, include_in_schema=False)
+    async def reviewer_portal_page():  # noqa: D401
+        return FileResponse(str(WEB_DIR / "reviewer-portal.html"))
+
+    @app.get("/admin-standards", response_class=FileResponse, include_in_schema=False)
+    @app.get("/admin-standards.html", response_class=FileResponse, include_in_schema=False)
+    async def admin_standards_page():  # noqa: D401
+        return FileResponse(str(WEB_DIR / "admin-standards.html"))
+
+    @app.get("/crosswalkx", response_class=FileResponse, include_in_schema=False)
+    @app.get("/crosswalkx.html", response_class=FileResponse, include_in_schema=False)
+    async def crosswalkx_page():  # noqa: D401
+        return FileResponse(str(WEB_DIR / "crosswalkx.html"))
         
 else:
     logger.warning(f"Web directory not found at: {WEB_DIR}")

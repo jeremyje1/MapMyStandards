@@ -34,7 +34,8 @@ class StorageService:
                     aws_secret_access_key=settings.aws_secret_access_key,
                     region_name=settings.aws_region or 'us-east-1'
                 )
-                self.bucket_name = os.getenv("S3_BUCKET_NAME", "mapmystandards-uploads")
+                # Support multiple env var names for the bucket for convenience
+                self.bucket_name = os.getenv("S3_BUCKET_NAME") or os.getenv("S3_BUCKET") or os.getenv("MMS_ARTIFACTS_BUCKET") or "mapmystandards-uploads"
                 self.storage_type = "s3"
                 logger.info("Storage service initialized with S3")
             except ImportError:

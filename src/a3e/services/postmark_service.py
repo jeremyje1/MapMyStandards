@@ -29,7 +29,8 @@ class PostmarkEmailService:
     """Postmark-based email service for A³E platform"""
     
     def __init__(self):
-        self.api_key = os.getenv('POSTMARK_SERVER_TOKEN') or os.getenv('POSTMARK_API_KEY')
+        # Accept common env var names used historically
+        self.api_key = os.getenv('POSTMARK_SERVER_TOKEN') or os.getenv('POSTMARK_API_TOKEN') or os.getenv('POSTMARK_API_KEY')
         self.from_email = os.getenv('EMAIL_FROM', 'support@mapmystandards.ai')
         self.from_name = os.getenv('EMAIL_FROM_NAME', 'MapMyStandards A³E')
         self.admin_email = os.getenv('ADMIN_NOTIFICATION_EMAIL', 'info@northpathstrategies.org')

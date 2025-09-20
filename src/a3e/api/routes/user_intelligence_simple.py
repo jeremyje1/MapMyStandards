@@ -25,10 +25,16 @@ from ...services.metrics_timeseries import maybe_snapshot, get_series
 from ...database.connection import db_manager
 from sqlalchemy import text
 from ...services.narrative_service import generate_narrative_html
+from ...services.storage_service import get_storage_service, StorageService
 from ...services.analytics_service import analytics_service
 from ...core.config import get_settings
 import secrets
 from pathlib import Path
+import hashlib
+import zipfile
+import tempfile
+import re
+# (imports deduplicated)
 
 router = APIRouter(prefix="/api/user/intelligence-simple", tags=["user-intelligence-simple"])
 security = HTTPBearer()
@@ -48,10 +54,36 @@ UPLOADS_STORE = os.getenv("USER_UPLOADS_STORE", "user_uploads_store.json")
 SESSIONS_STORE = os.getenv("USER_SESSIONS_STORE", "user_sessions_store.json")
 ORG_CHART_STORE = os.getenv("ORG_CHART_STORE", "user_org_charts.json")
 REVIEWS_AUDIT_LOG = os.getenv("USER_REVIEWS_AUDIT_LOG", "user_reviews_audit.jsonl")
+TASKS_STORE = os.getenv("USER_TASKS_STORE", "user_tasks_store.json")
+TASKS_AUDIT_LOG = os.getenv("USER_TASKS_AUDIT_LOG", "user_tasks_audit.jsonl")
 
 # Simple uploads directory used by the dashboard's drag/drop upload
 SIMPLE_UPLOADS_DIR = Path(os.getenv("SIMPLE_UPLOADS_DIR", "uploads/simple"))
 SIMPLE_UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+
+# BYOL (Bring Your Own License) standards directory
+BYOL_STANDARDS_DIR = Path(os.getenv("BYOL_STANDARDS_DIR", "byol/standards"))
+BYOL_STANDARDS_DIR.mkdir(parents=True, exist_ok=True)
+
+def _get_standards_display_mode(claims: Dict[str, Any]) -> str:
+    try:
+        s = _get_user_settings(claims) or {}
+    except Exception:
+        s = {}
+    mode = str(s.get("standards_display_mode") or os.getenv("STANDARDS_DISPLAY_MODE") or os.getenv("STANDARDS_SAFE_DISPLAY") or "full").lower()
+    return "redacted" if mode in {"redacted", "safe", "hide"} else "full"
+
+def _apply_display_policy(items: List[Dict[str, Any]], mode: str) -> List[Dict[str, Any]]:
+    if mode == "full":
+        return items
+    redacted: List[Dict[str, Any]] = []
+    for it in items:
+        r = dict(it)
+        r["description"] = ""
+        redacted.append(r)
+    return redacted
+
+# (BYOL endpoints moved below auth helpers)
 
 
 def _safe_load_json(path: str) -> Dict[str, Any]:
@@ -243,7 +275,7 @@ def _set_user_uploads(claims: Dict[str, Any], data: Dict[str, Any]) -> None:
 
 
 def _record_user_upload(
-    claims: Dict[str, Any], filename: str, standard_ids: List[str], doc_type: Optional[str] = None, mapping_details: Optional[List[Dict[str, Any]]] = None
+    claims: Dict[str, Any], filename: str, standard_ids: List[str], doc_type: Optional[str] = None, mapping_details: Optional[List[Dict[str, Any]]] = None, trust_score: Optional[Dict[str, Any]] = None, saved_path: Optional[str] = None, fingerprint: Optional[str] = None
 ) -> Dict[str, Any]:
     data = _get_user_uploads(claims)
     docs = data.get("documents", [])
@@ -254,6 +286,9 @@ def _record_user_upload(
         "doc_type": doc_type or "",
         # optional rich mapping details
         "mappings": mapping_details or [],
+        "trust_score": trust_score or {},
+        "saved_path": saved_path or "",
+        "fingerprint": fingerprint or "",
     }
     docs.append(entry)
     # Update unique standards
@@ -311,6 +346,205 @@ def _compute_dashboard_metrics_for_snapshot(current_user: Dict[str, Any]) -> Dic
 
 
 # ------------------------------
+# Internal helper: analyze evidence content from bytes
+# ------------------------------
+async def _analyze_evidence_from_bytes(
+    filename: str,
+    content: bytes,
+    doc_type: Optional[str],
+    current_user: Dict[str, Any],
+):
+    try:
+        filename_lower = (filename or "").lower()
+        is_pdf = (
+            filename_lower.endswith(".pdf") or content[:4] == b"%PDF"
+        )
+        text_content = ""
+        page_texts: List[str] = []
+        if is_pdf:
+            try:
+                import pypdf  # type: ignore
+                from io import BytesIO
+                reader = pypdf.PdfReader(BytesIO(content))
+                parts = []
+                for i, page in enumerate(reader.pages[:20]):
+                    try:
+                        txt = page.extract_text() or ""
+                        parts.append(txt)
+                        page_texts.append(txt)
+                    except Exception:
+                        continue
+                text_content = "\n".join([p for p in parts if p]).strip()
+            except Exception:
+                text_content = ""
+        else:
+            try:
+                text_content = content.decode("utf-8", errors="ignore")
+            except Exception:
+                text_content = ""
+
+        # Optional OCR fallback when PDF has no text
+        if is_pdf and not text_content:
+            try:
+                ocr_enabled = os.getenv("OCR_ENABLED", "false").lower() in {"1", "true", "yes"}
+                if ocr_enabled:
+                    from pdf2image import convert_from_bytes  # type: ignore
+                    import pytesseract  # type: ignore
+                    images = convert_from_bytes(content, first_page=1, last_page=5)
+                    ocr_texts: List[str] = []
+                    for img in images:
+                        try:
+                            t = pytesseract.image_to_string(img) or ""
+                            if t.strip():
+                                ocr_texts.append(t)
+                                page_texts.append(t)
+                        except Exception:
+                            continue
+                    text_content = "\n".join(ocr_texts).strip()
+            except Exception:
+                pass
+
+        # Optional PII/FERPA preflight redaction
+        redaction_enabled = os.getenv("PII_REDACTION_ENABLED", "true").lower() in {"1", "true", "yes"}
+        redaction_report = {"emails": 0, "ssn": 0, "phones": 0, "dob": 0}
+
+        def _redact(text: str) -> str:
+            nonlocal redaction_report
+            import re as _re
+            text = _re.sub(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}", lambda m: redaction_report.__setitem__("emails", redaction_report["emails"] + 1) or "[REDACTED_EMAIL]", text)
+            text = _re.sub(r"\b\d{3}-\d{2}-\d{4}\b", lambda m: redaction_report.__setitem__("ssn", redaction_report["ssn"] + 1) or "[REDACTED_SSN]", text)
+            text = _re.sub(r"(\+?\d{1,2}[\s-])?(\(?\d{3}\)?[\s-]?\d{3}[\s-]?\d{4})", lambda m: redaction_report.__setitem__("phones", redaction_report["phones"] + 1) or "[REDACTED_PHONE]", text)
+            text = _re.sub(r"\b(0?[1-9]|1[0-2])/(0?[1-9]|[12]\d|3[01])/(19|20)\d{2}\b", lambda m: redaction_report.__setitem__("dob", redaction_report["dob"] + 1) or "[REDACTED_DOB]", text)
+            return text
+
+        redacted_text = _redact(text_content) if (redaction_enabled and text_content) else text_content
+
+        doc = EvidenceDocument(
+            doc_id=filename,
+            text=redacted_text,
+            metadata={"uploaded_by": _user_key(current_user), "doc_type": doc_type or "policy"},
+            doc_type="policy",
+            source_system="manual",
+            upload_date=datetime.utcnow(),
+        )
+
+        mappings = evidence_mapper.map_evidence(doc)
+        top_conf = mappings[0].confidence if mappings else 0.6
+
+        trust = evidence_trust_scorer.calculate_trust_score(
+            evidence_id=doc.doc_id,
+            evidence_type=EvidenceType.POLICY,
+            source_system=SourceSystem.MANUAL,
+            upload_date=doc.upload_date,
+            last_modified=datetime.utcnow(),
+            content_length=len(doc.text or ""),
+            metadata=doc.metadata,
+            mapping_confidence=top_conf,
+            reviewer_approved=True,
+            citations_count=0,
+            conflicts_detected=0,
+        )
+
+        trust_dict = trust.to_dict()
+        signals = {s["type"]: s["value"] for s in trust_dict.get("signals", [])}
+        quality_score = signals.get("completeness", trust_dict.get("overall_score", 0.7))
+        reliability_score = (signals.get("provenance", 0.7) + signals.get("alignment", 0.7)) / 2.0
+        confidence_score = signals.get("reviewer_verification", 0.8)
+
+        def _meets(mt: str, conf: float) -> bool:
+            try:
+                return bool(mt in ("exact", "strong") or float(conf) >= 0.7)
+            except Exception:
+                return False
+
+        reviews_map = _get_user_reviews(current_user, filename)
+        mappings_ui = []
+        mapping_details: List[Dict[str, Any]] = []
+        for m in mappings[:10]:
+            review = reviews_map.get(m.standard_id, {}) if isinstance(reviews_map, dict) else {}
+            anchors: List[Dict[str, Any]] = []
+            try:
+                for idx, page_txt in enumerate(page_texts or []):
+                    for span in m.rationale_spans[:2]:
+                        snip = (span or "").replace("**", "").strip()
+                        if snip and snip[:24] in page_txt:
+                            anchors.append({"page": idx + 1, "snippet": snip[:120]})
+                            break
+            except Exception:
+                anchors = []
+            mappings_ui.append(
+                {
+                    "standard_id": m.standard_id,
+                    "title": m.standard_title,
+                    "confidence": float(m.confidence),
+                    "accreditor": m.accreditor,
+                    "match_type": m.match_type,
+                    "meets_standard": bool(_meets(m.match_type, m.confidence)),
+                    "rationale_spans": m.rationale_spans,
+                    "explanation": m.explanation,
+                    "page_anchors": anchors,
+                    "reviewed": bool(review.get("reviewed", False)),
+                    "note": review.get("note", ""),
+                    "rationale_note": review.get("rationale_note", ""),
+                }
+            )
+            mapping_details.append({
+                "standard_id": m.standard_id,
+                "accreditor": m.accreditor,
+                "confidence": float(m.confidence),
+                "page_anchors": anchors,
+            })
+        fingerprint = EvidenceDocument(doc_id=filename, text=text_content, metadata={}, doc_type="", source_system="manual", upload_date=datetime.utcnow()).get_fingerprint()
+        _record_user_upload(current_user, filename, [m.standard_id for m in mappings], doc_type, mapping_details, trust_dict, None, fingerprint)
+
+        try:
+            overall_trust = float(trust_dict.get("overall_score", 0.7) or 0.7)
+            for md in mapping_details[:50]:
+                sid = str(md.get("standard_id"))
+                conf = float(md.get("confidence") or 0.0)
+                snapshot = StandardEvidenceSnapshot(
+                    standard_id=sid,
+                    coverage_percent=25.0,
+                    trust_scores=[overall_trust, conf],
+                    evidence_ages_days=[365],
+                    overdue_tasks=0,
+                    total_tasks=0,
+                    recent_changes=0,
+                    historical_findings=0,
+                    days_to_review=180,
+                )
+                risk_explainer.compute_standard_risk(snapshot)
+        except Exception:
+            pass
+
+        return {
+            "status": "success",
+            "filename": filename,
+            "analysis": {
+                "is_pdf": bool(is_pdf),
+                "mappings": mappings_ui,
+                "trust_score": {
+                    "overall_score": float(trust_dict.get("overall_score", 0.7) or 0.7),
+                    "quality_score": float(round(float(quality_score), 3)),
+                    "reliability_score": float(round(float(reliability_score), 3)),
+                    "confidence_score": float(round(float(confidence_score), 3)),
+                },
+                "standards_mapped": len(mappings),
+                "content_length": len(doc.text or ""),
+                "redaction": {"enabled": redaction_enabled, **redaction_report},
+                "fingerprint": fingerprint,
+                "document_preview": (
+                    "[PDF detected: preview unavailable]" if (is_pdf and not (doc.text or "").strip()) else (doc.text or "")[:2000]
+                ),
+            },
+            "algorithms_used": ["EvidenceMapper™", "EvidenceTrust Score™", "StandardsGraph™"],
+        }
+    except Exception as e:
+        logger.error(f"Evidence analysis (from-bytes) error: {e}")
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {e}")
+
+
+# ------------------------------
 # Auth helpers
 # ------------------------------
 
@@ -355,6 +589,135 @@ async def get_current_user_simple(
     if not claims:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
     return claims
+
+# ------------------------------
+# BYOL Standards Ingestion
+# ------------------------------
+@router.post("/standards/byol/upload")
+async def upload_byol_standards(
+    file: UploadFile = File(...),
+    accreditor: Optional[str] = Form(None),
+    current_user: Dict[str, Any] = Depends(get_current_user_simple),
+):
+    """Upload an accreditor standards file (YAML/JSON) into BYOL store.
+
+    Stores the file under `BYOL_STANDARDS_DIR` and returns a handle. Does not reload the graph.
+    """
+    try:
+        filename = file.filename or "standards.yaml"
+        suffix = Path(filename).suffix.lower()
+        if suffix not in {".yaml", ".yml", ".json"}:
+            raise HTTPException(status_code=400, detail="Only .yaml, .yml, or .json files are supported")
+        data = await file.read()
+        if not data:
+            raise HTTPException(status_code=400, detail="Empty file")
+        # Optionally namespace by accreditor
+        subdir = BYOL_STANDARDS_DIR / (accreditor.upper() if accreditor else "")
+        subdir.mkdir(parents=True, exist_ok=True)
+        target = subdir / filename
+        with open(target, "wb") as f:
+            f.write(data)
+        return {
+            "success": True,
+            "stored_at": str(target),
+            "bytes": len(data),
+            "hint": "Call /standards/byol/reload to refresh the in-memory graph",
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"BYOL upload error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to store BYOL standards file")
+
+
+@router.post("/standards/byol/reload")
+async def reload_byol_standards(
+    path: Optional[str] = Form(None),
+    fallback_to_seed: bool = Form(True),
+    current_user: Dict[str, Any] = Depends(get_current_user_simple),
+):
+    """Reload the StandardsGraph from a corpus directory.
+
+    - If `path` provided, use it; otherwise use `BYOL_STANDARDS_DIR` if non-empty;
+      else default repo `data/standards`.
+    """
+    try:
+        base = None
+        if path:
+            base = Path(path)
+        else:
+            # Prefer BYOL dir if contains at least one standards file
+            has_files = any(p.is_file() and p.suffix.lower() in {".yaml", ".yml", ".json"} for p in BYOL_STANDARDS_DIR.glob("**/*"))
+            if has_files:
+                base = BYOL_STANDARDS_DIR
+        stats = standards_graph.reload_from_corpus(str(base) if base else None, fallback_to_seed=bool(fallback_to_seed))
+        # Include corpus status snapshot
+        meta = await get_corpus_metadata_api(current_user=current_user)  # type: ignore
+        return {"success": True, "reloaded_from": str(base) if base else None, "graph": stats, "corpus": meta}
+    except Exception as e:
+        logger.error(f"BYOL reload error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to reload standards corpus")
+
+
+# Compatibility alias: allow GET-based reload in environments where POST may be blocked
+@router.get("/standards/byol/reload")
+async def reload_byol_standards_get(
+    path: Optional[str] = None,
+    fallback_to_seed: bool = True,
+    current_user: Dict[str, Any] = Depends(get_current_user_simple),
+):
+    try:
+        base = None
+        if path:
+            base = Path(path)
+        else:
+            has_files = any(p.is_file() and p.suffix.lower() in {".yaml", ".yml", ".json"} for p in BYOL_STANDARDS_DIR.glob("**/*"))
+            if has_files:
+                base = BYOL_STANDARDS_DIR
+        stats = standards_graph.reload_from_corpus(str(base) if base else None, fallback_to_seed=bool(fallback_to_seed))
+        meta = await get_corpus_metadata_api(current_user=current_user)  # type: ignore
+        return {"success": True, "reloaded_from": str(base) if base else None, "graph": stats, "corpus": meta, "via": "GET"}
+    except Exception as e:
+        logger.error(f"BYOL reload (GET) error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to reload standards corpus (GET)")
+
+
+# ------------------------------
+# BYOL: ingest from storage (supports S3 presigned)
+# ------------------------------
+@router.post("/standards/byol/ingest/from-storage")
+async def ingest_byol_from_storage(
+    payload: Dict[str, Any],
+    current_user: Dict[str, Any] = Depends(get_current_user_simple),
+    storage: StorageService = Depends(get_storage_service),
+):
+    """Copy a YAML/JSON standards file from storage into BYOL corpus dir.
+
+    Expected payload: { file_key, filename, accreditor? }
+    """
+    file_key = str(payload.get("file_key") or "").strip()
+    filename = str(payload.get("filename") or "").strip()
+    accreditor = (payload.get("accreditor") or "").strip() or None
+    if not file_key or not filename:
+        raise HTTPException(status_code=400, detail="file_key and filename are required")
+    try:
+        content = await storage.get_file(file_key)
+        if not content:
+            raise HTTPException(status_code=404, detail="File not found in storage")
+        suffix = Path(filename).suffix.lower()
+        if suffix not in {".yaml", ".yml", ".json"}:
+            raise HTTPException(status_code=400, detail="Only .yaml, .yml, .json supported for BYOL")
+        subdir = BYOL_STANDARDS_DIR / (accreditor.upper() if accreditor else "")
+        subdir.mkdir(parents=True, exist_ok=True)
+        target = subdir / filename
+        with open(target, "wb") as f:
+            f.write(content)
+        return {"success": True, "stored_at": str(target), "bytes": len(content)}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"BYOL ingest-from-storage error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to ingest BYOL file from storage")
 
 
 # ------------------------------
@@ -466,6 +829,8 @@ async def get_integrations_status(current_user: Dict[str, Any] = Depends(get_cur
         "document_sources": _merge_claims_with_settings(current_user).get("document_sources", []),
         "canvas_available": bool(os.getenv("CANVAS_CLIENT_ID")),
         "microsoft_available": bool(os.getenv("MS_CLIENT_ID")),
+        "google_available": bool(os.getenv("GOOGLE_CLIENT_ID")),
+        "sharepoint_available": bool(os.getenv("MS_SHAREPOINT_TENANT")),
     }
 # ------------------------------
 # UI Help and Tutorial metadata
@@ -814,12 +1179,13 @@ async def list_standards(
                 if chosen:
                     levels_set = chosen
         nodes = standards_graph.get_nodes_by_accreditor(acc, levels_set)
+        mode = _get_standards_display_mode(current_user)
         items = [
             {
                 "id": getattr(n, "node_id", ""),
                 "code": getattr(n, "standard_id", getattr(n, "node_id", "")),
                 "title": getattr(n, "title", ""),
-                "description": getattr(n, "description", ""),
+                "description": ("" if mode == "redacted" else getattr(n, "description", "")),
                 "level": getattr(n, "level", "standard"),
                 "accreditor": getattr(n, "accreditor", acc),
             }
@@ -830,6 +1196,7 @@ async def list_standards(
             "accreditor": {"name": acc, "acronym": acc},
             "count": len(items),
             "standards": items,
+            "display_mode": mode,
         }
     except Exception as e:
         logger.error(f"Standards list error: {e}")
@@ -855,6 +1222,7 @@ async def search_standards(
         if acc:
             candidates = [n for n in candidates if getattr(n, "accreditor", "").upper() == acc]
 
+        mode = _get_standards_display_mode(current_user)
         results: List[Dict[str, Any]] = []
         for n in candidates[:10000]:
             code = str(getattr(n, "standard_id", getattr(n, "code", getattr(n, "node_id", ""))) or "")
@@ -869,13 +1237,13 @@ async def search_standards(
                     "id": getattr(n, "node_id", code),
                     "code": code,
                     "title": title,
-                    "snippet": (desc[:180] + ("…" if len(desc) > 180 else "")) if desc else "",
+                    "snippet": ("" if mode == "redacted" else (desc[:180] + ("…" if len(desc) > 180 else "")) if desc else ""),
                     "category": level,
                     "accreditor": getattr(n, "accreditor", ""),
                 })
                 if len(results) >= 100:
                     break
-        return {"results": results}
+        return {"results": results, "display_mode": mode}
     except Exception as e:
         logger.error(f"Standards search error: {e}")
         raise HTTPException(status_code=500, detail="Failed to search standards")
@@ -929,12 +1297,33 @@ async def get_corpus_metadata_api(accreditor: Optional[str] = None, current_user
                     "loaded_node_count": loaded_nodes,
                 })
 
+        # Derive corpus status
+        available = bool(raw)
+        status_items: List[Dict[str, Any]] = []
+        for it in items:
+            exp = int(it.get("standard_count") or 0)
+            loaded = int(it.get("loaded_node_count") or 0)
+            # Only mark complete when we have an explicit expected count and match or exceed it
+            complete = bool(exp > 0 and loaded >= exp)
+            status_items.append({
+                "accreditor": it.get("accreditor"),
+                "expected": exp,
+                "loaded": loaded,
+                "complete": complete,
+            })
+        overall_complete = bool(available and status_items and all(s.get("complete") for s in status_items))
+
         return {
             "success": True,
             "generated_at": datetime.utcnow().isoformat(),
             "total_accreditors": len(items),
             "total_standards": total_standards,
             "accreditors": sorted(items, key=lambda x: x.get("accreditor", "")),
+            "corpus_status": {
+                "available": available,
+                "overall_complete": overall_complete,
+                "accreditors": status_items,
+            },
         }
     except Exception as e:
         logger.error(f"Corpus metadata error: {e}")
@@ -945,6 +1334,29 @@ async def get_corpus_metadata_api(accreditor: Optional[str] = None, current_user
 async def get_corpus_metadata_alias(accreditor: Optional[str] = None, current_user: Dict[str, Any] = Depends(get_current_user_simple)):
     """Alias for standards corpus metadata to match frontend expectations."""
     return await get_corpus_metadata_api(accreditor=accreditor, current_user=current_user)  # type: ignore
+
+
+@router.get("/standards/corpus/status")
+async def get_corpus_status(current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+    """Lightweight status for standards corpus availability and completeness."""
+    meta = await get_corpus_metadata_api(current_user=current_user)  # type: ignore
+    cs = meta.get("corpus_status", {}) if isinstance(meta, dict) else {}
+    return {
+        "success": True,
+        "generated_at": meta.get("generated_at") if isinstance(meta, dict) else None,
+        "corpus_status": cs,
+    }
+
+
+# Additional compatibility aliases for status
+@router.get("/standards/status")
+async def get_corpus_status_alias1(current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+    return await get_corpus_status(current_user)  # type: ignore
+
+
+@router.get("/standards/corpusstatus")
+async def get_corpus_status_alias2(current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+    return await get_corpus_status(current_user)  # type: ignore
 
 
 @router.get("/metrics/summary")
@@ -1317,14 +1729,16 @@ async def evidence_upload_simple(
             safe_name = datetime.utcnow().strftime("%Y%m%d_%H%M%S") + "_" + secrets.token_hex(8) + ext
             path = SIMPLE_UPLOADS_DIR / safe_name
             content = await f.read()
+            sha256 = hashlib.sha256(content).hexdigest()
             with open(path, "wb") as out:
                 out.write(content)
             # record minimal mapping info for metrics
-            _record_user_upload(current_user, name, standard_ids=[], doc_type=doc_type)
+            _record_user_upload(current_user, name, standard_ids=[], doc_type=doc_type, trust_score=None, saved_path=str(path), fingerprint=sha256[:16])
             saved.append({
                 "original": name,
                 "saved_as": str(path),
                 "size": len(content),
+                "hash": sha256,
                 "status": "queued",
             })
         return {"success": True, "files": saved}
@@ -1356,6 +1770,7 @@ async def analyze_evidence(
             (getattr(file, "content_type", None) == "application/pdf") or filename_lower.endswith(".pdf") or (content[:4] == b"%PDF")
         )
         text_content = ""
+        page_texts: List[str] = []
         if is_pdf:
             # Try a lightweight extraction so we can map something
             try:
@@ -1363,9 +1778,11 @@ async def analyze_evidence(
                 from io import BytesIO
                 reader = pypdf.PdfReader(BytesIO(content))
                 parts = []
-                for i, page in enumerate(reader.pages[:5]):  # cap pages for speed
+                for i, page in enumerate(reader.pages[:20]):  # cap pages for speed
                     try:
-                        parts.append(page.extract_text() or "")
+                        txt = page.extract_text() or ""
+                        parts.append(txt)
+                        page_texts.append(txt)
                     except Exception:
                         continue
                 text_content = "\n".join([p for p in parts if p]).strip()
@@ -1374,9 +1791,48 @@ async def analyze_evidence(
         else:
             text_content = content.decode("utf-8", errors="ignore")
 
+        # Optional OCR fallback when PDF has no text
+        if is_pdf and not text_content:
+            try:
+                ocr_enabled = os.getenv("OCR_ENABLED", "false").lower() in {"1", "true", "yes"}
+                if ocr_enabled:
+                    from pdf2image import convert_from_bytes  # type: ignore
+                    import pytesseract  # type: ignore
+                    images = convert_from_bytes(content, first_page=1, last_page=5)
+                    ocr_texts: List[str] = []
+                    for img in images:
+                        try:
+                            t = pytesseract.image_to_string(img) or ""
+                            if t.strip():
+                                ocr_texts.append(t)
+                                page_texts.append(t)
+                        except Exception:
+                            continue
+                    text_content = "\n".join(ocr_texts).strip()
+            except Exception:
+                pass
+
+        # Optional PII/FERPA preflight redaction
+        redaction_enabled = os.getenv("PII_REDACTION_ENABLED", "true").lower() in {"1", "true", "yes"}
+        redaction_report = {"emails": 0, "ssn": 0, "phones": 0, "dob": 0}
+
+        def _redact(text: str) -> str:
+            nonlocal redaction_report
+            # email
+            text = re.sub(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}", lambda m: redaction_report.__setitem__("emails", redaction_report["emails"] + 1) or "[REDACTED_EMAIL]", text)
+            # SSN
+            text = re.sub(r"\b\d{3}-\d{2}-\d{4}\b", lambda m: redaction_report.__setitem__("ssn", redaction_report["ssn"] + 1) or "[REDACTED_SSN]", text)
+            # phone
+            text = re.sub(r"(\+?\d{1,2}[\s-])?(\(?\d{3}\)?[\s-]?\d{3}[\s-]?\d{4})", lambda m: redaction_report.__setitem__("phones", redaction_report["phones"] + 1) or "[REDACTED_PHONE]", text)
+            # DOB (simple mm/dd/yyyy)
+            text = re.sub(r"\b(0?[1-9]|1[0-2])/(0?[1-9]|[12]\d|3[01])/(19|20)\d{2}\b", lambda m: redaction_report.__setitem__("dob", redaction_report["dob"] + 1) or "[REDACTED_DOB]", text)
+            return text
+
+        redacted_text = _redact(text_content) if (redaction_enabled and text_content) else text_content
+
         doc = EvidenceDocument(
             doc_id=file.filename,
-            text=text_content,
+            text=redacted_text,
             metadata={"uploaded_by": _user_key(current_user), "doc_type": doc_type or "policy"},
             doc_type="policy",
             source_system="manual",
@@ -1417,6 +1873,17 @@ async def analyze_evidence(
         mapping_details: List[Dict[str, Any]] = []
         for m in mappings[:10]:
             review = reviews_map.get(m.standard_id, {}) if isinstance(reviews_map, dict) else {}
+            # approximate page anchors: search spans in per-page text
+            anchors: List[Dict[str, Any]] = []
+            try:
+                for idx, page_txt in enumerate(page_texts or []):
+                    for span in m.rationale_spans[:2]:
+                        snip = (span or "").replace("**", "").strip()
+                        if snip and snip[:24] in page_txt:
+                            anchors.append({"page": idx + 1, "snippet": snip[:120]})
+                            break
+            except Exception:
+                anchors = []
             mappings_ui.append(
                 {
                     "standard_id": m.standard_id,
@@ -1427,6 +1894,7 @@ async def analyze_evidence(
                     "meets_standard": bool(_meets(m.match_type, m.confidence)),
                     "rationale_spans": m.rationale_spans,
                     "explanation": m.explanation,
+                    "page_anchors": anchors,
                     "reviewed": bool(review.get("reviewed", False)),
                     "note": review.get("note", ""),
                     "rationale_note": review.get("rationale_note", ""),
@@ -1436,9 +1904,11 @@ async def analyze_evidence(
                 "standard_id": m.standard_id,
                 "accreditor": m.accreditor,
                 "confidence": float(m.confidence),
+                "page_anchors": anchors,
             })
         # Record upload for metrics/overview
-        _record_user_upload(current_user, file.filename, [m.standard_id for m in mappings], doc_type, mapping_details)
+        fingerprint = EvidenceDocument(doc_id=file.filename, text=text_content, metadata={}, doc_type="", source_system="manual", upload_date=datetime.utcnow()).get_fingerprint()
+        _record_user_upload(current_user, file.filename, [m.standard_id for m in mappings], doc_type, mapping_details, trust_dict, None, fingerprint)
 
         # Seed risk model with per-standard scores (transparent, lightweight)
         try:
@@ -1476,6 +1946,8 @@ async def analyze_evidence(
                 },
                 "standards_mapped": len(mappings),
                 "content_length": len(doc.text or ""),
+                "redaction": {"enabled": redaction_enabled, **redaction_report},
+                "fingerprint": fingerprint,
                 "document_preview": (
                     "[PDF detected: preview unavailable]" if (is_pdf and not (doc.text or "").strip()) else (doc.text or "")[:2000]
                 ),
@@ -1514,6 +1986,284 @@ async def analyze_evidence_bulk(
         except Exception as e:
             results.append({"status": "error", "filename": getattr(f, 'filename', ''), "detail": str(e)})
     return {"status": "success", "results": results}
+
+
+# ------------------------------
+# Evidence: analyze from storage (supports S3 presigned upload flow)
+# ------------------------------
+@router.post("/evidence/analyze/from-storage")
+async def analyze_evidence_from_storage(
+    payload: Dict[str, Any],
+    current_user: Dict[str, Any] = Depends(get_current_user_simple),
+    storage: StorageService = Depends(get_storage_service),
+):
+    """Analyze an evidence file that has been uploaded to storage.
+
+    Expected payload: { file_key, filename, content_type?, doc_type? }
+    """
+    file_key = str(payload.get("file_key") or "").strip()
+    filename = str(payload.get("filename") or "").strip()
+    if not file_key or not filename:
+        raise HTTPException(status_code=400, detail="file_key and filename are required")
+    try:
+        content = await storage.get_file(file_key)
+        if not content:
+            raise HTTPException(status_code=404, detail="File not found in storage")
+        doc_type = payload.get("doc_type")
+        return await _analyze_evidence_from_bytes(filename, content, doc_type, current_user)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Analyze from storage error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to analyze evidence from storage")
+
+
+# ------------------------------
+# Governance: Tasks & Audit
+# ------------------------------
+def _get_user_tasks(claims: Dict[str, Any]) -> Dict[str, Any]:
+    all_t = _safe_load_json(TASKS_STORE)
+    return all_t.get(_user_key(claims), {})
+
+
+def _save_user_tasks(claims: Dict[str, Any], tasks: Dict[str, Any]) -> None:
+    all_t = _safe_load_json(TASKS_STORE)
+    all_t[_user_key(claims)] = tasks
+    _safe_save_json(TASKS_STORE, all_t)
+
+
+@router.post("/tasks/create")
+async def create_task(payload: Dict[str, Any], current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+    tid = datetime.utcnow().strftime("%Y%m%d%H%M%S") + "_" + secrets.token_hex(6)
+    task = {
+        "id": tid,
+        "title": payload.get("title") or "",
+        "description": payload.get("description") or "",
+        "standard_id": payload.get("standard_id") or "",
+        "accreditor": (payload.get("accreditor") or "").upper(),
+        "assignee": payload.get("assignee") or "",
+        "due_date": payload.get("due_date") or "",
+        "priority": payload.get("priority") or "normal",
+        "status": payload.get("status") or "open",
+        "created_at": datetime.utcnow().isoformat(),
+        "updated_at": datetime.utcnow().isoformat(),
+        "comments": [],
+    }
+    tasks = _get_user_tasks(current_user)
+    tasks[tid] = task
+    _save_user_tasks(current_user, tasks)
+    try:
+        with open(TASKS_AUDIT_LOG, "a", encoding="utf-8") as f:
+            f.write(json.dumps({"ts": datetime.utcnow().isoformat(), "user": _user_key(current_user), "action": "create", "task": task}, ensure_ascii=False) + "\n")
+    except Exception:
+        pass
+    return {"success": True, "task": task}
+
+
+@router.get("/tasks/list")
+async def list_tasks(
+    accreditor: Optional[str] = None,
+    standard_id: Optional[str] = None,
+    status: Optional[str] = None,
+    assignee: Optional[str] = None,
+    current_user: Dict[str, Any] = Depends(get_current_user_simple),
+):
+    tasks = list(_get_user_tasks(current_user).values())
+
+    def ok(t: Dict[str, Any]) -> bool:
+        if accreditor and (t.get("accreditor") or "").upper() != accreditor.upper():
+            return False
+        if standard_id and t.get("standard_id") != standard_id:
+            return False
+        if status and (t.get("status") or "").lower() != status.lower():
+            return False
+        if assignee and (t.get("assignee") or "").lower() != assignee.lower():
+            return False
+        return True
+    filt = [t for t in tasks if ok(t)]
+    return {"success": True, "count": len(filt), "tasks": sorted(filt, key=lambda x: x.get("due_date") or "")}
+
+
+@router.post("/tasks/update")
+async def update_task(payload: Dict[str, Any], current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+    tid = payload.get("id")
+    if not tid:
+        raise HTTPException(status_code=400, detail="id is required")
+    tasks = _get_user_tasks(current_user)
+    if tid not in tasks:
+        raise HTTPException(status_code=404, detail="task not found")
+    t = tasks[tid]
+    before = dict(t)
+    for k in ["title", "description", "standard_id", "accreditor", "assignee", "due_date", "priority", "status"]:
+        if k in payload and payload[k] is not None:
+            t[k] = payload[k]
+    if payload.get("comment"):
+        t.setdefault("comments", []).append({"author": _user_key(current_user), "ts": datetime.utcnow().isoformat(), "text": str(payload.get("comment"))})
+    t["updated_at"] = datetime.utcnow().isoformat()
+    tasks[tid] = t
+    _save_user_tasks(current_user, tasks)
+    try:
+        with open(TASKS_AUDIT_LOG, "a", encoding="utf-8") as f:
+            f.write(json.dumps({"ts": datetime.utcnow().isoformat(), "user": _user_key(current_user), "action": "update", "id": tid, "before": before, "after": t}, ensure_ascii=False) + "\n")
+    except Exception:
+        pass
+    return {"success": True, "task": t}
+
+
+# ------------------------------
+# Narratives: Strict citations and export
+# ------------------------------
+def _build_citation_map(claims: Dict[str, Any], standard_ids: List[str]) -> Dict[str, Any]:
+    uploads = _get_user_uploads(claims)
+    cmap: Dict[str, Any] = {}
+    for d in uploads.get("documents", []):
+        fname = d.get("filename")
+        for md in d.get("mappings", []):
+            sid = md.get("standard_id")
+            if sid in (standard_ids or []):
+                cmap.setdefault(sid, []).append({
+                    "filename": fname,
+                    "confidence": md.get("confidence"),
+                    "page_anchors": md.get("page_anchors", []),
+                    "fingerprint": d.get("fingerprint"),
+                    "saved_path": d.get("saved_path"),
+                })
+    return cmap
+
+
+@router.post("/narratives/generate")
+async def generate_narrative_v2(payload: Dict[str, Any], current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+    standard_ids = payload.get("standard_ids") or []
+    user_body = payload.get("body") or ""
+    strict = bool(payload.get("strict_citations", False))
+    if strict:
+        cmap = _build_citation_map(current_user, standard_ids)
+        missing = [sid for sid in standard_ids if not cmap.get(sid)]
+        if missing:
+            return {"success": False, "strict_blocked": True, "missing_citations": missing}
+    html = generate_narrative_html(standard_ids, user_body)
+    mode = _get_standards_display_mode(current_user)
+    return {"success": True, "html": html, "display_mode": mode}
+
+
+@router.post("/narratives/citeguard/check")
+async def citeguard_check(payload: Dict[str, Any], current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+    standard_ids = payload.get("standard_ids") or []
+    cmap = _build_citation_map(current_user, standard_ids)
+    missing = [sid for sid in standard_ids if not cmap.get(sid)]
+    return {"success": True, "ok": len(missing) == 0, "missing": missing, "citation_map": cmap}
+
+
+@router.post("/narratives/export/reviewer-pack")
+async def export_reviewer_pack(payload: Dict[str, Any], current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+    standard_ids = payload.get("standard_ids") or []
+    include_files = bool(payload.get("include_files", False))
+    user_body = payload.get("body") or ""
+    html = generate_narrative_html(standard_ids, user_body)
+    cmap = _build_citation_map(current_user, standard_ids)
+    tmp_zip = Path(tempfile.gettempdir()) / ("reviewer_pack_" + secrets.token_hex(6) + ".zip")
+    try:
+        with zipfile.ZipFile(tmp_zip, 'w', zipfile.ZIP_DEFLATED) as zf:
+            zf.writestr("index.html", "<html><body><h1>Reviewer Pack</h1><a href=\"narrative.html\">Open Narrative</a></body></html>")
+            zf.writestr("narrative.html", html)
+            zf.writestr("citation_map.json", json.dumps(cmap, ensure_ascii=False, indent=2))
+            if include_files:
+                for sid, cites in (cmap or {}).items():
+                    for c in cites:
+                        sp = c.get("saved_path")
+                        if sp and os.path.exists(sp):
+                            try:
+                                arcname = f"artifacts/{os.path.basename(sp)}"
+                                zf.write(sp, arcname=arcname)
+                            except Exception:
+                                continue
+        return {"success": True, "pack_path": str(tmp_zip)}
+    except Exception as e:
+        logger.error(f"Reviewer pack export error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to build reviewer pack")
+
+
+# ------------------------------
+# Readiness Scorecard
+# ------------------------------
+@router.get("/readiness/scorecard")
+async def readiness_scorecard(current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+    settings_ = _merge_claims_with_settings(current_user)
+    acc = (settings_.get("primary_accreditor") or "HLC").upper()
+    uploads = _get_user_uploads(current_user)
+    # Coverage
+    mapped = set(uploads.get("unique_standards", []) or [])
+    total_roots = len(standards_graph.get_accreditor_standards(acc)) or 0
+    coverage = round(((len(mapped) / total_roots) * 100), 1) if total_roots else 0.0
+    # Trust
+    tscores: List[float] = []
+    for d in uploads.get("documents", []):
+        ov = (d.get("trust_score") or {}).get("overall_score")
+        if isinstance(ov, (int, float)):
+            tscores.append(float(ov))
+    avg_trust = round((sum(tscores) / len(tscores)), 3) if tscores else 0.7
+    # Risk
+    risk_agg = risk_explainer.aggregate()
+    avg_risk = float(risk_agg.get("average_risk", 0.0))
+    # Tasks
+    tasks = list(_get_user_tasks(current_user).values())
+    open_tasks = len([t for t in tasks if (t.get("status") or "").lower() in {"open", "in-progress"}])
+    overdue = 0
+    try:
+        now = datetime.utcnow().date()
+        for t in tasks:
+            dd = t.get("due_date")
+            if dd:
+                try:
+                    ddate = datetime.fromisoformat(dd.replace("Z", "")).date()
+                    if ddate < now and (t.get("status") or "").lower() != "done":
+                        overdue += 1
+                except Exception:
+                    continue
+    except Exception:
+        pass
+    return {
+        "success": True,
+        "accreditor": acc,
+        "coverage_percent": coverage,
+        "average_trust": avg_trust,
+        "average_risk": round(avg_risk, 3),
+        "tasks_open": open_tasks,
+        "tasks_overdue": overdue,
+    }
+
+
+# ------------------------------
+# Immutable As-Of Snapshot
+# ------------------------------
+SNAPSHOTS_DIR = Path(os.getenv("SNAPSHOTS_DIR", "snapshots"))
+SNAPSHOTS_DIR.mkdir(parents=True, exist_ok=True)
+
+
+@router.post("/snapshot/create")
+async def create_snapshot(payload: Dict[str, Any] = None, current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+    """Create an immutable zip snapshot of current mappings and tasks for audit."""
+    try:
+        acc = (_merge_claims_with_settings(current_user).get("primary_accreditor") or "HLC").upper()
+        uploads = _get_user_uploads(current_user)
+        tasks = _get_user_tasks(current_user)
+        meta = {
+            "accreditor": acc,
+            "user": _user_key(current_user),
+            "created_at": datetime.utcnow().isoformat(),
+            "coverage": len(set(uploads.get("unique_standards", []) or [])),
+            "documents": len(uploads.get("documents", [])),
+            "tasks": len(tasks or {}),
+        }
+        out = SNAPSHOTS_DIR / ("snapshot_" + datetime.utcnow().strftime("%Y%m%d_%H%M%S") + "_" + secrets.token_hex(6) + ".zip")
+        with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED) as zf:
+            zf.writestr("meta.json", json.dumps(meta, ensure_ascii=False, indent=2))
+            zf.writestr("uploads.json", json.dumps(uploads, ensure_ascii=False, indent=2))
+            zf.writestr("tasks.json", json.dumps(tasks, ensure_ascii=False, indent=2))
+        return {"success": True, "snapshot_path": str(out)}
+    except Exception as e:
+        logger.error(f"Snapshot create error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to create snapshot")
 
 
 # ------------------------------
@@ -1889,14 +2639,16 @@ async def get_standard_detail(standard_id: str, current_user: Dict[str, Any] = D
                     break
         if not node:
             raise HTTPException(status_code=404, detail="Standard not found")
+        mode = _get_standards_display_mode(current_user)
         return {
             "id": getattr(node, "node_id", standard_id),
             "code": getattr(node, "standard_id", getattr(node, "code", standard_id)),
             "title": getattr(node, "title", ""),
             "category": getattr(node, "level", getattr(node, "category", "Standard")),
             "domain": getattr(node, "accreditor", "Core"),
-            "description": getattr(node, "description", ""),
+            "description": ("" if mode == "redacted" else getattr(node, "description", "")),
             "level": getattr(node, "level", None),
+            "display_mode": mode,
         }
     except HTTPException:
         raise

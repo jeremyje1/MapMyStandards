@@ -34,9 +34,26 @@
       </div>
       <div class="row" style="margin:8px 0">
         <input class="input" type="file" id="file" multiple accept=".yaml,.yml,.json"/>
-        <button class="btn" id="uploadBtn">Upload</button>
+        <button class="btn" id="uploadBtn">Upload (legacy)</button>
       </div>
-      <p class="muted">Files are stored under <code>byol/standards/&lt;ACCR&gt;/</code> and can be reloaded into memory.</p>
+      <div class="row" style="margin:8px 0">
+        <button class="btn" id="uploadByolPresignedBtn">Upload via Presigned S3 (recommended)</button>
+      </div>
+      <p class="muted">Files are stored under <code>byol/standards/&lt;ACCR&gt;/</code> and can be reloaded into memory. Presigned uploads handle large files reliably.</p>
+      <pre id="byolOut" class="muted" style="background:#0f172a;color:#e2e8f0">Waiting…</pre>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-top:0">Upload Evidence (PDF/DOCX/TXT)</h3>
+      <div class="row" style="margin:8px 0">
+        <input class="input" type="file" id="evidenceFiles" multiple accept=".pdf,.doc,.docx,.txt"/>
+        <button class="btn" id="uploadEvidenceBtn">Upload Evidence (legacy)</button>
+      </div>
+      <div class="row" style="margin:8px 0">
+        <button class="btn" id="uploadEvidencePresignedBtn">Upload Evidence via Presigned S3</button>
+      </div>
+      <p class="muted">Evidence uploads are analyzed and mapped to standards. Presigned uploads improve reliability for larger files. For a fuller UX, you can also use <a href="/upload-modern">Upload</a>.</p>
+      <pre id="evidenceOut" class="muted" style="background:#0f172a;color:#e2e8f0">Waiting…</pre>
     </div>
 
     <div class="grid">
@@ -58,6 +75,7 @@
   </div>
   <script>
     const API = '/api/user/intelligence-simple';
+    const UPLOAD_API = '/api/upload';
 
     function ensureTokenFromQuery() {
       try {
@@ -118,6 +136,24 @@
       alert(`Uploaded ${results.length} file(s).`);
     }
 
+    async function uploadEvidence() {
+      const out = document.getElementById('evidenceOut');
+      const input = document.getElementById('evidenceFiles');
+      const files = input.files;
+      if (!files || !files.length) { alert('Select at least one evidence file'); return; }
+      try {
+        const fd = new FormData();
+        for (const f of files) fd.append('files', f);
+        const r = await fetch(`${API}/evidence/upload`, { method: 'POST', body: fd, headers: authHeaders() });
+        const j = await r.json().catch(() => ({}));
+        out.textContent = JSON.stringify(j || { ok: r.ok, status: r.status }, null, 2);
+        if (!r.ok) alert('Upload failed: ' + r.status);
+      } catch (e) {
+        out.textContent = String(e);
+        alert('Upload failed');
+      }
+    }
+
     async function reloadGraph() {
       const path = document.getElementById('path').value.trim();
       let res, j;
@@ -167,8 +203,113 @@
     }
 
     document.getElementById('uploadBtn').addEventListener('click', uploadFiles);
-    document.getElementById('reloadBtn').addEventListener('click', reloadGraph);
+  document.getElementById('reloadBtn').addEventListener('click', reloadGraph);
+  document.getElementById('uploadEvidenceBtn').addEventListener('click', uploadEvidence);
     document.getElementById('statusBtn').addEventListener('click', refreshStatus);
+
+    // ---- Presigned upload helpers ----
+    async function presign(filename, contentType, size) {
+      const res = await fetch(`${UPLOAD_API}/presign`, {
+        method: 'POST',
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ filename, content_type: contentType, size })
+      });
+      if (!res.ok) throw new Error('Failed to get presign');
+      return res.json();
+    }
+
+    async function s3Upload(presignData, file, progressCb) {
+      const form = new FormData();
+      const fields = presignData.upload_fields || presignData.fields || {};
+      Object.entries(fields).forEach(([k,v]) => form.append(k, v));
+      form.append('Content-Type', file.type || 'application/octet-stream');
+      form.append('file', file);
+      const xhr = new XMLHttpRequest();
+      const url = presignData.upload_url || presignData.url;
+      return await new Promise((resolve, reject) => {
+        xhr.open('POST', url);
+        xhr.upload.onprogress = (e) => { if (progressCb && e.lengthComputable) progressCb(Math.round((e.loaded/e.total)*100)); };
+        xhr.onload = () => { (xhr.status >= 200 && xhr.status < 300) ? resolve(true) : reject(new Error(`S3 upload failed ${xhr.status}`)); };
+        xhr.onerror = () => reject(new Error('Network error during S3 upload'));
+        xhr.send(form);
+      });
+    }
+
+    async function completeUpload(file_key, filename, size, content_type, hash) {
+      const res = await fetch(`${UPLOAD_API}/complete`, {
+        method: 'POST',
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ file_key, filename, size, content_type, hash })
+      });
+      if (!res.ok) throw new Error('Failed to complete upload');
+      return res.json();
+    }
+
+    async function sha256(file) {
+      const buf = await file.arrayBuffer();
+      const hash = await crypto.subtle.digest('SHA-256', buf);
+      const bytes = Array.from(new Uint8Array(hash));
+      return bytes.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    async function uploadByolPresigned() {
+      const out = document.getElementById('byolOut');
+      const input = document.getElementById('file');
+      const accreditor = document.getElementById('accr').value.trim();
+      const files = input.files;
+      if (!files || !files.length) { alert('Select at least one standards file'); return; }
+      const results = [];
+      for (const file of files) {
+        try {
+          const pres = await presign(file.name, file.type || 'application/octet-stream', file.size);
+          let pct = 0; await s3Upload(pres, file, p => { pct = p; out.textContent = `Uploading ${file.name}: ${p}%`; });
+          const hash = await sha256(file);
+          const comp = await completeUpload(pres.file_key, file.name, file.size, file.type || 'application/octet-stream', hash);
+          // Ingest from storage into BYOL corpus
+          const ingestRes = await fetch(`${API}/standards/byol/ingest/from-storage`, {
+            method: 'POST',
+            headers: authHeaders({ 'Content-Type': 'application/json' }),
+            body: JSON.stringify({ file_key: pres.file_key, filename: file.name, accreditor })
+          });
+          const ingestJson = await ingestRes.json().catch(() => ({}));
+          results.push({ file: file.name, presign: pres, complete: comp, ingest: ingestJson });
+        } catch (e) {
+          results.push({ file: file.name, error: String(e) });
+        }
+      }
+      // After uploads, attempt to reload the graph (BYOL dir may already contain files from legacy uploads)
+      try { await reloadGraph(); } catch {}
+      out.textContent = JSON.stringify({ success: true, results }, null, 2);
+    }
+
+    async function uploadEvidencePresigned() {
+      const out = document.getElementById('evidenceOut');
+      const files = document.getElementById('evidenceFiles').files;
+      if (!files || !files.length) { alert('Select at least one evidence file'); return; }
+      const results = [];
+      for (const file of files) {
+        try {
+          const pres = await presign(file.name, file.type || 'application/octet-stream', file.size);
+          let pct = 0; await s3Upload(pres, file, p => { pct = p; out.textContent = `Uploading ${file.name}: ${p}%`; });
+          const hash = await sha256(file);
+          const comp = await completeUpload(pres.file_key, file.name, file.size, file.type || 'application/octet-stream', hash);
+          // Kick off server-side analysis directly from storage
+          const analyzeRes = await fetch(`${API}/evidence/analyze/from-storage`, {
+            method: 'POST',
+            headers: authHeaders({ 'Content-Type': 'application/json' }),
+            body: JSON.stringify({ file_key: pres.file_key, filename: file.name, content_type: file.type || 'application/octet-stream' })
+          });
+          const analyzeJson = await analyzeRes.json().catch(() => ({}));
+          results.push({ file: file.name, complete: comp, analysis: analyzeJson });
+        } catch (e) {
+          results.push({ file: file.name, error: String(e) });
+        }
+      }
+      out.textContent = JSON.stringify({ success: true, results }, null, 2);
+    }
+
+    document.getElementById('uploadByolPresignedBtn').addEventListener('click', uploadByolPresigned);
+    document.getElementById('uploadEvidencePresignedBtn').addEventListener('click', uploadEvidencePresigned);
 
     ensureTokenFromQuery();
     currentDisplayMode();

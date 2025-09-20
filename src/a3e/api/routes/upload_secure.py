@@ -34,6 +34,11 @@ ALLOWED_MIME_TYPES = [
     "application/vnd.openxmlformats-officedocument.presentationml.presentation",
     "text/plain",
     "text/csv",
+    "application/json",
+    "application/yaml",
+    "application/x-yaml",
+    "text/yaml",
+    "application/octet-stream",
 ]
 
 
@@ -232,6 +237,22 @@ async def upload_file_direct(
                 "uploaded_at": datetime.utcnow().isoformat(),
             },
         )
+
+        # Demo token: skip DB writes to avoid FK/DB availability constraints
+        if info["user_id"] == "demo_user":
+            try:
+                download_url = await storage.get_download_url(
+                    file_key=file_key, filename=file.filename
+                )
+            except Exception:
+                download_url = None
+            return UploadResponse(
+                success=True,
+                message="File uploaded (demo mode; metadata not persisted)",
+                file_id=None,
+                file_key=file_key,
+                download_url=download_url,
+            )
 
         document = Document(
             user_id=info["user_id"],
