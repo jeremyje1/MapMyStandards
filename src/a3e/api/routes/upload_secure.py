@@ -143,8 +143,24 @@ async def complete_upload(
     storage: StorageService = Depends(get_storage_service),
     db: AsyncSession = Depends(get_db),
 ):
+    info = _extract_user_info(current_user)
+    # Special-case demo token: skip DB writes to avoid FK constraints
+    if info["user_id"] == "demo_user":
+        try:
+            download_url = await storage.get_download_url(
+                file_key=request.file_key, filename=request.filename
+            )
+        except Exception:
+            download_url = None
+        return UploadResponse(
+            success=True,
+            message="File upload recorded (demo mode; metadata not persisted)",
+            file_id=None,
+            file_key=request.file_key,
+            download_url=download_url,
+        )
+
     try:
-        info = _extract_user_info(current_user)
         document = Document(
             user_id=info["user_id"],
             filename=request.filename,
@@ -257,8 +273,12 @@ async def list_user_files(
     db: AsyncSession = Depends(get_db),
     limit: int = 50,
 ):
+    info = _extract_user_info(current_user)
+    # Demo token: return empty set without DB access
+    if info["user_id"] == "demo_user":
+        return {"files": []}
+
     try:
-        info = _extract_user_info(current_user)
         result = await db.execute(
             select(Document)
             .where(Document.user_id == info["user_id"])  
