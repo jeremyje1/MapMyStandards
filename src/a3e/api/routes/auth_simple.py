@@ -92,10 +92,17 @@ async def simple_login(request: LoginRequest, db: AsyncSession = Depends(get_db)
 @router.post("/auth/login", response_model=AuthResponse) 
 async def auth_login(request: LoginRequest, db: AsyncSession = Depends(get_db)):
     """Handle legacy /auth/login endpoint"""
-    return await do_login(request, db)
+    try:
+        return await do_login(request, db)
+    except Exception as e:
+        logger.error(f"Login endpoint error: {type(e).__name__}: {str(e)}")
+        logger.exception("Full traceback:")
+        # Return a generic error to avoid exposing internals
+        raise HTTPException(status_code=500, detail="Internal server error during login")
 
 async def do_login(request: LoginRequest, db: AsyncSession):
     """Simple login that works with database session"""
+    logger.info(f"Login attempt for email: {request.email}")
     try:
         # Demo account shortcut
         if request.email == "demo@example.com" and request.password == "demo123":
@@ -109,7 +116,8 @@ async def do_login(request: LoginRequest, db: AsyncSession):
             })
 
         if not db:
-            raise HTTPException(status_code=503, detail="database_unavailable")
+            logger.error("Database session is None - database connection failed")
+            raise HTTPException(status_code=503, detail="Database unavailable")
 
         result = await db.execute(select(User).where(User.email == request.email.lower()))
         user = result.scalar_one_or_none()
