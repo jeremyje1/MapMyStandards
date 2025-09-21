@@ -9,8 +9,7 @@ import logging
 from datetime import datetime, timezone
 
 from ...services.webhook_service import webhook_service, WebhookEvent
-from ...core.auth import get_current_user
-from ...models.user import User
+from ..dependencies import get_current_user
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/webhooks", tags=["webhooks"])
@@ -48,7 +47,7 @@ class WebhookResponse(BaseModel):
 
 @router.get("/")
 async def list_webhooks(
-    current_user: User = Depends(get_current_user)
+    current_user: Dict = Depends(get_current_user)
 ) -> List[WebhookResponse]:
     """List all webhooks for the current user's institution."""
     try:
@@ -62,7 +61,7 @@ async def list_webhooks(
             WHERE institution_id = :institution_id
             ORDER BY created_at DESC
             """,
-            {"institution_id": current_user.institution_id}
+            {"institution_id": current_user.get("institution_id")}
         )
         
         return [
@@ -88,13 +87,13 @@ async def list_webhooks(
 @router.post("/", response_model=Dict[str, str])
 async def create_webhook(
     request: CreateWebhookRequest,
-    current_user: User = Depends(get_current_user)
+    current_user: Dict = Depends(get_current_user)
 ) -> Dict[str, str]:
     """Create a new webhook."""
     try:
         async with webhook_service:
             webhook_id = await webhook_service.create_webhook(
-                institution_id=current_user.institution_id,
+                institution_id=current_user.get("institution_id"),
                 url=str(request.url),
                 events=request.events,
                 secret=request.secret,
@@ -109,7 +108,7 @@ async def create_webhook(
                     "webhook_id": webhook_id,
                     "events": [e.value for e in request.events]
                 },
-                institution_id=current_user.institution_id,
+                institution_id=current_user.get("institution_id"),
                 metadata={"test": True}
             )
             
@@ -127,7 +126,7 @@ async def create_webhook(
 @router.get("/{webhook_id}")
 async def get_webhook(
     webhook_id: str,
-    current_user: User = Depends(get_current_user)
+    current_user: Dict = Depends(get_current_user)
 ) -> Dict[str, Any]:
     """Get webhook details."""
     try:
@@ -137,7 +136,7 @@ async def get_webhook(
             SELECT * FROM webhook_configs
             WHERE id = :id AND institution_id = :institution_id
             """,
-            {"id": webhook_id, "institution_id": current_user.institution_id}
+            {"id": webhook_id, "institution_id": current_user.get("institution_id")}
         )
         
         if not webhook:
@@ -156,7 +155,7 @@ async def get_webhook(
 async def update_webhook(
     webhook_id: str,
     request: UpdateWebhookRequest,
-    current_user: User = Depends(get_current_user)
+    current_user: Dict = Depends(get_current_user)
 ) -> Dict[str, str]:
     """Update a webhook configuration."""
     try:
@@ -165,7 +164,7 @@ async def update_webhook(
         
         # Build update query dynamically
         update_fields = []
-        params = {"id": webhook_id, "institution_id": current_user.institution_id}
+        params = {"id": webhook_id, "institution_id": current_user.get("institution_id")}
         
         if request.url is not None:
             update_fields.append("url = :url")
@@ -220,7 +219,7 @@ async def update_webhook(
 @router.delete("/{webhook_id}")
 async def delete_webhook(
     webhook_id: str,
-    current_user: User = Depends(get_current_user)
+    current_user: Dict = Depends(get_current_user)
 ) -> Dict[str, str]:
     """Delete a webhook."""
     try:
@@ -231,7 +230,7 @@ async def delete_webhook(
             SELECT id FROM webhook_configs
             WHERE id = :id AND institution_id = :institution_id
             """,
-            {"id": webhook_id, "institution_id": current_user.institution_id}
+            {"id": webhook_id, "institution_id": current_user.get("institution_id")}
         )
         
         if not webhook:
@@ -253,7 +252,7 @@ async def delete_webhook(
 async def get_webhook_deliveries(
     webhook_id: str,
     limit: int = 100,
-    current_user: User = Depends(get_current_user)
+    current_user: Dict = Depends(get_current_user)
 ) -> List[Dict[str, Any]]:
     """Get webhook delivery history."""
     try:
@@ -264,7 +263,7 @@ async def get_webhook_deliveries(
             SELECT id FROM webhook_configs
             WHERE id = :id AND institution_id = :institution_id
             """,
-            {"id": webhook_id, "institution_id": current_user.institution_id}
+            {"id": webhook_id, "institution_id": current_user.get("institution_id")}
         )
         
         if not webhook:
@@ -285,7 +284,7 @@ async def get_webhook_deliveries(
 @router.post("/{webhook_id}/test")
 async def test_webhook(
     webhook_id: str,
-    current_user: User = Depends(get_current_user)
+    current_user: Dict = Depends(get_current_user)
 ) -> Dict[str, str]:
     """Send a test event to the webhook."""
     try:
@@ -296,7 +295,7 @@ async def test_webhook(
             SELECT * FROM webhook_configs
             WHERE id = :id AND institution_id = :institution_id
             """,
-            {"id": webhook_id, "institution_id": current_user.institution_id}
+            {"id": webhook_id, "institution_id": current_user.get("institution_id")}
         )
         
         if not webhook:
@@ -314,7 +313,7 @@ async def test_webhook(
                     "webhook_id": webhook_id,
                     "timestamp": datetime.now(timezone.utc).isoformat()
                 },
-                institution_id=current_user.institution_id,
+                institution_id=current_user.get("institution_id"),
                 metadata={"test": True}
             )
         

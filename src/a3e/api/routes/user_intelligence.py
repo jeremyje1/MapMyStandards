@@ -65,7 +65,7 @@ async def get_current_user(
 
 @router.get("/dashboard/overview")
 async def get_dashboard_overview(
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Get personalized dashboard overview with compliance insights"""
@@ -80,7 +80,7 @@ async def get_dashboard_overview(
         accreditor_standards = standards_graph.get_accreditor_standards(primary_accreditor)
         
         # Get user's document count
-        upload_dir = os.path.join(getattr(settings, "data_dir", "/app/data"), "uploads", str(current_user.id))
+        upload_dir = os.path.join(getattr(settings, "data_dir", "/app/data"), "uploads", str(current_user.get("id")))
         document_count = 0
         if os.path.exists(upload_dir):
             document_count = len([f for f in os.listdir(upload_dir) if os.path.isfile(os.path.join(upload_dir, f))])
@@ -90,7 +90,7 @@ async def get_dashboard_overview(
         
         return {
             "user": {
-                "email": current_user.email,
+                "email": current_user.get("email"),
                 "institution_name": institution_name,
                 "primary_accreditor": primary_accreditor,
                 "trial_active": current_user.is_trial_active if current_user.is_trial else True,
@@ -125,7 +125,7 @@ async def get_dashboard_overview(
 @router.get("/standards/graph")
 async def get_standards_graph(
     accreditor: Optional[str] = None,
-    current_user: User = Depends(get_current_user)
+    current_user: Dict = Depends(get_current_user)
 ):
     """Get standards graph data for visualization"""
     try:
@@ -154,7 +154,7 @@ async def get_standards_graph(
 @router.post("/evidence/analyze")
 async def analyze_evidence(
     file: UploadFile = File(...),
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Analyze uploaded document and map to standards"""
@@ -172,7 +172,7 @@ async def analyze_evidence(
             content=text_content,
             metadata={
                 "filename": file.filename,
-                "user_id": str(current_user.id),
+                "user_id": str(current_user.get("id")),
                 "upload_time": datetime.utcnow().isoformat()
             }
         )
@@ -223,7 +223,7 @@ async def analyze_evidence(
 
 @router.get("/compliance/gaps")
 async def get_compliance_gaps(
-    current_user: User = Depends(get_current_user)
+    current_user: Dict = Depends(get_current_user)
 ):
     """Get compliance gap analysis for user's institution"""
     try:
@@ -235,7 +235,7 @@ async def get_compliance_gaps(
         institution_size = merged_data.get("institution_size", "medium")
         
         # Get user's documents for analysis
-        upload_dir = os.path.join(getattr(settings, "data_dir", "/app/data"), "uploads", str(current_user.id))
+        upload_dir = os.path.join(getattr(settings, "data_dir", "/app/data"), "uploads", str(current_user.get("id")))
         evidence_count = 0
         if os.path.exists(upload_dir):
             evidence_count = len([f for f in os.listdir(upload_dir) if os.path.isfile(os.path.join(upload_dir, f))])
@@ -280,12 +280,12 @@ async def get_compliance_gaps(
 
 @router.get("/metrics/summary")
 async def get_metrics_summary(
-    current_user: User = Depends(get_current_user)
+    current_user: Dict = Depends(get_current_user)
 ):
     """Get summarized metrics for dashboard widgets"""
     try:
         # Get user's upload directory
-        upload_dir = os.path.join(getattr(settings, "data_dir", "/app/data"), "uploads", str(current_user.id))
+        upload_dir = os.path.join(getattr(settings, "data_dir", "/app/data"), "uploads", str(current_user.get("id")))
         document_count = 0
         if os.path.exists(upload_dir):
             document_count = len([f for f in os.listdir(upload_dir) if os.path.isfile(os.path.join(upload_dir, f))])

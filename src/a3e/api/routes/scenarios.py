@@ -80,7 +80,7 @@ class ScenarioResponse(BaseModel):
 @router.post("/scenarios/calculate", response_model=ScenarioResults)
 async def calculate_scenario(
     inputs: ScenarioInputs,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     has_subscription: bool = Depends(has_active_subscription)
 ):
     """
@@ -170,7 +170,7 @@ async def calculate_scenario(
 @router.post("/scenarios", response_model=ScenarioResponse)
 async def create_scenario(
     scenario: ScenarioCreate,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     has_subscription: bool = Depends(has_active_subscription),
     db: AsyncSession = Depends(get_db_session)
 ):
@@ -187,7 +187,7 @@ async def create_scenario(
     results = await calculate_scenario(scenario.inputs, current_user, has_subscription)
     
     # Create scenario ID
-    scenario_id = f"scenario_{current_user.id}_{datetime.utcnow().timestamp()}"
+    scenario_id = f"scenario_{current_user.get("id")}_{datetime.utcnow().timestamp()}"
     
     response = ScenarioResponse(
         id=scenario_id,
@@ -198,12 +198,12 @@ async def create_scenario(
         is_template=scenario.is_template,
         created_at=datetime.utcnow(),
         updated_at=datetime.utcnow(),
-        created_by=current_user.email
+        created_by=current_user.get("email")
     )
     
     # Save to database
     db_scenario = Scenario(
-        user_id=current_user.id,
+        user_id=current_user.get("id"),
         name=scenario.name,
         description=scenario.description,
         inputs=scenario.inputs.dict(),
@@ -223,7 +223,7 @@ async def create_scenario(
 @router.get("/scenarios", response_model=List[ScenarioResponse])
 async def list_scenarios(
     include_templates: bool = True,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     has_subscription: bool = Depends(has_active_subscription),
     db: AsyncSession = Depends(get_db_session)
 ):
@@ -237,7 +237,7 @@ async def list_scenarios(
         )
     
     # Query scenarios from database
-    query = db.query(Scenario).filter(Scenario.user_id == current_user.id)
+    query = db.query(Scenario).filter(Scenario.user_id == current_user.get("id"))
     
     if not include_templates:
         query = query.filter(Scenario.is_template.is_(False))
@@ -255,7 +255,7 @@ async def list_scenarios(
             is_template=db_scenario.is_template,
             created_at=db_scenario.created_at,
             updated_at=db_scenario.updated_at,
-            created_by=current_user.email
+            created_by=current_user.get("email")
         ))
     
     return scenarios
@@ -323,7 +323,7 @@ async def get_scenario_templates():
 @router.get("/scenarios/{scenario_id}", response_model=ScenarioResponse)
 async def get_scenario(
     scenario_id: str,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     has_subscription: bool = Depends(has_active_subscription),
     db: AsyncSession = Depends(get_db_session)
 ):
@@ -339,7 +339,7 @@ async def get_scenario(
     # Query scenario by ID
     db_scenario = db.query(Scenario).filter(
         Scenario.id == scenario_id,
-        Scenario.user_id == current_user.id
+        Scenario.user_id == current_user.get("id")
     ).first()
     
     if not db_scenario:
@@ -357,14 +357,14 @@ async def get_scenario(
         is_template=db_scenario.is_template,
         created_at=db_scenario.created_at,
         updated_at=db_scenario.updated_at,
-        created_by=current_user.email
+        created_by=current_user.get("email")
     )
 
 
 @router.delete("/scenarios/{scenario_id}")
 async def delete_scenario(
     scenario_id: str,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     has_subscription: bool = Depends(has_active_subscription),
     db: AsyncSession = Depends(get_db_session)
 ):
@@ -380,7 +380,7 @@ async def delete_scenario(
     # Query and delete scenario
     db_scenario = db.query(Scenario).filter(
         Scenario.id == scenario_id,
-        Scenario.user_id == current_user.id
+        Scenario.user_id == current_user.get("id")
     ).first()
     
     if not db_scenario:

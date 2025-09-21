@@ -61,7 +61,7 @@ async def get_current_user(
 
 @router.get("/overview")
 async def get_dashboard_overview(
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ) -> Dict[str, Any]:
     """Get dashboard overview data"""
@@ -73,7 +73,7 @@ async def get_dashboard_overview(
 
         # Get recent activity
         stmt = select(UsageEvent).where(
-            UsageEvent.user_id == current_user.id
+            UsageEvent.user_id == current_user.get("id")
         ).order_by(UsageEvent.created_at.desc()).limit(10)
 
         result = await db.execute(stmt)
@@ -94,9 +94,9 @@ async def get_dashboard_overview(
         return {
             "user": {
                 "name": current_user.name,
-                "email": current_user.email,
+                "email": current_user.get("email"),
                 "institution": current_user.institution_name,
-                "role": current_user.role,
+                "role": current_user.get("role"),
                 "subscription_tier": current_user.subscription_tier,
                 "is_trial": current_user.is_trial,
                 "trial_days_remaining": current_user.days_remaining_in_trial if current_user.is_trial else None
@@ -130,7 +130,7 @@ async def get_dashboard_overview(
 @router.get("/analytics")
 async def get_analytics_data(
     period: str = "week",  # week, month, quarter
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ) -> Dict[str, Any]:
     """Get analytics data for charts and graphs"""
@@ -152,7 +152,7 @@ async def get_analytics_data(
             func.count(UsageEvent.id).label('count'),
             UsageEvent.event_type.label('event_type')
         ).where(
-            UsageEvent.user_id == current_user.id,
+            UsageEvent.user_id == current_user.get("id"),
             UsageEvent.created_at >= start_date
         ).group_by(
             func.date(UsageEvent.created_at),
@@ -193,7 +193,7 @@ async def get_analytics_data(
 
 @router.get("/notifications")
 async def get_notifications(
-    current_user: User = Depends(get_current_user)
+    current_user: Dict = Depends(get_current_user)
 ) -> Dict[str, Any]:
     """Get user notifications and alerts"""
     try:

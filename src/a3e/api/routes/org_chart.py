@@ -80,7 +80,7 @@ class OrgChartResponse(BaseModel):
 @router.post("/org-chart", response_model=OrgChartResponse)
 async def create_org_chart(
     chart: OrgChartCreate,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     has_subscription: bool = Depends(has_active_subscription),
     db: Session = Depends(get_db)
 ):
@@ -101,7 +101,7 @@ async def create_org_chart(
         chart_data['total_employees'] = chart.total_employees
     
     db_chart = OrgChart(
-        user_id=current_user.id,
+        user_id=current_user.get("id"),
         name=chart.name,
         description=chart.description,
         chart_data=chart_data
@@ -125,7 +125,7 @@ async def create_org_chart(
         total_employees=total_employees,
         created_at=db_chart.created_at,
         updated_at=db_chart.updated_at,
-        created_by=current_user.email
+        created_by=current_user.get("email")
     )
     
     return response
@@ -133,7 +133,7 @@ async def create_org_chart(
 
 @router.get("/org-chart", response_model=List[OrgChartResponse])
 async def list_org_charts(
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     has_subscription: bool = Depends(has_active_subscription),
     db: Session = Depends(get_db)
 ):
@@ -147,7 +147,7 @@ async def list_org_charts(
         )
     
     # Query organization charts for the current user
-    db_charts = db.query(OrgChart).filter(OrgChart.user_id == current_user.id).all()
+    db_charts = db.query(OrgChart).filter(OrgChart.user_id == current_user.get("id")).all()
     
     charts = []
     for db_chart in db_charts:
@@ -164,7 +164,7 @@ async def list_org_charts(
             total_employees=total_employees,
             created_at=db_chart.created_at,
             updated_at=db_chart.updated_at,
-            created_by=current_user.email
+            created_by=current_user.get("email")
         ))
     
     return charts
@@ -173,7 +173,7 @@ async def list_org_charts(
 @router.get("/org-chart/{chart_id}", response_model=OrgChartResponse)
 async def get_org_chart(
     chart_id: str,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     has_subscription: bool = Depends(has_active_subscription),
     db: Session = Depends(get_db)
 ):
@@ -189,7 +189,7 @@ async def get_org_chart(
     # Query organization chart by ID and user
     db_chart = db.query(OrgChart).filter(
         OrgChart.id == int(chart_id),
-        OrgChart.user_id == current_user.id
+        OrgChart.user_id == current_user.get("id")
     ).first()
     
     if not db_chart:
@@ -212,7 +212,7 @@ async def get_org_chart(
         total_employees=total_employees,
         created_at=db_chart.created_at,
         updated_at=db_chart.updated_at,
-        created_by=current_user.email
+        created_by=current_user.get("email")
     )
 
 
@@ -220,7 +220,7 @@ async def get_org_chart(
 async def update_org_chart(
     chart_id: str,
     chart: OrgChartCreate,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     has_subscription: bool = Depends(has_active_subscription),
     db: Session = Depends(get_db)
 ):
@@ -236,7 +236,7 @@ async def update_org_chart(
     # Query and update organization chart
     db_chart = db.query(OrgChart).filter(
         OrgChart.id == int(chart_id),
-        OrgChart.user_id == current_user.id
+        OrgChart.user_id == current_user.get("id")
     ).first()
     
     if not db_chart:
@@ -274,7 +274,7 @@ async def update_org_chart(
         total_employees=total_employees,
         created_at=db_chart.created_at,
         updated_at=db_chart.updated_at,
-        created_by=current_user.email
+        created_by=current_user.get("email")
     )
     
     return response
@@ -283,7 +283,7 @@ async def update_org_chart(
 @router.delete("/org-chart/{chart_id}")
 async def delete_org_chart(
     chart_id: str,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     has_subscription: bool = Depends(has_active_subscription),
     db: Session = Depends(get_db)
 ):
@@ -299,7 +299,7 @@ async def delete_org_chart(
     # Query and delete organization chart
     db_chart = db.query(OrgChart).filter(
         OrgChart.id == int(chart_id),
-        OrgChart.user_id == current_user.id
+        OrgChart.user_id == current_user.get("id")
     ).first()
     
     if not db_chart:
@@ -317,7 +317,7 @@ async def delete_org_chart(
 @router.post("/org-chart/{chart_id}/analyze")
 async def analyze_org_chart(
     chart_id: str,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     has_subscription: bool = Depends(has_active_subscription),
     db: Session = Depends(get_db)
 ):

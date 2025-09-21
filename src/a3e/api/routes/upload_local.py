@@ -60,7 +60,7 @@ class DocumentResponse(BaseModel):
 @router.post("/simple", response_model=SimpleUploadResponse)
 async def upload_file(
     file: UploadFile = File(...),
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -87,10 +87,10 @@ async def upload_file(
         # Generate unique file key
         file_uuid = str(uuid.uuid4())
         file_extension = os.path.splitext(file.filename)[1]
-        file_key = f"{current_user.id}/{file_uuid}{file_extension}"
+        file_key = f"{current_user.get("id")}/{file_uuid}{file_extension}"
         
         # Create user directory
-        user_dir = UPLOAD_DIR / str(current_user.id)
+        user_dir = UPLOAD_DIR / str(current_user.get("id"))
         user_dir.mkdir(exist_ok=True, parents=True)
         
         # Save file to local storage
@@ -103,7 +103,7 @@ async def upload_file(
         
         # Create document record
         document = Document(
-            user_id=current_user.id,
+            user_id=current_user.get("id"),
             organization_id=current_user.institution_name,
             filename=file.filename,
             file_key=file_key,
@@ -141,7 +141,7 @@ async def upload_file(
 @router.get("/download/{document_id}")
 async def download_file(
     document_id: str,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -151,7 +151,7 @@ async def download_file(
         # Get document record
         document = db.query(Document).filter(
             Document.id == document_id,
-            Document.user_id == current_user.id
+            Document.user_id == current_user.get("id")
         ).first()
         
         if not document:
@@ -178,7 +178,7 @@ async def download_file(
 
 @router.get("/documents", response_model=List[DocumentResponse])
 async def list_documents(
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     db: Session = Depends(get_db),
     limit: int = 50,
     offset: int = 0
@@ -188,7 +188,7 @@ async def list_documents(
     """
     try:
         documents = db.query(Document).filter(
-            Document.user_id == current_user.id,
+            Document.user_id == current_user.get("id"),
             Document.status != "deleted"
         ).order_by(
             Document.uploaded_at.desc()
@@ -218,7 +218,7 @@ async def list_documents(
 @router.delete("/documents/{document_id}")
 async def delete_document(
     document_id: str,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -227,7 +227,7 @@ async def delete_document(
     try:
         document = db.query(Document).filter(
             Document.id == document_id,
-            Document.user_id == current_user.id
+            Document.user_id == current_user.get("id")
         ).first()
         
         if not document:

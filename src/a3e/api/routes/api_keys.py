@@ -1,3 +1,4 @@
+from typing import Dict
 """
 API Key management endpoints
 """
@@ -49,12 +50,12 @@ class ApiKeyCreateResponse(BaseModel):
 @router.get("/{team_id}/api-keys", response_model=List[ApiKeyResponse])
 async def get_team_api_keys(
     team_id: str,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Get all API keys for a team"""
     await EnhancedAuthService.require_team_permission(
-        db, current_user.id, team_id, "manage"
+        db, current_user.get("id"), team_id, "manage"
     )
     
     api_keys = await EnhancedAuthService.get_team_api_keys(db, team_id)
@@ -80,13 +81,13 @@ async def create_api_key(
     team_id: str,
     key_data: ApiKeyCreate,
     request: Request,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     _: bool = Depends(has_active_subscription),
     db: AsyncSession = Depends(get_db)
 ):
     """Create a new API key for a team"""
     await EnhancedAuthService.require_team_permission(
-        db, current_user.id, team_id, "manage"
+        db, current_user.get("id"), team_id, "manage"
     )
     
     # Validate scopes
@@ -102,7 +103,7 @@ async def create_api_key(
         api_key, key_obj = await EnhancedAuthService.create_api_key(
             db=db,
             team_id=team_id,
-            created_by_id=current_user.id,
+            created_by_id=current_user.get("id"),
             name=key_data.name,
             scopes=key_data.scopes,
             expires_in_days=key_data.expires_in_days
@@ -111,7 +112,7 @@ async def create_api_key(
         # Log action
         await AuditService.log_action(
             db=db,
-            user_id=current_user.id,
+            user_id=current_user.get("id"),
             action="create",
             resource_type="api_key",
             team_id=team_id,
@@ -146,12 +147,12 @@ async def revoke_api_key(
     team_id: str,
     key_id: str,
     request: Request,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Revoke an API key"""
     await EnhancedAuthService.require_team_permission(
-        db, current_user.id, team_id, "manage"
+        db, current_user.get("id"), team_id, "manage"
     )
     
     success = await EnhancedAuthService.revoke_api_key(db, key_id)
@@ -165,7 +166,7 @@ async def revoke_api_key(
     # Log action
     await AuditService.log_action(
         db=db,
-        user_id=current_user.id,
+        user_id=current_user.get("id"),
         action="revoke",
         resource_type="api_key",
         team_id=team_id,
@@ -179,12 +180,12 @@ async def revoke_api_key(
 async def get_api_key_usage(
     team_id: str,
     key_id: str,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Get usage statistics for an API key"""
     await EnhancedAuthService.require_team_permission(
-        db, current_user.id, team_id, "manage"
+        db, current_user.get("id"), team_id, "manage"
     )
     
     # This would query your API usage logs

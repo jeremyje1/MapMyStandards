@@ -419,7 +419,7 @@ async def refresh_token(request: Request, response: Response, db: Session = Depe
         raise HTTPException(status_code=500, detail="Token refresh failed")
 
 @router.post("/logout")
-async def logout(response: Response, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+async def logout(response: Response, db: Session = Depends(get_db), current_user: Dict = Depends(get_current_user)):
     """Logout user and clear cookies"""
     try:
         # Revoke refresh token in database
@@ -438,13 +438,13 @@ async def logout(response: Response, db: Session = Depends(get_db), current_user
         raise HTTPException(status_code=500, detail="Logout failed")
 
 @router.get("/me")
-async def get_current_user_info(current_user: User = Depends(get_current_user)):
+async def get_current_user_info(current_user: Dict = Depends(get_current_user)):
     """Get current user information"""
     return {
-        "id": str(current_user.id),
-        "email": current_user.email,
+        "id": str(current_user.get("id")),
+        "email": current_user.get("email"),
         "name": current_user.name,
-        "role": current_user.role,
+        "role": current_user.get("role"),
         "institution_name": current_user.institution_name,
         "is_active": current_user.is_active,
         "created_at": current_user.created_at.isoformat() if current_user.created_at else None

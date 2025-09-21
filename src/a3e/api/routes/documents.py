@@ -1,3 +1,4 @@
+from typing import Dict
 """
 Document upload and processing endpoints for A3E platform
 """
@@ -62,7 +63,7 @@ async def get_current_user(
 async def upload_document(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Upload a document for analysis"""
@@ -94,7 +95,7 @@ async def upload_document(
 
         # Create upload directory if it doesn't exist
         upload_base = getattr(settings, "data_dir", "/app/data")
-        upload_dir = os.path.join(upload_base, "uploads", str(current_user.id))
+        upload_dir = os.path.join(upload_base, "uploads", str(current_user.get("id")))
         os.makedirs(upload_dir, exist_ok=True)
 
         # Save file
@@ -104,7 +105,7 @@ async def upload_document(
         
         # Track usage event
         usage_event = UsageEvent(
-            user_id=current_user.id,
+            user_id=current_user.get("id"),
             event_type="document_upload",
             event_data={
                 "category": "analysis",
@@ -126,11 +127,11 @@ async def upload_document(
             process_document,
             document_id,
             file_path,
-            current_user.id,
+            current_user.get("id"),
             file.filename
         )
         
-        logger.info(f"Document uploaded: {document_id} by user {current_user.email}")
+        logger.info(f"Document uploaded: {document_id} by user {current_user.get("email")}")
         
         return {
             "success": True,
@@ -175,7 +176,7 @@ async def process_document(document_id: str, file_path: str, user_id: str, origi
 
 @router.get("/list")
 async def list_documents(
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """List user's uploaded documents"""
@@ -213,7 +214,7 @@ async def list_documents(
 @router.get("/{document_id}")
 async def get_document(
     document_id: str,
-    current_user: User = Depends(get_current_user)
+    current_user: Dict = Depends(get_current_user)
 ):
     """Get document details and analysis results"""
     try:
@@ -251,7 +252,7 @@ async def get_document(
 @router.delete("/{document_id}")
 async def delete_document(
     document_id: str,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Delete a document"""
@@ -264,7 +265,7 @@ async def delete_document(
         
         # Track usage event
         usage_event = UsageEvent(
-            user_id=current_user.id,
+            user_id=current_user.get("id"),
             event_type="document_delete",
             event_category="analysis",
             event_metadata={"document_id": document_id}

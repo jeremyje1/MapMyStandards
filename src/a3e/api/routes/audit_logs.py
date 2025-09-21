@@ -1,3 +1,4 @@
+from typing import Dict
 """
 Audit logs API endpoints for tracking and compliance
 """
@@ -52,12 +53,12 @@ async def get_team_audit_logs(
     offset: int = Query(0, ge=0),
     resource_type: Optional[str] = None,
     user_id: Optional[str] = None,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Get audit logs for a team"""
     await EnhancedAuthService.require_team_permission(
-        db, current_user.id, team_id, "read"
+        db, current_user.get("id"), team_id, "read"
     )
     
     logs = await AuditService.get_team_audit_logs(
@@ -97,13 +98,13 @@ async def get_team_audit_logs(
 async def get_my_audit_logs(
     limit: int = Query(100, ge=1, le=1000),
     offset: int = Query(0, ge=0),
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Get audit logs for current user"""
     logs = await AuditService.get_user_audit_logs(
         db=db,
-        user_id=current_user.id,
+        user_id=current_user.get("id"),
         limit=limit,
         offset=offset
     )
@@ -120,7 +121,7 @@ async def get_my_audit_logs(
             resource_type=log.resource_type,
             resource_id=log.resource_id,
             description=description,
-            user_email=current_user.email,
+            user_email=current_user.get("email"),
             user_name=current_user.name,
             ip_address=log.ip_address,
             created_at=log.created_at.isoformat(),
@@ -134,14 +135,14 @@ async def get_resource_history(
     resource_type: str,
     resource_id: str,
     team_id: Optional[str] = Query(None),
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Get complete history for a specific resource"""
     # If team_id provided, check permission
     if team_id:
         await EnhancedAuthService.require_team_permission(
-            db, current_user.id, team_id, "read"
+            db, current_user.get("id"), team_id, "read"
         )
     
     logs = await AuditService.get_resource_history(
@@ -179,12 +180,12 @@ async def get_resource_history(
 async def get_team_activity_summary(
     team_id: str,
     days: int = Query(7, ge=1, le=90),
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Get activity summary for a team"""
     await EnhancedAuthService.require_team_permission(
-        db, current_user.id, team_id, "read"
+        db, current_user.get("id"), team_id, "read"
     )
     
     summary = await AuditService.get_activity_summary(

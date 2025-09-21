@@ -353,7 +353,7 @@ async def realtime_analytics(websocket: WebSocket, user_id: str):
 async def get_dashboard_templates(
     user_role: str = "faculty",
     institution_type: str = "university",
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     has_subscription: bool = Depends(has_active_subscription)
 ):
     """Get available dashboard templates for user"""
@@ -387,7 +387,7 @@ async def get_dashboard_templates(
 @router.get("/templates/{template_id}")
 async def get_dashboard_template(
     template_id: str,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     has_subscription: bool = Depends(has_active_subscription)
 ):
     """Get detailed dashboard template configuration"""
@@ -428,7 +428,7 @@ async def get_dashboard_template(
 @router.post("/templates/custom")
 async def create_custom_dashboard(
     request: CustomDashboardRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     has_subscription: bool = Depends(has_active_subscription)
 ):
     """Create a custom dashboard template"""
@@ -449,15 +449,15 @@ async def create_custom_dashboard(
             widgets=request.widgets,
             filters=request.filters,
             permissions={
-                "view": [current_user.id],
-                "edit": [current_user.id],
-                "export": [current_user.id]
+                "view": [current_user.get("id")],
+                "edit": [current_user.get("id")],
+                "export": [current_user.get("id")]
             }
         )
         
-        template_id = await analytics_service.create_custom_template(template, current_user.id)
+        template_id = await analytics_service.create_custom_template(template, current_user.get("id"))
         
-        await track_user_action(current_user.id, "custom_dashboard_created", {
+        await track_user_action(current_user.get("id"), "custom_dashboard_created", {
             "template_id": template_id,
             "template_name": request.name,
             "metric_value": 1.0
@@ -478,7 +478,7 @@ async def create_custom_dashboard(
 @router.post("/events")
 async def track_analytics_event(
     request: AnalyticsEventRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     has_subscription: bool = Depends(has_active_subscription)
 ):
     """Track an analytics event for real-time updates"""
@@ -491,7 +491,7 @@ async def track_analytics_event(
     try:
         event = AnalyticsEvent(
             event_type=request.event_type,
-            user_id=current_user.id,
+            user_id=current_user.get("id"),
             institution_id=request.data.get("institution_id"),
             timestamp=datetime.utcnow(),
             data=request.data,
@@ -516,7 +516,7 @@ async def track_analytics_event(
 
 @router.get("/realtime/metrics")
 async def get_realtime_metrics(
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     has_subscription: bool = Depends(has_active_subscription)
 ):
     """Get current real-time metrics"""
@@ -555,7 +555,7 @@ async def get_realtime_metrics(
 async def get_advanced_analytics(
     time_range: str = "30d",
     include_predictions: bool = True,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     has_subscription: bool = Depends(has_active_subscription)
 ):
     """Get advanced analytics insights and predictions"""
@@ -567,11 +567,11 @@ async def get_advanced_analytics(
     
     try:
         analytics_data = await analytics_service.generate_advanced_analytics(
-            current_user.id, 
+            current_user.get("id"), 
             time_range
         )
         
-        await track_user_action(current_user.id, "advanced_analytics_viewed", {
+        await track_user_action(current_user.get("id"), "advanced_analytics_viewed", {
             "time_range": time_range,
             "include_predictions": include_predictions,
             "metric_value": 1.0
@@ -593,7 +593,7 @@ async def get_advanced_analytics(
 
 @router.get("/custom-visuals")
 async def get_custom_visuals(
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     has_subscription: bool = Depends(has_active_subscription)
 ):
     """Get available custom Power BI visuals"""
@@ -646,7 +646,7 @@ async def get_custom_visuals(
 async def generate_ai_insight(
     data_context: Dict[str, Any],
     insight_type: str = "compliance_recommendation",
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     has_subscription: bool = Depends(has_active_subscription)
 ):
     """Generate AI-powered insights from data"""
@@ -684,7 +684,7 @@ async def generate_ai_insight(
             }
         }
         
-        await track_user_action(current_user.id, "ai_insight_generated", {
+        await track_user_action(current_user.get("id"), "ai_insight_generated", {
             "insight_type": insight_type,
             "data_points": len(data_context),
             "metric_value": 1.0

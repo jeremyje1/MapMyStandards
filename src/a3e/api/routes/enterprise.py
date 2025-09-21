@@ -41,7 +41,7 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
 @router.get("/metrics", response_model=EnterpriseMetrics)
 async def get_enterprise_metrics(
     time_range: int = 30,  # days
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db_session)
 ):
     """
@@ -125,7 +125,7 @@ async def get_enterprise_metrics(
 
 @router.get("/teams/performance", response_model=List[TeamPerformance])
 async def get_team_performance(
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db_session)
 ):
     """
@@ -202,7 +202,7 @@ async def get_team_performance(
 @router.get("/activity/recent", response_model=List[ActivitySummary])
 async def get_recent_activity(
     limit: int = 20,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db_session)
 ):
     """
@@ -257,7 +257,7 @@ async def get_recent_activity(
 
 @router.get("/risk/assessment", response_model=RiskAssessment)
 async def get_risk_assessment(
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db_session)
 ):
     """
@@ -333,7 +333,7 @@ async def get_risk_assessment(
 
 @router.get("/compliance/report", response_model=ComplianceReport)
 async def get_compliance_report(
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db_session)
 ):
     """

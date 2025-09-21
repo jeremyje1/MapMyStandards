@@ -78,7 +78,7 @@ class MappedStandard(BaseModel):
 @router.post("/profiles", response_model=ProfileResponse)
 async def create_profile(
     request: ProfileRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -106,7 +106,7 @@ async def create_profile(
         recommendations = generate_recommendations(onboarding_data)
         
         return ProfileResponse(
-            profile_id=str(current_user.id),
+            profile_id=str(current_user.get("id")),
             message="Profile created successfully",
             recommendations=recommendations
         )
@@ -119,7 +119,7 @@ async def create_profile(
 async def create_analysis(
     request: AnalysisRequest,
     background_tasks: BackgroundTasks,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -128,7 +128,7 @@ async def create_analysis(
     try:
         # Create analysis record
         analysis = Analysis(
-            user_id=current_user.id,
+            user_id=current_user.get("id"),
             document_id=request.document_id,
             analysis_type=request.analysis_type,
             standards_set=request.standards_set,
@@ -168,7 +168,7 @@ async def create_analysis(
 @router.get("/analyses/{analysis_id}", response_model=AnalysisStatusResponse)
 async def get_analysis_status(
     analysis_id: str,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -177,7 +177,7 @@ async def get_analysis_status(
     try:
         analysis = db.query(Analysis).filter(
             Analysis.id == analysis_id,
-            Analysis.user_id == current_user.id
+            Analysis.user_id == current_user.get("id")
         ).first()
         
         if not analysis:
@@ -209,7 +209,7 @@ async def get_analysis_status(
 
 @router.get("/analyses", response_model=List[AnalysisStatusResponse])
 async def list_analyses(
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     db: Session = Depends(get_db),
     limit: int = 20,
     offset: int = 0
@@ -219,7 +219,7 @@ async def list_analyses(
     """
     try:
         analyses = db.query(Analysis).filter(
-            Analysis.user_id == current_user.id
+            Analysis.user_id == current_user.get("id")
         ).order_by(
             Analysis.created_at.desc()
         ).limit(limit).offset(offset).all()
@@ -252,7 +252,7 @@ async def list_analyses(
 
 @router.get("/quick-wins")
 async def get_quick_wins(
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -261,7 +261,7 @@ async def get_quick_wins(
     try:
         # Get user's latest completed analysis
         latest_analysis = db.query(Analysis).filter(
-            Analysis.user_id == current_user.id,
+            Analysis.user_id == current_user.get("id"),
             Analysis.status == "completed"
         ).order_by(Analysis.completed_at.desc()).first()
         

@@ -93,14 +93,14 @@ async def get_current_user(
 @router.post("/check", response_model=List[ComplianceScore])
 async def check_compliance(
     request: ComplianceCheckRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Run compliance check against specified standards"""
     try:
         # Track usage event
         usage_event = UsageEvent(
-            user_id=current_user.id,
+            user_id=current_user.get("id"),
             event_type="compliance_check",
             event_category="compliance",
             event_metadata={
@@ -149,7 +149,7 @@ async def check_compliance(
             
             scores.append(score)
         
-        logger.info(f"Compliance check completed for user {current_user.email}")
+        logger.info(f"Compliance check completed for user {current_user.get("email")}")
         
         return scores
         
@@ -164,14 +164,14 @@ async def check_compliance(
 @router.post("/gap-analysis", response_model=GapAnalysisResult)
 async def perform_gap_analysis(
     request: GapAnalysisRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Perform comprehensive gap analysis"""
     try:
         # Track usage event
         usage_event = UsageEvent(
-            user_id=current_user.id,
+            user_id=current_user.get("id"),
             event_type="gap_analysis",
             event_category="compliance",
             event_value=request.target_score,
@@ -239,7 +239,7 @@ async def perform_gap_analysis(
             estimated_effort_hours=estimated_hours
         )
         
-        logger.info(f"Gap analysis completed for user {current_user.email}")
+        logger.info(f"Gap analysis completed for user {current_user.get("email")}")
         
         return result
         
@@ -254,7 +254,7 @@ async def perform_gap_analysis(
 @router.get("/standards/{accreditor}")
 async def get_accreditor_standards(
     accreditor: str,
-    current_user: User = Depends(get_current_user)
+    current_user: Dict = Depends(get_current_user)
 ):
     """Get list of standards for an accreditor"""
     try:

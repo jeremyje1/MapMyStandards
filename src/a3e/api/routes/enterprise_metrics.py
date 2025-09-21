@@ -92,7 +92,7 @@ class EnterpriseMetricsResponse(BaseModel):
 @router.get("/metrics/enterprise", response_model=EnterpriseMetricsResponse)
 async def get_enterprise_metrics(
     time_range: str = Query("30d", description="Time range: 7d, 30d, 90d, 1y"),
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     has_subscription: bool = Depends(has_active_subscription),
     db: AsyncSession = Depends(get_db_session)
 ):
@@ -282,7 +282,7 @@ async def get_enterprise_metrics(
 
 @router.get("/metrics/departments", response_model=List[DepartmentPerformance])
 async def get_department_metrics(
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     has_subscription: bool = Depends(has_active_subscription),
     db: AsyncSession = Depends(get_db_session)
 ):
@@ -366,7 +366,7 @@ async def get_department_metrics(
 @router.get("/metrics/compliance-trend")
 async def get_compliance_trend(
     days: int = Query(30, description="Number of days to show"),
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     has_subscription: bool = Depends(has_active_subscription),
     db: AsyncSession = Depends(get_db_session)
 ):
@@ -416,7 +416,7 @@ async def get_compliance_trend(
 async def export_metrics(
     format: str = Query("pdf", description="Export format: pdf, excel, csv"),
     time_range: str = Query("30d", description="Time range for data"),
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     has_subscription: bool = Depends(has_active_subscription)
 ):
     """
@@ -429,7 +429,7 @@ async def export_metrics(
         )
     
     # In production, this would generate actual files
-    export_id = f"export_{current_user.id}_{datetime.utcnow().timestamp()}"
+    export_id = f"export_{current_user.get("id")}_{datetime.utcnow().timestamp()}"
     
     return {
         "export_id": export_id,

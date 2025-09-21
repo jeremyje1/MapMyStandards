@@ -1,3 +1,4 @@
+from typing import Dict
 """
 Complete authentication system with remember-me and password reset
 """
@@ -508,12 +509,12 @@ async def reset_password(
 
 @router.get("/me")
 async def get_current_user_profile(
-    current_user: User = Depends(get_current_user)
+    current_user: Dict = Depends(get_current_user)
 ):
     """Get current user profile"""
     return {
-        "id": str(current_user.id),
-        "email": current_user.email,
+        "id": str(current_user.get("id")),
+        "email": current_user.get("email"),
         "name": f"{current_user.first_name} {current_user.last_name}".strip(),
         "institution": current_user.institution_name,
         "institution_type": current_user.institution_type,

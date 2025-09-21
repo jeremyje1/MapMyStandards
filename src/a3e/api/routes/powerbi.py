@@ -79,7 +79,7 @@ class PowerBIDataset(BaseModel):
 
 @router.get("/powerbi/config", response_model=PowerBIStatus)
 async def get_powerbi_config(
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     has_subscription: bool = Depends(has_active_subscription)
 ):
     """
@@ -164,7 +164,7 @@ async def get_powerbi_config(
 @router.post("/powerbi/embed-token", response_model=PowerBIConfig)
 async def create_embed_token(
     request: PowerBIEmbedRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     has_subscription: bool = Depends(has_active_subscription),
     db: AsyncSession = Depends(get_db_session)
 ):
@@ -194,7 +194,7 @@ async def create_embed_token(
                     dataset_ids.append(report.dataset_id)
         
         # Apply Row-Level Security based on user's institution
-        username = request.username or current_user.email
+        username = request.username or current_user.get("email")
         roles = request.roles or ["User"]  # Default role
         
         # Generate embed token
@@ -214,7 +214,7 @@ async def create_embed_token(
         
         # Save configuration to database
         config = PowerBIConfigModel(
-            user_id=current_user.id,
+            user_id=current_user.get("id"),
             workspace_id=powerbi_service.credentials.workspace_id,
             report_id=request.report_ids[0] if request.report_ids else "",
             last_sync=datetime.utcnow(),
@@ -245,7 +245,7 @@ async def create_embed_token(
 
 @router.get("/powerbi/reports", response_model=List[PowerBIReport])
 async def list_powerbi_reports(
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     has_subscription: bool = Depends(has_active_subscription)
 ):
     """
@@ -286,7 +286,7 @@ async def list_powerbi_reports(
 
 @router.get("/powerbi/datasets", response_model=List[PowerBIDataset])
 async def list_powerbi_datasets(
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     has_subscription: bool = Depends(has_active_subscription)
 ):
     """
@@ -333,7 +333,7 @@ async def list_powerbi_datasets(
 async def refresh_powerbi_dataset(
     dataset_id: str,
     notify_option: str = "MailOnCompletion",
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     has_subscription: bool = Depends(has_active_subscription)
 ):
     """
@@ -372,7 +372,7 @@ async def refresh_powerbi_dataset(
 async def get_refresh_history(
     dataset_id: str,
     top: int = 10,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     has_subscription: bool = Depends(has_active_subscription)
 ):
     """
@@ -404,7 +404,7 @@ async def get_refresh_history(
 @router.post("/powerbi/row-level-security")
 async def configure_rls(
     institution_filter: str,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     has_subscription: bool = Depends(has_active_subscription),
     db: AsyncSession = Depends(get_db_session)
 ):
@@ -420,26 +420,26 @@ async def configure_rls(
     try:
         # Save RLS configuration to database
         existing_config = db.query(PowerBIConfigModel).filter(
-            PowerBIConfigModel.user_id == current_user.id
+            PowerBIConfigModel.user_id == current_user.get("id")
         ).first()
         
         if existing_config:
             # Update existing configuration
             existing_config.rls_config = {
                 "institution_filter": institution_filter,
-                "configured_by": current_user.email,
+                "configured_by": current_user.get("email"),
                 "configured_at": datetime.utcnow().isoformat()
             }
             existing_config.updated_at = datetime.utcnow()
         else:
             # Create new configuration
             config = PowerBIConfigModel(
-                user_id=current_user.id,
+                user_id=current_user.get("id"),
                 workspace_id=os.getenv("POWERBI_WORKSPACE_ID", ""),
                 report_id="",  # Will be set when generating embed tokens
                 rls_config={
                     "institution_filter": institution_filter,
-                    "configured_by": current_user.email,
+                    "configured_by": current_user.get("email"),
                     "configured_at": datetime.utcnow().isoformat()
                 }
             )
@@ -450,7 +450,7 @@ async def configure_rls(
         return {
             "status": "configured",
             "institution_filter": institution_filter,
-            "user": current_user.email,
+            "user": current_user.get("email"),
             "message": "Row-level security has been configured for your reports"
         }
         

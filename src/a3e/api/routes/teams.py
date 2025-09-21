@@ -1,3 +1,4 @@
+from typing import Dict
 """
 Team management API endpoints
 """
@@ -70,7 +71,7 @@ class InvitationResponse(BaseModel):
 async def create_team(
     team_data: TeamCreate,
     request: Request,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     _: bool = Depends(has_active_subscription),
     db: AsyncSession = Depends(get_db)
 ):
@@ -78,14 +79,14 @@ async def create_team(
     team = await TeamService.create_team(
         db=db,
         name=team_data.name,
-        owner_id=current_user.id,
+        owner_id=current_user.get("id"),
         description=team_data.description
     )
     
     # Log action
     await AuditService.log_action(
         db=db,
-        user_id=current_user.id,
+        user_id=current_user.get("id"),
         action="create",
         resource_type="team",
         team_id=team.id,
@@ -107,11 +108,11 @@ async def create_team(
 
 @router.get("", response_model=List[TeamResponse])
 async def get_my_teams(
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Get all teams for current user"""
-    user_teams = await TeamService.get_user_teams(db, current_user.id)
+    user_teams = await TeamService.get_user_teams(db, current_user.get("id"))
     
     response = []
     for team_data in user_teams:
@@ -133,12 +134,12 @@ async def get_my_teams(
 @router.get("/{team_id}", response_model=TeamResponse)
 async def get_team(
     team_id: str,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Get team details"""
     await EnhancedAuthService.require_team_permission(
-        db, current_user.id, team_id, "read"
+        db, current_user.get("id"), team_id, "read"
     )
     
     team = await db.get(Team, team_id)
@@ -149,7 +150,7 @@ async def get_team(
         )
     
     members = await TeamService.get_team_members(db, team.id)
-    user_role = await TeamService.get_user_role_in_team(db, team_id, current_user.id)
+    user_role = await TeamService.get_user_role_in_team(db, team_id, current_user.get("id"))
     
     return TeamResponse(
         id=team.id,
@@ -166,12 +167,12 @@ async def update_team(
     team_id: str,
     team_update: TeamUpdate,
     request: Request,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Update team details"""
     await EnhancedAuthService.require_team_permission(
-        db, current_user.id, team_id, "manage"
+        db, current_user.get("id"), team_id, "manage"
     )
     
     team = await db.get(Team, team_id)
@@ -201,7 +202,7 @@ async def update_team(
     # Log action
     await AuditService.log_action(
         db=db,
-        user_id=current_user.id,
+        user_id=current_user.get("id"),
         action="update",
         resource_type="team",
         team_id=team_id,
@@ -211,7 +212,7 @@ async def update_team(
     )
     
     members = await TeamService.get_team_members(db, team_id)
-    user_role = await TeamService.get_user_role_in_team(db, team_id, current_user.id)
+    user_role = await TeamService.get_user_role_in_team(db, team_id, current_user.get("id"))
     
     return TeamResponse(
         id=team.id,
@@ -226,12 +227,12 @@ async def update_team(
 @router.get("/{team_id}/members", response_model=List[TeamMemberResponse])
 async def get_team_members(
     team_id: str,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Get team members"""
     await EnhancedAuthService.require_team_permission(
-        db, current_user.id, team_id, "read"
+        db, current_user.get("id"), team_id, "read"
     )
     
     members = await TeamService.get_team_members(db, team_id)
@@ -254,12 +255,12 @@ async def invite_member(
     team_id: str,
     invite_data: TeamInvite,
     request: Request,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Invite a new member to the team"""
     await EnhancedAuthService.require_team_permission(
-        db, current_user.id, team_id, "manage"
+        db, current_user.get("id"), team_id, "manage"
     )
     
     # Validate role
@@ -276,13 +277,13 @@ async def invite_member(
         team_id=team_id,
         email=invite_data.email,
         role=role,
-        invited_by_id=current_user.id
+        invited_by_id=current_user.get("id")
     )
     
     # Log action
     await AuditService.log_action(
         db=db,
-        user_id=current_user.id,
+        user_id=current_user.get("id"),
         action="invite",
         resource_type="team",
         team_id=team_id,
@@ -309,12 +310,12 @@ async def update_member_role(
     user_id: str,
     role_update: RoleUpdate,
     request: Request,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Update a team member's role"""
     await EnhancedAuthService.require_team_permission(
-        db, current_user.id, team_id, "manage"
+        db, current_user.get("id"), team_id, "manage"
     )
     
     # Validate role
@@ -327,7 +328,7 @@ async def update_member_role(
         )
     
     # Don't allow changing own role if user is the only owner
-    if user_id == current_user.id and new_role != UserRole.OWNER:
+    if user_id == current_user.get("id") and new_role != UserRole.OWNER:
         members = await TeamService.get_team_members(db, team_id)
         owner_count = sum(1 for m in members if m["role"] == UserRole.OWNER.value)
         if owner_count == 1:
@@ -342,7 +343,7 @@ async def update_member_role(
     # Log action
     await AuditService.log_action(
         db=db,
-        user_id=current_user.id,
+        user_id=current_user.get("id"),
         action="update",
         resource_type="team_member",
         team_id=team_id,
@@ -358,16 +359,16 @@ async def remove_team_member(
     team_id: str,
     user_id: str,
     request: Request,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Remove a member from the team"""
     await EnhancedAuthService.require_team_permission(
-        db, current_user.id, team_id, "manage"
+        db, current_user.get("id"), team_id, "manage"
     )
     
     # Don't allow removing self if user is the only owner
-    if user_id == current_user.id:
+    if user_id == current_user.get("id"):
         members = await TeamService.get_team_members(db, team_id)
         owner_count = sum(1 for m in members if m["role"] == UserRole.OWNER.value)
         if owner_count == 1:
@@ -381,7 +382,7 @@ async def remove_team_member(
     # Log action
     await AuditService.log_action(
         db=db,
-        user_id=current_user.id,
+        user_id=current_user.get("id"),
         action="remove",
         resource_type="team_member",
         team_id=team_id,
@@ -395,11 +396,11 @@ async def remove_team_member(
 async def accept_invitation(
     token: str,
     request: Request,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Accept a team invitation"""
-    team = await TeamService.accept_invitation(db, token, current_user.id)
+    team = await TeamService.accept_invitation(db, token, current_user.get("id"))
     
     if not team:
         raise HTTPException(
@@ -410,7 +411,7 @@ async def accept_invitation(
     # Log action
     await AuditService.log_action(
         db=db,
-        user_id=current_user.id,
+        user_id=current_user.get("id"),
         action="join",
         resource_type="team",
         team_id=team.id,
