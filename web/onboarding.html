@@ -659,7 +659,45 @@
 
     // Initialize
     async function loadExisting(){
-      // Try pre-populate from settings if user is authenticated
+      // First try to load from user profile (database)
+      try {
+        const token = localStorage.getItem('a3e_api_key') || localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+        if (token) {
+          const headers = {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          };
+          
+          const profileRes = await fetch(`${API_BASE}/api/user/profile`, {
+            method: 'GET',
+            headers: headers,
+            credentials: 'include'
+          });
+          
+          if (profileRes.ok) {
+            const profile = await profileRes.json();
+            console.log('Loaded user profile from database:', profile);
+            
+            // Pre-populate fields from database
+            if (profile.institution_name) {
+              document.getElementById('institution_name').value = profile.institution_name;
+              state.data.institution_name = profile.institution_name;
+            }
+            if (profile.institution_type) {
+              document.getElementById('institution_type').value = profile.institution_type;
+              state.data.institution_type = profile.institution_type;
+            }
+            if (profile.role) {
+              state.data.role = profile.role;
+            }
+            // Note: primary_accreditor, state, institution_size might also be in profile
+          }
+        }
+      } catch (e) {
+        console.warn('Could not load user profile:', e);
+      }
+      
+      // Then try pre-populate from settings if user is authenticated
       try{
   const res = await fetch(`${API_BASE}/api/user/intelligence-simple/settings`, { credentials: 'include' });
         if(res.ok){
@@ -711,6 +749,29 @@
         }
       }catch(e){ console.info('No existing settings data', e); }
     }
+    // Check if onboarding was already completed
+    const onboardingComplete = localStorage.getItem('mms:onboarding-complete');
+    if (onboardingComplete === '1') {
+      // Show a message instead of auto-redirecting
+      const notice = document.createElement('div');
+      notice.style.background = '#042f2e';
+      notice.style.color = '#5eead4';
+      notice.style.padding = '16px 20px';
+      notice.style.border = '1px solid #134e4a';
+      notice.style.borderRadius = '12px';
+      notice.style.fontSize = '.9rem';
+      notice.style.margin = '0 0 24px';
+      notice.innerHTML = `
+        <div style="font-weight: 500; margin-bottom: 8px;">✅ Your onboarding appears to be complete!</div>
+        <div style="margin-bottom: 12px; opacity: 0.9;">Would you like to update your information or continue to the dashboard?</div>
+        <div style="display: flex; gap: 12px;">
+          <button onclick="window.location.href='https://platform.mapmystandards.ai/dashboard'" style="background: #134e4a; color: #d1fae5; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: .85rem;">Go to Dashboard →</button>
+          <button onclick="this.parentElement.parentElement.style.display='none'" style="background: transparent; color: #5eead4; padding: 8px 16px; border: 1px solid #134e4a; border-radius: 6px; cursor: pointer; font-size: .85rem;">Update Information</button>
+        </div>
+      `;
+      document.querySelector('.shell').insertBefore(notice, document.querySelector('.shell').firstChild);
+    }
+    
     showStep();
     prePopulateFields();
     loadExisting();
