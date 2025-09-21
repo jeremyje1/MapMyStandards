@@ -2114,6 +2114,22 @@ if WEB_DIR.exists():
         modern = WEB_DIR / "upload-modern.html"
         legacy = WEB_DIR / "upload.html"
         return FileResponse(str(modern if modern.exists() else legacy))
+    
+    @app.get("/documentation", response_class=FileResponse, include_in_schema=False)
+    async def documentation_page():  # noqa: D401
+        """Serve documentation page."""
+        doc_file = WEB_DIR / "documentation.html"
+        if not doc_file.exists():
+            return HTMLResponse("<h1>Documentation page not found</h1>", status_code=404)
+        return FileResponse(str(doc_file))
+    
+    @app.get("/support", response_class=FileResponse, include_in_schema=False)
+    async def support_page():  # noqa: D401
+        """Serve support page."""
+        support_file = WEB_DIR / "support.html"
+        if not support_file.exists():
+            return HTMLResponse("<h1>Support page not found</h1>", status_code=404)
+        return FileResponse(str(support_file))
 
     # New pages: Reviewer Portal, Admin Standards, CrosswalkX (extensionless + .html)
     @app.get("/reviewer-portal", response_class=FileResponse, include_in_schema=False)
