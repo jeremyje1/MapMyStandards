@@ -1,14 +1,30 @@
 """Workspace API routes for team collaboration."""
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from typing import List, Optional, Dict
+from sqlalchemy.ext.asyncio import AsyncSession
+from typing import List, Optional, Dict, AsyncGenerator
 from pydantic import BaseModel
 from datetime import datetime
+import logging
 
-from ...database import get_db
+from ..dependencies import get_current_user
 from ...services.workspace_service import WorkspaceService
 from ...models.workspace import WorkspaceRole
-from ..dependencies import get_current_user
+from ...core.config import settings
+from ...services.database_service import DatabaseService
+
+logger = logging.getLogger(__name__)
+
+# Database dependency
+_db_service: Optional['DatabaseService'] = None
+
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
+    """Database dependency function"""
+    global _db_service
+    if _db_service is None:
+        _db_service = DatabaseService(settings.database_url)
+    async with _db_service.get_session() as session:
+        yield session
 
 router = APIRouter(prefix="/api/workspaces", tags=["workspaces"])
 
