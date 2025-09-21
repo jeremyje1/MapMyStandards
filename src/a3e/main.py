@@ -562,6 +562,7 @@ logger.info("CORS configured allow_origins=%s", _cors_origins)
 @app.middleware("http")
 async def add_cors_headers(request, call_next):
     origin = request.headers.get("origin", "")
+    logger.info(f"CORS middleware: {request.method} {request.url.path} from origin: {origin}")
     
     # Handle preflight OPTIONS requests
     if request.method == "OPTIONS":

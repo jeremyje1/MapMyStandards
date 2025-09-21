@@ -51,16 +51,16 @@ def _get_db_service() -> Optional['DatabaseService']:  # type: ignore
     return _db_service
 
 async def get_db():
-    logger.debug("get_db dependency called")
+    logger.info("get_db dependency called")
     svc = _get_db_service()
     if svc is None:
         logger.error("Database service is None")
         yield None
         return
     try:
-        logger.debug("Attempting to get database session")
+        logger.info("Attempting to get database session")
         async with svc.get_session() as session:
-            logger.debug("Database session obtained successfully")
+            logger.info("Database session obtained successfully")
             yield session
     except RuntimeError as e:
         # Engine/session factory unavailable (likely DB unreachable)
