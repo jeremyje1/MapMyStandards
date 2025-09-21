@@ -496,10 +496,11 @@
         <div class="header-content">
             <a href="/" class="logo">A³E</a>
             <nav class="nav-links">
-                <a href="/dashboard-modern.html" class="active">Dashboard</a>
+                <a href="/dashboard" class="active">Dashboard</a>
                 <a href="/upload">Upload</a>
                 <a href="/standards-modern.html">Standards</a>
                 <a href="/reports-modern.html">Reports</a>
+                <a href="/org-chart.html">Org Chart</a>
                 <a href="#" onclick="logout()">Logout</a>
             </nav>
         </div>
@@ -515,6 +516,7 @@
                 <a href="/upload" class="action-btn" data-tooltip="Upload your accreditation documents">📤 Start Analysis</a>
                 <a href="/standards-modern.html" class="action-btn" data-tooltip="Browse and search standards">📊 View Standards</a>
                 <a href="/reports-modern.html" class="action-btn" data-tooltip="Generate compliance reports">📈 Generate Reports</a>
+                <a href="/org-chart.html" class="action-btn" data-tooltip="Build compliance organization structure">🏢 Org Chart</a>
                 <a href="/docs" class="action-btn" data-tooltip="Explore API documentation">📖 API Documentation</a>
             </div>
         </div>
@@ -880,6 +882,9 @@
                     case 'd':
                         window.location.href = '/docs';
                         break;
+                    case 'o':
+                        window.location.href = '/org-chart.html';
+                        break;
                     case '?':
                         showKeyboardShortcuts();
                         break;
@@ -920,6 +925,10 @@
                 <div style="display: flex; justify-content: space-between; padding: 12px; background: #f8fafc; border-radius: 8px;">
                     <span style="font-weight: 500;">Generate Reports</span>
                     <kbd style="background: #e5e7eb; padding: 4px 8px; border-radius: 4px; font-family: monospace;">R</kbd>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 12px; background: #f8fafc; border-radius: 8px;">
+                    <span style="font-weight: 500;">Org Chart</span>
+                    <kbd style="background: #e5e7eb; padding: 4px 8px; border-radius: 4px; font-family: monospace;">O</kbd>
                 </div>
                 <div style="display: flex; justify-content: space-between; padding: 12px; background: #f8fafc; border-radius: 8px;">
                     <span style="font-weight: 500;">API Documentation</span>
