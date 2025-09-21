@@ -12,14 +12,14 @@ import hmac
 import json
 from enum import Enum
 from pydantic import BaseModel, HttpUrl
+import uuid
+
+from sqlalchemy.orm import Session
+from sqlalchemy import text
 
 from ..core.config import settings
-from ..models import db
-from sqlalchemy import Column, String, Text, DateTime, Boolean, Integer, JSON
-from sqlalchemy.ext.declarative import declarative_base
 
 logger = logging.getLogger(__name__)
-Base = declarative_base()
 
 
 class WebhookEvent(str, Enum):
@@ -28,401 +28,365 @@ class WebhookEvent(str, Enum):
     EVIDENCE_UPLOADED = "evidence.uploaded"
     EVIDENCE_PROCESSED = "evidence.processed"
     EVIDENCE_FAILED = "evidence.failed"
+    EVIDENCE_APPROVED = "evidence.approved"
+    EVIDENCE_REJECTED = "evidence.rejected"
     
-    # Standards events
-    STANDARDS_MAPPED = "standards.mapped"
-    STANDARDS_GAP_FOUND = "standards.gap_found"
+    # Standard events
+    STANDARD_UPDATE = "standard.update"
+    STANDARD_ADDED = "standard.added"
+    STANDARD_REMOVED = "standard.removed"
+    STANDARD_MAPPING_COMPLETE = "standard.mapping_complete"
     
-    # Report events
-    REPORT_GENERATED = "report.generated"
-    REPORT_EXPORTED = "report.exported"
+    # Compliance events
+    COMPLIANCE_CHECK_COMPLETE = "compliance.check_complete"
+    COMPLIANCE_ISSUE_FOUND = "compliance.issue_found"
+    COMPLIANCE_RESOLVED = "compliance.resolved"
     
     # User events
-    USER_CREATED = "user.created"
-    USER_TRIAL_STARTED = "user.trial_started"
-    USER_SUBSCRIBED = "user.subscribed"
+    USER_REGISTERED = "user.registered"
+    USER_LOGIN = "user.login"
+    USER_UPDATED = "user.updated"
     
-    # Institution events
-    INSTITUTION_CREATED = "institution.created"
-    INSTITUTION_UPDATED = "institution.updated"
-    
-    # Integration events
-    INTEGRATION_CONNECTED = "integration.connected"
-    INTEGRATION_DISCONNECTED = "integration.disconnected"
-    INTEGRATION_SYNC_COMPLETED = "integration.sync_completed"
-
-
-class WebhookConfig(Base):
-    """Webhook configuration model."""
-    __tablename__ = "webhook_configs"
-    
-    id = Column(String, primary_key=True)
-    institution_id = Column(String, nullable=False)
-    url = Column(String, nullable=False)
-    secret = Column(String, nullable=True)  # For HMAC signing
-    events = Column(JSON, nullable=False)  # List of subscribed events
-    headers = Column(JSON, nullable=True)  # Custom headers to include
-    active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
-    
-    # Retry configuration
-    max_retries = Column(Integer, default=3)
-    retry_delay = Column(Integer, default=60)  # seconds
-    
-    # Statistics
-    last_triggered_at = Column(DateTime, nullable=True)
-    last_success_at = Column(DateTime, nullable=True)
-    last_error_at = Column(DateTime, nullable=True)
-    last_error_message = Column(Text, nullable=True)
-    total_sent = Column(Integer, default=0)
-    total_failed = Column(Integer, default=0)
-
-
-class WebhookDelivery(Base):
-    """Webhook delivery history."""
-    __tablename__ = "webhook_deliveries"
-    
-    id = Column(String, primary_key=True)
-    webhook_id = Column(String, nullable=False)
-    event_type = Column(String, nullable=False)
-    payload = Column(JSON, nullable=False)
-    response_status = Column(Integer, nullable=True)
-    response_body = Column(Text, nullable=True)
-    attempt_count = Column(Integer, default=0)
-    delivered_at = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
-    error_message = Column(Text, nullable=True)
-
-
-class WebhookPayload(BaseModel):
-    """Standard webhook payload structure."""
-    event: str
-    timestamp: str
-    webhook_id: str
-    data: Dict[str, Any]
-    metadata: Optional[Dict[str, Any]] = None
+    # Organization events
+    ORGANIZATION_UPDATED = "organization.updated"
+    TEAM_MEMBER_ADDED = "team.member_added"
+    TEAM_MEMBER_REMOVED = "team.member_removed"
 
 
 class WebhookService:
-    """Service for managing and sending webhooks."""
+    """Service for managing webhooks and triggering events."""
     
     def __init__(self):
-        self.client = httpx.AsyncClient(timeout=30.0)
-        self.active_webhooks: Dict[str, List[WebhookConfig]] = {}
-        self._load_task = None
+        self.client = httpx.AsyncClient(
+            timeout=httpx.Timeout(30.0),
+            follow_redirects=True,
+            headers={
+                "User-Agent": "MapMyStandards-Webhook/1.0"
+            }
+        )
     
-    async def __aenter__(self):
-        """Async context manager entry."""
-        await self.load_webhooks()
-        return self
-    
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
-        """Async context manager exit."""
-        await self.client.aclose()
-    
-    async def load_webhooks(self):
-        """Load active webhooks from database."""
-        try:
-            # Query active webhooks grouped by event type
-            webhooks = await db.fetch_all(
-                "SELECT * FROM webhook_configs WHERE active = true"
-            )
-            
-            self.active_webhooks.clear()
-            for webhook in webhooks:
-                for event in webhook['events']:
-                    if event not in self.active_webhooks:
-                        self.active_webhooks[event] = []
-                    self.active_webhooks[event].append(webhook)
-            
-            logger.info(f"Loaded {len(webhooks)} active webhooks")
-        except Exception as e:
-            logger.error(f"Error loading webhooks: {e}")
-    
-    async def trigger_event(
-        self,
-        event: WebhookEvent,
+    async def trigger_webhook(
+        self, 
+        db: Session,
+        event: WebhookEvent, 
         data: Dict[str, Any],
-        institution_id: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None
-    ):
-        """Trigger a webhook event."""
+        institution_id: Optional[str] = None
+    ) -> List[str]:
+        """
+        Trigger webhooks for a specific event.
+        
+        Args:
+            db: Database session
+            event: The webhook event type
+            data: The event data payload
+            institution_id: Optional institution ID to filter webhooks
+        
+        Returns:
+            List of webhook IDs that were triggered
+        """
         try:
-            # Get webhooks subscribed to this event
-            webhooks = self.active_webhooks.get(event.value, [])
+            # Get active webhooks for this event
+            query = text("""
+                SELECT id, url, secret, headers
+                FROM webhook_configs
+                WHERE active = true
+                AND :event = ANY(events)
+                AND (institution_id IS NULL OR institution_id = :institution_id)
+            """)
             
-            # Filter by institution if provided
-            if institution_id:
-                webhooks = [w for w in webhooks if w['institution_id'] == institution_id]
+            result = db.execute(
+                query,
+                {"event": event, "institution_id": institution_id}
+            )
+            webhooks = result.fetchall()
             
             if not webhooks:
-                logger.debug(f"No webhooks registered for event: {event}")
-                return
+                logger.debug(f"No active webhooks found for event {event}")
+                return []
             
-            # Create tasks for all webhooks
+            # Prepare the payload
+            payload = {
+                "event": event,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "data": data
+            }
+            
+            # Trigger webhooks concurrently
             tasks = []
             for webhook in webhooks:
-                payload = WebhookPayload(
-                    event=event.value,
-                    timestamp=datetime.now(timezone.utc).isoformat(),
-                    webhook_id=webhook['id'],
-                    data=data,
-                    metadata=metadata
+                task = self._deliver_webhook(
+                    db=db,
+                    webhook_id=webhook.id,
+                    url=webhook.url,
+                    secret=webhook.secret,
+                    headers=webhook.headers or {},
+                    payload=payload
                 )
-                tasks.append(self._send_webhook(webhook, payload))
+                tasks.append(task)
             
-            # Send all webhooks concurrently
             await asyncio.gather(*tasks, return_exceptions=True)
             
-        except Exception as e:
-            logger.error(f"Error triggering webhook event {event}: {e}")
-    
-    async def _send_webhook(self, webhook: Dict[str, Any], payload: WebhookPayload):
-        """Send a single webhook with retry logic."""
-        delivery_id = f"del_{datetime.now().timestamp()}"
-        
-        # Record delivery attempt
-        await self._record_delivery(delivery_id, webhook['id'], payload)
-        
-        for attempt in range(webhook.get('max_retries', 3)):
-            try:
-                # Prepare headers
-                headers = {
-                    'Content-Type': 'application/json',
-                    'X-Webhook-Event': payload.event,
-                    'X-Webhook-ID': webhook['id'],
-                    'X-Webhook-Timestamp': payload.timestamp,
-                    'X-Webhook-Delivery': delivery_id
-                }
-                
-                # Add custom headers
-                if webhook.get('headers'):
-                    headers.update(webhook['headers'])
-                
-                # Add HMAC signature if secret is configured
-                payload_json = payload.json()
-                if webhook.get('secret'):
-                    signature = self._generate_signature(webhook['secret'], payload_json)
-                    headers['X-Webhook-Signature'] = signature
-                
-                # Send request
-                response = await self.client.post(
-                    webhook['url'],
-                    json=payload.dict(),
-                    headers=headers
-                )
-                
-                # Update statistics
-                await self._update_webhook_stats(webhook['id'], success=response.is_success)
-                
-                # Record response
-                await self._update_delivery(
-                    delivery_id,
-                    response.status_code,
-                    response.text[:1000],  # Limit response body size
-                    attempt + 1
-                )
-                
-                if response.is_success:
-                    logger.info(f"Webhook delivered successfully: {webhook['id']} -> {payload.event}")
-                    return
-                else:
-                    logger.warning(f"Webhook failed with status {response.status_code}: {webhook['id']}")
-                    
-            except Exception as e:
-                logger.error(f"Error sending webhook {webhook['id']}: {e}")
-                await self._update_delivery(
-                    delivery_id,
-                    None,
-                    str(e),
-                    attempt + 1,
-                    error=str(e)
-                )
+            return [w.id for w in webhooks]
             
-            # Wait before retry
-            if attempt < webhook.get('max_retries', 3) - 1:
-                await asyncio.sleep(webhook.get('retry_delay', 60))
-        
-        # All retries failed
-        await self._update_webhook_stats(webhook['id'], success=False, error="Max retries exceeded")
+        except Exception as e:
+            logger.error(f"Error triggering webhooks: {e}")
+            return []
     
-    def _generate_signature(self, secret: str, payload: str) -> str:
+    async def _deliver_webhook(
+        self,
+        db: Session,
+        webhook_id: str,
+        url: str,
+        secret: Optional[str],
+        headers: Dict[str, str],
+        payload: Dict[str, Any]
+    ) -> bool:
+        """Deliver a webhook with retry logic."""
+        delivery_id = str(uuid.uuid4())
+        
+        # Create delivery record
+        create_query = text("""
+            INSERT INTO webhook_deliveries (
+                id, webhook_id, event, payload, 
+                status, created_at
+            ) VALUES (
+                :id, :webhook_id, :event, :payload,
+                'pending', :created_at
+            )
+        """)
+        
+        db.execute(
+            create_query,
+            {
+                "id": delivery_id,
+                "webhook_id": webhook_id,
+                "event": payload["event"],
+                "payload": json.dumps(payload),
+                "created_at": datetime.now(timezone.utc)
+            }
+        )
+        db.commit()
+        
+        # Prepare headers
+        request_headers = {
+            "Content-Type": "application/json",
+            "X-Webhook-Event": payload["event"],
+            "X-Webhook-Delivery": delivery_id,
+            **headers
+        }
+        
+        # Add signature if secret is provided
+        if secret:
+            signature = self._generate_signature(secret, payload)
+            request_headers["X-Webhook-Signature"] = signature
+        
+        # Attempt delivery with retries
+        max_retries = 3
+        retry_delay = 1
+        
+        for attempt in range(max_retries):
+            try:
+                response = await self.client.post(
+                    url,
+                    json=payload,
+                    headers=request_headers
+                )
+                
+                # Update delivery record with success
+                update_query = text("""
+                    UPDATE webhook_deliveries
+                    SET status = 'delivered',
+                        response_status = :status,
+                        response_headers = :headers,
+                        response_body = :body,
+                        delivered_at = :delivered_at,
+                        attempts = :attempts
+                    WHERE id = :id
+                """)
+                
+                db.execute(
+                    update_query,
+                    {
+                        "id": delivery_id,
+                        "status": response.status_code,
+                        "headers": json.dumps(dict(response.headers)),
+                        "body": response.text[:1000],  # Limit response body size
+                        "delivered_at": datetime.now(timezone.utc),
+                        "attempts": attempt + 1
+                    }
+                )
+                
+                # Update webhook last triggered
+                webhook_update_query = text("""
+                    UPDATE webhook_configs
+                    SET last_triggered_at = :triggered_at
+                    WHERE id = :id
+                """)
+                
+                db.execute(
+                    webhook_update_query,
+                    {
+                        "id": webhook_id,
+                        "triggered_at": datetime.now(timezone.utc)
+                    }
+                )
+                db.commit()
+                
+                return True
+                
+            except Exception as e:
+                logger.warning(f"Webhook delivery attempt {attempt + 1} failed: {e}")
+                
+                if attempt == max_retries - 1:
+                    # Final attempt failed
+                    failure_query = text("""
+                        UPDATE webhook_deliveries
+                        SET status = 'failed',
+                            error_message = :error,
+                            attempts = :attempts
+                        WHERE id = :id
+                    """)
+                    
+                    db.execute(
+                        failure_query,
+                        {
+                            "id": delivery_id,
+                            "error": str(e),
+                            "attempts": attempt + 1
+                        }
+                    )
+                    
+                    # Update webhook failure count
+                    webhook_fail_query = text("""
+                        UPDATE webhook_configs
+                        SET failure_count = failure_count + 1,
+                            last_failure_at = :failure_at
+                        WHERE id = :id
+                    """)
+                    
+                    db.execute(
+                        webhook_fail_query,
+                        {
+                            "id": webhook_id,
+                            "failure_at": datetime.now(timezone.utc)
+                        }
+                    )
+                    db.commit()
+                    
+                    return False
+                
+                # Wait before retry
+                await asyncio.sleep(retry_delay * (attempt + 1))
+    
+    def _generate_signature(self, secret: str, payload: Dict[str, Any]) -> str:
         """Generate HMAC signature for webhook payload."""
+        payload_str = json.dumps(payload, separators=(',', ':'), sort_keys=True)
         signature = hmac.new(
-            secret.encode('utf-8'),
-            payload.encode('utf-8'),
+            secret.encode(),
+            payload_str.encode(),
             hashlib.sha256
         ).hexdigest()
         return f"sha256={signature}"
     
-    async def _record_delivery(self, delivery_id: str, webhook_id: str, payload: WebhookPayload):
-        """Record webhook delivery attempt."""
-        try:
-            await db.execute(
-                """
-                INSERT INTO webhook_deliveries (id, webhook_id, event_type, payload, created_at)
-                VALUES (:id, :webhook_id, :event_type, :payload, :created_at)
-                """,
-                {
-                    "id": delivery_id,
-                    "webhook_id": webhook_id,
-                    "event_type": payload.event,
-                    "payload": payload.dict(),
-                    "created_at": datetime.now(timezone.utc)
-                }
-            )
-        except Exception as e:
-            logger.error(f"Error recording webhook delivery: {e}")
-    
-    async def _update_delivery(
-        self, 
-        delivery_id: str, 
-        status_code: Optional[int], 
-        response_body: str,
-        attempt_count: int,
-        error: Optional[str] = None
-    ):
-        """Update webhook delivery record."""
-        try:
-            await db.execute(
-                """
-                UPDATE webhook_deliveries 
-                SET response_status = :status,
-                    response_body = :body,
-                    attempt_count = :attempts,
-                    error_message = :error,
-                    delivered_at = :delivered_at
-                WHERE id = :id
-                """,
-                {
-                    "id": delivery_id,
-                    "status": status_code,
-                    "body": response_body,
-                    "attempts": attempt_count,
-                    "error": error,
-                    "delivered_at": datetime.now(timezone.utc) if status_code and 200 <= status_code < 300 else None
-                }
-            )
-        except Exception as e:
-            logger.error(f"Error updating webhook delivery: {e}")
-    
-    async def _update_webhook_stats(self, webhook_id: str, success: bool, error: Optional[str] = None):
-        """Update webhook statistics."""
-        try:
-            if success:
-                await db.execute(
-                    """
-                    UPDATE webhook_configs
-                    SET last_triggered_at = :now,
-                        last_success_at = :now,
-                        total_sent = total_sent + 1,
-                        updated_at = :now
-                    WHERE id = :id
-                    """,
-                    {"id": webhook_id, "now": datetime.now(timezone.utc)}
-                )
-            else:
-                await db.execute(
-                    """
-                    UPDATE webhook_configs
-                    SET last_triggered_at = :now,
-                        last_error_at = :now,
-                        last_error_message = :error,
-                        total_sent = total_sent + 1,
-                        total_failed = total_failed + 1,
-                        updated_at = :now
-                    WHERE id = :id
-                    """,
-                    {
-                        "id": webhook_id,
-                        "now": datetime.now(timezone.utc),
-                        "error": error
-                    }
-                )
-        except Exception as e:
-            logger.error(f"Error updating webhook stats: {e}")
-    
-    async def create_webhook(
+    def create_webhook(
         self,
-        institution_id: str,
+        db: Session,
+        name: str,
         url: str,
-        events: List[WebhookEvent],
+        events: List[str],
+        institution_id: Optional[str] = None,
         secret: Optional[str] = None,
-        headers: Optional[Dict[str, str]] = None
+        headers: Optional[Dict[str, str]] = None,
+        active: bool = True
     ) -> str:
         """Create a new webhook configuration."""
-        webhook_id = f"wh_{datetime.now().timestamp()}"
+        webhook_id = str(uuid.uuid4())
         
-        try:
-            await db.execute(
-                """
-                INSERT INTO webhook_configs (
-                    id, institution_id, url, secret, events, headers, 
-                    active, created_at, updated_at
-                )
-                VALUES (
-                    :id, :institution_id, :url, :secret, :events, :headers,
-                    true, :now, :now
-                )
-                """,
-                {
-                    "id": webhook_id,
-                    "institution_id": institution_id,
-                    "url": url,
-                    "secret": secret,
-                    "events": [e.value for e in events],
-                    "headers": headers,
-                    "now": datetime.now(timezone.utc)
-                }
+        if not secret:
+            secret = self._generate_secret()
+        
+        query = text("""
+            INSERT INTO webhook_configs (
+                id, name, url, events, secret, headers,
+                institution_id, active, created_at, failure_count
+            ) VALUES (
+                :id, :name, :url, :events, :secret, :headers,
+                :institution_id, :active, :created_at, 0
             )
-            
-            # Reload webhooks
-            await self.load_webhooks()
-            
-            return webhook_id
-            
-        except Exception as e:
-            logger.error(f"Error creating webhook: {e}")
-            raise
+        """)
+        
+        db.execute(
+            query,
+            {
+                "id": webhook_id,
+                "name": name,
+                "url": url,
+                "events": events,
+                "secret": secret,
+                "headers": json.dumps(headers) if headers else None,
+                "institution_id": institution_id,
+                "active": active,
+                "created_at": datetime.now(timezone.utc)
+            }
+        )
+        db.commit()
+        
+        return webhook_id
     
-    async def delete_webhook(self, webhook_id: str):
-        """Delete a webhook configuration."""
-        try:
-            await db.execute(
-                "UPDATE webhook_configs SET active = false WHERE id = :id",
-                {"id": webhook_id}
-            )
-            
-            # Reload webhooks
-            await self.load_webhooks()
-            
-        except Exception as e:
-            logger.error(f"Error deleting webhook: {e}")
-            raise
+    def _generate_secret(self) -> str:
+        """Generate a random webhook secret."""
+        return hashlib.sha256(str(uuid.uuid4()).encode()).hexdigest()
     
-    async def get_webhook_deliveries(
+    def delete_webhook(self, db: Session, webhook_id: str) -> bool:
+        """Delete (deactivate) a webhook."""
+        query = text("""
+            UPDATE webhook_configs
+            SET active = false
+            WHERE id = :id
+        """)
+        
+        result = db.execute(query, {"id": webhook_id})
+        db.commit()
+        
+        return result.rowcount > 0
+    
+    def get_webhook_deliveries(
         self,
+        db: Session,
         webhook_id: str,
-        limit: int = 100
+        limit: int = 50
     ) -> List[Dict[str, Any]]:
-        """Get webhook delivery history."""
-        try:
-            deliveries = await db.fetch_all(
-                """
-                SELECT * FROM webhook_deliveries
-                WHERE webhook_id = :webhook_id
-                ORDER BY created_at DESC
-                LIMIT :limit
-                """,
-                {"webhook_id": webhook_id, "limit": limit}
-            )
-            return [dict(d) for d in deliveries]
-            
-        except Exception as e:
-            logger.error(f"Error fetching webhook deliveries: {e}")
-            return []
+        """Get recent deliveries for a webhook."""
+        query = text("""
+            SELECT id, event, status, response_status,
+                   created_at, delivered_at, attempts,
+                   error_message
+            FROM webhook_deliveries
+            WHERE webhook_id = :webhook_id
+            ORDER BY created_at DESC
+            LIMIT :limit
+        """)
+        
+        result = db.execute(
+            query,
+            {"webhook_id": webhook_id, "limit": limit}
+        )
+        
+        deliveries = []
+        for row in result:
+            deliveries.append({
+                "id": row.id,
+                "event": row.event,
+                "status": row.status,
+                "response_status": row.response_status,
+                "created_at": row.created_at,
+                "delivered_at": row.delivered_at,
+                "attempts": row.attempts,
+                "error_message": row.error_message
+            })
+        
+        return deliveries
 
 
-# Global webhook service instance
+# Create a global instance
 webhook_service = WebhookService()

@@ -1,14 +1,14 @@
 """Workspace API routes for team collaboration."""
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import List, Optional, Dict
 from pydantic import BaseModel
 from datetime import datetime
 
 from ...database import get_db
 from ...services.workspace_service import WorkspaceService
 from ...models.workspace import WorkspaceRole
-from ..dependencies import get_current_user, User
+from ..dependencies import get_current_user
 
 router = APIRouter(prefix="/api/workspaces", tags=["workspaces"])
 
@@ -60,16 +60,16 @@ class RoleUpdate(BaseModel):
 @router.post("", response_model=WorkspaceResponse)
 async def create_workspace(
     workspace_data: WorkspaceCreate,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Create a new workspace."""
     service = WorkspaceService(db)
     workspace = service.create_workspace(
-        user_id=current_user.id,
+        user_id=current_user["user_id"],
         name=workspace_data.name,
         description=workspace_data.description,
-        institution_id=workspace_data.institution_id or current_user.institution_id
+        institution_id=workspace_data.institution_id or current_user.get("institution_id")
     )
     
     # Get member count
@@ -91,12 +91,12 @@ async def create_workspace(
 
 @router.get("", response_model=List[WorkspaceResponse])
 async def get_user_workspaces(
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Get all workspaces the user belongs to."""
     service = WorkspaceService(db)
-    user_workspaces = service.get_user_workspaces(current_user.id)
+    user_workspaces = service.get_user_workspaces(current_user["user_id"])
     
     responses = []
     for uw in user_workspaces:
@@ -122,7 +122,7 @@ async def get_user_workspaces(
 @router.get("/{workspace_id}")
 async def get_workspace(
     workspace_id: str,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Get workspace details with members and content."""
@@ -133,7 +133,7 @@ async def get_workspace(
         raise HTTPException(status_code=404, detail="Workspace not found")
     
     # Check if user is a member
-    user_role = workspace.get_user_role(current_user.id)
+    user_role = workspace.get_user_role(current_user["user_id"])
     if not user_role:
         raise HTTPException(status_code=403, detail="You are not a member of this workspace")
     
@@ -195,7 +195,7 @@ async def get_workspace(
 async def invite_to_workspace(
     workspace_id: str,
     invitation: InvitationCreate,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Invite a user to join the workspace."""
@@ -210,7 +210,7 @@ async def invite_to_workspace(
     try:
         invite = service.invite_user(
             workspace_id=workspace_id,
-            inviter_id=current_user.id,
+            inviter_id=current_user["user_id"],
             email=invitation.email,
             role=role
         )
@@ -219,7 +219,7 @@ async def invite_to_workspace(
             "id": invite.id,
             "email": invite.email,
             "role": invite.role.value,
-            "invited_by_name": current_user.name,
+            "invited_by_name": current_user.get("name", current_user["email"]),
             "created_at": invite.created_at,
             "expires_at": invite.expires_at,
             "status": invite.status
@@ -232,14 +232,14 @@ async def invite_to_workspace(
 @router.post("/accept-invitation")
 async def accept_invitation(
     token: str = Query(..., description="Invitation token"),
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Accept a workspace invitation."""
     service = WorkspaceService(db)
     
     try:
-        workspace = service.accept_invitation(token, current_user.id)
+        workspace = service.accept_invitation(token, current_user["user_id"])
         return {"message": f"Successfully joined workspace: {workspace.name}"}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -248,7 +248,7 @@ async def accept_invitation(
 async def add_standard_to_workspace(
     workspace_id: str,
     standard_data: StandardAdd,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Add a standard to the workspace."""
@@ -258,7 +258,7 @@ async def add_standard_to_workspace(
         result = service.add_standard_to_workspace(
             workspace_id=workspace_id,
             standard_id=standard_data.standard_id,
-            user_id=current_user.id,
+            user_id=current_user["user_id"],
             notes=standard_data.notes,
             priority=standard_data.priority
         )
@@ -270,7 +270,7 @@ async def add_standard_to_workspace(
 async def add_evidence_to_workspace(
     workspace_id: str,
     evidence_data: EvidenceAdd,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Add evidence to the workspace."""
@@ -280,7 +280,7 @@ async def add_evidence_to_workspace(
         result = service.add_evidence_to_workspace(
             workspace_id=workspace_id,
             evidence_id=evidence_data.evidence_id,
-            user_id=current_user.id
+            user_id=current_user["user_id"]
         )
         return {"message": "Evidence added to workspace", "id": result.id}
     except PermissionError as e:
@@ -291,7 +291,7 @@ async def review_workspace_evidence(
     workspace_id: str,
     evidence_id: str,
     review_data: EvidenceReview,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Review evidence in a workspace."""
@@ -301,7 +301,7 @@ async def review_workspace_evidence(
         result = service.review_evidence(
             workspace_id=workspace_id,
             evidence_id=evidence_id,
-            user_id=current_user.id,
+            user_id=current_user["user_id"],
             status=review_data.status,
             notes=review_data.notes
         )
@@ -316,7 +316,7 @@ async def update_member_role(
     workspace_id: str,
     user_id: str,
     role_data: RoleUpdate,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Update a member's role in the workspace."""
@@ -330,7 +330,7 @@ async def update_member_role(
     try:
         service.update_user_role(
             workspace_id=workspace_id,
-            user_id=current_user.id,
+            user_id=current_user["user_id"],
             target_user_id=user_id,
             new_role=role
         )
@@ -344,7 +344,7 @@ async def update_member_role(
 async def remove_member(
     workspace_id: str,
     user_id: str,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Remove a member from the workspace."""
@@ -353,7 +353,7 @@ async def remove_member(
     try:
         service.remove_user(
             workspace_id=workspace_id,
-            user_id=current_user.id,
+            user_id=current_user["user_id"],
             target_user_id=user_id
         )
         return {"message": "User removed from workspace"}
@@ -365,14 +365,14 @@ async def remove_member(
 @router.delete("/{workspace_id}")
 async def delete_workspace(
     workspace_id: str,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Delete a workspace (soft delete)."""
     service = WorkspaceService(db)
     
     try:
-        service.delete_workspace(workspace_id, current_user.id)
+        service.delete_workspace(workspace_id, current_user["user_id"])
         return {"message": "Workspace deleted successfully"}
     except PermissionError as e:
         raise HTTPException(status_code=403, detail=str(e))

@@ -8,9 +8,9 @@ from pydantic import BaseModel, HttpUrl
 import logging
 from datetime import datetime, timezone
 
-from ...services.webhook_service import webhook_service, WebhookEvent, WebhookConfig
+from ...services.webhook_service import webhook_service, WebhookEvent
 from ...core.auth import get_current_user
-from ...models import User
+from ...models.user import User
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/webhooks", tags=["webhooks"])
