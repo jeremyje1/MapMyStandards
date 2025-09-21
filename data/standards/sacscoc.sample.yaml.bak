@@ -1,0 +1,48 @@
+accreditor: SACSCOC
+version: "2024"
+effective_date: "2024-01-01"
+standards:
+  - id: "1"
+    title: "Institutional Mission"
+    description: "The institution has a clearly defined, comprehensive, and published mission statement."
+    clauses:
+      - id: "1.1"
+        title: "Mission Statement"
+        description: "The institution has a clearly defined, comprehensive, and published mission statement."
+        indicators:
+          - "Mission statement is board-approved"
+          - "Mission guides institutional planning"
+          - "Mission is publicly available"
+          - "Mission reviewed regularly"
+  - id: "8"
+    title: "Faculty"
+    description: "The institution employs competent faculty members qualified to accomplish the mission."
+    clauses:
+      - id: "8.1"
+        title: "Faculty Qualifications"
+        description: "The institution employs competent faculty members qualified to accomplish the mission."
+        indicators:
+          - "Faculty credentials documented"
+          - "Terminal degrees in discipline"
+          - "Professional experience relevant"
+          - "Ongoing professional development"
+      - id: "8.2a"
+        title: "Faculty Evaluation"
+        description: "The institution regularly evaluates the effectiveness of each faculty member."
+        indicators:
+          - "Annual performance reviews"
+          - "Student evaluation data"
+          - "Peer review process"
+          - "Professional development plans"
+  - id: "10"
+    title: "Financial Resources"
+    description: "The institution provides evidence of adequate financial resources."
+    clauses:
+      - id: "10.1"
+        title: "Financial Stability"
+        description: "The institution provides evidence of adequate financial resources."
+        indicators:
+          - "Positive net assets"
+          - "Adequate cash reserves"
+          - "Diversified revenue streams"
+          - "Clean audit opinions"

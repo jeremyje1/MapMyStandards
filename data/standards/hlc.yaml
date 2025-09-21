@@ -1,0 +1,351 @@
+accreditor: HLC
+version: "2024"
+effective_date: "2024-01-01"
+metadata:
+  name: Higher Learning Commission
+  version: "2024"
+  last_updated: "2024-01-01"
+  source_url: "https://www.hlcommission.org/"
+  license: "proprietary-summary"
+  disclaimer: "Paraphrased summaries for development. Replace with licensed text before production."
+  coverage_notes: "Complete criteria with core components and subcomponents"
+
+standards:
+  # Criterion One: Mission
+  - id: "1"
+    title: "Mission"
+    description: "The institution's mission is clear and articulated publicly; it guides the institution's operations."
+    category: "Criteria for Accreditation"
+    clauses:
+      - id: "1.A"
+        title: "Mission Articulation"
+        description: "The institution's mission is articulated publicly and operationalized throughout the institution."
+        indicators:
+          - "Mission statement is clear and publicly accessible"
+          - "Mission guides institutional decision-making"
+          - "Mission communicated to all stakeholders"
+          - "Mission reflects institutional identity"
+      - id: "1.B"
+        title: "Mission and Diversity"
+        description: "The institution's mission demonstrates commitment to the public good."
+        indicators:
+          - "Mission addresses diversity and inclusion"
+          - "Educational role in multicultural society acknowledged"
+          - "Public service commitment evident"
+          - "Community engagement reflected"
+      - id: "1.C"
+        title: "Mission Understanding"
+        description: "The institution provides opportunities for civic engagement consistent with its mission."
+        indicators:
+          - "Educational programs address societal needs"
+          - "Community partnerships established"
+          - "Student civic engagement opportunities"
+          - "Faculty community involvement"
+
+  # Criterion Two: Integrity - Ethical and Responsible Conduct
+  - id: "2"
+    title: "Integrity: Ethical and Responsible Conduct"
+    description: "The institution acts with integrity; its conduct is ethical and responsible."
+    category: "Criteria for Accreditation"
+    clauses:
+      - id: "2.A"
+        title: "Integrity in Operations"
+        description: "The institution establishes and follows policies ensuring fair and ethical behavior."
+        indicators:
+          - "Board policies ensure independence"
+          - "Financial integrity maintained"
+          - "Academic freedom protected"
+          - "Ethics policies enforced"
+      - id: "2.B"
+        title: "Ethical Communication"
+        description: "The institution presents itself clearly to students and the public."
+        indicators:
+          - "Accurate program information"
+          - "Clear cost disclosures"
+          - "Truthful marketing"
+          - "Transparent policies"
+      - id: "2.C"
+        title: "Governing Board Integrity"
+        description: "The governing board acts responsibly and with integrity."
+        indicators:
+          - "Board independence maintained"
+          - "Conflict of interest policies"
+          - "Board self-evaluation"
+          - "Transparent governance"
+      - id: "2.D"
+        title: "Academic Freedom"
+        description: "The institution is committed to academic freedom and freedom of expression."
+        indicators:
+          - "Academic freedom policies"
+          - "Faculty rights protected"
+          - "Student expression supported"
+          - "Intellectual inquiry fostered"
+      - id: "2.E"
+        title: "Policies and Procedures"
+        description: "The institution ensures responsible acquisition and use of resources."
+        indicators:
+          - "Ethical financial practices"
+          - "Responsible resource management"
+          - "Auxiliary enterprise oversight"
+          - "Fundraising integrity"
+
+  # Criterion Three: Teaching and Learning - Quality, Resources and Support
+  - id: "3"
+    title: "Teaching and Learning: Quality, Resources and Support"
+    description: "The institution provides quality education characterized by appropriate academic offerings and qualified faculty."
+    category: "Criteria for Accreditation"
+    clauses:
+      - id: "3.A"
+        title: "Degree Program Quality"
+        description: "Degree programs are appropriate to higher education."
+        indicators:
+          - "Programs at appropriate levels"
+          - "Learning goals clearly stated"
+          - "Curriculum regularly reviewed"
+          - "Graduate programs have distinct goals"
+      - id: "3.B"
+        title: "General Education"
+        description: "The institution offers general education that imparts essential knowledge and skills."
+        indicators:
+          - "General education requirements clear"
+          - "Essential skills development"
+          - "Broad knowledge cultivation"
+          - "Integration with majors"
+      - id: "3.C"
+        title: "Faculty Qualifications"
+        description: "The institution has sufficient qualified faculty and staff."
+        indicators:
+          - "Faculty credentials appropriate"
+          - "Sufficient faculty numbers"
+          - "Ongoing professional development"
+          - "Effective evaluation processes"
+          - "Staff qualifications verified"
+      - id: "3.D"
+        title: "Support Services"
+        description: "The institution provides support for student learning and resources for effective teaching."
+        indicators:
+          - "Academic support services available"
+          - "Library resources adequate"
+          - "Technology infrastructure robust"
+          - "Student development programs"
+          - "Advising services effective"
+
+  # Criterion Four: Teaching and Learning - Evaluation and Improvement
+  - id: "4"
+    title: "Teaching and Learning: Evaluation and Improvement"
+    description: "The institution demonstrates responsibility for quality through ongoing assessment and improvement."
+    category: "Criteria for Accreditation"
+    clauses:
+      - id: "4.A"
+        title: "Educational Quality"
+        description: "The institution ensures quality educational offerings."
+        indicators:
+          - "Regular program review"
+          - "Learning outcomes assessment"
+          - "External accreditation maintained"
+          - "Credit hour policies appropriate"
+      - id: "4.B"
+        title: "Assessment of Learning"
+        description: "The institution engages in ongoing assessment of student learning."
+        indicators:
+          - "Learning goals clearly stated"
+          - "Assessment methods appropriate"
+          - "Results used for improvement"
+          - "Co-curricular learning assessed"
+      - id: "4.C"
+        title: "Retention and Persistence"
+        description: "The institution demonstrates commitment to educational achievement through retention efforts."
+        indicators:
+          - "Retention data collected and analyzed"
+          - "Graduation rates tracked"
+          - "Improvement strategies implemented"
+          - "Student success initiatives"
+
+  # Criterion Five: Institutional Resources, Planning, and Effectiveness
+  - id: "5"
+    title: "Institutional Resources, Planning and Effectiveness"
+    description: "The institution's resources, structures, and processes are sufficient to fulfill its mission."
+    category: "Criteria for Accreditation"
+    clauses:
+      - id: "5.A"
+        title: "Resource Allocation"
+        description: "The institution's resource base supports educational offerings and plans for the future."
+        indicators:
+          - "Financial resources adequate"
+          - "Facilities support programs"
+          - "Technology infrastructure current"
+          - "Human resources sufficient"
+          - "Resource allocation aligns with mission"
+      - id: "5.B"
+        title: "Governance and Administration"
+        description: "Governance and administrative structures promote effective leadership."
+        indicators:
+          - "Shared governance practiced"
+          - "Board provides oversight"
+          - "Administration qualified"
+          - "Faculty role in governance"
+          - "Staff participation enabled"
+      - id: "5.C"
+        title: "Planning"
+        description: "The institution engages in systematic planning and improvement."
+        indicators:
+          - "Strategic planning comprehensive"
+          - "Budgeting links to planning"
+          - "Data-informed decisions"
+          - "Continuous improvement culture"
+          - "Emergency preparedness"
+
+  # Additional Core Components for comprehensive coverage
+  - id: "1.A.1"
+    title: "Mission Statement Development"
+    description: "The mission was developed through constituent involvement and approved by the board."
+    category: "Core Component"
+    clauses:
+      - id: "1.A.1"
+        title: "Mission Development Process"
+        description: "Broad participation in mission development"
+        indicators:
+          - "Stakeholder input gathered"
+          - "Board approval documented"
+          - "Regular review process"
+          - "Community needs considered"
+
+  - id: "1.A.2"
+    title: "Mission Implementation"
+    description: "The institution's academic offerings align with its mission."
+    category: "Core Component"
+    clauses:
+      - id: "1.A.2"
+        title: "Academic Alignment"
+        description: "Programs demonstrate mission alignment"
+        indicators:
+          - "Program goals support mission"
+          - "New programs vetted for fit"
+          - "Resource allocation reflects priorities"
+          - "Student learning outcomes aligned"
+
+  - id: "1.A.3"
+    title: "Mission Planning"
+    description: "Planning and budgeting align with the mission."
+    category: "Core Component"
+    clauses:
+      - id: "1.A.3"
+        title: "Planning Alignment"
+        description: "Institutional planning reflects mission priorities"
+        indicators:
+          - "Strategic plan mission-based"
+          - "Budget supports mission activities"
+          - "Assessment tied to mission"
+          - "Performance indicators mission-relevant"
+
+  - id: "2.A.1"
+    title: "Integrity Policies"
+    description: "The institution operates with integrity in financial and academic matters."
+    category: "Core Component"
+    clauses:
+      - id: "2.A.1"
+        title: "Operational Integrity"
+        description: "Policies ensure ethical operations"
+        indicators:
+          - "Financial controls implemented"
+          - "Academic integrity enforced"
+          - "Research ethics maintained"
+          - "Compliance systems active"
+
+  - id: "3.A.1"
+    title: "Degree Appropriateness"
+    description: "Courses and programs are appropriate to degree levels offered."
+    category: "Core Component"
+    clauses:
+      - id: "3.A.1"
+        title: "Level Appropriateness"
+        description: "Academic expectations match degree levels"
+        indicators:
+          - "Course rigor appropriate"
+          - "Prerequisites established"
+          - "Learning outcomes scaffolded"
+          - "Assessment methods suitable"
+
+  - id: "3.A.2"
+    title: "Program Quality"
+    description: "All programs meet quality expectations."
+    category: "Core Component"
+    clauses:
+      - id: "3.A.2"
+        title: "Quality Assurance"
+        description: "Systematic quality assurance for all programs"
+        indicators:
+          - "Regular program review"
+          - "External benchmarking"
+          - "Advisory board input"
+          - "Continuous improvement"
+
+  - id: "3.A.3"
+    title: "Transfer Policies"
+    description: "The institution awards credits appropriately."
+    category: "Core Component"
+    clauses:
+      - id: "3.A.3"
+        title: "Credit Policies"
+        description: "Clear policies for awarding credit"
+        indicators:
+          - "Transfer credit evaluated fairly"
+          - "Prior learning assessment available"
+          - "Credit hour standards maintained"
+          - "Articulation agreements current"
+
+  - id: "4.A.1"
+    title: "Program Review"
+    description: "The institution maintains regular program review."
+    category: "Core Component"
+    clauses:
+      - id: "4.A.1"
+        title: "Review Processes"
+        description: "Systematic program review cycle"
+        indicators:
+          - "Review schedule established"
+          - "Data collection systematic"
+          - "External reviewers used"
+          - "Improvements implemented"
+
+  - id: "4.A.2"
+    title: "Credit Quality"
+    description: "The institution evaluates credits it transcripts."
+    category: "Core Component"
+    clauses:
+      - id: "4.A.2"
+        title: "Credit Evaluation"
+        description: "Rigorous evaluation of transfer credits"
+        indicators:
+          - "Clear transfer policies"
+          - "Qualified evaluators"
+          - "Consistent standards"
+          - "Appeals process available"
+
+  - id: "5.A.1"
+    title: "Resource Sufficiency"
+    description: "Resources are adequate for operations."
+    category: "Core Component"
+    clauses:
+      - id: "5.A.1"
+        title: "Operational Resources"
+        description: "Sufficient resources for quality operations"
+        indicators:
+          - "Budget supports operations"
+          - "Reserves maintained"
+          - "Infrastructure adequate"
+          - "Staffing levels appropriate"
+
+  - id: "5.A.2"
+    title: "Resource Planning"
+    description: "Resource allocation supports educational purposes."
+    category: "Core Component"
+    clauses:
+      - id: "5.A.2"
+        title: "Educational Resource Priority"
+        description: "Resources prioritize educational mission"
+        indicators:
+          - "Academic programs funded adequately"
+          - "Student services supported"
+          - "Faculty development funded"
+          - "Technology needs met"

@@ -1,0 +1,35 @@
+# Placeholder scaffold for MSCHE (Middle States Commission on Higher Education)
+metadata:
+  accreditor: MSCHE
+  name: Middle States Commission on Higher Education
+  version: 2025.1-draft
+  last_updated: 2025-09-15
+  source_url: https://www.msche.org/
+  license: proprietary-summary
+  disclaimer: >-
+    Summaries only; substitute with licensed content for production.
+  coverage_notes: Standards 1 & 2 partial.
+
+standards:
+  - id: MSCHE-S1
+    code: Standard I
+    title: Mission & Goals
+    category: Standard
+    level: standard
+    description: Institution’s mission and goals define purpose, student success commitment, and align with planning.
+    weight: 100
+    is_required: true
+    indicators:
+      - id: MSCHE-S1-I1
+        description: Mission approved and reviewed periodically
+  - id: MSCHE-S2
+    code: Standard II
+    title: Ethics & Integrity
+    category: Standard
+    level: standard
+    description: Institution demonstrates honesty, fairness, and respect in policies and academic conduct.
+    weight: 100
+    is_required: true
+    indicators:
+      - id: MSCHE-S2-I1
+        description: Public availability of grievance process

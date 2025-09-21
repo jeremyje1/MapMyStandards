@@ -1,0 +1,903 @@
+accreditor: NECHE
+version: "2024"
+effective_date: "2024-01-01"
+metadata:
+  name: New England Commission of Higher Education
+  version: "2024"
+  last_updated: "2024-01-01"
+  source_url: "https://www.neche.org/"
+  license: "proprietary-summary"
+  disclaimer: "Paraphrased summaries for development. Replace with licensed text before production."
+  coverage_notes: "Complete standards with considerations for each area"
+
+standards:
+  # Standard One: Mission and Purposes
+  - id: "1.1"
+    title: "Mission Statement"
+    description: "The institution's mission defines its distinctive character and addresses academic and societal needs."
+    category: "Mission and Purposes"
+    clauses:
+      - id: "1.1.a"
+        title: "Clear Mission"
+        description: "Mission clearly defined and published"
+        indicators:
+          - "Mission statement published"
+          - "Distinctive character evident"
+          - "Educational purposes clear"
+          - "Societal needs addressed"
+
+  - id: "1.2"
+    title: "Mission Consistency"
+    description: "The institution's mission is consistent with legal authorization and academic commitments."
+    category: "Mission and Purposes"
+    clauses:
+      - id: "1.2.a"
+        title: "Legal Alignment"
+        description: "Mission aligns with charter and authorization"
+        indicators:
+          - "Charter consistency"
+          - "Legal compliance"
+          - "Accreditation alignment"
+          - "State authorization"
+
+  - id: "1.3"
+    title: "Mission Review"
+    description: "The mission provides direction for institutional decision-making and resource allocation."
+    category: "Mission and Purposes"
+    clauses:
+      - id: "1.3.a"
+        title: "Planning Alignment"
+        description: "Planning and evaluation guided by mission"
+        indicators:
+          - "Strategic plan alignment"
+          - "Resource allocation tied to mission"
+          - "Decision framework clear"
+          - "Regular mission review"
+
+  - id: "1.4"
+    title: "Public Purposes"
+    description: "The mission encompasses institution's commitment to public purposes."
+    category: "Mission and Purposes"
+    clauses:
+      - id: "1.4.a"
+        title: "Community Service"
+        description: "Commitment to serving public good"
+        indicators:
+          - "Public service explicit"
+          - "Community partnerships"
+          - "Civic engagement promoted"
+          - "Social responsibility demonstrated"
+
+  # Standard Two: Planning and Evaluation
+  - id: "2.1"
+    title: "Planning Process"
+    description: "Planning and evaluation are systematic, comprehensive, broad-based, integrated, and appropriate."
+    category: "Planning and Evaluation"
+    clauses:
+      - id: "2.1.a"
+        title: "Systematic Planning"
+        description: "Planning is ongoing and systematic"
+        indicators:
+          - "Regular planning cycle"
+          - "Broad participation"
+          - "Data-informed decisions"
+          - "Mission-driven priorities"
+
+  - id: "2.2"
+    title: "Institutional Research"
+    description: "Institutional research capacity supports planning and decision-making."
+    category: "Planning and Evaluation"
+    clauses:
+      - id: "2.2.a"
+        title: "Research Capacity"
+        description: "Sufficient institutional research function"
+        indicators:
+          - "IR office established"
+          - "Data systems adequate"
+          - "Analysis capabilities"
+          - "Research disseminated"
+
+  - id: "2.3"
+    title: "Planning Priorities"
+    description: "The institution identifies priorities for improvement and allocates resources accordingly."
+    category: "Planning and Evaluation"
+    clauses:
+      - id: "2.3.a"
+        title: "Priority Setting"
+        description: "Clear process for establishing priorities"
+        indicators:
+          - "Priority criteria defined"
+          - "Resource alignment"
+          - "Timeline established"
+          - "Progress monitored"
+
+  - id: "2.4"
+    title: "Resource Planning"
+    description: "The institution plans for and responds to financial and other contingencies."
+    category: "Planning and Evaluation"
+    clauses:
+      - id: "2.4.a"
+        title: "Financial Planning"
+        description: "Multi-year financial planning conducted"
+        indicators:
+          - "Revenue projections"
+          - "Expense management"
+          - "Reserve policies"
+          - "Risk assessment"
+
+  - id: "2.5"
+    title: "Evaluation Systems"
+    description: "The institution has a demonstrable system of evaluation of all programs and services."
+    category: "Planning and Evaluation"
+    clauses:
+      - id: "2.5.a"
+        title: "Program Review"
+        description: "Regular review of academic programs"
+        indicators:
+          - "Review cycle established"
+          - "External perspectives"
+          - "Improvement actions"
+          - "Resource implications"
+
+  - id: "2.6"
+    title: "External Relations"
+    description: "External relations are consistent with mission and support institutional effectiveness."
+    category: "Planning and Evaluation"
+    clauses:
+      - id: "2.6.a"
+        title: "Advancement Activities"
+        description: "Fundraising aligned with mission and priorities"
+        indicators:
+          - "Ethical fundraising"
+          - "Donor stewardship"
+          - "Gift acceptance policies"
+          - "Campaign alignment"
+
+  - id: "2.7"
+    title: "Assessment Implementation"
+    description: "The institution implements assessment findings to improve programs and services."
+    category: "Planning and Evaluation"
+    clauses:
+      - id: "2.7.a"
+        title: "Closing the Loop"
+        description: "Assessment results drive improvements"
+        indicators:
+          - "Action plans developed"
+          - "Resources allocated"
+          - "Changes implemented"
+          - "Impact evaluated"
+
+  # Standard Three: Organization and Governance
+  - id: "3.1"
+    title: "Authority and Responsibility"
+    description: "Authority and responsibility are clearly defined for effective institutional functioning."
+    category: "Organization and Governance"
+    clauses:
+      - id: "3.1.a"
+        title: "Clear Authority"
+        description: "Lines of authority and accountability clear"
+        indicators:
+          - "Organizational chart current"
+          - "Reporting relationships defined"
+          - "Decision authority clear"
+          - "Delegation appropriate"
+
+  - id: "3.2"
+    title: "Governing Board"
+    description: "The governing board is the legally constituted body ultimately responsible for the institution."
+    category: "Organization and Governance"
+    clauses:
+      - id: "3.2.a"
+        title: "Board Composition"
+        description: "Board membership ensures independence"
+        indicators:
+          - "Sufficient size"
+          - "Diverse expertise"
+          - "No conflicts of interest"
+          - "Term limits appropriate"
+
+  - id: "3.3"
+    title: "Board Responsibilities"
+    description: "The board exercises appropriate oversight of institutional policies and resources."
+    category: "Organization and Governance"
+    clauses:
+      - id: "3.3.a"
+        title: "Fiduciary Oversight"
+        description: "Board ensures financial health and integrity"
+        indicators:
+          - "Budget approval"
+          - "Audit review"
+          - "Investment oversight"
+          - "Risk management"
+
+  - id: "3.4"
+    title: "Chief Executive Officer"
+    description: "The institution has a chief executive whose primary responsibility is to the institution."
+    category: "Organization and Governance"
+    clauses:
+      - id: "3.4.a"
+        title: "CEO Authority"
+        description: "CEO has authority to implement board policies"
+        indicators:
+          - "Clear appointment"
+          - "Delegated authority"
+          - "Performance evaluation"
+          - "Succession planning"
+
+  - id: "3.5"
+    title: "Administration"
+    description: "The institution has an administration of appropriate size and expertise."
+    category: "Organization and Governance"
+    clauses:
+      - id: "3.5.a"
+        title: "Administrative Capacity"
+        description: "Sufficient qualified administrators"
+        indicators:
+          - "Appropriate credentials"
+          - "Clear responsibilities"
+          - "Professional development"
+          - "Performance review"
+
+  - id: "3.6"
+    title: "Faculty Role"
+    description: "Faculty exercise an important role in assuring academic quality."
+    category: "Organization and Governance"
+    clauses:
+      - id: "3.6.a"
+        title: "Faculty Governance"
+        description: "Faculty participate in academic governance"
+        indicators:
+          - "Faculty senate/council"
+          - "Curriculum authority"
+          - "Academic policy input"
+          - "Shared governance"
+
+  - id: "3.7"
+    title: "Students"
+    description: "Students are provided opportunity to participate in institutional governance."
+    category: "Organization and Governance"
+    clauses:
+      - id: "3.7.a"
+        title: "Student Voice"
+        description: "Student participation in governance"
+        indicators:
+          - "Student government"
+          - "Committee membership"
+          - "Feedback mechanisms"
+          - "Policy input opportunities"
+
+  # Standard Four: The Academic Program
+  - id: "4.1"
+    title: "Academic Offerings"
+    description: "The institution's academic programs are consistent with its mission."
+    category: "The Academic Program"
+    clauses:
+      - id: "4.1.a"
+        title: "Program Alignment"
+        description: "Programs align with institutional mission"
+        indicators:
+          - "Mission consistency"
+          - "Appropriate levels"
+          - "Resource support"
+          - "Quality standards"
+
+  - id: "4.2"
+    title: "Undergraduate Education"
+    description: "Undergraduate degree programs include general education requirements."
+    category: "The Academic Program"
+    clauses:
+      - id: "4.2.a"
+        title: "General Education"
+        description: "Coherent general education program"
+        indicators:
+          - "Core competencies defined"
+          - "Distribution requirements"
+          - "Integration with majors"
+          - "Assessment conducted"
+
+  - id: "4.3"
+    title: "General Education Competencies"
+    description: "General education incorporates study of values, ethics, and diverse perspectives."
+    category: "The Academic Program"
+    clauses:
+      - id: "4.3.a"
+        title: "Essential Skills"
+        description: "Development of essential competencies"
+        indicators:
+          - "Written communication"
+          - "Quantitative reasoning"
+          - "Information literacy"
+          - "Critical thinking"
+
+  - id: "4.4"
+    title: "Major Requirements"
+    description: "Graduation requirements include demonstrated competence in specialized studies."
+    category: "The Academic Program"
+    clauses:
+      - id: "4.4.a"
+        title: "Depth of Study"
+        description: "Majors provide appropriate depth"
+        indicators:
+          - "Sequential curriculum"
+          - "Capstone experiences"
+          - "Skill development"
+          - "Professional preparation"
+
+  - id: "4.5"
+    title: "Degree Requirements"
+    description: "Degree programs have coherent design and appropriate requirements."
+    category: "The Academic Program"
+    clauses:
+      - id: "4.5.a"
+        title: "Credit Requirements"
+        description: "Credit hour requirements appropriate"
+        indicators:
+          - "Total credits defined"
+          - "Residence requirements"
+          - "Upper-level requirements"
+          - "GPA standards"
+
+  - id: "4.6"
+    title: "Graduate Programs"
+    description: "Graduate degree programs are progressively more advanced than undergraduate programs."
+    category: "The Academic Program"
+    clauses:
+      - id: "4.6.a"
+        title: "Advanced Study"
+        description: "Graduate programs provide advanced learning"
+        indicators:
+          - "Research methods"
+          - "Theoretical foundations"
+          - "Independent scholarship"
+          - "Professional competence"
+
+  - id: "4.7"
+    title: "Assessment of Learning"
+    description: "The institution demonstrates that students learn what programs promise."
+    category: "The Academic Program"
+    clauses:
+      - id: "4.7.a"
+        title: "Learning Assessment"
+        description: "Systematic assessment of student learning"
+        indicators:
+          - "Learning outcomes defined"
+          - "Multiple measures used"
+          - "Results analyzed"
+          - "Improvements made"
+
+  - id: "4.8"
+    title: "Academic Planning"
+    description: "The institution engages in academic planning that supports mission."
+    category: "The Academic Program"
+    clauses:
+      - id: "4.8.a"
+        title: "Program Development"
+        description: "New programs developed strategically"
+        indicators:
+          - "Market analysis"
+          - "Resource assessment"
+          - "Quality assurance"
+          - "Approval processes"
+
+  - id: "4.9"
+    title: "Credit Integrity"
+    description: "The institution ensures integrity in awarding academic credit."
+    category: "The Academic Program"
+    clauses:
+      - id: "4.9.a"
+        title: "Credit Policies"
+        description: "Clear policies for awarding credit"
+        indicators:
+          - "Credit hour definition"
+          - "Transfer policies"
+          - "Prior learning assessment"
+          - "Alternative credit options"
+
+  - id: "4.10"
+    title: "Faculty Scholarship"
+    description: "Faculty are current in their disciplines and adept in teaching methods."
+    category: "The Academic Program"
+    clauses:
+      - id: "4.10.a"
+        title: "Scholarly Activity"
+        description: "Faculty engage in scholarship"
+        indicators:
+          - "Research productivity"
+          - "Creative activities"
+          - "Professional engagement"
+          - "Pedagogical innovation"
+
+  # Standard Five: Students
+  - id: "5.1"
+    title: "Admissions"
+    description: "The institution recruits and admits students qualified to succeed."
+    category: "Students"
+    clauses:
+      - id: "5.1.a"
+        title: "Admission Standards"
+        description: "Clear and appropriate admission criteria"
+        indicators:
+          - "Published requirements"
+          - "Consistent application"
+          - "Success predictors"
+          - "Fair processes"
+
+  - id: "5.2"
+    title: "Student Services"
+    description: "The institution provides student services appropriate to its mission."
+    category: "Students"
+    clauses:
+      - id: "5.2.a"
+        title: "Support Services"
+        description: "Comprehensive support services available"
+        indicators:
+          - "Academic advising"
+          - "Career counseling"
+          - "Health services"
+          - "Financial aid counseling"
+
+  - id: "5.3"
+    title: "Student Records"
+    description: "The institution maintains accessible, secure, and comprehensive student records."
+    category: "Students"
+    clauses:
+      - id: "5.3.a"
+        title: "Records Management"
+        description: "Proper maintenance of student records"
+        indicators:
+          - "Security measures"
+          - "Privacy protection"
+          - "Retention policies"
+          - "Access procedures"
+
+  - id: "5.4"
+    title: "Student Success"
+    description: "The institution demonstrates its effectiveness in contributing to student success."
+    category: "Students"
+    clauses:
+      - id: "5.4.a"
+        title: "Success Measures"
+        description: "Multiple indicators of student success"
+        indicators:
+          - "Retention rates"
+          - "Graduation rates"
+          - "Learning outcomes"
+          - "Post-graduation success"
+
+  - id: "5.5"
+    title: "Student Development"
+    description: "The institution fosters personal and social development of students."
+    category: "Students"
+    clauses:
+      - id: "5.5.a"
+        title: "Holistic Development"
+        description: "Programs support whole student development"
+        indicators:
+          - "Leadership programs"
+          - "Cultural activities"
+          - "Service learning"
+          - "Wellness initiatives"
+
+  - id: "5.6"
+    title: "Student Conduct"
+    description: "The institution has clear policies on student rights and responsibilities."
+    category: "Students"
+    clauses:
+      - id: "5.6.a"
+        title: "Conduct Standards"
+        description: "Clear behavioral expectations and processes"
+        indicators:
+          - "Code of conduct"
+          - "Judicial processes"
+          - "Appeal procedures"
+          - "Educational approach"
+
+  - id: "5.7"
+    title: "Diversity and Inclusion"
+    description: "The institution addresses its own goals for diversity and inclusion."
+    category: "Students"
+    clauses:
+      - id: "5.7.a"
+        title: "Inclusive Environment"
+        description: "Commitment to diversity and inclusion"
+        indicators:
+          - "Diversity goals"
+          - "Inclusive practices"
+          - "Support programs"
+          - "Climate assessment"
+
+  - id: "5.8"
+    title: "Athletics and Co-Curricular"
+    description: "Athletics and student activities are conducted with appropriate oversight."
+    category: "Students"
+    clauses:
+      - id: "5.8.a"
+        title: "Program Integrity"
+        description: "Co-curricular programs support mission"
+        indicators:
+          - "Educational focus"
+          - "Compliance maintained"
+          - "Student welfare priority"
+          - "Resource sustainability"
+
+  # Standard Six: Teaching, Learning, and Scholarship
+  - id: "6.1"
+    title: "Faculty Qualifications"
+    description: "The institution's faculty are appropriately qualified."
+    category: "Teaching, Learning, and Scholarship"
+    clauses:
+      - id: "6.1.a"
+        title: "Academic Credentials"
+        description: "Faculty possess appropriate credentials"
+        indicators:
+          - "Terminal degrees"
+          - "Disciplinary expertise"
+          - "Professional experience"
+          - "Continuous learning"
+
+  - id: "6.2"
+    title: "Teaching Effectiveness"
+    description: "Faculty demonstrate teaching effectiveness."
+    category: "Teaching, Learning, and Scholarship"
+    clauses:
+      - id: "6.2.a"
+        title: "Pedagogical Excellence"
+        description: "Commitment to effective teaching"
+        indicators:
+          - "Student evaluations"
+          - "Peer review"
+          - "Teaching innovation"
+          - "Professional development"
+
+  - id: "6.3"
+    title: "Faculty Workload"
+    description: "Faculty workload reflects institutional mission and priorities."
+    category: "Teaching, Learning, and Scholarship"
+    clauses:
+      - id: "6.3.a"
+        title: "Balanced Workload"
+        description: "Appropriate distribution of faculty effort"
+        indicators:
+          - "Teaching loads defined"
+          - "Research expectations"
+          - "Service requirements"
+          - "Work-life balance"
+
+  - id: "6.4"
+    title: "Academic Freedom"
+    description: "The institution supports academic freedom for faculty and students."
+    category: "Teaching, Learning, and Scholarship"
+    clauses:
+      - id: "6.4.a"
+        title: "Freedom Protections"
+        description: "Policies protect academic freedom"
+        indicators:
+          - "AAUP principles"
+          - "Due process procedures"
+          - "Free inquiry supported"
+          - "Responsible conduct"
+
+  - id: "6.5"
+    title: "Faculty Evaluation"
+    description: "Faculty are evaluated regularly using multiple indicators."
+    category: "Teaching, Learning, and Scholarship"
+    clauses:
+      - id: "6.5.a"
+        title: "Comprehensive Evaluation"
+        description: "Multi-faceted evaluation system"
+        indicators:
+          - "Teaching assessment"
+          - "Scholarship review"
+          - "Service evaluation"
+          - "Development planning"
+
+  - id: "6.6"
+    title: "Faculty Development"
+    description: "The institution provides opportunities for faculty development."
+    category: "Teaching, Learning, and Scholarship"
+    clauses:
+      - id: "6.6.a"
+        title: "Professional Growth"
+        description: "Support for faculty development"
+        indicators:
+          - "Development programs"
+          - "Sabbatical opportunities"
+          - "Conference support"
+          - "Mentoring programs"
+
+  - id: "6.7"
+    title: "Information Resources"
+    description: "Information resources support teaching and learning."
+    category: "Teaching, Learning, and Scholarship"
+    clauses:
+      - id: "6.7.a"
+        title: "Library Resources"
+        description: "Adequate information resources and services"
+        indicators:
+          - "Collection development"
+          - "Digital resources"
+          - "Information literacy"
+          - "Research support"
+
+  - id: "6.8"
+    title: "Technology Integration"
+    description: "Technology appropriately supports teaching and learning."
+    category: "Teaching, Learning, and Scholarship"
+    clauses:
+      - id: "6.8.a"
+        title: "Educational Technology"
+        description: "Effective use of technology"
+        indicators:
+          - "Learning management system"
+          - "Classroom technology"
+          - "Online learning support"
+          - "Digital literacy"
+
+  # Standard Seven: Institutional Resources
+  - id: "7.1"
+    title: "Human Resources"
+    description: "The institution has sufficient human resources."
+    category: "Institutional Resources"
+    clauses:
+      - id: "7.1.a"
+        title: "Staffing Adequacy"
+        description: "Appropriate staffing levels maintained"
+        indicators:
+          - "Position analysis"
+          - "Competitive compensation"
+          - "Benefits programs"
+          - "Retention strategies"
+
+  - id: "7.2"
+    title: "Financial Resources"
+    description: "The institution has sufficient financial resources."
+    category: "Institutional Resources"
+    clauses:
+      - id: "7.2.a"
+        title: "Financial Stability"
+        description: "Financial resources support operations"
+        indicators:
+          - "Operating margins"
+          - "Cash reserves"
+          - "Debt management"
+          - "Revenue diversity"
+
+  - id: "7.3"
+    title: "Financial Planning"
+    description: "Financial planning is integrated with overall planning."
+    category: "Institutional Resources"
+    clauses:
+      - id: "7.3.a"
+        title: "Budget Process"
+        description: "Participatory and strategic budgeting"
+        indicators:
+          - "Transparent process"
+          - "Strategic alignment"
+          - "Multi-year projections"
+          - "Contingency planning"
+
+  - id: "7.4"
+    title: "Facilities"
+    description: "The institution has adequate physical facilities."
+    category: "Institutional Resources"
+    clauses:
+      - id: "7.4.a"
+        title: "Facility Sufficiency"
+        description: "Facilities support programs and services"
+        indicators:
+          - "Space adequacy"
+          - "Maintenance programs"
+          - "Safety compliance"
+          - "Accessibility standards"
+
+  - id: "7.5"
+    title: "Technology Infrastructure"
+    description: "The institution has adequate technology infrastructure."
+    category: "Institutional Resources"
+    clauses:
+      - id: "7.5.a"
+        title: "IT Resources"
+        description: "Technology supports operations"
+        indicators:
+          - "Network reliability"
+          - "Security measures"
+          - "User support"
+          - "System integration"
+
+  - id: "7.6"
+    title: "Risk Management"
+    description: "The institution manages risks effectively."
+    category: "Institutional Resources"
+    clauses:
+      - id: "7.6.a"
+        title: "Risk Assessment"
+        description: "Comprehensive risk management program"
+        indicators:
+          - "Risk identification"
+          - "Insurance coverage"
+          - "Business continuity"
+          - "Compliance monitoring"
+
+  # Standard Eight: Educational Effectiveness
+  - id: "8.1"
+    title: "Educational Effectiveness"
+    description: "The institution demonstrates educational effectiveness."
+    category: "Educational Effectiveness"
+    clauses:
+      - id: "8.1.a"
+        title: "Student Achievement"
+        description: "Evidence of student learning and success"
+        indicators:
+          - "Learning outcomes achieved"
+          - "Retention/completion rates"
+          - "Graduate outcomes"
+          - "Employer satisfaction"
+
+  - id: "8.2"
+    title: "Assessment Culture"
+    description: "The institution has a culture of assessment."
+    category: "Educational Effectiveness"
+    clauses:
+      - id: "8.2.a"
+        title: "Systematic Assessment"
+        description: "Ongoing assessment activities"
+        indicators:
+          - "Assessment plans"
+          - "Data collection systematic"
+          - "Results shared"
+          - "Improvements documented"
+
+  - id: "8.3"
+    title: "Student Learning Outcomes"
+    description: "Learning outcomes are regularly assessed and results used for improvement."
+    category: "Educational Effectiveness"
+    clauses:
+      - id: "8.3.a"
+        title: "Outcomes Assessment"
+        description: "Direct and indirect assessment methods"
+        indicators:
+          - "Direct measures used"
+          - "Indirect measures included"
+          - "Benchmarking conducted"
+          - "Trends analyzed"
+
+  - id: "8.4"
+    title: "Program Review"
+    description: "Academic programs undergo regular review."
+    category: "Educational Effectiveness"
+    clauses:
+      - id: "8.4.a"
+        title: "Systematic Review"
+        description: "Comprehensive program evaluation"
+        indicators:
+          - "Review schedule"
+          - "External reviewers"
+          - "Student outcomes focus"
+          - "Action plans developed"
+
+  - id: "8.5"
+    title: "General Education Assessment"
+    description: "General education effectiveness is assessed systematically."
+    category: "Educational Effectiveness"
+    clauses:
+      - id: "8.5.a"
+        title: "Core Competency Assessment"
+        description: "Assessment of general education outcomes"
+        indicators:
+          - "Competencies assessed"
+          - "Multiple measures"
+          - "Cross-disciplinary review"
+          - "Curriculum improvements"
+
+  - id: "8.6"
+    title: "Co-Curricular Assessment"
+    description: "Co-curricular programs contribute to educational effectiveness."
+    category: "Educational Effectiveness"
+    clauses:
+      - id: "8.6.a"
+        title: "Learning Outside Classroom"
+        description: "Assessment of co-curricular learning"
+        indicators:
+          - "Learning outcomes defined"
+          - "Participation tracked"
+          - "Impact measured"
+          - "Integration with curriculum"
+
+  # Standard Nine: Integrity, Transparency, and Public Disclosure
+  - id: "9.1"
+    title: "Institutional Integrity"
+    description: "The institution acts with integrity in all activities."
+    category: "Integrity, Transparency, and Public Disclosure"
+    clauses:
+      - id: "9.1.a"
+        title: "Ethical Standards"
+        description: "High ethical standards maintained"
+        indicators:
+          - "Ethics policies"
+          - "Training provided"
+          - "Violations addressed"
+          - "Culture of integrity"
+
+  - id: "9.2"
+    title: "Transparency"
+    description: "The institution is transparent about its operations."
+    category: "Integrity, Transparency, and Public Disclosure"
+    clauses:
+      - id: "9.2.a"
+        title: "Open Communication"
+        description: "Transparent communication practices"
+        indicators:
+          - "Regular reporting"
+          - "Data accessibility"
+          - "Decision transparency"
+          - "Stakeholder engagement"
+
+  - id: "9.3"
+    title: "Public Disclosure"
+    description: "The institution provides sufficient public information."
+    category: "Integrity, Transparency, and Public Disclosure"
+    clauses:
+      - id: "9.3.a"
+        title: "Information Availability"
+        description: "Key information publicly available"
+        indicators:
+          - "Academic programs"
+          - "Admission requirements"
+          - "Costs and aid"
+          - "Student outcomes"
+
+  - id: "9.4"
+    title: "Academic Honesty"
+    description: "The institution promotes honesty and academic integrity."
+    category: "Integrity, Transparency, and Public Disclosure"
+    clauses:
+      - id: "9.4.a"
+        title: "Academic Integrity Policies"
+        description: "Clear policies on academic honesty"
+        indicators:
+          - "Honor code/policies"
+          - "Detection procedures"
+          - "Sanctions defined"
+          - "Education programs"
+
+  - id: "9.5"
+    title: "Fair Practices"
+    description: "The institution demonstrates fair and equitable practices."
+    category: "Integrity, Transparency, and Public Disclosure"
+    clauses:
+      - id: "9.5.a"
+        title: "Equitable Treatment"
+        description: "Fair treatment of all constituents"
+        indicators:
+          - "Non-discrimination policies"
+          - "Grievance procedures"
+          - "Equal opportunity"
+          - "Accommodation processes"
+
+  - id: "9.6"
+    title: "Complaint Resolution"
+    description: "The institution handles complaints fairly and promptly."
+    category: "Integrity, Transparency, and Public Disclosure"
+    clauses:
+      - id: "9.6.a"
+        title: "Complaint Processes"
+        description: "Clear procedures for complaints"
+        indicators:
+          - "Published procedures"
+          - "Multiple channels"
+          - "Timely resolution"
+          - "Appeals available"
+
+  - id: "9.7"
+    title: "Marketing Accuracy"
+    description: "The institution represents itself accurately in all communications."
+    category: "Integrity, Transparency, and Public Disclosure"
+    clauses:
+      - id: "9.7.a"
+        title: "Truth in Advertising"
+        description: "Accurate representation in all media"
+        indicators:
+          - "Claims verified"
+          - "Data accurate"
+          - "Images representative"
+          - "Testimonials authentic"

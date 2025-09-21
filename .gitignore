@@ -271,6 +271,8 @@ node_modules/
 uploads/
 /uploads/
 data/
+!data/standards/
+!data/standards/**
 documents/
 artifacts/
 backups/

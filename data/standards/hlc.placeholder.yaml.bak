@@ -1,0 +1,47 @@
+# Placeholder scaffold for HLC (Higher Learning Commission)
+metadata:
+  accreditor: HLC
+  name: Higher Learning Commission
+  version: 2025.1-draft
+  last_updated: 2025-09-15
+  source_url: https://hlcommission.org/
+  license: proprietary-summary
+  disclaimer: >-
+    Synthetic paraphrased summaries for development. Replace with licensed text before production.
+  coverage_notes: Criteria 1 & 2 partial.
+
+standards:
+  - id: HLC-C1
+    code: Criterion 1
+    title: Mission
+    category: Criterion
+    level: standard
+    description: Institution’s mission is clear, public, and guides operations and decision-making.
+    weight: 100
+    is_required: true
+    indicators:
+      - id: HLC-C1-I1
+        description: Mission publicly accessible
+      - id: HLC-C1-I2
+        description: Planning documents reference mission alignment
+  - id: HLC-C1-CO1
+    code: 1.A
+    title: Mission Clarity
+    category: Criterion 1
+    level: component
+    description: Mission clearly articulates scope of academic offerings and commitment to stakeholders.
+    weight: 80
+    is_required: true
+  - id: HLC-C2
+    code: Criterion 2
+    title: Integrity: Ethical & Responsible Conduct
+    category: Criterion
+    level: standard
+    description: Institution acts with integrity and upholds ethical policies and responsible conduct.
+    weight: 100
+    is_required: true
+    indicators:
+      - id: HLC-C2-I1
+        description: Publicly posted academic integrity policies
+      - id: HLC-C2-I2
+        description: Annual ethics training completion evidence

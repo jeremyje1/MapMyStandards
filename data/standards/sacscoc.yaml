@@ -1,0 +1,429 @@
+accreditor: SACSCOC
+version: "2024"
+effective_date: "2024-01-01"
+metadata:
+  name: Southern Association of Colleges and Schools Commission on Colleges
+  version: "2024"
+  last_updated: "2024-01-01"
+  source_url: "https://sacscoc.org/"
+  license: "proprietary-summary"
+  disclaimer: "Paraphrased summaries for development. Replace with licensed text before production."
+  coverage_notes: "Complete principles with representative indicators"
+
+standards:
+  # Section 4: Governing Board
+  - id: "4.1"
+    title: "Governing board characteristics"
+    description: "The institution has a governing board of at least five members that is the legal body with specific authority over the institution."
+    category: "Governance"
+    clauses:
+      - id: "4.1.a"
+        title: "Board independence"
+        description: "The governing board is free from undue influence from political, religious, or other external bodies."
+        indicators:
+          - "Board operates independently"
+          - "No undue external influence"
+          - "Clear governance policies"
+          - "Documented board authority"
+      - id: "4.1.b"
+        title: "Board size"
+        description: "Board has at least five members"
+        indicators:
+          - "Minimum five board members"
+          - "Board composition documented"
+  
+  - id: "4.2"
+    title: "Board/administrative distinction"
+    description: "The governing board ensures a clear and appropriate distinction between the policy-making function of the board and the administrative function of the institution."
+    category: "Governance"
+    clauses:
+      - id: "4.2.a"
+        title: "Policy vs operations"
+        description: "Clear distinction between policy-making and administrative functions"
+        indicators:
+          - "Board focuses on policy"
+          - "Administration handles operations"
+          - "Roles clearly defined"
+          - "No board micromanagement"
+
+  # Section 5: Administration and Organization
+  - id: "5.1"
+    title: "Chief executive officer"
+    description: "The institution employs a qualified chief executive officer"
+    category: "Administration"
+    clauses:
+      - id: "5.1"
+        title: "CEO qualifications"
+        description: "CEO has appropriate qualifications and experience"
+        indicators:
+          - "Terminal degree or equivalent"
+          - "Relevant experience"
+          - "Leadership capabilities"
+          - "Board-appointed position"
+
+  - id: "5.4"
+    title: "Qualified administrative/academic officers"
+    description: "The institution employs qualified administrative and academic officers."
+    category: "Administration"
+    clauses:
+      - id: "5.4"
+        title: "Officer qualifications"
+        description: "Administrative and academic officers have appropriate qualifications"
+        indicators:
+          - "Appropriate degrees"
+          - "Relevant experience"
+          - "Professional development"
+          - "Clear job descriptions"
+
+  # Section 6: Faculty
+  - id: "6.1"
+    title: "Full-time faculty"
+    description: "The institution employs an adequate number of full-time faculty members."
+    category: "Faculty"
+    clauses:
+      - id: "6.1"
+        title: "Faculty adequacy"
+        description: "Adequate number of full-time faculty to support programs"
+        indicators:
+          - "Sufficient faculty-student ratio"
+          - "Program needs met"
+          - "Appropriate workload"
+          - "Faculty availability"
+
+  - id: "6.2"
+    title: "Faculty qualifications"
+    description: "For each of its educational programs, the institution employs faculty with appropriate qualifications."
+    category: "Faculty"
+    clauses:
+      - id: "6.2.a"
+        title: "Academic credentials"
+        description: "Faculty possess academic credentials appropriate to their teaching assignments"
+        indicators:
+          - "Terminal degree in discipline"
+          - "18 graduate hours in teaching field"
+          - "Documented qualifications"
+          - "Credential verification"
+      - id: "6.2.b"
+        title: "Professional experience"
+        description: "Faculty have relevant professional experience"
+        indicators:
+          - "Industry experience when relevant"
+          - "Clinical experience for professional programs"
+          - "Research experience"
+          - "Ongoing professional development"
+
+  - id: "6.3"
+    title: "Faculty evaluation"
+    description: "The institution regularly evaluates the effectiveness of its faculty members."
+    category: "Faculty"
+    clauses:
+      - id: "6.3"
+        title: "Performance evaluation"
+        description: "Regular and systematic faculty evaluation process"
+        indicators:
+          - "Annual performance reviews"
+          - "Student evaluations"
+          - "Peer review process"
+          - "Professional development plans"
+          - "Evaluation criteria aligned with mission"
+
+  # Section 7: Institutional Planning and Effectiveness
+  - id: "7.1"
+    title: "Institutional planning"
+    description: "The institution engages in ongoing, comprehensive, and integrated research-based planning and evaluation processes."
+    category: "Planning"
+    clauses:
+      - id: "7.1"
+        title: "Planning process"
+        description: "Comprehensive planning that involves all constituencies"
+        indicators:
+          - "Strategic plan in place"
+          - "Data-driven decisions"
+          - "Stakeholder involvement"
+          - "Regular plan updates"
+          - "Mission alignment"
+
+  - id: "7.3"
+    title: "Administrative effectiveness"
+    description: "The institution identifies expected outcomes for its administrative support services and demonstrates improvement."
+    category: "Effectiveness"
+    clauses:
+      - id: "7.3"
+        title: "Support service assessment"
+        description: "Regular assessment of administrative support services"
+        indicators:
+          - "Service outcomes defined"
+          - "Regular assessment cycle"
+          - "Data collection methods"
+          - "Improvement actions documented"
+          - "Effectiveness measured"
+
+  # Section 8: Student Achievement
+  - id: "8.1"
+    title: "Student achievement"
+    description: "The institution identifies student achievement consistent with its mission."
+    category: "Student Success"
+    clauses:
+      - id: "8.1"
+        title: "Achievement metrics"
+        description: "Clear metrics for student achievement aligned with mission"
+        indicators:
+          - "Graduation rates tracked"
+          - "Retention rates monitored"
+          - "Job placement data"
+          - "Licensure pass rates"
+          - "Benchmarks established"
+
+  - id: "8.2"
+    title: "Student outcomes assessment"
+    description: "The institution identifies expected outcomes for its educational programs."
+    category: "Assessment"
+    clauses:
+      - id: "8.2.a"
+        title: "Learning outcomes"
+        description: "Clear learning outcomes for all programs"
+        indicators:
+          - "Program outcomes defined"
+          - "Course outcomes mapped"
+          - "Assessment methods clear"
+          - "Results documented"
+
+  # Section 9: Educational Program Structure and Content
+  - id: "9.1"
+    title: "Program content"
+    description: "Educational programs embody coherent courses of study that are compatible with stated program outcomes."
+    category: "Curriculum"
+    clauses:
+      - id: "9.1"
+        title: "Curriculum coherence"
+        description: "Programs have coherent, well-designed curricula"
+        indicators:
+          - "Clear program structure"
+          - "Prerequisite sequences"
+          - "Learning progression"
+          - "Outcomes alignment"
+
+  - id: "9.2"
+    title: "Program length"
+    description: "Program length is appropriate for each degree level."
+    category: "Curriculum"
+    clauses:
+      - id: "9.2"
+        title: "Credit requirements"
+        description: "Appropriate credit hours for degree level"
+        indicators:
+          - "Associates: 60+ credits"
+          - "Bachelors: 120+ credits"
+          - "Masters: 30+ credits"
+          - "Doctoral: appropriate to field"
+
+  - id: "9.3"
+    title: "General education"
+    description: "The institution requires the successful completion of general education coursework."
+    category: "Curriculum"
+    clauses:
+      - id: "9.3"
+        title: "Gen ed requirements"
+        description: "Comprehensive general education program"
+        indicators:
+          - "30+ hours for bachelor's"
+          - "Core competencies addressed"
+          - "Broad knowledge areas"
+          - "Skills development"
+
+  # Section 10: Educational Policies, Procedures, and Practices
+  - id: "10.1"
+    title: "Academic policies"
+    description: "The institution publishes and implements academic policies."
+    category: "Policies"
+    clauses:
+      - id: "10.1"
+        title: "Policy publication"
+        description: "Academic policies are clear and accessible"
+        indicators:
+          - "Policies published"
+          - "Easily accessible"
+          - "Regularly updated"
+          - "Consistently applied"
+
+  - id: "10.5"
+    title: "Admissions policies"
+    description: "The institution publishes admissions policies."
+    category: "Policies"
+    clauses:
+      - id: "10.5"
+        title: "Admission requirements"
+        description: "Clear admission requirements and processes"
+        indicators:
+          - "Requirements published"
+          - "Non-discriminatory"
+          - "Appropriate to programs"
+          - "Consistently applied"
+
+  - id: "10.6"
+    title: "Distance education"
+    description: "The institution ensures quality in distance education programs."
+    category: "Distance Education"
+    clauses:
+      - id: "10.6.a"
+        title: "Student verification"
+        description: "Procedures to verify student identity"
+        indicators:
+          - "Identity verification process"
+          - "Secure authentication"
+          - "Privacy protection"
+          - "Regular verification"
+      - id: "10.6.b"
+        title: "DE quality"
+        description: "Distance education maintains quality standards"
+        indicators:
+          - "Same learning outcomes"
+          - "Qualified faculty"
+          - "Appropriate technology"
+          - "Student support services"
+
+  # Section 11: Library and Learning Resources
+  - id: "11.1"
+    title: "Library resources"
+    description: "The institution provides adequate library and learning resources."
+    category: "Resources"
+    clauses:
+      - id: "11.1"
+        title: "Resource adequacy"
+        description: "Library resources support all programs"
+        indicators:
+          - "Sufficient collections"
+          - "Current materials"
+          - "Electronic resources"
+          - "Appropriate access"
+
+  - id: "11.2"
+    title: "Library staff"
+    description: "The institution ensures adequate library staff."
+    category: "Resources"
+    clauses:
+      - id: "11.2"
+        title: "Staff qualifications"
+        description: "Qualified library and learning resource staff"
+        indicators:
+          - "Professional librarians"
+          - "Appropriate credentials"
+          - "Sufficient staffing"
+          - "Ongoing training"
+
+  - id: "11.3"
+    title: "Library assessment"
+    description: "The institution provides evidence of library effectiveness."
+    category: "Resources"
+    clauses:
+      - id: "11.3"
+        title: "Usage and effectiveness"
+        description: "Regular assessment of library services"
+        indicators:
+          - "Usage data collected"
+          - "User satisfaction surveys"
+          - "Collection assessment"
+          - "Service improvements"
+
+  # Section 12: Academic and Student Support Services
+  - id: "12.1"
+    title: "Student support services"
+    description: "The institution provides appropriate student support services."
+    category: "Student Services"
+    clauses:
+      - id: "12.1"
+        title: "Support programs"
+        description: "Comprehensive student support programs"
+        indicators:
+          - "Academic advising"
+          - "Tutoring services"
+          - "Career counseling"
+          - "Personal counseling"
+          - "Disability services"
+
+  - id: "12.4"
+    title: "Student complaints"
+    description: "The institution has adequate procedures for addressing student complaints."
+    category: "Student Services"
+    clauses:
+      - id: "12.4"
+        title: "Complaint procedures"
+        description: "Clear procedures for student complaints"
+        indicators:
+          - "Written procedures"
+          - "Multiple levels of review"
+          - "Timely resolution"
+          - "Records maintained"
+
+  # Section 13: Financial and Physical Resources
+  - id: "13.1"
+    title: "Financial stability"
+    description: "The institution has sound financial resources and financial stability."
+    category: "Resources"
+    clauses:
+      - id: "13.1"
+        title: "Financial health"
+        description: "Demonstration of financial stability"
+        indicators:
+          - "Positive net assets"
+          - "Adequate reserves"
+          - "Diverse revenue"
+          - "Clean audits"
+
+  - id: "13.2"
+    title: "Financial controls"
+    description: "The institution has adequate financial controls."
+    category: "Resources"
+    clauses:
+      - id: "13.2"
+        title: "Internal controls"
+        description: "Appropriate financial management and controls"
+        indicators:
+          - "Segregation of duties"
+          - "Regular audits"
+          - "Board oversight"
+          - "Written procedures"
+
+  - id: "13.7"
+    title: "Physical resources"
+    description: "The institution ensures adequate physical facilities."
+    category: "Resources"
+    clauses:
+      - id: "13.7"
+        title: "Facilities adequacy"
+        description: "Physical facilities support institutional mission"
+        indicators:
+          - "Safe facilities"
+          - "ADA compliance"
+          - "Regular maintenance"
+          - "Adequate space"
+          - "Technology infrastructure"
+
+  # Section 14: Transparency and Institutional Representation
+  - id: "14.1"
+    title: "Publication of information"
+    description: "The institution publishes accurate information."
+    category: "Transparency"
+    clauses:
+      - id: "14.1"
+        title: "Public disclosure"
+        description: "Accurate and accessible public information"
+        indicators:
+          - "Current catalog"
+          - "Accurate website"
+          - "Cost information"
+          - "Outcome data"
+
+  - id: "14.3"
+    title: "Comprehensive standards"
+    description: "The institution applies all appropriate standards."
+    category: "Compliance"
+    clauses:
+      - id: "14.3"
+        title: "Standards compliance"
+        description: "Compliance with all SACSCOC standards"
+        indicators:
+          - "All standards addressed"
+          - "Evidence documented"
+          - "Regular review"
+          - "Continuous improvement"

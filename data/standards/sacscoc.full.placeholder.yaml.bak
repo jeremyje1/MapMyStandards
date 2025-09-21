@@ -1,0 +1,76 @@
+# Placeholder scaffold for SACSCOC comprehensive corpus
+# NOTE: Contains only synthetic summaries, not verbatim standard text.
+metadata:
+  accreditor: SACSCOC
+  name: Southern Association of Colleges and Schools Commission on Colleges
+  version: 2025.1-draft
+  last_updated: 2025-09-15
+  source_url: https://sacscoc.org/
+  license: proprietary-summary
+  disclaimer: >-
+    This file is a structured scaffold with synthetic paraphrased summaries for development/testing.
+    Replace description fields with institution-licensed content before production use.
+  coverage_notes: Initial scaffold – populate remaining sections iteratively.
+
+standards:
+  - id: SACSCOC-CR-1.1
+    code: CR 1.1
+    title: Institutional Mission
+    category: Core Requirement
+    level: standard
+    description: >-
+      Institution articulates a clear, approved mission guiding planning and resource allocation.
+    weight: 100
+    is_required: true
+    evidence_requirements:
+      - id: SACSCOC-CR-1.1-E1
+        description: Current published mission statement (official catalog or website)
+        type: document
+      - id: SACSCOC-CR-1.1-E2
+        description: Governing board approval minutes referencing mission adoption/revision
+        type: governance_record
+    indicators:
+      - id: SACSCOC-CR-1.1-I1
+        description: Mission statement revision cycle documented
+      - id: SACSCOC-CR-1.1-I2
+        description: Mission alignment referenced in strategic plan
+  - id: SACSCOC-CR-1.2
+    code: CR 1.2
+    title: Governance Structure
+    category: Core Requirement
+    level: standard
+    description: >-
+      Governance system defines clear authority and responsibility for academic and fiduciary oversight.
+    weight: 100
+    is_required: true
+    evidence_requirements:
+      - id: SACSCOC-CR-1.2-E1
+        description: Organizational governance chart
+        type: diagram
+      - id: SACSCOC-CR-1.2-E2
+        description: Board bylaws or charter excerpt
+        type: policy
+    indicators:
+      - id: SACSCOC-CR-1.2-I1
+        description: Defined conflict of interest policy implementation evidence
+  - id: SACSCOC-Std-8.2.a
+    code: Std 8.2.a
+    title: Student Outcomes – Educational Programs
+    category: Standard 8 (Student Achievement)
+    level: standard
+    description: >-
+      Institution identifies, assesses, and publishes student learning outcomes for educational programs.
+    weight: 90
+    is_required: true
+    evidence_requirements:
+      - id: SACSCOC-Std-8.2.a-E1
+        description: Program assessment reports with outcome measures
+        type: report
+      - id: SACSCOC-Std-8.2.a-E2
+        description: Public webpage demonstrating outcome publication
+        type: url_capture
+    indicators:
+      - id: SACSCOC-Std-8.2.a-I1
+        description: Closing-the-loop action items documented
+
+# TODO: Continue adding remaining Core Requirements + Standards 1–14 systematically.
