@@ -359,6 +359,28 @@
             transition: var(--transition);
             position: relative;
             overflow: hidden;
+            cursor: pointer;
+        }
+        
+        .metric-card:hover {
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+            border-color: var(--blue-500);
+        }
+        
+        .loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 5px solid #f3f4f6;
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         .metric-card::before {
@@ -1719,6 +1741,191 @@
                 }
 
         </script>
+        
+        <!-- Metrics Detail Modal -->
+        <div id="metricsDetailModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000;">
+            <div style="position:relative; max-width:800px; margin:50px auto; background:white; border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,0.1); max-height:80vh; overflow-y:auto;">
+                <div style="padding:24px; border-bottom:1px solid #e5e7eb;">
+                    <h2 id="modalTitle" style="font-size:24px; font-weight:700; color:#111827; margin:0;">Metric Details</h2>
+                    <button onclick="closeMetricsModal()" style="position:absolute; top:24px; right:24px; background:none; border:none; font-size:24px; cursor:pointer; color:#6b7280;">×</button>
+                </div>
+                <div id="modalContent" style="padding:24px;">
+                    <!-- Dynamic content will be inserted here -->
+                </div>
+            </div>
+        </div>
+        
+        <script>
+            // Make metric cards clickable
+            function addMetricCardClickHandlers() {
+                setTimeout(() => {
+                    const metricCards = document.querySelectorAll('.metric-card');
+                    metricCards.forEach((card, index) => {
+                        card.style.cursor = 'pointer';
+                        card.addEventListener('click', () => {
+                            const labels = ['documents', 'standards', 'compliance', 'reports', 'trust', 'risk'];
+                            const label = labels[index] || 'metric';
+                            showMetricDetails(label);
+                        });
+                    });
+                }, 100);
+            }
+            
+            // Show metric details modal
+            async function showMetricDetails(metricType) {
+                const modal = document.getElementById('metricsDetailModal');
+                const title = document.getElementById('modalTitle');
+                const content = document.getElementById('modalContent');
+                
+                // Set title based on metric type
+                const titles = {
+                    'documents': 'Document Analysis Details',
+                    'standards': 'Standards Mapping Details',
+                    'compliance': 'Compliance Score Breakdown',
+                    'reports': 'Generated Reports',
+                    'trust': 'Evidence Trust Analysis',
+                    'risk': 'Gap Risk Assessment'
+                };
+                
+                title.textContent = titles[metricType] || 'Metric Details';
+                
+                // Show loading state
+                content.innerHTML = '<div style="text-align:center; padding:40px;"><div class="loading-spinner"></div><p style="color:#6b7280; margin-top:16px;">Loading details...</p></div>';
+                modal.style.display = 'block';
+                
+                try {
+                    // Fetch detailed data based on metric type
+                    const token = dashboard.getAuthToken();
+                    const headers = { 'Authorization': `Bearer ${token}` };
+                    let endpoint = '';
+                    
+                    switch(metricType) {
+                        case 'documents':
+                            endpoint = '/api/user/intelligence-simple/documents/list';
+                            break;
+                        case 'standards':
+                            endpoint = '/api/user/intelligence-simple/mappings/summary';
+                            break;
+                        case 'compliance':
+                            endpoint = '/api/user/intelligence-simple/compliance/details';
+                            break;
+                        case 'trust':
+                            endpoint = '/api/user/intelligence-simple/evidence/trust-analysis';
+                            break;
+                        case 'risk':
+                            endpoint = '/api/user/intelligence-simple/risk/analysis';
+                            break;
+                    }
+                    
+                    if (endpoint) {
+                        const response = await fetch(endpoint, { headers });
+                        const data = await response.json();
+                        
+                        // Render detailed content based on metric type
+                        content.innerHTML = renderMetricDetailsContent(metricType, data);
+                    }
+                } catch (error) {
+                    content.innerHTML = `
+                        <div style="text-align:center; padding:40px; color:#ef4444;">
+                            <p>Unable to load details. Please try again.</p>
+                            <button onclick="closeMetricsModal()" style="margin-top:16px; padding:8px 16px; background:#3b82f6; color:white; border:none; border-radius:6px; cursor:pointer;">Close</button>
+                        </div>
+                    `;
+                }
+            }
+            
+            // Render content based on metric type
+            function renderMetricDetailsContent(type, data) {
+                switch(type) {
+                    case 'documents':
+                        const docs = data.documents || [];
+                        if (docs.length === 0) {
+                            return '<p style="color:#6b7280;">No documents uploaded yet.</p>';
+                        }
+                        return `
+                            <div>
+                                <h3 style="font-size:18px; font-weight:600; margin-bottom:16px;">Analyzed Documents</h3>
+                                <div style="display:flex; flex-direction:column; gap:12px;">
+                                    ${docs.map(doc => `
+                                        <div style="padding:16px; border:1px solid #e5e7eb; border-radius:8px;">
+                                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                                <div>
+                                                    <h4 style="font-weight:600; color:#111827;">${doc.filename || 'Untitled'}</h4>
+                                                    <p style="font-size:14px; color:#6b7280; margin-top:4px;">
+                                                        Uploaded: ${new Date(doc.upload_date).toLocaleDateString()} • 
+                                                        Standards mapped: ${doc.standards_count || 0}
+                                                    </p>
+                                                </div>
+                                                <div style="text-align:right;">
+                                                    <span style="display:inline-block; padding:4px 12px; background:#10b981; color:white; border-radius:12px; font-size:12px;">
+                                                        ${doc.status || 'Analyzed'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        `;
+                    
+                    case 'standards':
+                        const mappings = data.mappings || [];
+                        const grouped = {};
+                        mappings.forEach(m => {
+                            const std = m.standard_id || 'Unknown';
+                            if (!grouped[std]) grouped[std] = [];
+                            grouped[std].push(m);
+                        });
+                        
+                        return `
+                            <div>
+                                <h3 style="font-size:18px; font-weight:600; margin-bottom:16px;">Standards Coverage</h3>
+                                <div style="display:flex; flex-direction:column; gap:12px;">
+                                    ${Object.entries(grouped).map(([stdId, maps]) => `
+                                        <div style="padding:16px; border:1px solid #e5e7eb; border-radius:8px;">
+                                            <h4 style="font-weight:600; color:#111827;">${stdId}: ${maps[0]?.standard_title || 'Standard'}</h4>
+                                            <p style="font-size:14px; color:#6b7280; margin-top:4px;">
+                                                ${maps.length} document${maps.length > 1 ? 's' : ''} mapped
+                                            </p>
+                                            <div style="margin-top:8px;">
+                                                ${maps.map(m => `
+                                                    <div style="padding:8px; background:#f3f4f6; border-radius:4px; margin-top:4px;">
+                                                        <span style="font-size:13px;">${m.document_name || 'Document'}</span>
+                                                        <span style="float:right; color:#10b981; font-weight:500;">${Math.round(m.confidence * 100)}% match</span>
+                                                    </div>
+                                                `).join('')}
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        `;
+                    
+                    default:
+                        return '<p style="color:#6b7280;">Details view coming soon...</p>';
+                }
+            }
+            
+            // Close modal
+            function closeMetricsModal() {
+                document.getElementById('metricsDetailModal').style.display = 'none';
+            }
+            
+            // Close modal on outside click
+            document.getElementById('metricsDetailModal').addEventListener('click', (e) => {
+                if (e.target.id === 'metricsDetailModal') {
+                    closeMetricsModal();
+                }
+            });
+            
+            // Update the renderMetrics function to call addMetricCardClickHandlers
+            const originalRenderMetrics = dashboard.renderMetrics;
+            dashboard.renderMetrics = function(data) {
+                originalRenderMetrics.call(this, data);
+                addMetricCardClickHandlers();
+            };
+        </script>
+        
         <!-- Service worker registration for offline support -->
         <script>
         // Service worker registration for offline support
@@ -1728,5 +1935,8 @@
             navigator.serviceWorker.register(rootSw).catch(() => {});
         }
     </script>
+    
+    <!-- Info Banner Component -->
+    <script src="/web/banner-component.js"></script>
 </body>
 </html>
