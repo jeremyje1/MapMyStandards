@@ -45,10 +45,10 @@
 
         /* Header */
         .header {
-            background: var(--gradient-primary);
-            color: white;
-            padding: 1.25rem 0;
-            box-shadow: var(--shadow-lg);
+            background: white;
+            border-bottom: 1px solid var(--border-light);
+            padding: 1rem 0;
+            box-shadow: var(--shadow-sm);
             position: sticky;
             top: 0;
             z-index: 100;
@@ -63,42 +63,98 @@
             align-items: center;
         }
 
-        .logo {
-            font-size: 1.75rem;
-            font-weight: 800;
-            text-decoration: none;
-            color: white;
+        .logo-container {
             display: flex;
             align-items: center;
             gap: 0.75rem;
         }
 
-        .logo::before {
-            content: "🎯";
-            font-size: 2rem;
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-decoration: none;
+        }
+
+        .header-nav {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
         }
 
         .nav-links {
             display: flex;
-            gap: 2.5rem;
-            align-items: center;
+            gap: 1.5rem;
         }
 
         .nav-links a {
-            color: white;
+            color: var(--text-medium);
             text-decoration: none;
             font-weight: 500;
-            opacity: 0.9;
-            transition: all 0.3s ease;
-            padding: 0.5rem 1rem;
+            padding: 0.5rem 0.75rem;
             border-radius: 0.5rem;
+            transition: all 0.3s ease;
+            position: relative;
         }
 
         .nav-links a:hover,
         .nav-links a.active {
-            opacity: 1;
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
+            color: var(--primary-blue);
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .nav-links a.active::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 6px;
+            height: 6px;
+            background: var(--primary-blue);
+            border-radius: 50%;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-menu {
+            position: relative;
+        }
+
+        .user-button {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--bg-light);
+            border: none;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .user-button:hover {
+            background: var(--border-light);
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            background: var(--gradient-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.875rem;
         }
 
         /* Main Container */
@@ -631,14 +687,30 @@
     <!-- Header -->
     <header class="header">
         <div class="header-content">
-            <a href="/" class="logo">A³E</a>
-            <nav class="nav-links">
-                <a href="/dashboard-modern">Dashboard</a>
-                <a href="/upload-modern" class="active">Upload</a>
-                <a href="/standards-modern">Standards</a>
-                <a href="/reports-modern">Reports</a>
-                <a href="#" onclick="logout()">Logout</a>
-            </nav>
+            <div class="logo-container">
+                <a href="/" class="logo">MapMyStandards</a>
+            </div>
+            
+            <div class="header-nav">
+                <nav class="nav-links">
+                    <a href="/dashboard-modern">Dashboard</a>
+                    <a href="/upload-modern" class="active">Upload</a>
+                    <a href="/standards-modern">Standards</a>
+                    <a href="/reports-modern">Reports</a>
+                    <a href="/reviewer-portal">Reviewer Portal</a>
+                    <a href="/admin-standards">Admin Standards</a>
+                    <a href="/crosswalkx">CrosswalkX</a>
+                </nav>
+                
+                <div class="header-actions">
+                    <div class="user-menu">
+                        <button class="user-button" id="userMenuButton">
+                            <div class="user-avatar" id="userAvatar">JD</div>
+                            <span id="userDisplayName">John Doe</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </header>
 
@@ -780,6 +852,39 @@
             } catch (_) {}
         })();
         let selectedFiles = [];
+        
+        // Initialize user display
+        async function loadUserProfile() {
+            try {
+                const token = getAuthToken();
+                if (token) {
+                    const headers = {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    };
+                    
+                    const response = await fetch('https://api.mapmystandards.ai/api/user/profile', {
+                        method: 'GET',
+                        headers: headers,
+                        credentials: 'include'
+                    });
+                    
+                    if (response.ok) {
+                        const profile = await response.json();
+                        const displayName = profile.name || profile.email || 'User';
+                        const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+                        
+                        document.getElementById('userDisplayName').textContent = displayName;
+                        document.getElementById('userAvatar').textContent = initials;
+                    }
+                }
+            } catch (e) {
+                console.error('Error loading user profile:', e);
+            }
+        }
+        
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', loadUserProfile);
 
         function getAuthToken() {
             return localStorage.getItem('a3e_api_key') ||

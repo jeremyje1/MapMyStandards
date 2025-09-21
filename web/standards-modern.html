@@ -106,6 +106,59 @@
             backdrop-filter: blur(10px);
         }
 
+        /* User Menu */
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-left: 1rem;
+            padding-left: 1rem;
+            border-left: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            background: var(--gradient-accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .user-avatar:hover {
+            transform: scale(1.05);
+        }
+
+        .user-name {
+            color: white;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .logout-link {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            opacity: 0.9;
+            transition: all 0.3s ease;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            margin-left: 0.5rem;
+        }
+
+        .logout-link:hover {
+            opacity: 1;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+        }
+
         /* Main Container */
         .container {
             max-width: 1400px;
@@ -630,7 +683,17 @@
                 <a href="/upload-modern">Upload</a>
                 <a href="/standards-modern" class="active">Standards</a>
                 <a href="/reports-modern">Reports</a>
-                <a href="#" onclick="logout()">Logout</a>
+                <a href="/plans-modern">Plans</a>
+                <a href="/profile">Profile</a>
+                <a href="/documentation">Docs</a>
+                <a href="/support">Support</a>
+                <div class="user-menu">
+                    <div class="user-avatar" id="userAvatar">
+                        <span id="userInitial">?</span>
+                    </div>
+                    <span class="user-name" id="userDisplayName">Loading...</span>
+                    <a href="#" onclick="logout()" class="logout-link">Logout</a>
+                </div>
             </nav>
         </div>
     </header>
@@ -822,6 +885,39 @@
         }
         function isReviewerMode(){ try { return localStorage.getItem('mms:reviewerMode') === 'true'; } catch(_) { return false; } }
         function setReviewerMode(v){ try { localStorage.setItem('mms:reviewerMode', v?'true':'false'); } catch(_){} }
+        
+        // Load user profile for header
+        async function loadUserProfile() {
+            try {
+                const token = localStorage.getItem('access_token') || 
+                             localStorage.getItem('jwt_token') || 
+                             localStorage.getItem('a3e_api_key');
+                
+                if (!token) return;
+
+                const response = await fetch(buildApiUrl('/api/user/profile'), {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const displayName = data.name || data.institution_name || 'User';
+                    const initial = displayName.charAt(0).toUpperCase();
+                    
+                    const userDisplayName = document.getElementById('userDisplayName');
+                    const userInitial = document.getElementById('userInitial');
+                    
+                    if (userDisplayName) userDisplayName.textContent = displayName;
+                    if (userInitial) userInitial.textContent = initial;
+                }
+            } catch (error) {
+                console.error('Failed to load user profile:', error);
+            }
+        }
+        
         function persistFiltersToUrl(){
             const u=new URL(window.location.href);
             const acc=document.getElementById('accreditorSelect').value||'';
@@ -1536,6 +1632,9 @@
 
         // Initialize
         document.addEventListener('DOMContentLoaded', async function() {
+            // Load user profile for header
+            loadUserProfile();
+            
             // Initialize levels + reviewer mode
             try{
                 const ls=document.getElementById('levelsSelect'); if(ls){ ls.value=getLevelsParam(); ls.addEventListener('change', ()=>{ setLevelsParam(ls.value); const acc=document.getElementById('accreditorSelect').value; if(acc){ loadStandards(acc, document.getElementById('institutionTypeSelect').value); } persistFiltersToUrl(); }); }
