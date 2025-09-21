@@ -51,16 +51,23 @@ def _get_db_service() -> Optional['DatabaseService']:  # type: ignore
     return _db_service
 
 async def get_db():
+    logger.debug("get_db dependency called")
     svc = _get_db_service()
     if svc is None:
+        logger.error("Database service is None")
         yield None
         return
     try:
+        logger.debug("Attempting to get database session")
         async with svc.get_session() as session:
+            logger.debug("Database session obtained successfully")
             yield session
     except RuntimeError as e:
         # Engine/session factory unavailable (likely DB unreachable)
         logger.error(f"Database session unavailable: {e}")
+        yield None
+    except Exception as e:
+        logger.error(f"Unexpected error in get_db: {type(e).__name__}: {e}")
         yield None
 
 class LoginRequest(BaseModel):
@@ -85,12 +92,12 @@ def create_token(user_data: dict, expires_delta: timedelta = None):
     return jwt.encode(to_encode, JWT_SECRET, algorithm=ALGORITHM)
 
 @router.post("/auth-simple/login", response_model=AuthResponse)
-async def simple_login(request: LoginRequest, db: AsyncSession = Depends(get_db)):
+async def simple_login(request: LoginRequest, db: Optional[AsyncSession] = Depends(get_db)):
     """Simple login that works"""
     return await do_login(request, db)
 
 @router.post("/auth/login", response_model=AuthResponse) 
-async def auth_login(request: LoginRequest, db: AsyncSession = Depends(get_db)):
+async def auth_login(request: LoginRequest, db: Optional[AsyncSession] = Depends(get_db)):
     """Handle legacy /auth/login endpoint"""
     try:
         return await do_login(request, db)
@@ -100,7 +107,7 @@ async def auth_login(request: LoginRequest, db: AsyncSession = Depends(get_db)):
         # Return a generic error to avoid exposing internals
         raise HTTPException(status_code=500, detail="Internal server error during login")
 
-async def do_login(request: LoginRequest, db: AsyncSession):
+async def do_login(request: LoginRequest, db: Optional[AsyncSession]):
     """Simple login that works with database session"""
     logger.info(f"Login attempt for email: {request.email}")
     try:

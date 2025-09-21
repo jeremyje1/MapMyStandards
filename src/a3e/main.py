@@ -582,7 +582,8 @@ async def add_cors_headers(request, call_next):
         response = await call_next(request)
     except Exception as e:
         # Even on errors, we need CORS headers
-        logger.error(f"Request error: {e}")
+        logger.error(f"Request error: {type(e).__name__}: {e}")
+        logger.exception("Full traceback:")
         response = Response(content="Internal Server Error", status_code=500)
     
     # Add CORS headers to all responses (including errors)
