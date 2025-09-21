@@ -274,6 +274,14 @@ except ImportError as e:
     user_intelligence_simple_router_available = False
     _user_intelligence_simple_import_exception = e
 
+# User Profile Router
+try:
+    from .api.routes.user_profile import router as user_profile_router
+    user_profile_router_available = True
+except ImportError as e:
+    user_profile_router_available = False
+    _user_profile_import_exception = e
+
 # Password Reset Router
 try:
     from .api.routes.password_reset import router as password_reset_router
@@ -914,6 +922,13 @@ if user_intelligence_simple_router_available:
 else:
     logger.warning(f"⚠️ User Intelligence Simple router not available")
 
+# Include User Profile router (Database updates)
+if user_profile_router_available:
+    app.include_router(user_profile_router)
+    logger.info("✅ User Profile router loaded (Database updates)")
+else:
+    logger.warning(f"⚠️ User Profile router not available: {_user_profile_import_exception}")
+
 # Include Password Reset router
 if password_reset_router_available:
     app.include_router(password_reset_router)
@@ -1405,6 +1420,7 @@ async def debug_router_presence():  # noqa: D401
         flags = {
             "user_intelligence": bool(globals().get("user_intelligence_router_available")),
             "user_intelligence_simple": bool(globals().get("user_intelligence_simple_router_available")),
+            "user_profile": bool(globals().get("user_profile_router_available")),
             "compliance_intelligence": bool(globals().get("intelligence_router_available")),
             "documents": bool(globals().get("documents_router_available")),
             "dashboard": bool(globals().get("dashboard_router_available")),

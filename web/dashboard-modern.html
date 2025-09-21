@@ -953,7 +953,16 @@
                 try {
                     const API_BASE = (window.mmsAPI && window.mmsAPI.getBaseUrl && window.mmsAPI.getBaseUrl()) || (location.hostname.includes('api.mapmystandards.ai') ? '' : 'https://api.mapmystandards.ai');
                     const token = localStorage.getItem('a3e_api_key') || localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
-                    const res = await fetch(`${API_BASE}/api/user/intelligence-simple/standards/list`, { credentials: 'include' });
+                    const headers = {
+                        'Content-Type': 'application/json'
+                    };
+                    if (token) {
+                        headers['Authorization'] = `Bearer ${token}`;
+                    }
+                    const res = await fetch(`${API_BASE}/api/user/intelligence-simple/standards/list`, { 
+                        credentials: 'include',
+                        headers: headers
+                    });
                     const data = await res.json();
                     if (data && data.display_mode === 'redacted') {
                         document.getElementById('redacted-banner').style.display = 'block';
@@ -1046,8 +1055,17 @@
 
             async loadMetrics() {
                 try {
+                    const token = this.getAuthToken();
+                    const headers = {
+                        'Content-Type': 'application/json'
+                    };
+                    if (token) {
+                        headers['Authorization'] = `Bearer ${token}`;
+                    }
+                    
                     const response = await fetch(this.metricsEndpoint, {
-                        credentials: 'include'
+                        credentials: 'include',
+                        headers: headers
                     });
                     
                     if (!response.ok) {
@@ -1408,7 +1426,17 @@
                     return this._tsCache.series;
                 }
                 const url = `${this.API_BASE}/api/user/intelligence-simple/metrics/timeseries/${encodeURIComponent(accreditor||'')}`;
-                const res = await fetch(url + '?days=30&limit=200', { credentials: 'include' });
+                const token = this.getAuthToken();
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+                const res = await fetch(url + '?days=30&limit=200', { 
+                    credentials: 'include',
+                    headers: headers
+                });
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const data = await res.json();
                 const series = (data && data.series) || [];
@@ -1646,7 +1674,17 @@
                         setStoredRecentUploads(recent);
                         renderRecentUploads();
                                 const base = ((window.mmsAPI&&window.mmsAPI.getBaseUrl&&window.mmsAPI.getBaseUrl())||(location.hostname.includes('api.mapmystandards.ai')?'':'https://api.mapmystandards.ai'));
-                                const res = await fetch(base + '/api/user/intelligence-simple/evidence/upload', { method:'POST', body: form, credentials:'include' });
+                                const token = localStorage.getItem('a3e_api_key') || localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+                                const headers = {};
+                                if (token) {
+                                    headers['Authorization'] = `Bearer ${token}`;
+                                }
+                                const res = await fetch(base + '/api/user/intelligence-simple/evidence/upload', { 
+                                    method:'POST', 
+                                    body: form, 
+                                    credentials:'include',
+                                    headers: headers
+                                });
                                 if (!res.ok) {
                                     // If the simple route isn't deployed yet, fall back to documents upload (one-by-one)
                                     if (res.status === 404 || res.status === 405) {
@@ -1654,7 +1692,17 @@
                                             for (const f of files) {
                                                 const fd = new FormData();
                                                 fd.append('file', f);
-                                                const r = await fetch(base + '/documents/upload', { method:'POST', body: fd, credentials:'include' });
+                                                const token = localStorage.getItem('a3e_api_key') || localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+                                                const headers = {};
+                                                if (token) {
+                                                    headers['Authorization'] = `Bearer ${token}`;
+                                                }
+                                                const r = await fetch(base + '/documents/upload', { 
+                                                    method:'POST', 
+                                                    body: fd, 
+                                                    credentials:'include',
+                                                    headers: headers
+                                                });
                                                 if (!r.ok) throw new Error('Fallback upload failed');
                                             }
                                         })(fileList);

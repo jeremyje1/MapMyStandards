@@ -611,14 +611,51 @@
       if(state.step < state.total){ state.step++; showStep(); persist(true); }
       else {
         await persist();
+        
+        // Update user profile in database
+        try {
+          const profileData = {
+            institution_name: state.data.institution_name || '',
+            institution_type: state.data.institution_type || 'college',
+            role: state.data.role || '',
+            primary_accreditor: state.data.primary_accreditor || '',
+            state: state.data.state || '',
+            institution_size: state.data.institution_size || ''
+          };
+          
+          const token = localStorage.getItem('a3e_api_key') || localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+          const headers = {
+            'Content-Type': 'application/json'
+          };
+          if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+          }
+          
+          const profileRes = await fetch(`${API_BASE}/api/user/profile/update`, {
+            method: 'PUT',
+            credentials: 'include',
+            headers: headers,
+            body: JSON.stringify(profileData)
+          });
+          
+          if (profileRes.ok) {
+            console.log('✅ User profile updated in database');
+          } else {
+            console.warn('Profile update failed:', profileRes.status);
+          }
+        } catch (e) {
+          console.warn('Profile update error:', e);
+          // Continue anyway - don't block onboarding completion
+        }
+        
         try { localStorage.setItem('mms:onboarding-complete', '1'); } catch(_) {}
         successMsg.style.display='block';
         fillEl.style.width='100%'; pctEl.textContent='100%';
         // Redirect to main dashboard
-        setTimeout(()=>{ window.location.href='https://platform.mapmystandards.ai/dashboard'; }, 1500);
+        setTimeout(()=>{ window.location.href='https://platform.mapmystandards.ai/dashboard-modern'; }, 1500);
       }
     });
-  skipBtn.addEventListener('click', async ()=>{ try{ collectStep(); await persist(true); localStorage.setItem('mms:onboarding-complete','1'); }catch(_){} window.location.href='https://platform.mapmystandards.ai/dashboard'; });
+  skipBtn.addEventListener('click', async ()=>{ try{ collectStep(); await persist(true); localStorage.setItem('mms:onboarding-complete','1'); }catch(_){} window.location.href='https://platform.mapmystandards.ai/dashboard-modern'; });
 
     // Initialize
     async function loadExisting(){
