@@ -44,7 +44,7 @@ class Workspace(Base):
     
     # Relationships
     institution = relationship("Institution", back_populates="workspaces")
-    members = relationship("User", secondary=workspace_members, back_populates="workspaces")
+    members = relationship("User", secondary=workspace_members)
     standards = relationship("StandardWorkspace", back_populates="workspace", cascade="all, delete-orphan")
     evidence = relationship("EvidenceWorkspace", back_populates="workspace", cascade="all, delete-orphan")
     

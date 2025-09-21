@@ -72,7 +72,7 @@ class User(Base):
     sessions = relationship("UserSession", back_populates="user", cascade="all, delete-orphan")
     password_resets = relationship("PasswordReset", back_populates="user", cascade="all, delete-orphan")
     usage_events = relationship("UsageEvent", back_populates="user", cascade="all, delete-orphan")
-    workspaces = relationship("Workspace", secondary="workspace_members", back_populates="members")
+    # Note: workspaces relationship defined in workspace.py to avoid circular import
     
     def __repr__(self):
         return f"<User(id='{self.id}', email='{self.email}', institution='{self.institution_name}')>"
