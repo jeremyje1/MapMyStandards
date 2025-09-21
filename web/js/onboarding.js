@@ -42,9 +42,21 @@
     if (t){
       try{
         const res = await fetch(apiBase() + '/api/user/intelligence-simple/settings', { headers: { 'Authorization': `Bearer ${t}` }, credentials: 'include' });
-        if (res.ok){ return await res.json(); }
+        if (res.ok){
+          const j = await res.json();
+          return (j && j.organization !== undefined) ? j : (j && j.settings) || j || {};
+        }
       }catch(_){ /* fall through */ }
     }
+    // Cookie-based fetch (most production flows use httpOnly session cookies)
+    try{
+      const base = apiBase();
+      const res = await fetch((base ? base : '') + '/api/user/intelligence-simple/settings', { credentials: 'include' });
+      if (res.ok){
+        const j = await res.json();
+        return (j && j.organization !== undefined) ? j : (j && j.settings) || j || {};
+      }
+    }catch(_){ /* fall back to local */ }
     try{ return JSON.parse(localStorage.getItem('mms:onboarding')||'{}') || {}; }catch(_){ return {}; }
   }
 
@@ -63,6 +75,7 @@
   }
 
   function shouldPrompt(settings){
+    try { if (localStorage.getItem('mms:onboarding-complete') === '1') return false; } catch(_) {}
     if (!settings) return true;
     const org = settings.organization || settings.institution_name || '';
     const accr = settings.primary_accreditor || '';
@@ -172,7 +185,15 @@
     });
   }
 
+  function isOnboardingRoute(){
+    try{
+      const p = String(location.pathname || '').replace(/\/$/, '');
+      return p === '/onboarding' || p === '/onboarding.html';
+    }catch(_){ return false; }
+  }
+
   async function maybePrompt(){
+    if (isOnboardingRoute()) return; // don't prompt while user is on the onboarding page
     try{
       const s = await loadSettings();
       if (shouldPrompt(s)) openWizard(s);

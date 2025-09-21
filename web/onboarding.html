@@ -593,7 +593,15 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
-        if(!res.ok){ console.warn('Settings persist not ok', res.status); }
+        if(res.ok){
+          try{
+            const j = await res.json();
+            const settings = (j && j.organization !== undefined) ? j : (j && j.settings) || payload;
+            try { localStorage.setItem('mms:onboarding', JSON.stringify(settings)); } catch(_) {}
+          }catch(_){ /* ignore json errors */ }
+        } else {
+          console.warn('Settings persist not ok', res.status);
+        }
       } catch(e){ console.warn('Settings persist failed', e); }
     }
 
@@ -603,13 +611,14 @@
       if(state.step < state.total){ state.step++; showStep(); persist(true); }
       else {
         await persist();
+        try { localStorage.setItem('mms:onboarding-complete', '1'); } catch(_) {}
         successMsg.style.display='block';
         fillEl.style.width='100%'; pctEl.textContent='100%';
-    // Redirect to main dashboard
-  setTimeout(()=>{ window.location.href='https://platform.mapmystandards.ai/dashboard-modern'; }, 1500);
+        // Redirect to main dashboard
+        setTimeout(()=>{ window.location.href='https://platform.mapmystandards.ai/dashboard-modern'; }, 1500);
       }
     });
-  skipBtn.addEventListener('click', async ()=>{ try{ collectStep(); await persist(true);}catch(_){} window.location.href='https://platform.mapmystandards.ai/dashboard-modern'; });
+  skipBtn.addEventListener('click', async ()=>{ try{ collectStep(); await persist(true); localStorage.setItem('mms:onboarding-complete','1'); }catch(_){} window.location.href='https://platform.mapmystandards.ai/dashboard-modern'; });
 
     // Initialize
     async function loadExisting(){
@@ -655,6 +664,11 @@
             }
             if(settings.success_definition){
               document.getElementById('success_definition').value = settings.success_definition;
+            }
+            // Cache for immediate use by other pages and prompt suppressor
+            try { localStorage.setItem('mms:onboarding', JSON.stringify(settings)); } catch(_) {}
+            if ((settings.organization && settings.primary_accreditor)) {
+              try { localStorage.setItem('mms:onboarding-complete','1'); } catch(_) {}
             }
           }
         }
