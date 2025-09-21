@@ -6,7 +6,72 @@
     <title>Dashboard - A³E | MapMyStandards.ai</title>
     
     <!-- Critical CSS to prevent flash -->
-    <style>
+    <        .stat-card:nth-child(4)::before {
+            background: linear-gradient(135deg, #ec4899 0%, #f472b6 100%);
+        }
+        
+        .stat-card::after {
+            content: 'Click for details';
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            font-size: 11px;
+            color: #9ca3af;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .stat-card:hover::after {
+            opacity: 1;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        /* Enhanced tooltips */
+        [data-tooltip] {
+            position: relative;
+        }
+        
+        [data-tooltip]::before,
+        [data-tooltip]::after {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        
+        [data-tooltip]::before {
+            content: attr(data-tooltip);
+            bottom: calc(100% + 12px);
+            background: #1f2937;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            white-space: nowrap;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        [data-tooltip]::after {
+            content: '';
+            bottom: calc(100% + 6px);
+            width: 0;
+            height: 0;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-top: 6px solid #1f2937;
+        }
+        
+        [data-tooltip]:hover::before,
+        [data-tooltip]:hover::after {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(-2px);
+        }le>
         /* Critical loading styles - prevent FOUC */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -280,13 +345,41 @@
         }
 
         .activity-section {
-            background: var(--bg-white);
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow-xl);
-            overflow: hidden;
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            animation: fadeInUp 0.6s ease-out backwards;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-
-        .activity-header {
+        
+        .activity-section:hover {
+            box-shadow: 0 25px 30px -5px rgba(0, 0, 0, 0.15), 0 15px 15px -5px rgba(0, 0, 0, 0.08);
+            transform: translateY(-2px);
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes pulse {
+            0% {
+                opacity: 0.7;
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0.7;
+            }
+        }        .activity-header {
             background: var(--gradient-primary);
             color: white;
             padding: 2rem;
@@ -419,11 +512,29 @@
             <h1 class="welcome-title">🎯 Welcome to Your A³E Command Center</h1>
             <p class="welcome-text" id="welcomeText">Transform your institution into an accreditation powerhouse with AI-powered analytics that become more valuable every day.</p>
             <div class="action-buttons">
-                <a href="/upload" class="action-btn">📤 Start Analysis</a>
-                <a href="/standards-modern.html" class="action-btn">📊 View Standards</a>
-                <a href="/reports-modern.html" class="action-btn">📈 Generate Reports</a>
-                <a href="/docs" class="action-btn">📖 API Documentation</a>
+                <a href="/upload" class="action-btn" data-tooltip="Upload your accreditation documents">📤 Start Analysis</a>
+                <a href="/standards-modern.html" class="action-btn" data-tooltip="Browse and search standards">📊 View Standards</a>
+                <a href="/reports-modern.html" class="action-btn" data-tooltip="Generate compliance reports">📈 Generate Reports</a>
+                <a href="/docs" class="action-btn" data-tooltip="Explore API documentation">📖 API Documentation</a>
             </div>
+        </div>
+        
+        <!-- Progress Indicator -->
+        <div class="onboarding-progress" id="onboardingProgress" style="margin: 24px 0; padding: 20px; background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); border-radius: 12px; color: white; transition: opacity 0.5s ease;">
+            <h3 style="font-size: 16px; margin-bottom: 12px; font-weight: 600;">Getting Started Progress</h3>
+            <div style="background: rgba(255,255,255,0.2); height: 8px; border-radius: 4px; overflow: hidden;">
+                <div id="progressBar" style="height: 100%; background: white; width: 0%; transition: width 0.5s ease; border-radius: 4px;"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-top: 12px; font-size: 14px;">
+                <span id="progressText">0% Complete</span>
+                <span id="progressSteps">0 of 4 steps completed</span>
+            </div>
+        </div>
+        
+        <!-- Keyboard Shortcuts Tip -->
+        <div style="margin: 16px 0; padding: 12px 16px; background: #e0f2fe; border-radius: 8px; font-size: 14px; color: #0369a1; display: flex; align-items: center; gap: 8px;">
+            <span>💡</span>
+            <span>Tip: Press <kbd style="background: #0369a1; color: white; padding: 2px 6px; border-radius: 3px; font-family: monospace;">?</kbd> to view keyboard shortcuts</span>
         </div>
         
         <!-- Stats Grid -->
@@ -454,6 +565,48 @@
                     <span class="stat-icon">⏰</span>
                     <div class="stat-value" id="trialDaysRemaining">Loading</div>
                     <div class="stat-label">Trial Days Remaining</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Getting Started Guide (shown when no data) -->
+        <div id="gettingStartedGuide" style="display: none; margin-top: 24px; padding: 24px; background: #f8fafc; border-radius: 12px; border: 2px dashed #3b82f6;">
+            <h2 style="font-size: 20px; margin-bottom: 16px; color: #1e40af;">🚀 Getting Started with MapMyStandards</h2>
+            <div style="display: grid; gap: 16px;">
+                <div style="display: flex; align-items: start; gap: 12px; padding: 16px; background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    <span style="font-size: 24px;">1️⃣</span>
+                    <div>
+                        <h3 style="font-size: 16px; margin-bottom: 4px; color: #1e40af;">Upload Your Documents</h3>
+                        <p style="font-size: 14px; color: #64748b; margin: 0;">Start by uploading your curriculum or accreditation documents for analysis.</p>
+                        <a href="/upload" style="display: inline-block; margin-top: 8px; padding: 6px 12px; background: #3b82f6; color: white; text-decoration: none; border-radius: 6px; font-size: 14px;">Upload Now →</a>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: start; gap: 12px; padding: 16px; background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    <span style="font-size: 24px;">2️⃣</span>
+                    <div>
+                        <h3 style="font-size: 16px; margin-bottom: 4px; color: #1e40af;">Map to Standards</h3>
+                        <p style="font-size: 14px; color: #64748b; margin: 0;">Our AI will analyze your documents and map them to relevant standards.</p>
+                        <a href="/standards-modern.html" style="display: inline-block; margin-top: 8px; padding: 6px 12px; background: #10b981; color: white; text-decoration: none; border-radius: 6px; font-size: 14px;">Browse Standards →</a>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: start; gap: 12px; padding: 16px; background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    <span style="font-size: 24px;">3️⃣</span>
+                    <div>
+                        <h3 style="font-size: 16px; margin-bottom: 4px; color: #1e40af;">Generate Reports</h3>
+                        <p style="font-size: 14px; color: #64748b; margin: 0;">Create detailed compliance reports and gap analyses for your institution.</p>
+                        <a href="/reports-modern.html" style="display: inline-block; margin-top: 8px; padding: 6px 12px; background: #8b5cf6; color: white; text-decoration: none; border-radius: 6px; font-size: 14px;">View Reports →</a>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: start; gap: 12px; padding: 16px; background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    <span style="font-size: 24px;">4️⃣</span>
+                    <div>
+                        <h3 style="font-size: 16px; margin-bottom: 4px; color: #1e40af;">Need Help?</h3>
+                        <p style="font-size: 14px; color: #64748b; margin: 0;">Check out our documentation, tutorials, and FAQ for guidance.</p>
+                        <div style="display: flex; gap: 8px; margin-top: 8px;">
+                            <a href="/tutorial.html" style="padding: 6px 12px; background: #f59e0b; color: white; text-decoration: none; border-radius: 6px; font-size: 14px;">Tutorial →</a>
+                            <a href="/faq.html" style="padding: 6px 12px; background: #ef4444; color: white; text-decoration: none; border-radius: 6px; font-size: 14px;">FAQ →</a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -495,6 +648,8 @@
             // Load dynamic content
             loadDashboardMetrics();
             loadRecentActivity();
+            updateOnboardingProgress();
+            setupKeyboardShortcuts();
             
             // Auto-refresh every 30 seconds
             setInterval(() => {
@@ -592,6 +747,10 @@
                     const activities = data.activities || data.documents || [];
                     
                     if (activities.length > 0) {
+                        // Mark that user has uploaded documents
+                        localStorage.setItem('hasUploaded', 'true');
+                        updateOnboardingProgress();
+                        
                         activityContent.innerHTML = activities.slice(0, 5).map(activity => {
                             const date = new Date(activity.created_at || activity.upload_date);
                             const timeAgo = getTimeAgo(date);
@@ -660,6 +819,82 @@
             return 'Just now';
         }
 
+        // Update onboarding progress
+        function updateOnboardingProgress() {
+            const steps = {
+                hasUploaded: localStorage.getItem('hasUploaded') === 'true',
+                hasViewedStandards: localStorage.getItem('hasViewedStandards') === 'true',
+                hasGeneratedReport: localStorage.getItem('hasGeneratedReport') === 'true',
+                hasCompletedProfile: localStorage.getItem('hasCompletedProfile') === 'true'
+            };
+            
+            const completedSteps = Object.values(steps).filter(v => v).length;
+            const totalSteps = Object.keys(steps).length;
+            const percentage = Math.round((completedSteps / totalSteps) * 100);
+            
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const progressSteps = document.getElementById('progressSteps');
+            const progressContainer = document.getElementById('onboardingProgress');
+            
+            if (progressBar && progressText && progressSteps) {
+                progressBar.style.width = percentage + '%';
+                progressText.textContent = percentage + '% Complete';
+                progressSteps.textContent = completedSteps + ' of ' + totalSteps + ' steps completed';
+                
+                // Hide progress bar if all steps are complete
+                if (percentage === 100 && progressContainer) {
+                    setTimeout(() => {
+                        progressContainer.style.opacity = '0';
+                        setTimeout(() => {
+                            progressContainer.style.display = 'none';
+                        }, 500);
+                    }, 2000);
+                }
+            }
+            
+            // Show or hide getting started guide based on activity
+            const hasActivity = localStorage.getItem('hasUploaded') === 'true';
+            const gettingStartedGuide = document.getElementById('gettingStartedGuide');
+            if (gettingStartedGuide) {
+                gettingStartedGuide.style.display = hasActivity ? 'none' : 'block';
+            }
+        }
+
+        // Set up keyboard shortcuts
+        function setupKeyboardShortcuts() {
+            document.addEventListener('keydown', (e) => {
+                // Ignore if user is typing in an input
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+                
+                switch(e.key.toLowerCase()) {
+                    case 'u':
+                        window.location.href = '/upload';
+                        break;
+                    case 's':
+                        window.location.href = '/standards-modern.html';
+                        break;
+                    case 'r':
+                        window.location.href = '/reports-modern.html';
+                        break;
+                    case 'd':
+                        window.location.href = '/docs';
+                        break;
+                    case '?':
+                        showKeyboardShortcuts();
+                        break;
+                }
+            });
+        }
+
+        // Show keyboard shortcuts modal
+        function showKeyboardShortcuts() {
+            const modal = document.getElementById('keyboardShortcutsModal');
+            if (modal) {
+                modal.style.display = 'flex';
+            }
+        }
+
         // Initialize page when DOM is ready
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', initPage);
@@ -667,5 +902,35 @@
             initPage();
         }
     </script>
+    
+    <!-- Keyboard Shortcuts Modal -->
+    <div id="keyboardShortcutsModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;" onclick="if(event.target === this) this.style.display='none'">
+        <div style="background: white; border-radius: 12px; padding: 32px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; position: relative; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);">
+            <button onclick="document.getElementById('keyboardShortcutsModal').style.display='none'" style="position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 24px; cursor: pointer;">×</button>
+            <h2 style="margin-bottom: 24px; color: #1e40af;">⌨️ Keyboard Shortcuts</h2>
+            <div style="display: grid; gap: 12px;">
+                <div style="display: flex; justify-content: space-between; padding: 12px; background: #f8fafc; border-radius: 8px;">
+                    <span style="font-weight: 500;">Upload Document</span>
+                    <kbd style="background: #e5e7eb; padding: 4px 8px; border-radius: 4px; font-family: monospace;">U</kbd>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 12px; background: #f8fafc; border-radius: 8px;">
+                    <span style="font-weight: 500;">View Standards</span>
+                    <kbd style="background: #e5e7eb; padding: 4px 8px; border-radius: 4px; font-family: monospace;">S</kbd>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 12px; background: #f8fafc; border-radius: 8px;">
+                    <span style="font-weight: 500;">Generate Reports</span>
+                    <kbd style="background: #e5e7eb; padding: 4px 8px; border-radius: 4px; font-family: monospace;">R</kbd>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 12px; background: #f8fafc; border-radius: 8px;">
+                    <span style="font-weight: 500;">API Documentation</span>
+                    <kbd style="background: #e5e7eb; padding: 4px 8px; border-radius: 4px; font-family: monospace;">D</kbd>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 12px; background: #f8fafc; border-radius: 8px;">
+                    <span style="font-weight: 500;">Show This Help</span>
+                    <kbd style="background: #e5e7eb; padding: 4px 8px; border-radius: 4px; font-family: monospace;">?</kbd>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
