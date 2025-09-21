@@ -1992,19 +1992,15 @@ if WEB_DIR.exists():
         # Redirect to the proper dashboard route without rendering intermediary HTML
         return RedirectResponse(url="/dashboard", status_code=302)
 
-    @app.get("/ai-dashboard", response_class=FileResponse, include_in_schema=False)
+    @app.get("/ai-dashboard", response_class=HTMLResponse, include_in_schema=False)
     async def ai_dashboard():  # noqa: D401
-        """AI-powered dashboard (modern)."""
-        modern = WEB_DIR / "dashboard-modern.html"
-        fallback = WEB_DIR / "ai-dashboard.html"
-        return FileResponse(str(modern if modern.exists() else fallback))
+        """Redirect AI dashboard to main dashboard."""
+        return RedirectResponse(url="/dashboard", status_code=301)
 
-    @app.get("/ai-dashboard.html", response_class=FileResponse, include_in_schema=False)
+    @app.get("/ai-dashboard.html", response_class=HTMLResponse, include_in_schema=False)
     async def ai_dashboard_html():  # noqa: D401
-        """AI-powered dashboard (modern)."""
-        modern = WEB_DIR / "dashboard-modern.html"
-        fallback = WEB_DIR / "ai-dashboard.html"
-        return FileResponse(str(modern if modern.exists() else fallback))
+        """Redirect AI dashboard HTML to main dashboard."""
+        return RedirectResponse(url="/dashboard", status_code=301)
 
     @app.get("/upload-ai.html", response_class=FileResponse, include_in_schema=False)
     async def upload_ai_html():  # noqa: D401
