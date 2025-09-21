@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CORS Test</title>
+</head>
+<body>
+    <h1>CORS Test</h1>
+    <button onclick="testCORS()">Test CORS</button>
+    <button onclick="testLogin()">Test Login</button>
+    <pre id="result"></pre>
+    
+    <script>
+    async function testCORS() {
+        const result = document.getElementById('result');
+        try {
+            const response = await fetch('https://api.mapmystandards.ai/api/cors-test');
+            const data = await response.json();
+            result.textContent = 'CORS Test Success: ' + JSON.stringify(data, null, 2);
+        } catch (e) {
+            result.textContent = 'CORS Test Failed: ' + e.message;
+        }
+    }
+    
+    async function testLogin() {
+        const result = document.getElementById('result');
+        try {
+            const response = await fetch('https://api.mapmystandards.ai/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                    email: 'demo@example.com',
+                    password: 'demo123',
+                    remember: true
+                })
+            });
+            
+            result.textContent = 'Status: ' + response.status + '\n';
+            result.textContent += 'Headers:\n';
+            for (let [key, value] of response.headers) {
+                result.textContent += key + ': ' + value + '\n';
+            }
+            
+            if (response.ok) {
+                const data = await response.json();
+                result.textContent += '\nResponse: ' + JSON.stringify(data, null, 2);
+            } else {
+                const text = await response.text();
+                result.textContent += '\nError: ' + text;
+            }
+        } catch (e) {
+            result.textContent = 'Login Failed: ' + e.message;
+        }
+    }
+    </script>
+</body>
+</html>

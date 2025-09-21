@@ -561,9 +561,10 @@ logger.info("CORS configured allow_origins=%s", _cors_origins)
 # Add explicit CORS headers for Railway proxy issues
 @app.middleware("http")
 async def add_cors_headers(request, call_next):
+    origin = request.headers.get("origin", "")
+    
     # Handle preflight OPTIONS requests
     if request.method == "OPTIONS":
-        origin = request.headers.get("origin")
         if origin in _cors_origins:
             return Response(
                 status_code=200,
@@ -576,13 +577,21 @@ async def add_cors_headers(request, call_next):
                 }
             )
     
-    response = await call_next(request)
-    origin = request.headers.get("origin")
+    # Process the request
+    try:
+        response = await call_next(request)
+    except Exception as e:
+        # Even on errors, we need CORS headers
+        logger.error(f"Request error: {e}")
+        response = Response(content="Internal Server Error", status_code=500)
+    
+    # Add CORS headers to all responses (including errors)
     if origin in _cors_origins:
         response.headers["Access-Control-Allow-Origin"] = origin
         response.headers["Access-Control-Allow-Credentials"] = "true"
         response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
         response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    
     return response
 
 # Security
