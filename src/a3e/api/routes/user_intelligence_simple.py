@@ -44,6 +44,12 @@ logger = logging.getLogger(__name__)
 
 JWT_ALGORITHM = "HS256"
 
+# Ensure standards are loaded on startup
+try:
+    from ...startup import standards_loader
+except ImportError:
+    logger.warning("Standards loader startup module not found")
+
 # ------------------------------
 # Lightweight JSON stores (settings and reviews)
 # ------------------------------
