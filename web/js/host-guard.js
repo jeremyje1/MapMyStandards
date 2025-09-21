@@ -21,8 +21,9 @@
 
   const toPlatform = (path) => `https://${PLATFORM_HOST}${path}`;
   const CANONICAL = {
-    '/login': '/login-platform.html',
-    '/login-platform': '/login-platform.html',
+    '/login': '/login.html',
+    '/login-platform': '/login.html',
+    '/login-platform.html': '/login.html',
   };
 
   const rewriteLinks = () => {

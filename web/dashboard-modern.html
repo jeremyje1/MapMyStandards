@@ -946,14 +946,14 @@
             </section>
         </main>
 
-    <script src="/js/onboarding.js"></script>
+    <script src="/js/onboarding.js?v=20250921a"></script>
 
         <script>
             async function checkDisplayMode() {
                 try {
                     const API_BASE = (window.mmsAPI && window.mmsAPI.getBaseUrl && window.mmsAPI.getBaseUrl()) || (location.hostname.includes('api.mapmystandards.ai') ? '' : 'https://api.mapmystandards.ai');
                     const token = localStorage.getItem('a3e_api_key') || localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
-                    const res = await fetch(`${API_BASE}/api/user/intelligence-simple/standards/list`, { headers: token ? { 'Authorization': 'Bearer ' + token } : {} });
+                    const res = await fetch(`${API_BASE}/api/user/intelligence-simple/standards/list`, { credentials: 'include' });
                     const data = await res.json();
                     if (data && data.display_mode === 'redacted') {
                         document.getElementById('redacted-banner').style.display = 'block';
@@ -1047,9 +1047,7 @@
             async loadMetrics() {
                 try {
                     const response = await fetch(this.metricsEndpoint, {
-                        headers: {
-                            'Authorization': `Bearer ${this.getAuthToken()}`
-                        }
+                        credentials: 'include'
                     });
                     
                     if (!response.ok) {
@@ -1091,8 +1089,8 @@
                                         const main = document.querySelector('main');
                                         if (!main) return;
                                         const baseHost = (location.hostname.includes('platform.mapmystandards.ai') ? '' : 'https://platform.mapmystandards.ai');
-                                        const returnPath = encodeURIComponent(location.pathname.replace(/\/index\.html$/, '')) || encodeURIComponent('/dashboard-modern');
-                                        const loginUrl = `${baseHost}/login-platform.html?return=${returnPath}`;
+                                        const returnPath = encodeURIComponent(location.pathname.replace(/\/index\.html$/, '')) || encodeURIComponent('/dashboard');
+                                        const loginUrl = `${baseHost}/login?return=${returnPath}`;
                                         main.innerHTML = `
                                                 <section class="section">
                                                     <div class="card" style="text-align:center;padding:32px;">
@@ -1138,7 +1136,8 @@
                 const performance = data.performance_metrics;
                 const account = data.account_info;
                 const explain = (performance && performance.explanations) || {};
-                const accName = (account && (account.primary_accreditor || account.accreditor)) || (this.settings && (this.settings.primary_accreditor || this.settings.accreditor)) || 'Standards';
+                // Prefer onboarding settings over account defaults for accreditor naming
+                const accName = (this.settings && (this.settings.primary_accreditor || this.settings.accreditor)) || (account && (account.primary_accreditor || account.accreditor)) || 'Standards';
 
                 metricsGrid.innerHTML = `
                     <div class="metric-card success">
@@ -1261,7 +1260,8 @@
                 
 
                 // Render trend sparklines using timeseries endpoint (throttled)
-                this.ensureTimeseries(account.primary_accreditor || (this.settings && this.settings.primary_accreditor)).then(series => {
+                // Prefer onboarding settings for accreditor selection
+                this.ensureTimeseries((this.settings && this.settings.primary_accreditor) || account.primary_accreditor).then(series => {
                     try {
                         const coverageVals = (series||[]).map(s => Number(s.coverage_percentage || 0));
                         const complianceVals = (series||[]).map(s => Number(s.compliance_score || 0));
@@ -1408,7 +1408,7 @@
                     return this._tsCache.series;
                 }
                 const url = `${this.API_BASE}/api/user/intelligence-simple/metrics/timeseries/${encodeURIComponent(accreditor||'')}`;
-                const res = await fetch(url + '?days=30&limit=200', { headers: { 'Authorization': `Bearer ${this.getAuthToken()}` }});
+                const res = await fetch(url + '?days=30&limit=200', { credentials: 'include' });
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const data = await res.json();
                 const series = (data && data.series) || [];
@@ -1645,23 +1645,19 @@
                         }
                         setStoredRecentUploads(recent);
                         renderRecentUploads();
-                                const guessJwt = (t)=>{ try{ return typeof t==='string' && t.split('.').length===3 && t.length>40; }catch{return false;} };
-                                const token = localStorage.getItem('a3e_api_key') || sessionStorage.getItem('a3e_api_key') || localStorage.getItem('access_token') || localStorage.getItem('jwt_token') || '';
-                                const headers = guessJwt(token) ? { 'Authorization': `Bearer ${token}` } : {};
                                 const base = ((window.mmsAPI&&window.mmsAPI.getBaseUrl&&window.mmsAPI.getBaseUrl())||(location.hostname.includes('api.mapmystandards.ai')?'':'https://api.mapmystandards.ai'));
-                                const res = await fetch(base + '/api/user/intelligence-simple/evidence/upload', { method:'POST', body: form, headers, credentials:'include' });
+                                const res = await fetch(base + '/api/user/intelligence-simple/evidence/upload', { method:'POST', body: form, credentials:'include' });
                                 if (!res.ok) {
                                     // If the simple route isn't deployed yet, fall back to documents upload (one-by-one)
                                     if (res.status === 404 || res.status === 405) {
-                                        if (!headers['Authorization']) throw new Error('Upload route unavailable and no JWT token for fallback');
-                                        await (async function uploadViaDocumentsRoute(files, headers){
+                                        await (async function uploadViaDocumentsRoute(files){
                                             for (const f of files) {
                                                 const fd = new FormData();
                                                 fd.append('file', f);
-                                                const r = await fetch(base + '/documents/upload', { method:'POST', body: fd, headers, credentials:'include' });
+                                                const r = await fetch(base + '/documents/upload', { method:'POST', body: fd, credentials:'include' });
                                                 if (!r.ok) throw new Error('Fallback upload failed');
                                             }
-                                        })(fileList, headers);
+                                        })(fileList);
                                     } else {
                                         throw new Error('Upload failed');
                                     }

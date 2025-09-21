@@ -443,8 +443,9 @@
   "platform_pages_status": {
     "homepage": "web/homepage-enhanced.html - Marketing page (deployed to root domain)",
     "dashboard": "web/dashboard.html - Main application dashboard",
-    "login": "web/login.html - Authentication page",
-    "trial_signup": "web/trial-signup-flow.html - 3-step signup with Stripe integration",
+    "login": "web/login.html - Authentication page (production route: /login)",
+    "signup": "/subscribe - Canonical production signup (single-plan Stripe flow)",
+    "trial_signup": "DEPRECATED - legacy trial page (replaced by /subscribe)",
     "org_chart": "web/org-chart.html - Organization structure visualization",
     "scenario_modeling": "web/scenario-modeling.html - ROI calculator and scenarios",
     "powerbi_dashboard": "web/powerbi-dashboard.html - Analytics integration",
@@ -522,6 +523,16 @@
     "compliance": "SOX, GDPR, HIPAA, ISO27001, SOC2 ready",
     "integration": "Enterprise SSO, API governance, audit systems",
     "deployment": "Production-ready enterprise platform"
+  },
+
+  "canonical_urls": {
+    "platform_base": "https://platform.mapmystandards.ai",
+    "api_base": "https://api.mapmystandards.ai",
+    "login": "https://platform.mapmystandards.ai/login",
+    "signup": "https://platform.mapmystandards.ai/subscribe",
+    "post_payment_success": "https://platform.mapmystandards.ai/payment-success.html",
+    "onboarding": "https://platform.mapmystandards.ai/onboarding",
+    "dashboard": "https://platform.mapmystandards.ai/dashboard"
   },
   
   "session_recovery_context": {

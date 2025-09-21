@@ -313,45 +313,64 @@
             loginBtn.innerHTML = '<span class="spinner"></span> Signing in...';
             
             try {
-                const response = await fetch('https://api.mapmystandards.ai/auth-simple/login', {
+                // Use cookie-based auth endpoint
+                const response = await fetch('https://api.mapmystandards.ai/api/auth/login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify(loginData)
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        email: loginData.email,
+                        password: loginData.password,
+                        rememberMe: loginData.remember
+                    })
                 });
                 
-                const result = await response.json();
+                const result = await response.json().catch(() => ({}));
                 
-                if (result.success) {
-                    // Store authentication token and user data
-                    if (result.data) {
-                        // Store with both keys for compatibility
-                        localStorage.setItem('access_token', result.data.access_token || result.data.api_key);
-                        localStorage.setItem('token', result.data.access_token || result.data.api_key);
-                        localStorage.setItem('a3e_api_key', result.data.api_key || result.data.access_token);
-                        localStorage.setItem('a3e_user_email', result.data.email);
-                        localStorage.setItem('user', JSON.stringify({
-                            email: result.data.email,
-                            name: result.data.name,
-                            user_id: result.data.user_id,
-                            institution: result.data.institution || loginData.email.split('@')[1].split('.')[0]
-                        }));
-                    }
+                if (response.ok && (result.success || result.access_token || (result.data && result.data.access_token))) {
+                    // Store tokens if present (though cookies are primary auth)
+                    try {
+                        const access = (result && (result.access_token || (result.data && result.data.access_token))) || '';
+                        if (access) {
+                            const store = loginData.remember ? localStorage : sessionStorage;
+                            store.setItem('access_token', access);
+                            store.setItem('jwt_token', access);
+                            // compatibility with other pages
+                            try { localStorage.setItem('a3e_api_key', access); } catch(_) {}
+                        }
+                        // Store user data if available
+                        if (result.data && result.data.email) {
+                            localStorage.setItem('a3e_user_email', result.data.email);
+                            localStorage.setItem('user', JSON.stringify({
+                                email: result.data.email,
+                                name: result.data.name,
+                                user_id: result.data.user_id,
+                                institution: result.data.institution || loginData.email.split('@')[1].split('.')[0]
+                            }));
+                        }
+                    } catch(_) {}
                     
                     // Show success message
                     alertMessage.className = 'alert alert-success';
                     alertMessage.textContent = 'Login successful! Redirecting...';
                     alertMessage.style.display = 'block';
                     
-                    // Redirect to dashboard
+                    // Check for return URL parameter
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const returnUrl = urlParams.get('return') || '/dashboard';
+                    
+                    // Redirect to dashboard or return URL
                     setTimeout(() => {
-                        window.location.href = 'https://platform.mapmystandards.ai/ai-dashboard';
+                        window.location.href = returnUrl.startsWith('/') 
+                            ? `https://platform.mapmystandards.ai${returnUrl}`
+                            : 'https://platform.mapmystandards.ai/dashboard';
                     }, 1000);
                 } else {
                     // Show error message
                     alertMessage.className = 'alert alert-error';
-                    alertMessage.textContent = result.message || 'Login failed. Please try again.';
+                    alertMessage.textContent = (result && result.message) || (result && result.detail) || 'Login failed. Please try again.';
                     alertMessage.style.display = 'block';
                 }
             } catch (error) {

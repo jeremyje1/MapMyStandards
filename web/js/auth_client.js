@@ -5,9 +5,9 @@
   function redirectToLogin(withReturn=true){
     try{
       const ret = withReturn ? `?return=${encodeURIComponent(window.location.pathname + window.location.search)}` : '';
-      const dest = PLATFORM_BASE.replace(/\/$/, '') + '/login-platform.html' + ret;
+      const dest = PLATFORM_BASE.replace(/\/$/, '') + '/login' + ret;
       window.location.replace(dest);
-    }catch(_){ window.location.href = '/login-platform.html'; }
+    }catch(_){ window.location.href = '/login'; }
   }
   class AuthClient {
     constructor(){
