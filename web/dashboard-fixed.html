@@ -465,25 +465,10 @@
                 <p>Track your latest uploads, analyses, and compliance progress</p>
             </div>
             <div class="activity-content" id="activityContent">
-                <div class="activity-item">
-                    <span class="activity-icon">📤</span>
+                <div class="loading-message">
+                    <span class="activity-icon">⏳</span>
                     <div class="activity-details">
-                        <div class="activity-title">Document uploaded successfully</div>
-                        <div class="activity-meta">Faculty Handbook.pdf • 2 hours ago</div>
-                    </div>
-                </div>
-                <div class="activity-item">
-                    <span class="activity-icon">🔍</span>
-                    <div class="activity-details">
-                        <div class="activity-title">Standards analysis completed</div>
-                        <div class="activity-meta">15 standards mapped • 4 hours ago</div>
-                    </div>
-                </div>
-                <div class="activity-item">
-                    <span class="activity-icon">📊</span>
-                    <div class="activity-details">
-                        <div class="activity-title">Compliance report generated</div>
-                        <div class="activity-meta">Comprehensive report • Yesterday</div>
+                        <div class="activity-title">Loading recent activity...</div>
                     </div>
                 </div>
             </div>
@@ -509,6 +494,13 @@
 
             // Load dynamic content
             loadDashboardMetrics();
+            loadRecentActivity();
+            
+            // Auto-refresh every 30 seconds
+            setInterval(() => {
+                loadDashboardMetrics();
+                loadRecentActivity();
+            }, 30000);
         }
 
         // Logout function
@@ -577,6 +569,95 @@
             updateMetric('standardsMapped', '158/180');
             updateMetric('reportsGenerated', 8);
             updateMetric('trialDaysRemaining', 14);
+        }
+        
+        // Load recent activity
+        async function loadRecentActivity() {
+            const activityContent = document.getElementById('activityContent');
+            if (!activityContent) return;
+            
+            try {
+                const token = localStorage.getItem('authToken') || 
+                            localStorage.getItem('a3e_api_key') || 
+                            localStorage.getItem('access_token') || 
+                            localStorage.getItem('jwt_token') || 
+                            'demo-token';
+                
+                const response = await fetch('/api/user/intelligence-simple/documents/recent', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const activities = data.activities || data.documents || [];
+                    
+                    if (activities.length > 0) {
+                        activityContent.innerHTML = activities.slice(0, 5).map(activity => {
+                            const date = new Date(activity.created_at || activity.upload_date);
+                            const timeAgo = getTimeAgo(date);
+                            const icon = activity.status === 'completed' ? '✅' : 
+                                        activity.status === 'processing' ? '⏳' : '📄';
+                            const title = activity.status === 'completed' ? 'Standards analysis completed' :
+                                         activity.status === 'processing' ? 'Document processing' : 
+                                         'Document uploaded successfully';
+                            
+                            return `
+                                <div class="activity-item">
+                                    <span class="activity-icon">${icon}</span>
+                                    <div class="activity-details">
+                                        <div class="activity-title">${title}</div>
+                                        <div class="activity-meta">${activity.filename || activity.name || 'Document'} • ${timeAgo}</div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('');
+                    } else {
+                        activityContent.innerHTML = `
+                            <div class="activity-item">
+                                <span class="activity-icon">📁</span>
+                                <div class="activity-details">
+                                    <div class="activity-title">No recent activity</div>
+                                    <div class="activity-meta">Upload documents to see activity here</div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                } else {
+                    throw new Error('Failed to load activity');
+                }
+            } catch (error) {
+                console.error('Error loading activity:', error);
+                activityContent.innerHTML = `
+                    <div class="activity-item">
+                        <span class="activity-icon">📁</span>
+                        <div class="activity-details">
+                            <div class="activity-title">No recent activity</div>
+                            <div class="activity-meta">Upload documents to see activity here</div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        
+        // Helper function to get time ago
+        function getTimeAgo(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+            const intervals = {
+                year: 31536000,
+                month: 2592000,
+                week: 604800,
+                day: 86400,
+                hour: 3600,
+                minute: 60
+            };
+            
+            for (const [unit, secondsInUnit] of Object.entries(intervals)) {
+                const interval = Math.floor(seconds / secondsInUnit);
+                if (interval >= 1) {
+                    return interval === 1 ? `1 ${unit} ago` : `${interval} ${unit}s ago`;
+                }
+            }
+            return 'Just now';
         }
 
         // Initialize page when DOM is ready
