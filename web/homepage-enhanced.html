@@ -1588,6 +1588,502 @@
                 page-break-after: avoid;
             }
         }
+        
+        /* Interactive Sandbox Styles */
+        .sandbox-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .sandbox-notice {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            padding: 1rem 1.5rem;
+            border-radius: var(--radius-lg);
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            color: var(--primary);
+        }
+        
+        .sandbox-notice i {
+            font-size: 1.25rem;
+        }
+        
+        .sandbox-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .sandbox-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            padding: 2rem;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition-smooth);
+        }
+        
+        .sandbox-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .sandbox-card h3 {
+            color: var(--text-primary);
+            margin-bottom: 0.75rem;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .sandbox-card h3 i {
+            color: var(--primary);
+        }
+        
+        .sandbox-card p {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            font-size: 0.875rem;
+        }
+        
+        .sandbox-select, .sandbox-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            background: var(--bg-base);
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            transition: var(--transition-smooth);
+        }
+        
+        .sandbox-select:focus, .sandbox-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+        
+        .sandbox-results {
+            margin-top: 1.5rem;
+            min-height: 150px;
+            padding: 1rem;
+            background: var(--bg-accent);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-light);
+        }
+        
+        .trust-inputs {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .trust-inputs label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .trust-inputs select, .trust-inputs input[type="range"] {
+            width: 60%;
+            font-size: 0.8125rem;
+        }
+        
+        .sandbox-cta {
+            text-align: center;
+            padding: 3rem 2rem;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(168, 85, 247, 0.05));
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-light);
+        }
+        
+        .sandbox-cta p {
+            font-size: 1.25rem;
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .sandbox-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        @media (max-width: 768px) {
+            .sandbox-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            .sandbox-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .sandbox-buttons .btn {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+        
+        /* Documentation Section Styles */
+        .docs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .doc-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            padding: 2rem;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition-smooth);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .doc-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--gradient-primary);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.3s ease;
+        }
+        
+        .doc-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary);
+        }
+        
+        .doc-card:hover::before {
+            transform: scaleX(1);
+        }
+        
+        .doc-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .doc-icon i {
+            font-size: 1.75rem;
+            color: var(--primary);
+        }
+        
+        .doc-card h3 {
+            color: var(--text-primary);
+            font-size: 1.25rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .doc-card > p {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+        
+        .doc-details {
+            background: var(--bg-accent);
+            padding: 1.25rem;
+            border-radius: var(--radius-md);
+            margin-bottom: 1.5rem;
+        }
+        
+        .doc-details h4 {
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+        
+        .doc-details ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .doc-details li {
+            color: var(--text-secondary);
+            font-size: 0.8125rem;
+            padding-left: 1.25rem;
+            position: relative;
+            margin-bottom: 0.5rem;
+            line-height: 1.5;
+        }
+        
+        .doc-details li::before {
+            content: '•';
+            color: var(--primary);
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+        
+        .doc-link {
+            color: var(--primary);
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: var(--transition-smooth);
+        }
+        
+        .doc-link:hover {
+            gap: 0.75rem;
+            color: var(--primary-dark);
+        }
+        
+        .docs-cta {
+            text-align: center;
+            padding: 2rem;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(168, 85, 247, 0.05));
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-light);
+        }
+        
+        .docs-cta p {
+            font-size: 1.125rem;
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+        }
+        
+        @media (max-width: 768px) {
+            .docs-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+        }
+        
+        /* Pricing Details Styles */
+        .pricing-details {
+            margin-top: 3rem;
+            padding-top: 3rem;
+            border-top: 1px solid var(--border-light);
+        }
+        
+        .pricing-details h3 {
+            text-align: center;
+            color: var(--text-primary);
+            font-size: 1.75rem;
+            margin-bottom: 2rem;
+        }
+        
+        .pricing-faq-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+        
+        .pricing-faq-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            padding: 1.75rem;
+            border-radius: var(--radius-lg);
+            transition: var(--transition-smooth);
+        }
+        
+        .pricing-faq-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .pricing-faq-card h4 {
+            color: var(--text-primary);
+            font-size: 1.125rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .pricing-faq-card h4 i {
+            color: var(--primary);
+            font-size: 1.25rem;
+        }
+        
+        .pricing-faq-card p {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            line-height: 1.6;
+            margin: 0;
+        }
+        
+        .enterprise-cta {
+            text-align: center;
+            padding: 2.5rem;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(168, 85, 247, 0.05));
+            border: 1px solid var(--primary-light);
+            border-radius: var(--radius-lg);
+        }
+        
+        .enterprise-cta h4 {
+            color: var(--text-primary);
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .enterprise-cta p {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+        
+        @media (max-width: 768px) {
+            .pricing-faq-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* Integrations Section Styles */
+        .integrations-grid {
+            display: grid;
+            gap: 3rem;
+            margin-bottom: 3rem;
+        }
+        
+        .integration-category {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            padding: 2rem;
+            border-radius: var(--radius-lg);
+        }
+        
+        .integration-category h3 {
+            color: var(--text-primary);
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .integration-category h3 i {
+            color: var(--primary);
+        }
+        
+        .integration-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .integration-card {
+            background: var(--bg-base);
+            border: 1px solid var(--border-light);
+            padding: 1.5rem;
+            border-radius: var(--radius-md);
+            transition: var(--transition-smooth);
+            position: relative;
+        }
+        
+        .integration-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--primary);
+        }
+        
+        .integration-card img {
+            margin-bottom: 1rem;
+            object-fit: contain;
+            max-width: 150px;
+        }
+        
+        .integration-card h4 {
+            color: var(--text-primary);
+            font-size: 1.125rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .integration-card h4 i {
+            color: var(--primary);
+            font-size: 1rem;
+        }
+        
+        .integration-card p {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+        
+        .integration-status {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 0.75rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            background: var(--success-light);
+            color: var(--success);
+        }
+        
+        .integration-status:contains("Coming") {
+            background: var(--warning-light);
+            color: var(--warning);
+        }
+        
+        .integration-cta {
+            text-align: center;
+            padding: 2.5rem;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(168, 85, 247, 0.05));
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-light);
+        }
+        
+        .integration-cta h3 {
+            color: var(--text-primary);
+            font-size: 1.75rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .integration-cta p {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+        
+        @media (max-width: 768px) {
+            .integration-items {
+                grid-template-columns: 1fr;
+            }
+            
+            .integration-card .integration-status {
+                position: static;
+                display: inline-block;
+                margin-top: 0.5rem;
+            }
+        }
     </style>
     <script src="js/host-guard.js"></script>
         <script>
@@ -1607,10 +2103,10 @@
                     var t = getToken();
                     var navLogin = document.getElementById('navLoginLink');
                     if (t && navLogin) navLogin.textContent = 'Open Dashboard';
-                    // Primary hero CTA: if logged in, point to dashboard-modern
-                    var ctas = document.querySelectorAll('a.btn.btn-primary[href*="/subscribe"]');
+                    // Primary hero CTA: if logged in, point to /dashboard
+                    var ctas = document.querySelectorAll('a.btn.btn-primary[href*="/trial"]');
                     if (t && ctas && ctas.length){
-                        ctas[0].setAttribute('href', toPlatform('/dashboard-modern'));
+                        ctas[0].setAttribute('href', toPlatform('/dashboard'));
                         ctas[0].firstChild && (ctas[0].firstChild.textContent = 'Open Your Dashboard ');
                     }
                 });
@@ -1628,9 +2124,12 @@
         <div class="container">
             <div class="nav-links" style="margin-left: 0;">
                 <a href="#platform-features">Features</a>
+                <a href="#sandbox">Try Demo</a>
+                <a href="#integrations">Integrations</a>
+                <a href="#documentation">Documentation</a>
                 <a href="#pricing">Pricing</a>
-                <a id="navLoginLink" href="https://platform.mapmystandards.ai/login-platform.html?return=%2Fdashboard-modern">Login</a>
-                <a href="https://platform.mapmystandards.ai/subscribe" class="btn btn-primary" style="color: white;">Get Started</a>
+                <a id="navLoginLink" href="https://platform.mapmystandards.ai/login">Login</a>
+                <a href="https://platform.mapmystandards.ai/trial" class="btn btn-primary" style="color: white;">Get Started</a>
             </div>
             <button class="mobile-menu-btn" aria-label="Menu" onclick="toggleMenu()">
                 <span></span>
@@ -1670,7 +2169,7 @@
                         </div>
                         
                         <div style="margin-top: 2rem;">
-                            <a href="https://platform.mapmystandards.ai/subscribe" class="btn btn-primary" style="font-size: 1.125rem; padding: 1rem 2rem;">
+                            <a href="https://platform.mapmystandards.ai/trial" class="btn btn-primary" style="font-size: 1.125rem; padding: 1rem 2rem;">
                                 Start 7-Day Free Trial <i class="fas fa-arrow-right"></i>
                             </a>
                             <p style="font-size: 0.875rem; color: var(--text-tertiary); margin-top: 0.75rem;">
@@ -2088,6 +2587,91 @@
             </div>
         </section>
 
+        <!-- Interactive Sandbox Section -->
+        <section id="sandbox" class="section" style="background: var(--bg-accent);">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Try MapMyStandards Without Registration</h2>
+                    <p>Experience our AI systems with sample data - no credit card required</p>
+                </div>
+                
+                <div class="sandbox-container">
+                    <div class="sandbox-notice">
+                        <i class="fas fa-info-circle"></i>
+                        <span>This is a live demo with synthetic data. Full features available after registration.</span>
+                    </div>
+                    
+                    <div class="sandbox-grid">
+                        <!-- Evidence Upload Simulator -->
+                        <div class="sandbox-card">
+                            <h3><i class="fas fa-upload"></i> Test Evidence Mapping</h3>
+                            <p>Select a sample document to see how EvidenceMapper™ works</p>
+                            <select class="sandbox-select" id="sampleDoc" onchange="simulateMapping()">
+                                <option value="">Choose a sample document...</option>
+                                <option value="faculty">Faculty_Handbook_2024.pdf</option>
+                                <option value="assessment">Assessment_Report_Fall2024.xlsx</option>
+                                <option value="strategic">Strategic_Plan_2020-2025.docx</option>
+                                <option value="syllabus">Course_Syllabus_BIO101.pdf</option>
+                            </select>
+                            <div id="mappingResults" class="sandbox-results"></div>
+                        </div>
+                        
+                        <!-- Standards Explorer -->
+                        <div class="sandbox-card">
+                            <h3><i class="fas fa-search"></i> Explore Standards</h3>
+                            <p>Browse our StandardsGraph™ knowledge base</p>
+                            <input type="text" class="sandbox-input" placeholder="Search standards (e.g., 'faculty qualifications')" onkeyup="searchStandards(event)">
+                            <div id="standardsResults" class="sandbox-results"></div>
+                        </div>
+                        
+                        <!-- Trust Score Calculator -->
+                        <div class="sandbox-card">
+                            <h3><i class="fas fa-calculator"></i> Calculate Trust Score</h3>
+                            <p>See how EvidenceTrust Score™ evaluates evidence</p>
+                            <div class="trust-inputs">
+                                <label>
+                                    Document Age:
+                                    <select id="docAge" onchange="calculateTrust()">
+                                        <option value="30">Less than 30 days</option>
+                                        <option value="90">30-90 days</option>
+                                        <option value="180">90-180 days</option>
+                                        <option value="365">Over 180 days</option>
+                                    </select>
+                                </label>
+                                <label>
+                                    Source Type:
+                                    <select id="sourceType" onchange="calculateTrust()">
+                                        <option value="official">Official Institution Document</option>
+                                        <option value="system">System Generated Report</option>
+                                        <option value="manual">Manually Created</option>
+                                        <option value="external">External Source</option>
+                                    </select>
+                                </label>
+                                <label>
+                                    Completeness:
+                                    <input type="range" id="completeness" min="0" max="100" value="80" onchange="calculateTrust()">
+                                    <span id="completenessVal">80%</span>
+                                </label>
+                            </div>
+                            <div id="trustResults" class="sandbox-results"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="sandbox-cta">
+                        <p>Ready to use MapMyStandards with your real data?</p>
+                        <div class="sandbox-buttons">
+                            <a href="https://platform.mapmystandards.ai/trial" class="btn btn-primary">
+                                Start Full 7-Day Trial <i class="fas fa-arrow-right"></i>
+                            </a>
+                            <a href="https://calendly.com/jeremyestrella/30min" class="btn btn-outline">
+                                Book a Personalized Demo
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- Value Differentiators -->
         <section class="section">
             <div class="container">
@@ -2154,6 +2738,133 @@
             </div>
         </section>
 
+        <!-- Integrations Section -->
+        <section id="integrations" class="section">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Seamless Integrations</h2>
+                    <p>Connect MapMyStandards with your existing institutional systems</p>
+                </div>
+                
+                <div class="integrations-grid">
+                    <!-- Document Management Integrations -->
+                    <div class="integration-category">
+                        <h3><i class="fas fa-folder-open"></i> Document Management</h3>
+                        <div class="integration-items">
+                            <div class="integration-card">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Google_Drive_logo.svg/512px-Google_Drive_logo.svg.png" alt="Google Drive" style="height: 40px;">
+                                <h4>Google Drive</h4>
+                                <p>Import evidence directly from Google Drive. Automatic syncing keeps documents up-to-date.</p>
+                                <span class="integration-status">Available Now</span>
+                            </div>
+                            
+                            <div class="integration-card">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Microsoft_365_%282022%29.svg/512px-Microsoft_365_%282022%29.svg.png" alt="SharePoint" style="height: 40px;">
+                                <h4>SharePoint & OneDrive</h4>
+                                <p>Seamless integration with Microsoft 365. Access SharePoint libraries and OneDrive files.</p>
+                                <span class="integration-status">Available Now</span>
+                            </div>
+                            
+                            <div class="integration-card">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Dropbox_logo_%282013%29.svg/512px-Dropbox_logo_%282013%29.svg.png" alt="Dropbox" style="height: 40px;">
+                                <h4>Dropbox</h4>
+                                <p>Connect your Dropbox for Business account to import institutional documents.</p>
+                                <span class="integration-status">Coming Q1 2025</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Learning Management Systems -->
+                    <div class="integration-category">
+                        <h3><i class="fas fa-graduation-cap"></i> Learning Management Systems</h3>
+                        <div class="integration-items">
+                            <div class="integration-card">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Canvas-logo.svg/512px-Canvas-logo.svg.png" alt="Canvas" style="height: 40px;">
+                                <h4>Canvas LMS</h4>
+                                <p>Pull course data, rubrics, and assessment results directly from Canvas.</p>
+                                <span class="integration-status">Available Now</span>
+                            </div>
+                            
+                            <div class="integration-card">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Blackboard_Learn_logo.svg/512px-Blackboard_Learn_logo.svg.png" alt="Blackboard" style="height: 40px;">
+                                <h4>Blackboard Learn</h4>
+                                <p>Import course outcomes and student achievement data from Blackboard.</p>
+                                <span class="integration-status">Coming Q2 2025</span>
+                            </div>
+                            
+                            <div class="integration-card">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Moodle-logo.svg/512px-Moodle-logo.svg.png" alt="Moodle" style="height: 40px;">
+                                <h4>Moodle</h4>
+                                <p>Connect with your Moodle instance to access course and assessment data.</p>
+                                <span class="integration-status">Coming Q2 2025</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Student Information Systems -->
+                    <div class="integration-category">
+                        <h3><i class="fas fa-database"></i> Student Information Systems</h3>
+                        <div class="integration-items">
+                            <div class="integration-card">
+                                <img src="https://www.ellucian.com/sites/default/files/uploads/images/Ellucian-Logo-RGB.png" alt="Banner" style="height: 40px;">
+                                <h4>Banner by Ellucian</h4>
+                                <p>Import enrollment data, program information, and student outcomes from Banner.</p>
+                                <span class="integration-status">Available Now</span>
+                            </div>
+                            
+                            <div class="integration-card">
+                                <img src="https://www.ellucian.com/sites/default/files/uploads/images/Ellucian-Logo-RGB.png" alt="Colleague" style="height: 40px;">
+                                <h4>Colleague</h4>
+                                <p>Seamless data flow from Colleague for comprehensive institutional reporting.</p>
+                                <span class="integration-status">Available Now</span>
+                            </div>
+                            
+                            <div class="integration-card">
+                                <img src="https://www.workday.com/content/dam/web/global/images/logos/workday-logo.svg" alt="Workday" style="height: 40px;">
+                                <h4>Workday Student</h4>
+                                <p>Connect with Workday Student for real-time student and program data.</p>
+                                <span class="integration-status">Coming Q3 2025</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Data & Analytics -->
+                    <div class="integration-category">
+                        <h3><i class="fas fa-chart-bar"></i> Analytics & Reporting</h3>
+                        <div class="integration-items">
+                            <div class="integration-card">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/New_Power_BI_Logo.svg/512px-New_Power_BI_Logo.svg.png" alt="Power BI" style="height: 40px;">
+                                <h4>Power BI</h4>
+                                <p>Export data to Power BI for custom dashboards and institutional analytics.</p>
+                                <span class="integration-status">Available Now</span>
+                            </div>
+                            
+                            <div class="integration-card">
+                                <img src="https://upload.wikimedia.org/wikipedia/en/thumb/0/06/Tableau_logo.svg/512px-Tableau_logo.svg.png" alt="Tableau" style="height: 40px;">
+                                <h4>Tableau</h4>
+                                <p>Direct connector for Tableau to visualize compliance data and trends.</p>
+                                <span class="integration-status">Coming Q1 2025</span>
+                            </div>
+                            
+                            <div class="integration-card">
+                                <h4><i class="fas fa-code"></i> REST API</h4>
+                                <p>Full REST API for custom integrations with any system.</p>
+                                <span class="integration-status">Available Now</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="integration-cta">
+                    <h3>Need a specific integration?</h3>
+                    <p>We're constantly adding new integrations based on customer needs</p>
+                    <a href="https://calendly.com/jeremyestrella/30min" class="btn btn-primary">
+                        Request an Integration <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </section>
+
         <!-- Platform Features -->
         <section id="platform-features" class="section" style="background: var(--gradient-subtle);">
             <div class="container">
@@ -2170,7 +2881,7 @@
                         </div>
                         <h3>Intelligent Dashboard</h3>
                         <p>Real-time compliance metrics, predictive analytics, and actionable insights</p>
-                        <a href="https://platform.mapmystandards.ai/login-platform.html?return=%2Fdashboard-modern" class="platform-link">
+                        <a href="https://platform.mapmystandards.ai/login" class="platform-link">
                             Access Dashboard <i class="fas fa-arrow-right"></i>
                         </a>
                     </div>
@@ -2182,7 +2893,7 @@
                         </div>
                         <h3>Dynamic Org Chart</h3>
                         <p>Visual hierarchy with role-based compliance tracking and assignments</p>
-                        <a href="https://platform.mapmystandards.ai/login-platform.html?return=%2Forg-chart" class="platform-link">
+                        <a href="https://platform.mapmystandards.ai/login" class="platform-link">
                             View Org Chart <i class="fas fa-arrow-right"></i>
                         </a>
                     </div>
@@ -2194,7 +2905,7 @@
                         </div>
                         <h3>Scenario Modeling</h3>
                         <p>ROI calculator and predictive compliance scenario planning</p>
-                        <a href="https://platform.mapmystandards.ai/login-platform.html?return=%2Fscenario-modeling.html" class="platform-link">
+                        <a href="https://platform.mapmystandards.ai/login" class="platform-link">
                             Model Scenarios <i class="fas fa-arrow-right"></i>
                         </a>
                     </div>
@@ -2206,7 +2917,7 @@
                         </div>
                         <h3>Power BI Reports</h3>
                         <p>Enterprise-grade analytics and custom compliance reporting</p>
-                        <a href="https://platform.mapmystandards.ai/login-platform.html?return=%2Fpowerbi-dashboard.html" class="platform-link">
+                        <a href="https://platform.mapmystandards.ai/login" class="platform-link">
                             View Reports <i class="fas fa-arrow-right"></i>
                         </a>
                     </div>
@@ -2218,7 +2929,7 @@
                         </div>
                         <h3>Advanced Analytics</h3>
                         <p>Deep insights, trends, and predictive compliance intelligence</p>
-                        <a href="https://platform.mapmystandards.ai/login-platform.html?return=%2Fdashboard-modern" class="platform-link">
+                        <a href="https://platform.mapmystandards.ai/login" class="platform-link">
                             Explore AI Dashboard <i class="fas fa-arrow-right"></i>
                         </a>
                     </div>
@@ -2230,7 +2941,7 @@
                         </div>
                         <h3>Team Settings</h3>
                         <p>User management, permissions, and collaboration tools</p>
-                        <a href="https://platform.mapmystandards.ai/login-platform.html?return=%2Fteam-settings.html" class="platform-link">
+                        <a href="https://platform.mapmystandards.ai/login" class="platform-link">
                             Manage Team <i class="fas fa-arrow-right"></i>
                         </a>
                     </div>
@@ -2242,7 +2953,7 @@
                         </div>
                         <h3>Reports & Export</h3>
                         <p>Export HTML and CSV evidence reports directly from your dashboard</p>
-                        <a href="https://platform.mapmystandards.ai/login-platform.html?return=%2Freports-modern" class="platform-link">
+                        <a href="https://platform.mapmystandards.ai/login" class="platform-link">
                             Reports & Exports <i class="fas fa-arrow-right"></i>
                         </a>
                     </div>
@@ -2254,14 +2965,14 @@
                         </div>
                         <h3>Standards Explorer</h3>
                         <p>Search standards and page through results with context and categories</p>
-                        <a href="https://platform.mapmystandards.ai/login-platform.html?return=%2Fstandards-modern" class="platform-link">
+                        <a href="https://platform.mapmystandards.ai/login" class="platform-link">
                             Browse Standards <i class="fas fa-arrow-right"></i>
                         </a>
                     </div>
                 </div>
                 
                 <div style="text-align: center; margin-top: 3rem;">
-                    <a href="https://platform.mapmystandards.ai/subscribe" class="btn btn-primary" style="font-size: 1.125rem; padding: 1rem 2.5rem;">
+                    <a href="https://platform.mapmystandards.ai/trial" class="btn btn-primary" style="font-size: 1.125rem; padding: 1rem 2.5rem;">
                         Get Everything for $199/month <i class="fas fa-arrow-right"></i>
                     </a>
                     <p style="color: var(--text-secondary); margin-top: 1rem;">Start with a 7-day free trial - card required, not charged until trial ends</p>
@@ -2324,6 +3035,161 @@
             </div>
         </section>
 
+        <!-- Technical Documentation Section -->
+        <section id="documentation" class="section" style="background: var(--bg-accent);">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Technical Documentation & Whitepapers</h2>
+                    <p>Deep dive into our proprietary algorithms and methodologies</p>
+                </div>
+                
+                <div class="docs-grid">
+                    <!-- StandardsGraph Documentation -->
+                    <div class="doc-card">
+                        <div class="doc-icon">
+                            <i class="fas fa-network-wired"></i>
+                        </div>
+                        <h3>StandardsGraph™ Architecture</h3>
+                        <p>Learn how our knowledge graph maps accreditor relationships with multi-granular indexing and semantic embeddings.</p>
+                        <div class="doc-details">
+                            <h4>Technical Highlights:</h4>
+                            <ul>
+                                <li>Graph database architecture with Neo4j</li>
+                                <li>Hierarchical standard decomposition (Accreditor → Standard → Clause → Indicator)</li>
+                                <li>Semantic embeddings using BERT-based models</li>
+                                <li>Sub-100ms retrieval through optimized indexing</li>
+                                <li>Version control and change tracking</li>
+                            </ul>
+                        </div>
+                        <a href="#" class="doc-link" onclick="alert('Full documentation available after registration'); return false;">
+                            Read Technical Paper <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                    
+                    <!-- EvidenceMapper Documentation -->
+                    <div class="doc-card">
+                        <div class="doc-icon">
+                            <i class="fas fa-crosshairs"></i>
+                        </div>
+                        <h3>EvidenceMapper™ Algorithm</h3>
+                        <p>Understand our dual-encoder retrieval system with cross-encoder reranking for precise evidence-to-standard mapping.</p>
+                        <div class="doc-details">
+                            <h4>Technical Highlights:</h4>
+                            <ul>
+                                <li>Dual-encoder architecture for candidate retrieval</li>
+                                <li>Cross-encoder reranking for precision</li>
+                                <li>Calibrated confidence scoring (87% top-1 accuracy)</li>
+                                <li>Rationale span extraction with attention mechanisms</li>
+                                <li>Multi-modal support (text, tables, images)</li>
+                            </ul>
+                        </div>
+                        <a href="#" class="doc-link" onclick="alert('Full documentation available after registration'); return false;">
+                            Read Technical Paper <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                    
+                    <!-- EvidenceTrust Documentation -->
+                    <div class="doc-card">
+                        <div class="doc-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h3>EvidenceTrust Score™ Methodology</h3>
+                        <p>Explore our multi-factor quality scoring system that predicts audit acceptance probability.</p>
+                        <div class="doc-details">
+                            <h4>Scoring Factors:</h4>
+                            <ul>
+                                <li>Provenance tracking (source credibility)</li>
+                                <li>Temporal freshness algorithms</li>
+                                <li>Completeness validation</li>
+                                <li>Relevance scoring</li>
+                                <li>Cross-reference alignment</li>
+                                <li>Historical acceptance patterns</li>
+                            </ul>
+                        </div>
+                        <a href="#" class="doc-link" onclick="alert('Full documentation available after registration'); return false;">
+                            Read Methodology Guide <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                    
+                    <!-- GapRisk Documentation -->
+                    <div class="doc-card">
+                        <div class="doc-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h3>GapRisk Predictor™ Model</h3>
+                        <p>Discover our 8-factor predictive model for forecasting non-compliance probability.</p>
+                        <div class="doc-details">
+                            <h4>Risk Factors:</h4>
+                            <ul>
+                                <li>Evidence coverage gaps</li>
+                                <li>Trust score distribution</li>
+                                <li>Temporal staleness patterns</li>
+                                <li>Task completion rates</li>
+                                <li>Dependency chain analysis</li>
+                                <li>Historical compliance trends</li>
+                                <li>Peer institution benchmarks</li>
+                                <li>Reviewer feedback patterns</li>
+                            </ul>
+                        </div>
+                        <a href="#" class="doc-link" onclick="alert('Full documentation available after registration'); return false;">
+                            Read Risk Model Paper <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                    
+                    <!-- CrosswalkX Documentation -->
+                    <div class="doc-card">
+                        <div class="doc-icon">
+                            <i class="fas fa-exchange-alt"></i>
+                        </div>
+                        <h3>CrosswalkX™ Translation Engine</h3>
+                        <p>Learn about semantic entailment and equivalence detection across accreditor frameworks.</p>
+                        <div class="doc-details">
+                            <h4>Technical Features:</h4>
+                            <ul>
+                                <li>Semantic similarity computation</li>
+                                <li>Entailment relationship detection</li>
+                                <li>Multi-accreditor ontology alignment</li>
+                                <li>73% average evidence reuse rate</li>
+                                <li>Confidence-weighted mapping</li>
+                            </ul>
+                        </div>
+                        <a href="#" class="doc-link" onclick="alert('Full documentation available after registration'); return false;">
+                            Read Translation Guide <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                    
+                    <!-- CiteGuard Documentation -->
+                    <div class="doc-card">
+                        <div class="doc-icon">
+                            <i class="fas fa-file-signature"></i>
+                        </div>
+                        <h3>CiteGuard™ Citation System</h3>
+                        <p>Understand our zero-hallucination narrative generation with mandatory evidence citations.</p>
+                        <div class="doc-details">
+                            <h4>System Components:</h4>
+                            <ul>
+                                <li>Retrieval-augmented generation (RAG)</li>
+                                <li>Contradiction detection algorithms</li>
+                                <li>Page-level citation tracking</li>
+                                <li>Claim verification pipeline</li>
+                                <li>Human-in-the-loop editing</li>
+                            </ul>
+                        </div>
+                        <a href="#" class="doc-link" onclick="alert('Full documentation available after registration'); return false;">
+                            Read Citation Paper <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="docs-cta">
+                    <p>Ready to implement MapMyStandards at your institution?</p>
+                    <a href="https://calendly.com/jeremyestrella/30min" class="btn btn-primary">
+                        Schedule Technical Discussion <i class="fas fa-calendar"></i>
+                    </a>
+                </div>
+            </div>
+        </section>
+
         <!-- Pricing with ROI -->
         <section id="pricing" class="section" style="background: var(--gradient-subtle);">
             <div class="container">
@@ -2368,12 +3234,57 @@
                         </div>
                     </div>
                     
-                    <a href="https://platform.mapmystandards.ai/subscribe" class="btn btn-primary" style="width: 100%; margin-top: 2rem; font-size: 1.125rem; padding: 1rem;">
+                    <a href="https://api.mapmystandards.ai/trial-signup?utm_source=homepage&utm_medium=cta&utm_campaign=hero" class="btn btn-primary" style="width: 100%; margin-top: 2rem; font-size: 1.125rem; padding: 1rem;">
                         Start 7-Day Free Trial <i class="fas fa-arrow-right"></i>
                     </a>
                     <p style="font-size: 0.875rem; color: var(--text-tertiary); margin-top: 1rem; text-align: center;">
                         Credit card required • Not charged during trial • Cancel anytime
                     </p>
+                </div>
+                
+                <!-- Pricing Details and Clarifications -->
+                <div class="pricing-details">
+                    <h3>Pricing Details & Options</h3>
+                    
+                    <div class="pricing-faq-grid">
+                        <div class="pricing-faq-card">
+                            <h4><i class="fas fa-building"></i> What counts as an institution?</h4>
+                            <p>One subscription covers your entire institution, including all campuses and programs under a single accreditation scope. Multi-system institutions may require additional licenses.</p>
+                        </div>
+                        
+                        <div class="pricing-faq-card">
+                            <h4><i class="fas fa-users"></i> How many users are included?</h4>
+                            <p>Unlimited users within your institution. Add faculty, staff, administrators, and accreditation team members at no extra cost.</p>
+                        </div>
+                        
+                        <div class="pricing-faq-card">
+                            <h4><i class="fas fa-percentage"></i> Are there annual discounts?</h4>
+                            <p>Yes! Save 20% with annual billing ($1,910/year). Contact us for multi-year agreements with even greater savings.</p>
+                        </div>
+                        
+                        <div class="pricing-faq-card">
+                            <h4><i class="fas fa-graduation-cap"></i> Multi-program pricing?</h4>
+                            <p>Institutions with 10+ distinct accredited programs qualify for volume discounts. Schedule a call to discuss your specific needs.</p>
+                        </div>
+                        
+                        <div class="pricing-faq-card">
+                            <h4><i class="fas fa-file-contract"></i> Contract options?</h4>
+                            <p>Month-to-month, annual, or multi-year contracts available. We work with your procurement process and can provide sole-source justification.</p>
+                        </div>
+                        
+                        <div class="pricing-faq-card">
+                            <h4><i class="fas fa-shield-alt"></i> What's included?</h4>
+                            <p>Everything! All 6 AI systems, unlimited evidence uploads, all accreditors, priority support, and regular platform updates.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="enterprise-cta">
+                        <h4>Need a custom enterprise agreement?</h4>
+                        <p>For consortiums, state systems, or institutions with special requirements</p>
+                        <a href="https://calendly.com/jeremyestrella/30min" class="btn btn-outline">
+                            Schedule Enterprise Discussion <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
                 </div>
             </div>
         </section>
@@ -2385,7 +3296,7 @@
                 <p>Join institutions saving 32 hours weekly with compliance intelligence</p>
                 
                 <div class="cta-buttons">
-                    <a href="https://platform.mapmystandards.ai/subscribe" class="btn btn-white">
+                    <a href="https://api.mapmystandards.ai/trial-signup?utm_source=homepage&utm_medium=cta&utm_campaign=final-cta" class="btn btn-white">
                         Start 7-Day Trial <i class="fas fa-arrow-right"></i>
                     </a>
                     <a href="https://calendly.com/jeremyestrella/30min" class="btn btn-outline">
@@ -2437,7 +3348,8 @@
                     <h4>Platform</h4>
                     <ul>
                         <li><a href="#algorithms">Intelligence Algorithms</a></li>
-                        <li><a href="#demo">Live Demo</a></li>
+                        <li><a href="#sandbox">Try Demo</a></li>
+                        <li><a href="#integrations">Integrations</a></li>
                         <li><a href="#platform-features">Features</a></li>
                         <li><a href="#pricing">Pricing</a></li>
                     </ul>
@@ -2447,6 +3359,8 @@
                 <div class="footer-section">
                     <h4>Resources</h4>
                     <ul>
+                        <li><a href="#documentation">Technical Documentation</a></li>
+                        <li><a href="#sandbox">Interactive Demo</a></li>
                         <li><a href="https://calendly.com/jeremyestrella/30min">Book a Demo</a></li>
                     </ul>
                 </div>
@@ -2712,6 +3626,163 @@
                     });
                 }
             });
+        });
+        
+        // Sandbox demo functions
+        function simulateMapping() {
+            const select = document.getElementById('sampleDoc');
+            const results = document.getElementById('mappingResults');
+            
+            if (!select.value) {
+                results.innerHTML = '<p style="color: var(--text-tertiary); text-align: center;">Select a document to see mapping results</p>';
+                return;
+            }
+            
+            // Simulate loading
+            results.innerHTML = '<div style="text-align: center;"><i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary);"></i><p style="color: var(--text-secondary); margin-top: 1rem;">Analyzing document...</p></div>';
+            
+            // Simulate results after delay
+            setTimeout(() => {
+                const mappings = {
+                    faculty: [
+                        { standard: 'SACSCOC 8.1', title: 'Faculty Qualifications', confidence: 92, match: 'strong' },
+                        { standard: 'HLC 3.C', title: 'Faculty Roles', confidence: 78, match: 'partial' },
+                        { standard: 'MSCHE III.2', title: 'Faculty Credentials', confidence: 85, match: 'strong' }
+                    ],
+                    assessment: [
+                        { standard: 'SACSCOC 8.2.a', title: 'Student Outcomes', confidence: 88, match: 'strong' },
+                        { standard: 'HLC 4.B', title: 'Assessment of Learning', confidence: 94, match: 'strong' },
+                        { standard: 'WASC CFR 2.3', title: 'Student Learning', confidence: 81, match: 'partial' }
+                    ],
+                    strategic: [
+                        { standard: 'SACSCOC 7.1', title: 'Institutional Planning', confidence: 96, match: 'strong' },
+                        { standard: 'HLC 5.C', title: 'Planning and Resources', confidence: 89, match: 'strong' },
+                        { standard: 'MSCHE VI', title: 'Planning & Assessment', confidence: 83, match: 'strong' }
+                    ],
+                    syllabus: [
+                        { standard: 'SACSCOC 8.2', title: 'Faculty Performance', confidence: 72, match: 'partial' },
+                        { standard: 'HLC 3.A', title: 'Teaching & Learning', confidence: 67, match: 'partial' },
+                        { standard: 'WASC CFR 2.1', title: 'Educational Programs', confidence: 75, match: 'partial' }
+                    ]
+                };
+                
+                const selectedMappings = mappings[select.value] || [];
+                let html = '<div style="display: flex; flex-direction: column; gap: 1rem;">';
+                
+                selectedMappings.forEach(mapping => {
+                    const color = mapping.match === 'strong' ? 'var(--success)' : 'var(--warning)';
+                    html += `
+                        <div style="padding: 1rem; background: var(--bg-surface); border-left: 4px solid ${color}; border-radius: var(--radius-md);">
+                            <div style="display: flex; justify-content: space-between; align-items: start;">
+                                <div>
+                                    <strong style="color: var(--text-primary);">${mapping.standard}</strong> - ${mapping.title}
+                                    <div style="margin-top: 0.5rem;">
+                                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                            <span style="font-size: 0.75rem; color: var(--text-tertiary);">Confidence</span>
+                                            <div style="flex: 1; height: 4px; background: var(--bg-accent); border-radius: 2px; overflow: hidden;">
+                                                <div style="width: ${mapping.confidence}%; height: 100%; background: ${color};"></div>
+                                            </div>
+                                            <span style="font-weight: 600; color: var(--text-primary);">${mapping.confidence}%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <span style="font-size: 0.75rem; padding: 0.25rem 0.75rem; background: ${color}20; color: ${color}; border-radius: 9999px; font-weight: 600;">
+                                    ${mapping.match.toUpperCase()}
+                                </span>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+                html += '<p style="margin-top: 1.5rem; text-align: center; color: var(--text-secondary); font-size: 0.875rem;"><i class="fas fa-info-circle"></i> Full mapping includes rationale extraction and citation links</p>';
+                results.innerHTML = html;
+            }, 1500);
+        }
+        
+        function searchStandards(event) {
+            const input = event.target;
+            const results = document.getElementById('standardsResults');
+            
+            if (input.value.length < 3) {
+                results.innerHTML = '<p style="color: var(--text-tertiary); text-align: center;">Type at least 3 characters to search...</p>';
+                return;
+            }
+            
+            // Simulate search results
+            const standards = [
+                { id: 'SACSCOC 8.1', title: 'Faculty employment policies and practices', desc: 'The institution publishes and implements policies...' },
+                { id: 'HLC 3.C.2', title: 'Faculty qualifications', desc: 'The institution has sufficient numbers and continuity...' },
+                { id: 'MSCHE III.2', title: 'Faculty credentials', desc: 'An institution requires that all faculty...' },
+                { id: 'WASC CFR 3.1', title: 'Faculty sufficiency', desc: 'Faculty and staff recruitment, hiring, orientation...' }
+            ];
+            
+            let html = '<div style="display: flex; flex-direction: column; gap: 0.75rem;">';
+            standards.forEach(standard => {
+                html += `
+                    <div style="padding: 1rem; background: var(--bg-surface); border: 1px solid var(--border-light); border-radius: var(--radius-md); cursor: pointer; transition: var(--transition-smooth);" 
+                         onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--border-light)'">
+                        <strong style="color: var(--primary); display: block;">${standard.id} - ${standard.title}</strong>
+                        <p style="font-size: 0.8125rem; color: var(--text-secondary); margin-top: 0.25rem; margin-bottom: 0;">${standard.desc}</p>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            results.innerHTML = html;
+        }
+        
+        function calculateTrust() {
+            const age = parseInt(document.getElementById('docAge').value);
+            const sourceType = document.getElementById('sourceType').value;
+            const completeness = parseInt(document.getElementById('completeness').value);
+            const results = document.getElementById('trustResults');
+            
+            // Update completeness display
+            document.getElementById('completenessVal').textContent = completeness + '%';
+            
+            // Calculate trust scores
+            const freshnessScore = age <= 30 ? 0.95 : age <= 90 ? 0.8 : age <= 180 ? 0.6 : 0.4;
+            const sourceScore = sourceType === 'official' ? 0.9 : sourceType === 'system' ? 0.85 : sourceType === 'manual' ? 0.7 : 0.5;
+            const completenessScore = completeness / 100;
+            
+            const overallScore = (freshnessScore * 0.3 + sourceScore * 0.4 + completenessScore * 0.3).toFixed(2);
+            const trustLevel = overallScore >= 0.8 ? 'HIGH' : overallScore >= 0.6 ? 'MEDIUM' : 'LOW';
+            const trustColor = overallScore >= 0.8 ? 'var(--success)' : overallScore >= 0.6 ? 'var(--warning)' : 'var(--danger)';
+            
+            let html = `
+                <div style="text-align: center;">
+                    <div style="font-size: 3rem; font-weight: 800; color: ${trustColor};">${overallScore}</div>
+                    <div style="font-size: 1.25rem; color: ${trustColor}; font-weight: 600; margin-bottom: 1rem;">${trustLevel} TRUST</div>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 2rem;">
+                        <div style="padding: 0.75rem; background: var(--bg-surface); border-radius: var(--radius-md);">
+                            <div style="font-size: 0.75rem; color: var(--text-tertiary);">Freshness</div>
+                            <div style="font-size: 1.25rem; font-weight: 600; color: var(--text-primary);">${freshnessScore}</div>
+                        </div>
+                        <div style="padding: 0.75rem; background: var(--bg-surface); border-radius: var(--radius-md);">
+                            <div style="font-size: 0.75rem; color: var(--text-tertiary);">Provenance</div>
+                            <div style="font-size: 1.25rem; font-weight: 600; color: var(--text-primary);">${sourceScore}</div>
+                        </div>
+                        <div style="padding: 0.75rem; background: var(--bg-surface); border-radius: var(--radius-md);">
+                            <div style="font-size: 0.75rem; color: var(--text-tertiary);">Completeness</div>
+                            <div style="font-size: 1.25rem; font-weight: 600; color: var(--text-primary);">${completenessScore}</div>
+                        </div>
+                    </div>
+                    
+                    <p style="margin-top: 1.5rem; font-size: 0.875rem; color: var(--text-secondary);">
+                        <i class="fas fa-lightbulb"></i> ${overallScore >= 0.8 ? 'Evidence likely to be accepted by reviewers' : overallScore >= 0.6 ? 'Consider updating document for better acceptance' : 'High risk - evidence needs significant improvement'}
+                    </p>
+                </div>
+            `;
+            
+            results.innerHTML = html;
+        }
+        
+        // Initialize trust calculator on load
+        document.addEventListener('DOMContentLoaded', function() {
+            if (document.getElementById('docAge')) {
+                calculateTrust();
+            }
         });
     </script>
     <script>
