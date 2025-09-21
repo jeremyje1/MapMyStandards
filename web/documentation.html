@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Documentation - A³E | MapMyStandards.ai</title>
+    <title>User Guide - A³E | MapMyStandards.ai</title>
     <script src="/js/config.js"></script>
     <script src="/js/ux.js"></script>
     
@@ -357,6 +357,44 @@
                 gap: 1.5rem;
             }
         }
+
+        /* Smooth scrolling for anchor links */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Add some scroll margin for better positioning */
+        .content-section {
+            scroll-margin-top: 100px;
+        }
+
+        /* Code styling */
+        code {
+            background: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            color: var(--accent-purple);
+        }
+
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        /* Content section links */
+        .content-section a {
+            color: var(--accent-green);
+            text-decoration: none;
+            font-weight: 600;
+            transition: opacity 0.3s ease;
+        }
+
+        .content-section a:hover {
+            opacity: 0.8;
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -386,7 +424,7 @@
     <div class="container">
         <!-- Page Header -->
         <div class="page-header">
-            <h1 class="page-title">Documentation</h1>
+            <h1 class="page-title">User Guide</h1>
             <p class="page-subtitle">Everything you need to know about using A³E for accreditation excellence</p>
         </div>
 
@@ -501,6 +539,238 @@
                 </div>
                 <div class="faq-answer">
                     Absolutely. We use bank-level encryption for all data transmission and storage. Your documents are stored securely on AWS servers with regular backups. We never share your data with third parties.
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Sections -->
+        <div id="content-sections" style="margin-top: 3rem;">
+            <!-- Getting Started Section -->
+            <div id="getting-started" class="content-section" style="background: var(--bg-white); border-radius: var(--border-radius); box-shadow: var(--shadow-md); padding: 2.5rem; margin-bottom: 2rem;">
+                <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 1.5rem; color: var(--text-dark); display: flex; align-items: center; gap: 1rem;">
+                    <span style="font-size: 2.5rem;">🚀</span>
+                    Getting Started
+                </h2>
+                <div style="color: var(--text-medium); line-height: 1.8;">
+                    <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; color: var(--text-dark);">Welcome to A³E</h3>
+                    <p style="margin-bottom: 1rem;">A³E (Automated Accreditation Alignment Engine) is your comprehensive solution for managing and streamlining the accreditation process. This guide will help you get started quickly.</p>
+                    
+                    <h4 style="font-size: 1.125rem; font-weight: 600; margin: 1.5rem 0 0.75rem; color: var(--text-dark);">Initial Setup</h4>
+                    <ol style="margin-left: 1.5rem; margin-bottom: 1rem;">
+                        <li style="margin-bottom: 0.5rem;">Complete your institution profile during onboarding</li>
+                        <li style="margin-bottom: 0.5rem;">Select your primary accreditor (AACSB, ACBSP, IACBE, etc.)</li>
+                        <li style="margin-bottom: 0.5rem;">Choose your institution type and program levels</li>
+                        <li style="margin-bottom: 0.5rem;">Configure notification preferences</li>
+                    </ol>
+                    
+                    <h4 style="font-size: 1.125rem; font-weight: 600; margin: 1.5rem 0 0.75rem; color: var(--text-dark);">Key Features Overview</h4>
+                    <ul style="margin-left: 1.5rem;">
+                        <li style="margin-bottom: 0.5rem;"><strong>Document Upload:</strong> AI-powered analysis of your evidence documents</li>
+                        <li style="margin-bottom: 0.5rem;"><strong>Standards Browser:</strong> Navigate and map accreditation standards</li>
+                        <li style="margin-bottom: 0.5rem;"><strong>Automated Mapping:</strong> AI matches your content to standards</li>
+                        <li style="margin-bottom: 0.5rem;"><strong>Progress Tracking:</strong> Real-time dashboard showing compliance status</li>
+                        <li style="margin-bottom: 0.5rem;"><strong>Report Generation:</strong> Create comprehensive accreditation reports</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Upload & Analysis Section -->
+            <div id="upload-guide" class="content-section" style="background: var(--bg-white); border-radius: var(--border-radius); box-shadow: var(--shadow-md); padding: 2.5rem; margin-bottom: 2rem;">
+                <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 1.5rem; color: var(--text-dark); display: flex; align-items: center; gap: 1rem;">
+                    <span style="font-size: 2.5rem;">📤</span>
+                    Upload & Analysis
+                </h2>
+                <div style="color: var(--text-medium); line-height: 1.8;">
+                    <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; color: var(--text-dark);">Document Upload Process</h3>
+                    <p style="margin-bottom: 1rem;">Our AI-powered system analyzes your documents to automatically identify and map evidence to accreditation standards.</p>
+                    
+                    <h4 style="font-size: 1.125rem; font-weight: 600; margin: 1.5rem 0 0.75rem; color: var(--text-dark);">Supported File Types</h4>
+                    <ul style="margin-left: 1.5rem; margin-bottom: 1rem;">
+                        <li>PDF documents (up to 50MB)</li>
+                        <li>Microsoft Word (.doc, .docx)</li>
+                        <li>Microsoft Excel (.xls, .xlsx)</li>
+                        <li>Microsoft PowerPoint (.ppt, .pptx)</li>
+                        <li>Text files (.txt)</li>
+                    </ul>
+                    
+                    <h4 style="font-size: 1.125rem; font-weight: 600; margin: 1.5rem 0 0.75rem; color: var(--text-dark);">Upload Steps</h4>
+                    <ol style="margin-left: 1.5rem; margin-bottom: 1rem;">
+                        <li style="margin-bottom: 0.5rem;">Navigate to the Upload page from the main menu</li>
+                        <li style="margin-bottom: 0.5rem;">Drag and drop files or click to browse</li>
+                        <li style="margin-bottom: 0.5rem;">Select multiple files for batch processing</li>
+                        <li style="margin-bottom: 0.5rem;">Click "Start Analysis" to begin AI processing</li>
+                        <li style="margin-bottom: 0.5rem;">Monitor progress in real-time</li>
+                    </ol>
+                    
+                    <h4 style="font-size: 1.125rem; font-weight: 600; margin: 1.5rem 0 0.75rem; color: var(--text-dark);">Analysis Features</h4>
+                    <ul style="margin-left: 1.5rem;">
+                        <li style="margin-bottom: 0.5rem;"><strong>Text Extraction:</strong> Extracts all text content from documents</li>
+                        <li style="margin-bottom: 0.5rem;"><strong>Evidence Identification:</strong> Identifies relevant accreditation evidence</li>
+                        <li style="margin-bottom: 0.5rem;"><strong>Standard Mapping:</strong> Maps content to specific standards</li>
+                        <li style="margin-bottom: 0.5rem;"><strong>Quality Scoring:</strong> Evaluates evidence strength</li>
+                        <li style="margin-bottom: 0.5rem;"><strong>Gap Analysis:</strong> Identifies missing evidence areas</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Standards Browser Section -->
+            <div id="standards-guide" class="content-section" style="background: var(--bg-white); border-radius: var(--border-radius); box-shadow: var(--shadow-md); padding: 2.5rem; margin-bottom: 2rem;">
+                <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 1.5rem; color: var(--text-dark); display: flex; align-items: center; gap: 1rem;">
+                    <span style="font-size: 2.5rem;">📋</span>
+                    Standards Browser
+                </h2>
+                <div style="color: var(--text-medium); line-height: 1.8;">
+                    <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; color: var(--text-dark);">Navigate Accreditation Standards</h3>
+                    <p style="margin-bottom: 1rem;">Browse, search, and select standards from your accreditor's framework. Track which standards you're addressing and monitor compliance status.</p>
+                    
+                    <h4 style="font-size: 1.125rem; font-weight: 600; margin: 1.5rem 0 0.75rem; color: var(--text-dark);">Features</h4>
+                    <ul style="margin-left: 1.5rem; margin-bottom: 1rem;">
+                        <li style="margin-bottom: 0.5rem;">Hierarchical view of standards and sub-standards</li>
+                        <li style="margin-bottom: 0.5rem;">Search by keyword or standard number</li>
+                        <li style="margin-bottom: 0.5rem;">Filter by status, category, or requirement type</li>
+                        <li style="margin-bottom: 0.5rem;">View detailed descriptions and requirements</li>
+                        <li style="margin-bottom: 0.5rem;">Track evidence mapped to each standard</li>
+                    </ul>
+                    
+                    <h4 style="font-size: 1.125rem; font-weight: 600; margin: 1.5rem 0 0.75rem; color: var(--text-dark);">Standard Selection Process</h4>
+                    <ol style="margin-left: 1.5rem; margin-bottom: 1rem;">
+                        <li style="margin-bottom: 0.5rem;">Choose your accreditor from the dropdown</li>
+                        <li style="margin-bottom: 0.5rem;">Select your institution type if applicable</li>
+                        <li style="margin-bottom: 0.5rem;">Browse or search for relevant standards</li>
+                        <li style="margin-bottom: 0.5rem;">Click standards to view details</li>
+                        <li style="margin-bottom: 0.5rem;">Select standards to include in your accreditation scope</li>
+                    </ol>
+                    
+                    <h4 style="font-size: 1.125rem; font-weight: 600; margin: 1.5rem 0 0.75rem; color: var(--text-dark);">Compliance Tracking</h4>
+                    <p>Each standard shows:</p>
+                    <ul style="margin-left: 1.5rem;">
+                        <li style="margin-bottom: 0.5rem;"><span style="color: #10b981;">✓ Complete:</span> Sufficient evidence mapped</li>
+                        <li style="margin-bottom: 0.5rem;"><span style="color: #f59e0b;">◐ In Progress:</span> Some evidence found</li>
+                        <li style="margin-bottom: 0.5rem;"><span style="color: #ef4444;">○ Not Started:</span> No evidence yet</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Reports & Analytics Section -->
+            <div id="reports-guide" class="content-section" style="background: var(--bg-white); border-radius: var(--border-radius); box-shadow: var(--shadow-md); padding: 2.5rem; margin-bottom: 2rem;">
+                <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 1.5rem; color: var(--text-dark); display: flex; align-items: center; gap: 1rem;">
+                    <span style="font-size: 2.5rem;">📊</span>
+                    Reports & Analytics
+                </h2>
+                <div style="color: var(--text-medium); line-height: 1.8;">
+                    <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; color: var(--text-dark);">Generate Comprehensive Reports</h3>
+                    <p style="margin-bottom: 1rem;">Create detailed accreditation reports that demonstrate compliance and track your progress over time.</p>
+                    
+                    <h4 style="font-size: 1.125rem; font-weight: 600; margin: 1.5rem 0 0.75rem; color: var(--text-dark);">Report Types</h4>
+                    <ul style="margin-left: 1.5rem; margin-bottom: 1rem;">
+                        <li style="margin-bottom: 0.5rem;"><strong>Compliance Report:</strong> Overall compliance status by standard</li>
+                        <li style="margin-bottom: 0.5rem;"><strong>Evidence Summary:</strong> All evidence mapped to standards</li>
+                        <li style="margin-bottom: 0.5rem;"><strong>Gap Analysis:</strong> Standards needing additional evidence</li>
+                        <li style="margin-bottom: 0.5rem;"><strong>Progress Report:</strong> Track improvement over time</li>
+                        <li style="margin-bottom: 0.5rem;"><strong>Executive Summary:</strong> High-level overview for leadership</li>
+                    </ul>
+                    
+                    <h4 style="font-size: 1.125rem; font-weight: 600; margin: 1.5rem 0 0.75rem; color: var(--text-dark);">Analytics Dashboard</h4>
+                    <p style="margin-bottom: 0.75rem;">Key metrics include:</p>
+                    <ul style="margin-left: 1.5rem; margin-bottom: 1rem;">
+                        <li style="margin-bottom: 0.5rem;">Overall compliance percentage</li>
+                        <li style="margin-bottom: 0.5rem;">Standards coverage breakdown</li>
+                        <li style="margin-bottom: 0.5rem;">Evidence quality scores</li>
+                        <li style="margin-bottom: 0.5rem;">Document analysis statistics</li>
+                        <li style="margin-bottom: 0.5rem;">Timeline to accreditation</li>
+                    </ul>
+                    
+                    <h4 style="font-size: 1.125rem; font-weight: 600; margin: 1.5rem 0 0.75rem; color: var(--text-dark);">Export Options</h4>
+                    <ul style="margin-left: 1.5rem;">
+                        <li style="margin-bottom: 0.5rem;">PDF reports for submission</li>
+                        <li style="margin-bottom: 0.5rem;">Excel spreadsheets for detailed analysis</li>
+                        <li style="margin-bottom: 0.5rem;">Word documents for editing</li>
+                        <li style="margin-bottom: 0.5rem;">CSV data exports</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- API Documentation Section -->
+            <div id="api-docs" class="content-section" style="background: var(--bg-white); border-radius: var(--border-radius); box-shadow: var(--shadow-md); padding: 2.5rem; margin-bottom: 2rem;">
+                <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 1.5rem; color: var(--text-dark); display: flex; align-items: center; gap: 1rem;">
+                    <span style="font-size: 2.5rem;">🔧</span>
+                    API Documentation
+                </h2>
+                <div style="color: var(--text-medium); line-height: 1.8;">
+                    <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; color: var(--text-dark);">REST API Integration</h3>
+                    <p style="margin-bottom: 1rem;">Integrate A³E with your existing systems using our comprehensive REST API. Automate workflows and sync data seamlessly.</p>
+                    
+                    <h4 style="font-size: 1.125rem; font-weight: 600; margin: 1.5rem 0 0.75rem; color: var(--text-dark);">Authentication</h4>
+                    <p style="margin-bottom: 0.75rem;">All API requests require authentication using a Bearer token:</p>
+                    <pre style="background: var(--bg-light); padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; overflow-x: auto;">
+Authorization: Bearer YOUR_API_KEY</pre>
+                    
+                    <h4 style="font-size: 1.125rem; font-weight: 600; margin: 1.5rem 0 0.75rem; color: var(--text-dark);">Key Endpoints</h4>
+                    <ul style="margin-left: 1.5rem; margin-bottom: 1rem;">
+                        <li style="margin-bottom: 0.5rem;"><code>POST /api/upload</code> - Upload documents for analysis</li>
+                        <li style="margin-bottom: 0.5rem;"><code>GET /api/standards</code> - Retrieve accreditation standards</li>
+                        <li style="margin-bottom: 0.5rem;"><code>GET /api/analysis/{id}</code> - Get analysis results</li>
+                        <li style="margin-bottom: 0.5rem;"><code>POST /api/reports/generate</code> - Generate reports</li>
+                        <li style="margin-bottom: 0.5rem;"><code>GET /api/compliance/status</code> - Check compliance status</li>
+                    </ul>
+                    
+                    <h4 style="font-size: 1.125rem; font-weight: 600; margin: 1.5rem 0 0.75rem; color: var(--text-dark);">Integration Examples</h4>
+                    <ul style="margin-left: 1.5rem; margin-bottom: 1rem;">
+                        <li style="margin-bottom: 0.5rem;">Canvas LMS integration for course data</li>
+                        <li style="margin-bottom: 0.5rem;">Document management system sync</li>
+                        <li style="margin-bottom: 0.5rem;">Automated report generation</li>
+                        <li style="margin-bottom: 0.5rem;">Compliance monitoring dashboards</li>
+                    </ul>
+                    
+                    <p style="margin-top: 1rem;">For full API documentation, visit: <a href="https://api.mapmystandards.ai/docs" target="_blank" style="color: var(--accent-green); text-decoration: none; font-weight: 600;">api.mapmystandards.ai/docs</a></p>
+                </div>
+            </div>
+
+            <!-- Best Practices Section -->
+            <div id="best-practices" class="content-section" style="background: var(--bg-white); border-radius: var(--border-radius); box-shadow: var(--shadow-md); padding: 2.5rem; margin-bottom: 2rem;">
+                <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 1.5rem; color: var(--text-dark); display: flex; align-items: center; gap: 1rem;">
+                    <span style="font-size: 2.5rem;">✨</span>
+                    Best Practices
+                </h2>
+                <div style="color: var(--text-medium); line-height: 1.8;">
+                    <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; color: var(--text-dark);">Maximize Your Accreditation Success</h3>
+                    <p style="margin-bottom: 1rem;">Follow these proven strategies to streamline your accreditation process and ensure the best outcomes.</p>
+                    
+                    <h4 style="font-size: 1.125rem; font-weight: 600; margin: 1.5rem 0 0.75rem; color: var(--text-dark);">Document Preparation</h4>
+                    <ul style="margin-left: 1.5rem; margin-bottom: 1rem;">
+                        <li style="margin-bottom: 0.5rem;">Use clear, descriptive file names</li>
+                        <li style="margin-bottom: 0.5rem;">Ensure documents are text-searchable (not scanned images)</li>
+                        <li style="margin-bottom: 0.5rem;">Organize documents by standard or category</li>
+                        <li style="margin-bottom: 0.5rem;">Include metadata and dates in documents</li>
+                        <li style="margin-bottom: 0.5rem;">Review documents before uploading</li>
+                    </ul>
+                    
+                    <h4 style="font-size: 1.125rem; font-weight: 600; margin: 1.5rem 0 0.75rem; color: var(--text-dark);">Evidence Collection</h4>
+                    <ul style="margin-left: 1.5rem; margin-bottom: 1rem;">
+                        <li style="margin-bottom: 0.5rem;">Start collecting evidence early in the process</li>
+                        <li style="margin-bottom: 0.5rem;">Include both quantitative and qualitative data</li>
+                        <li style="margin-bottom: 0.5rem;">Document continuous improvement efforts</li>
+                        <li style="margin-bottom: 0.5rem;">Maintain evidence from multiple time periods</li>
+                        <li style="margin-bottom: 0.5rem;">Cross-reference evidence to multiple standards</li>
+                    </ul>
+                    
+                    <h4 style="font-size: 1.125rem; font-weight: 600; margin: 1.5rem 0 0.75rem; color: var(--text-dark);">Team Collaboration</h4>
+                    <ul style="margin-left: 1.5rem; margin-bottom: 1rem;">
+                        <li style="margin-bottom: 0.5rem;">Assign standards to appropriate team members</li>
+                        <li style="margin-bottom: 0.5rem;">Set regular review meetings</li>
+                        <li style="margin-bottom: 0.5rem;">Use comments and notes features</li>
+                        <li style="margin-bottom: 0.5rem;">Track progress weekly</li>
+                        <li style="margin-bottom: 0.5rem;">Share reports with stakeholders</li>
+                    </ul>
+                    
+                    <h4 style="font-size: 1.125rem; font-weight: 600; margin: 1.5rem 0 0.75rem; color: var(--text-dark);">Timeline Management</h4>
+                    <ul style="margin-left: 1.5rem;">
+                        <li style="margin-bottom: 0.5rem;">Begin preparation 12-18 months before visit</li>
+                        <li style="margin-bottom: 0.5rem;">Complete initial gap analysis early</li>
+                        <li style="margin-bottom: 0.5rem;">Allow time for evidence collection</li>
+                        <li style="margin-bottom: 0.5rem;">Plan for multiple review cycles</li>
+                        <li style="margin-bottom: 0.5rem;">Keep buffer time for unexpected needs</li>
+                    </ul>
                 </div>
             </div>
         </div>
