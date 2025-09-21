@@ -187,7 +187,7 @@ async def create_scenario(
     results = await calculate_scenario(scenario.inputs, current_user, has_subscription)
     
     # Create scenario ID
-    scenario_id = f"scenario_{current_user.get("id")}_{datetime.utcnow().timestamp()}"
+    scenario_id = f"scenario_{current_user.get('id')}_{datetime.utcnow().timestamp()}"
     
     response = ScenarioResponse(
         id=scenario_id,

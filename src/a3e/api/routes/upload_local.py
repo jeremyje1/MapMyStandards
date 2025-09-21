@@ -87,7 +87,7 @@ async def upload_file(
         # Generate unique file key
         file_uuid = str(uuid.uuid4())
         file_extension = os.path.splitext(file.filename)[1]
-        file_key = f"{current_user.get("id")}/{file_uuid}{file_extension}"
+        file_key = f"{current_user.get('id')}/{file_uuid}{file_extension}"
         
         # Create user directory
         user_dir = UPLOAD_DIR / str(current_user.get("id"))

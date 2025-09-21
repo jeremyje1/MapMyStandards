@@ -131,7 +131,7 @@ async def upload_document(
             file.filename
         )
         
-        logger.info(f"Document uploaded: {document_id} by user {current_user.get("email")}")
+        logger.info(f"Document uploaded: {document_id} by user {current_user.get('email')}")
         
         return {
             "success": True,

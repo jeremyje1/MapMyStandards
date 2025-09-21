@@ -429,7 +429,7 @@ async def export_metrics(
         )
     
     # In production, this would generate actual files
-    export_id = f"export_{current_user.get("id")}_{datetime.utcnow().timestamp()}"
+    export_id = f"export_{current_user.get('id')}_{datetime.utcnow().timestamp()}"
     
     return {
         "export_id": export_id,

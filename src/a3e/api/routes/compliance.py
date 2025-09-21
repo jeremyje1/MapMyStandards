@@ -149,7 +149,7 @@ async def check_compliance(
             
             scores.append(score)
         
-        logger.info(f"Compliance check completed for user {current_user.get("email")}")
+        logger.info(f"Compliance check completed for user {current_user.get('email')}")
         
         return scores
         
@@ -239,7 +239,7 @@ async def perform_gap_analysis(
             estimated_effort_hours=estimated_hours
         )
         
-        logger.info(f"Gap analysis completed for user {current_user.get("email")}")
+        logger.info(f"Gap analysis completed for user {current_user.get('email')}")
         
         return result
         
