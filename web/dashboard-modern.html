@@ -907,9 +907,10 @@
     </style>
 </head>
 <body>
-    <div id="redacted-banner" style="display:none;background:#FEF3C7;color:#92400E;padding:12px;text-align:center;border-bottom:1px solid #F59E0B;">
+    <!-- Redacted mode banner removed - full standards access is now available -->
+    <!-- <div id="redacted-banner" style="display:none;background:#FEF3C7;color:#92400E;padding:12px;text-align:center;border-bottom:1px solid #F59E0B;">
         Standards are displayed in Redacted Mode due to licensing. <a href="mailto:support@mapmystandards.ai" style="color:#1e40af;text-decoration:underline;">Request full-text access</a> or upload your licensed corpus.
-    </div>
+    </div> -->
     <!-- Header -->
     <header class="header">
         <div class="header-content">
@@ -1099,27 +1100,28 @@
     <script src="/js/onboarding.js?v=20250921a"></script>
 
         <script>
-            async function checkDisplayMode() {
-                try {
-                    const API_BASE = (window.mmsAPI && window.mmsAPI.getBaseUrl && window.mmsAPI.getBaseUrl()) || (location.hostname.includes('api.mapmystandards.ai') ? '' : 'https://api.mapmystandards.ai');
-                    const token = localStorage.getItem('a3e_api_key') || localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
-                    const headers = {
-                        'Content-Type': 'application/json'
-                    };
-                    if (token) {
-                        headers['Authorization'] = `Bearer ${token}`;
-                    }
-                    const res = await fetch(`${API_BASE}/api/user/intelligence-simple/standards/list`, { 
-                        credentials: 'include',
-                        headers: headers
-                    });
-                    const data = await res.json();
-                    if (data && data.display_mode === 'redacted') {
-                        document.getElementById('redacted-banner').style.display = 'block';
-                    }
-                } catch (e) {}
-            }
-            checkDisplayMode();
+            // Display mode check commented out - full standards access is now available
+            // async function checkDisplayMode() {
+            //     try {
+            //         const API_BASE = (window.mmsAPI && window.mmsAPI.getBaseUrl && window.mmsAPI.getBaseUrl()) || (location.hostname.includes('api.mapmystandards.ai') ? '' : 'https://api.mapmystandards.ai');
+            //         const token = localStorage.getItem('a3e_api_key') || localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+            //         const headers = {
+            //             'Content-Type': 'application/json'
+            //         };
+            //         if (token) {
+            //             headers['Authorization'] = `Bearer ${token}`;
+            //         }
+            //         const res = await fetch(`${API_BASE}/api/user/intelligence-simple/standards/list`, { 
+            //             credentials: 'include',
+            //             headers: headers
+            //         });
+            //         const data = await res.json();
+            //         if (data && data.display_mode === 'redacted') {
+            //             document.getElementById('redacted-banner').style.display = 'block';
+            //         }
+            //     } catch (e) {}
+            // }
+            // checkDisplayMode();
         </script>
         <script>
             // Dashboard functionality
