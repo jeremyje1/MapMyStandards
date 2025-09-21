@@ -1046,10 +1046,16 @@
                 await this.loadMetrics();
                 await this.loadActivity();
                 await this.loadProgress();
+                await this.loadGapAnalysis();
+                renderRecentUploads();
                 
                 // Auto-refresh every 30 seconds
                 setInterval(() => {
                     this.loadMetrics();
+                    this.loadActivity();
+                    this.loadProgress();
+                    this.loadGapAnalysis();
+                    renderRecentUploads();
                 }, 30000);
 
                 // Listen for upload/analysis events from other tabs
@@ -1412,24 +1418,183 @@
 
             async loadActivity() {
                 const activityList = document.getElementById('activityList');
-                activityList.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-icon">📁</div>
-                        <div class="empty-title">No recent activity</div>
-                        <div class="empty-description">Upload documents to see processing and mapping activity here.</div>
-                        <a class="empty-action" href="/upload-modern">Upload Documents</a>
-                    </div>`;
+                try {
+                    // Show loading state
+                    activityList.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-icon">🔄</div>
+                            <div class="spinner"></div>
+                            <div class="empty-description">Loading your recent activity...</div>
+                        </div>`;
+                    
+                    // Fetch activity data
+                    const token = this.getAuthToken();
+                    const response = await fetch('/api/user/intelligence-simple/documents/recent', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    
+                    if (!response.ok) throw new Error('Failed to fetch activity');
+                    
+                    const data = await response.json();
+                    const activities = data.activities || data.documents || [];
+                    
+                    if (activities.length === 0) {
+                        activityList.innerHTML = `
+                            <div class="empty-state">
+                                <div class="empty-icon">📁</div>
+                                <div class="empty-title">No recent activity</div>
+                                <div class="empty-description">Upload documents to see processing and mapping activity here.</div>
+                                <a class="empty-action" href="/upload-modern">Upload Documents</a>
+                            </div>`;
+                    } else {
+                        // Render activity items
+                        activityList.innerHTML = activities.slice(0, 5).map(activity => {
+                            const date = new Date(activity.created_at || activity.upload_date).toLocaleDateString();
+                            const icon = activity.status === 'completed' ? '✅' : 
+                                        activity.status === 'processing' ? '⏳' : '📄';
+                            return `
+                                <div class="activity-item">
+                                    <div class="activity-icon">${icon}</div>
+                                    <div class="activity-content">
+                                        <div class="activity-title">${activity.filename || activity.name || 'Document'}</div>
+                                        <div class="activity-meta">${activity.status || 'Uploaded'} • ${date}</div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('');
+                    }
+                } catch (error) {
+                    console.error('Error loading activity:', error);
+                    activityList.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-icon">📁</div>
+                            <div class="empty-title">No recent activity</div>
+                            <div class="empty-description">Upload documents to see processing and mapping activity here.</div>
+                            <a class="empty-action" href="/upload-modern">Upload Documents</a>
+                        </div>`;
+                }
             }
 
             async loadProgress() {
                 const progressOverview = document.getElementById('progressOverview');
-                progressOverview.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-icon">🧭</div>
-                        <div class="empty-title">No progress to show yet</div>
-                        <div class="empty-description">Once your documents are analyzed, compliance progress will appear here.</div>
-                        <a class="empty-action" href="/upload-modern">Start by Uploading</a>
-                    </div>`;
+                try {
+                    // Show loading state
+                    progressOverview.innerHTML = `
+                        <div class="progress-item">
+                            <div class="skeleton" style="height: 60px; border-radius: var(--border-radius);"></div>
+                        </div>`;
+                    
+                    // Fetch compliance data
+                    const token = this.getAuthToken();
+                    const response = await fetch('/api/user/intelligence-simple/compliance/summary', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    
+                    if (!response.ok) throw new Error('Failed to fetch progress');
+                    
+                    const data = await response.json();
+                    
+                    if (!data.total_standards || data.total_standards === 0) {
+                        progressOverview.innerHTML = `
+                            <div class="empty-state">
+                                <div class="empty-icon">🧭</div>
+                                <div class="empty-title">No progress to show yet</div>
+                                <div class="empty-description">Once your documents are analyzed, compliance progress will appear here.</div>
+                                <a class="empty-action" href="/upload-modern">Start by Uploading</a>
+                            </div>`;
+                    } else {
+                        // Calculate percentages
+                        const mappedPercent = Math.round((data.mapped_standards / data.total_standards) * 100);
+                        const compliantPercent = Math.round(data.compliance_score || 0);
+                        
+                        progressOverview.innerHTML = `
+                            <div class="progress-item">
+                                <div class="progress-header">
+                                    <span class="progress-label">Standards Coverage</span>
+                                    <span class="progress-value">${mappedPercent}%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${mappedPercent}%"></div>
+                                </div>
+                                <div class="progress-meta">${data.mapped_standards} of ${data.total_standards} standards mapped</div>
+                            </div>
+                            
+                            <div class="progress-item">
+                                <div class="progress-header">
+                                    <span class="progress-label">Compliance Score</span>
+                                    <span class="progress-value">${compliantPercent}%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${compliantPercent}%; background: var(--green-500);"></div>
+                                </div>
+                                <div class="progress-meta">${data.compliant_standards || 0} standards fully compliant</div>
+                            </div>
+                        `;
+                    }
+                } catch (error) {
+                    console.error('Error loading progress:', error);
+                    progressOverview.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-icon">🧭</div>
+                            <div class="empty-title">No progress to show yet</div>
+                            <div class="empty-description">Once your documents are analyzed, compliance progress will appear here.</div>
+                            <a class="empty-action" href="/upload-modern">Start by Uploading</a>
+                        </div>`;
+                }
+            }
+            
+            async loadGapAnalysis() {
+                const gapSummary = document.getElementById('gapAnalysisSummary');
+                if (!gapSummary) return;
+                
+                try {
+                    const token = this.getAuthToken();
+                    const response = await fetch('/api/user/intelligence-simple/risk/summary', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.total_gaps > 0) {
+                            const highRisk = data.high_risk_gaps || 0;
+                            const medRisk = data.medium_risk_gaps || 0;
+                            const lowRisk = data.low_risk_gaps || 0;
+                            
+                            gapSummary.innerHTML = `
+                                <div style="background:#fef3c7; border:1px solid #fbbf24; border-radius:8px; padding:12px; margin-bottom:8px;">
+                                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                                        <div>
+                                            <div style="font-weight:600; color:#92400e;">${data.total_gaps} Compliance Gaps Found</div>
+                                            <div style="font-size:14px; color:#78350f; margin-top:4px;">
+                                                High Risk: ${highRisk} • Medium: ${medRisk} • Low: ${lowRisk}
+                                            </div>
+                                        </div>
+                                        <div style="font-size:24px;">⚠️</div>
+                                    </div>
+                                </div>
+                            `;
+                        } else if (data.documents_analyzed > 0) {
+                            gapSummary.innerHTML = `
+                                <div style="background:#d1fae5; border:1px solid #34d399; border-radius:8px; padding:12px;">
+                                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                                        <div>
+                                            <div style="font-weight:600; color:#065f46;">No Gaps Detected</div>
+                                            <div style="font-size:14px; color:#047857; margin-top:4px;">
+                                                All analyzed standards are compliant
+                                            </div>
+                                        </div>
+                                        <div style="font-size:24px;">✅</div>
+                                    </div>
+                                </div>
+                            `;
+                        } else {
+                            gapSummary.innerHTML = '';
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error loading gap analysis:', error);
+                    gapSummary.innerHTML = '';
+                }
             }
 
             getAuthToken() {
@@ -1628,6 +1793,9 @@
                                         </div>
                                         <div style="padding: var(--space-6);">
                                             <p class="section-description">AI-powered compliance gap detection</p>
+                                            <div id="gapAnalysisSummary" style="margin-top:12px;">
+                                                <!-- Gap summary will be loaded here -->
+                                            </div>
                                             <button id="dashAnalyzeGaps" class="action-btn action-btn-primary" style="margin-top:10px">Analyze Gaps</button>
                                         </div>
                                     </section>
@@ -1675,9 +1843,42 @@
                     try { localStorage.setItem('mms:recentUploads', JSON.stringify(items.slice(0,5))); } catch {}
                 }
 
-                function renderRecentUploads(){
+                async function renderRecentUploads(){
                     const list = document.getElementById('dashRecentUploads');
                     if (!list) return;
+                    
+                    try {
+                        // Fetch actual document data from API
+                        const token = localStorage.getItem('a3e_api_key') || localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+                        const response = await fetch('/api/user/intelligence-simple/documents/list', {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
+                        
+                        if (response.ok) {
+                            const data = await response.json();
+                            const documents = (data.documents || []).slice(0, 5); // Show last 5
+                            
+                            if (documents.length > 0) {
+                                list.innerHTML = documents.map(doc => {
+                                    const statusColor = doc.status === 'completed' ? '#065f46' : '#92400e';
+                                    const statusBg = doc.status === 'completed' ? '#ecfdf5' : '#fffbeb';
+                                    const statusBorder = doc.status === 'completed' ? '#a7f3d0' : '#fde68a';
+                                    const displayStatus = doc.status === 'completed' ? 'analyzed' : 
+                                                        doc.status === 'processing' ? 'processing' : 'queued';
+                                    
+                                    return `<li style='display:flex;justify-content:space-between;gap:8px;border:1px solid #e5e7eb;border-radius:8px;padding:6px 8px;margin-top:6px'>
+                                        <span style='overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:70%'>${doc.filename || doc.name}</span>
+                                        <span style='font-size:12px;color:${statusColor};background:${statusBg};border:1px solid ${statusBorder};padding:2px 6px;border-radius:999px'>${displayStatus}</span>
+                                    </li>`;
+                                }).join('');
+                                return;
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error fetching recent uploads:', error);
+                    }
+                    
+                    // Fall back to localStorage data if API fails
                     const items = getStoredRecentUploads();
                     list.innerHTML = items.length ? items.map(it=>`<li style='display:flex;justify-content:space-between;gap:8px;border:1px solid #e5e7eb;border-radius:8px;padding:6px 8px;margin-top:6px'>
                         <span style='overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:70%'>${it.name}</span>
