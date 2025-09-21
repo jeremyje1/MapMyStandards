@@ -280,7 +280,7 @@
                 <button id="onboardingBtn" onclick="window.location.href='/onboarding'">
                     🚀 Start Guided Onboarding
                 </button>
-                <button id="dashboardBtn" class="btn-secondary" style="display:none" onclick="window.location.href='https://platform.mapmystandards.ai/ai-dashboard'">Skip to Dashboard →</button>
+                <button id="dashboardBtn" class="btn-secondary" style="display:none" onclick="window.location.href='https://platform.mapmystandards.ai/dashboard'">Skip to Dashboard →</button>
                 <button id="loginBtn" class="btn-secondary" style="display:none" onclick="window.location.href='/login'">Go to Login</button>
             </div>
         </div>
@@ -492,7 +492,7 @@
                     const loginBtn = document.getElementById('loginBtn');
                     if (authToken) {
                         dashBtn.style.display = 'block';
-                        setTimeout(() => { window.location.href = 'https://platform.mapmystandards.ai/ai-dashboard'; }, 3000);
+                        setTimeout(() => { window.location.href = 'https://platform.mapmystandards.ai/dashboard'; }, 3000);
                     } else {
                         loginBtn.style.display = 'block';
                         // Do not auto-redirect to dashboard without a token

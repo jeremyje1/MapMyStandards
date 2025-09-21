@@ -86,7 +86,7 @@
                     </svg>
                 </div>
                 <div class="ml-4">
-                    <h2 class="text-lg font-medium text-blue-900">Welcome to your A³E Dashboard!</h2>
+                    <h2 class="text-lg font-medium text-blue-900" id="welcomeMessage">Welcome to your A³E Dashboard!</h2>
                     <p class="text-blue-700">Your 7-day free trial is active. Complete the onboarding to get started with accreditation management.</p>
                 </div>
             </div>
@@ -280,16 +280,64 @@
     </main>
 
     <script>
-        // Redirect to AI-powered dashboard
+        // Check authentication
         document.addEventListener('DOMContentLoaded', function() {
-            const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+            const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token') || localStorage.getItem('a3e_api_key');
             if (!token) {
                 window.location.href = 'https://platform.mapmystandards.ai/login-platform.html';
             } else {
-                // Redirect to the new AI dashboard
-                window.location.href = 'https://platform.mapmystandards.ai/ai-dashboard';
+                // Stay on this dashboard - no redirect to ai-dashboard
+                // Load user data and display dashboard content
+                loadDashboardData();
             }
         });
+
+        async function loadDashboardData() {
+            try {
+                const token = localStorage.getItem('a3e_api_key') || localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+                const headers = {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                };
+
+                // Load user profile
+                const profileRes = await fetch('https://api.mapmystandards.ai/api/user/profile', {
+                    method: 'GET',
+                    headers: headers,
+                    credentials: 'include'
+                });
+
+                if (profileRes.ok) {
+                    const profile = await profileRes.json();
+                    // Update UI with user data
+                    const welcomeEl = document.getElementById('welcomeMessage');
+                    if (welcomeEl && profile.institution_name) {
+                        welcomeEl.textContent = `Welcome back, ${profile.institution_name}`;
+                    }
+                }
+
+                // Load dashboard metrics
+                const metricsRes = await fetch('https://api.mapmystandards.ai/api/dashboard/metrics', {
+                    method: 'GET',
+                    headers: headers,
+                    credentials: 'include'
+                });
+
+                if (metricsRes.ok) {
+                    const metrics = await metricsRes.json();
+                    // Update dashboard with metrics
+                    updateDashboardMetrics(metrics);
+                }
+            } catch (e) {
+                console.error('Error loading dashboard data:', e);
+            }
+        }
+
+        function updateDashboardMetrics(metrics) {
+            // Update the dashboard UI with metrics data
+            // This would update the various dashboard elements
+            console.log('Dashboard metrics:', metrics);
+        }
     </script>
 </body>
 </html>
