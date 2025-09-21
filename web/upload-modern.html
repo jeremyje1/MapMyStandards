@@ -785,24 +785,9 @@
                     <ul class="recent-list" id="recentList">
                         <li class="recent-item">
                             <div class="recent-file-info">
-                                <div class="recent-file-name">Accreditation Evidence 2024.pdf</div>
-                                <div class="recent-file-meta">Uploaded 2 hours ago • 2.3 MB • 15 standards mapped</div>
+                                <div class="recent-file-name">Loading recent uploads...</div>
+                                <div class="recent-file-meta">Please wait</div>
                             </div>
-                            <span class="status-badge status-complete">Complete</span>
-                        </li>
-                        <li class="recent-item">
-                            <div class="recent-file-info">
-                                <div class="recent-file-name">Faculty Handbook.docx</div>
-                                <div class="recent-file-meta">Uploaded yesterday • 1.8 MB • Processing...</div>
-                            </div>
-                            <span class="status-badge status-processing">Processing</span>
-                        </li>
-                        <li class="recent-item">
-                            <div class="recent-file-info">
-                                <div class="recent-file-name">Student Outcomes Data.xlsx</div>
-                                <div class="recent-file-meta">Uploaded 3 days ago • 5.2 MB • 23 standards mapped</div>
-                            </div>
-                            <span class="status-badge status-complete">Complete</span>
                         </li>
                     </ul>
                 </div>
@@ -1186,6 +1171,7 @@
                 }
             } catch (e) {
                 console.error('Failed to load recent uploads', e);
+                list.innerHTML = '<li class="recent-item"><div class="recent-file-info"><div class="recent-file-name">No recent uploads</div><div class="recent-file-meta">Start by adding your first document</div></div></li>';
             }
         }
 
