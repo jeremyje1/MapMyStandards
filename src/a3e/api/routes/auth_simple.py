@@ -96,9 +96,33 @@ async def simple_login(request: LoginRequest, db: Optional[AsyncSession] = Depen
     """Simple login that works"""
     return await do_login(request, db)
 
+@router.get("/auth/test")
+async def auth_test_endpoint():
+    """Test endpoint without database dependency"""
+    logger.info("Test endpoint called successfully")
+    return {"status": "ok", "message": "Auth router is working"}
+
+@router.get("/auth/test-db")
+async def auth_test_db_endpoint(db: Optional[AsyncSession] = Depends(get_db)):
+    """Test endpoint with database dependency"""
+    logger.info("Test DB endpoint called")
+    if db is None:
+        return {"status": "error", "message": "Database is None"}
+    
+    try:
+        from sqlalchemy import text
+        result = await db.execute(text("SELECT 1"))
+        value = result.scalar()
+        logger.info(f"Database test successful: {value}")
+        return {"status": "ok", "message": "Database connection working", "result": value}
+    except Exception as e:
+        logger.error(f"Database test error: {type(e).__name__}: {e}")
+        return {"status": "error", "message": str(e)}
+
 @router.post("/auth/login", response_model=AuthResponse) 
 async def auth_login(request: LoginRequest, db: Optional[AsyncSession] = Depends(get_db)):
     """Handle legacy /auth/login endpoint"""
+    logger.info(f"Auth login endpoint called with email: {request.email}")
     try:
         return await do_login(request, db)
     except Exception as e:
