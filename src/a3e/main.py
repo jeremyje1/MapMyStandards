@@ -2130,6 +2130,22 @@ if WEB_DIR.exists():
         if not support_file.exists():
             return HTMLResponse("<h1>Support page not found</h1>", status_code=404)
         return FileResponse(str(support_file))
+    
+    @app.get("/faq", response_class=FileResponse, include_in_schema=False)
+    async def faq_page():  # noqa: D401
+        """Serve FAQ page."""
+        faq_file = WEB_DIR / "faq.html"
+        if not faq_file.exists():
+            return HTMLResponse("<h1>FAQ page not found</h1>", status_code=404)
+        return FileResponse(str(faq_file))
+    
+    @app.get("/tutorial", response_class=FileResponse, include_in_schema=False)
+    async def tutorial_page():  # noqa: D401
+        """Serve tutorial page."""
+        tutorial_file = WEB_DIR / "tutorial.html"
+        if not tutorial_file.exists():
+            return HTMLResponse("<h1>Tutorial page not found</h1>", status_code=404)
+        return FileResponse(str(tutorial_file))
 
     # New pages: Reviewer Portal, Admin Standards, CrosswalkX (extensionless + .html)
     @app.get("/reviewer-portal", response_class=FileResponse, include_in_schema=False)

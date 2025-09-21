@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAQ - MapMyStandards</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .header {
+            background-color: #0f172a;
+            color: white;
+            padding: 1rem 2rem;
+            margin: -20px -20px 30px -20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+        
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .nav-links a:hover {
+            text-decoration: underline;
+        }
+        
+        h1 {
+            color: #0f172a;
+            margin-bottom: 30px;
+        }
+        
+        .faq-container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .faq-section {
+            margin-bottom: 40px;
+        }
+        
+        .faq-section h2 {
+            color: #1e40af;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .faq-item {
+            margin-bottom: 25px;
+        }
+        
+        .faq-question {
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .faq-question:before {
+            content: '▶';
+            font-size: 12px;
+            transition: transform 0.3s;
+        }
+        
+        .faq-question.active:before {
+            transform: rotate(90deg);
+        }
+        
+        .faq-answer {
+            color: #4b5563;
+            padding-left: 25px;
+            display: none;
+        }
+        
+        .faq-answer.active {
+            display: block;
+        }
+        
+        .faq-answer p {
+            margin: 10px 0;
+        }
+        
+        .faq-answer code {
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+        
+        .faq-answer ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        
+        .faq-answer li {
+            margin: 5px 0;
+        }
+        
+        .back-to-top {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #1e40af;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            text-decoration: none;
+            display: none;
+        }
+        
+        .back-to-top:hover {
+            background: #1e3a8a;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2 style="margin: 0;">MapMyStandards</h2>
+        <nav class="nav-links">
+            <a href="/dashboard">Dashboard</a>
+            <a href="/upload-modern">Upload</a>
+            <a href="/standards-modern">Standards</a>
+            <a href="/documentation">User Guide</a>
+            <a href="/faq">FAQ</a>
+            <a href="/support">Support</a>
+        </nav>
+    </div>
+
+    <h1>Frequently Asked Questions</h1>
+
+    <div class="faq-container">
+        <div class="faq-section">
+            <h2>Getting Started</h2>
+            
+            <div class="faq-item">
+                <div class="faq-question">What is MapMyStandards?</div>
+                <div class="faq-answer">
+                    <p>MapMyStandards is an AI-powered platform that helps educational institutions map their evidence documents to accreditation standards. It automates the analysis of documents, identifies compliance gaps, and generates comprehensive narratives for accreditation reporting.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">How do I get started?</div>
+                <div class="faq-answer">
+                    <p>To get started with MapMyStandards:</p>
+                    <ul>
+                        <li>Sign up for an account at <a href="https://platform.mapmystandards.ai/signup">platform.mapmystandards.ai/signup</a></li>
+                        <li>Complete the onboarding process to set up your institution profile</li>
+                        <li>Select your accreditor (SACSCOC, HLC, MSCHE, etc.)</li>
+                        <li>Upload your first evidence documents</li>
+                        <li>Review the automated analysis and mappings</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">Which accreditors are supported?</div>
+                <div class="faq-answer">
+                    <p>MapMyStandards currently supports the following accreditors:</p>
+                    <ul>
+                        <li><strong>SACSCOC</strong> - Southern Association of Colleges and Schools Commission on Colleges</li>
+                        <li><strong>HLC</strong> - Higher Learning Commission</li>
+                        <li><strong>MSCHE</strong> - Middle States Commission on Higher Education</li>
+                        <li><strong>NECHE</strong> - New England Commission of Higher Education</li>
+                        <li><strong>NWCCU</strong> - Northwest Commission on Colleges and Universities</li>
+                        <li><strong>WASC</strong> - Western Association of Schools and Colleges</li>
+                    </ul>
+                    <p>More accreditors are being added regularly. Contact support if you need a specific accreditor added.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="faq-section">
+            <h2>Uploading Documents</h2>
+            
+            <div class="faq-item">
+                <div class="faq-question">What file formats are supported?</div>
+                <div class="faq-answer">
+                    <p>MapMyStandards supports the following file formats:</p>
+                    <ul>
+                        <li><strong>PDF</strong> - Portable Document Format (recommended)</li>
+                        <li><strong>DOCX</strong> - Microsoft Word documents</li>
+                        <li><strong>DOC</strong> - Legacy Word documents</li>
+                        <li><strong>TXT</strong> - Plain text files</li>
+                    </ul>
+                    <p>For best results, use PDF format with searchable text (not scanned images).</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">Is there a file size limit?</div>
+                <div class="faq-answer">
+                    <p>Yes, individual files should be under 50MB for optimal processing. If you have larger files:</p>
+                    <ul>
+                        <li>Consider splitting them into smaller documents</li>
+                        <li>Compress PDFs using online tools</li>
+                        <li>Remove unnecessary images or appendices</li>
+                    </ul>
+                    <p>You can upload multiple files at once, with a total limit of 500MB per batch.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">How long does analysis take?</div>
+                <div class="faq-answer">
+                    <p>Analysis time depends on several factors:</p>
+                    <ul>
+                        <li><strong>Small documents (1-10 pages)</strong>: 30 seconds - 2 minutes</li>
+                        <li><strong>Medium documents (10-50 pages)</strong>: 2-5 minutes</li>
+                        <li><strong>Large documents (50+ pages)</strong>: 5-15 minutes</li>
+                    </ul>
+                    <p>Processing happens in the background, so you can continue working while documents are analyzed.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="faq-section">
+            <h2>Standards & Mapping</h2>
+            
+            <div class="faq-item">
+                <div class="faq-question">How does the mapping algorithm work?</div>
+                <div class="faq-answer">
+                    <p>Our AI-powered mapping algorithm:</p>
+                    <ul>
+                        <li>Analyzes document content using natural language processing</li>
+                        <li>Identifies key themes, policies, and procedures</li>
+                        <li>Compares content against accreditation standards</li>
+                        <li>Calculates confidence scores for each mapping</li>
+                        <li>Provides detailed explanations for each match</li>
+                    </ul>
+                    <p>The system learns from user feedback to improve accuracy over time.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">Can I manually adjust mappings?</div>
+                <div class="faq-answer">
+                    <p>Yes! You have full control over the mappings:</p>
+                    <ul>
+                        <li>Review all automated mappings in the dashboard</li>
+                        <li>Add or remove standard associations</li>
+                        <li>Adjust confidence levels</li>
+                        <li>Add notes and comments for your team</li>
+                        <li>Export final mappings for your records</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">What is the confidence score?</div>
+                <div class="faq-answer">
+                    <p>Confidence scores indicate how strongly the AI believes a document matches a standard:</p>
+                    <ul>
+                        <li><strong>High (80-100%)</strong>: Strong, direct evidence for the standard</li>
+                        <li><strong>Medium (60-79%)</strong>: Relevant but may need additional support</li>
+                        <li><strong>Low (40-59%)</strong>: Tangentially related, review recommended</li>
+                        <li><strong>Below 40%</strong>: Not shown by default, likely not relevant</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="faq-section">
+            <h2>Reports & Narratives</h2>
+            
+            <div class="faq-item">
+                <div class="faq-question">What types of reports can I generate?</div>
+                <div class="faq-answer">
+                    <p>MapMyStandards offers several report types:</p>
+                    <ul>
+                        <li><strong>Compliance Summary</strong>: Overview of standards coverage</li>
+                        <li><strong>Gap Analysis</strong>: Standards lacking sufficient evidence</li>
+                        <li><strong>Evidence Matrix</strong>: Detailed mapping of documents to standards</li>
+                        <li><strong>Narrative Reports</strong>: AI-generated narratives for each standard</li>
+                        <li><strong>Executive Summary</strong>: High-level overview for leadership</li>
+                    </ul>
+                    <p>All reports can be exported as PDF, Word, or Excel files.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">How are narratives generated?</div>
+                <div class="faq-answer">
+                    <p>Our AI generates narratives by:</p>
+                    <ul>
+                        <li>Analyzing all evidence mapped to each standard</li>
+                        <li>Extracting key information and themes</li>
+                        <li>Writing coherent narratives in academic style</li>
+                        <li>Including specific examples from your documents</li>
+                        <li>Maintaining your institution's voice and terminology</li>
+                    </ul>
+                    <p>You can edit and refine all generated narratives before finalizing.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="faq-section">
+            <h2>Account & Billing</h2>
+            
+            <div class="faq-item">
+                <div class="faq-question">What subscription plans are available?</div>
+                <div class="faq-answer">
+                    <p>We offer flexible plans for institutions of all sizes:</p>
+                    <ul>
+                        <li><strong>Professional</strong>: $89/month - For single departments or small institutions</li>
+                        <li><strong>Institutional</strong>: $249/month - For larger institutions with multiple users</li>
+                        <li><strong>Enterprise</strong>: Custom pricing - For systems and consortiums</li>
+                    </ul>
+                    <p>All plans include unlimited document uploads and full feature access. Annual billing saves 20%.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">Can I add multiple users?</div>
+                <div class="faq-answer">
+                    <p>Yes, depending on your plan:</p>
+                    <ul>
+                        <li><strong>Professional</strong>: Up to 3 users</li>
+                        <li><strong>Institutional</strong>: Up to 25 users</li>
+                        <li><strong>Enterprise</strong>: Unlimited users</li>
+                    </ul>
+                    <p>You can manage users, set permissions, and track activity from the admin dashboard.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="faq-section">
+            <h2>Security & Privacy</h2>
+            
+            <div class="faq-item">
+                <div class="faq-question">Is my data secure?</div>
+                <div class="faq-answer">
+                    <p>Yes, we take security seriously:</p>
+                    <ul>
+                        <li>All data is encrypted in transit (TLS 1.3) and at rest (AES-256)</li>
+                        <li>Hosted on SOC 2 compliant infrastructure</li>
+                        <li>Regular security audits and penetration testing</li>
+                        <li>FERPA compliant data handling</li>
+                        <li>No sharing of your data with third parties</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">Who can access my documents?</div>
+                <div class="faq-answer">
+                    <p>Only authorized users from your institution can access your documents:</p>
+                    <ul>
+                        <li>You control who has access through user management</li>
+                        <li>All access is logged for audit purposes</li>
+                        <li>Support staff can only access with your explicit permission</li>
+                        <li>Documents are isolated by institution</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="faq-section">
+            <h2>Troubleshooting</h2>
+            
+            <div class="faq-item">
+                <div class="faq-question">My upload failed. What should I do?</div>
+                <div class="faq-answer">
+                    <p>If an upload fails, try these steps:</p>
+                    <ul>
+                        <li>Check your internet connection</li>
+                        <li>Ensure the file is under 50MB</li>
+                        <li>Verify the file format is supported</li>
+                        <li>Try uploading one file at a time</li>
+                        <li>Clear your browser cache and try again</li>
+                    </ul>
+                    <p>If problems persist, contact support with the error message.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">The mapping seems incorrect. How can I fix it?</div>
+                <div class="faq-answer">
+                    <p>To improve mapping accuracy:</p>
+                    <ul>
+                        <li>Use the feedback buttons to mark incorrect mappings</li>
+                        <li>Manually adjust mappings in the review interface</li>
+                        <li>Ensure documents have clear, descriptive titles</li>
+                        <li>Include context in your documents</li>
+                        <li>Contact support for persistent issues</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <a href="#" class="back-to-top">Back to Top</a>
+
+    <script>
+        // FAQ accordion functionality
+        document.querySelectorAll('.faq-question').forEach(question => {
+            question.addEventListener('click', () => {
+                const answer = question.nextElementSibling;
+                question.classList.toggle('active');
+                answer.classList.toggle('active');
+            });
+        });
+
+        // Back to top button
+        window.addEventListener('scroll', () => {
+            const backToTop = document.querySelector('.back-to-top');
+            if (window.scrollY > 200) {
+                backToTop.style.display = 'block';
+            } else {
+                backToTop.style.display = 'none';
+            }
+        });
+
+        document.querySelector('.back-to-top').addEventListener('click', (e) => {
+            e.preventDefault();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    </script>
+</body>
+</html>
