@@ -442,8 +442,9 @@
   
   "platform_pages_status": {
     "homepage": "web/homepage-enhanced.html - Marketing page (deployed to root domain)",
-    "dashboard": "web/dashboard.html - Main application dashboard",
-    "login": "web/login.html - Authentication page (production route: /login)",
+    "dashboard": "web/dashboard-modern.html - Main application dashboard (route: /dashboard)",
+    "login": "web/login.html - Cookie-based auth page (canonical route: /login)",
+    "login_platform": "DEPRECATED - use /login instead",
     "signup": "/subscribe - Canonical production signup (single-plan Stripe flow)",
     "trial_signup": "DEPRECATED - legacy trial page (replaced by /subscribe)",
     "org_chart": "web/org-chart.html - Organization structure visualization",
@@ -533,6 +534,120 @@
     "post_payment_success": "https://platform.mapmystandards.ai/payment-success.html",
     "onboarding": "https://platform.mapmystandards.ai/onboarding",
     "dashboard": "https://platform.mapmystandards.ai/dashboard"
+  },
+
+  "authentication_system_2025_09_21": {
+    "overview": "Cookie-based authentication system using HTTP-only secure cookies",
+    "critical_note": "ALL API calls must use cookie-based auth, NOT Bearer tokens",
+    "last_major_fix": {
+      "date": "2025-09-21",
+      "issue": "Infinite redirect loop between login and dashboard",
+      "root_cause": "Mismatch between auth methods - login used cookies but dashboard expected Bearer tokens",
+      "solution": "Unified all authentication to use cookie-based auth with credentials: 'include'"
+    },
+    
+    "authentication_flow": {
+      "login_endpoint": "/api/auth/login",
+      "login_method": "POST with credentials: 'include'",
+      "login_payload": {
+        "email": "user@example.com",
+        "password": "password",
+        "rememberMe": true
+      },
+      "response": "Sets HTTP-only secure cookie, returns user data",
+      "storage": "Optional localStorage for UI state only, NOT for auth"
+    },
+    
+    "api_calls": {
+      "required_option": "credentials: 'include'",
+      "example": "fetch(url, { credentials: 'include' })",
+      "no_bearer_tokens": "Do NOT use Authorization headers with Bearer tokens",
+      "cookie_handling": "Browser automatically sends cookies with credentials: 'include'"
+    },
+    
+    "page_configurations": {
+      "login.html": {
+        "endpoint": "https://api.mapmystandards.ai/api/auth/login",
+        "method": "Cookie-based auth with credentials: 'include'",
+        "redirect": "To /dashboard or return URL parameter"
+      },
+      "dashboard-modern.html": {
+        "auth_method": "All fetch calls use credentials: 'include'",
+        "no_bearer": "Removed all Authorization: Bearer headers",
+        "auth_check": "401 responses trigger redirect to /login"
+      },
+      "onboarding.html": {
+        "completion_redirect": "/dashboard (not /dashboard-modern)",
+        "auth_persistence": "Cookies maintained throughout flow"
+      }
+    },
+    
+    "javascript_files": {
+      "auth_client.js": {
+        "redirect_function": "redirectToLogin() goes to /login (not /login-platform)",
+        "auth_method": "Uses credentials: 'include' for all requests",
+        "silent_refresh": "Attempts /api/auth/refresh with cookies"
+      },
+      "host-guard.js": {
+        "canonical_mappings": "All login variants map to /login.html",
+        "deprecated_routes": ["/login-platform", "/login-platform.html"]
+      }
+    },
+    
+    "deprecated_patterns": {
+      "do_not_use": [
+        "Authorization: Bearer ${token}",
+        "headers: { 'Authorization': `Bearer ${this.getAuthToken()}` }",
+        "/auth-simple/login (token-only endpoint)",
+        "/login-platform or /login-platform.html URLs",
+        "localStorage tokens for API authentication"
+      ]
+    },
+    
+    "correct_patterns": {
+      "api_calls": "fetch(url, { credentials: 'include' })",
+      "login_url": "/login (canonical)",
+      "auth_endpoint": "/api/auth/login (cookie-based)",
+      "dashboard_url": "/dashboard (not /dashboard-modern)",
+      "error_handling": "401 → redirect to /login?return=<current_path>"
+    },
+    
+    "complete_user_flows": {
+      "login_flow": [
+        "1. User visits /login",
+        "2. Submits credentials to /api/auth/login",
+        "3. Server sets HTTP-only cookie",
+        "4. Redirect to /dashboard or return URL",
+        "5. Dashboard loads with cookie auth"
+      ],
+      "signup_flow": [
+        "1. User visits /subscribe",
+        "2. Completes Stripe payment",
+        "3. Redirected to /payment-success.html",
+        "4. Then to /checkout-success.html (set password)",
+        "5. Password set creates account and sets auth cookie",
+        "6. Redirected to /onboarding",
+        "7. Onboarding completion → /dashboard"
+      ]
+    },
+    
+    "troubleshooting": {
+      "infinite_redirect_loop": {
+        "symptom": "User logs in but gets redirected back to login",
+        "cause": "Dashboard using Bearer auth while login sets cookies",
+        "fix": "Ensure all pages use credentials: 'include'"
+      },
+      "401_errors": {
+        "symptom": "Dashboard shows 401 unauthorized",
+        "cause": "Missing credentials: 'include' in fetch calls",
+        "fix": "Add credentials: 'include' to all API calls"
+      },
+      "wrong_login_page": {
+        "symptom": "Redirects to /login-platform",
+        "cause": "Old redirect URLs in JavaScript",
+        "fix": "Update all redirects to use /login"
+      }
+    }
   },
   
   "session_recovery_context": {
