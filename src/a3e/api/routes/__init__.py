@@ -76,6 +76,13 @@ api_router.include_router(sso_router, prefix="/sso", tags=["sso"])
 # Include webhook management
 api_router.include_router(webhooks_router, prefix="/webhooks", tags=["webhooks"])
 
+# Include workspace management
+try:
+    from .workspaces import router as workspaces_router
+    api_router.include_router(workspaces_router, prefix="/workspaces", tags=["workspaces"])
+except Exception as e:
+    print(f"Failed to import workspaces router: {e}")
+
 # Configuration router not yet implemented
 
 __all__ = ["api_router"]

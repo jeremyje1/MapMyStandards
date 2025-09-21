@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Workspaces - MapMyStandards</title>
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/sidebar.css">
+    <link rel="stylesheet" href="css/header.css">
+    <style>
+        .main-content {
+            padding: 24px;
+            background: #f9fafb;
+            min-height: calc(100vh - 64px);
+        }
+
+        .workspace-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .workspace-header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin: 0;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        .workspaces-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .workspace-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 20px;
+            transition: box-shadow 0.2s;
+            cursor: pointer;
+        }
+
+        .workspace-card:hover {
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .workspace-card h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0 0 8px 0;
+            color: #1a1a1a;
+        }
+
+        .workspace-card p {
+            color: #6b7280;
+            font-size: 14px;
+            margin: 0 0 16px 0;
+        }
+
+        .workspace-stats {
+            display: flex;
+            gap: 16px;
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 12px;
+        }
+
+        .workspace-stats span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .workspace-role {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .role-owner { background: #fef3c7; color: #92400e; }
+        .role-admin { background: #dbeafe; color: #1e40af; }
+        .role-editor { background: #d1fae5; color: #065f46; }
+        .role-viewer { background: #e5e7eb; color: #374151; }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #6b7280;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: #374151;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* Workspace detail view */
+        .workspace-detail {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 24px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 24px;
+            border-bottom: 1px solid #e5e7eb;
+            margin-bottom: 24px;
+        }
+
+        .tab {
+            padding: 12px 0;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            font-weight: 500;
+            color: #6b7280;
+        }
+
+        .tab.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .members-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .member-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: #f9fafb;
+            border-radius: 6px;
+        }
+
+        .member-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .member-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .member-details h4 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .member-details p {
+            margin: 0;
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 48px;
+            color: #6b7280;
+        }
+
+        .empty-state h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #374151;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="main-header">
+        <div class="header-left">
+            <h1 class="logo">MapMyStandards</h1>
+            <span class="institution-name" id="institution-name">Academix University</span>
+        </div>
+        <div class="header-right">
+            <button class="icon-btn notification-btn">
+                <i class="fas fa-bell"></i>
+            </button>
+            <div class="user-menu">
+                <button class="user-menu-btn">
+                    <img src="https://via.placeholder.com/32" alt="User" class="user-avatar">
+                    <span class="user-name" id="user-name">John Doe</span>
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="main-content">
+        <!-- Workspaces List View -->
+        <div id="workspaces-list-view">
+            <div class="workspace-header">
+                <h1>Team Workspaces</h1>
+                <button class="btn-primary" onclick="showCreateWorkspaceModal()">
+                    <i class="fas fa-plus"></i> Create Workspace
+                </button>
+            </div>
+
+            <div class="workspaces-grid" id="workspaces-grid">
+                <!-- Workspace cards will be inserted here -->
+            </div>
+        </div>
+
+        <!-- Workspace Detail View -->
+        <div id="workspace-detail-view" style="display: none;">
+            <div class="workspace-detail">
+                <button class="btn-secondary" onclick="showWorkspacesList()">
+                    <i class="fas fa-arrow-left"></i> Back to Workspaces
+                </button>
+
+                <div class="workspace-header" style="margin-top: 20px;">
+                    <div>
+                        <h1 id="workspace-name"></h1>
+                        <p id="workspace-description" style="color: #6b7280; margin-top: 4px;"></p>
+                    </div>
+                    <div id="workspace-actions"></div>
+                </div>
+
+                <div class="tabs">
+                    <div class="tab active" onclick="switchTab('overview')">Overview</div>
+                    <div class="tab" onclick="switchTab('members')">Members</div>
+                    <div class="tab" onclick="switchTab('standards')">Standards</div>
+                    <div class="tab" onclick="switchTab('evidence')">Evidence</div>
+                    <div class="tab" onclick="switchTab('settings')">Settings</div>
+                </div>
+
+                <div class="tab-content active" id="tab-overview">
+                    <div class="workspace-stats" style="font-size: 16px; gap: 32px; margin-bottom: 32px;">
+                        <span><strong id="members-count">0</strong> Members</span>
+                        <span><strong id="standards-count">0</strong> Standards</span>
+                        <span><strong id="evidence-count">0</strong> Evidence Files</span>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="tab-members">
+                    <div style="margin-bottom: 16px;">
+                        <button class="btn-primary" onclick="showInviteModal()">
+                            <i class="fas fa-user-plus"></i> Invite Member
+                        </button>
+                    </div>
+                    <div class="members-list" id="members-list">
+                        <!-- Members will be inserted here -->
+                    </div>
+                </div>
+
+                <div class="tab-content" id="tab-standards">
+                    <div class="empty-state">
+                        <h3>No Standards Added</h3>
+                        <p>Add standards from your dashboard to collaborate on them in this workspace.</p>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="tab-evidence">
+                    <div class="empty-state">
+                        <h3>No Evidence Files</h3>
+                        <p>Upload evidence files to share them with your team for review.</p>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="tab-settings">
+                    <h3>Workspace Settings</h3>
+                    <p>Settings management coming soon...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Workspace Modal -->
+    <div class="modal" id="create-workspace-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Create New Workspace</h2>
+                <button class="close-btn" onclick="hideCreateWorkspaceModal()">&times;</button>
+            </div>
+            <form id="create-workspace-form">
+                <div class="form-group">
+                    <label for="workspace-name">Workspace Name *</label>
+                    <input type="text" id="workspace-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="workspace-description">Description</label>
+                    <textarea id="workspace-description"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="hideCreateWorkspaceModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">Create Workspace</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Invite Member Modal -->
+    <div class="modal" id="invite-member-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Invite Team Member</h2>
+                <button class="close-btn" onclick="hideInviteModal()">&times;</button>
+            </div>
+            <form id="invite-member-form">
+                <div class="form-group">
+                    <label for="member-email">Email Address *</label>
+                    <input type="email" id="member-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="member-role">Role *</label>
+                    <select id="member-role" required>
+                        <option value="viewer">Viewer - Can view content</option>
+                        <option value="editor">Editor - Can add and edit content</option>
+                        <option value="admin">Admin - Can manage workspace and members</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="hideInviteModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">Send Invitation</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentWorkspace = null;
+        let userWorkspaces = [];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadUserData();
+            await loadWorkspaces();
+        });
+
+        // Load user data
+        async function loadUserData() {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                window.location.href = '/signin.html';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/profile', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) throw new Error('Failed to load profile');
+                const data = await response.json();
+                
+                document.getElementById('user-name').textContent = data.name || data.email;
+                document.getElementById('institution-name').textContent = data.institution_name || 'Institution';
+            } catch (error) {
+                console.error('Error loading user data:', error);
+            }
+        }
+
+        // Load workspaces
+        async function loadWorkspaces() {
+            const token = localStorage.getItem('authToken');
+            try {
+                const response = await fetch('/api/workspaces', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) throw new Error('Failed to load workspaces');
+                userWorkspaces = await response.json();
+                displayWorkspaces();
+            } catch (error) {
+                console.error('Error loading workspaces:', error);
+                document.getElementById('workspaces-grid').innerHTML = `
+                    <div class="empty-state" style="grid-column: 1 / -1;">
+                        <h3>No Workspaces Yet</h3>
+                        <p>Create your first workspace to start collaborating with your team.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Display workspaces
+        function displayWorkspaces() {
+            const grid = document.getElementById('workspaces-grid');
+            
+            if (userWorkspaces.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1 / -1;">
+                        <h3>No Workspaces Yet</h3>
+                        <p>Create your first workspace to start collaborating with your team.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = userWorkspaces.map(ws => `
+                <div class="workspace-card" onclick="showWorkspaceDetail('${ws.id}')">
+                    <h3>${ws.name}</h3>
+                    <p>${ws.description || 'No description'}</p>
+                    <div class="workspace-stats">
+                        <span><i class="fas fa-users"></i> ${ws.member_count} members</span>
+                    </div>
+                    <span class="workspace-role role-${ws.user_role}">${ws.user_role.toUpperCase()}</span>
+                </div>
+            `).join('');
+        }
+
+        // Show workspace detail
+        async function showWorkspaceDetail(workspaceId) {
+            const token = localStorage.getItem('authToken');
+            try {
+                const response = await fetch(`/api/workspaces/${workspaceId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) throw new Error('Failed to load workspace');
+                const data = await response.json();
+                currentWorkspace = data;
+
+                // Update UI
+                document.getElementById('workspace-name').textContent = data.workspace.name;
+                document.getElementById('workspace-description').textContent = data.workspace.description || '';
+                document.getElementById('members-count').textContent = data.stats.member_count;
+                document.getElementById('standards-count').textContent = data.stats.standards_count;
+                document.getElementById('evidence-count').textContent = data.stats.evidence_count;
+
+                // Update actions based on role
+                const actions = document.getElementById('workspace-actions');
+                if (data.user_role === 'owner' || data.user_role === 'admin') {
+                    actions.innerHTML = `
+                        <button class="btn-secondary" onclick="showWorkspaceSettings()">
+                            <i class="fas fa-cog"></i> Settings
+                        </button>
+                    `;
+                } else {
+                    actions.innerHTML = '';
+                }
+
+                // Display members
+                displayMembers(data.members);
+
+                // Show detail view
+                document.getElementById('workspaces-list-view').style.display = 'none';
+                document.getElementById('workspace-detail-view').style.display = 'block';
+            } catch (error) {
+                console.error('Error loading workspace:', error);
+                alert('Failed to load workspace details');
+            }
+        }
+
+        // Display members
+        function displayMembers(members) {
+            const list = document.getElementById('members-list');
+            list.innerHTML = members.map(member => `
+                <div class="member-item">
+                    <div class="member-info">
+                        <div class="member-avatar">${member.name ? member.name[0].toUpperCase() : 'U'}</div>
+                        <div class="member-details">
+                            <h4>${member.name}</h4>
+                            <p>${member.email}</p>
+                        </div>
+                    </div>
+                    <span class="workspace-role role-${member.role}">${member.role.toUpperCase()}</span>
+                </div>
+            `).join('');
+        }
+
+        // Switch tabs
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+        }
+
+        // Show workspaces list
+        function showWorkspacesList() {
+            document.getElementById('workspace-detail-view').style.display = 'none';
+            document.getElementById('workspaces-list-view').style.display = 'block';
+            currentWorkspace = null;
+        }
+
+        // Modal functions
+        function showCreateWorkspaceModal() {
+            document.getElementById('create-workspace-modal').classList.add('active');
+        }
+
+        function hideCreateWorkspaceModal() {
+            document.getElementById('create-workspace-modal').classList.remove('active');
+            document.getElementById('create-workspace-form').reset();
+        }
+
+        function showInviteModal() {
+            document.getElementById('invite-member-modal').classList.add('active');
+        }
+
+        function hideInviteModal() {
+            document.getElementById('invite-member-modal').classList.remove('active');
+            document.getElementById('invite-member-form').reset();
+        }
+
+        // Form submissions
+        document.getElementById('create-workspace-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const token = localStorage.getItem('authToken');
+            
+            const data = {
+                name: document.getElementById('workspace-name').value,
+                description: document.getElementById('workspace-description').value
+            };
+
+            try {
+                const response = await fetch('/api/workspaces', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) throw new Error('Failed to create workspace');
+                
+                hideCreateWorkspaceModal();
+                await loadWorkspaces();
+                alert('Workspace created successfully!');
+            } catch (error) {
+                console.error('Error creating workspace:', error);
+                alert('Failed to create workspace');
+            }
+        });
+
+        document.getElementById('invite-member-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const token = localStorage.getItem('authToken');
+            
+            const data = {
+                email: document.getElementById('member-email').value,
+                role: document.getElementById('member-role').value
+            };
+
+            try {
+                const response = await fetch(`/api/workspaces/${currentWorkspace.workspace.id}/invite`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to send invitation');
+                }
+                
+                hideInviteModal();
+                alert('Invitation sent successfully!');
+            } catch (error) {
+                console.error('Error sending invitation:', error);
+                alert(error.message);
+            }
+        });
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</body>
+</html>
