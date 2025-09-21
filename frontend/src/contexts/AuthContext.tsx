@@ -39,18 +39,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Check if user is logged in on mount
+  // Check if user is logged in on mount (session cookie)
   useEffect(() => {
     const checkAuth = async () => {
-      const token = localStorage.getItem('token');
-      if (token) {
-        try {
-          const response = await api.auth.getCurrentUser();
-          setUser(response.data.user);
-        } catch (error) {
-          console.error('Auth check failed:', error);
-          setAuthToken(null);
+      try {
+        const response = await api.auth.getCurrentUser();
+        // Expect shape like { ok: true, user: { ... } } or similar
+        const d: any = response.data || {};
+        if (d && (d.user || d.ok)) {
+          const u = d.user || { id: d.user_id, email: d.email, name: d.name };
+          if (u && u.email) setUser(u);
         }
+      } catch (error) {
+        // Not logged in; ignore
       }
       setLoading(false);
     };
@@ -60,18 +61,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await api.auth.login(email, password);
-      
-      // auth-simple/login returns access_token directly in data
-      const { access_token, user_id, email: userEmail, name, plan } = response.data.data;
-      
-      setAuthToken(access_token);
-      setUser({
-        id: user_id,
-        email: userEmail,
-        name: name,
-        plan: plan
-      });
+      await api.auth.login(email, password); // sets session cookie
+      const me = await api.auth.getCurrentUser();
+      const d: any = me.data || {};
+      const u = d.user || { id: d.user_id, email: d.email, name: d.name };
+      if (!u || !u.email) throw new Error('Login failed');
+      setUser(u);
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Login failed');
     }
@@ -107,27 +102,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     window.location.href = '/login';
   };
 
-  const sendMagicLink = async (email: string) => {
-    try {
-      await api.auth.sendMagicLink(email);
-    } catch (error: any) {
-      throw new Error(error.response?.data?.message || 'Failed to send magic link');
-    }
+  const sendMagicLink = async (_email: string) => {
+    throw new Error('Magic link sign-in is not enabled on this environment.');
   };
 
-  const verifyMagicLink = async (token: string) => {
-    try {
-      const response = await api.auth.verifyMagicLink(token);
-      const { token: authToken, user, refreshToken } = response.data;
-      
-      setAuthToken(authToken);
-      if (refreshToken) {
-        localStorage.setItem('refreshToken', refreshToken);
-      }
-      setUser(user);
-    } catch (error: any) {
-      throw new Error(error.response?.data?.message || 'Invalid or expired magic link');
-    }
+  const verifyMagicLink = async (_token: string) => {
+    throw new Error('Magic link verification is not enabled on this environment.');
   };
 
   const value = {

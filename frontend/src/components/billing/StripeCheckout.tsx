@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { loadStripe } from '@stripe/stripe-js';
 import api from '../../services/api';
 
@@ -10,26 +10,17 @@ const stripePromise = loadStripe(
 );
 
 const StripeCheckout: React.FC = () => {
-  const [searchParams] = useSearchParams();
+  // const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   // const email = searchParams.get('email'); // Reserved for future use
-  const planName = searchParams.get('plan') || 'professional';
+  // const planName = searchParams.get('plan') || 'single'; // Not needed for single plan
   // const trial = searchParams.get('trial') === 'true'; // Reserved for future use
   
-  // Map plan names to Stripe LIVE price IDs (MapMyStandards account)
-  const priceMap: { [key: string]: string } = {
-    'professional': 'price_1S1PIaK8PKpLCKDZxRRzTP59', // Professional Monthly $299
-    'professional_annual': 'price_1S1PIkK8PKpLCKDZqxmtxUeG', // Professional Annual $2,999
-    'institution': 'price_1RyVQgK8PKpLCKDZTais3Tyx', // Institution Monthly $599
-    'institution_annual': 'price_1RyVQrK8PKpLCKDZUshqaOvZ', // Institution Annual $5,999
-    'starter': 'price_1RyVPPK8PKpLCKDZFbwkFdqq', // Starter Monthly $99
-    'starter_annual': 'price_1RyVPgK8PKpLCKDZe8nu4ium', // Starter Annual $999
-  };
-  
-  const priceId = priceMap[planName] || priceMap['professional'];
+  // Single plan price ID
+  const priceId = 'price_1S2yYNK8PKpLCKDZ6zgFu2ay'; // $199/month with 7-day trial
 
   useEffect(() => {
     handleCheckout();

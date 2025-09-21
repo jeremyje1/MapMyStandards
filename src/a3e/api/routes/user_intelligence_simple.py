@@ -5,6 +5,7 @@ Bypasses complex database queries to provide direct access to AI features
 
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form, Request, Header
 from fastapi.responses import JSONResponse, PlainTextResponse, Response
+from fastapi.responses import FileResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import List, Dict, Any, Optional, Tuple, Set
 from datetime import datetime
@@ -302,6 +303,9 @@ def _record_user_upload(
     return data
 
 
+# (Checklist endpoints moved below auth helpers to satisfy linters)
+
+
 def _compute_dashboard_metrics_for_snapshot(current_user: Dict[str, Any]) -> Dict[str, Any]:
     settings_ = _merge_claims_with_settings(current_user)
     uploads = _get_user_uploads(current_user)
@@ -591,6 +595,98 @@ async def get_current_user_simple(
     return claims
 
 # ------------------------------
+# Evidence Intake Checklist
+# ------------------------------
+@router.get("/standards/checklist")
+async def get_evidence_intake_checklist(
+    accreditor: Optional[str] = None,
+    format: Optional[str] = None,
+    include_indicators: bool = False,
+    current_user: Dict[str, Any] = Depends(get_current_user_simple),
+):
+    acc = (accreditor or _merge_claims_with_settings(current_user).get("primary_accreditor") or "HLC").upper()
+    uploads = _get_user_uploads(current_user)
+    mapped: Set[str] = set(uploads.get("unique_standards", []) or [])
+
+    def node_entry(n):
+        return {
+            "standard_id": n.node_id,
+            "accreditor": n.accreditor,
+            "level": n.level,
+            "title": n.title,
+            "description": n.description,
+            "evidence_requirements": list(n.evidence_requirements or []),
+            "covered": n.node_id in mapped,
+        }
+
+    levels = {"standard", "clause"}
+    if include_indicators:
+        levels.add("indicator")
+    nodes = standards_graph.get_nodes_by_accreditor(acc, levels)
+    by_standard: Dict[str, Dict[str, Any]] = {}
+    for n in nodes:
+        path = standards_graph.get_path_to_root(n.node_id)
+        root_node = path[0] if path else n
+        root_id = root_node.node_id
+        group = by_standard.setdefault(root_id, {
+            "standard_id": root_id,
+            "title": root_node.title if root_node else "",
+            "items": [],
+        })
+        group["items"].append(node_entry(n))
+
+    fmt = (format or "json").lower()
+    if fmt == "csv":
+        out_io = io.StringIO()
+        writer = csv.writer(out_io)
+        writer.writerow(["standard_id", "accreditor", "level", "title", "description", "evidence_requirements", "covered"])
+        for g in by_standard.values():
+            for it in g["items"]:
+                writer.writerow([
+                    it.get("standard_id"),
+                    it.get("accreditor"),
+                    it.get("level"),
+                    it.get("title"),
+                    (it.get("description") or "").replace("\n", " ").strip(),
+                    "; ".join(it.get("evidence_requirements") or []),
+                    "yes" if it.get("covered") else "no",
+                ])
+        return Response(content=out_io.getvalue(), media_type="text/csv")
+
+    total = sum(1 for g in by_standard.values() for _ in g["items"]) or 0
+    covered = sum(1 for g in by_standard.values() for it in g["items"] if it.get("covered"))
+    return {
+        "success": True,
+        "accreditor": acc,
+        "total_items": total,
+        "covered_items": covered,
+        "coverage_percentage": round((covered / total) * 100, 1) if total else 0.0,
+        "groups": list(by_standard.values()),
+    }
+
+
+@router.get("/standards/checklist/stats")
+async def get_evidence_intake_checklist_stats(
+    accreditor: Optional[str] = None,
+    include_indicators: bool = False,
+    current_user: Dict[str, Any] = Depends(get_current_user_simple),
+):
+    acc = (accreditor or _merge_claims_with_settings(current_user).get("primary_accreditor") or "HLC").upper()
+    uploads = _get_user_uploads(current_user)
+    mapped: Set[str] = set(uploads.get("unique_standards", []) or [])
+    levels = {"standard", "clause"}
+    if include_indicators:
+        levels.add("indicator")
+    nodes = standards_graph.get_nodes_by_accreditor(acc, levels)
+    total = len(nodes)
+    covered = len([n for n in nodes if n.node_id in mapped])
+    return {
+        "accreditor": acc,
+        "total_items": total,
+        "covered_items": covered,
+        "coverage_percentage": round((covered / total) * 100, 1) if total else 0.0,
+    }
+
 # BYOL Standards Ingestion
 # ------------------------------
 @router.post("/standards/byol/upload")
@@ -2158,6 +2254,10 @@ async def citeguard_check(payload: Dict[str, Any], current_user: Dict[str, Any] 
 async def export_reviewer_pack(payload: Dict[str, Any], current_user: Dict[str, Any] = Depends(get_current_user_simple)):
     standard_ids = payload.get("standard_ids") or []
     include_files = bool(payload.get("include_files", False))
+    include_checklist = bool(payload.get("include_checklist", True))
+    include_metrics = bool(payload.get("include_metrics", True))
+    checklist_format = str(payload.get("checklist_format") or "json").lower()
+    acc = (payload.get("accreditor") or _merge_claims_with_settings(current_user).get("primary_accreditor") or "HLC").upper()
     user_body = payload.get("body") or ""
     html = generate_narrative_html(standard_ids, user_body)
     cmap = _build_citation_map(current_user, standard_ids)
@@ -2167,6 +2267,42 @@ async def export_reviewer_pack(payload: Dict[str, Any], current_user: Dict[str, 
             zf.writestr("index.html", "<html><body><h1>Reviewer Pack</h1><a href=\"narrative.html\">Open Narrative</a></body></html>")
             zf.writestr("narrative.html", html)
             zf.writestr("citation_map.json", json.dumps(cmap, ensure_ascii=False, indent=2))
+            # Optional checklist
+            if include_checklist:
+                # Reuse the checklist generator (JSON)
+                chk = await get_evidence_intake_checklist(accreditor=acc, format="json", include_indicators=False, current_user=current_user)  # type: ignore
+                if checklist_format == "csv":
+                    # Build CSV from chk.groups
+                    try:
+                        import io as _io
+                        import csv as _csv
+                        sio = _io.StringIO()
+                        w = _csv.writer(sio)
+                        w.writerow(["standard_id", "accreditor", "level", "title", "description", "evidence_requirements", "covered"])
+                        for g in (chk.get("groups") or []):
+                            for it in (g.get("items") or []):
+                                w.writerow([
+                                    it.get("standard_id"),
+                                    it.get("accreditor"),
+                                    it.get("level"),
+                                    it.get("title"),
+                                    (it.get("description") or "").replace("\n", " ").strip(),
+                                    "; ".join(it.get("evidence_requirements") or []),
+                                    "yes" if it.get("covered") else "no",
+                                ])
+                        zf.writestr("checklist.csv", sio.getvalue())
+                    except Exception:
+                        # Fallback to JSON if CSV generation fails
+                        zf.writestr("checklist.json", json.dumps(chk, ensure_ascii=False, indent=2))
+                else:
+                    zf.writestr("checklist.json", json.dumps(chk, ensure_ascii=False, indent=2))
+            # Optional readiness metrics
+            if include_metrics:
+                try:
+                    metrics = await readiness_scorecard(current_user)  # type: ignore
+                except Exception:
+                    metrics = {"success": False}
+                zf.writestr("metrics.json", json.dumps(metrics, ensure_ascii=False, indent=2))
             if include_files:
                 for sid, cites in (cmap or {}).items():
                     for c in cites:
@@ -2177,7 +2313,38 @@ async def export_reviewer_pack(payload: Dict[str, Any], current_user: Dict[str, 
                                 zf.write(sp, arcname=arcname)
                             except Exception:
                                 continue
-        return {"success": True, "pack_path": str(tmp_zip)}
+        # Copy/move into snapshots with a stable name and provide download URL
+        try:
+            safe_user = (_user_key(current_user) or "user").replace("@", "_").replace("/", "_")
+            dest = SNAPSHOTS_DIR / f"reviewer_pack_{safe_user}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.zip"
+            import shutil
+            shutil.copyfile(tmp_zip, dest)
+            download_url = f"/api/user/intelligence-simple/download/snapshots/{dest.name}"
+            # Persist last reviewer pack info into user settings
+            try:
+                settings_ = _merge_claims_with_settings(current_user)
+                settings_["last_reviewer_pack"] = {
+                    "path": str(dest),
+                    "download_url": download_url,
+                    "created_at": datetime.utcnow().isoformat(),
+                }
+                _save_user_settings(current_user, settings_)
+            except Exception:
+                pass
+            return {"success": True, "pack_path": str(dest), "download_url": download_url}
+        except Exception:
+            # Persist fallback info without download URL
+            try:
+                settings_ = _merge_claims_with_settings(current_user)
+                settings_["last_reviewer_pack"] = {
+                    "path": str(tmp_zip),
+                    "download_url": None,
+                    "created_at": datetime.utcnow().isoformat(),
+                }
+                _save_user_settings(current_user, settings_)
+            except Exception:
+                pass
+            return {"success": True, "pack_path": str(tmp_zip)}
     except Exception as e:
         logger.error(f"Reviewer pack export error: {e}")
         raise HTTPException(status_code=500, detail="Failed to build reviewer pack")
@@ -2238,6 +2405,8 @@ async def readiness_scorecard(current_user: Dict[str, Any] = Depends(get_current
 # ------------------------------
 SNAPSHOTS_DIR = Path(os.getenv("SNAPSHOTS_DIR", "snapshots"))
 SNAPSHOTS_DIR.mkdir(parents=True, exist_ok=True)
+PUBLISHED_DIR = SNAPSHOTS_DIR / "public"
+PUBLISHED_DIR.mkdir(parents=True, exist_ok=True)
 
 
 @router.post("/snapshot/create")
@@ -2264,6 +2433,50 @@ async def create_snapshot(payload: Dict[str, Any] = None, current_user: Dict[str
     except Exception as e:
         logger.error(f"Snapshot create error: {e}")
         raise HTTPException(status_code=500, detail="Failed to create snapshot")
+
+@router.get("/download/snapshots/{filename}")
+async def download_snapshot(filename: str, current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+    try:
+        path = SNAPSHOTS_DIR / filename
+        if not path.exists() or not path.is_file():
+            raise HTTPException(status_code=404, detail="File not found")
+        return FileResponse(str(path), filename=filename, media_type="application/zip")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Download error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to download file")
+
+@router.post("/narratives/reviewer-pack/publish")
+async def publish_last_reviewer_pack(current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+    """Publish the user's last reviewer pack by extracting into a public directory and return a URL."""
+    try:
+        settings_ = _merge_claims_with_settings(current_user)
+        last = (settings_ or {}).get("last_reviewer_pack") or {}
+        pack_path = last.get("path")
+        if not pack_path or not os.path.exists(pack_path):
+            raise HTTPException(status_code=404, detail="No reviewer pack found to publish")
+
+        safe_user = (_user_key(current_user) or "user").replace("@", "_").replace("/", "_")
+        folder = f"{Path(pack_path).stem}_{secrets.token_hex(4)}"
+        out_dir = PUBLISHED_DIR / safe_user / folder
+        out_dir.mkdir(parents=True, exist_ok=True)
+
+        with zipfile.ZipFile(pack_path, 'r') as zf:
+            zf.extractall(out_dir)
+
+        public_url = f"/snapshots/public/{safe_user}/{folder}"
+        try:
+            settings_["last_reviewer_pack"]["public_url"] = public_url
+            _save_user_settings(current_user, settings_)
+        except Exception:
+            pass
+        return {"success": True, "public_url": public_url, "folder": folder}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Publish reviewer pack error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to publish reviewer pack")
 
 
 # ------------------------------

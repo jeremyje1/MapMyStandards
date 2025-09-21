@@ -76,32 +76,28 @@ api.interceptors.response.use(
 
 // API service methods
 const apiService = {
+  // raw helper for custom calls when needed
+  raw: api,
+  // Uploads (DB-backed)
+  uploads: {
+    upload: (file: File, opts?: { title?: string; description?: string; accreditor?: string }) => {
+      const form = new FormData();
+      form.append('file', file);
+      if (opts?.title) form.append('title', opts.title);
+      if (opts?.description) form.append('description', opts.description);
+      if (opts?.accreditor) form.append('accreditor', opts.accreditor);
+      return api.post('/api/uploads', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+    },
+    getJob: (jobId: string) => api.get(`/api/uploads/jobs/${jobId}`),
+    recent: (limit = 10) => api.get('/api/uploads/recent', { params: { limit } })
+  },
   // Auth endpoints
   auth: {
+    // Session-based login against production API
     login: async (email: string, password: string) => {
-      const response = await api.post('/auth-simple/login', { email, password });
-      // Transform backend response to match frontend expectations
-      if (response.data.success && response.data.data) {
-        const backendData = response.data.data;
-        return {
-          data: {
-            token: backendData.access_token,
-            user: {
-              id: backendData.user_id,
-              email: backendData.email,
-              name: backendData.name,
-              role: 'user',
-              plan: backendData.plan,
-              customerId: backendData.customer_id,
-              subscriptionId: backendData.subscription_id
-            },
-            refreshToken: null // Backend doesn't provide refresh token
-          }
-        };
-      }
-      return response;
+      return api.post('/api/auth/login', { email, password, rememberMe: false });
     },
-    
+
     register: (data: { 
       email: string; 
       password: string; 
@@ -112,31 +108,36 @@ const apiService = {
       billing_period: string;
       is_trial: boolean;
     }) =>
-      api.post('/auth/register', data),
+      api.post('/api/auth/register', data),
     
     completeRegistration: (data: { session_id: string; email: string; password: string }) =>
-      api.post('/auth/complete-registration', data),
+      api.post('/api/auth/complete-registration', data),
     
     logout: () => {
       setAuthToken(null);
       localStorage.removeItem('refreshToken');
-      return Promise.resolve();
+      return api.post('/api/auth/logout');
     },
     
     getCurrentUser: () =>
-      api.get('/auth/verify-token'),
+      api.get('/api/auth/me'),
     
-    sendMagicLink: (email: string) =>
-      api.post('/auth/magic-link', { email }),
+    // Not available in production backend; keep as stub with clear error
+    sendMagicLink: async (_email: string) => {
+      throw new Error('Magic link sign-in is not enabled on this environment.');
+    },
     
-    verifyMagicLink: (token: string) =>
-      api.post('/auth/verify-magic-link', { token }),
+    verifyMagicLink: async (_token: string) => {
+      throw new Error('Magic link verification is not enabled on this environment.');
+    },
     
-    resetPassword: (email: string) =>
-      api.post('/auth/reset-password', { email }),
+    resetPassword: async (_email: string) => {
+      throw new Error('Password reset is not enabled on this environment.');
+    },
     
-    updatePassword: (token: string, newPassword: string) =>
-      api.post('/auth/update-password', { token, newPassword }),
+    updatePassword: async (_token: string, _newPassword: string) => {
+      throw new Error('Password reset is not enabled on this environment.');
+    },
   },
   
   // User endpoints
@@ -212,6 +213,25 @@ const apiService = {
       api.get(`/reports/${id}/download`, { responseType: 'blob' }),
   },
   
+  // Intelligence Simple endpoints
+  intelligenceSimple: {
+    // Evidence reviews list (review queue)
+    listReviews: (params?: { status?: string; limit?: number }) =>
+      api.get('/api/user/intelligence-simple/evidence/reviews', { params }),
+
+    // Readiness scorecard snapshot
+    readinessScorecard: (params?: { accreditor?: string }) =>
+      api.get('/api/user/intelligence-simple/readiness/scorecard', { params }),
+
+    // Risk aggregate summary
+    riskAggregate: (params?: { accreditor?: string }) =>
+      api.get('/api/user/intelligence-simple/risk/aggregate', { params }),
+
+    // Metrics timeseries (coverage trend)
+    metricsTimeseries: (params?: { accreditor?: string }) =>
+      api.get('/api/user/intelligence-simple/metrics/timeseries', { params }),
+  },
+  
   // Standards endpoints
   standards: {
     list: () =>
@@ -225,6 +245,19 @@ const apiService = {
     
     updateMapping: (standardId: string, documentId: string, confidence: number) =>
       api.post('/standards/mappings', { standardId, documentId, confidence }),
+
+    // Checklist and stats (live endpoints)
+    getChecklist: async (params?: { accreditor?: string; format?: 'json'|'csv'; include_indicators?: boolean }) => {
+      return api.get('/api/user/intelligence-simple/standards/checklist', { params });
+    },
+
+    getChecklistStats: async (params?: { accreditor?: string; include_indicators?: boolean }) => {
+      return api.get('/api/user/intelligence-simple/standards/checklist/stats', { params });
+    },
+
+    // Reviewer pack export
+    exportReviewerPack: (payload: { standard_ids: string[]; include_files?: boolean; include_checklist?: boolean; include_metrics?: boolean; checklist_format?: 'json'|'csv'; accreditor?: string; body?: string; }) =>
+      api.post('/api/user/intelligence-simple/narratives/export/reviewer-pack', payload, { responseType: 'json' }),
   },
   
   // Billing endpoints

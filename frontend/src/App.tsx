@@ -10,6 +10,13 @@ import CheckoutSuccess from './components/CheckoutSuccess';
 import PricingPage from './components/PricingPage';
 import Trial from './components/Trial';
 import PrivateRoute from './components/PrivateRoute';
+import Layout from './components/Layout';
+import StandardsPage from './components/StandardsPage';
+import ReportsPage from './components/ReportsPage';
+import CrosswalkPage from './components/CrosswalkPage';
+import Onboarding from './components/Onboarding';
+import OnboardingGuard from './components/OnboardingGuard';
+import UploadPage from './components/UploadPage';
 
 function App() {
   return (
@@ -23,27 +30,40 @@ function App() {
           <Route path="/trial" element={<Trial />} />
           <Route path="/checkout" element={<StripeCheckout />} />
           <Route path="/checkout/success" element={<CheckoutSuccess />} />
+          <Route path="/onboarding" element={<Onboarding />} />
 
           {/* Protected routes */}
           <Route path="/dashboard" element={
             <PrivateRoute>
-              <Dashboard />
+              <OnboardingGuard>
+                <Layout><Dashboard /></Layout>
+              </OnboardingGuard>
             </PrivateRoute>
           } />
           
           <Route path="/documents" element={
             <PrivateRoute>
-              <div className="min-h-screen bg-gray-50 p-8">
-                <h1 className="text-3xl font-bold">Documents</h1>
-              </div>
+              <Layout>
+                <UploadPage />
+              </Layout>
             </PrivateRoute>
           } />
           
           <Route path="/reports" element={
             <PrivateRoute>
-              <div className="min-h-screen bg-gray-50 p-8">
-                <h1 className="text-3xl font-bold">Reports</h1>
-              </div>
+              <Layout><ReportsPage /></Layout>
+            </PrivateRoute>
+          } />
+
+          <Route path="/standards" element={
+            <PrivateRoute>
+              <Layout><StandardsPage /></Layout>
+            </PrivateRoute>
+          } />
+
+          <Route path="/crosswalk" element={
+            <PrivateRoute>
+              <Layout><CrosswalkPage /></Layout>
             </PrivateRoute>
           } />
 

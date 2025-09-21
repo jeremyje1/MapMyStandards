@@ -1231,6 +1231,12 @@ async def root_page(request: Request):
     which does not exist in templates/, leading to 404s in production. We remove
     the template dependency to make the root deterministic.
     """
+    # Prefer enhanced homepage if present
+    enhanced_file = WEB_DIR / "homepage-enhanced.html"
+    if enhanced_file.exists():
+        logger.info("[root] Serving homepage-enhanced.html from web directory (%s)", enhanced_file)
+        return FileResponse(str(enhanced_file))
+
     index_file = WEB_DIR / "index.html"
     if index_file.exists():
         logger.info("[root] Serving index.html from web directory (%s)", index_file)
@@ -1243,7 +1249,7 @@ async def root_page(request: Request):
         return FileResponse(str(homepage_file))
     
     # As a last resort, redirect users to the trial signup page
-    logger.warning("[root] Both index.html (%s) and homepage.html missing - redirecting to /trial-signup", index_file)
+    logger.warning("[root] Enhanced/index/homepage missing - redirecting to /trial-signup")
     return HTMLResponse("<html><head><meta http-equiv='refresh' content='0; url=/trial-signup'></head><body>Redirecting...</body></html>")
 
 # Lightweight debug endpoint to confirm static asset presence (not in schema)
@@ -1761,6 +1767,14 @@ async def favicon():  # noqa: D401
 # Mount /web for static assets (js, images, etc.)
 if WEB_DIR.exists():
     app.mount("/web", StaticFiles(directory=str(WEB_DIR)), name="web")
+    try:
+        from .api.routes.user_intelligence_simple import SNAPSHOTS_DIR
+        public_path = SNAPSHOTS_DIR / "public"
+        public_path.mkdir(parents=True, exist_ok=True)
+        app.mount("/snapshots/public", StaticFiles(directory=str(public_path)), name="snapshots-public")
+        logger.info("✅ Mounted /snapshots/public for reviewer packs")
+    except Exception as _e:
+        logger.warning(f"⚠️ Could not mount snapshots public dir: {_e}")
     # Add backup mount for simpler CSS paths (/static/css/tailwind.css)
     static_dir = WEB_DIR / "static"
     if static_dir.exists():

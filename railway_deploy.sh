@@ -1,45 +1,48 @@
 #!/bin/bash
 
-echo "🚀 Deploying MapMyStandards to Railway..."
+set -euo pipefail
 
-# Check if we're in the right directory
-if [ ! -f "subscription_backend.py" ]; then
-    echo "❌ subscription_backend.py not found. Make sure you're in the right directory."
+echo "🚀 Deploying MapMyStandards to Railway (browserless)..."
+
+# Configuration (override via env vars if needed)
+PROJECT_ID_DEFAULT="4f3575e8-ba3c-4cbb-a566-2dc318c6f58c"
+ENV_NAME_DEFAULT="production"
+SERVICE_NAME_DEFAULT="MapMyStandards"
+
+PROJECT_ID="${RAILWAY_PROJECT_ID:-$PROJECT_ID_DEFAULT}"
+ENV_NAME="${RAILWAY_ENVIRONMENT:-$ENV_NAME_DEFAULT}"
+SERVICE_NAME="${RAILWAY_SERVICE_NAME:-$SERVICE_NAME_DEFAULT}"
+
+# Check CLI
+if ! command -v railway >/dev/null 2>&1; then
+    echo "❌ Railway CLI not installed. Install with: npm install -g @railway/cli"
     exit 1
 fi
 
-# Check if Railway CLI is installed
-if ! command -v railway &> /dev/null; then
-    echo "❌ Railway CLI not installed. Install it first:"
-    echo "npm install -g @railway/cli"
+# Require token for non-interactive login
+if [[ -z "${RAILWAY_TOKEN:-}" ]]; then
+    echo "❌ RAILWAY_TOKEN not set. Create a token in Railway (Account → Tokens) and run:"
+    echo "   export RAILWAY_TOKEN=YOUR_TOKEN"
+    echo "Then re-run this script."
     exit 1
 fi
 
-# Login to Railway (if not already logged in)
-echo "📡 Logging into Railway..."
-railway login
+echo "🔎 Using project: $PROJECT_ID | env: $ENV_NAME | service: $SERVICE_NAME"
 
-# Initialize project if needed
-if [ ! -f "railway.toml" ]; then
-    echo "🔧 Initializing Railway project..."
-    railway init
-fi
+echo "📡 Linking project and service (browserless)..."
+# Link project and environment/service context so subsequent commands know where to deploy
+railway link "$PROJECT_ID" || true
+railway environment "$ENV_NAME" || true
+railway service "$SERVICE_NAME" || true
 
-# Deploy the application
-echo "🚀 Deploying application..."
-railway up
+# Deploy (non-interactive)
+echo "🚀 Deploying application to Railway..."
+railway up --ci --service "$SERVICE_NAME" --environment "$ENV_NAME" --detach || {
+    echo "❌ railway up failed"; exit 1; }
 
-# Check deployment status
 echo "✅ Checking deployment status..."
-railway status
+railway status || true
 
-echo ""
-echo "🎉 Deployment complete!"
-echo "Run 'railway open' to view your deployed application"
-echo "Run 'railway logs' to view application logs"
-echo ""
-echo "📋 Next steps:"
-echo "1. Get your Railway URL from the dashboard"
-echo "2. Configure Stripe webhook with: YOUR_RAILWAY_URL/webhook"
-echo "3. Test the health check: YOUR_RAILWAY_URL/health"
-echo "4. Test the signup flow"
+echo "\n🎉 Deployment command finished. For logs:"
+echo "   railway logs --project $PROJECT_ID --service $SERVICE_NAME"
+echo "   railway open --project $PROJECT_ID"

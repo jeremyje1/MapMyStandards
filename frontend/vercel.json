@@ -1,9 +1,22 @@
 {
-  "public": true,
-  "rewrites": [
-    {
-      "source": "/((?!api/.*).*)",
-      "destination": "/index.html"
-    }
-  ]
+  "version": 2,
+  "builds": [
+    { "src": "package.json", "use": "@vercel/static-build", "config": { "distDir": "build" } }
+  ],
+  "routes": [
+    { "src": "/login-platform(\\.html)?", "status": 301, "headers": { "Location": "/login" } },
+    { "src": "/dashboard-modern", "status": 301, "headers": { "Location": "/dashboard" } },
+    { "src": "/reports-modern", "status": 301, "headers": { "Location": "/reports" } },
+    { "src": "/standards-modern", "status": 301, "headers": { "Location": "/standards" } },
+    { "src": "/team-settings\\.html", "status": 301, "headers": { "Location": "/dashboard" } },
+    { "src": "/scenario-modeling\\.html", "status": 301, "headers": { "Location": "/dashboard" } },
+    { "src": "/powerbi-dashboard\\.html", "status": 301, "headers": { "Location": "/reports" } },
+    { "src": "/org-chart", "status": 301, "headers": { "Location": "/dashboard" } },
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "/index.html" }
+  ],
+  "env": {
+    "REACT_APP_API_URL": "https://api.mapmystandards.ai",
+    "REACT_APP_APP_URL": "https://platform.mapmystandards.ai"
+  }
 }

@@ -1,0 +1,62 @@
+name: E2E Tests
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * *' # nightly at 06:00 UTC
+  push:
+    tags:
+      - 'v*.*.*' # run on release tags
+
+jobs:
+  cypress:
+    runs-on: ubuntu-latest
+    if: ${{ (secrets.E2E_EMAIL != '' && secrets.E2E_PASSWORD != '') }}
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Wait for platform
+        run: |
+          for i in {1..30}; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" https://platform.mapmystandards.ai/ || true)
+            if [ "$code" = "200" ]; then echo "Platform ready"; exit 0; fi
+            echo "Waiting for platform... ($i)"
+            sleep 10
+          done
+          echo "Platform not ready"; exit 1
+
+      - name: Run Cypress (headless)
+        env:
+          E2E_EMAIL: ${{ secrets.E2E_EMAIL }}
+          E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
+          MIN_COVERAGE: ${{ vars.MIN_COVERAGE }}
+          CYPRESS_video: 'true'
+        run: npm run cypress:run
+
+      - name: Upload Cypress screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-screenshots
+          path: frontend/cypress/screenshots/**
+          if-no-files-found: ignore
+
+      - name: Upload Cypress videos
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-videos
+          path: frontend/cypress/videos/**
+          if-no-files-found: ignore

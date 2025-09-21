@@ -122,7 +122,7 @@ def _build_checkout_session(request: CreateCheckoutRequest, current_user: Option
         ),
         'cancel_url': request.cancel_url or os.getenv(
             "STRIPE_CANCEL_URL",
-            "https://platform.mapmystandards.ai/subscribe"
+            "https://platform.mapmystandards.ai/pricing"
         ),
         'allow_promotion_codes': True,
         # Add 7-day trial period

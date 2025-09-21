@@ -107,6 +107,16 @@
       if (!url) return;
       loadPack(url);
     });
+    // Auto-load if query param ?pack= is present
+    (function(){
+      const u = new URL(window.location.href);
+      const p = u.searchParams.get('pack');
+      if (p) {
+        const input = document.getElementById('packUrl');
+        if (input) input.value = p;
+        loadPack(p);
+      }
+    })();
   </script>
 </body>
 </html>

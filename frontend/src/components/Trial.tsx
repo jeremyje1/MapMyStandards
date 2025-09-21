@@ -4,66 +4,36 @@ import { CheckIcon } from '@heroicons/react/24/outline';
 
 const plans = [
   {
-    id: 'starter',
-    name: 'Starter',
-    price: '$97',
-    period: 'month',
-    features: [
-      'Up to 100 documents',
-      'Basic compliance tracking',
-      'Monthly reports',
-      'Email support',
-      '1 user account',
-    ],
-  },
-  {
-    id: 'professional',
-    name: 'Professional',
-    price: '$299',
+    id: 'standard',
+    name: 'Standard',
+    price: '$199',
     period: 'month',
     popular: true,
     features: [
+      'All features included',
       'Unlimited documents',
-      'Advanced compliance tracking',
-      'Real-time reports',
+      'Compliance tracking + real-time reports',
       'Priority support',
-      'Up to 10 user accounts',
-      'API access',
-      'Custom integrations',
-    ],
-  },
-  {
-    id: 'institution',
-    name: 'Institution',
-    price: '$997',
-    period: 'month',
-    features: [
-      'Everything in Professional',
-      'Unlimited user accounts',
-      'White-label options',
-      'Dedicated account manager',
-      'Custom training',
-      'SLA guarantee',
+      'Team access',
+      'API access & integrations',
     ],
   },
 ];
 
 const Trial: React.FC = () => {
-  const [selectedPlan, setSelectedPlan] = useState('professional');
+  const navigate = useNavigate();
+  const [selectedPlan] = useState('standard');
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
 
   const handleStartTrial = async () => {
     if (!email) {
       alert('Please enter your email address');
       return;
     }
-
     setLoading(true);
-    // Redirect to Stripe checkout with trial parameters
-    const checkoutUrl = `/checkout?email=${encodeURIComponent(email)}&plan=${selectedPlan}&trial=true`;
-    navigate(checkoutUrl);
+    // Navigate to checkout with the single plan
+    navigate(`/checkout?email=${encodeURIComponent(email)}&plan=single`);
   };
 
   return (
@@ -115,14 +85,10 @@ const Trial: React.FC = () => {
               </ul>
 
               <button
-                onClick={() => setSelectedPlan(plan.id)}
-                className={`mt-8 w-full py-3 px-4 rounded-md font-medium ${
-                  selectedPlan === plan.id
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
-                }`}
+                disabled
+                className="mt-8 w-full py-3 px-4 rounded-md font-medium bg-primary-600 text-white cursor-default"
               >
-                {selectedPlan === plan.id ? 'Selected' : 'Select Plan'}
+                Selected
               </button>
             </div>
           ))}

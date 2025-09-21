@@ -1,0 +1,56 @@
+[build]
+  command = "npm run build"
+  publish = "build"
+
+[[redirects]]
+  from = "/login-platform"
+  to = "/login"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/login-platform.html"
+  to = "/login"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/dashboard-modern"
+  to = "/dashboard"
+  status = 301
+
+[[redirects]]
+  from = "/reports-modern"
+  to = "/reports"
+  status = 301
+
+[[redirects]]
+  from = "/standards-modern"
+  to = "/standards"
+  status = 301
+
+[[redirects]]
+  from = "/team-settings.html"
+  to = "/dashboard"
+  status = 301
+
+[[redirects]]
+  from = "/scenario-modeling.html"
+  to = "/dashboard"
+  status = 301
+
+[[redirects]]
+  from = "/powerbi-dashboard.html"
+  to = "/reports"
+  status = 301
+
+[[redirects]]
+  from = "/org-chart"
+  to = "/dashboard"
+  status = 301
+
+# SPA fallback
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
