@@ -22,6 +22,7 @@ from .powerbi import router as powerbi_router
 from .teams import router as teams_router
 from .audit_logs import router as audit_logs_router
 from .sso import router as sso_router
+from .webhooks import router as webhooks_router
 
 # Create main API router
 api_router = APIRouter()
@@ -71,6 +72,9 @@ api_router.include_router(powerbi_router, tags=["powerbi"])
 api_router.include_router(teams_router, prefix="/teams", tags=["teams"])
 api_router.include_router(audit_logs_router, prefix="/audit-logs", tags=["audit"])
 api_router.include_router(sso_router, prefix="/sso", tags=["sso"])
+
+# Include webhook management
+api_router.include_router(webhooks_router, prefix="/webhooks", tags=["webhooks"])
 
 # Configuration router not yet implemented
 

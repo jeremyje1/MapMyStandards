@@ -29,6 +29,7 @@ from .services.llm_service import LLMService
 from .services.document_service import DocumentService
 from .api.routes import integrations_router, proprietary_router
 from .services.analytics_service import analytics_service
+from .services.webhook_service import webhook_service, WebhookEvent
 
 # Configure basic logging first before any imports that might use it  
 logging.basicConfig(level=logging.INFO)
@@ -1578,6 +1579,22 @@ async def upload_evidence(
             uploaded_by=current_user["user_id"]
         )
         
+        # Trigger webhook for evidence uploaded
+        async with webhook_service:
+            await webhook_service.trigger_event(
+                event=WebhookEvent.EVIDENCE_UPLOADED,
+                data={
+                    "evidence_id": str(evidence_item.id),
+                    "filename": file.filename,
+                    "evidence_type": evidence_type,
+                    "description": description,
+                    "size": file.size,
+                    "uploaded_by": current_user["user_id"],
+                    "institution_id": institution_id
+                },
+                institution_id=institution_id
+            )
+        
         return {
             "message": "Evidence uploaded and processing started",
             "evidence_id": str(evidence_item.id),
@@ -1628,6 +1645,21 @@ async def _execute_workflow_background(
         await db_service.save_workflow_results(results, user_id)
         
         logger.info(f"Workflow completed for institution {institution.id}")
+        
+        # Trigger webhook for evidence processed
+        async with webhook_service:
+            await webhook_service.trigger_event(
+                event=WebhookEvent.EVIDENCE_PROCESSED,
+                data={
+                    "institution_id": institution.id,
+                    "accreditor_id": accreditor_id,
+                    "evidence_count": len(evidence_items),
+                    "standards_mapped": len(results.get("mapped_standards", [])),
+                    "gaps_found": len(results.get("gaps", [])),
+                    "user_id": user_id
+                },
+                institution_id=institution.id
+            )
         
     except Exception as e:
         logger.error(f"Workflow execution failed: {e}")
@@ -2001,6 +2033,11 @@ if WEB_DIR.exists():
     async def ai_dashboard_html():  # noqa: D401
         """Redirect AI dashboard HTML to main dashboard."""
         return RedirectResponse(url="/dashboard", status_code=301)
+
+    @app.get("/web/integrations", response_class=FileResponse, include_in_schema=False)
+    async def integrations_page():  # noqa: D401
+        """Integrations management interface."""
+        return FileResponse(str(Path(__file__).parent.parent.parent / "static" / "integrations.html"))
 
     @app.get("/upload-ai.html", response_class=FileResponse, include_in_schema=False)
     async def upload_ai_html():  # noqa: D401

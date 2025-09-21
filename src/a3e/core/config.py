@@ -118,6 +118,30 @@ class Settings(BaseSettings):
     # Payment Configuration (Stripe)
     STRIPE_SECRET_KEY: str = Field(default="", env="STRIPE_SECRET_KEY")
     STRIPE_PUBLISHABLE_KEY: str = Field(default="", env="STRIPE_PUBLISHABLE_KEY")
+    
+    # Google Drive Integration
+    GOOGLE_CLIENT_ID: Optional[str] = Field(default=None, env="GOOGLE_CLIENT_ID")
+    GOOGLE_CLIENT_SECRET: Optional[str] = Field(default=None, env="GOOGLE_CLIENT_SECRET")
+    GOOGLE_REDIRECT_URI: str = Field(default="https://platform.mapmystandards.ai/api/v1/integrations/google/callback", env="GOOGLE_REDIRECT_URI")
+    
+    # Canvas LMS Integration
+    CANVAS_CLIENT_ID: Optional[str] = Field(default=None, env="CANVAS_CLIENT_ID")
+    CANVAS_CLIENT_SECRET: Optional[str] = Field(default=None, env="CANVAS_CLIENT_SECRET")
+    CANVAS_ACCESS_TOKEN: Optional[str] = Field(default=None, env="CANVAS_ACCESS_TOKEN")
+    CANVAS_API_BASE: str = Field(default="https://canvas.instructure.com/api/v1", env="CANVAS_API_BASE")
+    
+    # Banner SIS Integration
+    BANNER_ETHOS_TOKEN: Optional[str] = Field(default=None, env="BANNER_ETHOS_TOKEN")
+    BANNER_DB_HOST: Optional[str] = Field(default=None, env="BANNER_DB_HOST")
+    BANNER_DB_USER: Optional[str] = Field(default=None, env="BANNER_DB_USER")
+    BANNER_DB_PASSWORD: Optional[str] = Field(default=None, env="BANNER_DB_PASSWORD")
+    BANNER_DB_URL: Optional[str] = Field(default=None, env="BANNER_DB_URL")
+    
+    # SharePoint/Microsoft Integration
+    MS_CLIENT_ID: Optional[str] = Field(default=None, env="MS_CLIENT_ID")
+    MS_CLIENT_SECRET: Optional[str] = Field(default=None, env="MS_CLIENT_SECRET")
+    MS_TENANT_ID: Optional[str] = Field(default=None, env="MS_TENANT_ID")
+    AZURE_CLIENT_ID: Optional[str] = Field(default=None, env="AZURE_CLIENT_ID")  # Alias for MS_CLIENT_ID
     STRIPE_WEBHOOK_SECRET: str = Field(default="", env="STRIPE_WEBHOOK_SECRET")
     STRIPE_PRICE_COLLEGE_MONTHLY: str = Field(default="", env="STRIPE_PRICE_ID_PROFESSIONAL_MONTHLY")
     STRIPE_PRICE_COLLEGE_YEARLY: str = Field(default="", env="STRIPE_PRICE_ID_PROFESSIONAL_ANNUAL")

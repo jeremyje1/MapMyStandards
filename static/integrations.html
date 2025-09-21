@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Integrations - MapMyStandards A³E</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <style>
+        .integration-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .integration-card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .integration-logo {
+            width: 48px;
+            height: 48px;
+            margin-right: 15px;
+        }
+        
+        .integration-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .status-connected {
+            background-color: #d4f5d4;
+            color: #2e7d32;
+        }
+        
+        .status-configured {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-not-configured {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .file-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .file-item {
+            padding: 10px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .file-item:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .file-icon {
+            margin-right: 10px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">MapMyStandards A³E</a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/web/dashboard">Dashboard</a>
+                <a class="nav-link active" href="/web/integrations">Integrations</a>
+                <a class="nav-link" href="/logout">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h1 class="mb-4">Integrations</h1>
+        
+        <!-- Tabs for Integrations and Webhooks -->
+        <ul class="nav nav-tabs mb-4" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="integrations-tab" data-bs-toggle="tab" data-bs-target="#integrations" type="button" role="tab">
+                    <i class="fas fa-plug"></i> Integrations
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="webhooks-tab" data-bs-toggle="tab" data-bs-target="#webhooks" type="button" role="tab">
+                    <i class="fas fa-webhook"></i> Webhooks
+                </button>
+            </li>
+        </ul>
+        
+        <div class="tab-content">
+            <!-- Integrations Tab -->
+            <div class="tab-pane fade show active" id="integrations" role="tabpanel">
+                <!-- Integration Status Overview -->
+                <div id="integrationStatus" class="row">
+            <!-- Google Drive -->
+            <div class="col-md-6 col-lg-4">
+                <div class="integration-card" data-integration="google_drive">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="fab fa-google-drive integration-logo" style="color: #4285f4; font-size: 48px;"></i>
+                        <div>
+                            <h5 class="mb-1">Google Drive</h5>
+                            <span class="integration-status status-not-configured">Not Configured</span>
+                        </div>
+                    </div>
+                    <p class="text-muted mb-3">Import evidence directly from your Google Drive files</p>
+                    <button class="btn btn-primary btn-sm connect-btn" onclick="connectGoogleDrive()">
+                        <i class="fas fa-link"></i> Connect Google Drive
+                    </button>
+                    <button class="btn btn-success btn-sm browse-btn d-none" onclick="browseGoogleDrive()">
+                        <i class="fas fa-folder-open"></i> Browse Files
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Canvas LMS -->
+            <div class="col-md-6 col-lg-4">
+                <div class="integration-card" data-integration="canvas">
+                    <div class="d-flex align-items-center mb-3">
+                        <img src="/static/img/canvas-logo.svg" alt="Canvas" class="integration-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                        <i class="fas fa-graduation-cap integration-logo" style="color: #e74c3c; font-size: 48px; display: none;"></i>
+                        <div>
+                            <h5 class="mb-1">Canvas LMS</h5>
+                            <span class="integration-status status-not-configured">Not Configured</span>
+                        </div>
+                    </div>
+                    <p class="text-muted mb-3">Sync course data and learning outcomes from Canvas</p>
+                    <button class="btn btn-primary btn-sm connect-btn">
+                        <i class="fas fa-link"></i> Connect Canvas
+                    </button>
+                </div>
+            </div>
+            
+            <!-- SharePoint -->
+            <div class="col-md-6 col-lg-4">
+                <div class="integration-card" data-integration="sharepoint">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="fab fa-microsoft integration-logo" style="color: #0078d4; font-size: 48px;"></i>
+                        <div>
+                            <h5 class="mb-1">SharePoint</h5>
+                            <span class="integration-status status-not-configured">Not Configured</span>
+                        </div>
+                    </div>
+                    <p class="text-muted mb-3">Access documents from your SharePoint sites</p>
+                    <button class="btn btn-primary btn-sm connect-btn">
+                        <i class="fas fa-link"></i> Connect SharePoint
+                    </button>
+                </div>
+            </div>
+        </div>
+            </div>
+            
+            <!-- Webhooks Tab -->
+            <div class="tab-pane fade" id="webhooks" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4>Webhook Configurations</h4>
+                    <button class="btn btn-primary" onclick="showCreateWebhookModal()">
+                        <i class="fas fa-plus"></i> Create Webhook
+                    </button>
+                </div>
+                
+                <!-- Webhook List -->
+                <div id="webhookList" class="row">
+                    <div class="col-12 text-center py-5">
+                        <p class="text-muted">Loading webhooks...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Google Drive File Browser Modal -->
+        <div class="modal fade" id="googleDriveModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fab fa-google-drive"></i> Google Drive Files
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Search Bar -->
+                        <div class="mb-3">
+                            <div class="input-group">
+                                <input type="text" id="googleDriveSearch" class="form-control" placeholder="Search files...">
+                                <button class="btn btn-outline-secondary" onclick="searchGoogleDrive()">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- File List -->
+                        <div id="googleDriveFiles" class="file-list">
+                            <div class="text-center py-4">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mt-2 text-muted">Loading files...</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" id="importSelected" onclick="importSelectedFiles()" disabled>
+                            <i class="fas fa-download"></i> Import Selected
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let selectedFiles = new Set();
+        
+        // Check integration status on load
+        window.onload = async function() {
+            try {
+                const response = await fetch('/api/v1/integrations/status');
+                const data = await response.json();
+                updateIntegrationStatus(data.integrations);
+            } catch (error) {
+                console.error('Error fetching integration status:', error);
+            }
+        };
+        
+        function updateIntegrationStatus(integrations) {
+            Object.keys(integrations).forEach(key => {
+                const integration = integrations[key];
+                const card = document.querySelector(`[data-integration="${key}"]`);
+                if (!card) return;
+                
+                const statusElement = card.querySelector('.integration-status');
+                const connectBtn = card.querySelector('.connect-btn');
+                const browseBtn = card.querySelector('.browse-btn');
+                
+                if (integration.connected) {
+                    statusElement.className = 'integration-status status-connected';
+                    statusElement.textContent = 'Connected';
+                    if (connectBtn) connectBtn.classList.add('d-none');
+                    if (browseBtn) browseBtn.classList.remove('d-none');
+                } else if (integration.configured) {
+                    statusElement.className = 'integration-status status-configured';
+                    statusElement.textContent = 'Configured';
+                } else {
+                    statusElement.className = 'integration-status status-not-configured';
+                    statusElement.textContent = 'Not Configured';
+                }
+            });
+        }
+        
+        async function connectGoogleDrive() {
+            try {
+                const response = await fetch('/api/v1/integrations/google/auth-url');
+                const data = await response.json();
+                
+                if (data.auth_url) {
+                    // Open Google OAuth in a popup
+                    const width = 500;
+                    const height = 600;
+                    const left = (screen.width - width) / 2;
+                    const top = (screen.height - height) / 2;
+                    
+                    const authWindow = window.open(
+                        data.auth_url,
+                        'GoogleAuth',
+                        `width=${width},height=${height},left=${left},top=${top}`
+                    );
+                    
+                    // Check if authentication was successful
+                    const checkInterval = setInterval(async () => {
+                        if (authWindow.closed) {
+                            clearInterval(checkInterval);
+                            // Refresh integration status
+                            const statusResponse = await fetch('/api/v1/integrations/status');
+                            const statusData = await statusResponse.json();
+                            updateIntegrationStatus(statusData.integrations);
+                        }
+                    }, 1000);
+                }
+            } catch (error) {
+                console.error('Error connecting to Google Drive:', error);
+                alert('Failed to connect to Google Drive');
+            }
+        }
+        
+        async function browseGoogleDrive() {
+            selectedFiles.clear();
+            const modal = new bootstrap.Modal(document.getElementById('googleDriveModal'));
+            modal.show();
+            
+            // Load files
+            await loadGoogleDriveFiles();
+        }
+        
+        async function loadGoogleDriveFiles(query = '') {
+            const filesContainer = document.getElementById('googleDriveFiles');
+            filesContainer.innerHTML = `
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Loading files...</p>
+                </div>
+            `;
+            
+            try {
+                let url = '/api/v1/integrations/google/files';
+                if (query) {
+                    url += `?query=${encodeURIComponent(query)}`;
+                }
+                
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch files');
+                }
+                
+                const files = await response.json();
+                displayGoogleDriveFiles(files);
+            } catch (error) {
+                console.error('Error loading Google Drive files:', error);
+                filesContainer.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i> 
+                        Failed to load files. Please ensure Google Drive is connected.
+                    </div>
+                `;
+            }
+        }
+        
+        function displayGoogleDriveFiles(files) {
+            const filesContainer = document.getElementById('googleDriveFiles');
+            
+            if (files.length === 0) {
+                filesContainer.innerHTML = `
+                    <div class="text-center py-4 text-muted">
+                        <i class="fas fa-folder-open fa-3x mb-3"></i>
+                        <p>No files found</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            filesContainer.innerHTML = files.map(file => `
+                <div class="file-item" onclick="toggleFileSelection('${file.id}', this)">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="file-${file.id}">
+                        <label class="form-check-label w-100" for="file-${file.id}">
+                            <i class="fas ${getFileIcon(file.mimeType)} file-icon"></i>
+                            <strong>${file.name}</strong>
+                            <small class="text-muted ms-2">${formatFileSize(file.size)}</small>
+                            <small class="text-muted float-end">${formatDate(file.modifiedTime)}</small>
+                        </label>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function toggleFileSelection(fileId, element) {
+            const checkbox = element.querySelector('input[type="checkbox"]');
+            checkbox.checked = !checkbox.checked;
+            
+            if (checkbox.checked) {
+                selectedFiles.add(fileId);
+            } else {
+                selectedFiles.delete(fileId);
+            }
+            
+            document.getElementById('importSelected').disabled = selectedFiles.size === 0;
+        }
+        
+        function getFileIcon(mimeType) {
+            if (mimeType.includes('pdf')) return 'fa-file-pdf';
+            if (mimeType.includes('word') || mimeType.includes('document')) return 'fa-file-word';
+            if (mimeType.includes('sheet') || mimeType.includes('excel')) return 'fa-file-excel';
+            if (mimeType.includes('presentation') || mimeType.includes('powerpoint')) return 'fa-file-powerpoint';
+            if (mimeType.includes('image')) return 'fa-file-image';
+            if (mimeType.includes('folder')) return 'fa-folder';
+            return 'fa-file';
+        }
+        
+        function formatFileSize(bytes) {
+            if (!bytes) return '';
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(1024));
+            return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+        }
+        
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            return date.toLocaleDateString();
+        }
+        
+        async function searchGoogleDrive() {
+            const query = document.getElementById('googleDriveSearch').value;
+            await loadGoogleDriveFiles(query);
+        }
+        
+        async function importSelectedFiles() {
+            if (selectedFiles.size === 0) return;
+            
+            const importBtn = document.getElementById('importSelected');
+            importBtn.disabled = true;
+            importBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Importing...';
+            
+            const results = [];
+            for (const fileId of selectedFiles) {
+                try {
+                    const response = await fetch(`/api/v1/integrations/google/import/${fileId}`, {
+                        method: 'POST'
+                    });
+                    const result = await response.json();
+                    results.push({ fileId, success: response.ok, result });
+                } catch (error) {
+                    results.push({ fileId, success: false, error: error.message });
+                }
+            }
+            
+            // Show results
+            const successCount = results.filter(r => r.success).length;
+            const failCount = results.filter(r => !r.success).length;
+            
+            alert(`Import complete!\n✓ ${successCount} files imported successfully\n✗ ${failCount} files failed`);
+            
+            // Close modal and reset
+            bootstrap.Modal.getInstance(document.getElementById('googleDriveModal')).hide();
+            selectedFiles.clear();
+            importBtn.disabled = false;
+            importBtn.innerHTML = '<i class="fas fa-download"></i> Import Selected';
+        }
+        
+        // Handle OAuth callback
+        if (window.location.search.includes('code=')) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+            
+            if (code) {
+                // Send code to backend
+                fetch('/api/v1/integrations/google/callback', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code })
+                }).then(() => {
+                    // Close popup window if this is a popup
+                    if (window.opener) {
+                        window.close();
+                    } else {
+                        // Redirect to integrations page
+                        window.location.href = '/web/integrations';
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>

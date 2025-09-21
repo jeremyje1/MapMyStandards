@@ -60,6 +60,16 @@ async def get_integrations_overview() -> Dict[str, Any]:
                         "GET /api/v1/integrations/sharepoint/sites",
                         "GET /api/v1/integrations/sharepoint/sites/{site_id}/documents"
                     ]
+                },
+                "google_drive": {
+                    "description": "Google Drive integration for document import and evidence management",
+                    "status": "configured" if bool(getattr(settings, 'GOOGLE_CLIENT_ID', None)) else "not_configured",
+                    "endpoints": [
+                        "GET /api/v1/integrations/google/auth-url",
+                        "POST /api/v1/integrations/google/callback",
+                        "GET /api/v1/integrations/google/files",
+                        "POST /api/v1/integrations/google/import/{file_id}"
+                    ]
                 }
             },
             "management_endpoints": [
@@ -107,6 +117,16 @@ async def get_integration_status() -> Dict[str, Any]:
                     ),
                     "connected": connection_results.get('sharepoint', False),
                     "tenant_id": getattr(settings, 'MS_TENANT_ID', None),
+                    "mock_data": False
+                },
+                "google_drive": {
+                    "configured": bool(
+                        getattr(settings, 'GOOGLE_CLIENT_ID', None) and 
+                        getattr(settings, 'GOOGLE_CLIENT_SECRET', None)
+                    ),
+                    "connected": connection_results.get('google_drive', False),
+                    "auth_type": "oauth2",
+                    "scopes": ["drive.readonly", "drive.file"],
                     "mock_data": False
                 }
             }
@@ -308,6 +328,91 @@ async def canvas_oauth_callback(code: str) -> Dict[str, str]:
     except Exception as e:
         logger.error(f"Canvas OAuth callback error: {e}")
         raise HTTPException(status_code=500, detail="OAuth callback failed")
+
+# Google Drive Integration Routes
+@router.get("/google/auth-url")
+async def get_google_auth_url() -> Dict[str, str]:
+    """Get Google OAuth authorization URL."""
+    try:
+        async with integration_manager.google_drive:
+            auth_url = integration_manager.google_drive.get_auth_url()
+            return {
+                "auth_url": auth_url,
+                "message": "Redirect user to this URL for Google authentication"
+            }
+    except Exception as e:
+        logger.error(f"Error generating Google auth URL: {e}")
+        raise HTTPException(status_code=500, detail="Failed to generate authorization URL")
+
+@router.post("/google/callback")
+async def google_oauth_callback(code: str) -> Dict[str, str]:
+    """Handle Google OAuth callback."""
+    try:
+        async with integration_manager.google_drive:
+            success = await integration_manager.google_drive.authenticate(code)
+            
+            if success:
+                return {"message": "Google Drive authentication successful", "status": "connected"}
+            else:
+                raise HTTPException(status_code=400, detail="Failed to authenticate with Google Drive")
+                
+    except Exception as e:
+        logger.error(f"Google OAuth callback error: {e}")
+        raise HTTPException(status_code=500, detail="OAuth callback failed")
+
+@router.get("/google/files")
+async def get_google_drive_files(
+    query: Optional[str] = None,
+    folder_id: Optional[str] = None
+) -> List[Dict[str, Any]]:
+    """List files from Google Drive."""
+    try:
+        async with integration_manager.google_drive:
+            if not await integration_manager.google_drive.test_connection():
+                raise HTTPException(status_code=401, detail="Google Drive not authenticated")
+            
+            files = await integration_manager.google_drive.list_files(query=query, folder_id=folder_id)
+            return files
+            
+    except Exception as e:
+        logger.error(f"Error listing Google Drive files: {e}")
+        raise HTTPException(status_code=500, detail="Failed to list files")
+
+@router.post("/google/import/{file_id}")
+async def import_google_drive_file(file_id: str) -> Dict[str, Any]:
+    """Import a file from Google Drive as evidence."""
+    try:
+        async with integration_manager.google_drive:
+            if not await integration_manager.google_drive.test_connection():
+                raise HTTPException(status_code=401, detail="Google Drive not authenticated")
+            
+            # Download file content
+            file_content = await integration_manager.google_drive.download_file(file_id)
+            if not file_content:
+                raise HTTPException(status_code=404, detail="File not found or unable to download")
+            
+            # Get file metadata
+            files = await integration_manager.google_drive.list_files()
+            file_info = next((f for f in files if f['id'] == file_id), None)
+            if not file_info:
+                raise HTTPException(status_code=404, detail="File metadata not found")
+            
+            # Here you would typically save the file to your evidence storage
+            # and create an evidence record in the database
+            
+            return {
+                "message": "File imported successfully",
+                "file_id": file_id,
+                "filename": file_info.get('name'),
+                "size": file_info.get('size'),
+                "status": "imported"
+            }
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error importing Google Drive file: {e}")
+        raise HTTPException(status_code=500, detail="Failed to import file")
 
 # Configuration routes
 config_router = APIRouter(prefix="/api/v1/config", tags=["configuration"])

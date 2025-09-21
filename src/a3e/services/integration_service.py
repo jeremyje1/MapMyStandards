@@ -283,6 +283,175 @@ class BannerSISService(BaseIntegrationService):
             logger.error(f"Error getting courses: {e}")
             return []
 
+
+class GoogleDriveService(BaseIntegrationService):
+    """Google Drive integration service for document import and sync."""
+    
+    def __init__(self):
+        super().__init__()
+        self.client_id = getattr(settings, 'GOOGLE_CLIENT_ID', None)
+        self.client_secret = getattr(settings, 'GOOGLE_CLIENT_SECRET', None)
+        self.redirect_uri = getattr(settings, 'GOOGLE_REDIRECT_URI', None)
+        self.access_token: Optional[str] = None
+        self.refresh_token: Optional[str] = None
+        self.api_base = "https://www.googleapis.com"
+        self.scopes = [
+            'https://www.googleapis.com/auth/drive.readonly',
+            'https://www.googleapis.com/auth/drive.file'
+        ]
+    
+    async def authenticate(self, auth_code: Optional[str] = None) -> bool:
+        """Authenticate with Google Drive using OAuth 2.0."""
+        try:
+            if auth_code:
+                # Exchange auth code for tokens
+                token_url = f"{self.api_base}/oauth2/v4/token"
+                data = {
+                    'code': auth_code,
+                    'client_id': self.client_id,
+                    'client_secret': self.client_secret,
+                    'redirect_uri': self.redirect_uri,
+                    'grant_type': 'authorization_code'
+                }
+                
+                async with self.session.post(token_url, data=data) as response:
+                    if response.status == 200:
+                        token_data = await response.json()
+                        self.access_token = token_data.get('access_token')
+                        self.refresh_token = token_data.get('refresh_token')
+                        return True
+                    else:
+                        logger.error(f"Google auth failed: {response.status}")
+                        return False
+            else:
+                # Use existing refresh token if available
+                if self.refresh_token:
+                    return await self.refresh_access_token()
+                return False
+                
+        except Exception as e:
+            logger.error(f"Google Drive authentication error: {e}")
+            return False
+    
+    async def refresh_access_token(self) -> bool:
+        """Refresh the access token using refresh token."""
+        try:
+            token_url = f"{self.api_base}/oauth2/v4/token"
+            data = {
+                'refresh_token': self.refresh_token,
+                'client_id': self.client_id,
+                'client_secret': self.client_secret,
+                'grant_type': 'refresh_token'
+            }
+            
+            async with self.session.post(token_url, data=data) as response:
+                if response.status == 200:
+                    token_data = await response.json()
+                    self.access_token = token_data.get('access_token')
+                    return True
+                return False
+                
+        except Exception as e:
+            logger.error(f"Token refresh error: {e}")
+            return False
+    
+    def get_auth_url(self) -> str:
+        """Get the Google OAuth authorization URL."""
+        params = {
+            'client_id': self.client_id,
+            'redirect_uri': self.redirect_uri,
+            'response_type': 'code',
+            'scope': ' '.join(self.scopes),
+            'access_type': 'offline',
+            'prompt': 'consent'
+        }
+        from urllib.parse import urlencode
+        return f"https://accounts.google.com/o/oauth2/v2/auth?{urlencode(params)}"
+    
+    async def test_connection(self) -> bool:
+        """Test connection to Google Drive."""
+        try:
+            if not self.access_token:
+                return False
+            
+            headers = {'Authorization': f'Bearer {self.access_token}'}
+            url = f"{self.api_base}/drive/v3/about?fields=user"
+            
+            async with self.session.get(url, headers=headers) as response:
+                return response.status == 200
+                
+        except Exception as e:
+            logger.error(f"Google Drive connection test failed: {e}")
+            return False
+    
+    async def list_files(self, query: Optional[str] = None, folder_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        """List files from Google Drive with optional search."""
+        try:
+            headers = {'Authorization': f'Bearer {self.access_token}'}
+            
+            # Build query
+            queries = ["trashed=false"]
+            if folder_id:
+                queries.append(f"'{folder_id}' in parents")
+            if query:
+                queries.append(f"name contains '{query}'")
+            
+            params = {
+                'q': ' and '.join(queries),
+                'fields': 'files(id,name,mimeType,size,modifiedTime,webViewLink)',
+                'pageSize': 100
+            }
+            
+            url = f"{self.api_base}/drive/v3/files"
+            async with self.session.get(url, headers=headers, params=params) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    return data.get('files', [])
+                else:
+                    logger.error(f"Failed to list files: {response.status}")
+                    return []
+                    
+        except Exception as e:
+            logger.error(f"Error listing Google Drive files: {e}")
+            return []
+    
+    async def download_file(self, file_id: str) -> Optional[bytes]:
+        """Download a file from Google Drive."""
+        try:
+            headers = {'Authorization': f'Bearer {self.access_token}'}
+            
+            # First get file metadata to check if it's a Google Doc
+            metadata_url = f"{self.api_base}/drive/v3/files/{file_id}?fields=mimeType,name"
+            async with self.session.get(metadata_url, headers=headers) as response:
+                if response.status != 200:
+                    return None
+                metadata = await response.json()
+                mime_type = metadata.get('mimeType', '')
+            
+            # Determine download URL based on file type
+            if mime_type.startswith('application/vnd.google-apps'):
+                # Google Docs/Sheets/Slides - export as PDF
+                export_mime = 'application/pdf'
+                url = f"{self.api_base}/drive/v3/files/{file_id}/export?mimeType={export_mime}"
+            else:
+                # Regular file - direct download
+                url = f"{self.api_base}/drive/v3/files/{file_id}?alt=media"
+            
+            async with self.session.get(url, headers=headers) as response:
+                if response.status == 200:
+                    return await response.read()
+                else:
+                    logger.error(f"Failed to download file: {response.status}")
+                    return None
+                    
+        except Exception as e:
+            logger.error(f"Error downloading file: {e}")
+            return None
+    
+    async def search_documents(self, query: str) -> List[Dict[str, Any]]:
+        """Search for documents in Google Drive."""
+        return await self.list_files(query=query)
+
 class SharePointService(BaseIntegrationService):
     """Microsoft SharePoint/OneDrive integration service."""
     
@@ -435,6 +604,7 @@ class IntegrationManager:
         self.canvas = CanvasLMSService()
         self.banner = BannerSISService()
         self.sharepoint = SharePointService()
+        self.google_drive = GoogleDriveService()
     
     async def test_all_connections(self) -> Dict[str, bool]:
         """Test connections to all configured services."""
@@ -464,6 +634,14 @@ class IntegrationManager:
             else:
                 results['sharepoint'] = False
         
+        # Test Google Drive
+        async with self.google_drive:
+            if (self.google_drive.client_id and 
+                self.google_drive.client_secret):
+                results['google_drive'] = await self.google_drive.test_connection()
+            else:
+                results['google_drive'] = False
+        
         return results
     
     async def sync_all_data(self) -> Dict[str, Any]:
@@ -472,6 +650,7 @@ class IntegrationManager:
             'canvas': {'courses': [], 'outcomes': []},
             'banner': {'students': [], 'courses': []},
             'sharepoint': {'sites': [], 'documents': []},
+            'google_drive': {'files': [], 'folders': []},
             'errors': []
         }
         
