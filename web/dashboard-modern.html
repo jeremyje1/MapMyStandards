@@ -365,7 +365,22 @@
         .metric-card:hover {
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
             transform: translateY(-2px);
-            border-color: var(--blue-500);
+            border-color: var(--primary-blue-light);
+        }
+        
+        .metric-card::after {
+            content: 'Click for details';
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            font-size: 11px;
+            color: var(--gray-400);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .metric-card:hover::after {
+            opacity: 1;
         }
         
         .loading-spinner {
@@ -381,6 +396,53 @@
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
+        }
+        
+        /* Enhanced tooltips */
+        [data-tooltip] {
+            position: relative;
+        }
+        
+        [data-tooltip]::before,
+        [data-tooltip]::after {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        
+        [data-tooltip]::before {
+            content: attr(data-tooltip);
+            bottom: calc(100% + 12px);
+            background: var(--gray-900);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            white-space: nowrap;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        [data-tooltip]::after {
+            content: '';
+            bottom: calc(100% + 6px);
+            width: 0;
+            height: 0;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-top: 6px solid var(--gray-900);
+        }
+        
+        [data-tooltip]:hover::before,
+        [data-tooltip]:hover::after {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(-2px);
         }
 
         .metric-card::before {
@@ -506,6 +568,29 @@
             box-shadow: var(--shadow-md);
             border: 1px solid var(--gray-200);
             overflow: hidden;
+            animation: fadeInUp 0.6s ease-out backwards;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .activity-section:nth-child(1) { animation-delay: 0.1s; }
+        .activity-section:nth-child(2) { animation-delay: 0.2s; }
+        .activity-section:nth-child(3) { animation-delay: 0.3s; }
+        .activity-section:nth-child(4) { animation-delay: 0.4s; }
+        
+        .activity-section:hover {
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .section-header {
@@ -869,32 +954,44 @@
                     
                 </div>
                 
+                <!-- Progress Indicator -->
+                <div class="onboarding-progress" style="margin-top: 24px; padding: 20px; background: var(--gradient-primary); border-radius: 12px; color: white;">
+                    <h3 style="font-size: 16px; margin-bottom: 12px; font-weight: 600;">Getting Started Progress</h3>
+                    <div style="background: rgba(255,255,255,0.2); height: 8px; border-radius: 4px; overflow: hidden;">
+                        <div id="progressBar" style="height: 100%; background: white; width: 0%; transition: width 0.5s ease; border-radius: 4px;"></div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-top: 12px; font-size: 14px;">
+                        <span id="progressText">0% Complete</span>
+                        <span id="progressSteps">0 of 4 steps completed</span>
+                    </div>
+                </div>
+                
                 <div class="quick-actions">
-                    <a href="/upload-modern" class="action-btn action-btn-primary">
+                    <a href="/upload-modern" class="action-btn action-btn-primary" data-tooltip="Start by uploading your accreditation documents">
                         <span>📁</span>
                         Upload Documents
                     </a>
-                    <a href="/standards-modern" class="action-btn">
+                    <a href="/standards-modern" class="action-btn" data-tooltip="Browse and search accreditation standards">
                         <span>📋</span>
                         View Standards
                     </a>
-                    <a href="/reports-modern" class="action-btn">
+                    <a href="/reports-modern" class="action-btn" data-tooltip="Generate compliance reports and analytics">
                         <span>📊</span>
                         Generate Report
                     </a>
-                    <a href="#ai-evidence" class="action-btn">
+                    <a href="#ai-evidence" class="action-btn" data-tooltip="AI-powered document analysis and mapping">
                         <span>🧠</span>
                         AI Evidence Analysis
                     </a>
-                    <a href="#standards-graph" class="action-btn">
+                    <a href="#standards-graph" class="action-btn" data-tooltip="Visualize relationships between standards">
                         <span>🕸️</span>
                         Standards Graph
                     </a>
-                    <a href="#gap-analysis" class="action-btn">
+                    <a href="#gap-analysis" class="action-btn" data-tooltip="Identify compliance gaps and risks">
                         <span>⚠️</span>
                         Gap Analysis
                     </a>
-                    <a href="#narrative" class="action-btn">
+                    <a href="#narrative" class="action-btn" data-tooltip="Generate accreditation narratives with citations">
                         <span>📖</span>
                         Narrative (CiteGuard)
                     </a>
@@ -902,13 +999,43 @@
             </div>
         </section>
 
-        <!-- Next Steps -->
+        <!-- Next Steps / First Time Guide -->
         <section class="activity-section" id="nextSteps" style="display:none">
             <div class="section-header">
-                <h2 class="section-title">Next Steps</h2>
+                <h2 class="section-title">🚀 Getting Started Guide</h2>
             </div>
             <div id="nextStepsBody" style="padding: var(--space-6);">
-                <ul id="nextStepsList" style="list-style:none; padding:0; display:grid; gap:8px"></ul>
+                <ul id="nextStepsList" style="list-style:none; padding:0; display:grid; gap:12px">
+                    <li style="display:flex; align-items:start; gap:12px; padding:16px; background:var(--gray-50); border-radius:12px; border:1px solid var(--gray-200);">
+                        <div style="flex-shrink:0; width:40px; height:40px; background:var(--primary-blue-light); color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700;">1</div>
+                        <div>
+                            <h4 style="font-weight:600; margin-bottom:4px;">Upload Your Documents</h4>
+                            <p style="font-size:14px; color:var(--gray-600); margin-bottom:8px;">Start by uploading your institutional documents, policies, and evidence.</p>
+                            <a href="/upload-modern" class="action-btn action-btn-primary" style="font-size:14px; padding:8px 16px;">Upload Now →</a>
+                        </div>
+                    </li>
+                    <li style="display:flex; align-items:start; gap:12px; padding:16px; background:var(--gray-50); border-radius:12px; border:1px solid var(--gray-200);">
+                        <div style="flex-shrink:0; width:40px; height:40px; background:var(--gray-400); color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700;">2</div>
+                        <div>
+                            <h4 style="font-weight:600; margin-bottom:4px;">AI Analysis</h4>
+                            <p style="font-size:14px; color:var(--gray-600);">Our AI will automatically analyze and map your documents to standards.</p>
+                        </div>
+                    </li>
+                    <li style="display:flex; align-items:start; gap:12px; padding:16px; background:var(--gray-50); border-radius:12px; border:1px solid var(--gray-200);">
+                        <div style="flex-shrink:0; width:40px; height:40px; background:var(--gray-400); color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700;">3</div>
+                        <div>
+                            <h4 style="font-weight:600; margin-bottom:4px;">Review Compliance</h4>
+                            <p style="font-size:14px; color:var(--gray-600);">Check your compliance scores and identify any gaps.</p>
+                        </div>
+                    </li>
+                    <li style="display:flex; align-items:start; gap:12px; padding:16px; background:var(--gray-50); border-radius:12px; border:1px solid var(--gray-200);">
+                        <div style="flex-shrink:0; width:40px; height:40px; background:var(--gray-400); color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700;">4</div>
+                        <div>
+                            <h4 style="font-weight:600; margin-bottom:4px;">Generate Reports</h4>
+                            <p style="font-size:14px; color:var(--gray-600);">Create comprehensive reports and narratives for your accreditation.</p>
+                        </div>
+                    </li>
+                </ul>
             </div>
         </section>
 
@@ -1048,6 +1175,7 @@
                 await this.loadProgress();
                 await this.loadGapAnalysis();
                 renderRecentUploads();
+                this.updateOnboardingProgress();
                 
                 // Auto-refresh every 30 seconds
                 setInterval(() => {
@@ -1178,6 +1306,10 @@
                 if (!data || !data.core_metrics || !data.performance_metrics || !data.account_info) {
                     return this.renderMetricsError('Invalid');
                 }
+                
+                // Store metrics for onboarding progress
+                this.metrics = data.core_metrics;
+                
                 const metricsGrid = document.getElementById('metricsGrid');
                 const metrics = data.core_metrics;
                 const performance = data.performance_metrics;
@@ -1352,6 +1484,19 @@
                 const rfBtn = document.getElementById('openRiskFactorsBtn');
                 if (rfBtn) {
                     rfBtn.addEventListener('click', () => openDashboardRiskModal(this.getAuthToken()));
+                }
+                
+                // Update onboarding progress
+                this.updateOnboardingProgress();
+                
+                // Show/hide getting started guide based on data
+                const nextStepsSection = document.getElementById('nextSteps');
+                if (nextStepsSection) {
+                    if (metrics.documents_analyzed === 0) {
+                        nextStepsSection.style.display = 'block';
+                    } else {
+                        nextStepsSection.style.display = 'none';
+                    }
                 }
             }
 
@@ -1597,6 +1742,54 @@
                 }
             }
 
+            updateOnboardingProgress() {
+                // Check completion status
+                let completedSteps = 0;
+                const totalSteps = 4;
+                
+                // Check if user has uploaded documents
+                if (this.metrics && this.metrics.documents_analyzed > 0) completedSteps++;
+                
+                // Check if standards are mapped
+                if (this.metrics && this.metrics.standards_mapped > 0) completedSteps++;
+                
+                // Check if compliance score exists
+                if (this.metrics && this.metrics.compliance_score > 0) completedSteps++;
+                
+                // Check if user has generated any reports
+                if (this.metrics && this.metrics.reports_generated > 0) completedSteps++;
+                
+                // Update progress bar
+                const percentage = Math.round((completedSteps / totalSteps) * 100);
+                const progressBar = document.getElementById('progressBar');
+                const progressText = document.getElementById('progressText');
+                const progressSteps = document.getElementById('progressSteps');
+                
+                if (progressBar) {
+                    progressBar.style.width = percentage + '%';
+                }
+                if (progressText) {
+                    progressText.textContent = percentage + '% Complete';
+                }
+                if (progressSteps) {
+                    progressSteps.textContent = `${completedSteps} of ${totalSteps} steps completed`;
+                }
+                
+                // Hide progress indicator if fully complete
+                if (percentage === 100) {
+                    setTimeout(() => {
+                        const progressContainer = document.querySelector('.onboarding-progress');
+                        if (progressContainer) {
+                            progressContainer.style.transition = 'opacity 0.5s ease';
+                            progressContainer.style.opacity = '0';
+                            setTimeout(() => {
+                                progressContainer.style.display = 'none';
+                            }, 500);
+                        }
+                    }, 3000);
+                }
+            }
+            
             getAuthToken() {
                 return localStorage.getItem('a3e_api_key') ||
                        sessionStorage.getItem('a3e_api_key') ||
@@ -1732,6 +1925,84 @@
         }
 
                 // Inject AI action sections near end of body
+        // Keyboard shortcuts for power users
+        document.addEventListener('keydown', (e) => {
+            // Check if no input is focused
+            if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
+            
+            // Ctrl/Cmd + U = Upload
+            if ((e.ctrlKey || e.metaKey) && e.key === 'u') {
+                e.preventDefault();
+                window.location.href = '/upload-modern';
+            }
+            
+            // Ctrl/Cmd + R = Reports
+            if ((e.ctrlKey || e.metaKey) && e.key === 'r' && !e.shiftKey) {
+                e.preventDefault();
+                window.location.href = '/reports-modern';
+            }
+            
+            // Ctrl/Cmd + S = Standards
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                window.location.href = '/standards-modern';
+            }
+            
+            // ? = Show shortcuts
+            if (e.key === '?' && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
+                e.preventDefault();
+                showKeyboardShortcuts();
+            }
+        });
+        
+        // Show keyboard shortcuts modal
+        function showKeyboardShortcuts() {
+            const existingModal = document.getElementById('shortcutsModal');
+            if (existingModal) existingModal.remove();
+            
+            const modal = document.createElement('div');
+            modal.id = 'shortcutsModal';
+            modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;animation:fadeIn 0.3s ease;';
+            modal.onclick = () => modal.remove();
+            
+            const content = document.createElement('div');
+            content.style.cssText = 'background:white;border-radius:16px;padding:32px;max-width:400px;box-shadow:0 20px 25px -5px rgba(0,0,0,0.1);animation:slideIn 0.3s ease;';
+            content.onclick = (e) => e.stopPropagation();
+            content.innerHTML = `
+                <h2 style="margin-bottom:20px;font-size:24px;font-weight:700;">⌨️ Keyboard Shortcuts</h2>
+                <div style="display:grid;gap:12px;">
+                    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e5e7eb;">
+                        <span>Upload Documents</span>
+                        <kbd style="background:#f3f4f6;padding:4px 8px;border-radius:4px;font-family:monospace;font-size:12px;">${navigator.platform.includes('Mac') ? 'Cmd' : 'Ctrl'}+U</kbd>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e5e7eb;">
+                        <span>View Standards</span>
+                        <kbd style="background:#f3f4f6;padding:4px 8px;border-radius:4px;font-family:monospace;font-size:12px;">${navigator.platform.includes('Mac') ? 'Cmd' : 'Ctrl'}+S</kbd>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e5e7eb;">
+                        <span>Generate Reports</span>
+                        <kbd style="background:#f3f4f6;padding:4px 8px;border-radius:4px;font-family:monospace;font-size:12px;">${navigator.platform.includes('Mac') ? 'Cmd' : 'Ctrl'}+R</kbd>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;padding:8px 0;">
+                        <span>Show this help</span>
+                        <kbd style="background:#f3f4f6;padding:4px 8px;border-radius:4px;font-family:monospace;font-size:12px;">?</kbd>
+                    </div>
+                </div>
+                <button onclick="this.parentElement.parentElement.remove()" style="margin-top:24px;width:100%;padding:12px;background:#3b82f6;color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer;transition:background 0.2s;">Got it!</button>
+            `;
+            
+            // Add animations
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+                @keyframes slideIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+            `;
+            document.head.appendChild(style);
+            
+            modal.appendChild(content);
+            document.body.appendChild(modal);
+        }
+        
         document.addEventListener('DOMContentLoaded', () => {
             // Personalize header from local data
             (function personalizeUser(){
