@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evidence Analysis - MapMyStandards</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f9fafb;
+            color: #111827;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 8px;
+        }
+        
+        .header p {
+            color: #6b7280;
+            font-size: 16px;
+        }
+        
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 24px;
+        }
+        
+        .upload-section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #111827;
+        }
+        
+        .drop-zone {
+            border: 2px dashed #e5e7eb;
+            border-radius: 8px;
+            padding: 40px 20px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .drop-zone:hover {
+            border-color: #2563eb;
+            background: #f0f9ff;
+        }
+        
+        .drop-zone.active {
+            border-color: #2563eb;
+            background: #dbeafe;
+        }
+        
+        .browse-btn {
+            background: #2563eb;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 12px;
+        }
+        
+        .browse-btn:hover {
+            background: #1d4ed8;
+        }
+        
+        .file-list {
+            margin-top: 20px;
+        }
+        
+        .file-item {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .file-icon {
+            width: 32px;
+            height: 32px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: #6b7280;
+        }
+        
+        .file-name {
+            font-weight: 500;
+            color: #374151;
+        }
+        
+        .file-status {
+            font-size: 14px;
+            color: #6b7280;
+        }
+        
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-queued {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .status-processing {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .status-completed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .status-failed {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .results-section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .mapping-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            transition: all 0.3s;
+        }
+        
+        .mapping-card:hover {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .mapping-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 12px;
+        }
+        
+        .standard-info h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 4px;
+        }
+        
+        .standard-id {
+            font-size: 14px;
+            color: #6b7280;
+        }
+        
+        .confidence-score {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .confidence-bar {
+            width: 100px;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .confidence-fill {
+            height: 100%;
+            background: #10b981;
+            transition: width 0.3s;
+        }
+        
+        .confidence-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .rationale {
+            background: #f9fafb;
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 8px;
+        }
+        
+        .rationale-text {
+            font-size: 14px;
+            color: #374151;
+            line-height: 1.5;
+            font-style: italic;
+        }
+        
+        .trust-score-container {
+            background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            color: white;
+            text-align: center;
+        }
+        
+        .trust-score-value {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        .trust-score-label {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+        
+        .analyze-btn {
+            background: #10b981;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .analyze-btn:hover {
+            background: #059669;
+        }
+        
+        .analyze-btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        
+        .accreditor-selector {
+            margin-bottom: 16px;
+        }
+        
+        .accreditor-selector select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #374151;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6b7280;
+        }
+        
+        .empty-state h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #374151;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #e5e7eb;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #2563eb;
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>AI Evidence Analysis</h1>
+            <p>Upload documents to automatically map them to accreditation standards with our EvidenceMapper™ technology</p>
+        </div>
+        
+        <div class="content-grid">
+            <div class="upload-section">
+                <h2 class="section-title">Upload Evidence</h2>
+                
+                <div class="accreditor-selector">
+                    <label style="display: block; margin-bottom: 6px; font-size: 14px; font-weight: 500; color: #374151;">
+                        Select Accreditor
+                    </label>
+                    <select id="accreditorSelect">
+                        <option value="SACSCOC">SACSCOC - Southern Association</option>
+                        <option value="HLC">HLC - Higher Learning Commission</option>
+                        <option value="WASC">WASC - Western Association</option>
+                        <option value="MSCHE">MSCHE - Middle States</option>
+                        <option value="NECHE">NECHE - New England</option>
+                        <option value="NWCCU">NWCCU - Northwest</option>
+                    </select>
+                </div>
+                
+                <div class="drop-zone" id="dropZone">
+                    <div style="font-size: 32px; margin-bottom: 12px;">📄</div>
+                    <div style="font-weight: 500; margin-bottom: 8px;">Drag & drop files here</div>
+                    <div style="font-size: 14px; color: #6b7280;">or</div>
+                    <button class="browse-btn" id="browseBtn">Browse Files</button>
+                    <div style="margin-top: 12px; font-size: 12px; color: #9ca3af;">
+                        Supports PDF, DOC, DOCX, TXT • Max 10MB per file
+                    </div>
+                </div>
+                <input type="file" id="fileInput" multiple accept=".pdf,.doc,.docx,.txt" style="display: none;">
+                
+                <div class="file-list" id="fileList"></div>
+            </div>
+            
+            <div class="results-section">
+                <h2 class="section-title">Analysis Results</h2>
+                
+                <div id="resultsContainer">
+                    <div class="empty-state">
+                        <h3>No analysis results yet</h3>
+                        <p>Upload documents to see how they map to accreditation standards</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Global state
+        let uploadedFiles = [];
+        let analysisResults = {};
+        
+        // Get API base URL
+        const getAPIBase = () => {
+            if (window.location.hostname === 'localhost') {
+                return 'http://localhost:8000';
+            }
+            return 'https://api.mapmystandards.ai';
+        };
+        
+        // Get auth headers
+        const getAuthHeaders = () => {
+            const token = localStorage.getItem('a3e_api_key') || 
+                         localStorage.getItem('access_token') || 
+                         localStorage.getItem('jwt_token');
+            return token ? { 'Authorization': `Bearer ${token}` } : {};
+        };
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            setupEventListeners();
+            loadExistingResults();
+        });
+        
+        // Setup event listeners
+        function setupEventListeners() {
+            const dropZone = document.getElementById('dropZone');
+            const fileInput = document.getElementById('fileInput');
+            const browseBtn = document.getElementById('browseBtn');
+            
+            // Browse button
+            browseBtn.addEventListener('click', () => fileInput.click());
+            
+            // File input change
+            fileInput.addEventListener('change', (e) => {
+                handleFiles(e.target.files);
+            });
+            
+            // Drag and drop
+            dropZone.addEventListener('dragenter', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('active');
+            });
+            
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+            });
+            
+            dropZone.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('active');
+            });
+            
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('active');
+                handleFiles(e.dataTransfer.files);
+            });
+        }
+        
+        // Handle file upload
+        async function handleFiles(files) {
+            if (!files || files.length === 0) return;
+            
+            const formData = new FormData();
+            for (const file of files) {
+                formData.append('files', file);
+                
+                // Add to local state
+                const fileId = Math.random().toString(36).substr(2, 9);
+                uploadedFiles.push({
+                    id: fileId,
+                    name: file.name,
+                    size: file.size,
+                    status: 'uploading'
+                });
+            }
+            
+            // Add accreditor
+            const accreditor = document.getElementById('accreditorSelect').value;
+            formData.append('accreditor', accreditor);
+            formData.append('auto_analyze', 'true');
+            
+            // Update UI
+            renderFileList();
+            
+            try {
+                const response = await fetch(`${getAPIBase()}/api/evidence-analysis/upload`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Upload failed: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                // Update file status
+                if (data.files) {
+                    data.files.forEach((file, index) => {
+                        uploadedFiles[uploadedFiles.length - files.length + index] = {
+                            ...uploadedFiles[uploadedFiles.length - files.length + index],
+                            id: file.id,
+                            status: 'queued',
+                            serverFile: file
+                        };
+                    });
+                }
+                
+                renderFileList();
+                
+                // Start polling for results
+                data.files.forEach(file => {
+                    pollAnalysisStatus(file.id);
+                });
+                
+            } catch (error) {
+                console.error('Upload error:', error);
+                alert('Failed to upload files. Please try again.');
+                
+                // Update status to failed
+                uploadedFiles.forEach(file => {
+                    if (file.status === 'uploading') {
+                        file.status = 'failed';
+                    }
+                });
+                renderFileList();
+            }
+        }
+        
+        // Poll for analysis status
+        async function pollAnalysisStatus(fileId) {
+            const maxAttempts = 60; // 5 minutes max
+            let attempts = 0;
+            
+            const poll = async () => {
+                try {
+                    const response = await fetch(`${getAPIBase()}/api/evidence-analysis/status/${fileId}`, {
+                        headers: getAuthHeaders()
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Status check failed');
+                    }
+                    
+                    const data = await response.json();
+                    
+                    // Update file status
+                    const fileIndex = uploadedFiles.findIndex(f => f.id === fileId);
+                    if (fileIndex !== -1) {
+                        uploadedFiles[fileIndex].status = data.status;
+                        uploadedFiles[fileIndex].progress = data.progress || 0;
+                        uploadedFiles[fileIndex].message = data.message || '';
+                        renderFileList();
+                    }
+                    
+                    // If completed, update results
+                    if (data.status === 'completed') {
+                        analysisResults[fileId] = data;
+                        renderResults();
+                        return;
+                    }
+                    
+                    // Continue polling if not completed or failed
+                    if (data.status !== 'failed' && attempts < maxAttempts) {
+                        attempts++;
+                        setTimeout(poll, 5000); // Poll every 5 seconds
+                    }
+                    
+                } catch (error) {
+                    console.error('Status poll error:', error);
+                    attempts++;
+                    if (attempts < maxAttempts) {
+                        setTimeout(poll, 5000);
+                    }
+                }
+            };
+            
+            poll();
+        }
+        
+        // Render file list
+        function renderFileList() {
+            const container = document.getElementById('fileList');
+            container.innerHTML = '';
+            
+            uploadedFiles.forEach(file => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                
+                const statusClass = `status-${file.status}`;
+                const statusText = file.status.charAt(0).toUpperCase() + file.status.slice(1);
+                
+                fileItem.innerHTML = `
+                    <div class="file-info">
+                        <div class="file-icon">${getFileIcon(file.name)}</div>
+                        <div>
+                            <div class="file-name">${file.name}</div>
+                            <div class="file-status">${formatFileSize(file.size)}</div>
+                            ${file.progress ? `
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${file.progress}%"></div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span class="status-badge ${statusClass}">${statusText}</span>
+                        ${file.status === 'queued' ? `
+                            <button class="analyze-btn" onclick="triggerAnalysis('${file.id}')">
+                                Analyze Now
+                            </button>
+                        ` : ''}
+                    </div>
+                `;
+                
+                container.appendChild(fileItem);
+            });
+        }
+        
+        // Render analysis results
+        function renderResults() {
+            const container = document.getElementById('resultsContainer');
+            const results = Object.values(analysisResults);
+            
+            if (results.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>No analysis results yet</h3>
+                        <p>Upload documents to see how they map to accreditation standards</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Get most recent result
+            const latestResult = results[results.length - 1];
+            
+            container.innerHTML = `
+                <div class="trust-score-container">
+                    <div class="trust-score-value">${latestResult.trust_score}%</div>
+                    <div class="trust-score-label">EvidenceTrust Score™</div>
+                </div>
+                
+                <h3 style="margin-bottom: 12px; font-size: 18px; font-weight: 600;">
+                    Mapped Standards for ${latestResult.filename}
+                </h3>
+                
+                <div id="mappingsList"></div>
+            `;
+            
+            // Render mappings
+            const mappingsList = document.getElementById('mappingsList');
+            
+            if (latestResult.mappings && latestResult.mappings.length > 0) {
+                latestResult.mappings.forEach(mapping => {
+                    const mappingCard = document.createElement('div');
+                    mappingCard.className = 'mapping-card';
+                    
+                    const confidencePercent = Math.round(mapping.confidence * 100);
+                    
+                    mappingCard.innerHTML = `
+                        <div class="mapping-header">
+                            <div class="standard-info">
+                                <h3>${mapping.standard_title}</h3>
+                                <div class="standard-id">${mapping.standard_id}</div>
+                            </div>
+                            <div class="confidence-score">
+                                <div class="confidence-bar">
+                                    <div class="confidence-fill" style="width: ${confidencePercent}%"></div>
+                                </div>
+                                <div class="confidence-label">${confidencePercent}%</div>
+                            </div>
+                        </div>
+                        
+                        ${mapping.explanation ? `
+                            <div class="rationale">
+                                <div class="rationale-text">${mapping.explanation}</div>
+                            </div>
+                        ` : ''}
+                        
+                        ${mapping.rationale_spans && mapping.rationale_spans.length > 0 ? `
+                            <div style="margin-top: 8px;">
+                                <div style="font-size: 12px; font-weight: 500; color: #6b7280; margin-bottom: 4px;">
+                                    Relevant text:
+                                </div>
+                                ${mapping.rationale_spans.map(span => `
+                                    <div class="rationale">
+                                        <div class="rationale-text">"${span.text}"</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                    `;
+                    
+                    mappingsList.appendChild(mappingCard);
+                });
+            } else {
+                mappingsList.innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: #6b7280;">
+                        No standards mapped for this document
+                    </div>
+                `;
+            }
+        }
+        
+        // Trigger manual analysis
+        async function triggerAnalysis(fileId) {
+            try {
+                const accreditor = document.getElementById('accreditorSelect').value;
+                
+                const response = await fetch(`${getAPIBase()}/api/evidence-analysis/analyze/${fileId}`, {
+                    method: 'POST',
+                    headers: {
+                        ...getAuthHeaders(),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ accreditor })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to trigger analysis');
+                }
+                
+                // Update status
+                const fileIndex = uploadedFiles.findIndex(f => f.id === fileId);
+                if (fileIndex !== -1) {
+                    uploadedFiles[fileIndex].status = 'processing';
+                    renderFileList();
+                }
+                
+                // Start polling
+                pollAnalysisStatus(fileId);
+                
+            } catch (error) {
+                console.error('Trigger analysis error:', error);
+                alert('Failed to start analysis. Please try again.');
+            }
+        }
+        
+        // Load existing results
+        async function loadExistingResults() {
+            try {
+                const response = await fetch(`${getAPIBase()}/api/evidence-analysis/results`, {
+                    headers: getAuthHeaders()
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load results');
+                }
+                
+                const data = await response.json();
+                
+                if (data.results && data.results.length > 0) {
+                    // Load results into state
+                    data.results.forEach(result => {
+                        analysisResults[result.file_id] = result;
+                        
+                        // Add to files list if not already there
+                        if (!uploadedFiles.find(f => f.id === result.file_id)) {
+                            uploadedFiles.push({
+                                id: result.file_id,
+                                name: result.filename,
+                                size: 0,
+                                status: result.status,
+                                progress: result.progress || 100
+                            });
+                        }
+                    });
+                    
+                    renderFileList();
+                    renderResults();
+                }
+                
+            } catch (error) {
+                console.error('Load results error:', error);
+            }
+        }
+        
+        // Helper functions
+        function getFileIcon(filename) {
+            const ext = filename.split('.').pop().toLowerCase();
+            const icons = {
+                pdf: 'PDF',
+                doc: 'DOC',
+                docx: 'DOC',
+                txt: 'TXT'
+            };
+            return icons[ext] || 'FILE';
+        }
+        
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+    </script>
+</body>
+</html>

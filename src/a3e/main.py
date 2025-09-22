@@ -224,6 +224,13 @@ except ImportError as e:
     _evidence_mappings_import_exception = e
 
 try:
+    from .api.routes.evidence_analysis import router as evidence_analysis_router
+    evidence_analysis_router_available = True
+except ImportError as e:
+    evidence_analysis_router_available = False
+    _evidence_analysis_import_exception = e
+
+try:
     from .api.routes.analytics import router as analytics_router
     analytics_router_available = True
 except ImportError as e:
@@ -850,6 +857,12 @@ if evidence_mappings_router_available:
     logger.info("✅ Evidence mappings router loaded")
 else:
     logger.warning("⚠️ Evidence mappings router not available")
+
+if evidence_analysis_router_available:
+    app.include_router(evidence_analysis_router)
+    logger.info("✅ Evidence analysis router loaded")
+else:
+    logger.warning("⚠️ Evidence analysis router not available")
 
 if analytics_router_available:
     app.include_router(analytics_router)
