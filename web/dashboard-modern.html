@@ -2115,8 +2115,10 @@
                         const sb = document.getElementById('dashStandardsSearchBtn');
                         const si = document.getElementById('dashStandardsSearch');
                         if (sb && si) sb.addEventListener('click', ()=> { const q=encodeURIComponent(si.value||''); window.location.href = '/standards-modern?q=' + q; });
-                        const gaps = document.getElementById('dashAnalyzeGaps'); if (gaps) gaps.addEventListener('click', ()=> window.location.href='/gap-analysis');
-                        const narr = document.getElementById('dashOpenNarrative'); if (narr) narr.addEventListener('click', ()=> window.location.href='/narrative');
+                        const gaps = document.getElementById('dashAnalyzeGaps'); 
+                        if (gaps) gaps.addEventListener('click', generateGapAnalysisFromDashboard);
+                        const narr = document.getElementById('dashOpenNarrative'); 
+                        if (narr) narr.addEventListener('click', generateNarrativeFromDashboard);
                 });
 
                 function getStoredRecentUploads(){
@@ -2215,6 +2217,23 @@
                                     ` : ''}
                                 </div>
                             ` : ''}
+                            ${(it.status === 'processing' || it.status === 'queued') ? `
+                                <div style='margin-top:6px;display:flex;gap:8px'>
+                                    <button onclick="triggerAnalysis('${it.fileId || ''}', '${it.name}')" class="action-btn action-btn-primary" 
+                                            style="font-size:12px;padding:4px 12px;background:var(--accent-orange)">
+                                        ⚡ Trigger Analysis
+                                    </button>
+                                    <button onclick="checkAnalysisStatus('${it.fileId || ''}', '${it.name}')" class="action-btn" 
+                                            style="font-size:12px;padding:4px 12px">
+                                        🔄 Check Status
+                                    </button>
+                                </div>
+                            ` : ''}
+                            ${it.status === 'error' || it.status === 'failed' ? `
+                                <div style='margin-top:6px;font-size:12px;color:var(--accent-red)'>
+                                    Analysis failed. Please try re-uploading the document.
+                                </div>
+                            ` : ''}
                         </li>`;
                     }).join('') : `<li style='color:#6b7280;margin-top:6px'>No recent uploads</li>`;
                 }
@@ -2295,7 +2314,16 @@
                                             const originalFile = fileList[index];
                                             if (originalFile) {
                                                 syncUploadStatus(originalFile.name, 'processing', { fileId: file.id });
-                                                pollAnalysisStatus(file.id, originalFile.name);
+                                                
+                                                // If analysis wasn't auto-triggered, trigger it manually
+                                                if (file.status === 'uploaded' || file.status === 'queued') {
+                                                    setTimeout(() => {
+                                                        triggerAnalysis(file.id, originalFile.name);
+                                                    }, 1000);
+                                                } else {
+                                                    // Poll for results
+                                                    pollAnalysisStatus(file.id, originalFile.name);
+                                                }
                                             }
                                         });
                                     }
@@ -2332,6 +2360,28 @@
                             ...data
                         });
                         localStorage.setItem('mms:uploadHistory', JSON.stringify(uploadHistory.slice(0, 50)));
+                        
+                        // CRITICAL: Sync with main uploadedFiles array used by standards browser
+                        const uploadedFiles = JSON.parse(localStorage.getItem('uploadedFiles') || '[]');
+                        const existingFile = uploadedFiles.find(f => f.name === fileName);
+                        
+                        if (status === 'complete' && !existingFile) {
+                            // Add to uploadedFiles when complete
+                            uploadedFiles.push({
+                                name: fileName,
+                                id: data.fileId || fileName,
+                                uploadDate: new Date().toISOString(),
+                                mappingStatus: 'not_mapped',
+                                source: 'dashboard_ai_evidence',
+                                ...data
+                            });
+                            localStorage.setItem('uploadedFiles', JSON.stringify(uploadedFiles));
+                        } else if (existingFile) {
+                            // Update existing file status
+                            existingFile.status = status;
+                            Object.assign(existingFile, data);
+                            localStorage.setItem('uploadedFiles', JSON.stringify(uploadedFiles));
+                        }
                         
                         // Emit custom event for other pages to listen
                         window.dispatchEvent(new CustomEvent('fileUploadUpdate', { 
@@ -2385,7 +2435,9 @@
                                 // If still processing, continue polling
                                 if (lastStatus === 'processing' && attempts < maxAttempts) {
                                     attempts++;
-                                    setTimeout(poll, 5000);
+                                    // Use progressive delays: faster at first, slower later
+                                    const delay = attempts < 10 ? 2000 : attempts < 30 ? 3000 : 5000;
+                                    setTimeout(poll, delay);
                                 }
                                 return;
                             }
@@ -2410,22 +2462,56 @@
                             // Continue polling if not completed
                             if (data.status !== 'completed' && data.status !== 'failed' && attempts < maxAttempts) {
                                 attempts++;
-                                setTimeout(poll, 3000);
+                                // Use progressive delays
+                                const delay = attempts < 10 ? 2000 : attempts < 30 ? 3000 : 5000;
+                                setTimeout(poll, delay);
                             }
                             
                         } catch (error) {
                             console.error('Poll error:', error);
                             attempts++;
                             if (attempts < maxAttempts) {
-                                setTimeout(poll, 5000);
+                                // Progressive retry delays
+                                const delay = attempts < 10 ? 3000 : 5000;
+                                setTimeout(poll, delay);
                             } else {
-                                // After max attempts, mark as complete to avoid eternal queued state
-                                syncUploadStatus(fileName, 'complete', { fileId: fileId });
+                                // After max attempts, try one final check in the document list
+                                try {
+                                    const listResponse = await fetch(`${base}/api/user/intelligence-simple/documents/list`, {
+                                        headers: headers,
+                                        credentials: 'include'
+                                    });
+                                    if (listResponse.ok) {
+                                        const docs = await listResponse.json();
+                                        const foundDoc = (docs.documents || []).find(d => 
+                                            d.id === fileId || d.filename === fileName
+                                        );
+                                        if (foundDoc && foundDoc.trust_score !== undefined) {
+                                            syncUploadStatus(fileName, 'complete', {
+                                                fileId: fileId,
+                                                trustScore: foundDoc.trust_score,
+                                                standardsMapped: foundDoc.standard_mappings ? foundDoc.standard_mappings.length : 0
+                                            });
+                                            return;
+                                        }
+                                    }
+                                } catch (e) {
+                                    console.error('Final check error:', e);
+                                }
+                                
+                                // Mark as complete with helpful message
+                                syncUploadStatus(fileName, 'complete', { 
+                                    fileId: fileId,
+                                    message: 'Analysis may still be processing. Use "Check Status" button to verify.',
+                                    trustScore: 0,
+                                    standardsMapped: 0
+                                });
                             }
                         }
                     };
                     
-                    poll();
+                    // Start polling immediately with faster initial checks
+                    setTimeout(poll, 1000);
                 }
 
                 // Check and update queued files
@@ -2489,10 +2575,27 @@
                 }
 
                 function viewMappedStandards(fileName) {
-                    // Navigate to evidence analysis page to view mappings
-                    const params = new URLSearchParams();
-                    params.set('file', fileName);
-                    window.location.href = `/web/dashboard-evidence-analysis.html?${params.toString()}`;
+                    // Find the file in recent uploads to get its ID and info
+                    const recent = localStorage.getItem('recentUploads');
+                    let fileInfo = null;
+                    
+                    if (recent) {
+                        const uploads = JSON.parse(recent);
+                        fileInfo = uploads.find(u => u.name === fileName);
+                    }
+                    
+                    if (fileInfo && fileInfo.fileId) {
+                        // Navigate to evidence library with file pre-selected
+                        window.location.href = '/web/standards-modern.html#evidence-library';
+                        
+                        // Store file ID to auto-open details after navigation
+                        localStorage.setItem('autoOpenEvidenceDetail', fileInfo.fileId);
+                    } else {
+                        // Fallback to evidence analysis page
+                        const params = new URLSearchParams();
+                        params.set('file', fileName);
+                        window.location.href = `/web/dashboard-evidence-analysis.html?${params.toString()}`;
+                    }
                 }
 
                 // Update file processing to track mapping status
@@ -2754,6 +2857,514 @@
         
         <!-- Service worker registration for offline support -->
         <script>
+        // Show notification helper
+        function showNotification(message, type = 'info') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = 'notification notification-' + type;
+            notification.textContent = message;
+            
+            // Style the notification
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : type === 'warning' ? '#f59e0b' : '#3b82f6'};
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: 0.5rem;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                z-index: 1000;
+                max-width: 400px;
+                animation: slideIn 0.3s ease-out;
+            `;
+            
+            // Add animation
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes slideIn {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                @keyframes slideOut {
+                    from { transform: translateX(0); opacity: 1; }
+                    to { transform: translateX(100%); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+            
+            document.body.appendChild(notification);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease-out';
+                setTimeout(() => notification.remove(), 300);
+            }, 5000);
+        }
+        
+        // Manual trigger for evidence analysis
+        async function triggerAnalysis(fileId, fileName) {
+            if (!fileId) {
+                showNotification('File ID not available. Please wait for upload to complete.', 'warning');
+                return;
+            }
+            
+            try {
+                const base = getBaseUrl();
+                const token = getAuthToken();
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+                
+                // Show loading state
+                showNotification('Triggering analysis for ' + fileName + '...', 'info');
+                
+                const response = await fetch(`${base}/api/evidence-analysis/analyze/${fileId}`, {
+                    method: 'POST',
+                    headers: headers,
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        accreditor: 'SACSCOC' // Default accreditor
+                    })
+                });
+                
+                if (response.ok) {
+                    showNotification('Analysis triggered successfully! Results will appear shortly.', 'success');
+                    
+                    // Update status to processing
+                    syncUploadStatus(fileName, 'processing', { fileId: fileId });
+                    
+                    // Start polling for results
+                    pollAnalysisStatus(fileId, fileName);
+                } else {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Failed to trigger analysis');
+                }
+                
+            } catch (error) {
+                console.error('Error triggering analysis:', error);
+                showNotification('Failed to trigger analysis: ' + error.message, 'error');
+            }
+        }
+        
+        // Check analysis status manually
+        async function checkAnalysisStatus(fileId, fileName) {
+            if (!fileId) {
+                showNotification('File ID not available. Please wait for upload to complete.', 'warning');
+                return;
+            }
+            
+            try {
+                const base = getBaseUrl();
+                const token = getAuthToken();
+                const headers = {};
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+                
+                const response = await fetch(`${base}/api/evidence-analysis/status/${fileId}`, {
+                    headers: headers,
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    if (data.status === 'completed') {
+                        showNotification(`Analysis complete! Trust Score: ${data.trust_score || 0}%, Standards Mapped: ${data.total_standards_mapped || 0}`, 'success');
+                        
+                        // Update status
+                        syncUploadStatus(fileName, 'complete', {
+                            fileId: fileId,
+                            trustScore: data.trust_score,
+                            standardsMapped: data.total_standards_mapped
+                        });
+                    } else if (data.status === 'failed') {
+                        showNotification('Analysis failed: ' + (data.message || 'Unknown error'), 'error');
+                        syncUploadStatus(fileName, 'error');
+                    } else {
+                        showNotification(`Analysis ${data.status || 'in progress'}: ${data.progress || 0}% complete`, 'info');
+                        
+                        // Continue polling if still processing
+                        if (data.status === 'processing') {
+                            setTimeout(() => checkAnalysisStatus(fileId, fileName), 3000);
+                        }
+                    }
+                } else {
+                    // Check if document exists in the system
+                    const listResponse = await fetch(`${base}/api/user/intelligence-simple/documents/list`, {
+                        headers: headers,
+                        credentials: 'include'
+                    });
+                    
+                    if (listResponse.ok) {
+                        const docs = await listResponse.json();
+                        const foundDoc = (docs.documents || []).find(d => 
+                            d.id === fileId || d.filename === fileName
+                        );
+                        
+                        if (foundDoc) {
+                            showNotification(`Document found! Trust Score: ${foundDoc.trust_score || 0}%`, 'success');
+                            syncUploadStatus(fileName, 'complete', {
+                                fileId: fileId,
+                                trustScore: foundDoc.trust_score,
+                                standardsMapped: foundDoc.standard_mappings ? foundDoc.standard_mappings.length : 0
+                            });
+                        } else {
+                            showNotification('Document not found in system. It may still be processing.', 'warning');
+                        }
+                    } else {
+                        throw new Error('Unable to check document status');
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Error checking status:', error);
+                showNotification('Failed to check status: ' + error.message, 'error');
+            }
+        }
+        
+        // Gap Analysis and Narrative Generation Functions
+        async function generateGapAnalysisFromDashboard() {
+            const btn = document.getElementById('dashAnalyzeGaps');
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'Analyzing...';
+            
+            try {
+                // Get selected standards from localStorage
+                const selectedStandards = JSON.parse(localStorage.getItem('mms:selectedStandards') || '[]');
+                if (selectedStandards.length === 0) {
+                    showNotification('Please select standards on the Standards page first', 'warning');
+                    window.location.href = '/standards-modern';
+                    return;
+                }
+                
+                // Fetch evidence data
+                const token = localStorage.getItem('auth_token');
+                const docsResponse = await fetch(`${window.API_BASE_URL}/api/v1/evidence/documents`, {
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    credentials: 'include'
+                });
+                
+                if (!docsResponse.ok) throw new Error('Failed to fetch evidence');
+                
+                const docsData = await docsResponse.json();
+                const evidenceMap = {};
+                
+                // Map evidence to standards
+                if (docsData.success && Array.isArray(docsData.data)) {
+                    docsData.data.forEach(doc => {
+                        if (doc.mapped_standards) {
+                            doc.mapped_standards.forEach(std => {
+                                const stdId = std.code || std.id;
+                                if (!evidenceMap[stdId]) evidenceMap[stdId] = [];
+                                evidenceMap[stdId].push({ document: doc, mapping: std });
+                            });
+                        }
+                    });
+                }
+                
+                // Generate gap analysis report
+                const reportHtml = generateDashboardGapAnalysis(selectedStandards, evidenceMap);
+                const w = window.open('', '_blank');
+                if (w) {
+                    w.document.write(reportHtml);
+                    w.document.close();
+                }
+                
+                showNotification('Gap Analysis generated successfully!', 'success');
+                
+                // Update gap summary on dashboard
+                updateGapSummary(selectedStandards, evidenceMap);
+                
+            } catch (error) {
+                console.error('Error generating gap analysis:', error);
+                showNotification('Failed to generate gap analysis', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        }
+        
+        async function generateNarrativeFromDashboard() {
+            const btn = document.getElementById('dashOpenNarrative');
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'Generating...';
+            
+            try {
+                // Get selected standards
+                const selectedStandards = JSON.parse(localStorage.getItem('mms:selectedStandards') || '[]');
+                if (selectedStandards.length === 0) {
+                    showNotification('Please select standards on the Standards page first', 'warning');
+                    window.location.href = '/standards-modern';
+                    return;
+                }
+                
+                // Fetch evidence documents
+                const token = localStorage.getItem('auth_token');
+                const docsRes = await fetch(`${window.API_BASE_URL}/api/v1/evidence/documents`, { 
+                    headers:{ 'Authorization': `Bearer ${token}` }, 
+                    credentials:'include' 
+                });
+                
+                let evidenceDocs = [];
+                if (docsRes.ok) {
+                    const docsData = await docsRes.json();
+                    if (docsData.success && Array.isArray(docsData.data)) {
+                        const mappedDocs = docsData.data.filter(doc => 
+                            doc.mapped_standards && 
+                            doc.mapped_standards.some(std => 
+                                selectedStandards.includes(std.code || std.id)
+                            )
+                        );
+                        evidenceDocs = mappedDocs.slice(0, 8).map(doc => ({
+                            title: doc.filename || 'Evidence',
+                            summary: doc.summary || `${doc.file_type} document uploaded ${new Date(doc.uploaded_at).toLocaleDateString()}`
+                        }));
+                    }
+                }
+                
+                if (evidenceDocs.length === 0) {
+                    showNotification('No mapped evidence found. Please map evidence to standards first.', 'warning');
+                    return;
+                }
+                
+                // Generate narrative
+                const institution = localStorage.getItem('mms:institution') || 'Your Institution';
+                const accreditor = localStorage.getItem('mms:lastSelectedAccreditor') || 'SACSCOC';
+                
+                const narrativeHtml = generateDashboardNarrative(selectedStandards[0], evidenceDocs, institution, accreditor);
+                const w = window.open('', '_blank');
+                if (w) {
+                    w.document.write(narrativeHtml);
+                    w.document.close();
+                }
+                
+                showNotification('CiteGuard narrative generated successfully!', 'success');
+                
+            } catch (error) {
+                console.error('Error generating narrative:', error);
+                showNotification('Failed to generate narrative', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        }
+        
+        function generateDashboardGapAnalysis(standardIds, evidenceData) {
+            const reportDate = new Date().toLocaleDateString();
+            const institution = localStorage.getItem('mms:institution') || 'Your Institution';
+            const gaps = standardIds.filter(id => !evidenceData[id] || evidenceData[id].length === 0);
+            
+            return `<!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <title>Gap Analysis Report - Dashboard Generated</title>
+                <style>
+                    body { font-family: Arial, sans-serif; line-height: 1.6; margin: 40px; color: #333; }
+                    h1 { color: #ef4444; border-bottom: 3px solid #ef4444; padding-bottom: 10px; }
+                    h2 { color: #ef4444; margin-top: 30px; }
+                    .header { margin-bottom: 30px; }
+                    .summary { background: #fef2f2; padding: 20px; border-radius: 8px; margin: 20px 0; }
+                    .gap { background: #fffbeb; border: 1px solid #fcd34d; padding: 20px; margin: 15px 0; border-radius: 8px; }
+                    .critical { border-color: #ef4444; background: #fef2f2; }
+                    .priority { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.85em; }
+                    .high { background: #ef4444; color: white; }
+                    .medium { background: #f59e0b; color: white; }
+                    .low { background: #fbbf24; color: #1f2937; }
+                    .meta { color: #6b7280; font-size: 0.9em; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>⚠️ Gap Analysis Report</h1>
+                    <div class="meta">
+                        <p><strong>Institution:</strong> ${institution}</p>
+                        <p><strong>Generated from:</strong> Dashboard</p>
+                        <p><strong>Date:</strong> ${reportDate}</p>
+                    </div>
+                </div>
+                
+                <div class="summary">
+                    <h2>Gap Summary</h2>
+                    <p><strong>Total Standards Analyzed:</strong> ${standardIds.length}</p>
+                    <p><strong>Standards with Evidence:</strong> ${standardIds.length - gaps.length}</p>
+                    <p><strong>Standards with Gaps:</strong> ${gaps.length}</p>
+                    <p><strong>Compliance Coverage:</strong> ${Math.round(((standardIds.length - gaps.length) / standardIds.length) * 100)}%</p>
+                    <p><strong>Risk Level:</strong> ${gaps.length > standardIds.length * 0.3 ? 'HIGH' : gaps.length > standardIds.length * 0.1 ? 'MEDIUM' : 'LOW'}</p>
+                </div>
+                
+                <h2>Standards with Evidence (${standardIds.length - gaps.length})</h2>
+                ${standardIds.filter(id => evidenceData[id] && evidenceData[id].length > 0).map(stdId => {
+                    const evidence = evidenceData[stdId];
+                    return `
+                        <div style="background: #f0fdf4; border: 1px solid #86efac; padding: 15px; margin: 10px 0; border-radius: 8px;">
+                            <h3 style="color: #059669;">✓ ${stdId}</h3>
+                            <p><strong>Evidence Count:</strong> ${evidence.length} document(s)</p>
+                            <ul style="margin-top: 10px;">
+                                ${evidence.slice(0, 3).map(e => `
+                                    <li>${e.document.filename} (${e.mapping.relevance_score || 75}% relevance)</li>
+                                `).join('')}
+                                ${evidence.length > 3 ? `<li><em>...and ${evidence.length - 3} more</em></li>` : ''}
+                            </ul>
+                        </div>
+                    `;
+                }).join('')}
+                
+                <h2>Identified Compliance Gaps (${gaps.length})</h2>
+                ${gaps.length === 0 ? '<p style="color: #059669;">🎉 No gaps identified! All selected standards have supporting evidence.</p>' : 
+                gaps.map((gapId, index) => `
+                    <div class="gap ${index < 5 ? 'critical' : ''}">
+                        <h3>${gapId} <span class="priority ${index < 5 ? 'high' : index < 10 ? 'medium' : 'low'}">
+                            ${index < 5 ? 'HIGH PRIORITY' : index < 10 ? 'MEDIUM PRIORITY' : 'LOW PRIORITY'}
+                        </span></h3>
+                        <p><strong>Status:</strong> No evidence currently mapped</p>
+                        <p><strong>Action Required:</strong> Upload and map relevant documentation</p>
+                        <p><strong>Suggested Evidence Types:</strong></p>
+                        <ul>
+                            <li>Policy documents related to ${gapId}</li>
+                            <li>Meeting minutes demonstrating compliance</li>
+                            <li>Assessment reports and data</li>
+                            <li>Program documentation and procedures</li>
+                        </ul>
+                    </div>
+                `).join('')}
+                
+                <h2>Quick Actions</h2>
+                <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin-top: 20px;">
+                    <h3>Immediate Steps to Close Gaps:</h3>
+                    <ol>
+                        <li><strong>Review existing documents:</strong> Check if you already have evidence that hasn't been uploaded</li>
+                        <li><strong>Upload evidence:</strong> Use the dashboard upload feature to add documents</li>
+                        <li><strong>Map to standards:</strong> Use the evidence mapping tool to connect documents to standards</li>
+                        <li><strong>Generate reports:</strong> Create comprehensive compliance reports once gaps are addressed</li>
+                    </ol>
+                    
+                    <p style="margin-top: 20px;">
+                        <strong>Pro tip:</strong> Focus on high-priority gaps first. These are typically required standards or those with significant compliance impact.
+                    </p>
+                </div>
+            </body>
+            </html>`;
+        }
+        
+        function generateDashboardNarrative(standardId, evidenceDocs, institution, accreditor) {
+            const reportDate = new Date().toLocaleDateString();
+            
+            return `<!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <title>CiteGuard Narrative - ${standardId}</title>
+                <style>
+                    body { font-family: 'Times New Roman', serif; line-height: 2; margin: 40px 60px; color: #000; }
+                    h1 { text-align: center; font-size: 24px; margin-bottom: 40px; }
+                    .meta { text-align: center; margin-bottom: 40px; font-style: italic; }
+                    .narrative { text-align: justify; margin: 20px 0; }
+                    .citation { color: #1e40af; font-weight: bold; }
+                    .evidence-list { margin-top: 40px; border-top: 2px solid #333; padding-top: 20px; }
+                    .evidence-item { margin: 10px 0; }
+                    @media print {
+                        body { margin: 1in; }
+                    }
+                </style>
+            </head>
+            <body>
+                <h1>Accreditation Narrative</h1>
+                <div class="meta">
+                    <p>${institution}<br>
+                    Standard ${standardId}<br>
+                    ${accreditor} Accreditation<br>
+                    ${reportDate}</p>
+                </div>
+                
+                <div class="narrative">
+                    <p>
+                        ${institution} demonstrates comprehensive compliance with Standard ${standardId} through 
+                        systematic implementation of policies, procedures, and practices that align with ${accreditor} 
+                        requirements. Our institutional commitment to excellence is evidenced through multiple 
+                        supporting documents and established processes.
+                    </p>
+                    
+                    <p>
+                        The institution maintains robust documentation <span class="citation">[${evidenceDocs[0]?.title || 'Document 1'}]</span> 
+                        that clearly demonstrates adherence to the standard's requirements. Through regular assessment 
+                        and continuous improvement cycles, we ensure that our practices not only meet but exceed 
+                        accreditation expectations ${evidenceDocs[1] ? `<span class="citation">[${evidenceDocs[1].title}]</span>` : ''}.
+                    </p>
+                    
+                    <p>
+                        Our evidence portfolio includes ${evidenceDocs.length} key documents that collectively 
+                        demonstrate full compliance with this standard. These documents span various institutional 
+                        areas and provide comprehensive coverage of all standard requirements 
+                        ${evidenceDocs[2] ? `<span class="citation">[${evidenceDocs[2].title}]</span>` : ''}.
+                    </p>
+                    
+                    <p>
+                        The institution's commitment to this standard is further evidenced through:
+                    </p>
+                    <ul>
+                        <li>Regular review and updates of relevant policies ${evidenceDocs[3] ? `<span class="citation">[${evidenceDocs[3].title}]</span>` : ''}</li>
+                        <li>Systematic data collection and analysis processes</li>
+                        <li>Stakeholder engagement and feedback mechanisms ${evidenceDocs[4] ? `<span class="citation">[${evidenceDocs[4].title}]</span>` : ''}</li>
+                        <li>Continuous improvement initiatives based on assessment results</li>
+                    </ul>
+                    
+                    <p>
+                        In conclusion, ${institution} has established and maintains effective systems and processes 
+                        that ensure ongoing compliance with Standard ${standardId}. Our comprehensive documentation, 
+                        coupled with active monitoring and improvement practices, demonstrates our unwavering 
+                        commitment to meeting ${accreditor} standards and advancing our institutional mission.
+                    </p>
+                </div>
+                
+                <div class="evidence-list">
+                    <h2>Evidence Documents</h2>
+                    ${evidenceDocs.map((doc, index) => `
+                        <div class="evidence-item">
+                            <strong>[${doc.title}]:</strong> ${doc.summary}
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <div style="margin-top: 40px; padding: 20px; background: #f0f9ff; border-radius: 8px;">
+                    <p><strong>Note:</strong> This narrative was generated from the dashboard using mapped evidence. 
+                    For a more comprehensive narrative with additional customization options, please use the 
+                    Reports page narrative generator.</p>
+                </div>
+            </body>
+            </html>`;
+        }
+        
+        function updateGapSummary(standardIds, evidenceMap) {
+            const summaryDiv = document.getElementById('gapAnalysisSummary');
+            if (!summaryDiv) return;
+            
+            const gaps = standardIds.filter(id => !evidenceMap[id] || evidenceMap[id].length === 0);
+            const coverage = Math.round(((standardIds.length - gaps.length) / standardIds.length) * 100);
+            
+            summaryDiv.innerHTML = `
+                <div style="background: var(--bg-light); padding: 12px; border-radius: 8px; border: 1px solid var(--border-light);">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span>Coverage:</span>
+                        <strong>${coverage}%</strong>
+                    </div>
+                    <div style="width: 100%; height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden;">
+                        <div style="width: ${coverage}%; height: 100%; background: ${coverage > 80 ? '#10b981' : coverage > 60 ? '#f59e0b' : '#ef4444'};"></div>
+                    </div>
+                    <div style="margin-top: 8px; font-size: 0.875rem; color: var(--text-medium);">
+                        ${gaps.length} gap${gaps.length !== 1 ? 's' : ''} identified in ${standardIds.length} standard${standardIds.length !== 1 ? 's' : ''}
+                    </div>
+                </div>
+            `;
+        }
+        
         // Service worker registration for offline support
         if ('serviceWorker' in navigator) {
             const v = '20250920-1';

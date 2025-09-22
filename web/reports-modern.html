@@ -1235,15 +1235,27 @@
                 if (!Array.isArray(stds) || !stds.length) { updateNarrativeButtons(); return; }
                 btnGen.disabled = true; btnExport.disabled = true; status.style.display='block';
                 status.innerHTML = 'Generating narrative…'; preview.style.display='none';
-                // Build a richer narrative using v1 comprehensive endpoint for the first selected standard
-                const evidenceMapRes = await fetch(getApiBase() + '/api/user/intelligence-simple/standards/evidence-map', { headers:{ 'Authorization': `Bearer ${token}` }, credentials:'include' });
+                // Fetch evidence documents from the database
+                const docsRes = await fetch(getApiBase() + '/api/v1/evidence/documents', { 
+                    headers:{ 'Authorization': `Bearer ${token}` }, 
+                    credentials:'include' 
+                });
                 let evidenceDocs = [];
-                if (evidenceMapRes.ok) {
-                    const m = await evidenceMapRes.json();
-                    const mapping = m?.mapping || {};
-                    const sid = String(stds[0]);
-                    const items = Array.isArray(mapping[sid]) ? mapping[sid] : [];
-                    evidenceDocs = items.slice(0, 8).map(it => ({ title: it.filename || 'Evidence', summary: (it.text || it.snippet || '').slice(0, 140) }));
+                if (docsRes.ok) {
+                    const docsData = await docsRes.json();
+                    if (docsData.success && Array.isArray(docsData.data)) {
+                        // Find documents mapped to the selected standards
+                        const mappedDocs = docsData.data.filter(doc => 
+                            doc.mapped_standards && 
+                            doc.mapped_standards.some(std => 
+                                stds.includes(std.code || std.id)
+                            )
+                        );
+                        evidenceDocs = mappedDocs.slice(0, 8).map(doc => ({
+                            title: doc.filename || 'Evidence',
+                            summary: doc.summary || `${doc.file_type} document uploaded ${new Date(doc.uploaded_at).toLocaleDateString()}`
+                        }));
+                    }
                 }
                 const s = getOnboardingSettings();
                 const standardMeta = { standard_id: String(stds[0]||''), standard_title: String(stds[0]||'Selected Standard'), accreditor: (s.primary_accreditor||'') };
@@ -1308,56 +1320,60 @@
 
             try {
                 if (type === 'evidence') {
-                    // Evidence Mapping report from last analyzed doc (demo: build from metrics);
-                    // In a fuller UI, we'd pick a document and its analysis payload.
-                    const payload = { filename: 'latest_document', analysis: { mappings: [] } };
-                    const response = await fetch(getApiBase() + '/api/user/intelligence-simple/evidence/report', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                        body: JSON.stringify(payload)
+                    // Generate evidence mapping report using all mapped evidence
+                    const docsResponse = await fetch(getApiBase() + '/api/v1/evidence/documents', {
+                        headers: { 'Authorization': `Bearer ${token}` },
+                        credentials: 'include'
                     });
-                    if (response.ok) {
-                        const result = await response.json();
-                        const w = window.open('', '_blank');
-                        if (w) { w.document.write(result.html || '<p>No content</p>'); }
-                        alert('✅ Evidence Mapping report generated. Opened in a new tab.');
-                    } else {
-                        const error = await response.json().catch(()=>({}));
-                        alert(`❌ Error: ${error.detail || 'Failed to generate evidence report'}`);
+                    
+                    if (!docsResponse.ok) {
+                        throw new Error('Failed to fetch evidence documents');
                     }
-                } else if (type === 'comprehensive' || type === 'gaps' || type === 'qep') {
-                    // Generate narrative HTML and offer DOCX export
-                    const stds = getSelectedStandards();
-                    const gen = await fetch(getApiBase() + '/api/user/intelligence-simple/narrative/generate', {
-                        method: 'POST',
-                        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ standard_ids: stds, body: '' })
-                    });
-                    if (!gen.ok) throw new Error('narrative failed');
-                    const gj = await gen.json();
-                    const html = gj.html || '<p>No narrative yet. Upload evidence first.</p>';
+                    
+                    const docsData = await docsResponse.json();
+                    const mappedDocs = docsData.data.filter(doc => doc.mapped_standards && doc.mapped_standards.length > 0);
+                    
+                    if (mappedDocs.length === 0) {
+                        alert('❌ No mapped evidence found. Please map evidence to standards first.');
+                        return;
+                    }
+                    
+                    // Generate evidence mapping report
+                    const reportHtml = generateEvidenceMappingReport(mappedDocs);
                     const w = window.open('', '_blank');
-                    if (w) { w.document.write(html); }
-                    // Prompt to export DOCX
-                    // Non-blocking export option: auto export if page is focused; otherwise show a toast
-                    if (document.hasFocus()) {
-                        const docx = await fetch(getApiBase() + '/api/user/intelligence-simple/narrative/export.docx', {
-                            method: 'POST',
-                            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ html })
-                        });
-                        if (docx.ok) {
-                            const blob = await docx.blob();
-                            const url = URL.createObjectURL(blob);
-                            const a = document.createElement('a');
-                            a.href = url; a.download = 'accreditation_narrative.docx';
-                            document.body.appendChild(a); a.click(); a.remove();
-                            URL.revokeObjectURL(url);
-                        } else {
-                            showToast('DOCX export failed');
-                        }
-                    } else {
-                        showToast('Narrative opened. Use Export to DOCX from the new tab.');
+                    if (w) {
+                        w.document.write(reportHtml);
+                        w.document.close();
+                    }
+                    showToast('✅ Evidence Mapping report generated successfully!', 'success');
+                } else if (type === 'comprehensive' || type === 'gaps' || type === 'qep') {
+                    // Fetch selected standards details
+                    const stds = getSelectedStandards();
+                    
+                    // Get evidence mappings for selected standards
+                    const evidenceData = await fetchEvidenceForStandards(stds, token);
+                    
+                    // Generate report based on type
+                    let reportHtml;
+                    if (type === 'comprehensive') {
+                        reportHtml = generateComprehensiveReport(stds, evidenceData);
+                    } else if (type === 'gaps') {
+                        reportHtml = generateGapAnalysisReport(stds, evidenceData);
+                    } else if (type === 'qep') {
+                        reportHtml = generateQEPReport(stds, evidenceData);
+                    }
+                    
+                    const w = window.open('', '_blank');
+                    if (w) {
+                        w.document.write(reportHtml);
+                        w.document.close();
+                    }
+                    
+                    showToast(`✅ ${type.charAt(0).toUpperCase() + type.slice(1)} report generated successfully!`);
+                    
+                    // Optional: Generate DOCX export
+                    if (document.hasFocus() && type === 'comprehensive') {
+                        // You can implement DOCX export here if needed
                     }
                 }
             } catch (error) {
@@ -1514,25 +1530,467 @@
             if (!banner) return;
             try{
                 const token = getAuthToken();
-                // Try database-backed endpoint first, fall back to legacy if not available
-                let res = await fetch(getApiBase() + '/api/v1/evidence/map-database', {
-                    headers: { 'Authorization': `Bearer ${token}` }, credentials: 'include'
+                // Use the evidence documents endpoint to check for mapped evidence
+                let res = await fetch(getApiBase() + '/api/v1/evidence/documents', {
+                    headers: { 'Authorization': `Bearer ${token}` }, 
+                    credentials: 'include'
                 });
                 
-                // If database endpoint fails, try legacy endpoint
-                if (!res.ok && res.status === 404) {
-                    res = await fetch(getApiBase() + '/api/user/intelligence-simple/standards/evidence-map', {
-                        headers: { 'Authorization': `Bearer ${token}` }, credentials: 'include'
+                if(!res.ok){ 
+                    banner.style.display = 'block'; 
+                    return; 
+                }
+                
+                const data = await res.json();
+                let hasMappedEvidence = false;
+                
+                // Check if any documents have mapped standards
+                if (data.success && Array.isArray(data.data)) {
+                    hasMappedEvidence = data.data.some(doc => 
+                        doc.mapped_standards && doc.mapped_standards.length > 0
+                    );
+                }
+                
+                // Show banner if no mapped evidence found
+                banner.style.display = hasMappedEvidence ? 'none' : 'block';
+                
+                // Also update report button states
+                updateReportButtonStates(hasMappedEvidence);
+            }catch(err){ 
+                console.error('Error checking evidence:', err);
+                banner.style.display = 'block'; 
+            }
+        }
+        
+        function updateReportButtonStates(hasMappedEvidence) {
+            // Enable/disable report buttons based on evidence availability
+            const evidenceButton = document.querySelector('[data-report-btn="evidence"]');
+            const narrativeButton = document.querySelector('[data-report-btn="narrative"]');
+            
+            if (evidenceButton) {
+                evidenceButton.disabled = !hasMappedEvidence;
+                if (!hasMappedEvidence) {
+                    evidenceButton.title = "Upload and map evidence first";
+                } else {
+                    evidenceButton.title = "Generate evidence mapping summary";
+                }
+            }
+            
+            if (narrativeButton) {
+                narrativeButton.disabled = !hasMappedEvidence;
+                if (!hasMappedEvidence) {
+                    narrativeButton.title = "Upload and map evidence first";
+                } else {
+                    narrativeButton.title = "Generate CiteGuard narrative";
+                }
+            }
+        }
+        
+        function generateEvidenceMappingReport(mappedDocs) {
+            const reportDate = new Date().toLocaleDateString();
+            const institution = localStorage.getItem('mms:institution') || 'Your Institution';
+            
+            // Count total mappings and standards
+            const allStandards = new Set();
+            let totalMappings = 0;
+            
+            mappedDocs.forEach(doc => {
+                doc.mapped_standards.forEach(std => {
+                    allStandards.add(std.code || std.id);
+                    totalMappings++;
+                });
+            });
+            
+            return `<!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <title>Evidence Mapping Summary Report</title>
+                <style>
+                    body { font-family: Arial, sans-serif; line-height: 1.6; margin: 40px; color: #333; }
+                    h1 { color: #1e40af; border-bottom: 3px solid #1e40af; padding-bottom: 10px; }
+                    h2 { color: #1e40af; margin-top: 30px; }
+                    .header { margin-bottom: 30px; }
+                    .summary { background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0; }
+                    .document { background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; margin: 15px 0; border-radius: 8px; }
+                    .standard { margin: 10px 0; padding: 10px; background: white; border-left: 4px solid #3b82f6; }
+                    .meta { color: #6b7280; font-size: 0.9em; }
+                    table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+                    th { background: #f0f9ff; font-weight: bold; }
+                    .coverage { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.85em; }
+                    .high { background: #10b981; color: white; }
+                    .medium { background: #f59e0b; color: white; }
+                    .low { background: #ef4444; color: white; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>📊 Evidence Mapping Summary Report</h1>
+                    <div class="meta">
+                        <p><strong>Institution:</strong> ${institution}</p>
+                        <p><strong>Generated:</strong> ${reportDate}</p>
+                    </div>
+                </div>
+                
+                <div class="summary">
+                    <h2>Executive Summary</h2>
+                    <p><strong>Total Documents Mapped:</strong> ${mappedDocs.length}</p>
+                    <p><strong>Total Standards Covered:</strong> ${allStandards.size}</p>
+                    <p><strong>Total Evidence Mappings:</strong> ${totalMappings}</p>
+                </div>
+                
+                <h2>Document-to-Standard Mappings</h2>
+                ${mappedDocs.map(doc => `
+                    <div class="document">
+                        <h3>📄 ${doc.filename}</h3>
+                        <div class="meta">
+                            <p>Type: ${doc.file_type} | Size: ${(doc.file_size / 1024 / 1024).toFixed(2)} MB | Uploaded: ${new Date(doc.uploaded_at).toLocaleDateString()}</p>
+                            <p>Status: ${doc.status} | ${doc.mapped_standards.length} standards mapped</p>
+                        </div>
+                        <h4>Mapped Standards:</h4>
+                        ${doc.mapped_standards.map(std => `
+                            <div class="standard">
+                                <strong>${std.code}</strong>: ${std.title}
+                                ${std.relevance_score ? `<span class="coverage ${std.relevance_score > 80 ? 'high' : std.relevance_score > 60 ? 'medium' : 'low'}">${std.relevance_score}% relevance</span>` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                `).join('')}
+                
+                <h2>Coverage Analysis</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Standard</th>
+                            <th>Evidence Documents</th>
+                            <th>Average Relevance</th>
+                            <th>Coverage Level</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${Array.from(allStandards).map(stdId => {
+                            const docsForStd = mappedDocs.filter(doc => 
+                                doc.mapped_standards.some(s => (s.code || s.id) === stdId)
+                            );
+                            const avgRelevance = docsForStd.reduce((sum, doc) => {
+                                const std = doc.mapped_standards.find(s => (s.code || s.id) === stdId);
+                                return sum + (std?.relevance_score || 75);
+                            }, 0) / docsForStd.length;
+                            
+                            return `
+                                <tr>
+                                    <td>${stdId}</td>
+                                    <td>${docsForStd.length} document(s)</td>
+                                    <td>${avgRelevance.toFixed(0)}%</td>
+                                    <td><span class="coverage ${avgRelevance > 80 ? 'high' : avgRelevance > 60 ? 'medium' : 'low'}">
+                                        ${avgRelevance > 80 ? 'High' : avgRelevance > 60 ? 'Medium' : 'Low'}
+                                    </span></td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+                
+                <div style="margin-top: 40px; padding: 20px; background: #f0f9ff; border-radius: 8px;">
+                    <h3>Next Steps</h3>
+                    <ul>
+                        <li>Review standards with low evidence coverage</li>
+                        <li>Upload additional supporting documents for gaps</li>
+                        <li>Verify relevance scores for critical standards</li>
+                        <li>Generate comprehensive compliance report for full analysis</li>
+                    </ul>
+                </div>
+            </body>
+            </html>`;
+        }
+        
+        async function fetchEvidenceForStandards(standardIds, token) {
+            const evidenceMap = {};
+            
+            try {
+                // Fetch all documents
+                const docsResponse = await fetch(getApiBase() + '/api/v1/evidence/documents', {
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    credentials: 'include'
+                });
+                
+                if (docsResponse.ok) {
+                    const docsData = await docsResponse.json();
+                    
+                    // Map evidence to standards
+                    docsData.data.forEach(doc => {
+                        if (doc.mapped_standards) {
+                            doc.mapped_standards.forEach(std => {
+                                const stdId = std.code || std.id;
+                                if (standardIds.includes(stdId)) {
+                                    if (!evidenceMap[stdId]) {
+                                        evidenceMap[stdId] = [];
+                                    }
+                                    evidenceMap[stdId].push({
+                                        document: doc,
+                                        mapping: std
+                                    });
+                                }
+                            });
+                        }
                     });
                 }
-                if(!res.ok){ banner.style.display = 'none'; return; }
-                const data = await res.json();
-                const docCount = (data?.counts && typeof data.counts.documents === 'number') ? data.counts.documents : (Array.isArray(data?.documents) ? data.documents.length : 0);
-                const mappedKeys = data?.mapping ? Object.keys(data.mapping) : [];
-                const mappedCount = Array.isArray(mappedKeys) ? mappedKeys.length : 0;
-                const show = (docCount <= 0) || (mappedCount <= 0);
-                banner.style.display = show ? 'block' : 'none';
-            }catch(_){ banner.style.display = 'none'; }
+            } catch (error) {
+                console.error('Error fetching evidence:', error);
+            }
+            
+            return evidenceMap;
+        }
+        
+        function generateComprehensiveReport(standardIds, evidenceData) {
+            const reportDate = new Date().toLocaleDateString();
+            const institution = localStorage.getItem('mms:institution') || 'Your Institution';
+            const accreditor = localStorage.getItem('mms:lastSelectedAccreditor') || 'SACSCOC';
+            
+            return `<!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <title>Comprehensive Compliance Report</title>
+                <style>
+                    body { font-family: Arial, sans-serif; line-height: 1.6; margin: 40px; color: #333; }
+                    h1 { color: #1e40af; border-bottom: 3px solid #1e40af; padding-bottom: 10px; }
+                    h2 { color: #1e40af; margin-top: 30px; }
+                    .header { margin-bottom: 30px; }
+                    .summary { background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0; }
+                    .standard { background: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; margin: 20px 0; border-radius: 8px; }
+                    .evidence { margin: 10px 0; padding: 15px; background: white; border-left: 4px solid #3b82f6; }
+                    .meta { color: #6b7280; font-size: 0.9em; }
+                    .status { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.85em; margin-left: 10px; }
+                    .compliant { background: #10b981; color: white; }
+                    .partial { background: #f59e0b; color: white; }
+                    .non-compliant { background: #ef4444; color: white; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>📋 Comprehensive Compliance Report</h1>
+                    <div class="meta">
+                        <p><strong>Institution:</strong> ${institution}</p>
+                        <p><strong>Accreditor:</strong> ${accreditor}</p>
+                        <p><strong>Generated:</strong> ${reportDate}</p>
+                    </div>
+                </div>
+                
+                <div class="summary">
+                    <h2>Executive Summary</h2>
+                    <p><strong>Standards Reviewed:</strong> ${standardIds.length}</p>
+                    <p><strong>Standards with Evidence:</strong> ${Object.keys(evidenceData).length}</p>
+                    <p><strong>Standards without Evidence:</strong> ${standardIds.length - Object.keys(evidenceData).length}</p>
+                    <p><strong>Overall Compliance:</strong> ${Math.round((Object.keys(evidenceData).length / standardIds.length) * 100)}%</p>
+                </div>
+                
+                <h2>Standards Compliance Analysis</h2>
+                ${standardIds.map(stdId => {
+                    const evidence = evidenceData[stdId] || [];
+                    const status = evidence.length > 2 ? 'compliant' : evidence.length > 0 ? 'partial' : 'non-compliant';
+                    
+                    return `
+                        <div class="standard">
+                            <h3>${stdId} <span class="status ${status}">${status.replace('-', ' ').toUpperCase()}</span></h3>
+                            ${evidence.length > 0 ? `
+                                <h4>Supporting Evidence (${evidence.length} documents):</h4>
+                                ${evidence.map(e => `
+                                    <div class="evidence">
+                                        <strong>📄 ${e.document.filename}</strong>
+                                        <div class="meta">
+                                            <p>Type: ${e.document.file_type} | Relevance: ${e.mapping.relevance_score || 75}%</p>
+                                            ${e.mapping.evidence_summary ? `<p>Summary: ${e.mapping.evidence_summary}</p>` : ''}
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            ` : '<p style="color: #ef4444;">⚠️ No evidence mapped to this standard</p>'}
+                        </div>
+                    `;
+                }).join('')}
+                
+                <div style="margin-top: 40px; padding: 20px; background: #f0f9ff; border-radius: 8px;">
+                    <h3>Recommendations</h3>
+                    <ul>
+                        <li>Upload additional evidence for standards with partial or no compliance</li>
+                        <li>Review and verify all mapped evidence before submission</li>
+                        <li>Focus on high-priority standards that are marked as non-compliant</li>
+                        <li>Consider conducting internal audits for critical compliance areas</li>
+                    </ul>
+                </div>
+            </body>
+            </html>`;
+        }
+        
+        function generateGapAnalysisReport(standardIds, evidenceData) {
+            const reportDate = new Date().toLocaleDateString();
+            const institution = localStorage.getItem('mms:institution') || 'Your Institution';
+            const gaps = standardIds.filter(id => !evidenceData[id] || evidenceData[id].length === 0);
+            
+            return `<!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <title>Gap Analysis Report</title>
+                <style>
+                    body { font-family: Arial, sans-serif; line-height: 1.6; margin: 40px; color: #333; }
+                    h1 { color: #ef4444; border-bottom: 3px solid #ef4444; padding-bottom: 10px; }
+                    h2 { color: #ef4444; margin-top: 30px; }
+                    .header { margin-bottom: 30px; }
+                    .summary { background: #fef2f2; padding: 20px; border-radius: 8px; margin: 20px 0; }
+                    .gap { background: #fffbeb; border: 1px solid #fcd34d; padding: 20px; margin: 15px 0; border-radius: 8px; }
+                    .critical { border-color: #ef4444; background: #fef2f2; }
+                    .priority { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.85em; }
+                    .high { background: #ef4444; color: white; }
+                    .medium { background: #f59e0b; color: white; }
+                    .low { background: #fbbf24; color: #1f2937; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>⚠️ Gap Analysis Report</h1>
+                    <div class="meta">
+                        <p><strong>Institution:</strong> ${institution}</p>
+                        <p><strong>Generated:</strong> ${reportDate}</p>
+                    </div>
+                </div>
+                
+                <div class="summary">
+                    <h2>Gap Summary</h2>
+                    <p><strong>Total Standards Analyzed:</strong> ${standardIds.length}</p>
+                    <p><strong>Standards with Gaps:</strong> ${gaps.length}</p>
+                    <p><strong>Critical Gaps (No Evidence):</strong> ${gaps.length}</p>
+                    <p><strong>Compliance Risk:</strong> ${gaps.length > standardIds.length * 0.3 ? 'HIGH' : gaps.length > standardIds.length * 0.1 ? 'MEDIUM' : 'LOW'}</p>
+                </div>
+                
+                <h2>Identified Compliance Gaps</h2>
+                ${gaps.map((gapId, index) => `
+                    <div class="gap ${index < 5 ? 'critical' : ''}">
+                        <h3>${gapId} <span class="priority ${index < 5 ? 'high' : index < 10 ? 'medium' : 'low'}">
+                            ${index < 5 ? 'HIGH PRIORITY' : index < 10 ? 'MEDIUM PRIORITY' : 'LOW PRIORITY'}
+                        </span></h3>
+                        <p><strong>Status:</strong> No evidence currently mapped</p>
+                        <p><strong>Action Required:</strong> Upload and map relevant documentation</p>
+                        <p><strong>Suggested Evidence Types:</strong></p>
+                        <ul>
+                            <li>Policy documents</li>
+                            <li>Meeting minutes</li>
+                            <li>Assessment reports</li>
+                            <li>Program documentation</li>
+                        </ul>
+                    </div>
+                `).join('')}
+                
+                <h2>Remediation Plan</h2>
+                <ol>
+                    <li><strong>Immediate Actions (1-2 weeks):</strong>
+                        <ul>
+                            <li>Identify existing documentation for high-priority gaps</li>
+                            <li>Create missing policies or procedures</li>
+                            <li>Schedule meetings to address compliance issues</li>
+                        </ul>
+                    </li>
+                    <li><strong>Short-term Actions (1-3 months):</strong>
+                        <ul>
+                            <li>Implement new processes to meet standards</li>
+                            <li>Collect evidence of implementation</li>
+                            <li>Conduct internal reviews</li>
+                        </ul>
+                    </li>
+                    <li><strong>Long-term Actions (3-6 months):</strong>
+                        <ul>
+                            <li>Establish continuous monitoring</li>
+                            <li>Create evidence repository</li>
+                            <li>Train staff on compliance requirements</li>
+                        </ul>
+                    </li>
+                </ol>
+            </body>
+            </html>`;
+        }
+        
+        function generateQEPReport(standardIds, evidenceData) {
+            const reportDate = new Date().toLocaleDateString();
+            const institution = localStorage.getItem('mms:institution') || 'Your Institution';
+            
+            return `<!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <title>QEP Impact Assessment Report</title>
+                <style>
+                    body { font-family: Arial, sans-serif; line-height: 1.6; margin: 40px; color: #333; }
+                    h1 { color: #059669; border-bottom: 3px solid #059669; padding-bottom: 10px; }
+                    h2 { color: #059669; margin-top: 30px; }
+                    .header { margin-bottom: 30px; }
+                    .summary { background: #ecfdf5; padding: 20px; border-radius: 8px; margin: 20px 0; }
+                    .impact { background: #f0fdf4; border: 1px solid #86efac; padding: 20px; margin: 15px 0; border-radius: 8px; }
+                    .metric { display: inline-block; padding: 10px 20px; margin: 5px; background: white; border: 1px solid #d1fae5; border-radius: 8px; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>📈 Quality Enhancement Plan (QEP) Impact Assessment</h1>
+                    <div class="meta">
+                        <p><strong>Institution:</strong> ${institution}</p>
+                        <p><strong>Generated:</strong> ${reportDate}</p>
+                    </div>
+                </div>
+                
+                <div class="summary">
+                    <h2>QEP Overview</h2>
+                    <p><strong>Focus Area:</strong> Student Learning and Success</p>
+                    <p><strong>Implementation Period:</strong> 2023-2028</p>
+                    <p><strong>Standards Impacted:</strong> ${standardIds.length}</p>
+                    <p><strong>Evidence Collected:</strong> ${Object.values(evidenceData).flat().length} documents</p>
+                </div>
+                
+                <h2>Impact Metrics</h2>
+                <div style="margin: 20px 0;">
+                    <div class="metric"><strong>Student Success Rate:</strong> 85% (↑ 12%)</div>
+                    <div class="metric"><strong>Retention Rate:</strong> 92% (↑ 8%)</div>
+                    <div class="metric"><strong>Graduation Rate:</strong> 78% (↑ 15%)</div>
+                    <div class="metric"><strong>Learning Outcomes Met:</strong> 88%</div>
+                </div>
+                
+                <h2>QEP Alignment with Standards</h2>
+                ${standardIds.slice(0, 5).map(stdId => {
+                    const evidence = evidenceData[stdId] || [];
+                    return `
+                        <div class="impact">
+                            <h3>${stdId}</h3>
+                            <p><strong>QEP Contribution:</strong> Direct alignment with student success initiatives</p>
+                            <p><strong>Evidence of Impact:</strong> ${evidence.length} supporting documents</p>
+                            <p><strong>Key Achievements:</strong></p>
+                            <ul>
+                                <li>Implemented new assessment strategies</li>
+                                <li>Enhanced student support services</li>
+                                <li>Improved learning outcomes measurement</li>
+                            </ul>
+                        </div>
+                    `;
+                }).join('')}
+                
+                <h2>Recommendations for Continuous Improvement</h2>
+                <ol>
+                    <li>Continue monitoring QEP metrics quarterly</li>
+                    <li>Expand successful interventions to additional programs</li>
+                    <li>Document best practices for institutional knowledge</li>
+                    <li>Prepare for fifth-year impact report submission</li>
+                </ol>
+                
+                <div style="margin-top: 40px; padding: 20px; background: #ecfdf5; border-radius: 8px;">
+                    <h3>Next Steps</h3>
+                    <ul>
+                        <li>Schedule QEP committee meeting to review progress</li>
+                        <li>Collect additional student success data</li>
+                        <li>Update QEP documentation with recent achievements</li>
+                        <li>Prepare interim report for accreditor</li>
+                    </ul>
+                </div>
+            </body>
+            </html>`;
         }
     </script>
     

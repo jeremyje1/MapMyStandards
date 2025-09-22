@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Dashboard Gap Analysis & Narrative</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .feature {
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #3b82f6;
+            background: #f0f9ff;
+        }
+        .feature h3 {
+            margin-top: 0;
+            color: #1e40af;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            margin-left: 10px;
+        }
+        .success {
+            background: #10b981;
+            color: white;
+        }
+        .warning {
+            background: #f59e0b;
+            color: white;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 0.85em;
+        }
+    </style>
+</head>
+<body>
+    <h1>Dashboard Features Test</h1>
+    
+    <div class="test-section">
+        <h2>🔧 What We Fixed</h2>
+        <div class="feature">
+            <h3>Gap Analysis <span class="status success">FIXED</span></h3>
+            <p><strong>Previously:</strong> Clicking "Analyze Gaps" redirected to /gap-analysis (non-existent route)</p>
+            <p><strong>Now:</strong> Generates gap analysis report directly from dashboard using mapped evidence</p>
+            <ul>
+                <li>Fetches evidence documents from API</li>
+                <li>Maps evidence to selected standards</li>
+                <li>Identifies gaps where standards have no evidence</li>
+                <li>Generates comprehensive gap report with priorities</li>
+                <li>Updates dashboard summary with coverage metrics</li>
+            </ul>
+        </div>
+        
+        <div class="feature">
+            <h3>Narrative (CiteGuard) <span class="status success">FIXED</span></h3>
+            <p><strong>Previously:</strong> Clicking "Open Narrative" redirected to /narrative page or showed empty template</p>
+            <p><strong>Now:</strong> Generates CiteGuard narrative directly from dashboard with evidence citations</p>
+            <ul>
+                <li>Uses selected standards from localStorage</li>
+                <li>Fetches mapped evidence documents</li>
+                <li>Generates formatted narrative with inline citations</li>
+                <li>Includes evidence list with summaries</li>
+                <li>Opens in new window for easy printing/saving</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🧪 Test Instructions</h2>
+        <ol>
+            <li><strong>Prerequisites:</strong>
+                <ul>
+                    <li>Select at least one standard on the Standards page</li>
+                    <li>Upload and map evidence to those standards</li>
+                </ul>
+            </li>
+            <li><strong>Test Gap Analysis:</strong>
+                <ul>
+                    <li>Go to Dashboard</li>
+                    <li>Click "Analyze Gaps" button</li>
+                    <li>Should generate report showing:
+                        <ul>
+                            <li>Standards with evidence (green)</li>
+                            <li>Standards without evidence (gaps)</li>
+                            <li>Priority levels for gaps</li>
+                            <li>Remediation recommendations</li>
+                        </ul>
+                    </li>
+                    <li>Dashboard should update with coverage percentage</li>
+                </ul>
+            </li>
+            <li><strong>Test Narrative Generation:</strong>
+                <ul>
+                    <li>Go to Dashboard</li>
+                    <li>Click "Open Narrative" button</li>
+                    <li>Should generate narrative with:
+                        <ul>
+                            <li>Institution and standard information</li>
+                            <li>Compliance narrative with evidence citations</li>
+                            <li>List of evidence documents used</li>
+                            <li>Formatted for accreditation submission</li>
+                        </ul>
+                    </li>
+                </ul>
+            </li>
+        </ol>
+    </div>
+    
+    <div class="test-section">
+        <h2>📋 Implementation Details</h2>
+        <h3>New Functions Added:</h3>
+        <pre>
+- generateGapAnalysisFromDashboard()
+  Fetches evidence, analyzes gaps, generates report
+  
+- generateNarrativeFromDashboard()
+  Creates CiteGuard narrative with evidence citations
+  
+- generateDashboardGapAnalysis(standardIds, evidenceData)
+  HTML generation for gap analysis report
+  
+- generateDashboardNarrative(standardId, evidenceDocs, institution, accreditor)
+  HTML generation for accreditation narrative
+  
+- updateGapSummary(standardIds, evidenceMap)
+  Updates dashboard UI with gap metrics
+        </pre>
+        
+        <h3>API Endpoints Used:</h3>
+        <pre>
+GET /api/v1/evidence/documents
+  - Fetches all evidence documents with mapped standards
+  - Used by both gap analysis and narrative generation
+        </pre>
+    </div>
+    
+    <div class="test-section">
+        <h2>✅ Success Criteria</h2>
+        <ul>
+            <li>✓ Gap Analysis button works without redirecting</li>
+            <li>✓ Narrative button works without redirecting</li>
+            <li>✓ Both features use actual mapped evidence data</li>
+            <li>✓ Reports open in new windows</li>
+            <li>✓ Clear error messages if no standards selected</li>
+            <li>✓ Clear error messages if no evidence mapped</li>
+            <li>✓ Dashboard shows gap coverage summary</li>
+            <li>✓ Reports are properly formatted and printable</li>
+        </ul>
+    </div>
+    
+    <div class="test-section">
+        <h2>💡 Edge Cases Handled</h2>
+        <ul>
+            <li><strong>No standards selected:</strong> Shows warning and redirects to Standards page</li>
+            <li><strong>No evidence mapped:</strong> Shows warning message for narrative, gap analysis shows all as gaps</li>
+            <li><strong>API errors:</strong> Graceful error handling with user-friendly messages</li>
+            <li><strong>Loading states:</strong> Buttons show "Analyzing..." or "Generating..." during processing</li>
+        </ul>
+    </div>
+
+    <button onclick="testLocalStorage()">Test LocalStorage Data</button>
+    <div id="testResults" style="margin-top: 20px;"></div>
+
+    <script>
+        function testLocalStorage() {
+            const results = document.getElementById('testResults');
+            const selectedStandards = localStorage.getItem('mms:selectedStandards');
+            const institution = localStorage.getItem('mms:institution');
+            const accreditor = localStorage.getItem('mms:lastSelectedAccreditor');
+            
+            results.innerHTML = `
+                <div class="test-section">
+                    <h3>LocalStorage Values:</h3>
+                    <pre>
+Selected Standards: ${selectedStandards || 'None'}
+Institution: ${institution || 'Not set'}
+Accreditor: ${accreditor || 'Not set'}
+                    </pre>
+                    <p style="margin-top: 10px;">
+                        ${!selectedStandards || selectedStandards === '[]' ? 
+                          '<span class="status warning">⚠️ No standards selected - features won\'t work</span>' : 
+                          '<span class="status success">✓ Standards selected - ready to test</span>'}
+                    </p>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

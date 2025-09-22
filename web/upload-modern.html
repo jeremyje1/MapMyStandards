@@ -1084,6 +1084,35 @@
                     if (status === 'completed' || status === 'failed') {
                         // On completion, trigger metrics refresh signal
                         try { localStorage.setItem('mms:lastAnalysisCompleteAt', String(Date.now())); } catch(_){}
+                        
+                        // Sync with main uploadedFiles array for standards browser
+                        if (status === 'completed') {
+                            try {
+                                const uploadedFiles = JSON.parse(localStorage.getItem('uploadedFiles') || '[]');
+                                const existingFile = uploadedFiles.find(f => f.name === file.name);
+                                
+                                if (!existingFile) {
+                                    uploadedFiles.push({
+                                        name: file.name,
+                                        id: fileId || file.name,
+                                        uploadDate: new Date().toISOString(),
+                                        mappingStatus: 'not_mapped',
+                                        source: 'main_upload',
+                                        size: file.size,
+                                        jobId: jobId
+                                    });
+                                    localStorage.setItem('uploadedFiles', JSON.stringify(uploadedFiles));
+                                    
+                                    // Emit event for other pages
+                                    window.dispatchEvent(new CustomEvent('fileUploadUpdate', { 
+                                        detail: { fileName: file.name, status: 'completed', fileId, jobId } 
+                                    }));
+                                }
+                            } catch (e) {
+                                console.error('Error syncing to uploadedFiles:', e);
+                            }
+                        }
+                        
                         return;
                     }
                 } catch (_) { /* ignore transient errors */ }

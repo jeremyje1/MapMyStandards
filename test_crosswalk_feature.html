@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CrosswalkX™ Feature Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1e40af;
+            margin-bottom: 1rem;
+        }
+        h2 {
+            color: #3b82f6;
+            margin-top: 0;
+        }
+        .status {
+            padding: 1rem;
+            border-radius: 6px;
+            margin: 1rem 0;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+        .success { background: #d1fae5; color: #065f46; }
+        .error { background: #fee2e2; color: #991b1b; }
+        .info { background: #dbeafe; color: #1e40af; }
+        .warning { background: #fef3c7; color: #92400e; }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin: 0.5rem;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        select {
+            padding: 0.5rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+        input {
+            padding: 0.5rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+        .results {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #f9fafb;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        pre {
+            margin: 0;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔗 CrosswalkX™ Feature Test</h1>
+
+    <div class="test-section">
+        <h2>1. API Configuration</h2>
+        <button onclick="checkApiConfig()">Check API Configuration</button>
+        <div id="apiConfigStatus"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. Accreditors List</h2>
+        <button onclick="loadAccreditors()">Load Accreditors</button>
+        <div id="accreditorsStatus"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. CrosswalkX™ Mapping Test</h2>
+        <div class="grid">
+            <div>
+                <label>Source Accreditor:</label>
+                <select id="sourceAccSelect">
+                    <option value="">Select source</option>
+                </select>
+            </div>
+            <div>
+                <label>Target Accreditor:</label>
+                <select id="targetAccSelect">
+                    <option value="">Select target</option>
+                </select>
+            </div>
+            <div>
+                <label>Similarity Threshold:</label>
+                <input type="number" id="thresholdInput" value="0.3" step="0.05" min="0" max="1">
+            </div>
+            <div>
+                <label>Top K Matches:</label>
+                <input type="number" id="topKInput" value="3" min="1" max="10">
+            </div>
+        </div>
+        <button onclick="testCrosswalkMapping()">🔗 Find Mappings</button>
+        <button onclick="clearForm()">♻️ Reset</button>
+        <div id="crosswalkStatus"></div>
+        <div id="crosswalkResults" class="results" style="display:none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. Direct API Test</h2>
+        <button onclick="testDirectApi()">Test Direct API Call</button>
+        <div id="directApiStatus"></div>
+    </div>
+
+    <script>
+        let API_BASE_URL = '';
+        let accreditors = [];
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            // Try to get API base URL from parent window or use default
+            if (window.opener && window.opener.MMS_CONFIG && window.opener.MMS_CONFIG.API_BASE_URL) {
+                API_BASE_URL = window.opener.MMS_CONFIG.API_BASE_URL;
+            } else {
+                API_BASE_URL = window.location.origin; // Default to current origin
+            }
+            document.getElementById('apiConfigStatus').innerHTML = `<div class="status info">API Base URL: ${API_BASE_URL}</div>`;
+        });
+
+        function buildApiUrl(path) {
+            if (!path || typeof path !== 'string') return path;
+            if (path.startsWith('http')) return path;
+            const base = API_BASE_URL || '';
+            if (!base) return path;
+            const cleanBase = base.replace(/\/+$/, '');
+            const cleanPath = path.replace(/^\/+/, '');
+            return `${cleanBase}/${cleanPath}`;
+        }
+
+        function getAuthToken() {
+            // Try multiple methods to get auth token
+            const fromStorage = localStorage.getItem('mms:authToken') || 
+                              localStorage.getItem('authToken') || 
+                              localStorage.getItem('token');
+            const fromSession = sessionStorage.getItem('mms:authToken') || 
+                               sessionStorage.getItem('authToken') || 
+                               sessionStorage.getItem('token');
+            return fromStorage || fromSession || '';
+        }
+
+        async function checkApiConfig() {
+            const status = document.getElementById('apiConfigStatus');
+            try {
+                status.innerHTML = '<div class="status info">Testing API connectivity...</div>';
+                
+                const token = getAuthToken();
+                const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+                
+                // Test a simple endpoint
+                const response = await fetch(buildApiUrl('/api/v1/standards/accreditors'), {
+                    headers: headers,
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    status.innerHTML = `<div class="status success">✅ API is accessible. Found ${data.length || 0} accreditors.</div>`;
+                } else {
+                    status.innerHTML = `<div class="status warning">⚠️ API returned status ${response.status}. May need authentication.</div>`;
+                }
+            } catch (error) {
+                status.innerHTML = `<div class="status error">❌ API connection failed: ${error.message}</div>`;
+            }
+        }
+
+        async function loadAccreditors() {
+            const status = document.getElementById('accreditorsStatus');
+            try {
+                status.innerHTML = '<div class="status info">Loading accreditors...</div>';
+                
+                const token = getAuthToken();
+                const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+                
+                const response = await fetch(buildApiUrl('/api/v1/standards/accreditors'), {
+                    headers: headers,
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                accreditors = await response.json();
+                
+                // Populate select elements
+                populateCrossAccreditorSelects();
+                
+                status.innerHTML = `<div class="status success">✅ Loaded ${accreditors.length} accreditors</div>`;
+                
+                // Show some accreditors
+                const sample = accreditors.slice(0, 5).map(a => a.acronym || a.id).join(', ');
+                status.innerHTML += `<div class="status info">Sample: ${sample}${accreditors.length > 5 ? '...' : ''}</div>`;
+            } catch (error) {
+                status.innerHTML = `<div class="status error">❌ Failed to load accreditors: ${error.message}</div>`;
+            }
+        }
+
+        function populateCrossAccreditorSelects() {
+            const src = document.getElementById('sourceAccSelect');
+            const tgt = document.getElementById('targetAccSelect');
+            
+            src.innerHTML = '<option value="">Select source</option>';
+            tgt.innerHTML = '<option value="">Select target</option>';
+            
+            accreditors.forEach(acc => {
+                const o1 = document.createElement('option');
+                o1.value = acc.acronym || acc.id;
+                o1.textContent = acc.acronym || acc.id;
+                src.appendChild(o1);
+                
+                const o2 = document.createElement('option');
+                o2.value = acc.acronym || acc.id;
+                o2.textContent = acc.acronym || acc.id;
+                tgt.appendChild(o2);
+            });
+        }
+
+        async function testCrosswalkMapping() {
+            const status = document.getElementById('crosswalkStatus');
+            const results = document.getElementById('crosswalkResults');
+            
+            const source = document.getElementById('sourceAccSelect').value;
+            const target = document.getElementById('targetAccSelect').value;
+            const threshold = parseFloat(document.getElementById('thresholdInput').value) || 0.3;
+            const topK = parseInt(document.getElementById('topKInput').value) || 3;
+            
+            if (!source || !target) {
+                status.innerHTML = '<div class="status warning">⚠️ Please select both source and target accreditors</div>';
+                results.style.display = 'none';
+                return;
+            }
+            
+            if (source === target) {
+                status.innerHTML = '<div class="status warning">⚠️ Please select different accreditors for comparison</div>';
+                results.style.display = 'none';
+                return;
+            }
+            
+            try {
+                status.innerHTML = '<div class="status info">🔄 Computing CrosswalkX™ mappings...</div>';
+                results.style.display = 'none';
+                
+                const token = getAuthToken();
+                const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+                
+                const url = buildApiUrl(`/api/user/intelligence-simple/standards/cross-accreditor-matches?source=${encodeURIComponent(source)}&target=${encodeURIComponent(target)}&threshold=${threshold}&top_k=${topK}`);
+                
+                console.log('Fetching:', url);
+                
+                const response = await fetch(url, {
+                    headers: headers,
+                    credentials: 'include'
+                });
+                
+                const responseText = await response.text();
+                let data;
+                
+                try {
+                    data = JSON.parse(responseText);
+                } catch (e) {
+                    throw new Error(`Invalid JSON response: ${responseText}`);
+                }
+                
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        status.innerHTML = '<div class="status error">🔒 Authentication required. Please log in to use CrosswalkX™.</div>';
+                    } else {
+                        status.innerHTML = `<div class="status error">❌ API error ${response.status}: ${data.detail || responseText}</div>`;
+                    }
+                    return;
+                }
+                
+                if (data.matches && data.matches.length > 0) {
+                    status.innerHTML = `<div class="status success">✅ Found ${data.matches.length} CrosswalkX™ mappings</div>`;
+                    results.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                    results.style.display = 'block';
+                } else {
+                    status.innerHTML = `<div class="status warning">ℹ️ No mappings found above ${Math.round(threshold*100)}% similarity</div>`;
+                    results.innerHTML = '<pre>No matches found. Try lowering the threshold.</pre>';
+                    results.style.display = 'block';
+                }
+            } catch (error) {
+                status.innerHTML = `<div class="status error">❌ Error: ${error.message}</div>`;
+                console.error('CrosswalkX error:', error);
+            }
+        }
+
+        function clearForm() {
+            document.getElementById('sourceAccSelect').selectedIndex = 0;
+            document.getElementById('targetAccSelect').selectedIndex = 0;
+            document.getElementById('thresholdInput').value = '0.3';
+            document.getElementById('topKInput').value = '3';
+            document.getElementById('crosswalkStatus').innerHTML = '';
+            document.getElementById('crosswalkResults').style.display = 'none';
+        }
+
+        async function testDirectApi() {
+            const status = document.getElementById('directApiStatus');
+            try {
+                status.innerHTML = '<div class="status info">Testing direct API call with HLC -> MSCHE...</div>';
+                
+                const token = getAuthToken();
+                const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+                
+                const url = buildApiUrl('/api/user/intelligence-simple/standards/cross-accreditor-matches?source=HLC&target=MSCHE&threshold=0.3&top_k=3');
+                
+                const response = await fetch(url, {
+                    headers: headers,
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    status.innerHTML = `<div class="status success">✅ Direct API call successful</div>`;
+                    status.innerHTML += `<div class="status info"><pre>${JSON.stringify(data, null, 2)}</pre></div>`;
+                } else {
+                    status.innerHTML = `<div class="status error">❌ API returned ${response.status}: ${JSON.stringify(data)}</div>`;
+                }
+            } catch (error) {
+                status.innerHTML = `<div class="status error">❌ Direct API test failed: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>

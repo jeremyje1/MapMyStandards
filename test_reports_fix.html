@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Reports Fix</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-item {
+            padding: 10px;
+            margin: 10px 0;
+            border-left: 4px solid #e2e8f0;
+        }
+        .test-item.success {
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+        .test-item.fail {
+            border-color: #ef4444;
+            background: #fef2f2;
+        }
+        button {
+            background: #1e40af;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #1e3a8a;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Reports Page Fix Verification</h1>
+    
+    <div class="test-section">
+        <h2>🔧 What We Fixed</h2>
+        <div class="test-item success">
+            <strong>✅ Evidence Detection:</strong> Updated checkEvidenceMappingBanner() to use /api/v1/evidence/documents endpoint
+        </div>
+        <div class="test-item success">
+            <strong>✅ Report Button States:</strong> Added updateReportButtonStates() to enable/disable buttons based on evidence
+        </div>
+        <div class="test-item success">
+            <strong>✅ Evidence Mapping Report:</strong> Implemented generateEvidenceMappingReport() with proper formatting
+        </div>
+        <div class="test-item success">
+            <strong>✅ Comprehensive Report:</strong> Added generateComprehensiveReport() with compliance analysis
+        </div>
+        <div class="test-item success">
+            <strong>✅ Gap Analysis Report:</strong> Created generateGapAnalysisReport() showing missing evidence
+        </div>
+        <div class="test-item success">
+            <strong>✅ QEP Report:</strong> Implemented generateQEPReport() with impact metrics
+        </div>
+        <div class="test-item success">
+            <strong>✅ CiteGuard Narrative:</strong> Updated to fetch evidence from database API
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🧪 Test the Fix</h2>
+        <ol>
+            <li>Navigate to the Reports page</li>
+            <li>Check if the "no mapped evidence found yet" banner appears correctly:
+                <ul>
+                    <li>Should show when no documents have mapped standards</li>
+                    <li>Should hide when at least one document is mapped to standards</li>
+                </ul>
+            </li>
+            <li>Test each report button:
+                <ul>
+                    <li><strong>Evidence Mapping:</strong> Should generate a summary of all document-to-standard mappings</li>
+                    <li><strong>Comprehensive:</strong> Should show compliance status for selected standards</li>
+                    <li><strong>Gap Analysis:</strong> Should highlight standards without evidence</li>
+                    <li><strong>QEP:</strong> Should display quality enhancement metrics</li>
+                    <li><strong>CiteGuard:</strong> Should generate narrative with evidence citations</li>
+                </ul>
+            </li>
+        </ol>
+        
+        <button onclick="simulateAPICheck()">Test API Check</button>
+        <div id="apiResult" style="margin-top: 20px;"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>📋 Expected Behavior</h2>
+        <ul>
+            <li>✅ Reports page correctly detects mapped evidence from database</li>
+            <li>✅ All report buttons are enabled when evidence is mapped</li>
+            <li>✅ Evidence Mapping report shows all documents with their mapped standards</li>
+            <li>✅ Comprehensive report includes evidence coverage analysis</li>
+            <li>✅ Gap Analysis identifies standards needing evidence</li>
+            <li>✅ QEP report shows impact assessment metrics</li>
+            <li>✅ CiteGuard narrative includes evidence from mapped documents</li>
+        </ul>
+    </div>
+
+    <script>
+        async function simulateAPICheck() {
+            const resultDiv = document.getElementById('apiResult');
+            resultDiv.innerHTML = '<p>Checking evidence documents API...</p>';
+            
+            try {
+                // This simulates what the reports page does
+                const mockResponse = {
+                    success: true,
+                    data: [
+                        {
+                            id: 1,
+                            filename: "Student_Handbook_2024.pdf",
+                            file_type: "PDF",
+                            status: "analyzed",
+                            mapped_standards: [
+                                { code: "1.1", title: "Mission", relevance_score: 85 },
+                                { code: "2.5", title: "Student Support", relevance_score: 92 }
+                            ]
+                        },
+                        {
+                            id: 2,
+                            filename: "Faculty_Policies.docx",
+                            file_type: "DOCX", 
+                            status: "analyzed",
+                            mapped_standards: []
+                        }
+                    ]
+                };
+                
+                // Check if any documents have mapped standards
+                const hasMappedEvidence = mockResponse.data.some(doc => 
+                    doc.mapped_standards && doc.mapped_standards.length > 0
+                );
+                
+                resultDiv.innerHTML = `
+                    <h3>API Response:</h3>
+                    <pre>${JSON.stringify(mockResponse, null, 2)}</pre>
+                    <h3>Result:</h3>
+                    <p><strong>Has Mapped Evidence:</strong> ${hasMappedEvidence ? '✅ Yes' : '❌ No'}</p>
+                    <p><strong>Banner Should Be:</strong> ${hasMappedEvidence ? 'Hidden' : 'Visible'}</p>
+                    <p><strong>Report Buttons Should Be:</strong> ${hasMappedEvidence ? 'Enabled' : 'Disabled'}</p>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

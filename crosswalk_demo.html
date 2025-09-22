@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CrosswalkX™ Demo - How It Should Work</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: #f5f5f5;
+        }
+        .demo-section {
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1e40af;
+            margin-bottom: 1rem;
+        }
+        h2 {
+            color: #3b82f6;
+            margin-top: 0;
+        }
+        .status {
+            padding: 1rem;
+            border-radius: 6px;
+            margin: 1rem 0;
+            font-family: monospace;
+        }
+        .success { background: #d1fae5; color: #065f46; }
+        .info { background: #dbeafe; color: #1e40af; }
+        .warning { background: #fef3c7; color: #92400e; }
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        select, input {
+            padding: 0.5rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-right: 0.5rem;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+        th {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 2px solid #3b82f6;
+            background: #eff6ff;
+            color: #1e40af;
+            font-weight: 700;
+        }
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        tr:nth-child(even) {
+            background: #f9fafb;
+        }
+        .score-bar {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .bar-container {
+            width: 60px;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .bar-fill {
+            height: 100%;
+            transition: width 0.3s;
+        }
+        .keywords {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        .keyword {
+            background: #e0e7ff;
+            color: #4338ca;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+        }
+        .note {
+            margin-top: 1rem;
+            padding: 0.75rem;
+            background: #f3f4f6;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔗 CrosswalkX™ Demo - Expected Behavior</h1>
+
+    <div class="demo-section">
+        <h2>How CrosswalkX™ Should Work</h2>
+        <p>This demonstration shows the expected behavior of the Cross-Accreditor Mapping feature when working correctly.</p>
+        
+        <div class="controls">
+            <div>
+                <label>Source Accreditor:</label>
+                <select id="sourceSelect">
+                    <option value="">Select source</option>
+                    <option value="HLC">HLC</option>
+                    <option value="MSCHE">MSCHE</option>
+                    <option value="SACSCOC">SACSCOC</option>
+                    <option value="WASC">WASC</option>
+                </select>
+            </div>
+            <div>
+                <label>Target Accreditor:</label>
+                <select id="targetSelect">
+                    <option value="">Select target</option>
+                    <option value="HLC">HLC</option>
+                    <option value="MSCHE">MSCHE</option>
+                    <option value="SACSCOC">SACSCOC</option>
+                    <option value="WASC">WASC</option>
+                </select>
+            </div>
+            <div>
+                <label>Similarity Threshold:</label>
+                <input type="number" id="threshold" value="0.3" step="0.05" min="0" max="1">
+            </div>
+            <div>
+                <label>Top K Matches:</label>
+                <input type="number" id="topK" value="3" min="1" max="10">
+            </div>
+        </div>
+        
+        <div style="margin-top: 1rem;">
+            <button onclick="simulateFindMappings()">🔗 Find Mappings</button>
+            <button onclick="clearDemo()">♻️ Reset</button>
+        </div>
+        
+        <div id="status"></div>
+    </div>
+
+    <div class="demo-section" id="resultsSection" style="display: none;">
+        <h2>🎯 CrosswalkX™ Mapping Results</h2>
+        <div class="info" style="margin-bottom: 1rem;">
+            <strong>Demo Mode:</strong> Showing potential equivalencies between <span id="sourceLabel"></span> and <span id="targetLabel"></span> standards based on semantic similarity
+        </div>
+        
+        <table id="resultsTable">
+            <thead>
+                <tr>
+                    <th>Source Standard</th>
+                    <th>Target Equivalent(s)</th>
+                    <th style="text-align: center;">Match Score</th>
+                    <th>Common Keywords</th>
+                </tr>
+            </thead>
+            <tbody id="resultsBody">
+                <!-- Results will be inserted here -->
+            </tbody>
+        </table>
+        
+        <div class="note">
+            <strong>Note:</strong> CrosswalkX™ mappings are AI-generated suggestions based on semantic similarity. Manual review is recommended before using these mappings for official purposes.
+        </div>
+    </div>
+
+    <script>
+        // Sample data demonstrating expected results
+        const sampleMappings = {
+            'HLC-MSCHE': [
+                {
+                    source_id: 'HLC.CR.2.A',
+                    source_title: 'The institution establishes and follows clearly stated and ethical policies and processes for its governing board, administration, faculty and staff.',
+                    targets: [
+                        {
+                            target_id: 'MSCHE.II.1',
+                            target_title: 'The institution has a clearly defined mission and goals that are developed through appropriate collaborative participation.',
+                            score: 0.75,
+                            keywords: ['institution', 'policies', 'administration', 'faculty', 'staff']
+                        },
+                        {
+                            target_id: 'MSCHE.VII.1',
+                            target_title: 'The institution is governed and administered in a manner that allows it to realize its stated mission and goals.',
+                            score: 0.65,
+                            keywords: ['institution', 'governed', 'administered', 'mission', 'goals']
+                        }
+                    ]
+                },
+                {
+                    source_id: 'HLC.CR.3.C',
+                    source_title: 'The institution has the faculty and staff needed for effective, high-quality programs and student services.',
+                    targets: [
+                        {
+                            target_id: 'MSCHE.III.2',
+                            target_title: 'The institution has adequate and qualified faculty to support its educational programs.',
+                            score: 0.82,
+                            keywords: ['institution', 'faculty', 'qualified', 'programs', 'support']
+                        }
+                    ]
+                }
+            ],
+            'MSCHE-SACSCOC': [
+                {
+                    source_id: 'MSCHE.IV.1',
+                    source_title: 'The institution recruits a diverse student body and provides support services to promote academic success.',
+                    targets: [
+                        {
+                            target_id: 'SACSCOC.12.1',
+                            target_title: 'The institution provides appropriate student support services and programs consistent with its mission.',
+                            score: 0.71,
+                            keywords: ['institution', 'student', 'support', 'services', 'programs']
+                        }
+                    ]
+                }
+            ]
+        };
+
+        function simulateFindMappings() {
+            const source = document.getElementById('sourceSelect').value;
+            const target = document.getElementById('targetSelect').value;
+            const threshold = parseFloat(document.getElementById('threshold').value);
+            const status = document.getElementById('status');
+            const resultsSection = document.getElementById('resultsSection');
+            
+            // Validation
+            if (!source || !target) {
+                status.innerHTML = '<div class="warning">⚠️ Please select both source and target accreditors</div>';
+                resultsSection.style.display = 'none';
+                return;
+            }
+            
+            if (source === target) {
+                status.innerHTML = '<div class="warning">⚠️ Please select different accreditors for comparison</div>';
+                resultsSection.style.display = 'none';
+                return;
+            }
+            
+            // Simulate loading
+            status.innerHTML = '<div class="info">🔄 Computing CrosswalkX™ mappings...</div>';
+            
+            // Simulate API delay
+            setTimeout(() => {
+                const mappingKey = `${source}-${target}`;
+                const reverseMappingKey = `${target}-${source}`;
+                const mappings = sampleMappings[mappingKey] || sampleMappings[reverseMappingKey] || [];
+                
+                if (mappings.length > 0) {
+                    status.innerHTML = `<div class="success">✅ Found ${mappings.length} CrosswalkX™ mappings (similarity threshold: ${Math.round(threshold*100)}%)</div>`;
+                    displayResults(mappings, source, target);
+                    resultsSection.style.display = 'block';
+                } else {
+                    status.innerHTML = '<div class="warning">ℹ️ No demo mappings available for this accreditor pair. In production, this would search real standards data.</div>';
+                    resultsSection.style.display = 'none';
+                }
+            }, 1000);
+        }
+
+        function displayResults(mappings, source, target) {
+            document.getElementById('sourceLabel').textContent = source;
+            document.getElementById('targetLabel').textContent = target;
+            
+            const tbody = document.getElementById('resultsBody');
+            tbody.innerHTML = '';
+            
+            mappings.forEach((mapping, idx) => {
+                const bgColor = idx % 2 === 0 ? '#ffffff' : '#f9fafb';
+                
+                mapping.targets.forEach((target, targetIdx) => {
+                    const row = document.createElement('tr');
+                    row.style.background = bgColor;
+                    
+                    // Source standard (with rowspan for multiple targets)
+                    if (targetIdx === 0) {
+                        const sourceCell = document.createElement('td');
+                        sourceCell.rowSpan = mapping.targets.length;
+                        sourceCell.style.verticalAlign = 'top';
+                        sourceCell.innerHTML = `
+                            <div style="font-weight: 600; color: #1e40af; margin-bottom: 4px;">${mapping.source_id}</div>
+                            <div style="color: #6b7280; line-height: 1.4;">${mapping.source_title}</div>
+                        `;
+                        row.appendChild(sourceCell);
+                    }
+                    
+                    // Target standard
+                    const targetCell = document.createElement('td');
+                    targetCell.innerHTML = `
+                        <div style="font-weight: 600; color: #059669; margin-bottom: 4px;">${target.target_id}</div>
+                        <div style="color: #6b7280; line-height: 1.4;">${target.target_title}</div>
+                    `;
+                    row.appendChild(targetCell);
+                    
+                    // Score
+                    const scoreCell = document.createElement('td');
+                    scoreCell.style.textAlign = 'center';
+                    const scorePct = Math.round(target.score * 100);
+                    const scoreColor = scorePct >= 80 ? '#10b981' : scorePct >= 60 ? '#3b82f6' : '#f59e0b';
+                    scoreCell.innerHTML = `
+                        <div class="score-bar">
+                            <div class="bar-container">
+                                <div class="bar-fill" style="width: ${scorePct}%; background: ${scoreColor};"></div>
+                            </div>
+                            <span style="font-weight: 700; color: ${scoreColor};">${scorePct}%</span>
+                        </div>
+                    `;
+                    row.appendChild(scoreCell);
+                    
+                    // Keywords
+                    const keywordsCell = document.createElement('td');
+                    const keywords = target.keywords.slice(0, 5).map(k => 
+                        `<span class="keyword">${k}</span>`
+                    ).join(' ');
+                    keywordsCell.innerHTML = `<div class="keywords">${keywords}</div>`;
+                    row.appendChild(keywordsCell);
+                    
+                    tbody.appendChild(row);
+                });
+            });
+        }
+
+        function clearDemo() {
+            document.getElementById('sourceSelect').selectedIndex = 0;
+            document.getElementById('targetSelect').selectedIndex = 0;
+            document.getElementById('threshold').value = '0.3';
+            document.getElementById('topK').value = '3';
+            document.getElementById('status').innerHTML = '';
+            document.getElementById('resultsSection').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
