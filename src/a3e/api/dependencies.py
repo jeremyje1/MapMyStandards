@@ -134,3 +134,16 @@ def has_active_subscription(current_user: Dict = Depends(get_current_user)):
 require_professional = has_active_subscription
 require_institution = has_active_subscription  
 require_paid_plan = has_active_subscription
+
+# Database dependency
+async def get_async_db():
+    """Get async database session"""
+    try:
+        # Import here to avoid circular imports
+        from ..database.connection import Database
+        db = Database()
+        async for session in db.get_session():
+            yield session
+    except Exception as e:
+        logger.error(f"Database connection error: {e}")
+        raise HTTPException(status_code=503, detail="Database unavailable")

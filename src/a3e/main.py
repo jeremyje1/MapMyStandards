@@ -224,11 +224,18 @@ except ImportError as e:
     _evidence_mappings_import_exception = e
 
 try:
-    from .api.routes.evidence_mappings_db import router as evidence_mappings_db_router
-    evidence_mappings_db_router_available = True
+    from .api.routes.evidence_map_database import router as evidence_map_database_router
+    evidence_map_database_router_available = True
 except ImportError as e:
-    evidence_mappings_db_router_available = False
-    _evidence_mappings_db_import_exception = e
+    evidence_map_database_router_available = False
+    _evidence_map_database_import_exception = e
+
+try:
+    from .api.routes.reports_database import router as reports_database_router
+    reports_database_router_available = True
+except ImportError as e:
+    reports_database_router_available = False
+    _reports_database_import_exception = e
 
 try:
     from .api.routes.evidence_analysis import router as evidence_analysis_router
@@ -242,6 +249,13 @@ try:
 except ImportError as e:
     standards_compliance_router_available = False
     _evidence_analysis_import_exception = e
+
+try:
+    from .api.routes.risk_analysis_dynamic import router as risk_analysis_dynamic_router
+    risk_analysis_dynamic_router_available = True
+except ImportError as e:
+    risk_analysis_dynamic_router_available = False
+    _risk_analysis_dynamic_import_exception = e
 
 try:
     from .api.routes.analytics import router as analytics_router
@@ -871,11 +885,23 @@ if evidence_mappings_router_available:
 else:
     logger.warning("⚠️ Evidence mappings router not available")
 
-if evidence_mappings_db_router_available:
-    app.include_router(evidence_mappings_db_router)
-    logger.info("✅ Evidence mappings DB router loaded")
+if evidence_map_database_router_available:
+    app.include_router(evidence_map_database_router)
+    logger.info("✅ Evidence map database router loaded")
 else:
-    logger.warning("⚠️ Evidence mappings DB router not available")
+    if '_evidence_map_database_import_exception' in globals():
+        logger.warning(f"⚠️ Evidence map database router not available: {_evidence_map_database_import_exception}")
+    else:
+        logger.warning("⚠️ Evidence map database router not available")
+
+if reports_database_router_available:
+    app.include_router(reports_database_router)
+    logger.info("✅ Reports database router loaded")
+else:
+    if '_reports_database_import_exception' in globals():
+        logger.warning(f"⚠️ Reports database router not available: {_reports_database_import_exception}")
+    else:
+        logger.warning("⚠️ Reports database router not available")
 
 if evidence_analysis_router_available:
     app.include_router(evidence_analysis_router)
@@ -887,7 +913,13 @@ if standards_compliance_router_available:
     app.include_router(standards_compliance_router)
     logger.info("✅ Standards compliance router loaded")
 else:
-    logger.warning("⚠️ Evidence analysis router not available")
+    logger.warning("⚠️ Standards compliance router not available")
+
+if risk_analysis_dynamic_router_available:
+    app.include_router(risk_analysis_dynamic_router)
+    logger.info("✅ Risk analysis dynamic router loaded")
+else:
+    logger.warning("⚠️ Risk analysis dynamic router not available")
 
 if analytics_router_available:
     app.include_router(analytics_router)
@@ -2216,6 +2248,26 @@ if WEB_DIR.exists():
         modern = WEB_DIR / "reports-modern.html"
         legacy = WEB_DIR / "reports.html"
         return FileResponse(str(modern if modern.exists() else legacy))
+    
+    @app.get("/gap-analysis", response_class=FileResponse, include_in_schema=False)
+    async def gap_analysis_page():  # noqa: D401
+        """Serve gap analysis page."""
+        gap_analysis_file = WEB_DIR / "gap-analysis.html"
+        if gap_analysis_file.exists():
+            return FileResponse(str(gap_analysis_file))
+        else:
+            # Fallback to reports page with gap section
+            return FileResponse(str(WEB_DIR / "reports-modern.html"))
+    
+    @app.get("/narrative", response_class=FileResponse, include_in_schema=False)
+    async def narrative_page():  # noqa: D401
+        """Serve narrative generator page."""
+        narrative_file = WEB_DIR / "narrative.html"
+        if narrative_file.exists():
+            return FileResponse(str(narrative_file))
+        else:
+            # Fallback to reports page with narrative section
+            return FileResponse(str(WEB_DIR / "reports-modern.html"))
     
     @app.get("/upload", response_class=FileResponse, include_in_schema=False)
     async def upload_page():  # noqa: D401

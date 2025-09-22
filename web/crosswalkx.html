@@ -63,14 +63,23 @@
     }
 
     async function compute() {
-      const a = document.getElementById('a').value.trim();
-      const b = document.getElementById('b').value.trim();
+      const a = document.getElementById('a').value.trim().toUpperCase();
+      const b = document.getElementById('b').value.trim().toUpperCase();
       if (!a || !b) return alert('Enter both accreditors');
+      if (a === b) return alert('Please enter different accreditors for comparison');
+      
+      const out = document.getElementById('out');
+      out.innerHTML = '<div class="muted">Computing CrosswalkX™ mappings...</div>';
+      
       let j;
       try {
-        const r = await fetch(`${API}/standards/cross-accreditor-matches?accreditorA=${encodeURIComponent(a)}&accreditorB=${encodeURIComponent(b)}`, { headers: authHeaders() });
+        const r = await fetch(`${API}/standards/cross-accreditor-matches?source=${encodeURIComponent(a)}&target=${encodeURIComponent(b)}&threshold=0.3&top_k=10`, { 
+          headers: authHeaders(),
+          credentials: 'include' 
+        });
         if (!r.ok) {
-          j = { error: `Request failed (${r.status}) - ensure you're logged in and corpus is loaded.` };
+          const text = await r.text();
+          j = { error: `Request failed (${r.status}) - ${text || 'ensure you\'re logged in and corpus is loaded.'}` };
         } else {
           j = await r.json();
         }
@@ -80,17 +89,79 @@
     function render(j) {
       const out = document.getElementById('out');
       out.innerHTML = '';
-      (j.matches || []).forEach(m => {
-        const div = document.createElement('div');
-        div.className = 'row';
-        div.style.borderBottom = '1px solid #f1f5f9';
-        div.style.padding = '8px 0';
-        div.innerHTML = `<div style='min-width:200px'><strong>${m.standardA.id}</strong><div class='muted'>${m.standardA.title || ''}</div></div>
-                         <div class='pill'>~${Math.round((m.similarity||0)*100)}% similar</div>
-                         <div style='min-width:200px'><strong>${m.standardB.id}</strong><div class='muted'>${m.standardB.title || ''}</div></div>`;
-        out.appendChild(div);
+      
+      if (j.error) {
+        out.innerHTML = `<div style="color:#ef4444; padding: 12px; background-color: #fee; border-radius: 6px;">Error: ${j.error}</div>`;
+        return;
+      }
+      
+      const matches = j.matches || j.results || [];
+      if (matches.length === 0) {
+        out.innerHTML = '<div class="muted">No overlaps found. Try different accreditors or ensure the standards corpus is loaded.</div>';
+        return;
+      }
+      
+      // Group results by source standard
+      const grouped = {};
+      matches.forEach(m => {
+        const sourceKey = m.source_code || m.standardA?.id || 'Unknown';
+        if (!grouped[sourceKey]) grouped[sourceKey] = [];
+        grouped[sourceKey].push(m);
       });
-      if (!j.matches || !j.matches.length) out.innerHTML = '<div class="muted">No overlaps found or corpus unavailable.</div>';
+      
+      out.innerHTML = `<div style="margin-bottom: 15px; color: #64748b;">Found ${matches.length} potential matches across ${Object.keys(grouped).length} source standards</div>`;
+      
+      Object.entries(grouped).forEach(([sourceKey, items]) => {
+        const groupDiv = document.createElement('div');
+        groupDiv.style.cssText = 'border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 16px; overflow: hidden;';
+        
+        // Source header
+        const firstItem = items[0];
+        const sourceTitle = firstItem.source_title || firstItem.standardA?.title || '';
+        groupDiv.innerHTML = `
+          <div style="background-color: #0066cc; color: white; padding: 12px; font-weight: 600;">
+            ${sourceKey}${sourceTitle ? ' - ' + sourceTitle : ''}
+          </div>
+          <div style="padding: 12px;">`;
+        
+        // Target matches
+        items.forEach(m => {
+          const targetCode = m.target_code || m.standardB?.id || 'Unknown';
+          const targetTitle = m.target_title || m.standardB?.title || '';
+          const similarity = m.similarity || 0;
+          const simPercent = (similarity * 100).toFixed(1);
+          const progressColor = simPercent >= 70 ? '#10b981' : simPercent >= 50 ? '#f59e0b' : '#ef4444';
+          
+          const matchDiv = document.createElement('div');
+          matchDiv.style.cssText = 'border-left: 4px solid ' + progressColor + '; padding-left: 12px; margin-bottom: 12px;';
+          
+          let html = `
+            <div style="font-weight: 500; margin-bottom: 4px;">${targetCode}${targetTitle ? ' - ' + targetTitle : ''}</div>
+            <div style="display: flex; align-items: center; gap: 12px; margin-top: 8px;">
+              <span style="min-width: 80px; color: #64748b;">Similarity:</span>
+              <div style="flex: 1; height: 8px; background-color: #e5e7eb; border-radius: 4px; overflow: hidden;">
+                <div style="height: 100%; background-color: ${progressColor}; width: ${simPercent}%; transition: width 0.3s;"></div>
+              </div>
+              <span style="min-width: 50px; text-align: right; font-weight: 600; color: ${progressColor};">${simPercent}%</span>
+            </div>`;
+          
+          // Keywords if available
+          const keywords = m.keywords_overlap || m.common_keywords || [];
+          if (keywords.length > 0) {
+            html += '<div style="margin-top: 8px;"><span style="color: #64748b;">Common keywords:</span> ';
+            keywords.forEach(kw => {
+              html += `<span class="pill" style="background-color: #dbeafe; color: #1e40af; margin-right: 4px;">${kw}</span>`;
+            });
+            html += '</div>';
+          }
+          
+          matchDiv.innerHTML = html;
+          groupDiv.querySelector('div:last-child').appendChild(matchDiv);
+        });
+        
+        groupDiv.innerHTML += '</div>';
+        out.appendChild(groupDiv);
+      });
     }
     document.getElementById('go').addEventListener('click', compute);
     ensureTokenFromQuery();

@@ -988,11 +988,11 @@
                         <span>🕸️</span>
                         Standards Graph
                     </a>
-                    <a href="#gap-analysis" class="action-btn" data-tooltip="Identify compliance gaps and risks">
+                    <a href="/gap-analysis" class="action-btn" data-tooltip="Identify compliance gaps and risks">
                         <span>⚠️</span>
                         Gap Analysis
                     </a>
-                    <a href="#narrative" class="action-btn" data-tooltip="Generate accreditation narratives with citations">
+                    <a href="/narrative" class="action-btn" data-tooltip="Generate accreditation narratives with citations">
                         <span>📖</span>
                         Narrative (CiteGuard)
                     </a>
@@ -2099,14 +2099,24 @@
                         if (fi) fi.addEventListener('change', ()=> handleDashboardFiles(fi.files));
                         // Render any stored recent uploads
                         renderRecentUploads();
+                        
+                        // Periodic refresh to check for stuck files
+                        setInterval(async () => {
+                            await checkAndUpdateQueuedFiles();
+                            renderRecentUploads();
+                        }, 10000); // Check every 10 seconds
 
                         // Wire Graph/Gaps/Narrative
-                        const vg = document.getElementById('dashViewGraph'); if (vg) vg.addEventListener('click', ()=> window.location.href='/standards-modern#graph');
+                        const vg = document.getElementById('dashViewGraph'); 
+                        if (vg) vg.addEventListener('click', () => {
+                            // Navigate to standards page and trigger graph view
+                            window.location.href='/standards-modern?showGraph=true';
+                        });
                         const sb = document.getElementById('dashStandardsSearchBtn');
                         const si = document.getElementById('dashStandardsSearch');
                         if (sb && si) sb.addEventListener('click', ()=> { const q=encodeURIComponent(si.value||''); window.location.href = '/standards-modern?q=' + q; });
-                        const gaps = document.getElementById('dashAnalyzeGaps'); if (gaps) gaps.addEventListener('click', ()=> window.location.href='/reports#gaps');
-                        const narr = document.getElementById('dashOpenNarrative'); if (narr) narr.addEventListener('click', ()=> window.location.href='/reports#narrative');
+                        const gaps = document.getElementById('dashAnalyzeGaps'); if (gaps) gaps.addEventListener('click', ()=> window.location.href='/gap-analysis');
+                        const narr = document.getElementById('dashOpenNarrative'); if (narr) narr.addEventListener('click', ()=> window.location.href='/narrative');
                 });
 
                 function getStoredRecentUploads(){
@@ -2193,6 +2203,18 @@
                                     ${it.standardsMapped !== undefined ? `<span>Standards: <strong>${it.standardsMapped}</strong></span>` : ''}
                                 </div>
                             ` : ''}
+                            ${(it.status === 'complete' || it.status === 'processed') ? `
+                                <div style='margin-top:6px;display:flex;gap:8px'>
+                                    <button onclick="mapEvidenceForFile('${it.name}')" class="action-btn action-btn-primary" style="font-size:12px;padding:4px 12px">
+                                        🔗 Map to Standards
+                                    </button>
+                                    ${it.standardsMapped ? `
+                                        <button onclick="viewMappedStandards('${it.name}')" class="action-btn" style="font-size:12px;padding:4px 12px">
+                                            👁️ View Mappings
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            ` : ''}
                         </li>`;
                     }).join('') : `<li style='color:#6b7280;margin-top:6px'>No recent uploads</li>`;
                 }
@@ -2268,9 +2290,13 @@
                                     // Successfully uploaded via evidence analysis endpoint
                                     const data = await res.json();
                                     if (data.files) {
-                                        // Start polling for analysis results
-                                        data.files.forEach(file => {
-                                            pollAnalysisStatus(file.id);
+                                        // Start polling for analysis results and sync status
+                                        data.files.forEach((file, index) => {
+                                            const originalFile = fileList[index];
+                                            if (originalFile) {
+                                                syncUploadStatus(originalFile.name, 'processing', { fileId: file.id });
+                                                pollAnalysisStatus(file.id, originalFile.name);
+                                            }
                                         });
                                     }
                                 }
@@ -2284,14 +2310,47 @@
                         }
                 }
                 
+                // Sync upload status with main upload system
+                async function syncUploadStatus(fileName, status, data = {}) {
+                    try {
+                        // Update local storage for dashboard
+                        const recent = getStoredRecentUploads();
+                        const idx = recent.findIndex(r => r.name === fileName);
+                        if (idx !== -1) {
+                            recent[idx] = { ...recent[idx], status, ...data };
+                            setStoredRecentUploads(recent);
+                            renderRecentUploads();
+                        }
+                        
+                        // Also update main upload system storage
+                        const uploadHistory = JSON.parse(localStorage.getItem('mms:uploadHistory') || '[]');
+                        uploadHistory.unshift({
+                            fileName,
+                            status,
+                            timestamp: Date.now(),
+                            source: 'dashboard',
+                            ...data
+                        });
+                        localStorage.setItem('mms:uploadHistory', JSON.stringify(uploadHistory.slice(0, 50)));
+                        
+                        // Emit custom event for other pages to listen
+                        window.dispatchEvent(new CustomEvent('fileUploadUpdate', { 
+                            detail: { fileName, status, ...data } 
+                        }));
+                    } catch (e) {
+                        console.error('Error syncing upload status:', e);
+                    }
+                }
+                
                 // Poll for analysis status
-                async function pollAnalysisStatus(fileId) {
+                async function pollAnalysisStatus(fileId, fileName) {
                     const base = ((window.mmsAPI&&window.mmsAPI.getBaseUrl&&window.mmsAPI.getBaseUrl())||(location.hostname.includes('api.mapmystandards.ai')?'':'https://api.mapmystandards.ai'));
                     const token = localStorage.getItem('a3e_api_key') || localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
                     const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
                     
                     const maxAttempts = 60;
                     let attempts = 0;
+                    let lastStatus = 'queued';
                     
                     const poll = async () => {
                         try {
@@ -2300,26 +2359,53 @@
                                 credentials: 'include'
                             });
                             
-                            if (!response.ok) return;
+                            if (!response.ok) {
+                                // If 404, file might be already processed, check document list
+                                if (response.status === 404) {
+                                    const listResponse = await fetch(`${base}/api/user/intelligence-simple/documents/list`, {
+                                        headers: headers,
+                                        credentials: 'include'
+                                    });
+                                    if (listResponse.ok) {
+                                        const docs = await listResponse.json();
+                                        const foundDoc = (docs.documents || []).find(d => 
+                                            d.id === fileId || d.filename === fileName
+                                        );
+                                        if (foundDoc) {
+                                            syncUploadStatus(fileName, 'complete', {
+                                                fileId: fileId,
+                                                trustScore: foundDoc.trust_score,
+                                                standardsMapped: foundDoc.standard_mappings
+                                            });
+                                            return;
+                                        }
+                                    }
+                                }
+                                
+                                // If still processing, continue polling
+                                if (lastStatus === 'processing' && attempts < maxAttempts) {
+                                    attempts++;
+                                    setTimeout(poll, 5000);
+                                }
+                                return;
+                            }
                             
                             const data = await response.json();
                             
                             // Update file status in recent uploads
-                            const recent = getStoredRecentUploads();
-                            const fileIndex = recent.findIndex(f => f.id === fileId || f.name === data.filename);
-                            if (fileIndex !== -1) {
-                                recent[fileIndex].status = data.status === 'completed' ? 'complete' : 
-                                                          data.status === 'failed' ? 'error' : 'processing';
-                                recent[fileIndex].id = fileId;
-                                if (data.trust_score) {
-                                    recent[fileIndex].trustScore = data.trust_score;
-                                }
-                                if (data.total_standards_mapped) {
-                                    recent[fileIndex].standardsMapped = data.total_standards_mapped;
-                                }
-                                setStoredRecentUploads(recent);
-                                renderRecentUploads();
-                            }
+                            const status = data.status === 'completed' ? 'complete' : 
+                                          data.status === 'failed' ? 'error' : 'processing';
+                            
+                            lastStatus = status;
+                            
+                            const updateData = {
+                                fileId: fileId,
+                                trustScore: data.trust_score,
+                                standardsMapped: data.mapped_standards_count
+                            };
+                            
+                            // Use sync function to update both dashboard and main upload system
+                            syncUploadStatus(fileName || data.filename, status, updateData);
                             
                             // Continue polling if not completed
                             if (data.status !== 'completed' && data.status !== 'failed' && attempts < maxAttempts) {
@@ -2332,11 +2418,152 @@
                             attempts++;
                             if (attempts < maxAttempts) {
                                 setTimeout(poll, 5000);
+                            } else {
+                                // After max attempts, mark as complete to avoid eternal queued state
+                                syncUploadStatus(fileName, 'complete', { fileId: fileId });
                             }
                         }
                     };
                     
                     poll();
+                }
+
+                // Check and update queued files
+                async function checkAndUpdateQueuedFiles() {
+                    try {
+                        const base = ((window.mmsAPI&&window.mmsAPI.getBaseUrl&&window.mmsAPI.getBaseUrl())||(location.hostname.includes('api.mapmystandards.ai')?'':'https://api.mapmystandards.ai'));
+                        const token = localStorage.getItem('a3e_api_key') || localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+                        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+                        
+                        // Get current queued files from localStorage
+                        const recent = getStoredRecentUploads();
+                        const queuedFiles = recent.filter(f => f.status === 'queued' || f.status === 'processing');
+                        
+                        if (queuedFiles.length === 0) return;
+                        
+                        // Check actual status from API
+                        const listResponse = await fetch(`${base}/api/user/intelligence-simple/documents/list`, {
+                            headers: headers,
+                            credentials: 'include'
+                        });
+                        
+                        if (listResponse.ok) {
+                            const docs = await listResponse.json();
+                            const docMap = new Map((docs.documents || []).map(d => [d.filename, d]));
+                            
+                            // Update statuses
+                            queuedFiles.forEach(file => {
+                                const doc = docMap.get(file.name);
+                                if (doc) {
+                                    const newStatus = doc.status === 'completed' ? 'complete' : 
+                                                     doc.status === 'failed' ? 'error' : 'processing';
+                                    
+                                    if (newStatus !== file.status) {
+                                        syncUploadStatus(file.name, newStatus, {
+                                            fileId: doc.id,
+                                            trustScore: doc.trust_score,
+                                            standardsMapped: doc.standard_mappings
+                                        });
+                                    }
+                                } else {
+                                    // File not found in API, might be processed
+                                    // Check if it's been queued for too long (> 2 minutes)
+                                    if (file.ts && Date.now() - file.ts > 120000) {
+                                        syncUploadStatus(file.name, 'complete', {});
+                                    }
+                                }
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Error checking queued files:', error);
+                    }
+                }
+
+                // Evidence Mapping Functions
+                function mapEvidenceForFile(fileName) {
+                    // Navigate to standards page with evidence ready for mapping
+                    const params = new URLSearchParams();
+                    params.set('evidence', fileName);
+                    params.set('action', 'map');
+                    window.location.href = `/standards-modern?${params.toString()}`;
+                }
+
+                function viewMappedStandards(fileName) {
+                    // Navigate to evidence analysis page to view mappings
+                    const params = new URLSearchParams();
+                    params.set('file', fileName);
+                    window.location.href = `/web/dashboard-evidence-analysis.html?${params.toString()}`;
+                }
+
+                // Update file processing to track mapping status
+                async function updateFileProcessingStatus(fileName) {
+                    try {
+                        const base = ((window.mmsAPI&&window.mmsAPI.getBaseUrl&&window.mmsAPI.getBaseUrl())||(location.hostname.includes('api.mapmystandards.ai')?'':'https://api.mapmystandards.ai'));
+                        const token = localStorage.getItem('a3e_api_key') || localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+                        
+                        const response = await fetch(base + `/api/intelligence/evidence/status?filename=${encodeURIComponent(fileName)}`, {
+                            headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+                            credentials: 'include'
+                        });
+                        
+                        if (response.ok) {
+                            const data = await response.json();
+                            const recent = getStoredRecentUploads();
+                            const idx = recent.findIndex(r => r.name === fileName);
+                            if (idx !== -1) {
+                                recent[idx].status = data.status || 'complete';
+                                recent[idx].trustScore = data.trust_score;
+                                recent[idx].standardsMapped = data.mapped_standards_count;
+                                setStoredRecentUploads(recent);
+                                renderRecentUploads();
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error updating file status:', error);
+                    }
+                }
+
+                // Add real-time status indicator
+                function showMappingProgress(fileName, status) {
+                    const notification = document.createElement('div');
+                    notification.style.cssText = `
+                        position: fixed;
+                        bottom: 20px;
+                        right: 20px;
+                        background: white;
+                        padding: 16px 24px;
+                        border-radius: 8px;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                        display: flex;
+                        align-items: center;
+                        gap: 12px;
+                        z-index: 1000;
+                        animation: slideIn 0.3s ease;
+                    `;
+                    
+                    const spinner = status === 'processing' ? `<div class="spinner" style="width: 20px; height: 20px; border-width: 2px;"></div>` : '';
+                    const icon = status === 'complete' ? '✅' : status === 'error' ? '❌' : '';
+                    
+                    notification.innerHTML = `
+                        ${spinner}
+                        ${icon ? `<span style="font-size: 20px;">${icon}</span>` : ''}
+                        <div>
+                            <div style="font-weight: 600; color: #111827;">Evidence Mapping</div>
+                            <div style="font-size: 14px; color: #6b7280;">
+                                ${status === 'processing' ? `Processing ${fileName}...` : 
+                                  status === 'complete' ? `Successfully mapped ${fileName}` :
+                                  status === 'error' ? `Failed to map ${fileName}` : ''}
+                            </div>
+                        </div>
+                    `;
+                    
+                    document.body.appendChild(notification);
+                    
+                    if (status !== 'processing') {
+                        setTimeout(() => notification.remove(), 5000);
+                    }
+                    
+                    return notification;
                 }
 
         </script>

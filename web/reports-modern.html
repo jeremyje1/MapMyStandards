@@ -1514,9 +1514,17 @@
             if (!banner) return;
             try{
                 const token = getAuthToken();
-                const res = await fetch(getApiBase() + '/api/user/intelligence-simple/standards/evidence-map', {
+                // Try database-backed endpoint first, fall back to legacy if not available
+                let res = await fetch(getApiBase() + '/api/v1/evidence/map-database', {
                     headers: { 'Authorization': `Bearer ${token}` }, credentials: 'include'
                 });
+                
+                // If database endpoint fails, try legacy endpoint
+                if (!res.ok && res.status === 404) {
+                    res = await fetch(getApiBase() + '/api/user/intelligence-simple/standards/evidence-map', {
+                        headers: { 'Authorization': `Bearer ${token}` }, credentials: 'include'
+                    });
+                }
                 if(!res.ok){ banner.style.display = 'none'; return; }
                 const data = await res.json();
                 const docCount = (data?.counts && typeof data.counts.documents === 'number') ? data.counts.documents : (Array.isArray(data?.documents) ? data.documents.length : 0);
