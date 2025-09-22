@@ -671,6 +671,25 @@
         .loading-inline { font-size:0.75rem; color: var(--text-medium); }
         @keyframes fadeIn { from { opacity:0; transform: translateY(6px);} to { opacity:1; transform: translateY(0);} }
         @media (max-width: 640px){ .modal { margin-top:2rem; } .factor-table { font-size:0.65rem; } }
+        
+        /* Evidence Mapping Styles */
+        .evidence-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; margin-top: 1rem; }
+        .evidence-card { background: var(--bg-white); border: 1px solid var(--border-light); border-radius: 0.5rem; padding: 1rem; cursor: pointer; transition: all 0.3s ease; }
+        .evidence-card:hover { border-color: var(--primary-blue-light); box-shadow: var(--shadow-md); transform: translateY(-2px); }
+        .evidence-card.selected { border-color: var(--accent-green); background: #f0fdf4; }
+        .evidence-title { font-weight: 600; color: var(--text-dark); margin-bottom: 0.5rem; font-size: 0.9rem; }
+        .evidence-meta { display: flex; gap: 1rem; font-size: 0.8rem; color: var(--text-medium); }
+        .evidence-type { background: var(--bg-light); padding: 0.2rem 0.5rem; border-radius: 0.25rem; font-size: 0.7rem; }
+        .mapped-evidence { display: flex; align-items: center; gap: 0.5rem; background: #f0fdf4; padding: 0.5rem; border-radius: 0.5rem; margin-top: 0.5rem; font-size: 0.8rem; }
+        .mapped-evidence-icon { color: var(--accent-green); }
+        .trust-score { font-weight: 600; color: var(--accent-green); }
+        .mapped-evidence-container { margin: 0.5rem 0; }
+        .evidence-details { background: var(--bg-light); padding: 0.5rem; border-radius: 0.5rem; }
+        .evidence-detail-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0; font-size: 0.75rem; color: var(--text-medium); }
+        .evidence-doc-icon { opacity: 0.7; }
+        .evidence-doc-name { flex: 1; }
+        .evidence-doc-score { background: var(--accent-green); color: white; padding: 0.1rem 0.4rem; border-radius: 0.25rem; font-size: 0.7rem; font-weight: 600; }
+        .evidence-verified { color: var(--accent-green); font-weight: 600; font-size: 0.7rem; }
     </style>
 </head>
 <body>
@@ -765,6 +784,8 @@
                     </button>
                     <div id="selectionToolbar" class="selection-toolbar" style="display:none">
                         <span id="selectedCountBadge" class="badge-selected" role="status" aria-live="polite" aria-atomic="true">0 selected</span>
+                        <button id="mapEvidenceBtn" class="btn btn-primary" type="button" title="Map evidence to selected standards" aria-label="Map evidence to selected standards" onclick="openEvidenceMapModal()">🔗 Map Evidence</button>
+                        <button id="markCompliantBtn" class="btn btn-secondary" type="button" title="Mark selected standards as compliant" aria-label="Mark selected standards as compliant" onclick="markStandardsCompliant()">✅ Mark Compliant</button>
                         <button id="clearSelectionBtn" class="btn btn-secondary" type="button" title="Remove all selected standards" aria-label="Remove all selected standards">🧹 Clear selection</button>
                     </div>
                     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
@@ -1372,7 +1393,7 @@
                 <div class="standards-grid">
             `;
             
-            standards.forEach(standard => {
+            standards.forEach(async (standard) => {
                 const evidenceCount = standard.evidence_requirements ? standard.evidence_requirements.length : 0;
                 const reviewKey = `mms:review:${accreditor.acronym||accreditor.name}:${standard.code||standard.id}`;
                 const existing = JSON.parse(localStorage.getItem(reviewKey) || '{}');
@@ -1392,6 +1413,7 @@
                         </div>
                         <div class="standard-content">
                             <p class="standard-description">${standard.description}</p>
+                            <div id="mappedEvidence_${sid}" class="mapped-evidence-container"></div>
                             <div class="standard-meta">
                                 <div class="meta-item">
                                     <span class="meta-icon">📂</span>
@@ -1440,6 +1462,11 @@
             document.getElementById('contentArea').innerHTML = html;
             try { attachStandardsTooltips(); } catch(_){ }
             updateSelectedBadge();
+            
+            // Load mapped evidence for each standard
+            standards.forEach(standard => {
+                loadMappedEvidence(standard.code || standard.id);
+            });
         }
 
         window.toggleStandardSelection = function(e, sid){
@@ -1991,7 +2018,312 @@
             if(!el||!el.value) return [];
             return el.value.split(',').map(x=>parseFloat(x.trim())).filter(x=>Number.isFinite(x)).map(x=>String(x));
         }
+        
+        // Evidence Mapping Functions
+        let selectedEvidence = new Set();
+        let availableEvidence = [];
+        
+        async function openEvidenceMapModal() {
+            if (selectedStandards.size === 0) {
+                alert('Please select at least one standard to map evidence to.');
+                return;
+            }
+            
+            // Show selected standards in modal
+            const standardsList = Array.from(selectedStandards).join(', ');
+            document.getElementById('selectedStandardsList').textContent = standardsList;
+            
+            // Load available evidence
+            await loadAvailableEvidence();
+            
+            // Show modal
+            document.getElementById('evidenceMapModal').style.display = 'flex';
+        }
+        
+        function closeEvidenceMapModal(event) {
+            if (!event || event.target === event.currentTarget) {
+                document.getElementById('evidenceMapModal').style.display = 'none';
+                selectedEvidence.clear();
+                updateSelectedEvidenceCount();
+            }
+        }
+        
+        async function loadAvailableEvidence() {
+            try {
+                const token = getAuthToken();
+                const response = await fetch(buildApiUrl('/api/evidence-analysis/documents'), {
+                    headers: isLikelyJwt(token) ? { 'Authorization': `Bearer ${token}` } : {},
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load evidence documents');
+                }
+                
+                const data = await response.json();
+                availableEvidence = data.documents || [];
+                displayEvidenceGrid(availableEvidence);
+            } catch (error) {
+                console.error('Error loading evidence:', error);
+                document.getElementById('availableEvidenceGrid').innerHTML = '<p style="color: var(--text-medium);">Failed to load evidence documents. Please try again.</p>';
+            }
+        }
+        
+        function displayEvidenceGrid(documents) {
+            const grid = document.getElementById('availableEvidenceGrid');
+            if (documents.length === 0) {
+                grid.innerHTML = '<p style="color: var(--text-medium);">No evidence documents available. Upload documents first.</p>';
+                return;
+            }
+            
+            grid.innerHTML = documents.map(doc => `
+                <div class="evidence-card ${selectedEvidence.has(doc.id) ? 'selected' : ''}" onclick="toggleEvidenceSelection('${doc.id}')">
+                    <div class="evidence-title">${escapeHtml(doc.filename)}</div>
+                    <div class="evidence-meta">
+                        <span class="evidence-type">${doc.file_type || 'Document'}</span>
+                        <span>${formatDate(doc.uploaded_at)}</span>
+                    </div>
+                    ${doc.trust_score ? `<div style="margin-top: 0.5rem;"><span style="color: var(--text-medium);">Trust Score:</span> <span class="trust-score">${Math.round(doc.trust_score * 100)}%</span></div>` : ''}
+                    ${doc.status === 'completed' && doc.standard_mappings ? `<div style="margin-top: 0.5rem; font-size: 0.8rem; color: var(--text-medium);">${doc.standard_mappings} standards mapped</div>` : ''}
+                </div>
+            `).join('');
+        }
+        
+        function toggleEvidenceSelection(docId) {
+            if (selectedEvidence.has(docId)) {
+                selectedEvidence.delete(docId);
+            } else {
+                selectedEvidence.add(docId);
+            }
+            
+            // Update UI
+            const card = document.querySelector(`[onclick="toggleEvidenceSelection('${docId}')"]`);
+            if (card) {
+                card.classList.toggle('selected');
+            }
+            updateSelectedEvidenceCount();
+        }
+        
+        function updateSelectedEvidenceCount() {
+            document.getElementById('selectedEvidenceCount').textContent = `${selectedEvidence.size} documents selected`;
+        }
+        
+        function filterEvidence() {
+            const searchTerm = document.getElementById('evidenceSearchInput').value.toLowerCase();
+            const filtered = availableEvidence.filter(doc => 
+                doc.filename.toLowerCase().includes(searchTerm) ||
+                (doc.content && doc.content.toLowerCase().includes(searchTerm))
+            );
+            displayEvidenceGrid(filtered);
+        }
+        
+        async function confirmEvidenceMapping() {
+            if (selectedEvidence.size === 0) {
+                alert('Please select at least one evidence document to map.');
+                return;
+            }
+            
+            try {
+                const token = getAuthToken();
+                const mappingPromises = [];
+                
+                // Create mappings for each standard-document combination
+                for (const standardId of selectedStandards) {
+                    for (const documentId of selectedEvidence) {
+                        mappingPromises.push(
+                            fetch(buildApiUrl('/api/v1/evidence/mappings/db'), {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    ...(isLikelyJwt(token) ? { 'Authorization': `Bearer ${token}` } : {})
+                                },
+                                credentials: 'include',
+                                body: JSON.stringify({
+                                    document_id: documentId,
+                                    standard_id: standardId,
+                                    relevance_score: 85,
+                                    evidence_summary: 'Manually mapped by user',
+                                    mapping_confidence: 'high',
+                                    mapping_method: 'manual',
+                                    evidence_strength: 'Strong'
+                                })
+                            })
+                        );
+                    }
+                }
+                
+                await Promise.all(mappingPromises);
+                
+                // Close modal and refresh the standards display
+                closeEvidenceMapModal();
+                
+                // Show success message
+                alert(`Successfully mapped ${selectedEvidence.size} document(s) to ${selectedStandards.size} standard(s).`);
+                
+                // Update the display to show mapped evidence
+                applyFilters();
+            } catch (error) {
+                console.error('Error creating mappings:', error);
+                alert('Failed to create evidence mappings. Please try again.');
+            }
+        }
+        
+        async function markStandardsCompliant() {
+            if (selectedStandards.size === 0) {
+                alert('Please select at least one standard to mark as compliant.');
+                return;
+            }
+            
+            if (!confirm(`Are you sure you want to mark ${selectedStandards.size} standard(s) as compliant?`)) {
+                return;
+            }
+            
+            try {
+                const token = getAuthToken();
+                const accreditorId = document.getElementById('accreditorSelect').value;
+                const accreditor = accreditors.find(acc => acc.id === accreditorId);
+                
+                // Update compliance status via API
+                const response = await fetch(buildApiUrl('/api/v1/standards/compliance/update'), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(isLikelyJwt(token) ? { 'Authorization': `Bearer ${token}` } : {})
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        standard_ids: Array.from(selectedStandards),
+                        status: 'compliant',
+                        accreditor: accreditor.acronym || accreditor.name || accreditorId
+                    })
+                });
+                
+                if (!response.ok) {
+                    const error = await response.text();
+                    throw new Error(error);
+                }
+                
+                const result = await response.json();
+                
+                // Also update local status for immediate UI feedback
+                for (const standardId of selectedStandards) {
+                    const reviewKey = `mms:review:${accreditor.acronym || accreditor.name}:${standardId}`;
+                    const existing = JSON.parse(localStorage.getItem(reviewKey) || '{}');
+                    existing.status = 'Ready';
+                    existing.updated_at = new Date().toISOString();
+                    localStorage.setItem(reviewKey, JSON.stringify(existing));
+                }
+                
+                // Refresh display
+                applyFilters();
+                
+                alert(`Successfully marked ${result.data.updated_count} standard(s) as compliant.`);
+            } catch (error) {
+                console.error('Error marking standards compliant:', error);
+                alert('Failed to update standard status. Please try again.');
+            }
+        }
+        
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+        }
+        
+        function showMappedEvidenceDetails(standardId, event) {
+            event.stopPropagation();
+            const detailsDiv = document.getElementById(`evidenceDetails_${standardId}`);
+            const arrow = event.currentTarget.querySelector('span:last-child');
+            
+            if (detailsDiv) {
+                if (detailsDiv.style.display === 'none') {
+                    detailsDiv.style.display = 'block';
+                    arrow.textContent = '▼';
+                } else {
+                    detailsDiv.style.display = 'none';
+                    arrow.textContent = '▶';
+                }
+            }
+        }
+        
+        async function loadMappedEvidence(standardId) {
+            try {
+                const token = getAuthToken();
+                const response = await fetch(buildApiUrl(`/api/v1/evidence/mappings/by-standard/${encodeURIComponent(standardId)}`), {
+                    headers: isLikelyJwt(token) ? { 'Authorization': `Bearer ${token}` } : {},
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    return;
+                }
+                
+                const data = await response.json();
+                const container = document.getElementById(`mappedEvidence_${standardId}`);
+                
+                if (container && data.data && data.data.documents && data.data.documents.length > 0) {
+                    const docs = data.data.documents;
+                    const avgRelevance = data.data.average_relevance || 0;
+                    
+                    // Count verified documents
+                    const verifiedCount = docs.filter(d => d.is_verified).length;
+                    const verifiedText = verifiedCount > 0 ? `, ${verifiedCount} verified` : '';
+                    
+                    container.innerHTML = `
+                        <div class="mapped-evidence" onclick="showMappedEvidenceDetails('${standardId}', event)" style="cursor: pointer;">
+                            <span class="mapped-evidence-icon">📎</span>
+                            <span>${docs.length} evidence document(s) mapped${verifiedText}</span>
+                            <span class="trust-score">(Avg. ${Math.round(avgRelevance)}% relevance)</span>
+                            <span style="margin-left: auto; opacity: 0.7;">▶</span>
+                        </div>
+                        <div id="evidenceDetails_${standardId}" class="evidence-details" style="display: none; margin-top: 0.5rem;">
+                            ${docs.map(doc => `
+                                <div class="evidence-detail-item">
+                                    <span class="evidence-doc-icon">📄</span>
+                                    <span class="evidence-doc-name">${escapeHtml(doc.name)}</span>
+                                    <span class="evidence-doc-score">${Math.round(doc.relevance_score)}%</span>
+                                    ${doc.is_verified ? '<span class="evidence-verified">✓ Verified</span>' : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error(`Error loading mapped evidence for ${standardId}:`, error);
+            }
+        }
     </script>
+    
+    <!-- Evidence Mapping Modal -->
+    <div id="evidenceMapModal" class="modal-backdrop" onclick="closeEvidenceMapModal(event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3 class="modal-title">Map Evidence to Selected Standards</h3>
+                <button class="modal-close" onclick="closeEvidenceMapModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div id="evidenceMapStatus" style="margin-bottom: 1rem;">
+                    <p>Selected Standards: <span id="selectedStandardsList" style="font-weight: 600;"></span></p>
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <label class="filter-label">Search Evidence</label>
+                    <input type="text" id="evidenceSearchInput" class="filter-input" placeholder="Search by filename or content..." onkeyup="filterEvidence()">
+                </div>
+                <div id="availableEvidenceGrid" class="evidence-grid">
+                    <!-- Evidence documents will be loaded here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div>
+                    <span id="selectedEvidenceCount">0 documents selected</span>
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button class="btn btn-secondary" onclick="closeEvidenceMapModal()">Cancel</button>
+                    <button class="btn btn-primary" onclick="confirmEvidenceMapping()">Map Evidence</button>
+                </div>
+            </div>
+        </div>
+    </div>
     
     <!-- Info Banner Component -->
     <script src="/web/banner-component.js"></script>

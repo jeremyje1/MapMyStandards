@@ -224,10 +224,23 @@ except ImportError as e:
     _evidence_mappings_import_exception = e
 
 try:
+    from .api.routes.evidence_mappings_db import router as evidence_mappings_db_router
+    evidence_mappings_db_router_available = True
+except ImportError as e:
+    evidence_mappings_db_router_available = False
+    _evidence_mappings_db_import_exception = e
+
+try:
     from .api.routes.evidence_analysis import router as evidence_analysis_router
     evidence_analysis_router_available = True
 except ImportError as e:
     evidence_analysis_router_available = False
+    
+try:
+    from .api.routes.standards_compliance import router as standards_compliance_router
+    standards_compliance_router_available = True
+except ImportError as e:
+    standards_compliance_router_available = False
     _evidence_analysis_import_exception = e
 
 try:
@@ -858,9 +871,21 @@ if evidence_mappings_router_available:
 else:
     logger.warning("⚠️ Evidence mappings router not available")
 
+if evidence_mappings_db_router_available:
+    app.include_router(evidence_mappings_db_router)
+    logger.info("✅ Evidence mappings DB router loaded")
+else:
+    logger.warning("⚠️ Evidence mappings DB router not available")
+
 if evidence_analysis_router_available:
     app.include_router(evidence_analysis_router)
     logger.info("✅ Evidence analysis router loaded")
+else:
+    logger.warning("⚠️ Evidence analysis router not available")
+    
+if standards_compliance_router_available:
+    app.include_router(standards_compliance_router)
+    logger.info("✅ Standards compliance router loaded")
 else:
     logger.warning("⚠️ Evidence analysis router not available")
 
