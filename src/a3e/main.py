@@ -325,6 +325,28 @@ except ImportError as e:
     password_reset_router_available = False
     _password_reset_import_exception = e
 
+# New Simple API Routers
+try:
+    from .api.routes.users import router as users_router
+    users_router_available = True
+except ImportError as e:
+    users_router_available = False
+    _users_import_exception = e
+
+try:
+    from .api.routes.documents_simple import router as documents_simple_router
+    documents_simple_router_available = True
+except ImportError as e:
+    documents_simple_router_available = False
+    _documents_simple_import_exception = e
+
+try:
+    from .api.routes.standards import router as standards_router
+    standards_router_available = True
+except ImportError as e:
+    standards_router_available = False
+    _standards_import_exception = e
+
 # Logging already configured at top of file
 
 # Optional strict asset enforcement (set STRICT_FRONTEND_ASSETS=1 to fail startup if missing)
@@ -944,6 +966,25 @@ if db_init_router_available:
     logger.info("✅ Database init router loaded")
 else:
     logger.warning("⚠️ Database init router not available")
+
+# Mount new simple API routers
+if users_router_available:
+    app.include_router(users_router)
+    logger.info("✅ Users router loaded")
+else:
+    logger.warning("⚠️ Users router not available")
+
+if documents_simple_router_available:
+    app.include_router(documents_simple_router)
+    logger.info("✅ Documents simple router loaded")
+else:
+    logger.warning("⚠️ Documents simple router not available")
+
+if standards_router_available:
+    app.include_router(standards_router)
+    logger.info("✅ Standards router loaded")
+else:
+    logger.warning("⚠️ Standards router not available")
 
 # Mount admin vector router (requires ADMIN_API_TOKEN)
 if 'vector_admin_router_available' in globals() and vector_admin_router_available:

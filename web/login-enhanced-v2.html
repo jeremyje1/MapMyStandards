@@ -233,28 +233,6 @@
             text-decoration: underline;
         }
 
-        .demo-credentials {
-            background: #f7fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 1rem;
-            margin-bottom: 1.5rem;
-            font-size: 0.875rem;
-        }
-
-        .demo-credentials h3 {
-            color: #2d3748;
-            font-size: 0.875rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .demo-credentials code {
-            background: #edf2f7;
-            padding: 0.125rem 0.25rem;
-            border-radius: 4px;
-            font-family: monospace;
-        }
-
         /* Loading state */
         .loading-spinner {
             display: none;
@@ -333,13 +311,6 @@
             <p class="subtitle">Sign in to your MapMyStandards account</p>
         </div>
 
-        <!-- Demo Credentials Box -->
-        <div class="demo-credentials" id="demoBox">
-            <h3>🧪 Demo Account</h3>
-            <p>Email: <code>testuser@example.com</code></p>
-            <p>Password: <code>Test123!@#</code></p>
-        </div>
-
         <form id="loginForm" onsubmit="handleLogin(event)">
             <div class="form-group">
                 <label for="email">Email Address</label>
@@ -414,13 +385,6 @@
     </div>
 
     <script>
-        // Auto-fill demo credentials if URL has ?demo=true
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('demo') === 'true') {
-            document.getElementById('email').value = 'testuser@example.com';
-            document.getElementById('password').value = 'Test123!@#';
-        }
-
         // Toggle password visibility
         function togglePassword() {
             const passwordInput = document.getElementById('password');
@@ -507,7 +471,6 @@
 
                 // Show success animation
                 document.getElementById('loginForm').style.display = 'none';
-                document.getElementById('demoBox').style.display = 'none';
                 document.getElementById('successCheck').style.display = 'block';
                 
                 // Show success message

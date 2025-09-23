@@ -8,8 +8,8 @@ import sys
 
 # Configuration
 API_BASE_URL = "https://api.mapmystandards.ai"
-TEST_EMAIL = "testuser@example.com"
-TEST_PASSWORD = "Test123!@#"
+TEST_EMAIL = "jeremy.estrella@gmail.com"
+TEST_PASSWORD = "Ipo4Eva45*"
 
 print("🔍 Debugging Authentication Error\n")
 print(f"API URL: {API_BASE_URL}")

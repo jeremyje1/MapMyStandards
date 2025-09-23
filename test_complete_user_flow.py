@@ -13,8 +13,8 @@ from typing import Dict, Any, Optional
 # Configuration
 BASE_URL = "https://api.mapmystandards.ai"
 PLATFORM_URL = "https://platform.mapmystandards.ai"
-TEST_EMAIL = "testuser@example.com"
-TEST_PASSWORD = "Test123!@#"
+TEST_EMAIL = "jeremy.estrella@gmail.com"
+TEST_PASSWORD = "Ipo4Eva45*"
 
 # Color codes for output
 GREEN = '\033[92m'
