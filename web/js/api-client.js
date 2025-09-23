@@ -18,6 +18,11 @@ class MapMyStandardsAPI {
         this._auth = (typeof window !== 'undefined' && window.MMS_AUTH) ? window.MMS_AUTH : null;
     }
 
+    // Get base URL for API
+    getBaseUrl() {
+        return this.baseUrl;
+    }
+
     // Common headers for API requests
     getHeaders(includeAuth = true) {
         const headers = {

@@ -176,7 +176,7 @@
 
         async function loadSSOProviders() {
             try {
-                const response = await fetch(`${window.mmsAPI.getBaseUrl()}/sso/providers`);
+                const response = await fetch(`${window.mmsAPI.getBaseUrl()}/api/sso/providers`);
                 if (response.ok) {
                     const providers = await response.json();
                     const container = document.getElementById('ssoProviders');
@@ -212,7 +212,7 @@
 
         async function initiateSSO(provider) {
             try {
-                const response = await fetch(`${window.mmsAPI.getBaseUrl()}/sso/initiate/${provider}?redirect_uri=${encodeURIComponent(window.location.origin + '/auth/sso/callback')}`);
+                const response = await fetch(`${window.mmsAPI.getBaseUrl()}/api/sso/initiate/${provider}?redirect_uri=${encodeURIComponent(window.location.origin + '/auth/sso/callback')}`);
                 
                 if (response.ok) {
                     const data = await response.json();
@@ -236,10 +236,32 @@
             const password = formData.get('password');
             
             try {
-                // This would normally call your login API
-                // For now, simulate a login that requires 2FA
-                showTwoFactorModal();
-                
+                const response = await fetch(`${window.mmsAPI.getBaseUrl()}/api/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password }),
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Check if 2FA is required
+                    if (data.requires_2fa) {
+                        showTwoFactorModal();
+                    } else {
+                        // Login successful
+                        showSuccess('Login successful! Redirecting to dashboard...');
+                        setTimeout(() => {
+                            window.location.href = '/dashboard-enhanced.html';
+                        }, 1500);
+                    }
+                } else {
+                    const error = await response.json();
+                    showError(error.detail || 'Login failed. Please check your credentials.');
+                }
             } catch (error) {
                 showError('Login failed: ' + error.message);
             }
