@@ -10,10 +10,13 @@
     { "source": "/upload-modern", "destination": "/upload", "permanent": false },
     { "source": "/dashboard-modern", "destination": "/dashboard", "permanent": false },
     { "source": "/reports-modern", "destination": "/report-generation", "permanent": false },
-    { "source": "/standards-modern", "destination": "/standards-selection-wizard", "permanent": false }
+    { "source": "/standards-modern", "destination": "/standards-selection-wizard", "permanent": false },
+    { "source": "/login.html", "destination": "/login-enhanced.html", "permanent": false },
+    { "source": "/login-platform.html", "destination": "/login-enhanced.html", "permanent": false }
   ],
   "rewrites": [
     { "source": "/api/(.*)", "destination": "https://api.mapmystandards.ai/api/$1" },
+    { "source": "/login", "destination": "/login-enhanced.html" },
     { "source": "/dashboard", "destination": "/dashboard-enhanced.html" },
     { "source": "/upload", "destination": "/upload-enhanced.html" },
     { "source": "/standards-selection-wizard", "destination": "/standards-selection-wizard.html" },
