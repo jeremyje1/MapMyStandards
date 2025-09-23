@@ -2583,6 +2583,7 @@
                         </button>
                         <button id="markCompliantBtn" class="btn btn-secondary" type="button" title="Mark selected standards as compliant" aria-label="Mark selected standards as compliant" onclick="markStandardsCompliant()">✅ Mark Compliant</button>
                         <button id="viewGraphBtn" class="btn btn-primary" type="button" title="View standards relationship graph" aria-label="View standards relationship graph" onclick="showGraphView()">� View Graph</button>
+                        <button id="mapEvidenceBtn" class="btn btn-primary" type="button" title="Map evidence to selected standards" aria-label="Map evidence to selected standards" onclick="openEvidenceMappingModal()" style="display:none">🔗 Map Evidence</button>
                         <button id="analyzeGapsBtn" class="btn btn-primary" type="button" title="Analyze compliance gaps" aria-label="Analyze compliance gaps" onclick="analyzeGaps()">� Analyze Gaps</button>
                         <button id="generateReportBtn" class="btn btn-primary" type="button" title="Generate compliance report" aria-label="Generate compliance report" onclick="openReportGenerationModal()">📊 Generate Report</button>
                         <button id="clearSelectionBtn" class="btn btn-secondary" type="button" title="Remove all selected standards" aria-label="Remove all selected standards">🧹 Clear</button>
@@ -3081,11 +3082,17 @@
                     try{
                         const bar = document.getElementById('selectionToolbar');
                         const badge = document.getElementById('selectedCountBadge');
+                        const mapEvidenceBtn = document.getElementById('mapEvidenceBtn');
                         if(!bar || !badge) return;
                         const n = selectedStandards.size;
                         if(n > 0){ 
                             bar.style.display='flex'; 
                             badge.textContent = n + ' selected';
+                            
+                            // Show Map Evidence button when standards are selected
+                            if (mapEvidenceBtn) {
+                                mapEvidenceBtn.style.display = 'inline-block';
+                            }
                             
                             // Show first-time help tooltip
                             if (n === 1 && !localStorage.getItem('selectionHelpShown')) {
@@ -3093,7 +3100,14 @@
                                 showSelectionHelp();
                             }
                         }
-                        else { bar.style.display='none'; badge.textContent = '0 selected'; }
+                        else { 
+                            bar.style.display='none'; 
+                            badge.textContent = '0 selected'; 
+                            // Hide Map Evidence button when no standards selected
+                            if (mapEvidenceBtn) {
+                                mapEvidenceBtn.style.display = 'none';
+                            }
+                        }
                         
                         // Update button states whenever selection changes
                         updateButtonStates();
@@ -9202,14 +9216,27 @@
                 // Try to get evidence from API first
                 const token = getAuthToken();
                 try {
-                    const response = await fetch(buildApiUrl('/api/v1/evidence/documents'), {
+                    // Try the working /api/uploads/recent endpoint first
+                    const response = await fetch(buildApiUrl('/api/uploads/recent?limit=100'), {
                         headers: isLikelyJwt(token) ? { 'Authorization': `Bearer ${token}` } : {},
                         credentials: 'include'
                     });
                     
                     if (response.ok) {
                         const data = await response.json();
-                        evidenceLibraryData = data.data || [];
+                        // Convert upload format to evidence library format
+                        evidenceLibraryData = (data.data || data || []).map(upload => ({
+                            id: upload.id || upload.file_id,
+                            filename: upload.filename || upload.name,
+                            file_type: upload.file_type || upload.type || getFileExtension(upload.filename || upload.name),
+                            file_size: upload.file_size || upload.size || 0,
+                            upload_date: upload.created_at || upload.upload_date || new Date().toISOString(),
+                            status: upload.status || 'uploaded',
+                            job_id: upload.job_id,
+                            analysis_status: upload.analysis_status || upload.status || 'pending',
+                            mappings_count: upload.mappings_count || 0,
+                            confidence_score: upload.confidence_score || 0
+                        }));
                         
                         // Sync with localStorage
                         syncWithLocalStorage();
