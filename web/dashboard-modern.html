@@ -1321,7 +1321,7 @@
                 const accName = (this.settings && (this.settings.primary_accreditor || this.settings.accreditor)) || (account && (account.primary_accreditor || account.accreditor)) || 'Standards';
 
                 metricsGrid.innerHTML = `
-                    <div class="metric-card success">
+                    <div class="metric-card success" onclick="navigateToSection('evidence-upload')" style="cursor: pointer;">
                         <div class="metric-header">
                             <div class="metric-label">Documents Analyzed</div>
                             <div class="metric-icon success">📄</div>
@@ -1333,7 +1333,7 @@
                         </div>
                     </div>
 
-                    <div class="metric-card info" title="${(explain.coverage || '').replace(/\"/g,'"')}">
+                    <div class="metric-card info" onclick="window.location.href='standards-modern.html'" style="cursor: pointer;" title="${(explain.coverage || '').replace(/\"/g,'"')}">
                         <div class="metric-header">
                             <div class="metric-label">Standards Mapped <span style="cursor:help;font-size:14px" title="${(explain.coverage || '').replace(/\"/g,'"')}">ℹ️</span></div>
                             <div class="metric-icon info">🎯</div>
@@ -1348,7 +1348,7 @@
                         <div id="coverageSpark" style="margin-top:6px;height:36px"></div>
                     </div>
 
-                    <div class="metric-card warning" title="${(explain.compliance || '').replace(/\"/g,'"')}">
+                    <div class="metric-card warning" onclick="navigateToSection('compliance-overview')" style="cursor: pointer;" title="${(explain.compliance || '').replace(/\"/g,'"')}">
                         <div class="metric-header">
                             <div class="metric-label">Compliance Score <span style="cursor:help;font-size:14px" title="${(explain.compliance || '').replace(/\"/g,'"')}">ℹ️</span></div>
                             <div class="metric-icon warning">⚡</div>
@@ -1363,7 +1363,7 @@
                         <div id="complianceSpark" style="margin-top:6px;height:36px"></div>
                     </div>
 
-                    <div class="metric-card success">
+                    <div class="metric-card success" onclick="window.location.href='reports-modern.html'" style="cursor: pointer;">
                         <div class="metric-header">
                             <div class="metric-label">Reports Generated</div>
                             <div class="metric-icon success">📊</div>
@@ -1376,7 +1376,7 @@
                             </span>
                         </div>
                     </div>
-                    <div class="metric-card info" title="${(explain.average_trust || '').replace(/\"/g,'"')}">
+                    <div class="metric-card info" onclick="navigateToSection('evidence-upload')" style="cursor: pointer;" title="${(explain.average_trust || '').replace(/\"/g,'"')}">
                         <div class="metric-header">
                             <div class="metric-label">Evidence Trust <span style="cursor:help;font-size:14px" title="${(explain.average_trust || '').replace(/\"/g,'"')}">ℹ️</span></div>
                             <div class="metric-icon info">🔒</div>
@@ -1391,7 +1391,7 @@
                         <div id="trustSpark" style="margin-top:6px;height:36px"></div>
                     </div>
 
-                    <div class="metric-card danger" title="${(explain.average_risk || '').replace(/\"/g,'"')}">
+                    <div class="metric-card danger" onclick="window.location.href='gap-analysis.html'" style="cursor: pointer;" title="${(explain.average_risk || '').replace(/\"/g,'"')}">
                         <div class="metric-header">
                             <div class="metric-label">Gap Risk <span style="cursor:help;font-size:14px" title="${(explain.average_risk || '').replace(/\"/g,'"')}">ℹ️</span></div>
                             <div class="metric-icon danger">🛑</div>
@@ -2897,6 +2897,46 @@
         
         <!-- Service worker registration for offline support -->
         <script>
+        // Navigate to section helper
+        function navigateToSection(sectionId) {
+            // Check if section exists on current page
+            const section = document.getElementById(sectionId);
+            if (section) {
+                // Smooth scroll to section
+                section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                // Flash the section to highlight it
+                section.style.transition = 'background-color 0.3s ease';
+                section.style.backgroundColor = 'rgba(59, 130, 246, 0.1)';
+                setTimeout(() => {
+                    section.style.backgroundColor = '';
+                }, 1500);
+            } else {
+                // Navigate to appropriate page based on section
+                switch(sectionId) {
+                    case 'evidence-upload':
+                        // Scroll to upload section if on same page, otherwise show notification
+                        const uploadSection = document.querySelector('.upload-section');
+                        if (uploadSection) {
+                            uploadSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        } else {
+                            showNotification('View your uploaded documents in the Evidence Upload section below', 'info');
+                        }
+                        break;
+                    case 'compliance-overview':
+                        // Show compliance details modal or section
+                        const complianceSection = document.querySelector('[data-section="compliance"]');
+                        if (complianceSection) {
+                            complianceSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        } else {
+                            showNotification('View detailed compliance analysis in the overview below', 'info');
+                        }
+                        break;
+                    default:
+                        showNotification('Loading detailed view...', 'info');
+                }
+            }
+        }
+
         // Show notification helper
         function showNotification(message, type = 'info') {
             // Create notification element
