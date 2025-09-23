@@ -134,11 +134,35 @@ def _user_key(claims: Dict[str, Any]) -> str:
 
 
 def _get_user_settings(claims: Dict[str, Any]) -> Dict[str, Any]:
+    # Try database first if DATABASE_URL is set (Railway/Production)
+    if os.getenv("DATABASE_URL"):
+        try:
+            from ...services.user_settings_db import get_user_settings_db
+            db_service = get_user_settings_db()
+            settings = db_service.get_user_settings(claims)
+            if settings:
+                return settings
+        except Exception as e:
+            logger.warning(f"Failed to get settings from database: {e}")
+    
+    # Fallback to JSON file storage
     all_s = _safe_load_json(SETTINGS_STORE)
     return all_s.get(_user_key(claims), {})
 
 
 def _save_user_settings(claims: Dict[str, Any], data: Dict[str, Any]) -> None:
+    # Try database first if DATABASE_URL is set (Railway/Production)
+    if os.getenv("DATABASE_URL"):
+        try:
+            from ...services.user_settings_db import get_user_settings_db
+            db_service = get_user_settings_db()
+            if db_service.save_user_settings(claims, data):
+                logger.info("Settings saved to database")
+                return
+        except Exception as e:
+            logger.error(f"Failed to save settings to database: {e}")
+    
+    # Fallback to JSON file storage
     all_s = _safe_load_json(SETTINGS_STORE)
     all_s[_user_key(claims)] = data
     _safe_save_json(SETTINGS_STORE, all_s)
