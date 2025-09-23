@@ -643,12 +643,16 @@
             </div>
 
             <!-- What's Next -->
-            <div class="whats-next" id="whatsNext" style="display: none;">
-                <h2 class="whats-next-title">Great! Your files are being processed</h2>
-                <p class="whats-next-description">Next step: Return to your dashboard to view and map your evidence</p>
-                <a href="/dashboard-enhanced.html" class="whats-next-btn">
-                    Go to Dashboard →
+            <div class="whats-next" id="whatsNext" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; background: white; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); padding: 48px; border-radius: 16px; text-align: center; max-width: 500px;">
+                <div style="font-size: 48px; margin-bottom: 16px;">✅</div>
+                <h2 class="whats-next-title" style="font-size: 24px; margin-bottom: 16px;">Files Uploaded Successfully!</h2>
+                <p class="whats-next-description" style="font-size: 16px; margin-bottom: 24px; color: #6b7280;">Your documents have been saved. Continue to your dashboard to map them to standards.</p>
+                <a href="/dashboard-enhanced.html" class="whats-next-btn" style="display: inline-block; padding: 12px 32px; font-size: 18px; font-weight: 600;">
+                    Continue to Dashboard →
                 </a>
+                <div style="margin-top: 16px;">
+                    <button onclick="document.getElementById('whatsNext').style.display='none'" style="background: none; border: none; color: #6b7280; cursor: pointer; text-decoration: underline;">Upload more files</button>
+                </div>
             </div>
         </div>
     </main>
@@ -781,7 +785,15 @@
                     });
                     sessionStorage.setItem('uploadedFiles', JSON.stringify(existingUploads));
                     
-                    // Show what's next section
+                    // Show what's next section with backdrop
+                    const backdrop = document.createElement('div');
+                    backdrop.id = 'uploadBackdrop';
+                    backdrop.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 999;';
+                    backdrop.onclick = () => {
+                        document.getElementById('whatsNext').style.display = 'none';
+                        backdrop.remove();
+                    };
+                    document.body.appendChild(backdrop);
                     document.getElementById('whatsNext').style.display = 'block';
                     
                     // Update recent uploads
