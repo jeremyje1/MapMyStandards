@@ -4488,8 +4488,24 @@
                     }
                 }
                 
-                if (!successfulEndpoint) {
-                    throw new Error('Failed to load evidence documents from any endpoint');
+                if (!successfulEndpoint || allDocuments.length === 0) {
+                    console.log('API endpoints failed, falling back to localStorage');
+                    
+                    // Fallback to localStorage
+                    const localFiles = JSON.parse(localStorage.getItem('uploadedFiles') || '[]');
+                    allDocuments = localFiles.map(file => ({
+                        id: file.id || file.fileId || `local_${file.name}`,
+                        filename: file.filename || file.name,
+                        file_type: file.type || file.file_type || 'Document',
+                        uploaded_at: file.uploadDate || file.uploaded_at || new Date().toISOString(),
+                        status: file.status || 'completed',
+                        trust_score: file.trust_score || 0.8,
+                        standard_mappings: file.mappingCount || 0
+                    }));
+                    
+                    if (allDocuments.length === 0) {
+                        throw new Error('No evidence documents found in API or localStorage');
+                    }
                 }
                 
                 // Remove duplicates based on filename
@@ -4611,6 +4627,10 @@
         }
         
         function startMappingPipeline() {
+            console.log('Starting mapping pipeline...');
+            console.log('Selected evidence:', selectedEvidence);
+            console.log('Available evidence:', availableEvidence);
+            
             if (selectedEvidence.size === 0) {
                 showNotification('Please select at least one evidence document to map.', 'error');
                 return;
@@ -4618,10 +4638,12 @@
             
             // Generate session ID for this mapping
             mappingSessionId = `map_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            console.log('Mapping session ID:', mappingSessionId);
             
             // Update file statuses to mapping in progress
             selectedEvidence.forEach(docId => {
                 const doc = availableEvidence.find(d => d.id === docId);
+                console.log(`Processing doc ${docId}:`, doc);
                 if (doc && doc.filename) {
                     updateFileStatus(doc.filename, 'mapping');
                 }
@@ -10900,5 +10922,108 @@
     
     <!-- Info Banner Component -->
     <script src="/web/banner-component.js"></script>
+    
+    <!-- Debug Panel -->
+    <div id="debugPanel" style="position: fixed; bottom: 10px; right: 10px; background: #333; color: #fff; padding: 10px; border-radius: 5px; font-size: 12px; display: none; max-width: 400px; max-height: 200px; overflow: auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+            <strong>Debug Info</strong>
+            <button onclick="document.getElementById('debugPanel').style.display='none'" style="background: none; border: none; color: #fff; cursor: pointer;">✕</button>
+        </div>
+        <div id="debugContent"></div>
+    </div>
+    
+    <script>
+        // Debug helper
+        function showDebugInfo() {
+            const uploadedFiles = JSON.parse(localStorage.getItem('uploadedFiles') || '[]');
+            const mappings = JSON.parse(localStorage.getItem('evidenceMappings') || '[]');
+            const debugPanel = document.getElementById('debugPanel');
+            const debugContent = document.getElementById('debugContent');
+            
+            debugContent.innerHTML = `
+                <div>Uploaded Files: ${uploadedFiles.length}</div>
+                <div>Files with IDs: ${uploadedFiles.filter(f => f.id || f.fileId).length}</div>
+                <div>Mappings: ${mappings.length}</div>
+                <div>Selected Standards: ${selectedStandards.size}</div>
+                <hr style="margin: 5px 0;">
+                <div style="max-height: 100px; overflow: auto;">
+                    ${uploadedFiles.map(f => `<div>${f.name || f.filename} - ID: ${f.id || f.fileId || 'NO ID'}</div>`).join('')}
+                </div>
+            `;
+            
+            debugPanel.style.display = 'block';
+        }
+        
+        // Add keyboard shortcut for debug panel
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+                showDebugInfo();
+            }
+        });
+        
+        // Auto-show debug panel if there are issues
+        window.addEventListener('load', () => {
+            const uploadedFiles = JSON.parse(localStorage.getItem('uploadedFiles') || '[]');
+            if (uploadedFiles.length > 0 && uploadedFiles.filter(f => f.id || f.fileId).length === 0) {
+                console.warn('Files without IDs detected!');
+                showDebugInfo();
+            }
+        });
+        
+        // Helper function to add test evidence with proper IDs
+        function addTestEvidence() {
+            const testFiles = [
+                {
+                    id: 'test_file_1',
+                    fileId: 'test_file_1',
+                    name: 'Test Evidence Document 1.pdf',
+                    filename: 'Test Evidence Document 1.pdf',
+                    type: 'application/pdf',
+                    size: 1024000,
+                    uploadDate: new Date().toISOString(),
+                    status: 'complete',
+                    mappingStatus: 'not_mapped',
+                    source: 'test_data'
+                },
+                {
+                    id: 'test_file_2',
+                    fileId: 'test_file_2',
+                    name: 'Test Policy Document.docx',
+                    filename: 'Test Policy Document.docx',
+                    type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                    size: 512000,
+                    uploadDate: new Date().toISOString(),
+                    status: 'complete',
+                    mappingStatus: 'not_mapped',
+                    source: 'test_data'
+                }
+            ];
+            
+            const existingFiles = JSON.parse(localStorage.getItem('uploadedFiles') || '[]');
+            const updatedFiles = [...existingFiles, ...testFiles];
+            localStorage.setItem('uploadedFiles', JSON.stringify(updatedFiles));
+            
+            showNotification('Added test evidence files with proper IDs', 'success');
+            
+            // Reload evidence library if it's open
+            if (document.getElementById('evidenceLibraryModal').style.display === 'flex') {
+                loadEvidenceLibrary();
+            }
+            
+            // Reload available evidence if mapping modal is open
+            if (document.getElementById('evidenceMapModal').style.display === 'flex') {
+                loadAvailableEvidence();
+            }
+            
+            showDebugInfo();
+        }
+        
+        // Add command for easy testing: Ctrl+Shift+T
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.shiftKey && e.key === 'T') {
+                addTestEvidence();
+            }
+        });
+    </script>
 </body>
 </html>

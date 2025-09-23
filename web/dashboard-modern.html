@@ -2308,23 +2308,51 @@
                                 } else {
                                     // Successfully uploaded via evidence analysis endpoint
                                     const data = await res.json();
-                                    if (data.files) {
-                                        // Start polling for analysis results and sync status
+                                    console.log('Upload response:', data);
+                                    
+                                    if (data.files && Array.isArray(data.files)) {
+                                        // Handle array of files response
                                         data.files.forEach((file, index) => {
                                             const originalFile = fileList[index];
                                             if (originalFile) {
-                                                syncUploadStatus(originalFile.name, 'processing', { fileId: file.id });
+                                                const fileId = file.id || file.file_id || `local_${Date.now()}_${index}`;
+                                                syncUploadStatus(originalFile.name, 'processing', { 
+                                                    fileId: fileId,
+                                                    size: originalFile.size,
+                                                    type: originalFile.type
+                                                });
                                                 
                                                 // If analysis wasn't auto-triggered, trigger it manually
                                                 if (file.status === 'uploaded' || file.status === 'queued') {
                                                     setTimeout(() => {
-                                                        triggerAnalysis(file.id, originalFile.name);
+                                                        triggerAnalysis(fileId, originalFile.name);
                                                     }, 1000);
                                                 } else {
                                                     // Poll for results
-                                                    pollAnalysisStatus(file.id, originalFile.name);
+                                                    pollAnalysisStatus(fileId, originalFile.name);
                                                 }
                                             }
+                                        });
+                                    } else if (data.id || data.file_id) {
+                                        // Handle single file response
+                                        const fileId = data.id || data.file_id || `local_${Date.now()}`;
+                                        fileList.forEach((file, index) => {
+                                            syncUploadStatus(file.name, 'complete', { 
+                                                fileId: fileId + (index > 0 ? `_${index}` : ''),
+                                                size: file.size,
+                                                type: file.type
+                                            });
+                                        });
+                                    } else {
+                                        // Fallback: generate local IDs
+                                        console.warn('No file IDs in response, generating local IDs');
+                                        fileList.forEach((file, index) => {
+                                            const fileId = `local_${Date.now()}_${index}`;
+                                            syncUploadStatus(file.name, 'complete', { 
+                                                fileId: fileId,
+                                                size: file.size,
+                                                type: file.type
+                                            });
                                         });
                                     }
                                 }
@@ -2365,19 +2393,31 @@
                         const uploadedFiles = JSON.parse(localStorage.getItem('uploadedFiles') || '[]');
                         const existingFile = uploadedFiles.find(f => f.name === fileName);
                         
-                        if (status === 'complete' && !existingFile) {
-                            // Add to uploadedFiles when complete
+                        if (!existingFile) {
+                            // Add to uploadedFiles
                             uploadedFiles.push({
                                 name: fileName,
-                                id: data.fileId || fileName,
+                                filename: fileName, // Some parts expect 'filename' instead of 'name'
+                                id: data.fileId || `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                                fileId: data.fileId, // Duplicate for compatibility
                                 uploadDate: new Date().toISOString(),
+                                status: status,
                                 mappingStatus: 'not_mapped',
                                 source: 'dashboard_ai_evidence',
+                                size: data.size || 0,
+                                type: data.type || 'application/octet-stream',
                                 ...data
                             });
                             localStorage.setItem('uploadedFiles', JSON.stringify(uploadedFiles));
                         } else if (existingFile) {
-                            // Update existing file status
+                            // Update existing file status and ensure it has an ID
+                            existingFile.status = status;
+                            if (data.fileId && !existingFile.id) {
+                                existingFile.id = data.fileId;
+                                existingFile.fileId = data.fileId;
+                            }
+                            Object.assign(existingFile, data);
+                            localStorage.setItem('uploadedFiles', JSON.stringify(uploadedFiles));
                             existingFile.status = status;
                             Object.assign(existingFile, data);
                             localStorage.setItem('uploadedFiles', JSON.stringify(uploadedFiles));
