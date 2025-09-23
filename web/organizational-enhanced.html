@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Organization Chart - MapMyStandards</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+
+        .nav-header {
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .nav-header h1 {
+            color: #2c5aa0;
+            font-size: 1.5rem;
+            margin: 0;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            color: #555;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+
+        .nav-links a:hover {
+            background: #f0f0f0;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 2rem;
+            min-height: 600px;
+        }
+
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: background 0.3s;
+        }
+
+        .btn-primary {
+            background: #2c5aa0;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1e3d6f;
+        }
+
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #666;
+        }
+
+        .btn-secondary:hover {
+            background: #d1d5db;
+        }
+
+        #orgChart {
+            width: 100%;
+            height: 500px;
+            border: 1px solid #e5e7eb;
+            border-radius: 5px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .org-node {
+            position: absolute;
+            background: white;
+            border: 2px solid #2c5aa0;
+            border-radius: 8px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: transform 0.3s;
+            min-width: 150px;
+            text-align: center;
+        }
+
+        .org-node:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .org-node.selected {
+            border-color: #ef4444;
+            background: #fef2f2;
+        }
+
+        .org-node h4 {
+            color: #333;
+            margin-bottom: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .org-node p {
+            color: #666;
+            font-size: 0.75rem;
+            margin: 0;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #666;
+        }
+
+        .empty-state img {
+            width: 200px;
+            opacity: 0.3;
+            margin-bottom: 1rem;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            color: #333;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .nav-header {
+                padding: 1rem;
+            }
+            
+            .nav-links {
+                width: 100%;
+                margin-top: 1rem;
+                justify-content: center;
+            }
+            
+            .toolbar {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav-header">
+        <h1>Organization Chart</h1>
+        <div class="nav-links">
+            <a href="dashboard-enhanced.html">Dashboard</a>
+            <a href="upload-enhanced.html">Upload Evidence</a>
+            <a href="standards-graph-enhanced.html">Standards Graph</a>
+            <a href="compliance-dashboard-enhanced.html">Compliance</a>
+            <a href="reports-enhanced.html">Reports</a>
+            <a href="organizational-enhanced.html" class="active">Org Chart</a>
+            <a href="settings-enhanced.html">Settings</a>
+            <a href="#" onclick="logout()">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="chart-container">
+            <div class="toolbar">
+                <div>
+                    <button class="btn btn-primary" onclick="addNode()">Add Position</button>
+                    <button class="btn btn-secondary" onclick="editChart()">Edit Mode</button>
+                    <button class="btn btn-secondary" onclick="saveChart()">Save Chart</button>
+                </div>
+                <div>
+                    <button class="btn btn-secondary" onclick="exportChart()">Export</button>
+                    <button class="btn btn-secondary" onclick="resetChart()">Reset</button>
+                </div>
+            </div>
+            
+            <div id="orgChart">
+                <div class="empty-state" id="emptyState">
+                    <h3>No Organization Chart Created Yet</h3>
+                    <p>Click "Add Position" to start building your organization chart</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Node Modal -->
+    <div id="nodeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Add Position</h2>
+                <button class="btn btn-secondary" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="nodeForm" onsubmit="saveNode(event)">
+                <div class="form-group">
+                    <label for="positionTitle">Position Title</label>
+                    <input type="text" id="positionTitle" required placeholder="e.g., Provost">
+                </div>
+                <div class="form-group">
+                    <label for="personName">Person Name</label>
+                    <input type="text" id="personName" placeholder="e.g., Dr. Jane Smith">
+                </div>
+                <div class="form-group">
+                    <label for="department">Department</label>
+                    <input type="text" id="department" placeholder="e.g., Academic Affairs">
+                </div>
+                <div class="form-group">
+                    <label for="reportsTo">Reports To</label>
+                    <select id="reportsTo">
+                        <option value="">None (Top Level)</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+        <script src="js/common.js"></script>
+<script>
+        // Check authentication
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            window.location.href = 'login-enhanced.html';
+        }
+
+        // API Configuration
+        const API_BASE_URL = 'https://api.mapmystandards.ai/api';
+
+        // Chart data
+        let chartData = {
+            nodes: [],
+            edges: []
+        };
+        let selectedNode = null;
+        let editMode = false;
+
+        // Load organization chart
+        async function loadChart() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/org-chart`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                if (data.exists && data.chart) {
+                    chartData = data.chart;
+                    renderChart();
+                }
+            } catch (error) {
+                console.error('Error loading org chart:', error);
+                // Show demo data
+                loadDemoChart();
+            }
+        }
+
+        function loadDemoChart() {
+            chartData = {
+                nodes: [
+                    {
+                        id: 'president',
+                        title: 'President',
+                        name: 'Dr. John Doe',
+                        department: 'Executive',
+                        x: 300,
+                        y: 50
+                    },
+                    {
+                        id: 'provost',
+                        title: 'Provost',
+                        name: 'Dr. Jane Smith',
+                        department: 'Academic Affairs',
+                        x: 300,
+                        y: 150
+                    },
+                    {
+                        id: 'accreditation',
+                        title: 'Accreditation Director',
+                        name: 'You',
+                        department: 'Academic Affairs',
+                        x: 150,
+                        y: 250
+                    }
+                ],
+                edges: [
+                    { from: 'president', to: 'provost' },
+                    { from: 'provost', to: 'accreditation' }
+                ]
+            };
+            renderChart();
+        }
+
+        function renderChart() {
+            const chartEl = document.getElementById('orgChart');
+            const emptyState = document.getElementById('emptyState');
+            
+            if (chartData.nodes.length === 0) {
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            emptyState.style.display = 'none';
+            
+            // Clear existing nodes
+            chartEl.querySelectorAll('.org-node').forEach(node => node.remove());
+            
+            // Render nodes
+            chartData.nodes.forEach(node => {
+                const nodeEl = document.createElement('div');
+                nodeEl.className = 'org-node';
+                nodeEl.id = `node-${node.id}`;
+                nodeEl.style.left = `${node.x || 100}px`;
+                nodeEl.style.top = `${node.y || 100}px`;
+                nodeEl.innerHTML = `
+                    <h4>${node.title}</h4>
+                    <p>${node.name || 'Vacant'}</p>
+                    <p><small>${node.department || ''}</small></p>
+                `;
+                nodeEl.onclick = () => selectNode(node);
+                chartEl.appendChild(nodeEl);
+            });
+            
+            // TODO: Render connecting lines
+        }
+
+        function addNode() {
+            selectedNode = null;
+            document.getElementById('modalTitle').textContent = 'Add Position';
+            document.getElementById('nodeForm').reset();
+            showModal();
+        }
+
+        function editChart() {
+            editMode = !editMode;
+            alert(editMode ? 'Edit mode enabled. Click nodes to edit.' : 'Edit mode disabled.');
+        }
+
+        async function saveChart() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/org-chart`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(chartData)
+                });
+
+                if (response.ok) {
+                    alert('Organization chart saved successfully!');
+                } else {
+                    throw new Error('Failed to save chart');
+                }
+            } catch (error) {
+                console.error('Error saving chart:', error);
+                alert('Error saving chart. Please try again.');
+            }
+        }
+
+        function selectNode(node) {
+            if (editMode) {
+                selectedNode = node;
+                document.getElementById('modalTitle').textContent = 'Edit Position';
+                document.getElementById('positionTitle').value = node.title;
+                document.getElementById('personName').value = node.name || '';
+                document.getElementById('department').value = node.department || '';
+                showModal();
+            }
+        }
+
+        function saveNode(event) {
+            event.preventDefault();
+            
+            const formData = {
+                title: document.getElementById('positionTitle').value,
+                name: document.getElementById('personName').value,
+                department: document.getElementById('department').value,
+                reportsTo: document.getElementById('reportsTo').value
+            };
+            
+            if (selectedNode) {
+                // Update existing node
+                Object.assign(selectedNode, formData);
+            } else {
+                // Add new node
+                const newNode = {
+                    id: `node-${Date.now()}`,
+                    ...formData,
+                    x: 100 + Math.random() * 400,
+                    y: 100 + Math.random() * 300
+                };
+                chartData.nodes.push(newNode);
+                
+                if (formData.reportsTo) {
+                    chartData.edges.push({
+                        from: formData.reportsTo,
+                        to: newNode.id
+                    });
+                }
+            }
+            
+            renderChart();
+            closeModal();
+        }
+
+        function showModal() {
+            document.getElementById('nodeModal').style.display = 'flex';
+            updateReportsToSelect();
+        }
+
+        function closeModal() {
+            document.getElementById('nodeModal').style.display = 'none';
+        }
+
+        function updateReportsToSelect() {
+            const select = document.getElementById('reportsTo');
+            select.innerHTML = '<option value="">None (Top Level)</option>';
+            
+            chartData.nodes.forEach(node => {
+                if (!selectedNode || node.id !== selectedNode.id) {
+                    const option = document.createElement('option');
+                    option.value = node.id;
+                    option.textContent = `${node.title} - ${node.name || 'Vacant'}`;
+                    select.appendChild(option);
+                }
+            });
+        }
+
+        function exportChart() {
+            console.log('Export chart:', chartData);
+            alert('Export functionality coming soon!');
+        }
+
+        function resetChart() {
+            if (confirm('Are you sure you want to reset the organization chart?')) {
+                chartData = { nodes: [], edges: [] };
+                renderChart();
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('user_email');
+            window.location.href = 'login-enhanced.html';
+        }
+
+        // Close modal on outside click
+        window.onclick = function(event) {
+            const modal = document.getElementById('nodeModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+
+        // Initialize
+        loadChart();
+    </script>
+</body>
+</html>

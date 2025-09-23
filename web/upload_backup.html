@@ -671,7 +671,7 @@
         function checkAuth() {
             const token = localStorage.getItem('a3e_api_key');
             if (!token) {
-                window.location.href = '/login';
+                window.location.href = "/login-enhanced-v2.html";
             }
         }
         
@@ -948,7 +948,7 @@
     let pollingInterval=null; function startPollingRecent(){ if(pollingInterval) return; pollingInterval=setInterval(()=>{loadRecentUploads();},3000); setTimeout(()=>{clearInterval(pollingInterval); pollingInterval=null;},30000);} 
     function logout() {
             localStorage.clear();
-            window.location.href = '/login';
+            window.location.href = "/login-enhanced-v2.html";
         }
         
         // Initialize

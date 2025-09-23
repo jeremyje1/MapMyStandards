@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact - MapMyStandards</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+
+        .nav-header {
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .nav-header h1 {
+            color: #2c5aa0;
+            font-size: 1.5rem;
+            margin: 0;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            color: #555;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+
+        .nav-links a:hover {
+            background: #f0f0f0;
+        }
+
+        .nav-links .active {
+            color: #2c5aa0;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .contact-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .contact-form-section {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 2rem;
+        }
+
+        .contact-info-section {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 2rem;
+        }
+
+        .contact-form-section h2 {
+            color: #333;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            color: #333;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        .form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .btn {
+            padding: 0.75rem 2rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s;
+        }
+
+        .btn-primary {
+            background: #2c5aa0;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1e3d6f;
+        }
+
+        .contact-info {
+            margin-bottom: 2rem;
+        }
+
+        .contact-info h3 {
+            color: #333;
+            margin-bottom: 1rem;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: start;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .contact-icon {
+            font-size: 1.5rem;
+            color: #2c5aa0;
+            min-width: 30px;
+        }
+
+        .contact-details {
+            flex: 1;
+        }
+
+        .contact-details h4 {
+            color: #333;
+            margin-bottom: 0.25rem;
+        }
+
+        .contact-details p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .support-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .support-card {
+            background: #f9fafb;
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: transform 0.3s;
+            cursor: pointer;
+        }
+
+        .support-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .support-card .icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .support-card h4 {
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .support-card p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .nav-header {
+                padding: 1rem;
+            }
+            
+            .nav-links {
+                width: 100%;
+                margin-top: 1rem;
+                justify-content: center;
+            }
+            
+            .contact-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav-header">
+        <h1>Contact Us</h1>
+        <div class="nav-links">
+            <a href="dashboard-enhanced.html">Dashboard</a>
+            <a href="upload-enhanced.html">Upload Evidence</a>
+            <a href="standards-graph-enhanced.html">Standards Graph</a>
+            <a href="compliance-dashboard-enhanced.html">Compliance</a>
+            <a href="reports-enhanced.html">Reports</a>
+            <a href="settings-enhanced.html">Settings</a>
+            <a href="about-enhanced.html">About</a>
+            <a href="contact-enhanced.html" class="active">Contact</a>
+            <a href="#" onclick="logout()">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div id="alertMessage" class="alert"></div>
+        
+        <div class="contact-grid">
+            <div class="contact-form-section">
+                <h2>Get in Touch</h2>
+                <p style="margin-bottom: 1.5rem; color: #666;">Have a question or need assistance? We're here to help!</p>
+                
+                <form id="contactForm" onsubmit="submitContact(event)">
+                    <div class="form-group">
+                        <label for="name">Your Name</label>
+                        <input type="text" id="name" name="name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="subject">Subject</label>
+                        <select id="subject" name="subject" required>
+                            <option value="">Select a topic</option>
+                            <option value="technical">Technical Support</option>
+                            <option value="billing">Billing Question</option>
+                            <option value="feature">Feature Request</option>
+                            <option value="demo">Request a Demo</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="message">Message</label>
+                        <textarea id="message" name="message" required placeholder="Please describe how we can help you..."></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Send Message</button>
+                </form>
+            </div>
+            
+            <div class="contact-info-section">
+                <div class="contact-info">
+                    <h3>Contact Information</h3>
+                    
+                    <div class="contact-item">
+                        <div class="contact-icon">📧</div>
+                        <div class="contact-details">
+                            <h4>Email</h4>
+                            <p>support@mapmystandards.ai</p>
+                        </div>
+                    </div>
+                    
+                    <div class="contact-item">
+                        <div class="contact-icon">💬</div>
+                        <div class="contact-details">
+                            <h4>Live Chat</h4>
+                            <p>Available Mon-Fri, 9 AM - 5 PM EST</p>
+                        </div>
+                    </div>
+                    
+                    <div class="contact-item">
+                        <div class="contact-icon">📞</div>
+                        <div class="contact-details">
+                            <h4>Phone</h4>
+                            <p>1-800-MAP-STDS (1-800-627-7837)</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3>Quick Support</h3>
+                    <div class="support-cards">
+                        <div class="support-card" onclick="window.location.href='#'">
+                            <div class="icon">📚</div>
+                            <h4>Documentation</h4>
+                            <p>Browse guides and tutorials</p>
+                        </div>
+                        <div class="support-card" onclick="window.location.href='#'">
+                            <div class="icon">🎥</div>
+                            <h4>Video Tutorials</h4>
+                            <p>Watch how-to videos</p>
+                        </div>
+                        <div class="support-card" onclick="window.location.href='#'">
+                            <div class="icon">❓</div>
+                            <h4>FAQ</h4>
+                            <p>Find quick answers</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+        <script src="js/common.js"></script>
+<script>
+        // Check authentication
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            window.location.href = 'login-enhanced.html';
+        }
+
+        // Pre-fill email from localStorage
+        const userEmail = localStorage.getItem('user_email');
+        if (userEmail) {
+            document.getElementById('email').value = userEmail;
+        }
+
+        // API Configuration
+        const API_BASE_URL = 'https://api.mapmystandards.ai/api';
+
+        async function submitContact(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(event.target);
+            const data = Object.fromEntries(formData);
+            
+            const alertEl = document.getElementById('alertMessage');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/contact`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    alertEl.className = 'alert alert-success';
+                    alertEl.textContent = 'Thank you for your message! We\'ll get back to you within 24 hours.';
+                    alertEl.style.display = 'block';
+                    event.target.reset();
+                    if (userEmail) {
+                        document.getElementById('email').value = userEmail;
+                    }
+                } else {
+                    throw new Error('Failed to send message');
+                }
+            } catch (error) {
+                console.error('Error sending message:', error);
+                alertEl.className = 'alert alert-error';
+                alertEl.textContent = 'Sorry, there was an error sending your message. Please try again or email us directly.';
+                alertEl.style.display = 'block';
+            }
+            
+            // Scroll to top to show alert
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // Hide alert after 5 seconds
+            setTimeout(() => {
+                alertEl.style.display = 'none';
+            }, 5000);
+        }
+
+        function logout() {
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('user_email');
+            window.location.href = 'login-enhanced.html';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About - MapMyStandards</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .nav-header {
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .nav-header h1 {
+            color: #2c5aa0;
+            font-size: 1.5rem;
+            margin: 0;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            color: #555;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+
+        .nav-links a:hover {
+            background: #f0f0f0;
+        }
+
+        .nav-links .active {
+            color: #2c5aa0;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .hero-section {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 3rem;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .hero-section h2 {
+            color: #2c5aa0;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .hero-section p {
+            font-size: 1.25rem;
+            color: #666;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .content-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 2rem;
+        }
+
+        .content-card h3 {
+            color: #333;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .icon {
+            font-size: 1.5rem;
+        }
+
+        .content-card p {
+            color: #666;
+            line-height: 1.8;
+        }
+
+        .mission-section {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .mission-section h3 {
+            color: #2c5aa0;
+            margin-bottom: 1rem;
+        }
+
+        .values-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .value-item {
+            padding: 1rem;
+            background: #f9fafb;
+            border-radius: 8px;
+            border-left: 4px solid #2c5aa0;
+        }
+
+        .value-item h4 {
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .value-item p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .team-section {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 2rem;
+        }
+
+        .team-section h3 {
+            color: #333;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .cta-section {
+            background: #2c5aa0;
+            color: white;
+            border-radius: 10px;
+            padding: 3rem;
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        .cta-section h3 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .cta-section p {
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 2rem;
+            background: white;
+            color: #2c5aa0;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: 600;
+            transition: transform 0.3s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .nav-header {
+                padding: 1rem;
+            }
+            
+            .nav-links {
+                width: 100%;
+                margin-top: 1rem;
+                justify-content: center;
+            }
+            
+            .hero-section {
+                padding: 2rem 1.5rem;
+            }
+            
+            .hero-section h2 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav-header">
+        <h1>About MapMyStandards</h1>
+        <div class="nav-links">
+            <a href="dashboard-enhanced.html">Dashboard</a>
+            <a href="upload-enhanced.html">Upload Evidence</a>
+            <a href="standards-graph-enhanced.html">Standards Graph</a>
+            <a href="compliance-dashboard-enhanced.html">Compliance</a>
+            <a href="reports-enhanced.html">Reports</a>
+            <a href="settings-enhanced.html">Settings</a>
+            <a href="about-enhanced.html" class="active">About</a>
+            <a href="#" onclick="logout()">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="hero-section">
+            <h2>Simplifying Accreditation Compliance</h2>
+            <p>MapMyStandards is the leading AI-powered platform helping higher education institutions streamline their accreditation process and maintain continuous compliance.</p>
+        </div>
+
+        <div class="content-grid">
+            <div class="content-card">
+                <h3><span class="icon">🎯</span> Our Purpose</h3>
+                <p>We believe accreditation should strengthen institutions, not burden them. Our platform transforms the complex accreditation process into a manageable, continuous improvement journey that enhances educational quality.</p>
+            </div>
+            <div class="content-card">
+                <h3><span class="icon">🚀</span> What We Do</h3>
+                <p>MapMyStandards uses advanced AI to analyze your evidence, map it to accreditation standards, and provide real-time insights. We help you stay audit-ready year-round, not just during review cycles.</p>
+            </div>
+            <div class="content-card">
+                <h3><span class="icon">💡</span> Innovation</h3>
+                <p>Our patented StandardsGraph™ technology visualizes complex accreditation requirements as an interactive knowledge graph, making it easy to understand relationships between standards and identify gaps.</p>
+            </div>
+        </div>
+
+        <div class="mission-section">
+            <h3>Our Core Values</h3>
+            <p>These principles guide everything we do at MapMyStandards:</p>
+            
+            <div class="values-list">
+                <div class="value-item">
+                    <h4>Simplicity</h4>
+                    <p>We make complex accreditation processes simple and intuitive.</p>
+                </div>
+                <div class="value-item">
+                    <h4>Accuracy</h4>
+                    <p>Our AI delivers precise mapping with human-level understanding.</p>
+                </div>
+                <div class="value-item">
+                    <h4>Collaboration</h4>
+                    <p>We facilitate teamwork across departments and stakeholders.</p>
+                </div>
+                <div class="value-item">
+                    <h4>Innovation</h4>
+                    <p>We continuously improve our platform based on user feedback.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="team-section">
+            <h3>Built by Educators, for Educators</h3>
+            <p>MapMyStandards was founded by former accreditation professionals who experienced firsthand the challenges of managing compliance. Our team combines deep expertise in higher education accreditation with cutting-edge technology to deliver a solution that truly meets institutional needs.</p>
+            
+            <p style="margin-top: 1.5rem;">We partner with institutions across all major accrediting bodies including HLC, WASC, MSCHE, SACSCOC, NECHE, and NWCCU. Our platform adapts to each accreditor's unique standards while maintaining a consistent, user-friendly experience.</p>
+        </div>
+
+        <div class="cta-section">
+            <h3>Ready to Transform Your Accreditation Process?</h3>
+            <p>Join hundreds of institutions already using MapMyStandards to achieve and maintain accreditation excellence.</p>
+            <a href="contact-enhanced.html" class="btn">Get in Touch</a>
+        </div>
+    </div>
+
+        <script src="js/common.js"></script>
+<script>
+        // Check authentication
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            window.location.href = 'login-enhanced.html';
+        }
+
+        function logout() {
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('user_email');
+            window.location.href = 'login-enhanced.html';
+        }
+    </script>
+</body>
+</html>

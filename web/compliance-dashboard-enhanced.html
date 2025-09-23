@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compliance Dashboard - MapMyStandards</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+
+        .nav-header {
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .nav-header h1 {
+            color: #2c5aa0;
+            font-size: 1.5rem;
+            margin: 0;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            color: #555;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+
+        .nav-links a:hover {
+            background: #f0f0f0;
+        }
+
+        .nav-links .active {
+            color: #2c5aa0;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .metric-card h3 {
+            color: #666;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #2c5aa0;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-change {
+            font-size: 0.875rem;
+            color: #666;
+        }
+
+        .metric-change.positive {
+            color: #22c55e;
+        }
+
+        .metric-change.negative {
+            color: #ef4444;
+        }
+
+        .compliance-table {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .table-header h2 {
+            color: #333;
+            font-size: 1.25rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #f9fafb;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: #666;
+            font-size: 0.875rem;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        tr:hover {
+            background: #f9fafb;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status-compliant {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-partial {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-non-compliant {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #2c5aa0;
+            transition: width 0.3s ease;
+        }
+
+        .action-button {
+            padding: 0.5rem 1rem;
+            background: #2c5aa0;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            margin-right: 0.5rem;
+        }
+
+        .action-button:hover {
+            background: #1e3d6f;
+        }
+
+        .filters {
+            background: white;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filters select, .filters input {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .nav-header {
+                padding: 1rem;
+            }
+            
+            .nav-links {
+                width: 100%;
+                margin-top: 1rem;
+                justify-content: center;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            table {
+                font-size: 0.875rem;
+            }
+            
+            th, td {
+                padding: 0.75rem 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav-header">
+        <h1>Compliance Dashboard</h1>
+        <div class="nav-links">
+            <a href="dashboard-enhanced.html">Dashboard</a>
+            <a href="upload-enhanced.html">Upload Evidence</a>
+            <a href="standards-graph-enhanced.html">Standards Graph</a>
+            <a href="compliance-dashboard-enhanced.html" class="active">Compliance</a>
+            <a href="reports-enhanced.html">Reports</a>
+            <a href="settings-enhanced.html">Settings</a>
+            <a href="#" onclick="logout()">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Metrics Grid -->
+        <div class="dashboard-grid">
+            <div class="metric-card">
+                <h3>Overall Compliance</h3>
+                <div class="metric-value" id="overallCompliance">0%</div>
+                <div class="metric-change positive">+5% from last review</div>
+            </div>
+            <div class="metric-card">
+                <h3>Standards Addressed</h3>
+                <div class="metric-value" id="standardsAddressed">0/0</div>
+                <div class="metric-change">0 pending review</div>
+            </div>
+            <div class="metric-card">
+                <h3>Evidence Documents</h3>
+                <div class="metric-value" id="evidenceCount">0</div>
+                <div class="metric-change">0 uploaded this week</div>
+            </div>
+            <div class="metric-card">
+                <h3>Days to Next Review</h3>
+                <div class="metric-value" id="daysToReview">--</div>
+                <div class="metric-change">Scheduled for 2026</div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+            <select id="accreditorFilter">
+                <option value="">All Accreditors</option>
+            </select>
+            <select id="statusFilter">
+                <option value="">All Status</option>
+                <option value="compliant">Compliant</option>
+                <option value="partial">Partially Compliant</option>
+                <option value="non-compliant">Non-Compliant</option>
+            </select>
+            <input type="text" id="searchFilter" placeholder="Search standards...">
+            <button class="action-button" onclick="applyFilters()">Apply Filters</button>
+            <button class="action-button" onclick="exportCompliance()">Export Report</button>
+        </div>
+
+        <!-- Compliance Table -->
+        <div class="compliance-table">
+            <div class="table-header">
+                <h2>Standards Compliance Status</h2>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Standard</th>
+                        <th>Description</th>
+                        <th>Status</th>
+                        <th>Progress</th>
+                        <th>Evidence</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="complianceTableBody">
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 3rem;">
+                            Loading compliance data...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+        <script src="js/common.js"></script>
+<script>
+        // Check authentication
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            window.location.href = 'login-enhanced.html';
+        }
+
+        // API Configuration
+        const API_BASE_URL = 'https://api.mapmystandards.ai/api';
+
+        // Load compliance data
+        async function loadComplianceData() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/compliance/dashboard`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                updateDashboard(data);
+            } catch (error) {
+                console.error('Error loading compliance data:', error);
+                // Use fallback data for demo
+                loadFallbackData();
+            }
+        }
+
+        function loadFallbackData() {
+            // Demo data when API is not available
+            const demoData = {
+                overall_compliance: 78,
+                standards_total: 45,
+                standards_addressed: 35,
+                evidence_count: 23,
+                days_to_review: 180,
+                standards: [
+                    {
+                        id: 'I.A',
+                        name: 'Mission',
+                        description: 'The institution has a clearly defined mission',
+                        status: 'compliant',
+                        progress: 100,
+                        evidence_count: 3
+                    },
+                    {
+                        id: 'I.B',
+                        name: 'Academic Quality',
+                        description: 'The institution ensures academic quality',
+                        status: 'partial',
+                        progress: 75,
+                        evidence_count: 2
+                    },
+                    {
+                        id: 'II.A',
+                        name: 'Instructional Programs',
+                        description: 'All instructional programs meet standards',
+                        status: 'compliant',
+                        progress: 100,
+                        evidence_count: 5
+                    },
+                    {
+                        id: 'III.A',
+                        name: 'Human Resources',
+                        description: 'The institution employs qualified personnel',
+                        status: 'partial',
+                        progress: 60,
+                        evidence_count: 1
+                    }
+                ]
+            };
+            updateDashboard(demoData);
+        }
+
+        function updateDashboard(data) {
+            // Update metrics
+            document.getElementById('overallCompliance').textContent = `${data.overall_compliance || 0}%`;
+            document.getElementById('standardsAddressed').textContent = 
+                `${data.standards_addressed || 0}/${data.standards_total || 0}`;
+            document.getElementById('evidenceCount').textContent = data.evidence_count || 0;
+            document.getElementById('daysToReview').textContent = data.days_to_review || '--';
+
+            // Update table
+            const tbody = document.getElementById('complianceTableBody');
+            tbody.innerHTML = '';
+
+            if (data.standards && data.standards.length > 0) {
+                data.standards.forEach(standard => {
+                    const row = createComplianceRow(standard);
+                    tbody.appendChild(row);
+                });
+            } else {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 3rem;">
+                            No compliance data available
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        function createComplianceRow(standard) {
+            const tr = document.createElement('tr');
+            
+            const statusClass = {
+                'compliant': 'status-compliant',
+                'partial': 'status-partial',
+                'non-compliant': 'status-non-compliant'
+            }[standard.status] || 'status-partial';
+
+            const statusText = {
+                'compliant': 'Compliant',
+                'partial': 'Partially Compliant',
+                'non-compliant': 'Non-Compliant'
+            }[standard.status] || 'Unknown';
+
+            tr.innerHTML = `
+                <td><strong>${standard.id || standard.name}</strong></td>
+                <td>${standard.description}</td>
+                <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                <td>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${standard.progress || 0}%"></div>
+                    </div>
+                    <small>${standard.progress || 0}%</small>
+                </td>
+                <td>${standard.evidence_count || 0} documents</td>
+                <td>
+                    <button class="action-button" onclick="viewStandard('${standard.id}')">View</button>
+                    <button class="action-button" onclick="addEvidence('${standard.id}')">Add Evidence</button>
+                </td>
+            `;
+            
+            return tr;
+        }
+
+        function viewStandard(standardId) {
+            console.log('View standard:', standardId);
+            // Navigate to standard detail view
+        }
+
+        function addEvidence(standardId) {
+            console.log('Add evidence for standard:', standardId);
+            window.location.href = `upload-enhanced.html?standard=${standardId}`;
+        }
+
+        function applyFilters() {
+            console.log('Applying filters...');
+            // Implement filtering logic
+        }
+
+        function exportCompliance() {
+            console.log('Exporting compliance report...');
+            // Implement export functionality
+        }
+
+        function logout() {
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('user_email');
+            window.location.href = 'login-enhanced.html';
+        }
+
+        // Initialize
+        loadComplianceData();
+    </script>
+</body>
+</html>

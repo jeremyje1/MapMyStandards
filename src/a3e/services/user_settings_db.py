@@ -99,7 +99,8 @@ class UserSettingsDB:
                 user = User(
                     id=user_id or email,
                     email=email,
-                    username=email.split("@")[0] if email else "user"
+                    name=email.split("@")[0] if email else "user",
+                    password_hash="placeholder"  # Will be set on actual registration
                 )
                 db.add(user)
                 

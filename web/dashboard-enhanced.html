@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - MapMyStandards AI</title>
+    <script src="js/common.js"></script>
     <script src="/js/ux.js"></script>
     <script src="/js/onboarding.js?v=20250923"></script>
     <meta name="description" content="Your AI-powered accreditation dashboard. Track compliance, analyze documents, and generate reports.">
@@ -927,7 +928,7 @@
                 // Check authentication
                 const token = this.getAuthToken();
                 if (!token) {
-                    window.location.href = '/login-enhanced.html';
+                    window.location.href = '/login-enhanced-v2.html';
                     return;
                 }
 
@@ -1211,7 +1212,7 @@
             sessionStorage.removeItem('access_token');
             sessionStorage.removeItem('user_data');
             // Don't clear mms:onboarding-complete or a3e_user_email
-            window.location.href = '/login-enhanced.html';
+            window.location.href = '/login-enhanced-v2.html';
         }
 
         // Initialize dashboard when DOM is ready

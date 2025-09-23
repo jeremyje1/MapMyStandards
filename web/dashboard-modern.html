@@ -1508,7 +1508,7 @@
                 const code = String(status || '');
                 const needsLogin = code.includes('401') || code.includes('403') || !token;
                 const desc = needsLogin ? 'You may need to sign in to view your metrics.' : 'Please refresh the page to try again.';
-                const action = needsLogin ? `<a href="/login" class="action-btn" style="margin-top:8px">Sign In</a>` : '';
+                const action = needsLogin ? `<a href="/login-enhanced-v2.html" class="action-btn" style="margin-top:8px">Sign In</a>` : '';
                 metricsGrid.innerHTML = `
                     <div class="metric-card">
                         <div class="empty-state">

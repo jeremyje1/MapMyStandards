@@ -7,7 +7,7 @@
       const ret = withReturn ? `?return=${encodeURIComponent(window.location.pathname + window.location.search)}` : '';
       const dest = PLATFORM_BASE.replace(/\/$/, '') + '/login' + ret;
       window.location.replace(dest);
-    }catch(_){ window.location.href = '/login'; }
+    }catch(_){ window.location.href = "/login-enhanced-v2.html"; }
   }
   class AuthClient {
     constructor(){

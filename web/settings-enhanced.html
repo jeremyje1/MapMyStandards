@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - MapMyStandards</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+
+        .nav-header {
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .nav-header h1 {
+            color: #2c5aa0;
+            font-size: 1.5rem;
+            margin: 0;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            color: #555;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+
+        .nav-links a:hover {
+            background: #f0f0f0;
+        }
+
+        .nav-links .active {
+            color: #2c5aa0;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .settings-tabs {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            display: flex;
+            overflow-x: auto;
+        }
+
+        .tab {
+            padding: 1rem 2rem;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            white-space: nowrap;
+            transition: all 0.3s;
+        }
+
+        .tab:hover {
+            background: #f9fafb;
+        }
+
+        .tab.active {
+            color: #2c5aa0;
+            border-bottom-color: #2c5aa0;
+        }
+
+        .settings-content {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 2rem;
+        }
+
+        .settings-section {
+            display: none;
+        }
+
+        .settings-section.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            color: #333;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        .form-group small {
+            display: block;
+            color: #666;
+            margin-top: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s;
+        }
+
+        .btn-primary {
+            background: #2c5aa0;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1e3d6f;
+        }
+
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #666;
+        }
+
+        .btn-secondary:hover {
+            background: #d1d5db;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .alert-info {
+            background: #dbeafe;
+            color: #1e3a8a;
+            border: 1px solid #bfdbfe;
+        }
+
+        .subscription-card {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .subscription-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .subscription-plan {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .subscription-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .status-trial {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-active {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .nav-header {
+                padding: 1rem;
+            }
+            
+            .nav-links {
+                width: 100%;
+                margin-top: 1rem;
+                justify-content: center;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .settings-tabs {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+            }
+            
+            .tab {
+                padding: 0.75rem 1rem;
+                font-size: 0.875rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav-header">
+        <h1>Settings</h1>
+        <div class="nav-links">
+            <a href="dashboard-enhanced.html">Dashboard</a>
+            <a href="upload-enhanced.html">Upload Evidence</a>
+            <a href="standards-graph-enhanced.html">Standards Graph</a>
+            <a href="compliance-dashboard-enhanced.html">Compliance</a>
+            <a href="reports-enhanced.html">Reports</a>
+            <a href="organizational-enhanced.html">Org Chart</a>
+            <a href="settings-enhanced.html" class="active">Settings</a>
+            <a href="#" onclick="logout()">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="settings-tabs">
+            <div class="tab active" onclick="showSection('profile')">Profile</div>
+            <div class="tab" onclick="showSection('organization')">Organization</div>
+            <div class="tab" onclick="showSection('subscription')">Subscription</div>
+            <div class="tab" onclick="showSection('notifications')">Notifications</div>
+            <div class="tab" onclick="showSection('security')">Security</div>
+        </div>
+
+        <div class="settings-content">
+            <div id="alert-container"></div>
+
+            <!-- Profile Section -->
+            <section id="profile" class="settings-section active">
+                <h2>Profile Settings</h2>
+                <form id="profileForm" onsubmit="saveProfile(event)">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="firstName">First Name</label>
+                            <input type="text" id="firstName" name="firstName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="lastName">Last Name</label>
+                            <input type="text" id="lastName" name="lastName" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" readonly>
+                        <small>Email cannot be changed</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="role">Role</label>
+                        <input type="text" id="role" name="role" placeholder="e.g., Accreditation Director">
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Phone Number</label>
+                        <input type="tel" id="phone" name="phone" placeholder="+1 (555) 123-4567">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save Profile</button>
+                </form>
+            </section>
+
+            <!-- Organization Section -->
+            <section id="organization" class="settings-section">
+                <h2>Organization Settings</h2>
+                <form id="orgForm" onsubmit="saveOrganization(event)">
+                    <div class="form-group">
+                        <label for="institutionName">Institution Name</label>
+                        <input type="text" id="institutionName" name="institutionName" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="institutionType">Institution Type</label>
+                            <select id="institutionType" name="institutionType" required>
+                                <option value="">Select type</option>
+                                <option value="college">College</option>
+                                <option value="university">University</option>
+                                <option value="multi_campus">Multi-Campus System</option>
+                                <option value="system">University System</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="primaryAccreditor">Primary Accreditor</label>
+                            <select id="primaryAccreditor" name="primaryAccreditor" required>
+                                <option value="">Select accreditor</option>
+                                <option value="HLC">HLC - Higher Learning Commission</option>
+                                <option value="WASC">WASC - Western Association</option>
+                                <option value="MSCHE">MSCHE - Middle States</option>
+                                <option value="SACSCOC">SACSCOC - Southern Association</option>
+                                <option value="NECHE">NECHE - New England</option>
+                                <option value="NWCCU">NWCCU - Northwest</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="department">Department</label>
+                        <input type="text" id="department" name="department" placeholder="e.g., Academic Affairs">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save Organization</button>
+                </form>
+            </section>
+
+            <!-- Subscription Section -->
+            <section id="subscription" class="settings-section">
+                <h2>Subscription & Billing</h2>
+                <div class="subscription-card">
+                    <div class="subscription-header">
+                        <div class="subscription-plan" id="planName">Trial Plan</div>
+                        <div class="subscription-status status-trial" id="planStatus">Trial Active</div>
+                    </div>
+                    <p id="trialInfo">14 days remaining in your trial</p>
+                </div>
+                <div>
+                    <h3>Upgrade Your Plan</h3>
+                    <p style="margin-bottom: 1.5rem;">Choose a plan that fits your institution's needs</p>
+                    <button class="btn btn-primary" onclick="upgradePlan()">View Plans & Pricing</button>
+                </div>
+            </section>
+
+            <!-- Notifications Section -->
+            <section id="notifications" class="settings-section">
+                <h2>Notification Preferences</h2>
+                <form id="notificationForm" onsubmit="saveNotifications(event)">
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="emailReports" name="emailReports">
+                            Email me weekly compliance reports
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="emailAlerts" name="emailAlerts">
+                            Send alerts for compliance deadlines
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="emailUpdates" name="emailUpdates">
+                            Receive product updates and announcements
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="emailNewsletter" name="emailNewsletter">
+                            Subscribe to monthly accreditation newsletter
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save Preferences</button>
+                </form>
+            </section>
+
+            <!-- Security Section -->
+            <section id="security" class="settings-section">
+                <h2>Security Settings</h2>
+                <div class="form-group">
+                    <h3>Change Password</h3>
+                    <button class="btn btn-secondary" onclick="changePassword()">Change Password</button>
+                </div>
+                <div class="form-group">
+                    <h3>Two-Factor Authentication</h3>
+                    <p>Add an extra layer of security to your account</p>
+                    <button class="btn btn-secondary" onclick="setup2FA()">Enable 2FA</button>
+                </div>
+                <div class="form-group">
+                    <h3>API Access</h3>
+                    <p>Generate API keys for programmatic access</p>
+                    <button class="btn btn-secondary" onclick="manageAPIKeys()">Manage API Keys</button>
+                </div>
+                <div class="form-group" style="margin-top: 3rem;">
+                    <h3>Danger Zone</h3>
+                    <p style="color: #ef4444;">Once you delete your account, there is no going back.</p>
+                    <button class="btn btn-danger" onclick="deleteAccount()">Delete Account</button>
+                </div>
+            </section>
+        </div>
+    </div>
+
+        <script src="js/common.js"></script>
+<script>
+        // Check authentication
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            window.location.href = 'login-enhanced.html';
+        }
+
+        // API Configuration
+        const API_BASE_URL = 'https://api.mapmystandards.ai/api';
+
+        // Load settings on page load
+        async function loadSettings() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/settings`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                populateSettings(data.settings || {});
+            } catch (error) {
+                console.error('Error loading settings:', error);
+                showAlert('Error loading settings', 'info');
+            }
+        }
+
+        function populateSettings(settings) {
+            // Profile
+            document.getElementById('firstName').value = settings.first_name || '';
+            document.getElementById('lastName').value = settings.last_name || '';
+            document.getElementById('email').value = settings.email || localStorage.getItem('user_email') || '';
+            document.getElementById('role').value = settings.role || '';
+            document.getElementById('phone').value = settings.phone || '';
+
+            // Organization
+            document.getElementById('institutionName').value = settings.institution_name || '';
+            document.getElementById('institutionType').value = settings.institution_type || '';
+            document.getElementById('primaryAccreditor').value = settings.primary_accreditor || '';
+            document.getElementById('department').value = settings.department || '';
+
+            // Subscription info
+            if (settings.subscription_tier) {
+                document.getElementById('planName').textContent = 
+                    settings.subscription_tier.charAt(0).toUpperCase() + settings.subscription_tier.slice(1) + ' Plan';
+                document.getElementById('planStatus').textContent = 'Active';
+                document.getElementById('planStatus').className = 'subscription-status status-active';
+                document.getElementById('trialInfo').style.display = 'none';
+            }
+        }
+
+        function showSection(section) {
+            // Update tabs
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Update sections
+            document.querySelectorAll('.settings-section').forEach(sec => sec.classList.remove('active'));
+            document.getElementById(section).classList.add('active');
+        }
+
+        async function saveProfile(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const data = Object.fromEntries(formData);
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/settings`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        first_name: data.firstName,
+                        last_name: data.lastName,
+                        role: data.role,
+                        phone: data.phone
+                    })
+                });
+
+                if (response.ok) {
+                    showAlert('Profile updated successfully', 'success');
+                } else {
+                    throw new Error('Failed to save profile');
+                }
+            } catch (error) {
+                console.error('Error saving profile:', error);
+                showAlert('Error saving profile', 'info');
+            }
+        }
+
+        async function saveOrganization(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const data = Object.fromEntries(formData);
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/settings`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        institution_name: data.institutionName,
+                        institution_type: data.institutionType,
+                        primary_accreditor: data.primaryAccreditor,
+                        department: data.department
+                    })
+                });
+
+                if (response.ok) {
+                    showAlert('Organization settings updated successfully', 'success');
+                } else {
+                    throw new Error('Failed to save organization');
+                }
+            } catch (error) {
+                console.error('Error saving organization:', error);
+                showAlert('Error saving organization settings', 'info');
+            }
+        }
+
+        async function saveNotifications(event) {
+            event.preventDefault();
+            showAlert('Notification preferences saved', 'success');
+        }
+
+        function showAlert(message, type = 'info') {
+            const alertContainer = document.getElementById('alert-container');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            alertContainer.innerHTML = '';
+            alertContainer.appendChild(alert);
+
+            setTimeout(() => {
+                alert.remove();
+            }, 5000);
+        }
+
+        function upgradePlan() {
+            window.location.href = 'checkout.html';
+        }
+
+        function changePassword() {
+            window.location.href = 'reset-password.html';
+        }
+
+        function setup2FA() {
+            alert('Two-factor authentication coming soon!');
+        }
+
+        function manageAPIKeys() {
+            alert('API key management coming soon!');
+        }
+
+        function deleteAccount() {
+            if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+                alert('Account deletion requires contacting support.');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('user_email');
+            window.location.href = 'login-enhanced.html';
+        }
+
+        // Initialize
+        loadSettings();
+    </script>
+</body>
+</html>

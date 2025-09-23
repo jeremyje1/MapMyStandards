@@ -510,7 +510,7 @@
                     document.getElementById('successState').style.display = 'block';
                     // Redirect to login since we don't have a token
                     setTimeout(() => {
-                        window.location.href = '/login';
+                        window.location.href = "/login-enhanced-v2.html";
                     }, 2000);
                 } else {
                     throw new Error(data.detail || 'Failed to set password. Please try again.');

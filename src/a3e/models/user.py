@@ -27,6 +27,8 @@ class User(Base):
     institution_name = Column(String(255))
     institution_type = Column(String(50))  # college, multi_campus, system, etc.
     role = Column(String(100))  # e.g., "Accreditation Director"
+    primary_accreditor = Column(String(255))  # e.g., "WASC", "HLC", "MSCHE"
+    department = Column(String(255))  # e.g., "Academic Affairs"
     
     # Trial and subscription info
     is_trial = Column(Boolean, default=True)
