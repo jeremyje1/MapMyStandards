@@ -1844,34 +1844,75 @@ async def evidence_upload_simple(
     current_user: Dict[str, Any] = Depends(get_current_user_simple),
 ):
     try:
+        # Get storage service
+        storage = get_storage_service()
         saved: List[Dict[str, Any]] = []
+        
+        # Get user info for file key generation
+        user_id = current_user.get("sub", current_user.get("user_id", "unknown"))
+        org_id = current_user.get("org_id", "default")
+        
         for f in files:
             name = f.filename or "upload.bin"
-            # generate safe unique name
-            ext = ""
-            if "." in name:
-                ext = "." + name.rsplit(".", 1)[1]
-            safe_name = datetime.utcnow().strftime("%Y%m%d_%H%M%S") + "_" + secrets.token_hex(8) + ext
-            path = SIMPLE_UPLOADS_DIR / safe_name
             content = await f.read()
-            sha256 = hashlib.sha256(content).hexdigest()
-            with open(path, "wb") as out:
-                out.write(content)
-            # record minimal mapping info for metrics
-            _record_user_upload(current_user, name, standard_ids=[], doc_type=doc_type, trust_score=None, saved_path=str(path), fingerprint=sha256[:16])
-            saved.append({
-                "original": name,
-                "saved_as": str(path),
-                "size": len(content),
-                "hash": sha256,
-                "status": "queued",
-            })
+            
+            # Check if file has content
+            if not content or len(content) == 0:
+                logger.warning(f"Empty file uploaded: {name}")
+                continue
+                
+            # Generate storage key
+            file_key = storage.generate_file_key(org_id, user_id, name)
+            
+            # Determine content type
+            content_type = f.content_type or "application/octet-stream"
+            
+            # Save to storage (S3 or local)
+            result = await storage.save_file(
+                file_content=content,
+                file_key=file_key,
+                content_type=content_type,
+                metadata={
+                    "original_filename": name,
+                    "user_id": user_id,
+                    "org_id": org_id,
+                    "doc_type": doc_type or "",
+                    "uploaded_at": datetime.utcnow().isoformat()
+                }
+            )
+            
+            if result.get("success"):
+                # Record upload for metrics
+                _record_user_upload(
+                    current_user, 
+                    name, 
+                    standard_ids=[], 
+                    doc_type=doc_type, 
+                    trust_score=None, 
+                    saved_path=file_key,  # Use storage key instead of local path
+                    fingerprint=result.get("hash", "")[:16]
+                )
+                
+                saved.append({
+                    "original": name,
+                    "saved_as": file_key,
+                    "size": len(content),
+                    "hash": result.get("hash", ""),
+                    "status": "uploaded",
+                    "storage_type": result.get("storage_type", "unknown")
+                })
+            else:
+                logger.error(f"Failed to save file {name}")
+                
+        if not saved:
+            raise HTTPException(status_code=400, detail="No valid files uploaded")
+            
         return {"success": True, "files": saved}
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Simple evidence upload error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to upload evidence")
+        raise HTTPException(status_code=500, detail=f"Failed to upload evidence: {str(e)}")
 
 
 @router.get("/evidence/upload/debug", include_in_schema=False)
