@@ -501,9 +501,9 @@
                     <span class="logo-text">MapMyStandards</span>
                 </a>
                 <nav class="nav-links">
-                    <a href="/dashboard" class="nav-link">Dashboard</a>
-                    <a href="/standards-selection-wizard" class="nav-link">Standards</a>
-                    <a href="/upload" class="nav-link active">Upload</a>
+                    <a href="/dashboard-enhanced.html" class="nav-link">Dashboard</a>
+                    <a href="/dashboard-enhanced.html" class="nav-link">Evidence Mapping</a>
+                    <a href="/upload-enhanced.html" class="nav-link active">Upload</a>
                     <a href="/report-generation" class="nav-link">Reports</a>
                 </nav>
                 <div class="user-menu">
@@ -527,6 +527,16 @@
     <!-- Main Content -->
     <main>
         <div class="container">
+            <!-- Instructions -->
+            <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 12px; padding: 20px; margin-bottom: 32px;">
+                <h3 style="color: #166534; margin: 0 0 12px 0; font-size: 1.25rem; font-weight: 600;">📋 Quick Start Guide</h3>
+                <ol style="color: #166534; margin: 0; padding-left: 24px; font-size: 1rem; line-height: 1.6;">
+                    <li style="margin-bottom: 8px;">Upload your evidence documents below (syllabi, lesson plans, assessments, etc.)</li>
+                    <li style="margin-bottom: 8px;">After upload completes, you'll see a confirmation message</li>
+                    <li>Click "Go to Dashboard" to continue mapping your evidence to standards</li>
+                </ol>
+            </div>
+            
             <!-- Drop Zone -->
             <div class="drop-zone-container">
                 <div class="drop-zone" id="dropZone">
@@ -635,9 +645,9 @@
             <!-- What's Next -->
             <div class="whats-next" id="whatsNext" style="display: none;">
                 <h2 class="whats-next-title">Great! Your files are being processed</h2>
-                <p class="whats-next-description">Next step: Select the standards you want to map against</p>
-                <a href="/standards-selection-wizard" class="whats-next-btn">
-                    Select Standards →
+                <p class="whats-next-description">Next step: Return to your dashboard to view and map your evidence</p>
+                <a href="/dashboard-enhanced.html" class="whats-next-btn">
+                    Go to Dashboard →
                 </a>
             </div>
         </div>
@@ -656,6 +666,13 @@
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
+            // Check authentication first
+            const token = getAuthToken();
+            if (!token) {
+                window.location.href = '/login-enhanced.html';
+                return;
+            }
+            
             setupDropZone();
             loadRecentUploads();
             updateUserInfo();
@@ -738,7 +755,7 @@
                 }, 500);
 
                 // Upload file
-                const response = await fetch(`${API_BASE}/api/user/intelligence-simple/upload`, {
+                const response = await fetch(`${API_BASE}/api/user/intelligence-simple/evidence/upload`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${getAuthToken()}`
@@ -753,6 +770,16 @@
                     uploadedFiles.push(result);
                     updateProgress(uploadId, 100);
                     showSuccess(`${file.name} uploaded successfully!`);
+                    
+                    // Store uploaded files info for next page
+                    const existingUploads = JSON.parse(sessionStorage.getItem('uploadedFiles') || '[]');
+                    existingUploads.push({
+                        filename: file.name,
+                        fileId: result.files?.[0]?.saved_as || result.fileId,
+                        hash: result.files?.[0]?.hash || result.hash,
+                        uploadDate: new Date().toISOString()
+                    });
+                    sessionStorage.setItem('uploadedFiles', JSON.stringify(existingUploads));
                     
                     // Show what's next section
                     document.getElementById('whatsNext').style.display = 'block';
@@ -852,23 +879,66 @@
         }
 
         async function loadRecentUploads() {
-            // This would typically fetch from the API
-            // For now, show uploaded files from current session
             const container = document.getElementById('recentUploadsList');
             
-            if (uploadedFiles.length > 0) {
-                container.innerHTML = uploadedFiles.map(file => `
-                    <div class="upload-item">
-                        <div class="upload-item-icon">${getFileIcon(file.name)}</div>
-                        <div class="upload-item-info">
-                            <div class="upload-item-name">${file.name}</div>
-                            <div class="upload-item-size">Uploaded just now</div>
+            try {
+                // Fetch recent uploads from API
+                const response = await fetch(`${API_BASE}/api/user/intelligence-simple/uploads`, {
+                    headers: {
+                        'Authorization': `Bearer ${getAuthToken()}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const uploads = data.uploads || [];
+                    
+                    if (uploads.length > 0) {
+                        container.innerHTML = uploads.slice(0, 5).map(upload => `
+                            <div class="upload-item">
+                                <div class="upload-item-icon">${getFileIcon(upload.filename || upload.original)}</div>
+                                <div class="upload-item-info">
+                                    <div class="upload-item-name">${upload.filename || upload.original}</div>
+                                    <div class="upload-item-size">${upload.upload_date ? new Date(upload.upload_date).toLocaleDateString() : 'Recently uploaded'}</div>
+                                </div>
+                                <div class="upload-item-status">
+                                    <span class="status-icon">✅</span>
+                                </div>
+                            </div>
+                        `).join('');
+                    } else if (uploadedFiles.length > 0) {
+                        // Fallback to session uploads
+                        container.innerHTML = uploadedFiles.map(file => `
+                            <div class="upload-item">
+                                <div class="upload-item-icon">${getFileIcon(file.name)}</div>
+                                <div class="upload-item-info">
+                                    <div class="upload-item-name">${file.name}</div>
+                                    <div class="upload-item-size">Uploaded just now</div>
+                                </div>
+                                <div class="upload-item-status">
+                                    <span class="status-icon">✅</span>
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading recent uploads:', error);
+                // Show session uploads as fallback
+                if (uploadedFiles.length > 0) {
+                    container.innerHTML = uploadedFiles.map(file => `
+                        <div class="upload-item">
+                            <div class="upload-item-icon">${getFileIcon(file.name)}</div>
+                            <div class="upload-item-info">
+                                <div class="upload-item-name">${file.name}</div>
+                                <div class="upload-item-size">Uploaded just now</div>
+                            </div>
+                            <div class="upload-item-status">
+                                <span class="status-icon">✅</span>
+                            </div>
                         </div>
-                        <div class="upload-item-status">
-                            <span class="status-icon">✅</span>
-                        </div>
-                    </div>
-                `).join('');
+                    `).join('');
+                }
             }
         }
 
@@ -898,9 +968,13 @@
         }
 
         function logout() {
-            localStorage.clear();
-            sessionStorage.clear();
-            window.location.href = '/login';
+            // Only clear auth-related items, preserve onboarding status
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('user_data');
+            sessionStorage.removeItem('access_token');
+            sessionStorage.removeItem('user_data');
+            // Don't clear mms:onboarding-complete
+            window.location.href = '/login-enhanced.html';
         }
 
         // Update local storage to track upload

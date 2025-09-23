@@ -19,6 +19,11 @@ import jwt
 from ...services.standards_graph import standards_graph
 from ...services.standards_loader import get_corpus_metadata
 from ...services.evidence_mapper import evidence_mapper, EvidenceDocument
+try:
+    from ...services.evidence_mapper_enhanced import enhanced_evidence_mapper
+    USE_ENHANCED_MAPPER = True
+except ImportError:
+    USE_ENHANCED_MAPPER = False
 from ...services.evidence_trust import evidence_trust_scorer, EvidenceType, SourceSystem
 from ...services.gap_risk_predictor import gap_risk_predictor
 from ...services.risk_explainer import risk_explainer, StandardEvidenceSnapshot
@@ -438,7 +443,25 @@ async def _analyze_evidence_from_bytes(
             upload_date=datetime.utcnow(),
         )
 
-        mappings = evidence_mapper.map_evidence(doc)
+        # Use enhanced mapper if available and OpenAI key is configured
+        if USE_ENHANCED_MAPPER and settings.openai_api_key:
+            try:
+                # Initialize enhanced mapper if needed
+                if not enhanced_evidence_mapper._initialized:
+                    await enhanced_evidence_mapper.initialize()
+                
+                # Use AI-enhanced mapping
+                mappings = await enhanced_evidence_mapper.map_evidence_with_ai(
+                    doc, 
+                    num_candidates=20, 
+                    final_top_k=10,
+                    use_llm=True
+                )
+            except Exception as e:
+                logger.warning(f"Enhanced mapping failed, falling back to TF-IDF: {e}")
+                mappings = evidence_mapper.map_evidence(doc)
+        else:
+            mappings = evidence_mapper.map_evidence(doc)
         top_conf = mappings[0].confidence if mappings else 0.6
 
         trust = evidence_trust_scorer.calculate_trust_score(
@@ -2043,7 +2066,25 @@ async def analyze_evidence(
             upload_date=datetime.utcnow(),
         )
 
-        mappings = evidence_mapper.map_evidence(doc)
+        # Use enhanced mapper if available and OpenAI key is configured
+        if USE_ENHANCED_MAPPER and settings.openai_api_key:
+            try:
+                # Initialize enhanced mapper if needed
+                if not enhanced_evidence_mapper._initialized:
+                    await enhanced_evidence_mapper.initialize()
+                
+                # Use AI-enhanced mapping
+                mappings = await enhanced_evidence_mapper.map_evidence_with_ai(
+                    doc, 
+                    num_candidates=20, 
+                    final_top_k=10,
+                    use_llm=True
+                )
+            except Exception as e:
+                logger.warning(f"Enhanced mapping failed, falling back to TF-IDF: {e}")
+                mappings = evidence_mapper.map_evidence(doc)
+        else:
+            mappings = evidence_mapper.map_evidence(doc)
         top_conf = mappings[0].confidence if mappings else 0.6
 
         trust = evidence_trust_scorer.calculate_trust_score(
@@ -3223,3 +3264,49 @@ async def generate_evidence_report_csv(
     except Exception as e:
         logger.error(f"CSV report generation error: {e}")
         raise HTTPException(status_code=500, detail="Failed to generate CSV report")
+
+
+# ------------------------------
+# AI Integration Test Endpoints
+# ------------------------------
+@router.get("/test/ai-status")
+async def test_ai_status(
+    current_user: Dict[str, Any] = Depends(get_current_user_simple),
+):
+    """Test endpoint to verify AI/OpenAI integration status"""
+    status = {
+        "enhanced_mapper_available": USE_ENHANCED_MAPPER,
+        "openai_configured": bool(settings.openai_api_key),
+        "openai_key_prefix": settings.openai_api_key[:8] + "..." if settings.openai_api_key else None,
+    }
+    
+    if USE_ENHANCED_MAPPER and settings.openai_api_key:
+        try:
+            if not enhanced_evidence_mapper._initialized:
+                await enhanced_evidence_mapper.initialize()
+            
+            # Test with a simple prompt
+            test_doc = EvidenceDocument(
+                doc_id="test.txt",
+                text="This document describes our student assessment procedures and learning outcomes measurement.",
+                metadata={},
+                doc_type="policy",
+                source_system="manual",
+                upload_date=datetime.utcnow()
+            )
+            
+            mappings = await enhanced_evidence_mapper.map_evidence_with_ai(
+                test_doc,
+                num_candidates=5,
+                final_top_k=3,
+                use_llm=True
+            )
+            
+            status["ai_test_success"] = True
+            status["sample_mappings"] = len(mappings)
+            status["llm_service_initialized"] = enhanced_evidence_mapper.llm_service is not None
+        except Exception as e:
+            status["ai_test_success"] = False
+            status["ai_test_error"] = str(e)
+    
+    return status

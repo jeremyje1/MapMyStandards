@@ -167,10 +167,42 @@
             // Check for SSO callback
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.has('sso_success')) {
-                showSuccess('Login successful! Redirecting to dashboard...');
-                setTimeout(() => {
-                    window.location.href = '/dashboard-enhanced.html';
-                }, 1500);
+                showSuccess('Login successful! Checking account setup...');
+                
+                // Check onboarding status for SSO users too
+                try {
+                    const settingsResponse = await fetch(`${window.mmsAPI.getBaseUrl()}/api/user/intelligence-simple/settings`, {
+                        credentials: 'include'
+                    });
+                    
+                    if (settingsResponse.ok) {
+                        const settings = await settingsResponse.json();
+                        const hasCompletedOnboarding = settings.organization || 
+                                                       settings.institution_name || 
+                                                       settings.primary_accreditor;
+                        
+                        if (hasCompletedOnboarding) {
+                            showSuccess('Login successful! Redirecting to dashboard...');
+                            setTimeout(() => {
+                                window.location.href = '/dashboard-enhanced.html';
+                            }, 1500);
+                        } else {
+                            showSuccess('Login successful! Let\'s set up your account...');
+                            setTimeout(() => {
+                                window.location.href = '/onboarding';
+                            }, 1500);
+                        }
+                    } else {
+                        setTimeout(() => {
+                            window.location.href = '/onboarding';
+                        }, 1500);
+                    }
+                } catch (error) {
+                    console.error('Failed to check onboarding status:', error);
+                    setTimeout(() => {
+                        window.location.href = '/dashboard-enhanced.html';
+                    }, 1500);
+                }
             }
         });
 
@@ -252,11 +284,57 @@
                     if (data.requires_2fa) {
                         showTwoFactorModal();
                     } else {
-                        // Login successful
-                        showSuccess('Login successful! Redirecting to dashboard...');
-                        setTimeout(() => {
-                            window.location.href = '/dashboard-enhanced.html';
-                        }, 1500);
+                        // Login successful - check onboarding status
+                        showSuccess('Login successful! Checking account setup...');
+                        
+                        // Store auth token if provided
+                        if (data.access_token) {
+                            localStorage.setItem('access_token', data.access_token);
+                        }
+                        
+                        // Check if user has completed onboarding
+                        try {
+                            const settingsResponse = await fetch(`${window.mmsAPI.getBaseUrl()}/api/user/intelligence-simple/settings`, {
+                                headers: {
+                                    'Authorization': `Bearer ${data.access_token || localStorage.getItem('access_token')}`
+                                },
+                                credentials: 'include'
+                            });
+                            
+                            if (settingsResponse.ok) {
+                                const settings = await settingsResponse.json();
+                                
+                                // Check if onboarding is complete (has organization or primary_accreditor set)
+                                const hasCompletedOnboarding = settings.organization || 
+                                                               settings.institution_name || 
+                                                               settings.primary_accreditor;
+                                
+                                if (hasCompletedOnboarding) {
+                                    // Mark onboarding as complete
+                                    localStorage.setItem('mms:onboarding-complete', '1');
+                                    showSuccess('Login successful! Redirecting to dashboard...');
+                                    setTimeout(() => {
+                                        window.location.href = '/dashboard-enhanced.html';
+                                    }, 1500);
+                                } else {
+                                    showSuccess('Login successful! Let\'s set up your account...');
+                                    setTimeout(() => {
+                                        window.location.href = '/onboarding';
+                                    }, 1500);
+                                }
+                            } else {
+                                // If settings check fails, go to onboarding to be safe
+                                setTimeout(() => {
+                                    window.location.href = '/onboarding';
+                                }, 1500);
+                            }
+                        } catch (error) {
+                            console.error('Failed to check onboarding status:', error);
+                            // On error, proceed to dashboard
+                            setTimeout(() => {
+                                window.location.href = '/dashboard-enhanced.html';
+                            }, 1500);
+                        }
                     }
                 } else {
                     const error = await response.json();

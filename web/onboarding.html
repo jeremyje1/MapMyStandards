@@ -652,10 +652,10 @@
         successMsg.style.display='block';
         fillEl.style.width='100%'; pctEl.textContent='100%';
         // Redirect to main dashboard (not ai-dashboard)
-        setTimeout(()=>{ window.location.href='https://platform.mapmystandards.ai/dashboard'; }, 1500);
+        setTimeout(()=>{ window.location.href='https://platform.mapmystandards.ai/dashboard-enhanced.html'; }, 1500);
       }
     });
-  skipBtn.addEventListener('click', async ()=>{ try{ collectStep(); await persist(true); localStorage.setItem('mms:onboarding-complete','1'); }catch(_){} window.location.href='https://platform.mapmystandards.ai/dashboard'; });
+  skipBtn.addEventListener('click', async ()=>{ try{ collectStep(); await persist(true); localStorage.setItem('mms:onboarding-complete','1'); }catch(_){} window.location.href='https://platform.mapmystandards.ai/dashboard-enhanced.html'; });
 
     // Initialize
     async function loadExisting(){
@@ -765,7 +765,7 @@
         <div style="font-weight: 500; margin-bottom: 8px;">✅ Your onboarding appears to be complete!</div>
         <div style="margin-bottom: 12px; opacity: 0.9;">Would you like to update your information or continue to the dashboard?</div>
         <div style="display: flex; gap: 12px;">
-          <button onclick="window.location.href='https://platform.mapmystandards.ai/dashboard'" style="background: #134e4a; color: #d1fae5; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: .85rem;">Go to Dashboard →</button>
+          <button onclick="window.location.href='https://platform.mapmystandards.ai/dashboard-enhanced.html'" style="background: #134e4a; color: #d1fae5; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: .85rem;">Go to Dashboard →</button>
           <button onclick="this.parentElement.parentElement.style.display='none'" style="background: transparent; color: #5eead4; padding: 8px 16px; border: 1px solid #134e4a; border-radius: 6px; cursor: pointer; font-size: .85rem;">Update Information</button>
         </div>
       `;

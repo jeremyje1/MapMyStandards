@@ -685,10 +685,10 @@
                     <span class="logo-text">MapMyStandards</span>
                 </a>
                 <nav class="nav-links">
-                    <a href="/dashboard" class="nav-link active">Dashboard</a>
-                    <a href="/standards-selection-wizard" class="nav-link">Standards</a>
-                    <a href="/upload" class="nav-link">Upload</a>
-                    <a href="/report-generation" class="nav-link">Reports</a>
+                    <a href="/dashboard-enhanced.html" class="nav-link active">Dashboard</a>
+                    <a href="/dashboard-enhanced.html#evidence" class="nav-link">Evidence Mapping</a>
+                    <a href="/upload-enhanced.html" class="nav-link">Upload</a>
+                    <a href="/dashboard-enhanced.html#reports" class="nav-link">Reports</a>
                     <a href="/help" class="nav-link">Help</a>
                 </nav>
                 <div class="user-menu">
@@ -927,7 +927,7 @@
                 // Check authentication
                 const token = this.getAuthToken();
                 if (!token) {
-                    window.location.href = '/login';
+                    window.location.href = '/login-enhanced.html';
                     return;
                 }
 
@@ -1205,9 +1205,13 @@
         }
 
         function logout() {
-            localStorage.clear();
-            sessionStorage.clear();
-            window.location.href = '/login';
+            // Only clear auth-related items, preserve onboarding status
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('user_data');
+            sessionStorage.removeItem('access_token');
+            sessionStorage.removeItem('user_data');
+            // Don't clear mms:onboarding-complete
+            window.location.href = '/login-enhanced.html';
         }
 
         // Initialize dashboard when DOM is ready
