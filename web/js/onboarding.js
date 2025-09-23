@@ -56,8 +56,9 @@
         const j = await res.json();
         return (j && j.organization !== undefined) ? j : (j && j.settings) || j || {};
       }
-    }catch(_){ /* fall back to local */ }
-    try{ return JSON.parse(localStorage.getItem('mms:onboarding')||'{}') || {}; }catch(_){ return {}; }
+    }catch(_){ /* return empty if can't reach backend */ }
+    // Don't fall back to localStorage - only use backend data
+    return {};
   }
 
   async function saveSettings(values){
@@ -69,17 +70,31 @@
         if (res.ok){ const j = await res.json(); saved = (j && j.settings) || values; }
       }catch(_){ /* fall back to local only */ }
     }
-    try{ localStorage.setItem('mms:onboarding', JSON.stringify(saved)); }catch(_){}
+    // Don't store in localStorage to avoid cross-device issues
+    // Backend storage is the source of truth
     window.dispatchEvent(new CustomEvent('mms:onboarding-updated', { detail: saved }));
     return saved;
   }
 
   function shouldPrompt(settings){
-    try { if (localStorage.getItem('mms:onboarding-complete') === '1') return false; } catch(_) {}
+    // First check if backend has marked onboarding as complete
+    if (settings && settings.onboarding_completed === true) return false;
+    
+    // Otherwise check if they have filled in required fields
     if (!settings) return true;
     const org = settings.organization || settings.institution_name || '';
     const accr = settings.primary_accreditor || '';
-    return !(org && accr);
+    
+    // If they have both org and accreditor, consider it complete
+    const isComplete = !!(org && accr);
+    
+    // If complete but backend doesn't know, update it
+    if (isComplete && !settings.onboarding_completed) {
+      settings.onboarding_completed = true;
+      saveSettings(settings);
+    }
+    
+    return !isComplete;
   }
 
   function closeModal(){
@@ -180,6 +195,12 @@
         primary_accreditor: accr.value.trim(),
         institution_size: enroll.value.trim()
       };
+      
+      // Mark onboarding as complete if they've filled required fields
+      if (values.organization && values.primary_accreditor) {
+        values.onboarding_completed = true;
+      }
+      
       await saveSettings(values);
       closeModal();
     });
