@@ -1856,6 +1856,108 @@ async def evidence_upload_simple_debug():
     return {"ok": True, "path": "/api/user/intelligence-simple/evidence/upload"}
 
 
+@router.get("/evidence/list")
+async def list_evidence(
+    current_user: Dict[str, Any] = Depends(get_current_user_simple),
+):
+    """
+    List all uploaded evidence documents for the current user
+    """
+    try:
+        uploads = _get_user_uploads(current_user)
+        documents = uploads.get("documents", [])
+        
+        # Enrich with file metadata if available
+        enriched_docs = []
+        for doc in documents:
+            enriched = dict(doc)
+            # Add computed fields
+            enriched["id"] = enriched.get("fingerprint", hashlib.md5(doc["filename"].encode()).hexdigest()[:8])
+            enriched["status"] = "processed" if enriched.get("standards_mapped") else "pending"
+            enriched["mapped_count"] = len(enriched.get("standards_mapped", []))
+            
+            # Try to get file size if path exists
+            if enriched.get("saved_path") and os.path.exists(enriched["saved_path"]):
+                try:
+                    enriched["size"] = os.path.getsize(enriched["saved_path"])
+                except:
+                    enriched["size"] = 0
+            
+            enriched_docs.append(enriched)
+        
+        return {
+            "success": True,
+            "evidence": enriched_docs,
+            "total": len(enriched_docs),
+            "unique_standards": uploads.get("unique_standards", [])
+        }
+    except Exception as e:
+        logger.error(f"Error listing evidence: {e}")
+        raise HTTPException(status_code=500, detail="Failed to list evidence")
+
+
+@router.get("/uploads")
+async def list_uploads(
+    current_user: Dict[str, Any] = Depends(get_current_user_simple),
+):
+    """
+    List all uploads (alias for evidence/list for compatibility)
+    """
+    return await list_evidence(current_user)
+
+
+@router.get("/standards")
+async def list_user_standards(
+    current_user: Dict[str, Any] = Depends(get_current_user_simple),
+):
+    """
+    List standards available to the user based on their settings
+    """
+    try:
+        settings = _merge_claims_with_settings(current_user)
+        primary_accreditor = settings.get("primary_accreditor", "HLC")
+        
+        # Get standards for the user's primary accreditor
+        standards = standards_graph.get_accreditor_standards(primary_accreditor)
+        
+        # Apply display policy
+        mode = _get_standards_display_mode(current_user)
+        standards_list = []
+        
+        for std in standards:
+            std_dict = {
+                "id": std.id,
+                "number": std.number,
+                "description": std.description if mode == "full" else "",
+                "level": std.level,
+                "parent_id": std.parent_id,
+                "category": std.category,
+                "accreditor": primary_accreditor
+            }
+            standards_list.append(std_dict)
+        
+        return {
+            "success": True,
+            "standards": standards_list,
+            "total": len(standards_list),
+            "accreditor": primary_accreditor,
+            "display_mode": mode
+        }
+    except Exception as e:
+        logger.error(f"Error listing standards: {e}")
+        raise HTTPException(status_code=500, detail="Failed to list standards")
+
+
+@router.get("/metrics/dashboard")
+async def get_dashboard_metrics_alias(
+    current_user: Dict[str, Any] = Depends(get_current_user_simple),
+):
+    """
+    Alias for /dashboard/metrics to match expected URL pattern
+    """
+    return await get_dashboard_metrics_simple(current_user)
+
+
 # ------------------------------
 # Evidence analysis
 # ------------------------------
