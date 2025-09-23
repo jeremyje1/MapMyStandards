@@ -341,11 +341,11 @@ except ImportError as e:
     _documents_simple_import_exception = e
 
 try:
-    from .api.routes.standards import router as standards_router
-    standards_router_available = True
+    from .api.routes.standards_simple import router as standards_simple_router
+    standards_simple_router_available = True
 except ImportError as e:
-    standards_router_available = False
-    _standards_import_exception = e
+    standards_simple_router_available = False
+    _standards_simple_import_exception = e
 
 # Logging already configured at top of file
 
@@ -980,11 +980,11 @@ if documents_simple_router_available:
 else:
     logger.warning("⚠️ Documents simple router not available")
 
-if standards_router_available:
-    app.include_router(standards_router)
-    logger.info("✅ Standards router loaded")
+if standards_simple_router_available:
+    app.include_router(standards_simple_router)
+    logger.info("✅ Standards simple router loaded")
 else:
-    logger.warning("⚠️ Standards router not available")
+    logger.warning("⚠️ Standards simple router not available")
 
 # Mount admin vector router (requires ADMIN_API_TOKEN)
 if 'vector_admin_router_available' in globals() and vector_admin_router_available:

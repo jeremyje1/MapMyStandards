@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 from typing import List
-from src.a3e.core.database import get_db
-from src.a3e.core.auth import get_current_user
-from src.a3e.models.user import User
+from ...core.database import get_db
+from ..dependencies import get_current_user
+from ...models.user import User
 import uuid
 from datetime import datetime
 
