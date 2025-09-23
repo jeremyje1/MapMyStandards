@@ -1,0 +1,21 @@
+MapMyStandards.ai Test Account
+==============================
+
+🌐 Platform: https://platform.mapmystandards.ai
+🔐 Login Page: https://platform.mapmystandards.ai/login
+
+📧 Email: testuser_20250923091900@mapmystandards.ai
+🔑 Password: TestUser2025!
+
+📅 Valid for: 30 days
+💼 Access Level: Professional (All Features)
+
+Quick Start:
+-----------
+1. Login with the credentials above
+2. Upload some test documents
+3. Browse and select standards
+4. Map evidence to standards
+5. Generate reports
+
+Please send feedback to: feedback@mapmystandards.ai

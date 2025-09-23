@@ -1,0 +1,82 @@
+MapMyStandards.ai Test Account for Feedback
+===========================================
+
+Welcome! This test account has been created specifically for you to 
+test all features and provide feedback.
+
+LOGIN CREDENTIALS
+-----------------
+🌐 Website: https://platform.mapmystandards.ai
+📧 Email: testuser_20250923091900@mapmystandards.ai
+🔑 Password: TestUser2025!
+
+Direct login link: https://platform.mapmystandards.ai/login
+
+ACCOUNT DETAILS
+---------------
+- Valid for: 30 days (expires Oct 23, 2025)
+- Access Level: Professional (all features unlocked)
+- Institution: Test University
+- Department: Quality Assurance
+
+FEATURES TO TEST
+----------------
+1. EVIDENCE MANAGEMENT
+   - Upload PDFs and Word documents
+   - View the Evidence Library
+   - Check if files appear after upload
+
+2. STANDARDS BROWSER
+   - Search for accreditation standards
+   - Filter by different accreditors (HLC, SACSCOC, etc.)
+   - Select multiple standards
+   - Click on metric cards to navigate
+
+3. EVIDENCE MAPPING
+   - After selecting standards, click "Map Evidence" button
+   - Choose evidence files to map
+   - Save the mappings
+
+4. REPORTS & ANALYTICS
+   - Generate compliance reports
+   - View gap analysis
+   - Check the compliance dashboard
+
+5. ADVANCED FEATURES
+   - CrosswalkX: Map standards between accreditors
+   - StandardsGraph: Visualize standards relationships
+   - Risk analysis and scoring
+
+KNOWN ISSUES WE'RE WORKING ON
+-----------------------------
+- Some evidence analysis may stay in "queued" state
+- Report generation requires mapped evidence first
+- The system works best with PDF documents under 10MB
+
+PROVIDING FEEDBACK
+------------------
+Please share your experience! We're particularly interested in:
+
+1. What was easy/intuitive to use?
+2. What was confusing or hard to find?
+3. Any errors or broken features?
+4. What features would you like to see added?
+5. Overall impression and suggestions
+
+Send feedback to: feedback@mapmystandards.ai
+Or text/call Jeremy at the number he provided
+
+TIPS FOR TESTING
+----------------
+- Start by uploading 2-3 PDF documents
+- Select 3-5 standards to test mapping
+- Try different browsers if something doesn't work
+- Take screenshots of any errors
+- Note which features feel most/least useful
+
+Thank you for helping test MapMyStandards.ai! Your feedback 
+will directly influence how we improve the platform.
+
+---
+Technical Support: If you can't log in or have issues, 
+contact Jeremy directly.

@@ -86,7 +86,7 @@ async def login_page():
 async def dashboard_page():
     """Dashboard page placeholder redirect until unified dashboard available."""
     try:
-        return serve_html_file("dashboard.html")
+        return serve_html_file("dashboard-enhanced.html")
     except HTTPException:
         return RedirectResponse(url="/upload")
 

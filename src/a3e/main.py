@@ -2113,12 +2113,17 @@ if WEB_DIR.exists():
         
         # If user has authentication, serve the actual dashboard
         if auth_token or trial_id:
-            # Try to serve dashboard-fixed.html (the actual dashboard) first
+            # Try to serve dashboard-enhanced.html (the enhanced dashboard) first
+            dashboard_enhanced_file = WEB_DIR / "dashboard-enhanced.html"
+            if dashboard_enhanced_file.exists():
+                return FileResponse(str(dashboard_enhanced_file))
+            
+            # Try to serve dashboard-fixed.html (the actual dashboard) as fallback
             dashboard_fixed_file = WEB_DIR / "dashboard-fixed.html"
             if dashboard_fixed_file.exists():
                 return FileResponse(str(dashboard_fixed_file))
             
-            # Fallback to regular dashboard
+            # Final fallback to regular dashboard
             dashboard_file = WEB_DIR / "dashboard-page.html"
             if dashboard_file.exists():
                 return FileResponse(str(dashboard_file))
@@ -2271,10 +2276,48 @@ if WEB_DIR.exists():
     
     @app.get("/upload", response_class=FileResponse, include_in_schema=False)
     async def upload_page():  # noqa: D401
-        """Serve upload page (modern)."""
+        """Serve upload page (enhanced)."""
+        enhanced = WEB_DIR / "upload-enhanced.html"
         modern = WEB_DIR / "upload-modern.html"
         legacy = WEB_DIR / "upload.html"
-        return FileResponse(str(modern if modern.exists() else legacy))
+        if enhanced.exists():
+            return FileResponse(str(enhanced))
+        elif modern.exists():
+            return FileResponse(str(modern))
+        else:
+            return FileResponse(str(legacy))
+    
+    @app.get("/upload-modern", response_class=RedirectResponse, include_in_schema=False)
+    async def upload_modern_redirect():  # noqa: D401
+        """Redirect upload-modern to enhanced upload page."""
+        return RedirectResponse(url="/upload", status_code=302)
+    
+    @app.get("/standards-selection-wizard", response_class=FileResponse, include_in_schema=False)
+    async def standards_wizard_page():  # noqa: D401
+        """Serve standards selection wizard page."""
+        wizard_file = WEB_DIR / "standards-selection-wizard.html"
+        if wizard_file.exists():
+            return FileResponse(str(wizard_file))
+        else:
+            return RedirectResponse(url="/standards", status_code=302)
+    
+    @app.get("/evidence-mapping-wizard", response_class=FileResponse, include_in_schema=False)
+    async def evidence_mapping_page():  # noqa: D401
+        """Serve evidence mapping wizard page."""
+        mapping_file = WEB_DIR / "evidence-mapping-wizard.html"
+        if mapping_file.exists():
+            return FileResponse(str(mapping_file))
+        else:
+            return RedirectResponse(url="/standards", status_code=302)
+    
+    @app.get("/report-generation", response_class=FileResponse, include_in_schema=False)
+    async def report_generation_page():  # noqa: D401
+        """Serve report generation page."""
+        report_gen_file = WEB_DIR / "report-generation.html"
+        if report_gen_file.exists():
+            return FileResponse(str(report_gen_file))
+        else:
+            return RedirectResponse(url="/reports", status_code=302)
     
     @app.get("/documentation", response_class=FileResponse, include_in_schema=False)
     async def documentation_page():  # noqa: D401
