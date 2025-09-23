@@ -1205,12 +1205,12 @@
         }
 
         function logout() {
-            // Only clear auth-related items, preserve onboarding status
+            // Only clear auth-related items, preserve onboarding status and email
             localStorage.removeItem('access_token');
             localStorage.removeItem('user_data');
             sessionStorage.removeItem('access_token');
             sessionStorage.removeItem('user_data');
-            // Don't clear mms:onboarding-complete
+            // Don't clear mms:onboarding-complete or a3e_user_email
             window.location.href = '/login-enhanced.html';
         }
 
