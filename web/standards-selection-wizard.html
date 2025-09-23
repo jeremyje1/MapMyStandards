@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Accreditation Standards - MapMyStandards AI</title>
+    <script src="/js/ux.js"></script>
+    
+    <style>
+        /* Import base styles */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --primary-blue: #1e40af;
+            --primary-blue-light: #3b82f6;
+            --primary-blue-dark: #1e3a8a;
+            --accent-green: #10b981;
+            --accent-green-light: #34d399;
+            --accent-orange: #f59e0b;
+            --accent-purple: #8b5cf6;
+            --white: #ffffff;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            --gradient-primary: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-light) 100%);
+            --gradient-success: linear-gradient(135deg, var(--accent-green) 0%, var(--accent-green-light) 100%);
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', 'Helvetica Neue', Arial, sans-serif;
+            --space-1: 0.25rem;
+            --space-2: 0.5rem;
+            --space-3: 0.75rem;
+            --space-4: 1rem;
+            --space-6: 1.5rem;
+            --space-8: 2rem;
+            --space-12: 3rem;
+            --border-radius: 0.5rem;
+            --border-radius-lg: 0.75rem;
+            --border-radius-xl: 1rem;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background: var(--gray-50);
+            color: var(--gray-800);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 var(--space-6);
+        }
+
+        /* Progress Steps */
+        .progress-container {
+            background: white;
+            border-bottom: 1px solid var(--gray-200);
+            padding: var(--space-6) 0;
+        }
+
+        .progress-steps {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: var(--space-2);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .step-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            transition: all 0.3s ease;
+        }
+
+        .step.completed .step-circle {
+            background: var(--accent-green);
+            color: white;
+        }
+
+        .step.active .step-circle {
+            background: var(--primary-blue);
+            color: white;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        }
+
+        .step.inactive .step-circle {
+            background: var(--gray-200);
+            color: var(--gray-500);
+        }
+
+        .step-line {
+            width: 60px;
+            height: 2px;
+            background: var(--gray-200);
+            transition: all 0.3s ease;
+        }
+
+        .step.completed + .step-line {
+            background: var(--accent-green);
+        }
+
+        .step-label {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            margin-left: var(--space-2);
+        }
+
+        .step.active .step-label {
+            color: var(--primary-blue);
+            font-weight: 600;
+        }
+
+        /* Main Header */
+        .page-header {
+            text-align: center;
+            padding: var(--space-12) 0;
+        }
+
+        .page-title {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: var(--space-4);
+        }
+
+        .page-subtitle {
+            font-size: 1.25rem;
+            color: var(--gray-600);
+        }
+
+        /* Quick Selection */
+        .quick-selection {
+            background: rgba(59, 130, 246, 0.05);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: var(--border-radius-xl);
+            padding: var(--space-8);
+            margin-bottom: var(--space-8);
+            text-align: center;
+        }
+
+        .quick-selection-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-blue);
+            margin-bottom: var(--space-4);
+        }
+
+        .institution-types {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--space-4);
+            margin-bottom: var(--space-6);
+        }
+
+        .institution-btn {
+            background: white;
+            border: 2px solid var(--gray-200);
+            border-radius: var(--border-radius);
+            padding: var(--space-4);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .institution-btn:hover {
+            border-color: var(--primary-blue);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .institution-btn.selected {
+            background: var(--primary-blue);
+            border-color: var(--primary-blue);
+            color: white;
+        }
+
+        .institution-icon {
+            font-size: 2rem;
+            margin-bottom: var(--space-2);
+        }
+
+        .institution-name {
+            font-weight: 600;
+            margin-bottom: var(--space-1);
+        }
+
+        .institution-desc {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+        }
+
+        .institution-btn.selected .institution-desc {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        /* Recommendations */
+        .recommendations {
+            background: white;
+            border-radius: var(--border-radius-xl);
+            padding: var(--space-8);
+            box-shadow: var(--shadow);
+            margin-bottom: var(--space-8);
+        }
+
+        .recommendations-header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+            margin-bottom: var(--space-6);
+        }
+
+        .recommendation-badge {
+            background: var(--gradient-success);
+            color: white;
+            padding: var(--space-2) var(--space-4);
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .standards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: var(--space-4);
+        }
+
+        .standard-card {
+            background: var(--gray-50);
+            border: 2px solid var(--gray-200);
+            border-radius: var(--border-radius-lg);
+            padding: var(--space-6);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .standard-card:hover {
+            border-color: var(--primary-blue-light);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .standard-card.selected {
+            background: white;
+            border-color: var(--primary-blue);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .standard-card.recommended {
+            border-color: var(--accent-green);
+        }
+
+        .recommended-tag {
+            position: absolute;
+            top: -12px;
+            right: var(--space-4);
+            background: var(--accent-green);
+            color: white;
+            padding: var(--space-1) var(--space-3);
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .standard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: var(--space-4);
+        }
+
+        .standard-logo {
+            width: 60px;
+            height: 60px;
+            background: var(--gray-200);
+            border-radius: var(--border-radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .standard-checkbox {
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--gray-300);
+            border-radius: 4px;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+
+        .standard-card.selected .standard-checkbox {
+            background: var(--primary-blue);
+            border-color: var(--primary-blue);
+        }
+
+        .standard-card.selected .standard-checkbox::after {
+            content: "✓";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-weight: 700;
+        }
+
+        .standard-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: var(--space-2);
+        }
+
+        .standard-organization {
+            color: var(--gray-600);
+            margin-bottom: var(--space-3);
+        }
+
+        .standard-description {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            margin-bottom: var(--space-4);
+        }
+
+        .standard-stats {
+            display: flex;
+            gap: var(--space-4);
+            font-size: 0.875rem;
+        }
+
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: var(--space-1);
+            color: var(--gray-500);
+        }
+
+        /* All Standards Section */
+        .all-standards {
+            margin-top: var(--space-12);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-6);
+        }
+
+        .section-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--gray-900);
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            background: white;
+            border: 1px solid var(--gray-300);
+            border-radius: var(--border-radius);
+            padding: var(--space-2) var(--space-4);
+            width: 300px;
+        }
+
+        .search-box input {
+            border: none;
+            outline: none;
+            flex: 1;
+            font-size: 1rem;
+        }
+
+        /* Action Bar */
+        .action-bar {
+            position: sticky;
+            bottom: 0;
+            background: white;
+            border-top: 1px solid var(--gray-200);
+            padding: var(--space-4) 0;
+            margin-top: var(--space-8);
+            box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .action-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .selection-info {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+        }
+
+        .selected-count {
+            font-weight: 700;
+            color: var(--primary-blue);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: var(--space-4);
+        }
+
+        .btn {
+            padding: var(--space-3) var(--space-6);
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            font-size: 1rem;
+        }
+
+        .btn-secondary {
+            background: var(--gray-200);
+            color: var(--gray-700);
+        }
+
+        .btn-secondary:hover {
+            background: var(--gray-300);
+        }
+
+        .btn-primary {
+            background: var(--gradient-primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Filter Pills */
+        .filter-pills {
+            display: flex;
+            gap: var(--space-3);
+            margin-bottom: var(--space-6);
+            flex-wrap: wrap;
+        }
+
+        .filter-pill {
+            background: white;
+            border: 1px solid var(--gray-300);
+            border-radius: 9999px;
+            padding: var(--space-2) var(--space-4);
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .filter-pill:hover {
+            border-color: var(--primary-blue);
+        }
+
+        .filter-pill.active {
+            background: var(--primary-blue);
+            border-color: var(--primary-blue);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- Progress Steps -->
+    <div class="progress-container">
+        <div class="container">
+            <div class="progress-steps">
+                <div class="step completed">
+                    <div class="step-circle">✓</div>
+                    <span class="step-label">Upload</span>
+                </div>
+                <div class="step-line"></div>
+                <div class="step active">
+                    <div class="step-circle">2</div>
+                    <span class="step-label">Select Standards</span>
+                </div>
+                <div class="step-line"></div>
+                <div class="step inactive">
+                    <div class="step-circle">3</div>
+                    <span class="step-label">Map Evidence</span>
+                </div>
+                <div class="step-line"></div>
+                <div class="step inactive">
+                    <div class="step-circle">4</div>
+                    <span class="step-label">Generate Report</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main>
+        <div class="container">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1 class="page-title">Select Your Accreditation Standards</h1>
+                <p class="page-subtitle">Choose the standards you want to map your evidence against</p>
+            </div>
+
+            <!-- Quick Selection -->
+            <div class="quick-selection">
+                <h2 class="quick-selection-title">🎯 Quick Selection by Institution Type</h2>
+                <div class="institution-types">
+                    <button class="institution-btn" onclick="selectInstitutionType('university')">
+                        <div class="institution-icon">🎓</div>
+                        <div class="institution-name">University</div>
+                        <div class="institution-desc">4-year institutions</div>
+                    </button>
+                    <button class="institution-btn" onclick="selectInstitutionType('community-college')">
+                        <div class="institution-icon">🏫</div>
+                        <div class="institution-name">Community College</div>
+                        <div class="institution-desc">2-year institutions</div>
+                    </button>
+                    <button class="institution-btn" onclick="selectInstitutionType('k12')">
+                        <div class="institution-icon">🏫</div>
+                        <div class="institution-name">K-12 School</div>
+                        <div class="institution-desc">Primary & Secondary</div>
+                    </button>
+                    <button class="institution-btn" onclick="selectInstitutionType('professional')">
+                        <div class="institution-icon">🏢</div>
+                        <div class="institution-name">Professional School</div>
+                        <div class="institution-desc">Specialized programs</div>
+                    </button>
+                    <button class="institution-btn" onclick="selectInstitutionType('online')">
+                        <div class="institution-icon">💻</div>
+                        <div class="institution-name">Online Institution</div>
+                        <div class="institution-desc">Distance learning</div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Recommendations -->
+            <div class="recommendations" id="recommendations" style="display: none;">
+                <div class="recommendations-header">
+                    <h2 class="section-title">Recommended for You</h2>
+                    <div class="recommendation-badge">
+                        <span>⭐</span>
+                        <span>AI Recommendations</span>
+                    </div>
+                </div>
+                <div class="standards-grid" id="recommendedStandards">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+
+            <!-- All Standards -->
+            <div class="all-standards">
+                <div class="section-header">
+                    <h2 class="section-title">All Available Standards</h2>
+                    <div class="search-box">
+                        <span>🔍</span>
+                        <input type="text" placeholder="Search standards..." id="searchInput" onkeyup="searchStandards()">
+                    </div>
+                </div>
+
+                <!-- Filter Pills -->
+                <div class="filter-pills">
+                    <button class="filter-pill active" onclick="filterStandards('all')">All Standards</button>
+                    <button class="filter-pill" onclick="filterStandards('regional')">Regional</button>
+                    <button class="filter-pill" onclick="filterStandards('national')">National</button>
+                    <button class="filter-pill" onclick="filterStandards('programmatic')">Programmatic</button>
+                    <button class="filter-pill" onclick="filterStandards('professional')">Professional</button>
+                    <button class="filter-pill" onclick="filterStandards('international')">International</button>
+                </div>
+
+                <div class="standards-grid" id="allStandards">
+                    <!-- All standards will be populated here -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Action Bar -->
+    <div class="action-bar">
+        <div class="container">
+            <div class="action-content">
+                <div class="selection-info">
+                    <span class="selected-count">0 standards selected</span>
+                    <button class="btn btn-secondary" onclick="clearSelection()">Clear All</button>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn btn-secondary" onclick="goBack()">← Back</button>
+                    <button class="btn btn-primary" id="continueBtn" onclick="continueToMapping()" disabled>
+                        Continue to Mapping
+                        <span>→</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Standards data
+        const standardsData = {
+            'SACSCOC': {
+                name: 'SACSCOC',
+                fullName: 'Southern Association of Colleges and Schools Commission on Colleges',
+                description: 'Regional accreditation for degree-granting higher education institutions in the Southern states',
+                type: 'regional',
+                logo: '🏛️',
+                institutions: 800,
+                standards: 73,
+                recommendedFor: ['university', 'community-college']
+            },
+            'HLC': {
+                name: 'HLC',
+                fullName: 'Higher Learning Commission',
+                description: 'Regional accreditation for colleges and universities in 19 North Central states',
+                type: 'regional',
+                logo: '🎯',
+                institutions: 1000,
+                standards: 85,
+                recommendedFor: ['university', 'community-college', 'online']
+            },
+            'WASC': {
+                name: 'WASC',
+                fullName: 'Western Association of Schools and Colleges',
+                description: 'Regional accreditation for schools and colleges in California, Hawaii, and Pacific territories',
+                type: 'regional',
+                logo: '🌊',
+                institutions: 300,
+                standards: 42,
+                recommendedFor: ['university', 'community-college']
+            },
+            'AACSB': {
+                name: 'AACSB',
+                fullName: 'Association to Advance Collegiate Schools of Business',
+                description: 'Specialized accreditation for business education programs worldwide',
+                type: 'programmatic',
+                logo: '💼',
+                institutions: 900,
+                standards: 15,
+                recommendedFor: ['university', 'professional']
+            },
+            'ABET': {
+                name: 'ABET',
+                fullName: 'Accreditation Board for Engineering and Technology',
+                description: 'Specialized accreditation for applied science, computing, engineering, and technology programs',
+                type: 'programmatic',
+                logo: '⚙️',
+                institutions: 850,
+                standards: 8,
+                recommendedFor: ['university', 'professional']
+            },
+            'CAEP': {
+                name: 'CAEP',
+                fullName: 'Council for the Accreditation of Educator Preparation',
+                description: 'National accreditation for educator preparation providers',
+                type: 'national',
+                logo: '📚',
+                institutions: 650,
+                standards: 5,
+                recommendedFor: ['university', 'professional']
+            },
+            'COGNIA': {
+                name: 'Cognia',
+                fullName: 'Cognia (formerly AdvancED)',
+                description: 'Accreditation for K-12 schools and school systems globally',
+                type: 'international',
+                logo: '🌐',
+                institutions: 36000,
+                standards: 30,
+                recommendedFor: ['k12']
+            },
+            'NEASC': {
+                name: 'NEASC',
+                fullName: 'New England Association of Schools and Colleges',
+                description: 'Regional accreditation for educational institutions in New England',
+                type: 'regional',
+                logo: '🍁',
+                institutions: 2000,
+                standards: 60,
+                recommendedFor: ['university', 'k12', 'community-college']
+            },
+            'MSCHE': {
+                name: 'MSCHE',
+                fullName: 'Middle States Commission on Higher Education',
+                description: 'Regional accreditation for colleges and universities in Mid-Atlantic states',
+                type: 'regional',
+                logo: '🏛️',
+                institutions: 520,
+                standards: 7,
+                recommendedFor: ['university', 'community-college']
+            }
+        };
+
+        let selectedStandards = new Set();
+        let currentFilter = 'all';
+        let currentInstitutionType = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            renderAllStandards();
+            updateActionBar();
+        });
+
+        function selectInstitutionType(type) {
+            // Update UI
+            document.querySelectorAll('.institution-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            event.target.closest('.institution-btn').classList.add('selected');
+            
+            currentInstitutionType = type;
+            
+            // Show recommendations
+            showRecommendations(type);
+        }
+
+        function showRecommendations(type) {
+            const recommendationsEl = document.getElementById('recommendations');
+            const recommendedStandardsEl = document.getElementById('recommendedStandards');
+            
+            // Filter standards that are recommended for this type
+            const recommended = Object.entries(standardsData)
+                .filter(([key, standard]) => standard.recommendedFor.includes(type));
+            
+            // Render recommended standards
+            recommendedStandardsEl.innerHTML = recommended.map(([key, standard]) => 
+                createStandardCard(key, standard, true)
+            ).join('');
+            
+            recommendationsEl.style.display = 'block';
+            
+            // Smooth scroll to recommendations
+            recommendationsEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function renderAllStandards() {
+            const container = document.getElementById('allStandards');
+            const filtered = filterStandardsData(currentFilter);
+            
+            container.innerHTML = filtered.map(([key, standard]) => 
+                createStandardCard(key, standard, false)
+            ).join('');
+        }
+
+        function createStandardCard(key, standard, isRecommended) {
+            const isSelected = selectedStandards.has(key);
+            return `
+                <div class="standard-card ${isSelected ? 'selected' : ''} ${isRecommended ? 'recommended' : ''}" 
+                     onclick="toggleStandard('${key}')" id="standard-${key}">
+                    ${isRecommended ? '<span class="recommended-tag">Recommended</span>' : ''}
+                    <div class="standard-header">
+                        <div class="standard-logo">${standard.logo}</div>
+                        <div class="standard-checkbox"></div>
+                    </div>
+                    <h3 class="standard-title">${standard.name}</h3>
+                    <p class="standard-organization">${standard.fullName}</p>
+                    <p class="standard-description">${standard.description}</p>
+                    <div class="standard-stats">
+                        <div class="stat">
+                            <span>🏫</span>
+                            <span>${standard.institutions.toLocaleString()} institutions</span>
+                        </div>
+                        <div class="stat">
+                            <span>📋</span>
+                            <span>${standard.standards} standards</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function filterStandardsData(filter) {
+            if (filter === 'all') {
+                return Object.entries(standardsData);
+            }
+            return Object.entries(standardsData)
+                .filter(([key, standard]) => standard.type === filter);
+        }
+
+        function filterStandards(filter) {
+            currentFilter = filter;
+            
+            // Update pill states
+            document.querySelectorAll('.filter-pill').forEach(pill => {
+                pill.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Re-render standards
+            renderAllStandards();
+        }
+
+        function toggleStandard(key) {
+            if (selectedStandards.has(key)) {
+                selectedStandards.delete(key);
+            } else {
+                selectedStandards.add(key);
+            }
+            
+            // Update UI
+            document.getElementById(`standard-${key}`).classList.toggle('selected');
+            updateActionBar();
+        }
+
+        function updateActionBar() {
+            const count = selectedStandards.size;
+            document.querySelector('.selected-count').textContent = 
+                `${count} standard${count !== 1 ? 's' : ''} selected`;
+            
+            const continueBtn = document.getElementById('continueBtn');
+            continueBtn.disabled = count === 0;
+        }
+
+        function clearSelection() {
+            selectedStandards.clear();
+            document.querySelectorAll('.standard-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            updateActionBar();
+        }
+
+        function searchStandards() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const cards = document.querySelectorAll('.standard-card');
+            
+            cards.forEach(card => {
+                const text = card.textContent.toLowerCase();
+                card.style.display = text.includes(searchTerm) ? 'block' : 'none';
+            });
+        }
+
+        function goBack() {
+            window.location.href = '/upload-enhanced';
+        }
+
+        function continueToMapping() {
+            // Save selected standards
+            localStorage.setItem('selectedStandards', JSON.stringify([...selectedStandards]));
+            localStorage.setItem('mms:lastStandardsSelectionAt', new Date().toISOString());
+            
+            // Navigate to mapping page
+            window.location.href = '/evidence-mapping-wizard';
+        }
+    </script>
+</body>
+</html>

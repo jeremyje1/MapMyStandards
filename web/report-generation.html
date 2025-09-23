@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generate Accreditation Report - MapMyStandards AI</title>
+    <script src="/js/ux.js"></script>
+    
+    <style>
+        /* Import base styles */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --primary-blue: #1e40af;
+            --primary-blue-light: #3b82f6;
+            --primary-blue-dark: #1e3a8a;
+            --accent-green: #10b981;
+            --accent-green-light: #34d399;
+            --accent-orange: #f59e0b;
+            --accent-purple: #8b5cf6;
+            --accent-red: #ef4444;
+            --white: #ffffff;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            --gradient-primary: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-light) 100%);
+            --gradient-success: linear-gradient(135deg, var(--accent-green) 0%, var(--accent-green-light) 100%);
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', 'Helvetica Neue', Arial, sans-serif;
+            --space-1: 0.25rem;
+            --space-2: 0.5rem;
+            --space-3: 0.75rem;
+            --space-4: 1rem;
+            --space-6: 1.5rem;
+            --space-8: 2rem;
+            --space-12: 3rem;
+            --border-radius: 0.5rem;
+            --border-radius-lg: 0.75rem;
+            --border-radius-xl: 1rem;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background: var(--gray-50);
+            color: var(--gray-800);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 var(--space-6);
+        }
+
+        /* Progress Steps */
+        .progress-container {
+            background: white;
+            border-bottom: 1px solid var(--gray-200);
+            padding: var(--space-6) 0;
+        }
+
+        .progress-steps {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: var(--space-2);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .step-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            transition: all 0.3s ease;
+        }
+
+        .step.completed .step-circle {
+            background: var(--accent-green);
+            color: white;
+        }
+
+        .step.active .step-circle {
+            background: var(--primary-blue);
+            color: white;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
+            50% { box-shadow: 0 0 0 8px rgba(59, 130, 246, 0.1); }
+            100% { box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
+        }
+
+        .step.inactive .step-circle {
+            background: var(--gray-200);
+            color: var(--gray-500);
+        }
+
+        .step-line {
+            width: 60px;
+            height: 2px;
+            background: var(--gray-200);
+            transition: all 0.3s ease;
+        }
+
+        .step.completed + .step-line {
+            background: var(--accent-green);
+        }
+
+        /* Generation States */
+        .generation-container {
+            max-width: 800px;
+            margin: var(--space-12) auto;
+        }
+
+        /* Generating State */
+        .generating-state {
+            background: white;
+            border-radius: var(--border-radius-xl);
+            padding: var(--space-12);
+            text-align: center;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .generating-icon {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto var(--space-6);
+            position: relative;
+        }
+
+        .spinner {
+            width: 100%;
+            height: 100%;
+            border: 4px solid var(--gray-200);
+            border-top-color: var(--primary-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .generating-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: var(--space-4);
+        }
+
+        .generating-subtitle {
+            font-size: 1.25rem;
+            color: var(--gray-600);
+            margin-bottom: var(--space-8);
+        }
+
+        .generation-steps {
+            text-align: left;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .gen-step {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            margin-bottom: var(--space-4);
+            padding: var(--space-3);
+            border-radius: var(--border-radius);
+            transition: all 0.3s ease;
+        }
+
+        .gen-step.active {
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .gen-step.completed {
+            opacity: 0.6;
+        }
+
+        .gen-step-icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .gen-step-text {
+            flex: 1;
+            font-weight: 500;
+        }
+
+        /* Success State */
+        .success-state {
+            background: white;
+            border-radius: var(--border-radius-xl);
+            padding: var(--space-8);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .success-header {
+            text-align: center;
+            margin-bottom: var(--space-8);
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--gradient-success);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto var(--space-4);
+            font-size: 2.5rem;
+            color: white;
+            animation: scaleIn 0.3s ease-out;
+        }
+
+        @keyframes scaleIn {
+            from { transform: scale(0); }
+            to { transform: scale(1); }
+        }
+
+        .success-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: var(--space-2);
+        }
+
+        .success-subtitle {
+            color: var(--gray-600);
+            font-size: 1.125rem;
+        }
+
+        /* Report Summary */
+        .report-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--space-4);
+            margin-bottom: var(--space-8);
+        }
+
+        .summary-card {
+            background: var(--gray-50);
+            border-radius: var(--border-radius-lg);
+            padding: var(--space-6);
+            text-align: center;
+        }
+
+        .summary-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-blue);
+            margin-bottom: var(--space-2);
+        }
+
+        .summary-label {
+            color: var(--gray-600);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Report Actions */
+        .report-actions {
+            display: flex;
+            gap: var(--space-4);
+            justify-content: center;
+            margin-bottom: var(--space-8);
+        }
+
+        .btn {
+            padding: var(--space-4) var(--space-8);
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            font-size: 1.125rem;
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .btn-primary {
+            background: var(--gradient-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--primary-blue);
+            border: 2px solid var(--primary-blue);
+        }
+
+        .btn-secondary:hover {
+            background: var(--gray-50);
+        }
+
+        /* Report Preview */
+        .report-preview {
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: var(--border-radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        .preview-header {
+            background: var(--gray-50);
+            padding: var(--space-4) var(--space-6);
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .preview-title {
+            font-weight: 600;
+            color: var(--gray-900);
+        }
+
+        .preview-content {
+            padding: var(--space-6);
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .preview-section {
+            margin-bottom: var(--space-6);
+        }
+
+        .preview-section-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: var(--space-3);
+        }
+
+        .coverage-bar {
+            background: var(--gray-200);
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: var(--space-2);
+        }
+
+        .coverage-fill {
+            height: 100%;
+            background: var(--gradient-success);
+            transition: width 0.3s ease;
+        }
+
+        /* What's Next */
+        .whats-next {
+            background: rgba(59, 130, 246, 0.05);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: var(--border-radius-lg);
+            padding: var(--space-6);
+            margin-top: var(--space-8);
+        }
+
+        .whats-next-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary-blue);
+            margin-bottom: var(--space-4);
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .next-steps {
+            display: grid;
+            gap: var(--space-3);
+        }
+
+        .next-step {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+        }
+
+        .next-step-icon {
+            color: var(--primary-blue);
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Progress Steps -->
+    <div class="progress-container">
+        <div class="container">
+            <div class="progress-steps">
+                <div class="step completed">
+                    <div class="step-circle">✓</div>
+                    <span class="step-label">Upload</span>
+                </div>
+                <div class="step-line"></div>
+                <div class="step completed">
+                    <div class="step-circle">✓</div>
+                    <span class="step-label">Select Standards</span>
+                </div>
+                <div class="step-line"></div>
+                <div class="step completed">
+                    <div class="step-circle">✓</div>
+                    <span class="step-label">Map Evidence</span>
+                </div>
+                <div class="step-line"></div>
+                <div class="step active">
+                    <div class="step-circle">4</div>
+                    <span class="step-label">Generate Report</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main>
+        <div class="container">
+            <div class="generation-container">
+                <!-- Generating State (shown initially) -->
+                <div class="generating-state" id="generatingState">
+                    <div class="generating-icon">
+                        <div class="spinner"></div>
+                    </div>
+                    <h1 class="generating-title">Generating Your Report</h1>
+                    <p class="generating-subtitle">Our AI is analyzing your mappings and creating a comprehensive accreditation report</p>
+                    
+                    <div class="generation-steps">
+                        <div class="gen-step active" id="step1">
+                            <div class="gen-step-icon">⚡</div>
+                            <div class="gen-step-text">Analyzing evidence mappings...</div>
+                        </div>
+                        <div class="gen-step" id="step2">
+                            <div class="gen-step-icon">📊</div>
+                            <div class="gen-step-text">Calculating coverage metrics...</div>
+                        </div>
+                        <div class="gen-step" id="step3">
+                            <div class="gen-step-icon">✍️</div>
+                            <div class="gen-step-text">Writing executive summary...</div>
+                        </div>
+                        <div class="gen-step" id="step4">
+                            <div class="gen-step-icon">📋</div>
+                            <div class="gen-step-text">Compiling final report...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Success State (shown after generation) -->
+                <div class="success-state" id="successState" style="display: none;">
+                    <div class="success-header">
+                        <div class="success-icon">✓</div>
+                        <h1 class="success-title">Report Generated Successfully!</h1>
+                        <p class="success-subtitle">Your accreditation readiness report is ready</p>
+                    </div>
+
+                    <!-- Report Summary -->
+                    <div class="report-summary">
+                        <div class="summary-card">
+                            <div class="summary-value">87%</div>
+                            <div class="summary-label">Overall Coverage</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-value">73</div>
+                            <div class="summary-label">Standards Mapped</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-value">5</div>
+                            <div class="summary-label">Evidence Documents</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-value">12</div>
+                            <div class="summary-label">Gap Areas</div>
+                        </div>
+                    </div>
+
+                    <!-- Report Actions -->
+                    <div class="report-actions">
+                        <button class="btn btn-primary" onclick="downloadReport()">
+                            <span>📥</span>
+                            Download Full Report
+                        </button>
+                        <button class="btn btn-secondary" onclick="viewOnline()">
+                            <span>👁️</span>
+                            View Online
+                        </button>
+                        <button class="btn btn-secondary" onclick="shareReport()">
+                            <span>📤</span>
+                            Share
+                        </button>
+                    </div>
+
+                    <!-- Report Preview -->
+                    <div class="report-preview">
+                        <div class="preview-header">
+                            <div class="preview-title">Report Preview</div>
+                        </div>
+                        <div class="preview-content">
+                            <div class="preview-section">
+                                <h3 class="preview-section-title">Executive Summary</h3>
+                                <p>Based on our analysis of your uploaded documentation, your institution demonstrates 
+                                strong alignment with SACSCOC accreditation standards, achieving an overall coverage 
+                                rate of 87%. The evidence provided effectively addresses the majority of Core Requirements 
+                                and Comprehensive Standards.</p>
+                            </div>
+                            
+                            <div class="preview-section">
+                                <h3 class="preview-section-title">Coverage by Category</h3>
+                                <div style="margin-bottom: 1rem;">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                        <span>Mission & Governance</span>
+                                        <span style="color: var(--accent-green); font-weight: 600;">95%</span>
+                                    </div>
+                                    <div class="coverage-bar">
+                                        <div class="coverage-fill" style="width: 95%"></div>
+                                    </div>
+                                </div>
+                                <div style="margin-bottom: 1rem;">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                        <span>Academic Programs</span>
+                                        <span style="color: var(--accent-green); font-weight: 600;">88%</span>
+                                    </div>
+                                    <div class="coverage-bar">
+                                        <div class="coverage-fill" style="width: 88%"></div>
+                                    </div>
+                                </div>
+                                <div style="margin-bottom: 1rem;">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                        <span>Student Support</span>
+                                        <span style="color: var(--accent-orange); font-weight: 600;">72%</span>
+                                    </div>
+                                    <div class="coverage-bar">
+                                        <div class="coverage-fill" style="width: 72%; background: var(--accent-orange);"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="preview-section">
+                                <h3 class="preview-section-title">Key Strengths</h3>
+                                <ul style="padding-left: 1.5rem; color: var(--gray-700);">
+                                    <li>Comprehensive strategic planning documentation</li>
+                                    <li>Strong evidence of assessment practices</li>
+                                    <li>Clear institutional policies and procedures</li>
+                                    <li>Well-documented faculty qualifications</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- What's Next -->
+                    <div class="whats-next">
+                        <h3 class="whats-next-title">
+                            <span>🎯</span>
+                            What's Next?
+                        </h3>
+                        <div class="next-steps">
+                            <div class="next-step">
+                                <span class="next-step-icon">📋</span>
+                                <span>Review the gap analysis to identify areas needing additional evidence</span>
+                            </div>
+                            <div class="next-step">
+                                <span class="next-step-icon">📁</span>
+                                <span>Upload additional documents to improve coverage scores</span>
+                            </div>
+                            <div class="next-step">
+                                <span class="next-step-icon">👥</span>
+                                <span>Share this report with your accreditation team for review</span>
+                            </div>
+                            <div class="next-step">
+                                <span class="next-step-icon">📅</span>
+                                <span>Schedule a consultation with our experts for personalized guidance</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Simulate report generation process
+        document.addEventListener('DOMContentLoaded', () => {
+            simulateGeneration();
+        });
+
+        function simulateGeneration() {
+            const steps = [
+                { id: 'step1', duration: 2000 },
+                { id: 'step2', duration: 2500 },
+                { id: 'step3', duration: 3000 },
+                { id: 'step4', duration: 2000 }
+            ];
+
+            let currentStep = 0;
+
+            function processStep() {
+                if (currentStep > 0) {
+                    // Mark previous step as completed
+                    const prevStep = document.getElementById(steps[currentStep - 1].id);
+                    prevStep.classList.remove('active');
+                    prevStep.classList.add('completed');
+                    prevStep.querySelector('.gen-step-icon').textContent = '✓';
+                }
+
+                if (currentStep < steps.length) {
+                    // Mark current step as active
+                    const currStep = document.getElementById(steps[currentStep].id);
+                    currStep.classList.add('active');
+
+                    // Process next step after duration
+                    setTimeout(() => {
+                        currentStep++;
+                        processStep();
+                    }, steps[currentStep].duration);
+                } else {
+                    // All steps completed, show success
+                    showSuccess();
+                }
+            }
+
+            // Start the process
+            processStep();
+        }
+
+        function showSuccess() {
+            // Mark last step as completed
+            const lastStep = document.getElementById('step4');
+            lastStep.classList.remove('active');
+            lastStep.classList.add('completed');
+            lastStep.querySelector('.gen-step-icon').textContent = '✓';
+
+            // Hide generating state, show success state
+            setTimeout(() => {
+                document.getElementById('generatingState').style.display = 'none';
+                document.getElementById('successState').style.display = 'block';
+                
+                // Update progress step
+                document.querySelector('.step.active').classList.add('completed');
+                
+                // Save completion status
+                localStorage.setItem('mms:reportGenerated', 'true');
+                localStorage.setItem('mms:lastReportAt', new Date().toISOString());
+                
+                // Trigger celebration animation
+                celebrateCompletion();
+            }, 500);
+        }
+
+        function celebrateCompletion() {
+            // Add confetti or other celebration effects here
+            console.log('🎉 Journey completed!');
+        }
+
+        function downloadReport() {
+            // Simulate download
+            alert('Your report is being prepared for download. You will receive it via email shortly.');
+        }
+
+        function viewOnline() {
+            // Navigate to full report view
+            window.location.href = '/reports-modern';
+        }
+
+        function shareReport() {
+            // Show share modal
+            alert('Share functionality coming soon! You can download the report and share it manually.');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Map Your Evidence - MapMyStandards AI</title>
+    <script src="/js/ux.js"></script>
+    
+    <style>
+        /* Import base styles */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --primary-blue: #1e40af;
+            --primary-blue-light: #3b82f6;
+            --primary-blue-dark: #1e3a8a;
+            --accent-green: #10b981;
+            --accent-green-light: #34d399;
+            --accent-orange: #f59e0b;
+            --accent-purple: #8b5cf6;
+            --accent-red: #ef4444;
+            --white: #ffffff;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            --gradient-primary: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-light) 100%);
+            --gradient-success: linear-gradient(135deg, var(--accent-green) 0%, var(--accent-green-light) 100%);
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', 'Helvetica Neue', Arial, sans-serif;
+            --space-1: 0.25rem;
+            --space-2: 0.5rem;
+            --space-3: 0.75rem;
+            --space-4: 1rem;
+            --space-6: 1.5rem;
+            --space-8: 2rem;
+            --space-12: 3rem;
+            --border-radius: 0.5rem;
+            --border-radius-lg: 0.75rem;
+            --border-radius-xl: 1rem;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background: var(--gray-50);
+            color: var(--gray-800);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 var(--space-6);
+        }
+
+        /* Progress Steps (reuse from standards selection) */
+        .progress-container {
+            background: white;
+            border-bottom: 1px solid var(--gray-200);
+            padding: var(--space-6) 0;
+        }
+
+        .progress-steps {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: var(--space-2);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .step-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            transition: all 0.3s ease;
+        }
+
+        .step.completed .step-circle {
+            background: var(--accent-green);
+            color: white;
+        }
+
+        .step.active .step-circle {
+            background: var(--primary-blue);
+            color: white;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        }
+
+        .step.inactive .step-circle {
+            background: var(--gray-200);
+            color: var(--gray-500);
+        }
+
+        .step-line {
+            width: 60px;
+            height: 2px;
+            background: var(--gray-200);
+            transition: all 0.3s ease;
+        }
+
+        .step.completed + .step-line {
+            background: var(--accent-green);
+        }
+
+        /* Main Layout */
+        .mapping-container {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: var(--space-6);
+            margin-top: var(--space-8);
+            min-height: calc(100vh - 200px);
+        }
+
+        /* Left Panel - Evidence List */
+        .evidence-panel {
+            background: white;
+            border-radius: var(--border-radius-xl);
+            padding: var(--space-6);
+            box-shadow: var(--shadow);
+            height: fit-content;
+            position: sticky;
+            top: var(--space-6);
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-4);
+        }
+
+        .panel-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--gray-900);
+        }
+
+        .evidence-count {
+            background: var(--gray-100);
+            color: var(--gray-700);
+            padding: var(--space-1) var(--space-3);
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .evidence-list {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .evidence-item {
+            background: var(--gray-50);
+            border: 2px solid transparent;
+            border-radius: var(--border-radius);
+            padding: var(--space-4);
+            margin-bottom: var(--space-3);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .evidence-item:hover {
+            border-color: var(--primary-blue-light);
+            transform: translateX(4px);
+        }
+
+        .evidence-item.active {
+            background: white;
+            border-color: var(--primary-blue);
+            box-shadow: var(--shadow-md);
+        }
+
+        .evidence-item.mapped {
+            opacity: 0.6;
+        }
+
+        .evidence-icon {
+            font-size: 1.5rem;
+            margin-bottom: var(--space-2);
+        }
+
+        .evidence-name {
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: var(--space-1);
+        }
+
+        .evidence-meta {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+        }
+
+        .evidence-status {
+            display: flex;
+            align-items: center;
+            gap: var(--space-1);
+            margin-top: var(--space-2);
+            font-size: 0.875rem;
+        }
+
+        .status-mapped {
+            color: var(--accent-green);
+            font-weight: 600;
+        }
+
+        /* Right Panel - Mapping Interface */
+        .mapping-panel {
+            background: white;
+            border-radius: var(--border-radius-xl);
+            padding: var(--space-8);
+            box-shadow: var(--shadow);
+        }
+
+        /* AI Analysis Section */
+        .ai-analysis {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(59, 130, 246, 0.05) 100%);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: var(--border-radius-lg);
+            padding: var(--space-6);
+            margin-bottom: var(--space-8);
+        }
+
+        .ai-header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            margin-bottom: var(--space-4);
+        }
+
+        .ai-badge {
+            background: var(--gradient-primary);
+            color: white;
+            padding: var(--space-2) var(--space-4);
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .ai-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary-blue);
+        }
+
+        .ai-content {
+            color: var(--gray-700);
+            line-height: 1.8;
+        }
+
+        .key-points {
+            margin-top: var(--space-4);
+            padding-left: var(--space-6);
+        }
+
+        .key-point {
+            display: flex;
+            align-items: flex-start;
+            gap: var(--space-2);
+            margin-bottom: var(--space-2);
+        }
+
+        .key-point-icon {
+            color: var(--accent-purple);
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        /* Suggested Mappings */
+        .suggested-mappings {
+            margin-bottom: var(--space-8);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: var(--space-4);
+        }
+
+        .mapping-cards {
+            display: grid;
+            gap: var(--space-4);
+        }
+
+        .mapping-card {
+            background: var(--gray-50);
+            border: 2px solid var(--gray-200);
+            border-radius: var(--border-radius-lg);
+            padding: var(--space-4);
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .mapping-card:hover {
+            border-color: var(--primary-blue-light);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .mapping-card.selected {
+            background: white;
+            border-color: var(--accent-green);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .mapping-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: var(--space-3);
+        }
+
+        .standard-info {
+            flex: 1;
+        }
+
+        .standard-badge {
+            background: var(--primary-blue);
+            color: white;
+            padding: var(--space-1) var(--space-3);
+            border-radius: var(--border-radius);
+            font-size: 0.875rem;
+            font-weight: 700;
+            margin-bottom: var(--space-2);
+            display: inline-block;
+        }
+
+        .standard-number {
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: var(--space-1);
+        }
+
+        .standard-text {
+            color: var(--gray-700);
+            font-size: 0.875rem;
+            line-height: 1.6;
+        }
+
+        .confidence-score {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .score-circle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            font-weight: 700;
+            position: relative;
+            background: conic-gradient(
+                var(--accent-green) 0deg,
+                var(--accent-green) calc(var(--score) * 3.6deg),
+                var(--gray-200) calc(var(--score) * 3.6deg)
+            );
+        }
+
+        .score-circle::before {
+            content: '';
+            position: absolute;
+            width: 48px;
+            height: 48px;
+            background: white;
+            border-radius: 50%;
+            z-index: 0;
+        }
+
+        .score-value {
+            position: relative;
+            z-index: 1;
+        }
+
+        .confidence-label {
+            font-size: 0.75rem;
+            color: var(--gray-600);
+            margin-top: var(--space-1);
+        }
+
+        /* Mapping Actions */
+        .mapping-actions {
+            display: flex;
+            gap: var(--space-3);
+            margin-top: var(--space-4);
+        }
+
+        .btn-accept {
+            background: var(--gradient-success);
+            color: white;
+            border: none;
+            padding: var(--space-2) var(--space-4);
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: var(--space-1);
+        }
+
+        .btn-accept:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .btn-reject {
+            background: white;
+            color: var(--accent-red);
+            border: 2px solid var(--accent-red);
+        }
+
+        /* Action Bar */
+        .action-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 1px solid var(--gray-200);
+            padding: var(--space-4) 0;
+            box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .action-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .progress-info {
+            display: flex;
+            align-items: center;
+            gap: var(--space-6);
+        }
+
+        .progress-bar-container {
+            width: 200px;
+            height: 8px;
+            background: var(--gray-200);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--gradient-success);
+            transition: width 0.3s ease;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: var(--space-4);
+        }
+
+        .btn {
+            padding: var(--space-3) var(--space-6);
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            font-size: 1rem;
+        }
+
+        .btn-secondary {
+            background: var(--gray-200);
+            color: var(--gray-700);
+        }
+
+        .btn-primary {
+            background: var(--gradient-primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: var(--space-12) 0;
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: var(--space-4);
+        }
+
+        .empty-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: var(--space-2);
+        }
+
+        .empty-subtitle {
+            color: var(--gray-600);
+        }
+
+        /* Manual Search */
+        .manual-search {
+            margin-top: var(--space-8);
+            padding-top: var(--space-8);
+            border-top: 1px solid var(--gray-200);
+        }
+
+        .search-box {
+            display: flex;
+            gap: var(--space-3);
+            margin-bottom: var(--space-4);
+        }
+
+        .search-input {
+            flex: 1;
+            padding: var(--space-3) var(--space-4);
+            border: 1px solid var(--gray-300);
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .search-input:focus {
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .btn-search {
+            background: var(--primary-blue);
+            color: white;
+            padding: var(--space-3) var(--space-6);
+            border: none;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+    </style>
+</head>
+<body>
+    <!-- Progress Steps -->
+    <div class="progress-container">
+        <div class="container">
+            <div class="progress-steps">
+                <div class="step completed">
+                    <div class="step-circle">✓</div>
+                    <span class="step-label">Upload</span>
+                </div>
+                <div class="step-line"></div>
+                <div class="step completed">
+                    <div class="step-circle">✓</div>
+                    <span class="step-label">Select Standards</span>
+                </div>
+                <div class="step-line"></div>
+                <div class="step active">
+                    <div class="step-circle">3</div>
+                    <span class="step-label">Map Evidence</span>
+                </div>
+                <div class="step-line"></div>
+                <div class="step inactive">
+                    <div class="step-circle">4</div>
+                    <span class="step-label">Generate Report</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main>
+        <div class="container">
+            <div class="mapping-container">
+                <!-- Left Panel - Evidence List -->
+                <div class="evidence-panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">Your Evidence</h2>
+                        <span class="evidence-count" id="evidenceCount">0 files</span>
+                    </div>
+                    
+                    <div class="evidence-list" id="evidenceList">
+                        <!-- Evidence items populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Right Panel - Mapping Interface -->
+                <div class="mapping-panel">
+                    <div id="mappingContent">
+                        <!-- Empty state shown initially -->
+                        <div class="empty-state">
+                            <div class="empty-icon">👈</div>
+                            <h3 class="empty-title">Select a document to begin mapping</h3>
+                            <p class="empty-subtitle">Click on any evidence file from the left panel to see AI-suggested mappings</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Action Bar -->
+    <div class="action-bar">
+        <div class="container">
+            <div class="action-content">
+                <div class="progress-info">
+                    <span id="progressText">0 of 0 documents mapped</span>
+                    <div class="progress-bar-container">
+                        <div class="progress-fill" id="progressBar" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn btn-secondary" onclick="skipRemaining()">Skip Remaining</button>
+                    <button class="btn btn-primary" onclick="generateReport()">
+                        Generate Report
+                        <span>→</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample data - in production this would come from the API
+        const evidenceFiles = [
+            { id: 1, name: 'Strategic_Plan_2024.pdf', size: '2.4 MB', icon: '📄', mapped: false },
+            { id: 2, name: 'Assessment_Report_Fall2023.docx', size: '1.8 MB', icon: '📝', mapped: false },
+            { id: 3, name: 'Faculty_Handbook.pdf', size: '3.1 MB', icon: '📄', mapped: false },
+            { id: 4, name: 'Student_Learning_Outcomes.xlsx', size: '0.9 MB', icon: '📊', mapped: false },
+            { id: 5, name: 'Diversity_Policy.pdf', size: '0.5 MB', icon: '📄', mapped: false }
+        ];
+
+        const sampleStandards = {
+            SACSCOC: [
+                {
+                    id: 'CR-6.1',
+                    number: 'CR 6.1',
+                    text: 'The institution employs an adequate number of full-time faculty members to support the mission and goals of the institution.',
+                    confidence: 92
+                },
+                {
+                    id: 'CS-8.2.a',
+                    number: 'CS 8.2.a',
+                    text: 'The institution identifies expected outcomes, assesses the extent to which it achieves these outcomes, and provides evidence of seeking improvement based on analysis of the results in the areas below: Student learning outcomes for each of its educational programs.',
+                    confidence: 87
+                },
+                {
+                    id: 'CR-7.1',
+                    number: 'CR 7.1',
+                    text: 'The institution provides leadership and guidance for its educational programs.',
+                    confidence: 75
+                }
+            ]
+        };
+
+        let currentEvidence = null;
+        let mappedDocuments = new Set();
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadEvidence();
+            updateProgress();
+        });
+
+        function loadEvidence() {
+            const container = document.getElementById('evidenceList');
+            container.innerHTML = evidenceFiles.map(file => `
+                <div class="evidence-item ${file.mapped ? 'mapped' : ''}" 
+                     id="evidence-${file.id}"
+                     onclick="selectEvidence(${file.id})">
+                    <div class="evidence-icon">${file.icon}</div>
+                    <div class="evidence-name">${file.name}</div>
+                    <div class="evidence-meta">${file.size}</div>
+                    ${file.mapped ? `
+                        <div class="evidence-status">
+                            <span class="status-mapped">✓ Mapped</span>
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+            
+            document.getElementById('evidenceCount').textContent = `${evidenceFiles.length} files`;
+        }
+
+        function selectEvidence(id) {
+            const evidence = evidenceFiles.find(f => f.id === id);
+            if (!evidence) return;
+            
+            currentEvidence = evidence;
+            
+            // Update UI
+            document.querySelectorAll('.evidence-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            document.getElementById(`evidence-${id}`).classList.add('active');
+            
+            // Show mapping interface
+            showMappingInterface(evidence);
+        }
+
+        function showMappingInterface(evidence) {
+            const container = document.getElementById('mappingContent');
+            
+            // Simulate AI analysis
+            container.innerHTML = `
+                <!-- Document Header -->
+                <div style="margin-bottom: var(--space-6);">
+                    <h2 style="font-size: 2rem; font-weight: 700; color: var(--gray-900); margin-bottom: var(--space-2);">
+                        ${evidence.name}
+                    </h2>
+                    <p style="color: var(--gray-600);">Analyzing document and finding relevant standards...</p>
+                </div>
+
+                <!-- AI Analysis -->
+                <div class="ai-analysis">
+                    <div class="ai-header">
+                        <div class="ai-badge">
+                            <span>🤖</span>
+                            <span>AI Analysis</span>
+                        </div>
+                        <div class="ai-title">Document Summary</div>
+                    </div>
+                    <div class="ai-content">
+                        <p>This document appears to contain your institution's strategic planning framework 
+                        with clear goals, objectives, and measurable outcomes. Our AI identified several key areas
+                        that align with accreditation standards:</p>
+                        
+                        <ul class="key-points">
+                            <li class="key-point">
+                                <span class="key-point-icon">▸</span>
+                                <span>Mission and vision statements with supporting strategic goals</span>
+                            </li>
+                            <li class="key-point">
+                                <span class="key-point-icon">▸</span>
+                                <span>Resource allocation plans for faculty and infrastructure</span>
+                            </li>
+                            <li class="key-point">
+                                <span class="key-point-icon">▸</span>
+                                <span>Assessment and continuous improvement processes</span>
+                            </li>
+                            <li class="key-point">
+                                <span class="key-point-icon">▸</span>
+                                <span>Student success metrics and support strategies</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Suggested Mappings -->
+                <div class="suggested-mappings">
+                    <h3 class="section-title">Suggested Standard Mappings</h3>
+                    <div class="mapping-cards" id="mappingCards">
+                        ${generateMappingCards(evidence)}
+                    </div>
+                </div>
+
+                <!-- Manual Search -->
+                <div class="manual-search">
+                    <h3 class="section-title">Search for Additional Standards</h3>
+                    <div class="search-box">
+                        <input type="text" class="search-input" placeholder="Search by standard number or keyword...">
+                        <button class="btn-search">Search</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function generateMappingCards(evidence) {
+            // Get selected standards from localStorage
+            const selectedStandards = JSON.parse(localStorage.getItem('selectedStandards') || '["SACSCOC"]');
+            
+            // For demo, use SACSCOC standards
+            const standards = sampleStandards.SACSCOC;
+            
+            return standards.map((standard, index) => `
+                <div class="mapping-card" id="mapping-${standard.id}" onclick="toggleMapping('${standard.id}')">
+                    <div class="mapping-header">
+                        <div class="standard-info">
+                            <div class="standard-badge">SACSCOC</div>
+                            <div class="standard-number">${standard.number}</div>
+                            <div class="standard-text">${standard.text}</div>
+                        </div>
+                        <div class="confidence-score">
+                            <div class="score-circle" style="--score: ${standard.confidence}">
+                                <span class="score-value">${standard.confidence}%</span>
+                            </div>
+                            <span class="confidence-label">Confidence</span>
+                        </div>
+                    </div>
+                    <div class="mapping-actions">
+                        <button class="btn-accept" onclick="acceptMapping('${standard.id}'); event.stopPropagation();">
+                            <span>✓</span>
+                            Accept Match
+                        </button>
+                        <button class="btn-accept btn-reject" onclick="rejectMapping('${standard.id}'); event.stopPropagation();">
+                            <span>✗</span>
+                            Reject
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function toggleMapping(standardId) {
+            const card = document.getElementById(`mapping-${standardId}`);
+            card.classList.toggle('selected');
+        }
+
+        function acceptMapping(standardId) {
+            const card = document.getElementById(`mapping-${standardId}`);
+            card.classList.add('selected');
+            
+            // Mark current document as mapped
+            if (currentEvidence && !mappedDocuments.has(currentEvidence.id)) {
+                mappedDocuments.add(currentEvidence.id);
+                currentEvidence.mapped = true;
+                
+                // Update evidence list
+                document.getElementById(`evidence-${currentEvidence.id}`).classList.add('mapped');
+                document.getElementById(`evidence-${currentEvidence.id}`).innerHTML += `
+                    <div class="evidence-status">
+                        <span class="status-mapped">✓ Mapped</span>
+                    </div>
+                `;
+                
+                updateProgress();
+                
+                // Auto-advance to next unmapped document after a short delay
+                setTimeout(() => {
+                    const nextEvidence = evidenceFiles.find(f => !f.mapped);
+                    if (nextEvidence) {
+                        selectEvidence(nextEvidence.id);
+                    }
+                }, 1000);
+            }
+        }
+
+        function rejectMapping(standardId) {
+            const card = document.getElementById(`mapping-${standardId}`);
+            card.style.opacity = '0.3';
+            card.style.pointerEvents = 'none';
+        }
+
+        function updateProgress() {
+            const total = evidenceFiles.length;
+            const mapped = mappedDocuments.size;
+            const percentage = (mapped / total) * 100;
+            
+            document.getElementById('progressText').textContent = `${mapped} of ${total} documents mapped`;
+            document.getElementById('progressBar').style.width = percentage + '%';
+        }
+
+        function skipRemaining() {
+            if (confirm('Are you sure you want to skip mapping the remaining documents? You can always come back later.')) {
+                generateReport();
+            }
+        }
+
+        function generateReport() {
+            // Save mapping data
+            localStorage.setItem('mms:mappingComplete', 'true');
+            localStorage.setItem('mms:lastMappingAt', new Date().toISOString());
+            
+            // Navigate to report generation
+            window.location.href = '/report-generation';
+        }
+    </script>
+</body>
+</html>
