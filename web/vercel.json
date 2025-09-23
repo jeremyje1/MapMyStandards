@@ -6,10 +6,19 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "redirects": [
-    { "source": "/", "destination": "/homepage-enhanced", "permanent": false }
+    { "source": "/", "destination": "/homepage-enhanced", "permanent": false },
+    { "source": "/upload-modern", "destination": "/upload", "permanent": false },
+    { "source": "/dashboard-modern", "destination": "/dashboard", "permanent": false },
+    { "source": "/reports-modern", "destination": "/report-generation", "permanent": false },
+    { "source": "/standards-modern", "destination": "/standards-selection-wizard", "permanent": false }
   ],
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "https://api.mapmystandards.ai/api/$1" }
+    { "source": "/api/(.*)", "destination": "https://api.mapmystandards.ai/api/$1" },
+    { "source": "/dashboard", "destination": "/dashboard-enhanced.html" },
+    { "source": "/upload", "destination": "/upload-enhanced.html" },
+    { "source": "/standards-selection-wizard", "destination": "/standards-selection-wizard.html" },
+    { "source": "/evidence-mapping-wizard", "destination": "/evidence-mapping-wizard.html" },
+    { "source": "/report-generation", "destination": "/report-generation.html" }
   ],
   "headers": [
     {
