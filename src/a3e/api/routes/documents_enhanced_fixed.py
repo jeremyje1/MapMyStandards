@@ -134,6 +134,26 @@ async def list_documents(
     current_user: User = Depends(get_current_user)
 ):
     """List all documents for the current user."""
+    return await _list_documents_impl(skip, limit, category, db, current_user)
+
+@router.get("/list", status_code=status.HTTP_200_OK)
+async def list_documents_alt(
+    skip: int = 0,
+    limit: int = 50,
+    category: Optional[str] = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """List all documents for the current user (alternative endpoint)."""
+    return await _list_documents_impl(skip, limit, category, db, current_user)
+
+async def _list_documents_impl(
+    skip: int,
+    limit: int,
+    category: Optional[str],
+    db: Session,
+    current_user: User
+):
     try:
         query = db.query(Document).filter(
             Document.user_id == current_user.id,
