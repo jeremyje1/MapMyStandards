@@ -527,8 +527,12 @@
     <script>
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded, fetching documents...');
             loadUserFiles();
             setupUploadHandlers();
+            
+            // Also expose loadUserFiles globally for debugging
+            window.loadUserFiles = loadUserFiles;
         });
 
         // Setup upload handlers
@@ -631,7 +635,12 @@
                 showNotification('success', 'Upload Successful', `${file.name} has been uploaded`);
                 
                 // Reload the documents list after successful upload
-                await loadUserFiles();
+                console.log('Upload complete, refreshing documents list...');
+                // Add a small delay to ensure backend has processed the upload
+                setTimeout(async () => {
+                    await loadUserFiles();
+                    console.log('Documents list refreshed');
+                }, 1000);
                 
             } catch (error) {
                 console.error('Upload error:', error);
@@ -657,7 +666,12 @@
                 }
 
                 const data = await response.json();
-                displayFiles(data.evidence || data.documents || []);
+                console.log('API Response:', data);
+                
+                // The API returns documents in the 'evidence' array
+                const files = data.evidence || data.documents || [];
+                console.log(`Found ${files.length} documents`);
+                displayFiles(files);
                 
             } catch (error) {
                 console.error('Error loading files:', error);
