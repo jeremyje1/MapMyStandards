@@ -921,7 +921,7 @@
             <div class="header-nav">
                 <nav class="nav-links">
                     <a href="/dashboard-modern" class="active">Dashboard</a>
-                    <a href="/upload-modern">Upload</a>
+                    <a href="/upload-working.html">Upload</a>
                     <a href="/standards-modern">Standards</a>
                     <a href="/reports-modern">Reports</a>
                     <a href="/reviewer-portal">Reviewer Portal</a>
@@ -968,7 +968,7 @@
                 </div>
                 
                 <div class="quick-actions">
-                    <a href="/upload-modern" class="action-btn action-btn-primary" data-tooltip="Start by uploading your accreditation documents">
+                    <a href="/upload-working.html" class="action-btn action-btn-primary" data-tooltip="Start by uploading your accreditation documents">
                         <span>📁</span>
                         Upload Documents
                     </a>
@@ -1012,7 +1012,7 @@
                         <div>
                             <h4 style="font-weight:600; margin-bottom:4px;">Upload Your Documents</h4>
                             <p style="font-size:14px; color:var(--gray-600); margin-bottom:8px;">Start by uploading your institutional documents, policies, and evidence.</p>
-                            <a href="/upload-modern" class="action-btn action-btn-primary" style="font-size:14px; padding:8px 16px;">Upload Now →</a>
+                            <a href="/upload-working.html" class="action-btn action-btn-primary" style="font-size:14px; padding:8px 16px;">Upload Now →</a>
                         </div>
                     </li>
                     <li style="display:flex; align-items:start; gap:12px; padding:16px; background:var(--gray-50); border-radius:12px; border:1px solid var(--gray-200);">
@@ -1545,7 +1545,7 @@
 
                 const items = [];
                 if (!(hasOrg && hasAccr)) items.push({ id:'onboarding', text:'Complete onboarding to personalize your dashboard', href:'#', action: () => window.MMS_ONBOARDING && window.MMS_ONBOARDING.openWizard && window.MMS_ONBOARDING.openWizard(settings) });
-                if (!docs) items.push({ id:'upload', text:`Upload evidence documents${size? ` • target ${size}+ pages or key policies`:''}`, href:'/upload-modern' });
+                if (!docs) items.push({ id:'upload', text:`Upload evidence documents${size? ` • target ${size}+ pages or key policies`:''}`, href:'/upload-working.html' });
                 if (!sel) items.push({ id:'standards', text:'Browse and select standards to focus on', href:'/standards-modern' });
                 const reportHint = progCount ? `Generate reports • include ${progCount} program${progCount>1?'s':''}` : 'Generate reports when you’re ready';
                 items.push({ id:'reports', text: reportHint, href:'/reports-modern' });
@@ -1591,7 +1591,7 @@
                                 <div class="empty-icon">📁</div>
                                 <div class="empty-title">No recent activity</div>
                                 <div class="empty-description">Upload documents to see processing and mapping activity here.</div>
-                                <a class="empty-action" href="/upload-modern">Upload Documents</a>
+                                <a class="empty-action" href="/upload-working.html">Upload Documents</a>
                             </div>`;
                     } else {
                         // Render activity items
@@ -1617,7 +1617,7 @@
                             <div class="empty-icon">📁</div>
                             <div class="empty-title">No recent activity</div>
                             <div class="empty-description">Upload documents to see processing and mapping activity here.</div>
-                            <a class="empty-action" href="/upload-modern">Upload Documents</a>
+                            <a class="empty-action" href="/upload-working.html">Upload Documents</a>
                         </div>`;
                 }
             }
@@ -1647,7 +1647,7 @@
                                 <div class="empty-icon">🧭</div>
                                 <div class="empty-title">No progress to show yet</div>
                                 <div class="empty-description">Once your documents are analyzed, compliance progress will appear here.</div>
-                                <a class="empty-action" href="/upload-modern">Start by Uploading</a>
+                                <a class="empty-action" href="/upload-working.html">Start by Uploading</a>
                             </div>`;
                     } else {
                         // Calculate percentages
@@ -1685,7 +1685,7 @@
                             <div class="empty-icon">🧭</div>
                             <div class="empty-title">No progress to show yet</div>
                             <div class="empty-description">Once your documents are analyzed, compliance progress will appear here.</div>
-                            <a class="empty-action" href="/upload-modern">Start by Uploading</a>
+                            <a class="empty-action" href="/upload-working.html">Start by Uploading</a>
                         </div>`;
                 }
             }
@@ -1935,7 +1935,7 @@
             // Ctrl/Cmd + U = Upload
             if ((e.ctrlKey || e.metaKey) && e.key === 'u') {
                 e.preventDefault();
-                window.location.href = '/upload-modern';
+                window.location.href = '/upload-working.html';
             }
             
             // Ctrl/Cmd + R = Reports
