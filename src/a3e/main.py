@@ -341,7 +341,7 @@ except ImportError as e:
     _documents_simple_import_exception = e
 
 try:
-    from .api.routes.documents_enhanced import router as documents_enhanced_router
+    from .api.routes.documents_enhanced_fixed import router as documents_enhanced_router
     documents_enhanced_router_available = True
 except ImportError as e:
     documents_enhanced_router_available = False

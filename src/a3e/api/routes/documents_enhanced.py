@@ -33,8 +33,9 @@ def allowed_file(filename: str) -> bool:
     """Check if file extension is allowed"""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# In-memory notification queue (in production, use Redis/RabbitMQ)
-notifications = {}
+# In-memory notification queue (for demo purposes)
+# In production, use Redis or similar
+notification_queue = {}
 
 def send_notification(user_id: str, notification: Dict[str, Any]):
     """Send real-time notification to user"""
