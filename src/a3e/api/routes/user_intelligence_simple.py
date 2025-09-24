@@ -34,12 +34,14 @@ from ...services.narrative_service import generate_narrative_html
 from ...services.storage_service import get_storage_service, StorageService
 from ...services.analytics_service import analytics_service
 from ...core.config import get_settings
+from ...models.document import Document as DocumentModel
 import secrets
 from pathlib import Path
 import hashlib
 import zipfile
 import tempfile
 import re
+import uuid
 # (imports deduplicated)
 
 router = APIRouter(prefix="/api/user/intelligence-simple", tags=["user-intelligence-simple"])
@@ -299,52 +301,123 @@ def _merge_claims_with_settings(claims: Dict[str, Any]) -> Dict[str, Any]:
     return merged
 
 
-def _get_user_uploads(claims: Dict[str, Any]) -> Dict[str, Any]:
-    all_u = _safe_load_json(UPLOADS_STORE)
-    return all_u.get(_user_key(claims), {"documents": [], "unique_standards": []})
+async def _get_user_uploads(claims: Dict[str, Any]) -> Dict[str, Any]:
+    """Get user uploads from database"""
+    user_id = claims.get("sub", claims.get("user_id", "unknown"))
+    
+    try:
+        async with db_manager.get_session() as session:
+            result = await session.execute(
+                text("""
+                    SELECT id, filename, file_key, file_size, content_type, 
+                           sha256, status, uploaded_at, organization_id
+                    FROM documents 
+                    WHERE user_id = :user_id 
+                    AND (deleted_at IS NULL OR deleted_at = '')
+                    ORDER BY uploaded_at DESC
+                    LIMIT 50
+                """),
+                {"user_id": user_id}
+            )
+            
+            documents = []
+            unique_standards = set()
+            
+            for row in result:
+                doc = {
+                    "id": row.id,
+                    "filename": row.filename,
+                    "uploaded_at": row.uploaded_at.isoformat() if row.uploaded_at else "",
+                    "standards_mapped": [],  # TODO: Load from mapping table if exists
+                    "doc_type": row.content_type or "",
+                    "mappings": [],
+                    "trust_score": {},
+                    "saved_path": row.file_key,
+                    "fingerprint": row.sha256 or "",
+                    "size": row.file_size or 0,
+                }
+                documents.append(doc)
+            
+            return {
+                "documents": documents,
+                "unique_standards": list(unique_standards)
+            }
+    except Exception as e:
+        logger.error(f"Error getting user uploads from database: {e}")
+        # Fallback to empty result
+        return {"documents": [], "unique_standards": []}
 
 
-def _set_user_uploads(claims: Dict[str, Any], data: Dict[str, Any]) -> None:
-    all_u = _safe_load_json(UPLOADS_STORE)
-    all_u[_user_key(claims)] = data
-    _safe_save_json(UPLOADS_STORE, all_u)
-
-
-def _record_user_upload(
+async def _record_user_upload(
     claims: Dict[str, Any], filename: str, standard_ids: List[str], doc_type: Optional[str] = None, mapping_details: Optional[List[Dict[str, Any]]] = None, trust_score: Optional[Dict[str, Any]] = None, saved_path: Optional[str] = None, fingerprint: Optional[str] = None, file_size: Optional[int] = None
 ) -> Dict[str, Any]:
-    data = _get_user_uploads(claims)
-    docs = data.get("documents", [])
-    entry = {
-        "filename": filename,
-        "uploaded_at": datetime.utcnow().isoformat(),
-        "standards_mapped": list(standard_ids or []),
-        "doc_type": doc_type or "",
-        # optional rich mapping details
-        "mappings": mapping_details or [],
-        "trust_score": trust_score or {},
-        "saved_path": saved_path or "",
-        "fingerprint": fingerprint or "",
-        "size": file_size or 0,
-    }
-    docs.append(entry)
-    # Update unique standards
-    uniq = set(data.get("unique_standards", []))
-    for sid in standard_ids or []:
-        if sid:
-            uniq.add(sid)
-    data["documents"] = docs[-50:]  # cap history
-    data["unique_standards"] = list(uniq)
-    _set_user_uploads(claims, data)
-    return data
+    """Record a new upload in the database"""
+    user_id = claims.get("sub", claims.get("user_id", "unknown"))
+    org_id = claims.get("org_id", "default")
+    
+    try:
+        async with db_manager.get_session() as session:
+            # Create new document record
+            document_id = str(uuid.uuid4())
+            
+            await session.execute(
+                text("""
+                    INSERT INTO documents (
+                        id, user_id, organization_id, filename, file_key, 
+                        file_size, content_type, sha256, status, uploaded_at
+                    ) VALUES (
+                        :id, :user_id, :org_id, :filename, :file_key,
+                        :file_size, :content_type, :sha256, :status, :uploaded_at
+                    )
+                """),
+                {
+                    "id": document_id,
+                    "user_id": user_id,
+                    "org_id": org_id,
+                    "filename": filename,
+                    "file_key": saved_path or "",
+                    "file_size": file_size or 0,
+                    "content_type": doc_type or "application/octet-stream",
+                    "sha256": fingerprint or "",
+                    "status": "analyzed" if standard_ids else "uploaded",
+                    "uploaded_at": datetime.utcnow()
+                }
+            )
+            
+            await session.commit()
+            
+            # TODO: If standard_ids provided, insert into mapping table
+            
+            logger.info(f"Recorded upload {filename} for user {user_id} in database")
+            
+            # Return updated upload data
+            return await _get_user_uploads(claims)
+            
+    except Exception as e:
+        logger.error(f"Error recording upload in database: {e}")
+        # Fallback to return basic data
+        return {
+            "documents": [{
+                "filename": filename,
+                "uploaded_at": datetime.utcnow().isoformat(),
+                "standards_mapped": list(standard_ids or []),
+                "doc_type": doc_type or "",
+                "mappings": mapping_details or [],
+                "trust_score": trust_score or {},
+                "saved_path": saved_path or "",
+                "fingerprint": fingerprint or "",
+                "size": file_size or 0,
+            }],
+            "unique_standards": list(standard_ids or [])
+        }
 
 
 # (Checklist endpoints moved below auth helpers to satisfy linters)
 
 
-def _compute_dashboard_metrics_for_snapshot(current_user: Dict[str, Any]) -> Dict[str, Any]:
+async def _compute_dashboard_metrics_for_snapshot(current_user: Dict[str, Any]) -> Dict[str, Any]:
     settings_ = _merge_claims_with_settings(current_user)
-    uploads = _get_user_uploads(current_user)
+    uploads = await _get_user_uploads(current_user)
     acc = (settings_.get("primary_accreditor") or "HLC").upper()
     total_roots = len(standards_graph.get_accreditor_standards(acc)) or 0
     docs = uploads.get("documents", [])
@@ -553,7 +626,7 @@ async def _analyze_evidence_from_bytes(
                 "page_anchors": anchors,
             })
         fingerprint = EvidenceDocument(doc_id=filename, text=text_content, metadata={}, doc_type="", source_system="manual", upload_date=datetime.utcnow()).get_fingerprint()
-        _record_user_upload(current_user, filename, [m.standard_id for m in mappings], doc_type, mapping_details, trust_dict, None, fingerprint)
+        await _record_user_upload(current_user, filename, [m.standard_id for m in mappings], doc_type, mapping_details, trust_dict, None, fingerprint)
 
         try:
             overall_trust = float(trust_dict.get("overall_score", 0.7) or 0.7)
@@ -1573,7 +1646,7 @@ async def force_timeseries_snapshot(
         count = int(body.get("count", 1))
         spacing_minutes = int(body.get("spacing_minutes", 360))  # default 6h spacing
 
-        base_metrics = _compute_dashboard_metrics_for_snapshot(current_user)
+        base_metrics = await _compute_dashboard_metrics_for_snapshot(current_user)
         if override_accr:
             base_metrics["accreditor"] = override_accr
 
@@ -1908,7 +1981,7 @@ async def evidence_upload_simple(
             
             if result.get("success"):
                 # Record upload for metrics
-                _record_user_upload(
+                await _record_user_upload(
                     current_user, 
                     name, 
                     standard_ids=[], 
@@ -1954,7 +2027,7 @@ async def list_evidence(
     List all uploaded evidence documents for the current user
     """
     try:
-        uploads = _get_user_uploads(current_user)
+        uploads = await _get_user_uploads(current_user)
         documents = uploads.get("documents", [])
         
         # Enrich with file metadata if available
