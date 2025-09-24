@@ -313,7 +313,7 @@ async def _get_user_uploads(claims: Dict[str, Any]) -> Dict[str, Any]:
                            sha256, status, uploaded_at, organization_id
                     FROM documents 
                     WHERE user_id = :user_id 
-                    AND (deleted_at IS NULL OR deleted_at = '')
+                    AND deleted_at IS NULL
                     ORDER BY uploaded_at DESC
                     LIMIT 50
                 """),
