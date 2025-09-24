@@ -2363,6 +2363,64 @@ async def analyze_evidence_alias(
 
 
 # ------------------------------
+# Document download endpoint
+# ------------------------------
+@router.get("/uploads/{document_id}")
+async def download_document(
+    document_id: str,
+    current_user: Dict[str, Any] = Depends(get_current_user_simple)
+):
+    """Download a specific document by ID"""
+    try:
+        user_id = current_user.get("sub", current_user.get("user_id", "unknown"))
+        
+        # Get document info from database
+        async with db_manager.get_session() as session:
+            result = await session.execute(
+                text("""
+                    SELECT id, filename, file_key, content_type
+                    FROM documents 
+                    WHERE id = :document_id 
+                    AND user_id = :user_id 
+                    AND deleted_at IS NULL
+                """),
+                {"document_id": document_id, "user_id": user_id}
+            )
+            
+            doc = result.first()
+            if not doc:
+                raise HTTPException(status_code=404, detail="Document not found")
+            
+            # Get file from storage
+            file_key = doc.file_key
+            filename = doc.filename
+            content_type = doc.content_type or "application/octet-stream"
+            
+            # Download from storage
+            storage: StorageService = get_storage_service()
+            try:
+                file_content = await storage.download_file(file_key)
+                
+                # Return file response
+                return Response(
+                    content=file_content,
+                    media_type=content_type,
+                    headers={
+                        "Content-Disposition": f'attachment; filename="{filename}"'
+                    }
+                )
+            except Exception as e:
+                logger.error(f"Storage download error: {e}")
+                raise HTTPException(status_code=404, detail="File not found in storage")
+                
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Document download error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to download document")
+
+
+# ------------------------------
 # Bulk analyze (multi-file upload)
 # ------------------------------
 @router.post("/evidence/analyze/bulk")
