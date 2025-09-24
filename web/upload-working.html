@@ -695,8 +695,8 @@
                     <div class="file-details">
                         <div class="file-name">${file.filename}</div>
                         <div class="file-meta">
-                            <span>${formatFileSize(file.file_size)}</span>
-                            <span>${formatDate(file.upload_date)}</span>
+                            <span>${formatFileSize(file.size || 0)}</span>
+                            <span>${formatDate(file.uploaded_at)}</span>
                         </div>
                     </div>
                     <div class="file-actions">
