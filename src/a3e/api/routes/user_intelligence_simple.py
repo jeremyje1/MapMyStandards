@@ -395,8 +395,8 @@ async def _record_user_upload(
             
             logger.info(f"Recorded upload {filename} for user {user_id} in database")
             
-            # Return updated upload data
-            return await _get_user_uploads(claims)
+            # Return document_id for further processing
+            return {"document_id": document_id, "uploads": await _get_user_uploads(claims)}
             
     except Exception as e:
         logger.error(f"Error recording upload in database: {e}")
@@ -2137,7 +2137,7 @@ async def evidence_upload_simple(
             
             if result.get("success"):
                 # Record upload for metrics
-                await _record_user_upload(
+                upload_result = await _record_user_upload(
                     current_user, 
                     name, 
                     standard_ids=[], 
@@ -2148,13 +2148,41 @@ async def evidence_upload_simple(
                     file_size=len(content)
                 )
                 
+                document_id = upload_result.get("document_id")
+                
+                # Automatically trigger analysis for supported file types
+                analysis_result = None
+                try:
+                    if name.lower().endswith(('.pdf', '.txt', '.doc', '.docx')):
+                        # Analyze the document content
+                        analysis = await _analyze_evidence_from_bytes(
+                            name,
+                            content,
+                            doc_type,
+                            current_user
+                        )
+                        analysis_result = analysis
+                        
+                        # Update document status to analyzed
+                        if document_id and "mappings" in analysis:
+                            async with db_manager.get_session() as session:
+                                await session.execute(
+                                    text("UPDATE documents SET status = 'analyzed' WHERE id = :id"),
+                                    {"id": document_id}
+                                )
+                                await session.commit()
+                except Exception as e:
+                    logger.warning(f"Auto-analysis failed for {name}: {e}")
+                
                 saved.append({
+                    "id": document_id,
                     "original": name,
                     "saved_as": file_key,
                     "size": len(content),
                     "hash": result.get("hash", ""),
-                    "status": "uploaded",
-                    "storage_type": result.get("storage_type", "unknown")
+                    "status": "analyzed" if analysis_result else "uploaded",
+                    "storage_type": result.get("storage_type", "unknown"),
+                    "analysis": analysis_result
                 })
             else:
                 logger.error(f"Failed to save file {name}")
@@ -2569,6 +2597,122 @@ async def download_document(
     except Exception as e:
         logger.error(f"Document download error: {e}")
         raise HTTPException(status_code=500, detail="Failed to download document")
+
+
+@router.post("/documents/{document_id}/analyze")
+async def analyze_existing_document(
+    document_id: str,
+    current_user: Dict[str, Any] = Depends(get_current_user_simple)
+):
+    """Analyze a document that's already uploaded and stored in the database"""
+    try:
+        user_id = current_user.get("sub", current_user.get("user_id", "unknown"))
+        
+        # Get document from database
+        async with db_manager.get_session() as session:
+            result = await session.execute(
+                text("""
+                    SELECT id, filename, file_key, content_type, status
+                    FROM documents 
+                    WHERE id = :document_id 
+                    AND user_id = :user_id 
+                    AND deleted_at IS NULL
+                """),
+                {"document_id": document_id, "user_id": user_id}
+            )
+            
+            doc = result.first()
+            if not doc:
+                raise HTTPException(status_code=404, detail="Document not found")
+            
+            # Check if already analyzed
+            if doc.status == "analyzed":
+                # Return cached analysis if available
+                mappings_result = await session.execute(
+                    text("""
+                        SELECT standard_id, confidence, excerpts
+                        FROM evidence_mappings
+                        WHERE document_id = :document_id
+                    """),
+                    {"document_id": document_id}
+                )
+                mappings = []
+                for m in mappings_result:
+                    mappings.append({
+                        "standard_id": m.standard_id,
+                        "confidence": m.confidence,
+                        "excerpts": m.excerpts or []
+                    })
+                
+                if mappings:
+                    return {
+                        "status": "success",
+                        "document_id": document_id,
+                        "filename": doc.filename,
+                        "mappings": mappings,
+                        "cached": True
+                    }
+            
+            # Get file content from storage
+            storage = get_storage_service()
+            file_content = await storage.download_file(doc.file_key)
+            
+            # Analyze the document
+            analysis_result = await _analyze_evidence_from_bytes(
+                doc.filename,
+                file_content,
+                None,  # doc_type
+                current_user
+            )
+            
+            # Update document status
+            await session.execute(
+                text("""
+                    UPDATE documents 
+                    SET status = 'analyzed', 
+                        updated_at = CURRENT_TIMESTAMP
+                    WHERE id = :document_id
+                """),
+                {"document_id": document_id}
+            )
+            
+            # Store mappings in database
+            if "mappings" in analysis_result:
+                for mapping in analysis_result["mappings"]:
+                    await session.execute(
+                        text("""
+                            INSERT INTO evidence_mappings 
+                            (id, document_id, standard_id, confidence, excerpts, created_at)
+                            VALUES (:id, :document_id, :standard_id, :confidence, :excerpts, CURRENT_TIMESTAMP)
+                            ON CONFLICT (document_id, standard_id) 
+                            DO UPDATE SET 
+                                confidence = :confidence,
+                                excerpts = :excerpts,
+                                updated_at = CURRENT_TIMESTAMP
+                        """),
+                        {
+                            "id": str(uuid.uuid4()),
+                            "document_id": document_id,
+                            "standard_id": mapping["standard_id"],
+                            "confidence": mapping["confidence"],
+                            "excerpts": json.dumps(mapping.get("excerpts", []))
+                        }
+                    )
+            
+            await session.commit()
+            
+            return {
+                "status": "success",
+                "document_id": document_id,
+                "filename": doc.filename,
+                **analysis_result
+            }
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Document analysis error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to analyze document: {str(e)}")
 
 
 # ------------------------------

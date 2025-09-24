@@ -257,6 +257,29 @@
             width: 0%;
             transition: width 0.3s ease;
         }
+        
+        /* File status */
+        .file-status {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .file-status.analyzed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .file-action-button.analyze {
+            background: #8b5cf6;
+        }
+        
+        .file-action-button.analyze:hover {
+            background: #7c3aed;
+        }
 
         /* Empty State */
         .empty-state {
@@ -342,6 +365,10 @@
 
         .notification-banner.error {
             border-left: 4px solid #ef4444;
+        }
+        
+        .notification-banner.info {
+            border-left: 4px solid #3b82f6;
         }
 
         .notification-icon {
@@ -810,6 +837,16 @@
                         </div>
                     </div>
                     <div class="file-actions">
+                        ${file.status !== 'analyzed' ? `
+                            <button class="file-action-button analyze" onclick="analyzeFile('${file.id}', '${file.filename}')">
+                                <svg viewBox="0 0 24 24" width="16" height="16">
+                                    <path fill="currentColor" d="M9,4V2H15V4H20V7H4V4H9M12,9A4,4 0 0,1 16,13A4,4 0 0,1 12,17A4,4 0 0,1 8,13A4,4 0 0,1 12,9M18,9H20V20H4V9H6" />
+                                </svg>
+                                Analyze
+                            </button>
+                        ` : `
+                            <span class="file-status analyzed">✓ Analyzed</span>
+                        `}
                         <button class="file-action-button download" onclick="downloadFile('${file.id}', '${file.filename}')">
                             <svg viewBox="0 0 24 24" width="16" height="16">
                                 <path fill="currentColor" d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z" />
@@ -858,6 +895,34 @@
             }
         }
 
+        // Analyze file
+        async function analyzeFile(fileId, filename) {
+            try {
+                showNotification('info', 'Analyzing...', `Starting analysis of ${filename}`);
+                
+                const response = await fetch(`https://api.mapmystandards.ai/api/user/intelligence-simple/documents/${fileId}/analyze`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                    },
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    throw new Error('Analysis failed');
+                }
+
+                const result = await response.json();
+                const mappingsCount = result.mappings ? result.mappings.length : 0;
+                
+                showNotification('success', 'Analysis Complete', `Found ${mappingsCount} standards mappings in ${filename}`);
+                await loadUserFiles();
+            } catch (error) {
+                console.error('Analysis error:', error);
+                showNotification('error', 'Analysis Failed', error.message);
+            }
+        }
+
         // Delete file
         async function deleteFile(fileId) {
             if (!confirm('Are you sure you want to delete this file?')) return;
@@ -896,6 +961,8 @@
             
             if (type === 'error') {
                 icon.innerHTML = '<path fill="currentColor" d="M12,2C17.53,2 22,6.47 22,12C22,17.53 17.53,22 12,22C6.47,22 2,17.53 2,12C2,6.47 6.47,2 12,2M15.59,7L12,10.59L8.41,7L7,8.41L10.59,12L7,15.59L8.41,17L12,13.41L15.59,17L17,15.59L13.41,12L17,8.41L15.59,7Z" />';
+            } else if (type === 'info') {
+                icon.innerHTML = '<path fill="currentColor" d="M13,9H11V7H13M13,17H11V11H13M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z" />';
             } else {
                 icon.innerHTML = '<path fill="currentColor" d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z" />';
             }
