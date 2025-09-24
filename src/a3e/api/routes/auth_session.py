@@ -282,6 +282,7 @@ async def login(req: LoginRequest, response: Response):
     user = _get_user_by_email(req.email)
     if not user or not user["is_active"] or not verify_password(req.password, user["password_hash"]):
         # Fallback: try primary DB (users table managed by ORM) to support existing paid users
+        auth_failed = False
         async with _maybe_session() as session:
             if session and User is not None:
                 try:
@@ -299,20 +300,21 @@ async def login(req: LoginRequest, response: Response):
                                 _ensure_sqlite_user_record(str(db_user.id), db_user.email, ph if isinstance(ph, str) else ph_bytes.decode())
                                 user = {"user_id": str(db_user.id), "email": db_user.email, "password_hash": ph if isinstance(ph, str) else ph_bytes.decode(), "is_active": True}
                             else:
-                                raise HTTPException(status_code=401, detail="Invalid credentials")
+                                auth_failed = True
                         except Exception:
                             # If bcrypt check fails unexpectedly, do not expose details
-                            raise HTTPException(status_code=401, detail="Invalid credentials")
+                            auth_failed = True
                     else:
-                        raise HTTPException(status_code=401, detail="Invalid credentials")
-                except HTTPException:
-                    raise
+                        auth_failed = True
                 except Exception as e:  # pragma: no cover
                     logger.error(f"Fallback DB auth failed: {e}")
-                    raise HTTPException(status_code=401, detail="Invalid credentials")
+                    auth_failed = True
             else:
                 # No fallback available
-                raise HTTPException(status_code=401, detail="Invalid credentials")
+                auth_failed = True
+        
+        if auth_failed:
+            raise HTTPException(status_code=401, detail="Invalid credentials")
     access, aexp = _issue_access_token(user["user_id"], user["email"])
     refresh_days = REFRESH_DAYS_REMEMBER if req.rememberMe else REFRESH_DAYS
     refresh, rexp = _new_refresh_token(user["user_id"], refresh_days)

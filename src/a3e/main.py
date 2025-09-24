@@ -833,6 +833,15 @@ if 'billing_single_plan_router_available' in globals() and billing_single_plan_r
 else:
     logger.warning("⚠️ Single-plan billing router not available")
 
+# Conditionally register documents_enhanced router
+if 'documents_enhanced_router_available' in globals() and documents_enhanced_router_available:
+    app.include_router(documents_enhanced_router)
+    logger.info("✅ Documents enhanced router loaded (/api/documents)")
+else:
+    logger.warning("⚠️ Documents enhanced router not available")
+    if '_documents_enhanced_import_exception' in globals():
+        logger.error(f"   Import error: {_documents_enhanced_import_exception}")
+
 # Sentinel route very early for deployment verification (confirm this file is active)
 @app.get("/_sentinel_main", include_in_schema=False)
 async def _sentinel_main():  # noqa: D401
