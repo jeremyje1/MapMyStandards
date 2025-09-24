@@ -630,6 +630,9 @@
 
                 showNotification('success', 'Upload Successful', `${file.name} has been uploaded`);
                 
+                // Reload the documents list after successful upload
+                await loadUserFiles();
+                
             } catch (error) {
                 console.error('Upload error:', error);
                 uploadProgress.classList.remove('active');
@@ -654,7 +657,7 @@
                 }
 
                 const data = await response.json();
-                displayFiles(data.documents || []);
+                displayFiles(data.evidence || data.documents || []);
                 
             } catch (error) {
                 console.error('Error loading files:', error);
