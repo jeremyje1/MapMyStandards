@@ -1,16 +1,21 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, BackgroundTasks
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 from ...core.database import get_db
 from ..dependencies import get_current_user
 from ...models.user import User
+from ...models.document import Document
+from ...services.storage_service import StorageService
+from ...core.config import settings
 import uuid
 from datetime import datetime
+import logging
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/documents", tags=["documents"])
 
-# In-memory storage for demo
-documents_db = {}
+# Initialize storage service
+storage_service = StorageService(settings)
 
 @router.get("/")
 async def list_documents(current_user: User = Depends(get_current_user)):

@@ -341,6 +341,13 @@ except ImportError as e:
     _documents_simple_import_exception = e
 
 try:
+    from .api.routes.documents_enhanced import router as documents_enhanced_router
+    documents_enhanced_router_available = True
+except ImportError as e:
+    documents_enhanced_router_available = False
+    _documents_enhanced_import_exception = e
+
+try:
     from .api.routes.standards_simple import router as standards_simple_router
     standards_simple_router_available = True
 except ImportError as e:
@@ -979,6 +986,12 @@ if documents_simple_router_available:
     logger.info("✅ Documents simple router loaded")
 else:
     logger.warning("⚠️ Documents simple router not available")
+
+if documents_enhanced_router_available:
+    app.include_router(documents_enhanced_router)
+    logger.info("✅ Documents enhanced router loaded")
+else:
+    logger.warning("⚠️ Documents enhanced router not available")
 
 if standards_simple_router_available:
     app.include_router(standards_simple_router)
