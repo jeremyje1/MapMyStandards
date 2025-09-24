@@ -11,14 +11,13 @@ from datetime import datetime
 import uuid
 
 from ...core.config import get_settings
-from ...services.storage_service import StorageService
+from ...services.storage_service import get_storage_service, StorageService
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/documents", tags=["documents"])
 security = HTTPBearer()
 
 settings = get_settings()
-storage_service = StorageService(settings)
 
 JWT_ALGORITHM = "HS256"
 
@@ -40,7 +39,8 @@ async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(secur
 @router.post("/upload", status_code=status.HTTP_200_OK)
 async def upload_document(
     file: UploadFile = File(...),
-    user: dict = Depends(verify_token)
+    user: dict = Depends(verify_token),
+    storage_service: StorageService = Depends(get_storage_service)
 ):
     """Upload a document."""
     try:

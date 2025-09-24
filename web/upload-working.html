@@ -556,7 +556,7 @@
                 }, 300);
 
                 // Use the working intelligence-simple upload endpoint
-                const response = await fetch('https://api.mapmystandards.ai/api/user/intelligence-simple/uploads', {
+                const response = await fetch('https://api.mapmystandards.ai/api/user/intelligence-simple/evidence/upload', {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('access_token')}`
