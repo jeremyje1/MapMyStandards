@@ -981,11 +981,12 @@ if users_router_available:
 else:
     logger.warning("⚠️ Users router not available")
 
-if documents_simple_router_available:
-    app.include_router(documents_simple_router)
-    logger.info("✅ Documents simple router loaded")
-else:
-    logger.warning("⚠️ Documents simple router not available")
+# Disabled in favor of enhanced router
+# if documents_simple_router_available:
+#     app.include_router(documents_simple_router)
+#     logger.info("✅ Documents simple router loaded")
+# else:
+#     logger.warning("⚠️ Documents simple router not available")
 
 if documents_enhanced_router_available:
     app.include_router(documents_enhanced_router)
