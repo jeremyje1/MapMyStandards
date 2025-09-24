@@ -3,6 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - MapMyStandards</title>
+    <meta http-equiv="refresh" content="0; url=/login-enhanced-v2.html">
+    <script>
+        // Immediate redirect to the new login page
+        window.location.replace('/login-enhanced-v2.html');
+    </script>YPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - A³E | MapMyStandards.ai</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Tailwind (built) -->
@@ -15,6 +25,15 @@
     </style>
 </head>
 <body class="bg-gray-50">
+    <!-- Redirect notice -->
+    <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; z-index: 9999;">
+        <div style="background: white; padding: 40px; border-radius: 16px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.1);">
+            <h2 style="margin: 0 0 16px; color: #333;">Redirecting to New Login Page...</h2>
+            <p style="margin: 0 0 24px; color: #666;">Please wait while we redirect you to the updated login page.</p>
+            <p style="margin: 0; color: #888; font-size: 14px;">If you're not redirected, <a href="/login-enhanced-v2.html" style="color: #667eea;">click here</a>.</p>
+        </div>
+    </div>
+    <div style="display: none;"> <!-- Hide the old content -->
     <!-- Header -->
     <header class="bg-white shadow-sm border-b">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -317,5 +336,6 @@
             }, 5000);
         }
     </script>
+    </div> <!-- End of hidden content -->
 </body>
 </html>
