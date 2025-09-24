@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - MapMyStandards</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .login-container {
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        .logo {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .logo h1 {
+            color: #333;
+            font-size: 28px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+        input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e4e8;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: #5a67d8;
+            transform: translateY(-1px);
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .message {
+            padding: 12px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .message.error {
+            background: #fee;
+            color: #c33;
+            border: 1px solid #fcc;
+        }
+        .message.success {
+            background: #efe;
+            color: #3c3;
+            border: 1px solid #cfc;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+        }
+        .debug {
+            margin-top: 20px;
+            padding: 16px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            font-size: 12px;
+            font-family: monospace;
+            color: #666;
+        }
+        .links {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 14px;
+        }
+        .links a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        .links a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">
+            <h1>🎯 MapMyStandards</h1>
+            <p style="color: #666; margin-top: 8px;">Enhanced Login</p>
+        </div>
+
+        <div id="message" class="message" style="display: none;"></div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    name="email" 
+                    placeholder="your@email.com"
+                    required
+                    autocomplete="username"
+                >
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input 
+                    type="password" 
+                    id="password" 
+                    name="password" 
+                    placeholder="Your password"
+                    required
+                    autocomplete="current-password"
+                >
+            </div>
+
+            <button type="submit" id="submitBtn">Log In</button>
+        </form>
+
+        <div class="loading" id="loading">
+            <p>Logging in...</p>
+        </div>
+
+        <div class="debug" id="debug" style="display: none;">
+            <strong>Debug Info:</strong>
+            <div id="debugContent"></div>
+        </div>
+
+        <div class="links">
+            <a href="/signup.html">Don't have an account? Sign up</a><br>
+            <a href="/auth-status.html" style="color: #888;">Check Auth Status</a>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://api.mapmystandards.ai';
+        const form = document.getElementById('loginForm');
+        const message = document.getElementById('message');
+        const loading = document.getElementById('loading');
+        const submitBtn = document.getElementById('submitBtn');
+        const debug = document.getElementById('debug');
+        const debugContent = document.getElementById('debugContent');
+
+        // Show debug info
+        function showDebug(info) {
+            debug.style.display = 'block';
+            debugContent.innerHTML += info + '<br>';
+        }
+
+        function showMessage(text, type = 'error') {
+            message.textContent = text;
+            message.className = `message ${type}`;
+            message.style.display = 'block';
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+
+            if (!email || !password) {
+                showMessage('Please enter both email and password');
+                return;
+            }
+
+            // Clear previous messages
+            message.style.display = 'none';
+            debugContent.innerHTML = '';
+            
+            // Show loading
+            loading.style.display = 'block';
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Logging in...';
+
+            try {
+                showDebug(`Attempting login for: ${email}`);
+                
+                // Clear old tokens first
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('refresh_token');
+                localStorage.removeItem('a3e_api_key');
+                sessionStorage.clear();
+                
+                showDebug('Cleared old tokens');
+
+                // Make login request
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password }),
+                    credentials: 'include'
+                });
+
+                showDebug(`Response status: ${response.status}`);
+
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Login failed');
+                }
+
+                // Store tokens
+                if (data.access_token) {
+                    localStorage.setItem('access_token', data.access_token);
+                    showDebug('✅ Access token stored');
+                    
+                    // Decode and show token info
+                    try {
+                        const payload = JSON.parse(atob(data.access_token.split('.')[1]));
+                        const exp = new Date(payload.exp * 1000);
+                        showDebug(`Token expires: ${exp.toLocaleString()}`);
+                        showDebug(`User ID: ${payload.sub || payload.user_id}`);
+                    } catch (e) {
+                        showDebug('Could not decode token');
+                    }
+                }
+
+                if (data.refresh_token) {
+                    localStorage.setItem('refresh_token', data.refresh_token);
+                    showDebug('✅ Refresh token stored');
+                }
+
+                // Verify token works
+                showDebug('Verifying token...');
+                const testResponse = await fetch(`${API_BASE}/api/user/intelligence-simple/settings`, {
+                    headers: {
+                        'Authorization': `Bearer ${data.access_token}`
+                    }
+                });
+
+                if (testResponse.ok) {
+                    showDebug('✅ Token verified!');
+                    const userData = await testResponse.json();
+                    showDebug(`Logged in as: ${userData.email}`);
+                    
+                    showMessage('Login successful! Redirecting...', 'success');
+                    
+                    // Redirect after short delay
+                    setTimeout(() => {
+                        const redirect = new URLSearchParams(window.location.search).get('redirect') 
+                                      || '/dashboard-enhanced.html';
+                        window.location.href = redirect;
+                    }, 1500);
+                    
+                } else {
+                    throw new Error('Token verification failed');
+                }
+
+            } catch (error) {
+                console.error('Login error:', error);
+                showMessage(error.message || 'Login failed. Please try again.');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Log In';
+                loading.style.display = 'none';
+            }
+        });
+
+        // Check if already logged in
+        window.addEventListener('load', async () => {
+            const token = localStorage.getItem('access_token');
+            if (token) {
+                showDebug('Found existing token, checking validity...');
+                
+                try {
+                    const response = await fetch(`${API_BASE}/api/user/intelligence-simple/settings`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+
+                    if (response.ok) {
+                        showMessage('You are already logged in. Redirecting...', 'success');
+                        setTimeout(() => {
+                            window.location.href = '/dashboard-enhanced.html';
+                        }, 1000);
+                    } else {
+                        showDebug('Token invalid, clearing...');
+                        localStorage.removeItem('access_token');
+                        localStorage.removeItem('refresh_token');
+                    }
+                } catch (error) {
+                    showDebug('Token check failed');
+                }
+            }
+        });
+    </script>
+</body>
+</html>
