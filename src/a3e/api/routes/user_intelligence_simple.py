@@ -537,10 +537,35 @@ async def _analyze_evidence_from_bytes(
 
         redacted_text = _redact(text_content) if (redaction_enabled and text_content) else text_content
 
+        # Get user's institutional context
+        user_id = current_user.get('sub') or current_user.get('user_id')
+        user_institution = None
+        user_accreditor = None
+        
+        if user_id:
+            try:
+                async with db_manager.get_session() as session:
+                    user_result = await session.execute(
+                        text("SELECT institution_name, primary_accreditor FROM users WHERE id = :user_id"),
+                        {"user_id": user_id}
+                    )
+                    user_data = user_result.fetchone()
+                    if user_data:
+                        user_institution = user_data[0]
+                        user_accreditor = user_data[1]
+            except Exception as e:
+                logger.warning(f"Could not fetch user institution data: {e}")
+        
         doc = EvidenceDocument(
             doc_id=filename,
             text=redacted_text,
-            metadata={"uploaded_by": _user_key(current_user), "doc_type": doc_type or "policy"},
+            metadata={
+                "uploaded_by": _user_key(current_user), 
+                "doc_type": doc_type or "policy",
+                "institution": user_institution or "",
+                "accreditor": user_accreditor or "",
+                "user_id": user_id or ""
+            },
             doc_type="policy",
             source_system="manual",
             upload_date=datetime.utcnow(),
@@ -1393,6 +1418,87 @@ async def get_dashboard_metrics_simple(current_user: Dict[str, Any] = Depends(ge
         raise HTTPException(status_code=500, detail="Failed to compute dashboard metrics")
 
 
+@router.get("/user/profile")
+async def get_user_profile(current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+    """Get user profile information from database"""
+    try:
+        user_id = current_user.get('sub') or current_user.get('user_id')
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID not found")
+        
+        # Get user data from database
+        async with db_manager.get_session() as session:
+            result = await session.execute(
+                text("""
+                    SELECT 
+                        id, email, name, role, institution_name, institution_type,
+                        primary_accreditor, department, onboarding_data, is_trial,
+                        subscription_tier, documents_analyzed, reports_generated,
+                        compliance_checks_run, created_at, updated_at
+                    FROM users 
+                    WHERE id = :user_id
+                """),
+                {"user_id": user_id}
+            )
+            user_data = result.fetchone()
+            
+            if not user_data:
+                # Return basic info from JWT if user not in database
+                return {
+                    "id": user_id,
+                    "email": current_user.get('email'),
+                    "name": current_user.get('name', 'User'),
+                    "institution_name": None,
+                    "primary_accreditor": None,
+                    "onboarding_completed": False
+                }
+            
+            # Convert row to dict
+            user_dict = dict(user_data._mapping) if hasattr(user_data, '_mapping') else dict(zip(result.keys(), user_data))
+            
+            # Parse onboarding data
+            onboarding = user_dict.get('onboarding_data', {})
+            if isinstance(onboarding, str):
+                try:
+                    onboarding = json.loads(onboarding)
+                except:
+                    onboarding = {}
+            
+            return {
+                "id": str(user_dict['id']),
+                "email": user_dict['email'],
+                "name": user_dict['name'],
+                "role": user_dict.get('role'),
+                "institution_name": user_dict.get('institution_name'),
+                "institution_type": user_dict.get('institution_type'),
+                "primary_accreditor": user_dict.get('primary_accreditor'),
+                "department": user_dict.get('department'),
+                "is_trial": user_dict.get('is_trial', False),
+                "subscription_tier": user_dict.get('subscription_tier', 'trial'),
+                "documents_analyzed": user_dict.get('documents_analyzed', 0),
+                "reports_generated": user_dict.get('reports_generated', 0),
+                "compliance_checks_run": user_dict.get('compliance_checks_run', 0),
+                "onboarding_completed": onboarding.get('onboarding_completed', False),
+                "onboarding_data": onboarding,
+                "created_at": user_dict['created_at'].isoformat() if user_dict.get('created_at') else None,
+                "updated_at": user_dict['updated_at'].isoformat() if user_dict.get('updated_at') else None
+            }
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting user profile: {e}")
+        # Return basic info on error
+        return {
+            "id": user_id,
+            "email": current_user.get('email'),
+            "name": current_user.get('name', 'User'),
+            "institution_name": None,
+            "primary_accreditor": None,
+            "onboarding_completed": False
+        }
+
+
 # ------------------------------
 # Standards list and search
 # ------------------------------
@@ -1962,6 +2068,9 @@ async def save_evidence_review(payload: Dict[str, Any], current_user: Dict[str, 
 async def evidence_upload_simple(
     files: List[UploadFile] = File(...),
     doc_type: Optional[str] = Form(None),
+    institution: Optional[str] = Form(None),
+    accreditor: Optional[str] = Form(None),
+    institution_type: Optional[str] = Form(None),
     current_user: Dict[str, Any] = Depends(get_current_user_simple),
 ):
     try:
@@ -1988,6 +2097,27 @@ async def evidence_upload_simple(
             # Determine content type
             content_type = f.content_type or "application/octet-stream"
             
+            # Get institution context (from form data or user profile)
+            inst_name = institution
+            inst_accreditor = accreditor
+            inst_type = institution_type
+            
+            # If not provided in form, try to get from user profile in database
+            if not inst_name or not inst_accreditor:
+                try:
+                    async with db_manager.get_session() as session:
+                        user_result = await session.execute(
+                            text("SELECT institution_name, primary_accreditor, institution_type FROM users WHERE id = :user_id"),
+                            {"user_id": user_id}
+                        )
+                        user_data = user_result.fetchone()
+                        if user_data:
+                            inst_name = inst_name or user_data[0]
+                            inst_accreditor = inst_accreditor or user_data[1]
+                            inst_type = inst_type or user_data[2]
+                except Exception as e:
+                    logger.warning(f"Could not fetch user institution data: {e}")
+            
             # Save to storage (S3 or local)
             result = await storage.save_file(
                 file_content=content,
@@ -1997,6 +2127,9 @@ async def evidence_upload_simple(
                     "original_filename": name,
                     "user_id": user_id,
                     "org_id": org_id,
+                    "institution_name": inst_name or "",
+                    "institution_type": inst_type or "",
+                    "primary_accreditor": inst_accreditor or "",
                     "doc_type": doc_type or "",
                     "uploaded_at": datetime.utcnow().isoformat()
                 }

@@ -525,9 +525,53 @@
         }
     </script>
     <script>
+        // Global user data
+        let userData = null;
+        
+        // Load user profile data
+        async function loadUserProfile() {
+            const token = localStorage.getItem('access_token');
+            if (!token) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/user/intelligence-simple/user/profile`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    userData = await response.json();
+                    console.log('User profile loaded:', userData);
+                    
+                    // Apply user context to improve AI analysis
+                    if (userData.institution_name) {
+                        localStorage.setItem('institution_name', userData.institution_name);
+                        
+                        // Update UI to show institution
+                        const header = document.querySelector('.header-content');
+                        if (header && !document.getElementById('institutionBadge')) {
+                            const badge = document.createElement('div');
+                            badge.id = 'institutionBadge';
+                            badge.style.cssText = 'color: rgba(255,255,255,0.9); font-size: 14px; margin-left: auto; margin-right: 20px;';
+                            badge.textContent = `${userData.institution_name} • ${userData.primary_accreditor || 'No Accreditor Set'}`;
+                            header.appendChild(badge);
+                        }
+                    }
+                    
+                    if (userData.primary_accreditor) {
+                        localStorage.setItem('primary_accreditor', userData.primary_accreditor);
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load user profile:', error);
+            }
+        }
+        
         // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
             console.log('Page loaded, fetching documents...');
+            await loadUserProfile(); // Load user data first
             loadUserFiles();
             setupUploadHandlers();
             
@@ -602,6 +646,19 @@
 
                 const formData = new FormData();
                 formData.append('files', file);
+                
+                // Add institutional context if available
+                if (userData) {
+                    if (userData.institution_name) {
+                        formData.append('institution', userData.institution_name);
+                    }
+                    if (userData.primary_accreditor) {
+                        formData.append('accreditor', userData.primary_accreditor);
+                    }
+                    if (userData.institution_type) {
+                        formData.append('institution_type', userData.institution_type);
+                    }
+                }
 
                 // Simulate progress (since we can't track real upload progress with fetch)
                 let progress = 0;

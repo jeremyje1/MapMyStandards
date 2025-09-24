@@ -955,14 +955,15 @@
 
             async loadUserData() {
                 try {
-                    const response = await fetch(`${API_BASE}/api/user/intelligence-simple/settings`, {
+                    // First try to get full user profile from database
+                    const profileResponse = await fetch(`${API_BASE}/api/user/intelligence-simple/user/profile`, {
                         headers: {
                             'Authorization': `Bearer ${this.getAuthToken()}`
                         },
                         credentials: 'include'
                     });
                     
-                    if (response.status === 401) {
+                    if (profileResponse.status === 401) {
                         // Token expired
                         console.log('Authentication failed, showing re-login prompt...');
                         localStorage.removeItem('access_token');
@@ -971,9 +972,43 @@
                         return;
                     }
                     
-                    if (response.ok) {
-                        this.userData = await response.json();
+                    if (profileResponse.ok) {
+                        const profileData = await profileResponse.json();
+                        
+                        // Also try to get settings (may have additional data)
+                        try {
+                            const settingsResponse = await fetch(`${API_BASE}/api/user/intelligence-simple/settings`, {
+                                headers: {
+                                    'Authorization': `Bearer ${this.getAuthToken()}`
+                                },
+                                credentials: 'include'
+                            });
+                            
+                            if (settingsResponse.ok) {
+                                const settingsData = await settingsResponse.json();
+                                // Merge profile and settings data
+                                this.userData = { ...profileData, ...settingsData };
+                            } else {
+                                this.userData = profileData;
+                            }
+                        } catch (e) {
+                            // Settings endpoint failed, use profile data only
+                            this.userData = profileData;
+                        }
+                        
+                        // Store user data in localStorage for other pages
+                        if (profileData.institution_name) {
+                            localStorage.setItem('institution_name', profileData.institution_name);
+                        }
+                        if (profileData.primary_accreditor) {
+                            localStorage.setItem('primary_accreditor', profileData.primary_accreditor);
+                        }
+                        if (profileData.email) {
+                            localStorage.setItem('user_email', profileData.email);
+                        }
+                        
                         this.personalizeWelcome();
+                        this.applyUserContext();
                     }
                 } catch (error) {
                     console.error('Failed to load user data:', error);
@@ -999,6 +1034,38 @@
                     if (this.userData.email) {
                         userEmail.textContent = this.userData.email;
                     }
+                }
+            }
+            
+            applyUserContext() {
+                // Apply user's institutional context to improve AI analysis
+                if (!this.userData) return;
+                
+                // Update standards link to pre-select user's accreditor
+                if (this.userData.primary_accreditor) {
+                    const standardsLink = document.querySelector('a[href="/standards-modern"]');
+                    if (standardsLink) {
+                        standardsLink.href = `/standards-modern.html?accreditor=${this.userData.primary_accreditor}`;
+                    }
+                }
+                
+                // Update journey tracker based on user's progress
+                if (this.userData.documents_analyzed > 0) {
+                    this.journeyStep = 2;
+                }
+                if (this.userData.reports_generated > 0) {
+                    this.journeyStep = 3;
+                }
+                if (this.userData.compliance_checks_run > 0) {
+                    this.journeyStep = 4;
+                }
+                
+                // Update metrics display to reflect actual data
+                if (this.metrics) {
+                    // Add institution context to metrics
+                    this.metrics.institution = this.userData.institution_name;
+                    this.metrics.accreditor = this.userData.primary_accreditor;
+                    this.metrics.role = this.userData.role;
                 }
             }
 
