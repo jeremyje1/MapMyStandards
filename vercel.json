@@ -17,6 +17,7 @@
     { "src": "^/dashboard$", "dest": "/web/dashboard-modern.html" },
     { "src": "^/standards$", "dest": "/web/standards-modern.html" },
     { "src": "^/reports$", "dest": "/web/reports-modern.html" },
+    { "src": "^/upload$", "dest": "/web/upload-enhanced-v2.html" },
     { "src": "/([^./]+)$", "dest": "/web/$1.html" },
     { "src": "/(.*)", "dest": "/web/$1" }
   ]

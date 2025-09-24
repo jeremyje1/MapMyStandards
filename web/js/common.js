@@ -277,7 +277,7 @@ function logout() {
         localStorage.removeItem('access_token');
         localStorage.removeItem('user_email');
         setTimeout(() => {
-            window.location.href = 'login-enhanced-v2.html';
+            window.location.href = '/login-enhanced-v2';
         }, 500);
     }
 }
@@ -285,11 +285,12 @@ function logout() {
 // Check authentication on page load
 function checkAuth() {
     const token = localStorage.getItem('access_token');
-    const publicPages = ['login-enhanced-v2.html', 'login-enhanced.html', 'homepage-enhanced.html', 'forgot-password.html'];
+    const publicPages = ['login-enhanced-v2.html', 'login-enhanced.html', 'homepage-enhanced.html', 'forgot-password.html', 
+                        'login-enhanced-v2', 'login-enhanced', 'homepage-enhanced', 'forgot-password', '', 'index.html'];
     const currentPage = window.location.pathname.split('/').pop();
     
     if (!token && !publicPages.includes(currentPage)) {
-        window.location.href = 'login-enhanced-v2.html';
+        window.location.href = '/login-enhanced-v2';
     }
 }
 
@@ -317,5 +318,6 @@ window.commonUtils = {
     debounce,
     createProgressBar,
     updateProgressBar,
-    logout
+    logout,
+    checkAuth
 };
