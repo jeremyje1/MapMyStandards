@@ -341,11 +341,13 @@ except ImportError as e:
     _documents_simple_import_exception = e
 
 try:
-    from .api.routes.documents_enhanced_fixed import router as documents_enhanced_router
+    from .api.routes.documents_minimal import router as documents_enhanced_router
     documents_enhanced_router_available = True
+    logger.info("✅ Documents minimal router imported successfully")
 except ImportError as e:
     documents_enhanced_router_available = False
     _documents_enhanced_import_exception = e
+    logger.error(f"❌ Failed to import documents_minimal router: {e}")
 
 try:
     from .api.routes.standards_simple import router as standards_simple_router

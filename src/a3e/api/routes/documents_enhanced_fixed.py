@@ -4,24 +4,63 @@ Simplified version without notification complexity
 """
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, BackgroundTasks, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
+from sqlalchemy import text, select
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 import uuid
 import logging
+import jwt
+from jwt.exceptions import InvalidTokenError
 
-from ...core.database import get_db
-from ..dependencies import get_current_user
+from ...database.connection import db_manager
 from ...models.user import User
 from ...models.document import Document
 from ...services.storage_service import StorageService
-from ...core.config import settings
+from ...core.config import get_settings
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/documents", tags=["documents"])
+security = HTTPBearer()
 
-# Initialize storage service
+# Initialize settings and storage service
+settings = get_settings()
 storage_service = StorageService(settings)
+
+JWT_ALGORITHM = "HS256"
+
+# Database dependency
+async def get_db():
+    """Get database session."""
+    async with db_manager.get_session() as session:
+        yield session
+
+# Authentication dependency
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get current user from JWT token."""
+    try:
+        token = credentials.credentials
+        payload = jwt.decode(token, settings.jwt_secret, algorithms=[JWT_ALGORITHM])
+        user_id = payload.get("sub")
+        
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        
+        async with db_manager.get_session() as db:
+            result = await db.execute(select(User).where(User.id == user_id))
+            user = result.scalar_one_or_none()
+            
+            if not user:
+                raise HTTPException(status_code=401, detail="User not found")
+            
+            return user
+            
+    except InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    except Exception as e:
+        logger.error(f"Auth error: {e}")
+        raise HTTPException(status_code=401, detail="Authentication failed")
 
 # Allowed file types
 ALLOWED_EXTENSIONS = {
