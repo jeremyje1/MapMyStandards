@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication Status - MapMyStandards</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif; 
+            background: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 90%;
+        }
+        h1 {
+            margin-bottom: 24px;
+            color: #111;
+        }
+        .status-item {
+            padding: 16px;
+            margin: 12px 0;
+            background: #f9f9f9;
+            border-radius: 8px;
+            border-left: 4px solid #ddd;
+        }
+        .status-item.valid {
+            border-left-color: #10b981;
+            background: #f0fdf4;
+        }
+        .status-item.invalid {
+            border-left-color: #ef4444;
+            background: #fef2f2;
+        }
+        .status-label {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .status-value {
+            color: #666;
+            font-family: monospace;
+            word-break: break-all;
+        }
+        button {
+            background: #0066cc;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 24px;
+            width: 100%;
+        }
+        button:hover {
+            background: #0052a3;
+        }
+        .actions {
+            margin-top: 32px;
+            display: flex;
+            gap: 12px;
+        }
+        .btn-secondary {
+            background: #6c757d;
+        }
+        .btn-secondary:hover {
+            background: #5c636a;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Authentication Status</h1>
+        
+        <div id="statusContainer">
+            <p>Checking authentication status...</p>
+        </div>
+        
+        <div class="actions" id="actions" style="display: none;">
+            <button onclick="window.location.href='/login-working.html'" class="btn-secondary">
+                Go to Login
+            </button>
+            <button onclick="checkStatus()">
+                Refresh Status
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://api.mapmystandards.ai';
+
+        async function checkStatus() {
+            const container = document.getElementById('statusContainer');
+            const actions = document.getElementById('actions');
+            
+            // Check for tokens
+            const accessToken = localStorage.getItem('access_token');
+            const refreshToken = localStorage.getItem('refresh_token');
+            
+            let html = '';
+            
+            // Access Token Status
+            if (accessToken) {
+                html += `
+                    <div class="status-item valid">
+                        <div class="status-label">✅ Access Token Found</div>
+                        <div class="status-value">${accessToken.substring(0, 20)}...${accessToken.substring(accessToken.length - 10)}</div>
+                    </div>
+                `;
+                
+                // Try to decode JWT
+                try {
+                    const payload = JSON.parse(atob(accessToken.split('.')[1]));
+                    const exp = new Date(payload.exp * 1000);
+                    const now = new Date();
+                    const isExpired = exp < now;
+                    
+                    html += `
+                        <div class="status-item ${isExpired ? 'invalid' : 'valid'}">
+                            <div class="status-label">${isExpired ? '❌' : '✅'} Token Expiration</div>
+                            <div class="status-value">Expires: ${exp.toLocaleString()}</div>
+                            ${isExpired ? '<div class="status-value" style="color: #ef4444; margin-top: 8px;">Token has expired!</div>' : ''}
+                        </div>
+                    `;
+                    
+                    if (payload.sub || payload.user_id) {
+                        html += `
+                            <div class="status-item valid">
+                                <div class="status-label">👤 User ID</div>
+                                <div class="status-value">${payload.sub || payload.user_id}</div>
+                            </div>
+                        `;
+                    }
+                } catch (e) {
+                    html += `
+                        <div class="status-item invalid">
+                            <div class="status-label">❌ Invalid Token Format</div>
+                            <div class="status-value">Cannot decode token</div>
+                        </div>
+                    `;
+                }
+                
+                // Test API call
+                html += await testAPICall(accessToken);
+                
+            } else {
+                html += `
+                    <div class="status-item invalid">
+                        <div class="status-label">❌ No Access Token</div>
+                        <div class="status-value">You need to log in</div>
+                    </div>
+                `;
+            }
+            
+            // Refresh Token Status
+            if (refreshToken) {
+                html += `
+                    <div class="status-item valid">
+                        <div class="status-label">✅ Refresh Token Found</div>
+                        <div class="status-value">${refreshToken.substring(0, 20)}...${refreshToken.substring(refreshToken.length - 10)}</div>
+                    </div>
+                `;
+            }
+            
+            container.innerHTML = html;
+            actions.style.display = 'flex';
+        }
+
+        async function testAPICall(token) {
+            try {
+                const response = await fetch(`${API_BASE}/api/user/intelligence-simple/settings`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    return `
+                        <div class="status-item valid">
+                            <div class="status-label">✅ API Connection Successful</div>
+                            <div class="status-value">Logged in as: ${data.email || 'Unknown'}</div>
+                        </div>
+                    `;
+                } else {
+                    return `
+                        <div class="status-item invalid">
+                            <div class="status-label">❌ API Connection Failed</div>
+                            <div class="status-value">Status: ${response.status} ${response.statusText}</div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                return `
+                    <div class="status-item invalid">
+                        <div class="status-label">❌ API Connection Error</div>
+                        <div class="status-value">${error.message}</div>
+                    </div>
+                `;
+            }
+        }
+
+        // Check status on load
+        checkStatus();
+    </script>
+</body>
+</html>
