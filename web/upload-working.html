@@ -589,7 +589,7 @@
             if (!token) {
                 showNotification('error', 'Not Authenticated', 'Please log in to upload documents');
                 setTimeout(() => {
-                    window.location.href = '/login-working.html';
+                    window.location.href = '/login-enhanced-v2.html';
                 }, 2000);
                 return;
             }
@@ -630,7 +630,7 @@
                     localStorage.removeItem('refresh_token');
                     showNotification('error', 'Session Expired', 'Please log in again');
                     setTimeout(() => {
-                        window.location.href = '/login-working.html';
+                        window.location.href = '/login-enhanced-v2.html';
                     }, 2000);
                     uploadZone.classList.remove('uploading');
                     uploadProgress.classList.remove('active');
@@ -678,7 +678,7 @@
                 const token = localStorage.getItem('access_token');
                 if (!token) {
                     console.log('No access token found, redirecting to login...');
-                    window.location.href = '/login-working.html';
+                    window.location.href = '/login-enhanced-v2.html';
                     return;
                 }
 
@@ -695,7 +695,7 @@
                     console.log('Authentication failed (401), redirecting to login...');
                     localStorage.removeItem('access_token');
                     localStorage.removeItem('refresh_token');
-                    window.location.href = '/login-working.html';
+                    window.location.href = '/login-enhanced-v2.html';
                     return;
                 }
 
