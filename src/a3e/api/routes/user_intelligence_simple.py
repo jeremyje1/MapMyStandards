@@ -363,24 +363,29 @@ async def _record_user_upload(
             await session.execute(
                 text("""
                     INSERT INTO documents (
-                        id, user_id, organization_id, filename, file_key, 
-                        file_size, content_type, sha256, status, uploaded_at
+                        id, user_id, institution_id, filename, file_key, 
+                        file_size, content_type, sha256, status, uploaded_at,
+                        original_filename, file_path, mime_type
                     ) VALUES (
-                        :id, :user_id, :org_id, :filename, :file_key,
-                        :file_size, :content_type, :sha256, :status, :uploaded_at
+                        :id, :user_id, :institution_id, :filename, :file_key,
+                        :file_size, :content_type, :sha256, :status, :uploaded_at,
+                        :original_filename, :file_path, :mime_type
                     )
                 """),
                 {
                     "id": document_id,
                     "user_id": user_id,
-                    "org_id": org_id,
+                    "institution_id": org_id,  # Maps to institution_id column
                     "filename": filename,
                     "file_key": saved_path or "",
                     "file_size": file_size or 0,
                     "content_type": doc_type or "application/octet-stream",
                     "sha256": fingerprint or "",
                     "status": "analyzed" if standard_ids else "uploaded",
-                    "uploaded_at": datetime.utcnow()
+                    "uploaded_at": datetime.utcnow(),
+                    "original_filename": filename,  # Required field
+                    "file_path": saved_path or "",  # Required field
+                    "mime_type": doc_type or "application/octet-stream"  # Maps to mime_type column
                 }
             )
             
