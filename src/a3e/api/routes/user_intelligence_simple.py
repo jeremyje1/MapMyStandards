@@ -1232,20 +1232,30 @@ async def get_dashboard_metrics_simple(current_user: Dict[str, Any] = Depends(ge
         if user_id:
             try:
                 async with db_manager.get_session() as session:
-                    # Counts from jobs table
-                    c1 = await session.execute(
-                        text("SELECT COUNT(*) FROM jobs WHERE user_id = :u AND status = 'completed'"),
-                        {"u": user_id},
-                    )
-                    documents_analyzed = int(c1.scalar() or 0)
-                    c2 = await session.execute(
-                        text("""
-                            SELECT COUNT(*) FROM jobs
-                            WHERE user_id = :u AND status IN ('queued','extracting','parsing','embedding','matching','analyzing')
-                        """),
-                        {"u": user_id},
-                    )
-                    documents_processing = int(c2.scalar() or 0)
+                    # First try documents table (new approach)
+                    try:
+                        c1 = await session.execute(
+                            text("SELECT COUNT(*) FROM documents WHERE user_id = :u AND deleted_at IS NULL"),
+                            {"u": user_id},
+                        )
+                        documents_analyzed = int(c1.scalar() or 0)
+                        # Documents are instantly "analyzed" so processing is 0
+                        documents_processing = 0
+                    except Exception:
+                        # Fallback to jobs table (old approach)
+                        c1 = await session.execute(
+                            text("SELECT COUNT(*) FROM jobs WHERE user_id = :u AND status = 'completed'"),
+                            {"u": user_id},
+                        )
+                        documents_analyzed = int(c1.scalar() or 0)
+                        c2 = await session.execute(
+                            text("""
+                                SELECT COUNT(*) FROM jobs
+                                WHERE user_id = :u AND status IN ('queued','extracting','parsing','embedding','matching','analyzing')
+                            """),
+                            {"u": user_id},
+                        )
+                        documents_processing = int(c2.scalar() or 0)
 
                     # Determine result column name
                     col_sql = text(
@@ -1282,6 +1292,14 @@ async def get_dashboard_metrics_simple(current_user: Dict[str, Any] = Depends(ge
                                     if sid:
                                         uniq.add(str(sid))
                     standards_mapped = len(uniq)
+                    
+                    # If we found documents, get unique standards from user uploads
+                    if documents_analyzed > 0:
+                        uploads_data = await _get_user_uploads(current_user)
+                        unique_stds = uploads_data.get("unique_standards", [])
+                        if unique_stds:
+                            standards_mapped = len(unique_stds)
+                    
                     used_db = True
             except Exception as db_e:
                 logger.warning(f"DB metrics fallback: {db_e}")
