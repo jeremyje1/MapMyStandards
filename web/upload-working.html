@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document Upload - MapMyStandards</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-    <link rel="stylesheet" href="styles.css">
     <style>
         /* Enhanced Upload Styles */
         .upload-container {
@@ -377,6 +376,23 @@
             color: #6b7280;
         }
 
+        /* Page Layout Styles */
+        body {
+            margin: 0;
+            padding: 0;
+        }
+        
+        .main-content {
+            min-height: calc(100vh - 200px);
+            padding: 40px 0;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
         /* Responsive Design */
         @media (max-width: 768px) {
             .upload-container {
@@ -412,7 +428,12 @@
     </style>
 </head>
 <body>
-    <div id="headerContainer"></div>
+    <!-- Simple Header -->
+    <header style="background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 20px 0;">
+        <div class="container">
+            <h2 style="margin: 0; color: #0F3875;">MapMyStandards - Document Upload</h2>
+        </div>
+    </header>
 
     <main class="main-content">
         <div class="container">
@@ -465,7 +486,12 @@
         </div>
     </main>
 
-    <div id="footerContainer"></div>
+    <!-- Simple Footer -->
+    <footer style="background: #f8f9fa; padding: 40px 0; margin-top: 60px; border-top: 1px solid #e5e7eb;">
+        <div class="container" style="text-align: center; color: #6b7280;">
+            <p>© 2025 MapMyStandards. All rights reserved.</p>
+        </div>
+    </footer>
 
     <!-- Notification Banner -->
     <div class="notification-banner" id="notificationBanner">
@@ -480,7 +506,24 @@
         </div>
     </div>
 
-    <script src="common.js"></script>
+    <!-- Inline auth and common functions -->
+    <script>
+        // Check if user is authenticated
+        function checkAuth() {
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                window.location.href = '/login.html';
+                return false;
+            }
+            return true;
+        }
+        
+        // Initialize auth check
+        if (!checkAuth()) {
+            // Stop execution if not authenticated
+            throw new Error('Not authenticated');
+        }
+    </script>
     <script>
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
