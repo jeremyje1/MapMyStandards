@@ -311,7 +311,7 @@ def _set_user_uploads(claims: Dict[str, Any], data: Dict[str, Any]) -> None:
 
 
 def _record_user_upload(
-    claims: Dict[str, Any], filename: str, standard_ids: List[str], doc_type: Optional[str] = None, mapping_details: Optional[List[Dict[str, Any]]] = None, trust_score: Optional[Dict[str, Any]] = None, saved_path: Optional[str] = None, fingerprint: Optional[str] = None
+    claims: Dict[str, Any], filename: str, standard_ids: List[str], doc_type: Optional[str] = None, mapping_details: Optional[List[Dict[str, Any]]] = None, trust_score: Optional[Dict[str, Any]] = None, saved_path: Optional[str] = None, fingerprint: Optional[str] = None, file_size: Optional[int] = None
 ) -> Dict[str, Any]:
     data = _get_user_uploads(claims)
     docs = data.get("documents", [])
@@ -325,6 +325,7 @@ def _record_user_upload(
         "trust_score": trust_score or {},
         "saved_path": saved_path or "",
         "fingerprint": fingerprint or "",
+        "size": file_size or 0,
     }
     docs.append(entry)
     # Update unique standards
@@ -1914,7 +1915,8 @@ async def evidence_upload_simple(
                     doc_type=doc_type, 
                     trust_score=None, 
                     saved_path=file_key,  # Use storage key instead of local path
-                    fingerprint=result.get("hash", "")[:16]
+                    fingerprint=result.get("hash", "")[:16],
+                    file_size=len(content)
                 )
                 
                 saved.append({
@@ -1964,11 +1966,14 @@ async def list_evidence(
             enriched["status"] = "processed" if enriched.get("standards_mapped") else "pending"
             enriched["mapped_count"] = len(enriched.get("standards_mapped", []))
             
-            # Try to get file size if path exists
-            if enriched.get("saved_path") and os.path.exists(enriched["saved_path"]):
-                try:
-                    enriched["size"] = os.path.getsize(enriched["saved_path"])
-                except:
+            # Use stored size if available, otherwise try to get from local path
+            if "size" not in enriched:
+                if enriched.get("saved_path") and os.path.exists(enriched["saved_path"]):
+                    try:
+                        enriched["size"] = os.path.getsize(enriched["saved_path"])
+                    except:
+                        enriched["size"] = 0
+                else:
                     enriched["size"] = 0
             
             enriched_docs.append(enriched)
