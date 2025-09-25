@@ -71,13 +71,23 @@ def verify_password(password: str, password_hash: str) -> bool:
     """Verify password against hash"""
     return bcrypt.checkpw(password.encode('utf-8'), password_hash.encode('utf-8'))
 
-def create_jwt_token(email: str, remember: bool = False) -> str:
-    """Create JWT token for authenticated user"""
+def create_jwt_token(user_id: str, email: str, name: str = None, remember: bool = False) -> str:
+    """Create JWT token for authenticated user with UUID
+    
+    Args:
+        user_id: The user's UUID from the database
+        email: The user's email address
+        name: The user's name (optional)
+        remember: Whether to create a longer-lived token
+    """
     expiration = timedelta(hours=JWT_EXPIRATION_HOURS * (30 if remember else 1))
     expire = datetime.utcnow() + expiration
     
     payload = {
-        "sub": email,
+        "sub": str(user_id),  # Use UUID as the subject
+        "user_id": str(user_id),  # Explicit user_id field with UUID
+        "email": email,  # Keep email for display/reference
+        "name": name,  # Include name for UI if provided
         "exp": expire,
         "iat": datetime.utcnow()
     }
@@ -95,17 +105,36 @@ def _candidate_secrets() -> list:
         'your-secret-key-here-change-in-production',
     ]
 
-def verify_jwt_token(token: str) -> Optional[str]:
-    """Verify JWT token and return email if valid. Tries multiple secrets."""
+def verify_jwt_token(token: str) -> Optional[Dict[str, Any]]:
+    """Verify JWT token and return payload if valid. Tries multiple secrets.
+    
+    Returns:
+        Dict containing user information if valid, None otherwise
+    """
     for secret in _candidate_secrets():
         if not secret:
             continue
         try:
             payload = jwt.decode(token, secret, algorithms=[JWT_ALGORITHM])
-            return payload.get("sub")
+            # Return the full payload to support both old (email) and new (UUID) tokens
+            return payload
         except Exception:
             continue
     logger.warning("JWT verification failed for all candidate secrets")
+    return None
+
+
+def verify_jwt_token_email(token: str) -> Optional[str]:
+    """Verify JWT token and return email if valid (backward compatibility).
+    
+    This is a compatibility wrapper that extracts the email from the token payload.
+    It supports both old tokens (email in 'sub') and new tokens (email in 'email' field).
+    """
+    payload = verify_jwt_token(token)
+    if payload:
+        # Try to get email from the 'email' field first (new format)
+        # Fall back to 'sub' field for old tokens that used email as subject
+        return payload.get("email", payload.get("sub"))
     return None
 
 @router.post("/login", response_model=LoginResponse)
@@ -149,7 +178,7 @@ async def login(request: LoginRequest, db: AsyncSession = Depends(get_db)):
         
         # Create JWT token with session tracking
         jti = str(uuid.uuid4())
-        token = create_jwt_token(request.email, request.remember)
+        token = create_jwt_token(str(user.id), user.email, user.name, request.remember)
         
         # Create session record
         session = UserSession(
@@ -208,16 +237,21 @@ async def verify_token(token: str):
     """
     Verify if a JWT token is valid
     """
-    email = verify_jwt_token(token)
-    if email:
+    payload = verify_jwt_token(token)
+    if payload:
+        # Handle both old (email in sub) and new (UUID in sub) token formats
+        email = payload.get("email", payload.get("sub"))
+        user_id = payload.get("user_id", payload.get("sub"))
         return {
             "valid": True,
-            "email": email
+            "email": email,
+            "user_id": user_id
         }
     else:
         return {
             "valid": False,
-            "email": None
+            "email": None,
+            "user_id": None
         }
 
 @router.post("/password-reset", response_model=PasswordResetResponse)

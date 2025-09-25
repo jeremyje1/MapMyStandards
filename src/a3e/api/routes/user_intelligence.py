@@ -21,7 +21,7 @@ from ...services.evidence_mapper import evidence_mapper, EvidenceDocument
 from ...services.evidence_trust import evidence_trust_scorer, EvidenceType, SourceSystem
 from ...services.gap_risk_predictor import gap_risk_predictor
 from ...core.config import get_settings
-from ..routes.auth_impl import verify_jwt_token
+from ..routes.auth_impl import verify_jwt_token_email as verify_jwt_token
 
 router = APIRouter(prefix="/api/user/intelligence", tags=["user-intelligence"])
 security = HTTPBearer()

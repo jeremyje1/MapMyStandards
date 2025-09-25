@@ -122,8 +122,8 @@ async def register_user(
         await db.commit()
         await db.refresh(user)
         
-        # Generate JWT token
-        access_token = create_jwt_token(user.email)
+        # Generate JWT token with UUID
+        access_token = create_jwt_token(str(user.id), user.email, user.name)
         
         logger.info(f"User registered successfully: {request.email}")
         
@@ -197,8 +197,8 @@ async def login_user(
                 detail="Your trial has expired. Please upgrade to continue."
             )
         
-        # Generate new JWT token
-        access_token = create_jwt_token(user.email)
+        # Generate new JWT token with UUID
+        access_token = create_jwt_token(str(user.id), user.email, user.name)
         
         # Generate new API key if needed
         if not user.api_key:

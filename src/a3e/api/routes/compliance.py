@@ -14,7 +14,7 @@ import logging
 from ...models.user import User, UsageEvent
 from ...services.database_service import DatabaseService
 from ...core.config import get_settings
-from ..routes.auth_impl import verify_jwt_token
+from ..routes.auth_impl import verify_jwt_token_email as verify_jwt_token
 
 router = APIRouter(prefix="/api/compliance", tags=["compliance"])
 security = HTTPBearer()

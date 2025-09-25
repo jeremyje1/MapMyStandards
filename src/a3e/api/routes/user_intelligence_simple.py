@@ -352,7 +352,8 @@ async def _record_user_upload(
     claims: Dict[str, Any], filename: str, standard_ids: List[str], doc_type: Optional[str] = None, mapping_details: Optional[List[Dict[str, Any]]] = None, trust_score: Optional[Dict[str, Any]] = None, saved_path: Optional[str] = None, fingerprint: Optional[str] = None, file_size: Optional[int] = None
 ) -> Dict[str, Any]:
     """Record a new upload in the database"""
-    user_id = claims.get("sub", claims.get("user_id", "unknown"))
+    email = claims.get("sub", claims.get("email", claims.get("user_id", "unknown")))
+    user_id = await get_user_uuid_from_email(email)
     org_id = claims.get("org_id", "default")
     
     try:
@@ -539,7 +540,8 @@ async def _analyze_evidence_from_bytes(
         redacted_text = _redact(text_content) if (redaction_enabled and text_content) else text_content
 
         # Get user's institutional context
-        user_id = current_user.get('sub') or current_user.get('user_id')
+        email = current_user.get('sub') or current_user.get('email') or current_user.get('user_id')
+        user_id = await get_user_uuid_from_email(email)
         user_institution = None
         user_accreditor = None
         
@@ -806,6 +808,35 @@ async def get_current_user_simple(
     if not claims:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
     return claims
+
+
+# ------------------------------
+# Helper function to get user UUID from email
+# ------------------------------
+async def get_user_uuid_from_email(email: str) -> str:
+    """Get the actual UUID for a user from their email address"""
+    try:
+        async with db_manager.get_session() as session:
+            result = await session.execute(
+                text("SELECT id FROM users WHERE email = :email"),
+                {"email": email}
+            )
+            user = result.first()
+            if user:
+                return user.id
+            # If no user found, check if the provided value is already a UUID
+            import uuid
+            try:
+                uuid.UUID(email)
+                return email  # It's already a UUID
+            except:
+                # Return the email as fallback (for backward compatibility)
+                logger.warning(f"No user found for email: {email}, using email as ID")
+                return email
+    except Exception as e:
+        logger.error(f"Error getting user UUID: {e}")
+        return email
+
 
 # ------------------------------
 # Evidence Intake Checklist
@@ -2135,7 +2166,8 @@ async def evidence_upload_simple(
         saved: List[Dict[str, Any]] = []
         
         # Get user info for file key generation
-        user_id = current_user.get("sub", current_user.get("user_id", "unknown"))
+        email = current_user.get("sub", current_user.get("email", current_user.get("user_id", "unknown")))
+        user_id = await get_user_uuid_from_email(email)
         org_id = current_user.get("org_id", "default")
         
         for f in files:
@@ -2268,7 +2300,8 @@ async def list_evidence(
     List all uploaded evidence documents for the current user
     """
     try:
-        user_id = current_user.get("sub", current_user.get("user_id", "unknown"))
+        email = current_user.get("sub", current_user.get("email", current_user.get("user_id", "unknown")))
+        user_id = await get_user_uuid_from_email(email)
         
         # Get documents from database instead of file system
         async with db_manager.get_session() as session:
@@ -2630,7 +2663,8 @@ async def download_document(
 ):
     """Download a specific document by ID"""
     try:
-        user_id = current_user.get("sub", current_user.get("user_id", "unknown"))
+        email = current_user.get("sub", current_user.get("email", current_user.get("user_id", "unknown")))
+        user_id = await get_user_uuid_from_email(email)
         
         # Get document info from database
         async with db_manager.get_session() as session:
@@ -2685,7 +2719,8 @@ async def analyze_existing_document(
 ):
     """Analyze a document that's already uploaded and stored in the database"""
     try:
-        user_id = current_user.get("sub", current_user.get("user_id", "unknown"))
+        email = current_user.get("sub", current_user.get("email", current_user.get("user_id", "unknown")))
+        user_id = await get_user_uuid_from_email(email)
         
         # Get document from database
         async with db_manager.get_session() as session:
@@ -2802,7 +2837,8 @@ async def delete_document(
 ):
     """Delete a document (soft delete)"""
     try:
-        user_id = current_user.get("sub", current_user.get("user_id", "unknown"))
+        email = current_user.get("sub", current_user.get("email", current_user.get("user_id", "unknown")))
+        user_id = await get_user_uuid_from_email(email)
         
         # Soft delete the document
         async with db_manager.get_session() as session:
@@ -2846,7 +2882,8 @@ async def list_documents(
 ):
     """List all user's documents"""
     try:
-        user_id = current_user.get("sub", current_user.get("user_id", "unknown"))
+        email = current_user.get("sub", current_user.get("email", current_user.get("user_id", "unknown")))
+        user_id = await get_user_uuid_from_email(email)
         
         async with db_manager.get_session() as session:
             result = await session.execute(
@@ -2885,7 +2922,8 @@ async def get_recent_documents(
 ):
     """Get recent document activity"""
     try:
-        user_id = current_user.get("sub", current_user.get("user_id", "unknown"))
+        email = current_user.get("sub", current_user.get("email", current_user.get("user_id", "unknown")))
+        user_id = await get_user_uuid_from_email(email)
         
         async with db_manager.get_session() as session:
             result = await session.execute(
@@ -2924,7 +2962,8 @@ async def get_compliance_summary(
 ):
     """Get compliance summary for dashboard"""
     try:
-        user_id = current_user.get("sub", current_user.get("user_id", "unknown"))
+        email = current_user.get("sub", current_user.get("email", current_user.get("user_id", "unknown")))
+        user_id = await get_user_uuid_from_email(email)
         
         # Get document analysis results
         async with db_manager.get_session() as session:
@@ -2980,7 +3019,8 @@ async def get_risk_summary(
 ):
     """Get risk summary for dashboard"""
     try:
-        user_id = current_user.get("sub", current_user.get("user_id", "unknown"))
+        email = current_user.get("sub", current_user.get("email", current_user.get("user_id", "unknown")))
+        user_id = await get_user_uuid_from_email(email)
         
         # Mock risk data for now
         return {
