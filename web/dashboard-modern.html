@@ -1576,7 +1576,7 @@
                     
                     // Fetch activity data
                     const token = this.getAuthToken();
-                    const response = await fetch('/api/user/intelligence-simple/documents/recent', {
+                    const response = await fetch('https://api.mapmystandards.ai/api/user/intelligence-simple/documents/recent', {
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
                     
@@ -1633,7 +1633,7 @@
                     
                     // Fetch compliance data
                     const token = this.getAuthToken();
-                    const response = await fetch('/api/user/intelligence-simple/compliance/summary', {
+                    const response = await fetch('https://api.mapmystandards.ai/api/user/intelligence-simple/compliance/summary', {
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
                     
@@ -1696,7 +1696,7 @@
                 
                 try {
                     const token = this.getAuthToken();
-                    const response = await fetch('/api/user/intelligence-simple/risk/summary', {
+                    const response = await fetch('https://api.mapmystandards.ai/api/user/intelligence-simple/risk/summary', {
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
                     
@@ -2136,7 +2136,7 @@
                     try {
                         // Fetch actual document data from API
                         const token = localStorage.getItem('a3e_api_key') || localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
-                        const response = await fetch('/api/user/intelligence-simple/documents/list', {
+                        const response = await fetch('https://api.mapmystandards.ai/api/user/intelligence-simple/documents/list', {
                             headers: { 'Authorization': `Bearer ${token}` }
                         });
                         
@@ -2888,11 +2888,7 @@
             });
             
             // Update the renderMetrics function to call addMetricCardClickHandlers
-            const originalRenderMetrics = dashboard.renderMetrics;
-            dashboard.renderMetrics = function(data) {
-                originalRenderMetrics.call(this, data);
-                addMetricCardClickHandlers();
-            };
+            // This will be handled inside the Dashboard class initialization
         </script>
         
         <!-- Service worker registration for offline support -->

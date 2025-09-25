@@ -2758,6 +2758,169 @@ async def delete_document(
 
 
 # ------------------------------
+# Dashboard endpoints
+# ------------------------------
+@router.get("/documents/list")
+async def list_documents(
+    current_user: Dict[str, Any] = Depends(get_current_user_simple)
+):
+    """List all user's documents"""
+    try:
+        user_id = current_user.get("sub", current_user.get("user_id", "unknown"))
+        
+        async with db_manager.get_session() as session:
+            result = await session.execute(
+                text("""
+                    SELECT id, filename, file_size, content_type, status, uploaded_at
+                    FROM documents 
+                    WHERE user_id = :user_id 
+                    AND deleted_at IS NULL
+                    ORDER BY uploaded_at DESC
+                """),
+                {"user_id": user_id}
+            )
+            
+            documents = []
+            for row in result:
+                documents.append({
+                    "id": row.id,
+                    "filename": row.filename,
+                    "file_size": row.file_size,
+                    "content_type": row.content_type,
+                    "status": row.status,
+                    "uploaded_at": row.uploaded_at.isoformat() if row.uploaded_at else None
+                })
+            
+            return {"status": "success", "documents": documents}
+            
+    except Exception as e:
+        logger.error(f"Documents list error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to list documents: {str(e)}")
+
+
+@router.get("/documents/recent")
+async def get_recent_documents(
+    limit: int = 5,
+    current_user: Dict[str, Any] = Depends(get_current_user_simple)
+):
+    """Get recent document activity"""
+    try:
+        user_id = current_user.get("sub", current_user.get("user_id", "unknown"))
+        
+        async with db_manager.get_session() as session:
+            result = await session.execute(
+                text("""
+                    SELECT id, filename, status, uploaded_at
+                    FROM documents 
+                    WHERE user_id = :user_id 
+                    AND deleted_at IS NULL
+                    ORDER BY uploaded_at DESC
+                    LIMIT :limit
+                """),
+                {"user_id": user_id, "limit": limit}
+            )
+            
+            activities = []
+            for row in result:
+                activities.append({
+                    "type": "document_upload",
+                    "document_id": row.id,
+                    "filename": row.filename,
+                    "status": row.status,
+                    "timestamp": row.uploaded_at.isoformat() if row.uploaded_at else None,
+                    "message": f"Uploaded {row.filename}"
+                })
+            
+            return {"status": "success", "activities": activities}
+            
+    except Exception as e:
+        logger.error(f"Recent documents error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get recent documents: {str(e)}")
+
+
+@router.get("/compliance/summary")
+async def get_compliance_summary(
+    current_user: Dict[str, Any] = Depends(get_current_user_simple)
+):
+    """Get compliance summary for dashboard"""
+    try:
+        user_id = current_user.get("sub", current_user.get("user_id", "unknown"))
+        
+        # Get document analysis results
+        async with db_manager.get_session() as session:
+            # Count analyzed documents
+            doc_result = await session.execute(
+                text("""
+                    SELECT COUNT(*) as total,
+                           COUNT(CASE WHEN status = 'analyzed' THEN 1 END) as analyzed
+                    FROM documents 
+                    WHERE user_id = :user_id 
+                    AND deleted_at IS NULL
+                """),
+                {"user_id": user_id}
+            )
+            doc_stats = doc_result.first()
+            
+            # Count mapped standards
+            standards_result = await session.execute(
+                text("""
+                    SELECT COUNT(DISTINCT em.standard_id) as mapped_standards
+                    FROM evidence_mappings em
+                    JOIN documents d ON em.document_id = d.id
+                    WHERE d.user_id = :user_id
+                    AND d.deleted_at IS NULL
+                """),
+                {"user_id": user_id}
+            )
+            standards_stats = standards_result.first()
+            
+            total_docs = doc_stats.total or 0
+            analyzed_docs = doc_stats.analyzed or 0
+            completion_rate = (analyzed_docs / total_docs * 100) if total_docs > 0 else 0
+            
+            return {
+                "status": "success",
+                "summary": {
+                    "total_documents": total_docs,
+                    "analyzed_documents": analyzed_docs,
+                    "mapped_standards": standards_stats.mapped_standards or 0,
+                    "completion_rate": round(completion_rate, 1),
+                    "compliance_score": round(completion_rate * 0.85, 1)  # Mock score
+                }
+            }
+            
+    except Exception as e:
+        logger.error(f"Compliance summary error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get compliance summary: {str(e)}")
+
+
+@router.get("/risk/summary")
+async def get_risk_summary(
+    current_user: Dict[str, Any] = Depends(get_current_user_simple)
+):
+    """Get risk summary for dashboard"""
+    try:
+        user_id = current_user.get("sub", current_user.get("user_id", "unknown"))
+        
+        # Mock risk data for now
+        return {
+            "status": "success",
+            "summary": {
+                "total_standards": 100,
+                "covered_standards": 25,
+                "high_risk_gaps": 5,
+                "medium_risk_gaps": 15,
+                "low_risk_gaps": 55,
+                "risk_score": 72  # Mock score
+            }
+        }
+            
+    except Exception as e:
+        logger.error(f"Risk summary error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get risk summary: {str(e)}")
+
+
+# ------------------------------
 # Bulk analyze (multi-file upload)
 # ------------------------------
 @router.post("/evidence/analyze/bulk")
