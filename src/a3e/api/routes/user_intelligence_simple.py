@@ -2211,36 +2211,58 @@ async def list_evidence(
     List all uploaded evidence documents for the current user
     """
     try:
-        uploads = await _get_user_uploads(current_user)
-        documents = uploads.get("documents", [])
+        user_id = current_user.get("sub", current_user.get("user_id", "unknown"))
         
-        # Enrich with file metadata if available
-        enriched_docs = []
-        for doc in documents:
-            enriched = dict(doc)
-            # Add computed fields
-            enriched["id"] = enriched.get("fingerprint", hashlib.md5(doc["filename"].encode()).hexdigest()[:8])
-            enriched["status"] = "processed" if enriched.get("standards_mapped") else "pending"
-            enriched["mapped_count"] = len(enriched.get("standards_mapped", []))
+        # Get documents from database instead of file system
+        async with db_manager.get_session() as session:
+            result = await session.execute(
+                text("""
+                    SELECT d.id, d.filename, d.file_size, d.content_type, 
+                           d.status, d.uploaded_at, d.file_key,
+                           COUNT(em.standard_id) as mapped_count
+                    FROM documents d
+                    LEFT JOIN evidence_mappings em ON d.id = em.document_id
+                    WHERE d.user_id = :user_id 
+                    AND d.deleted_at IS NULL
+                    GROUP BY d.id, d.filename, d.file_size, d.content_type, 
+                             d.status, d.uploaded_at, d.file_key
+                    ORDER BY d.uploaded_at DESC
+                """),
+                {"user_id": user_id}
+            )
             
-            # Use stored size if available, otherwise try to get from local path
-            if "size" not in enriched:
-                if enriched.get("saved_path") and os.path.exists(enriched["saved_path"]):
-                    try:
-                        enriched["size"] = os.path.getsize(enriched["saved_path"])
-                    except:
-                        enriched["size"] = 0
-                else:
-                    enriched["size"] = 0
+            documents = []
+            for row in result:
+                documents.append({
+                    "id": row.id,  # Use actual database ID
+                    "filename": row.filename,
+                    "size": row.file_size or 0,
+                    "content_type": row.content_type,
+                    "status": row.status or "uploaded",
+                    "uploaded_at": row.uploaded_at.isoformat() if row.uploaded_at else None,
+                    "mapped_count": row.mapped_count or 0,
+                    "file_key": row.file_key
+                })
             
-            enriched_docs.append(enriched)
-        
-        return {
-            "success": True,
-            "evidence": enriched_docs,
-            "total": len(enriched_docs),
-            "unique_standards": uploads.get("unique_standards", [])
-        }
+            # Get unique standards
+            standards_result = await session.execute(
+                text("""
+                    SELECT DISTINCT em.standard_id
+                    FROM evidence_mappings em
+                    JOIN documents d ON em.document_id = d.id
+                    WHERE d.user_id = :user_id
+                    AND d.deleted_at IS NULL
+                """),
+                {"user_id": user_id}
+            )
+            unique_standards = [row.standard_id for row in standards_result]
+            
+            return {
+                "success": True,
+                "evidence": documents,
+                "total": len(documents),
+                "unique_standards": unique_standards
+            }
     except Exception as e:
         logger.error(f"Error listing evidence: {e}")
         raise HTTPException(status_code=500, detail="Failed to list evidence")
