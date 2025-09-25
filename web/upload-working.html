@@ -561,7 +561,7 @@
             if (!token) return;
             
             try {
-                const response = await fetch(`${API_BASE}/api/user/intelligence-simple/user/profile`, {
+                const response = await fetch('https://api.mapmystandards.ai/api/user/intelligence-simple/user/profile', {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -928,7 +928,7 @@
             if (!confirm('Are you sure you want to delete this file?')) return;
 
             try {
-                const response = await fetch(`https://api.mapmystandards.ai/api/user/intelligence-simple/uploads/${fileId}`, {
+                const response = await fetch(`https://api.mapmystandards.ai/api/user/intelligence-simple/documents/${fileId}`, {
                     method: 'DELETE',
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('access_token')}`

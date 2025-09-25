@@ -2715,6 +2715,48 @@ async def analyze_existing_document(
         raise HTTPException(status_code=500, detail=f"Failed to analyze document: {str(e)}")
 
 
+@router.delete("/documents/{document_id}")
+async def delete_document(
+    document_id: str,
+    current_user: Dict[str, Any] = Depends(get_current_user_simple),
+):
+    """Delete a document (soft delete)"""
+    try:
+        user_id = current_user.get("sub", current_user.get("user_id", "unknown"))
+        
+        # Soft delete the document
+        async with db_manager.get_session() as session:
+            result = await session.execute(
+                text("""
+                    UPDATE documents 
+                    SET deleted_at = CURRENT_TIMESTAMP
+                    WHERE id = :document_id 
+                    AND user_id = :user_id 
+                    AND deleted_at IS NULL
+                    RETURNING id, filename
+                """),
+                {"document_id": document_id, "user_id": user_id}
+            )
+            
+            deleted = result.first()
+            if not deleted:
+                raise HTTPException(status_code=404, detail="Document not found")
+            
+            await session.commit()
+            
+            return {
+                "status": "success",
+                "message": f"Document '{deleted.filename}' deleted successfully",
+                "document_id": document_id
+            }
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Document delete error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete document: {str(e)}")
+
+
 # ------------------------------
 # Bulk analyze (multi-file upload)
 # ------------------------------
