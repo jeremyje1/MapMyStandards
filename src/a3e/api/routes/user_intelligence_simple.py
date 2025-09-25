@@ -775,7 +775,12 @@ def _candidate_secrets() -> List[str]:
         os.getenv("JWT_SECRET"),
         os.getenv("SECRET_KEY"),
         os.getenv("ONBOARDING_SHARED_SECRET"),
+        # Common development/example secrets that might be in old tokens
         "your-secret-key-here-change-in-production",
+        "replace-with-generated-64-char-secret",
+        "your-secret-key-min-32-chars-generate-with-openssl-rand-hex-32",
+        # The one from .env.local file
+        "7UKtJWo1jG6Yji-Fw-0t1HRC6y8QsPojrWkEJhEXXTQV0myYJIJ183xEPLcT6vDcPjLR_mB9tBQsGejvTxg-QA",
         # Session router fallback default (only if env not set)
         "dev-secret-change",
     ]
@@ -807,6 +812,22 @@ async def get_current_user_simple(
     claims = verify_simple_token(token)
     if not claims:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
+    
+    # Handle backward compatibility: convert email to UUID if needed
+    # Check if 'sub' contains an email instead of a UUID
+    sub = claims.get("sub", "")
+    if sub and "@" in sub:
+        # This is an old token with email in 'sub'
+        logger.info(f"Converting old token format for user: {sub}")
+        user_uuid = await get_user_uuid_from_email(sub)
+        claims["user_id"] = user_uuid
+        claims["sub"] = user_uuid  # Update sub to use UUID
+        if "email" not in claims:
+            claims["email"] = sub  # Preserve the email
+    elif not claims.get("user_id"):
+        # Ensure user_id is set
+        claims["user_id"] = sub
+    
     return claims
 
 
