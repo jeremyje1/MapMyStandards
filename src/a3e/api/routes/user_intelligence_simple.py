@@ -471,6 +471,7 @@ async def _analyze_evidence_from_bytes(
     content: bytes,
     doc_type: Optional[str],
     current_user: Dict[str, Any],
+    document_id: Optional[str] = None,  # Add document ID to update existing record
 ):
     try:
         filename_lower = (filename or "").lower()
@@ -656,7 +657,62 @@ async def _analyze_evidence_from_bytes(
                 "page_anchors": anchors,
             })
         fingerprint = EvidenceDocument(doc_id=filename, text=text_content, metadata={}, doc_type="", source_system="manual", upload_date=datetime.utcnow()).get_fingerprint()
-        await _record_user_upload(current_user, filename, [m.standard_id for m in mappings], doc_type, mapping_details, trust_dict, None, fingerprint)
+        
+        # If we have a document_id, update the existing record instead of creating a new one
+        if document_id:
+            try:
+                async with db_manager.get_session() as session:
+                    # Update the existing document with analysis results
+                    await session.execute(
+                        text("""
+                            UPDATE documents 
+                            SET status = 'analyzed',
+                                standards_mapped = :standards,
+                                mapping_details = :mapping_details,
+                                trust_score = :trust_score,
+                                fingerprint = :fingerprint
+                            WHERE id = :id
+                        """),
+                        {
+                            "id": document_id,
+                            "standards": [m.standard_id for m in mappings],
+                            "mapping_details": json.dumps(mapping_details),
+                            "trust_score": json.dumps(trust_dict),
+                            "fingerprint": fingerprint
+                        }
+                    )
+                    
+                    # Also record the mappings in evidence_mappings table
+                    for mapping in mapping_details[:10]:
+                        await session.execute(
+                            text("""
+                                INSERT INTO evidence_mappings (
+                                    evidence_id, standard_id, confidence_score, 
+                                    explanation, accreditor, created_at
+                                ) VALUES (
+                                    :evidence_id, :standard_id, :confidence,
+                                    :explanation, :accreditor, :created_at
+                                ) ON CONFLICT (evidence_id, standard_id) DO UPDATE SET
+                                    confidence_score = EXCLUDED.confidence_score,
+                                    explanation = EXCLUDED.explanation,
+                                    updated_at = CURRENT_TIMESTAMP
+                            """),
+                            {
+                                "evidence_id": document_id,
+                                "standard_id": mapping["standard_id"],
+                                "confidence": mapping["confidence"],
+                                "explanation": json.dumps(mapping.get("page_anchors", [])),
+                                "accreditor": mapping.get("accreditor", ""),
+                                "created_at": datetime.utcnow()
+                            }
+                        )
+                    
+                    await session.commit()
+            except Exception as e:
+                logger.error(f"Error updating document analysis: {e}")
+        else:
+            # No document_id, create new record (original behavior)
+            await _record_user_upload(current_user, filename, [m.standard_id for m in mappings], doc_type, mapping_details, trust_dict, None, fingerprint)
 
         try:
             overall_trust = float(trust_dict.get("overall_score", 0.7) or 0.7)
@@ -2159,7 +2215,8 @@ async def evidence_upload_simple(
                             name,
                             content,
                             doc_type,
-                            current_user
+                            current_user,
+                            document_id=document_id  # Pass the document ID to update existing record
                         )
                         analysis_result = analysis
                         
@@ -2684,7 +2741,8 @@ async def analyze_existing_document(
                 doc.filename,
                 file_content,
                 None,  # doc_type
-                current_user
+                current_user,
+                document_id=document_id  # Pass document ID to update existing record
             )
             
             # Update document status

@@ -9,7 +9,8 @@
 
 ## Latest Deployment Details
 ✅ Backend (Railway):
-- Git commit: a1f4130 (Sep 25, 2025)
+- Git commit: 0b18bdf (Sep 25, 2025)
+- CRITICAL FIX: Document listing now uses database IDs
 - DELETE endpoint for documents added
 - Dashboard API endpoints added:
   - GET /documents/list
