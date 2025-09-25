@@ -144,7 +144,7 @@
               store.setItem('access_token', access);
               store.setItem('jwt_token', access);
               // compatibility with other pages
-              try { localStorage.setItem('a3e_api_key', access); } catch(_){}
+              try { localStorage.setItem('access_token', access); } catch(_){}
             }
           } catch(_){}
 
@@ -189,7 +189,7 @@
         if (email === 'demo@example.com' && password === 'demo123'){
           showSuccess('Demo login successful! Redirecting…');
           // Store demo token for header-based auth where supported
-          try { localStorage.setItem('access_token', 'demo-token'); localStorage.setItem('jwt_token', 'demo-token'); localStorage.setItem('a3e_api_key', 'demo-token'); } catch(_){}
+          try { localStorage.setItem('access_token', 'demo-token'); localStorage.setItem('jwt_token', 'demo-token'); localStorage.setItem('access_token', 'demo-token'); } catch(_){}
 
           // Store demo auth data
           if (window.MMS_AUTH_BRIDGE) {

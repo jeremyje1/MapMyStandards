@@ -303,8 +303,8 @@
         // Sample data service integration
         class QuickWinsDashboard {
             constructor() {
-                this.apiKey = localStorage.getItem('a3e_api_key') || sessionStorage.getItem('a3e_pending_api_key');
-                this.userEmail = localStorage.getItem('a3e_user_email') || sessionStorage.getItem('a3e_pending_email');
+                this.apiKey = localStorage.getItem('access_token') || sessionStorage.getItem('mms_pending_api_key');
+                this.userEmail = localStorage.getItem('user_email') || sessionStorage.getItem('mms_pending_email');
                 this.init();
             }
 
@@ -345,7 +345,7 @@
 
             getInstitutionSize() {
                 // Try to get from onboarding data or default
-                const onboardingData = sessionStorage.getItem('a3e_onboarding_data');
+                const onboardingData = sessionStorage.getItem('mms_onboarding_data');
                 if (onboardingData) {
                     try {
                         const data = JSON.parse(onboardingData);

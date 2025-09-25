@@ -342,11 +342,11 @@
                             store.setItem('access_token', access);
                             store.setItem('jwt_token', access);
                             // compatibility with other pages
-                            try { localStorage.setItem('a3e_api_key', access); } catch(_) {}
+                            try { localStorage.setItem('access_token', access); } catch(_) {}
                         }
                         // Store user data if available
                         if (result.data && result.data.email) {
-                            localStorage.setItem('a3e_user_email', result.data.email);
+                            localStorage.setItem('user_email', result.data.email);
                             localStorage.setItem('user', JSON.stringify({
                                 email: result.data.email,
                                 name: result.data.name,

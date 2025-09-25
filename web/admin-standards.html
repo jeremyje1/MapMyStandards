@@ -83,8 +83,8 @@
         const t = u.searchParams.get('token') || u.searchParams.get('api_key') || u.searchParams.get('access_token');
         if (t) {
           try {
-            localStorage.setItem('a3e_api_key', t);
-            sessionStorage.setItem('a3e_api_key', t);
+            localStorage.setItem('access_token', t);
+            sessionStorage.setItem('access_token', t);
             localStorage.setItem('access_token', t);
             localStorage.setItem('jwt_token', t);
           } catch(_e) {}
@@ -97,8 +97,8 @@
     }
 
     function getToken() {
-      return localStorage.getItem('a3e_api_key') ||
-             sessionStorage.getItem('a3e_api_key') ||
+      return localStorage.getItem('access_token') ||
+             sessionStorage.getItem('access_token') ||
              localStorage.getItem('access_token') ||
              localStorage.getItem('jwt_token') || '';
     }

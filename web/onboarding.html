@@ -443,8 +443,8 @@
     })();
     // Pull pending trial context (email & api key) stored during signup
     try {
-      state.email = sessionStorage.getItem('a3e_pending_email') || localStorage.getItem('a3e_user_email') || null;
-      state.apiKey = sessionStorage.getItem('a3e_pending_api_key') || localStorage.getItem('a3e_api_key') || null;
+      state.email = sessionStorage.getItem('mms_pending_email') || localStorage.getItem('user_email') || null;
+      state.apiKey = sessionStorage.getItem('mms_pending_api_key') || localStorage.getItem('access_token') || null;
       
       // Also check for user data from trial success page
       if (!state.email) {
@@ -462,7 +462,7 @@
       if(state.email){ state.data.email = state.email; }
       
       // Load signup data for pre-population
-      const signupDataStr = sessionStorage.getItem('a3e_signup_data');
+      const signupDataStr = sessionStorage.getItem('mms_signup_data');
       if (signupDataStr) {
         state.signupData = JSON.parse(signupDataStr);
       }
@@ -562,7 +562,7 @@
       }
       
       // Save to sessionStorage for dashboard integration
-      sessionStorage.setItem('a3e_onboarding_data', JSON.stringify(state.data));
+      sessionStorage.setItem('mms_onboarding_data', JSON.stringify(state.data));
     }
 
     async function persist(partial=false){
@@ -624,7 +624,7 @@
             institution_size: state.data.institution_size || ''
           };
           
-          const token = localStorage.getItem('a3e_api_key') || localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+          const token = localStorage.getItem('access_token') || localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
           const headers = {
             'Content-Type': 'application/json'
           };
@@ -653,16 +653,16 @@
         successMsg.style.display='block';
         fillEl.style.width='100%'; pctEl.textContent='100%';
         // Redirect to main dashboard (not ai-dashboard)
-        setTimeout(()=>{ window.location.href='https://platform.mapmystandards.ai/dashboard-enhanced.html'; }, 1500);
+        setTimeout(()=>{ window.location.href='https://platform.mapmystandards.ai/dashboard.html'; }, 1500);
       }
     });
-  skipBtn.addEventListener('click', async ()=>{ try{ collectStep(); await persist(true); localStorage.setItem('mms:onboarding-complete','1'); }catch(_){} window.location.href='https://platform.mapmystandards.ai/dashboard-enhanced.html'; });
+  skipBtn.addEventListener('click', async ()=>{ try{ collectStep(); await persist(true); localStorage.setItem('mms:onboarding-complete','1'); }catch(_){} window.location.href='https://platform.mapmystandards.ai/dashboard.html'; });
 
     // Initialize
     async function loadExisting(){
       // First try to load from user profile (database)
       try {
-        const token = localStorage.getItem('a3e_api_key') || localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
+        const token = localStorage.getItem('access_token') || localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
         if (token) {
           const headers = {
             'Authorization': `Bearer ${token}`,
@@ -766,7 +766,7 @@
         <div style="font-weight: 500; margin-bottom: 8px;">✅ Your onboarding appears to be complete!</div>
         <div style="margin-bottom: 12px; opacity: 0.9;">Would you like to update your information or continue to the dashboard?</div>
         <div style="display: flex; gap: 12px;">
-          <button onclick="window.location.href='https://platform.mapmystandards.ai/dashboard-enhanced.html'" style="background: #134e4a; color: #d1fae5; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: .85rem;">Go to Dashboard →</button>
+          <button onclick="window.location.href='https://platform.mapmystandards.ai/dashboard.html'" style="background: #134e4a; color: #d1fae5; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: .85rem;">Go to Dashboard →</button>
           <button onclick="this.parentElement.parentElement.style.display='none'" style="background: transparent; color: #5eead4; padding: 8px 16px; border: 1px solid #134e4a; border-radius: 6px; cursor: pointer; font-size: .85rem;">Update Information</button>
         </div>
       `;

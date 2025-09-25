@@ -1,5 +1,5 @@
 """
-Main FastAPI Application for A3E - Proprietary Accreditation Intelligence Platform
+Main FastAPI Application for MapMyStandards - Proprietary Accreditation Intelligence Platform
 
 Provides REST and GraphQL APIs for the Autonomous Accreditation & Audit Engine.
 Features proprietary ontology, vector-weighted matching, multi-agent pipeline, and audit traceability.
@@ -120,10 +120,10 @@ We attempt to import it but degrade gracefully if unavailable so the
 application can still boot for marketing pages and basic data endpoints."""
 try:  # Optional orchestrator (may require missing deps like 'autogen')
     from typing import TYPE_CHECKING
-    from .agents import A3EAgentOrchestrator  # type: ignore
+    from .agents import MapMyStandardsAgentOrchestrator  # type: ignore
     AGENT_ORCHESTRATOR_AVAILABLE = True
     if TYPE_CHECKING:  # pragma: no cover
-        from .agents import A3EAgentOrchestrator as _A3EAgentOrchestratorType
+        from .agents import MapMyStandardsAgentOrchestrator as _MapMyStandardsAgentOrchestratorType
 except Exception as e:  # Broad except to catch ImportError + transitive errors
     AGENT_ORCHESTRATOR_AVAILABLE = False
     _agent_orchestrator_import_exception = e
@@ -367,7 +367,7 @@ def log_warning_once_global(message: str, key: str = None):
     """Log warning once across all workers using filesystem marker"""
     if key is None:
         key = message[:50]  # Use first 50 chars as key
-    marker_file = os.path.join(tempfile.gettempdir(), f"a3e_warning_{hash(key) % 10000}.tmp")
+    marker_file = os.path.join(tempfile.gettempdir(), f"mms_warning_{hash(key) % 10000}.tmp")
     if not os.path.exists(marker_file):
         try:
             with open(marker_file, 'w') as f:
@@ -403,7 +403,7 @@ async def lifespan(app: FastAPI):
     """Application lifespan management"""
     global db_service, vector_service, llm_service, document_service, agent_orchestrator
     
-    logger.info("🚀 Starting A3E Application...")
+    logger.info("🚀 Starting MapMyStandards Application...")
     # Record startup time for uptime calculations
     app.state.start_time = datetime.utcnow()
     
@@ -471,7 +471,7 @@ async def lifespan(app: FastAPI):
         
         if AGENT_ORCHESTRATOR_AVAILABLE:
             try:
-                agent_orchestrator = A3EAgentOrchestrator(llm_service, vector_service)  # type: ignore
+                agent_orchestrator = MapMyStandardsAgentOrchestrator(llm_service, vector_service)  # type: ignore
                 logger.info("✅ Agent orchestrator initialized")
             except Exception as e:
                 log_warning_once(f"⚠️ Agent orchestrator unavailable (development mode): {str(e)}")
@@ -520,7 +520,7 @@ async def lifespan(app: FastAPI):
             await _load_accreditation_standards()
             logger.info("✅ Accreditation standards loaded")
         
-        logger.info("🎉 A3E Application startup complete!")
+        logger.info("🎉 MapMyStandards Application startup complete!")
         
     except Exception as e:
         logger.error(f"❌ Failed to initialize services: {e}")
@@ -529,7 +529,7 @@ async def lifespan(app: FastAPI):
     yield  # Application runs here
     
     # Cleanup
-    logger.info("🛑 Shutting down A3E Application...")
+    logger.info("🛑 Shutting down MapMyStandards Application...")
     
     # Close production database
     try:
@@ -2166,21 +2166,21 @@ if WEB_DIR.exists():
                 
                 <script>
                     // Store plan info for account creation
-                    localStorage.setItem('a3e_subscription_plan', '{plan}');
-                    localStorage.setItem('a3e_subscription_active', 'true');
-                    localStorage.setItem('a3e_payment_success', Date.now().toString());
+                    localStorage.setItem('mms_subscription_plan', '{plan}');
+                    localStorage.setItem('mms_subscription_active', 'true');
+                    localStorage.setItem('mms_payment_success', Date.now().toString());
                 </script>
             </body></html>
             """)
         
         # Check if user is authenticated (check for session token/cookie)
         auth_token = request.cookies.get("auth_token") or request.headers.get("Authorization")
-        trial_id = request.cookies.get("a3e_trial_id") or request.headers.get("X-Trial-ID")
+        trial_id = request.cookies.get("mms_trial_id") or request.headers.get("X-Trial-ID")
         
         # If user has authentication, serve the actual dashboard
         if auth_token or trial_id:
-            # Try to serve dashboard-enhanced.html (the enhanced dashboard) first
-            dashboard_enhanced_file = WEB_DIR / "dashboard-enhanced.html"
+            # Try to serve dashboard.html (the enhanced dashboard) first
+            dashboard_enhanced_file = WEB_DIR / "dashboard.html"
             if dashboard_enhanced_file.exists():
                 return FileResponse(str(dashboard_enhanced_file))
             
@@ -2343,7 +2343,7 @@ if WEB_DIR.exists():
     @app.get("/upload", response_class=FileResponse, include_in_schema=False)
     async def upload_page():  # noqa: D401
         """Serve upload page (enhanced)."""
-        enhanced = WEB_DIR / "upload-enhanced.html"
+        enhanced = WEB_DIR / "upload.html"
         modern = WEB_DIR / "upload-modern.html"
         legacy = WEB_DIR / "upload.html"
         if enhanced.exists():

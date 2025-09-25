@@ -507,7 +507,7 @@
         // Load dashboard metrics
         async function loadDashboardMetrics() {
             try {
-                const apiKey = localStorage.getItem('a3e_api_key');
+                const apiKey = localStorage.getItem('access_token');
                 
                 // Try real analytics API first
                 const response = await fetch('/api/v1/analytics/dashboard/metrics', {

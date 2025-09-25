@@ -70,9 +70,9 @@
         }
 
         function checkTrialStatus() {
-            const trialId = localStorage.getItem('a3e_trial_id');
-            const expiresAt = localStorage.getItem('a3e_expires_at');
-            const userEmail = localStorage.getItem('a3e_user_email');
+            const trialId = localStorage.getItem('mms_trial_id');
+            const expiresAt = localStorage.getItem('mms_expires_at');
+            const userEmail = localStorage.getItem('user_email');
 
             if (!trialId || !expiresAt) {
                 showError('Trial information not found. Please sign up again.');
@@ -119,7 +119,7 @@
         }
 
         function continueToPayment() {
-            const planType = localStorage.getItem('a3e_plan_type') || 'college_monthly';
+            const planType = localStorage.getItem('mms_plan_type') || 'college_monthly';
             const planPricing = {
                 college_monthly: { name: 'A³E College Plan', price: 29700, interval: 'month' },
                 college_yearly: { name: 'A³E College Plan (Annual)', price: 297000, interval: 'year' },
@@ -173,14 +173,14 @@
                 const {error, paymentMethod} = await stripe.createPaymentMethod({
                     type: 'card',
                     card: elements.getElement('card'),
-                    billing_details: { email: localStorage.getItem('a3e_user_email') }
+                    billing_details: { email: localStorage.getItem('user_email') }
                 });
 
                 if (error) throw new Error(error.message);
 
-                localStorage.setItem('a3e_payment_method', paymentMethod.id);
-                localStorage.setItem('a3e_subscription_status', 'active');
-                localStorage.setItem('a3e_subscription_date', new Date().toISOString());
+                localStorage.setItem('mms_payment_method', paymentMethod.id);
+                localStorage.setItem('mms_subscription_status', 'active');
+                localStorage.setItem('mms_subscription_date', new Date().toISOString());
 
                 document.getElementById('paymentCard').style.display = 'none';
                 document.getElementById('successCard').style.display = 'block';
@@ -199,7 +199,7 @@
         }
 
         function goToDashboard() {
-            const trialId = localStorage.getItem('a3e_trial_id');
+            const trialId = localStorage.getItem('mms_trial_id');
             if (trialId) {
                 window.location.href = `https://platform.mapmystandards.ai/dashboard-modern?trial_id=${trialId}`;
             } else {

@@ -781,7 +781,7 @@ Authorization: Bearer YOUR_API_KEY</pre>
         function getAuthToken() {
             return localStorage.getItem('access_token') || 
                    localStorage.getItem('jwt_token') || 
-                   localStorage.getItem('a3e_api_key') || '';
+                   localStorage.getItem('access_token') || '';
         }
 
         // Get API base URL

@@ -13,10 +13,10 @@ from pathlib import Path
 # Add src to Python path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from a3e.models import Base
-from a3e.models.document import Document
+from sqlalchemy import create_engine  # noqa: E402
+from sqlalchemy.orm import sessionmaker  # noqa: E402
+from a3e.models import Base  # noqa: E402
+from a3e.models.document import Document  # noqa: E402
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

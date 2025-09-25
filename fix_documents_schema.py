@@ -11,7 +11,7 @@ from datetime import datetime
 # Add src to Python path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, text  # noqa: E402
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

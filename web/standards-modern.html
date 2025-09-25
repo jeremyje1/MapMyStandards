@@ -2889,8 +2889,8 @@
                 const u = new URL(window.location.href);
                 const t = u.searchParams.get('token') || u.searchParams.get('api_key') || u.searchParams.get('access_token');
                 if (t) {
-                    localStorage.setItem('a3e_api_key', t);
-                    sessionStorage.setItem('a3e_api_key', t);
+                    localStorage.setItem('access_token', t);
+                    sessionStorage.setItem('access_token', t);
                     localStorage.setItem('access_token', t);
                     localStorage.setItem('jwt_token', t);
                     u.searchParams.delete('token');
@@ -2930,7 +2930,7 @@
             try {
                 const token = localStorage.getItem('access_token') || 
                              localStorage.getItem('jwt_token') || 
-                             localStorage.getItem('a3e_api_key');
+                             localStorage.getItem('access_token');
                 
                 if (!token) return;
 
@@ -2988,8 +2988,8 @@
             }catch(_){}
         }
         function getAuthToken(){
-            return localStorage.getItem('a3e_api_key') ||
-                   sessionStorage.getItem('a3e_api_key') ||
+            return localStorage.getItem('access_token') ||
+                   sessionStorage.getItem('access_token') ||
                    localStorage.getItem('access_token') ||
                    localStorage.getItem('jwt_token') ||
                    localStorage.getItem('token') ||
@@ -6474,7 +6474,7 @@
                     'For the best report quality, upload and map evidence documents first. You can still generate a basic report without evidence.',
                     'info',
                     [
-                        { text: 'Upload Evidence', action: () => window.location.href = '/web/dashboard-modern.html#evidence', primary: true },
+                        { text: 'Upload Evidence', action: () => window.location.href = '/web/dashboard.html#evidence', primary: true },
                         { text: 'Continue Without Evidence', action: () => proceedToReportGeneration() }
                     ]
                 );
@@ -7948,7 +7948,7 @@
                     'You need to upload evidence documents before analyzing gaps.',
                     'info',
                     [
-                        { text: 'Upload Evidence', action: () => window.location.href = '/web/dashboard-modern.html#evidence' }
+                        { text: 'Upload Evidence', action: () => window.location.href = '/web/dashboard.html#evidence' }
                     ]
                 );
                 return;
@@ -9120,7 +9120,7 @@
         function goToStep(stepName) {
             switch(stepName) {
                 case 'upload':
-                    window.location.href = '/web/dashboard-modern.html#evidence';
+                    window.location.href = '/web/dashboard.html#evidence';
                     break;
                 case 'map':
                     if (getSelectedStandards().length === 0) {
@@ -9862,7 +9862,7 @@
         
         function uploadMoreEvidence() {
             // Redirect to dashboard evidence upload section
-            window.location.href = '/web/dashboard-modern.html#evidence';
+            window.location.href = '/web/dashboard.html#evidence';
         }
         
         function exportEvidenceLibrary() {

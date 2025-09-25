@@ -3,348 +3,1369 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard | MapMyStandards A³E</title>
-    <script>
-        // Redirect to enhanced dashboard
-        window.location.replace('/dashboard-enhanced.html');
-    </script>
-    <link rel="stylesheet" href="/web/static/css/tailwind.css">
-    <script>
-        (function(){
-            const link = document.querySelector('link[href="/web/static/css/tailwind.css"]');
-            if (!link) return;
-            let triedAlias = false;
-            link.addEventListener('error', function(){
-                if (!triedAlias) {
-                    triedAlias = true;
-                    const alt = document.createElement('link');
-                    alt.rel = 'stylesheet';
-                    alt.href = '/static/css/tailwind.css?v=1';
-                    alt.addEventListener('error', function(){
-                        const s = document.createElement('script');
-                        s.src = 'https://cdn.tailwindcss.com';
-                        document.head.appendChild(s);
-                    });
-                    document.head.appendChild(alt);
-                } else {
-                    const s = document.createElement('script');
-                    s.src = 'https://cdn.tailwindcss.com';
-                    document.head.appendChild(s);
-                }
-            });
-        })();
-    </script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>Dashboard - MapMyStandards AI</title>
+    <script src="js/common.js"></script>
+    <script src="/js/ux.js"></script>
+    <script src="/js/onboarding.js?v=20250923"></script>
+    <meta name="description" content="Your AI-powered accreditation dashboard. Track compliance, analyze documents, and generate reports.">
+    
     <style>
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-            background-color: #f9fafb;
+        /* Modern CSS Reset */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
-        .loading-spinner {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #3b82f6;
+
+        /* Design System Variables */
+        :root {
+            /* Colors */
+            --primary-blue: #1e40af;
+            --primary-blue-light: #3b82f6;
+            --primary-blue-dark: #1e3a8a;
+            --accent-green: #10b981;
+            --accent-green-light: #34d399;
+            --accent-orange: #f59e0b;
+            --accent-purple: #8b5cf6;
+            --accent-red: #ef4444;
+            
+            /* Neutrals */
+            --white: #ffffff;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            
+            /* Gradients */
+            --gradient-primary: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-light) 100%);
+            --gradient-success: linear-gradient(135deg, var(--accent-green) 0%, var(--accent-green-light) 100%);
+            --gradient-warning: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+            --gradient-hero: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            
+            /* Typography */
+            --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', 'Helvetica Neue', Arial, sans-serif;
+            --font-size-xs: 0.75rem;
+            --font-size-sm: 0.875rem;
+            --font-size-base: 1rem;
+            --font-size-lg: 1.125rem;
+            --font-size-xl: 1.25rem;
+            --font-size-2xl: 1.5rem;
+            --font-size-3xl: 1.875rem;
+            --font-size-4xl: 2.25rem;
+            
+            /* Spacing */
+            --space-1: 0.25rem;
+            --space-2: 0.5rem;
+            --space-3: 0.75rem;
+            --space-4: 1rem;
+            --space-5: 1.25rem;
+            --space-6: 1.5rem;
+            --space-8: 2rem;
+            --space-10: 2.5rem;
+            --space-12: 3rem;
+            --space-16: 4rem;
+            --space-20: 5rem;
+            
+            /* Borders & Radius */
+            --border-radius-sm: 0.375rem;
+            --border-radius: 0.5rem;
+            --border-radius-lg: 0.75rem;
+            --border-radius-xl: 1rem;
+            --border-radius-2xl: 1.5rem;
+            
+            /* Shadows */
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            
+            /* Animations */
+            --transition: all 0.2s ease-in-out;
+            --transition-slow: all 0.3s ease-in-out;
+        }
+
+        /* Base Styles */
+        body {
+            font-family: var(--font-family);
+            background: var(--gray-50);
+            color: var(--gray-800);
+            line-height: 1.6;
+            font-size: var(--font-size-base);
+            min-height: 100vh;
+        }
+
+        /* Journey Tracker Styles */
+        .journey-tracker {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            width: 280px;
+            background: white;
+            border-radius: var(--border-radius-xl);
+            box-shadow: var(--shadow-lg);
+            padding: var(--space-6);
+            z-index: 100;
+            transition: var(--transition-slow);
+        }
+
+        .journey-tracker.minimized {
+            width: 60px;
+            height: 60px;
+            padding: 0;
+            cursor: pointer;
+        }
+
+        .journey-tracker.minimized .journey-content {
+            display: none;
+        }
+
+        .journey-tracker.minimized::after {
+            content: "📍";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+        }
+
+        .journey-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-4);
+        }
+
+        .journey-title {
+            font-size: var(--font-size-lg);
+            font-weight: 600;
+            color: var(--gray-900);
+        }
+
+        .journey-minimize {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--gray-500);
+        }
+
+        .journey-steps {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-3);
+        }
+
+        .journey-step {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            position: relative;
+        }
+
+        .journey-step:not(:last-child)::after {
+            content: "";
+            position: absolute;
+            left: 15px;
+            top: 35px;
+            bottom: -15px;
+            width: 2px;
+            background: var(--gray-200);
+        }
+
+        .journey-step.completed:not(:last-child)::after {
+            background: var(--accent-green);
+        }
+
+        .journey-step-icon {
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            animation: spin 1s linear infinite;
+            background: var(--gray-200);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: var(--font-size-sm);
+            flex-shrink: 0;
+            transition: var(--transition);
         }
-        @keyframes spin {
+
+        .journey-step.active .journey-step-icon {
+            background: var(--gradient-primary);
+            color: white;
+            animation: pulse 2s infinite;
+        }
+
+        .journey-step.completed .journey-step-icon {
+            background: var(--accent-green);
+            color: white;
+        }
+
+        .journey-step-content {
+            flex: 1;
+        }
+
+        .journey-step-title {
+            font-size: var(--font-size-sm);
+            font-weight: 600;
+            color: var(--gray-700);
+            margin-bottom: 2px;
+        }
+
+        .journey-step.active .journey-step-title {
+            color: var(--primary-blue);
+        }
+
+        .journey-step-description {
+            font-size: var(--font-size-xs);
+            color: var(--gray-500);
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
+
+        /* Enhanced Empty State Styles */
+        .empty-state-hero {
+            background: white;
+            border-radius: var(--border-radius-xl);
+            padding: var(--space-12);
+            text-align: center;
+            box-shadow: var(--shadow);
+            margin-bottom: var(--space-8);
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: var(--space-6);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .empty-state-title {
+            font-size: var(--font-size-2xl);
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: var(--space-3);
+        }
+
+        .empty-state-description {
+            font-size: var(--font-size-lg);
+            color: var(--gray-600);
+            margin-bottom: var(--space-8);
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .empty-state-actions {
+            display: flex;
+            gap: var(--space-4);
+            justify-content: center;
+        }
+
+        /* Quick Start Wizard Styles */
+        .quick-start-wizard {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-light) 100%);
+            color: white;
+            border-radius: var(--border-radius-xl);
+            padding: var(--space-8);
+            margin-bottom: var(--space-8);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .quick-start-wizard::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        .card-hover {
-            transition: all 0.3s ease;
+
+        .wizard-content {
+            position: relative;
+            z-index: 1;
         }
-        .card-hover:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+
+        .wizard-title {
+            font-size: var(--font-size-3xl);
+            font-weight: 700;
+            margin-bottom: var(--space-4);
+        }
+
+        .wizard-subtitle {
+            font-size: var(--font-size-xl);
+            opacity: 0.9;
+            margin-bottom: var(--space-6);
+        }
+
+        .wizard-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--space-6);
+            margin-bottom: var(--space-8);
+        }
+
+        .wizard-step {
+            text-align: center;
+        }
+
+        .wizard-step-number {
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: var(--font-size-2xl);
+            font-weight: 700;
+            margin: 0 auto var(--space-3);
+        }
+
+        .wizard-step-title {
+            font-size: var(--font-size-lg);
+            font-weight: 600;
+            margin-bottom: var(--space-2);
+        }
+
+        .wizard-step-description {
+            font-size: var(--font-size-sm);
+            opacity: 0.85;
+        }
+
+        .wizard-cta {
+            text-align: center;
+        }
+
+        .btn-hero {
+            background: white;
+            color: var(--primary-blue);
+            padding: var(--space-4) var(--space-8);
+            border-radius: var(--border-radius-lg);
+            font-size: var(--font-size-lg);
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+            transition: var(--transition);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-hero:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-xl);
+        }
+
+        /* Enhanced Metric Cards */
+        .metric-card {
+            background: white;
+            border-radius: var(--border-radius-xl);
+            padding: var(--space-6);
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .metric-card.empty {
+            background: var(--gray-50);
+            border: 2px dashed var(--gray-300);
+        }
+
+        .metric-card-empty-state {
+            text-align: center;
+            padding: var(--space-4) 0;
+        }
+
+        .metric-card-empty-icon {
+            font-size: 48px;
+            opacity: 0.3;
+            margin-bottom: var(--space-3);
+        }
+
+        .metric-card-empty-text {
+            color: var(--gray-500);
+            margin-bottom: var(--space-3);
+        }
+
+        .btn-start {
+            background: var(--gradient-primary);
+            color: white;
+            padding: var(--space-2) var(--space-4);
+            border-radius: var(--border-radius);
+            font-size: var(--font-size-sm);
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-1);
+            transition: var(--transition);
+        }
+
+        .btn-start:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        /* Interactive Tooltips */
+        .tooltip-trigger {
+            position: relative;
+            cursor: help;
+        }
+
+        .tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--gray-900);
+            color: white;
+            padding: var(--space-2) var(--space-3);
+            border-radius: var(--border-radius);
+            font-size: var(--font-size-sm);
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+            margin-bottom: var(--space-2);
+        }
+
+        .tooltip-trigger:hover .tooltip {
+            opacity: 1;
+        }
+
+        .tooltip::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 5px solid transparent;
+            border-top-color: var(--gray-900);
+        }
+
+        /* Feature Discovery Banner */
+        .feature-discovery {
+            background: var(--gradient-hero);
+            color: white;
+            padding: var(--space-4) var(--space-6);
+            border-radius: var(--border-radius-lg);
+            margin-bottom: var(--space-6);
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+        }
+
+        .feature-discovery-icon {
+            font-size: 32px;
+        }
+
+        .feature-discovery-content {
+            flex: 1;
+        }
+
+        .feature-discovery-title {
+            font-size: var(--font-size-lg);
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .feature-discovery-description {
+            font-size: var(--font-size-sm);
+            opacity: 0.9;
+        }
+
+        .feature-discovery-cta {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: var(--space-2) var(--space-4);
+            border-radius: var(--border-radius);
+            text-decoration: none;
+            font-size: var(--font-size-sm);
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .feature-discovery-cta:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            background: var(--gray-200);
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: var(--space-4);
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--gradient-primary);
+            width: 0%;
+            transition: width 0.5s ease;
+            border-radius: 4px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .journey-tracker {
+                position: relative;
+                top: auto;
+                right: auto;
+                width: 100%;
+                margin-bottom: var(--space-6);
+            }
+
+            .quick-start-wizard {
+                padding: var(--space-6);
+            }
+
+            .wizard-title {
+                font-size: var(--font-size-2xl);
+            }
+
+            .wizard-steps {
+                grid-template-columns: 1fr;
+                gap: var(--space-4);
+            }
+
+            .empty-state-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+
+        /* Existing styles from dashboard.html */
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 var(--space-6);
+        }
+
+        header {
+            background: white;
+            border-bottom: 1px solid var(--gray-200);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-4) 0;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            text-decoration: none;
+            color: var(--gray-900);
+        }
+
+        .logo-img {
+            height: 40px;
+        }
+
+        .logo-text {
+            font-size: var(--font-size-xl);
+            font-weight: 700;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: var(--space-6);
+            align-items: center;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: var(--gray-600);
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: var(--primary-blue);
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+        }
+
+        main {
+            padding: var(--space-8) 0;
+            min-height: calc(100vh - 80px);
+        }
+
+        .dashboard-header {
+            margin-bottom: var(--space-8);
+        }
+
+        .welcome-section {
+            background: white;
+            border-radius: var(--border-radius-xl);
+            padding: var(--space-8);
+            margin-bottom: var(--space-8);
+            box-shadow: var(--shadow);
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--space-6);
+            margin-bottom: var(--space-8);
+        }
+
+        .activity-section {
+            background: white;
+            border-radius: var(--border-radius-xl);
+            padding: var(--space-6);
+            box-shadow: var(--shadow);
+            margin-bottom: var(--space-8);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-6);
+        }
+
+        .section-title {
+            font-size: var(--font-size-xl);
+            font-weight: 700;
+            color: var(--gray-900);
         }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body>
     <!-- Header -->
-    <header class="bg-white shadow-sm border-b">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <div class="flex items-center">
-                    <h1 class="text-xl font-semibold text-gray-900">MapMyStandards A³E</h1>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <span class="text-sm text-gray-600" id="userEmail">Welcome!</span>
-                    <a href="https://platform.mapmystandards.ai/onboarding" class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700 transition-colors">
-                        Complete Setup
-                    </a>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <a href="/" class="logo">
+                    <img src="https://mapmystandards.ai/wp-content/uploads/2025/07/Original-Logo.png" alt="MapMyStandards" class="logo-img">
+                    <span class="logo-text">MapMyStandards</span>
+                </a>
+                <nav class="nav-links">
+                    <a href="/dashboard.html" class="nav-link active">Dashboard</a>
+                    <a href="/documents.html" class="nav-link">Documents</a>
+                    <a href="/upload.html" class="nav-link">Upload</a>
+                    <a href="/reports-modern.html" class="nav-link">Reports</a>
+                    <a href="/help" class="nav-link">Help</a>
+                </nav>
+                <div class="user-menu">
+                    <span class="user-email" id="userEmail">Loading...</span>
+                    <button class="btn-logout" onclick="logout()">Logout</button>
                 </div>
             </div>
         </div>
     </header>
 
     <!-- Main Content -->
-    <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        <!-- Welcome Banner -->
-        <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
-            <div class="flex items-center">
-                <div class="flex-shrink-0">
-                    <svg class="h-8 w-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
-                <div class="ml-4">
-                    <h2 class="text-lg font-medium text-blue-900" id="welcomeMessage">Welcome to your A³E Dashboard!</h2>
-                    <p class="text-blue-700">Your 7-day free trial is active. Complete the onboarding to get started with accreditation management.</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Quick Actions -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-white p-6 rounded-lg shadow card-hover">
-                <div class="flex items-start">
-                    <div class="flex-shrink-0">
-                        <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                            <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                            </svg>
+    <main>
+        <div class="container">
+            <!-- Journey Tracker (Always Visible) -->
+            <div class="journey-tracker" id="journeyTracker">
+                <div class="journey-content">
+                    <div class="journey-header">
+                        <h3 class="journey-title">Your Journey</h3>
+                        <button class="journey-minimize" onclick="toggleJourney()">−</button>
+                    </div>
+                    <div class="journey-steps">
+                        <div class="journey-step" id="step-upload">
+                            <div class="journey-step-icon">1</div>
+                            <div class="journey-step-content">
+                                <div class="journey-step-title">Upload Evidence</div>
+                                <div class="journey-step-description">Add your documents</div>
+                            </div>
+                        </div>
+                        <div class="journey-step" id="step-standards">
+                            <div class="journey-step-icon">2</div>
+                            <div class="journey-step-content">
+                                <div class="journey-step-title">Select Standards</div>
+                                <div class="journey-step-description">Choose 3-5 to start</div>
+                            </div>
+                        </div>
+                        <div class="journey-step" id="step-map">
+                            <div class="journey-step-icon">3</div>
+                            <div class="journey-step-content">
+                                <div class="journey-step-title">Map Evidence</div>
+                                <div class="journey-step-description">AI auto-mapping</div>
+                            </div>
+                        </div>
+                        <div class="journey-step" id="step-report">
+                            <div class="journey-step-icon">4</div>
+                            <div class="journey-step-content">
+                                <div class="journey-step-title">Generate Report</div>
+                                <div class="journey-step-description">Get insights</div>
+                            </div>
                         </div>
                     </div>
-                    <div class="ml-4">
-                        <h3 class="text-lg font-medium text-gray-900">Complete Onboarding</h3>
-                        <p class="text-gray-600 text-sm mt-1">Set up your accreditation profile</p>
-                        <a href="https://platform.mapmystandards.ai/onboarding" class="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium mt-3">
-                            Start Setup 
-                            <svg class="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                            </svg>
+                </div>
+            </div>
+
+            <!-- Dashboard Header -->
+            <div class="dashboard-header">
+                <h1 id="welcomeTitle">Welcome back! 👋</h1>
+                <p id="welcomeSubtitle">Let's get you started on your accreditation journey.</p>
+            </div>
+
+            <!-- Quick Start Wizard (Shows for new users) -->
+            <div class="quick-start-wizard" id="quickStartWizard" style="display: none;">
+                <div class="wizard-content">
+                    <h2 class="wizard-title">Start Your Accreditation Journey in Minutes</h2>
+                    <p class="wizard-subtitle">Follow these 4 simple steps to achieve compliance faster</p>
+                    <div class="wizard-steps">
+                        <div class="wizard-step">
+                            <div class="wizard-step-number">1</div>
+                            <h3 class="wizard-step-title">Upload</h3>
+                            <p class="wizard-step-description">Drag & drop your institutional documents</p>
+                        </div>
+                        <div class="wizard-step">
+                            <div class="wizard-step-number">2</div>
+                            <h3 class="wizard-step-title">Select</h3>
+                            <p class="wizard-step-description">Choose your accreditation standards</p>
+                        </div>
+                        <div class="wizard-step">
+                            <div class="wizard-step-number">3</div>
+                            <h3 class="wizard-step-title">Map</h3>
+                            <p class="wizard-step-description">AI maps evidence to standards</p>
+                        </div>
+                        <div class="wizard-step">
+                            <div class="wizard-step-number">4</div>
+                            <h3 class="wizard-step-title">Report</h3>
+                            <p class="wizard-step-description">Generate compliance reports</p>
+                        </div>
+                    </div>
+                    <div class="wizard-cta">
+                        <a href="/upload.html" class="btn-hero">
+                            <span>📁</span>
+                            Start with Document Upload
                         </a>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white p-6 rounded-lg shadow card-hover">
-                <div class="flex items-start">
-                    <div class="flex-shrink-0">
-                        <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                            <svg class="h-6 w-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                            </svg>
-                        </div>
+            <!-- Feature Discovery Banner -->
+            <div class="feature-discovery" id="featureDiscovery">
+                <div class="feature-discovery-icon">✨</div>
+                <div class="feature-discovery-content">
+                    <div class="feature-discovery-title">New! AI-Powered Evidence Analysis</div>
+                    <div class="feature-discovery-description">Our advanced AI can now automatically extract key insights from your documents and map them to standards with 87% accuracy.</div>
+                </div>
+                <a href="#" class="feature-discovery-cta" onclick="showFeatureTour()">Take a Tour</a>
+            </div>
+
+            <!-- Progress Overview -->
+            <div class="welcome-section">
+                <h2 class="section-title">Your Progress</h2>
+                <div class="progress-container">
+                    <div class="progress-bar" id="overallProgress"></div>
+                </div>
+                <p id="progressText">Getting started - 0% complete</p>
+            </div>
+
+            <!-- Metrics Grid with Empty States -->
+            <div class="metrics-grid" id="metricsGrid">
+                <!-- Documents Card -->
+                <div class="metric-card empty" id="documentsCard" onclick="navigateToUpload()">
+                    <div class="metric-card-empty-state">
+                        <div class="metric-card-empty-icon">📄</div>
+                        <h3>No Documents Yet</h3>
+                        <p class="metric-card-empty-text">Upload your first document to begin</p>
+                        <a href="/upload.html" class="btn-start">Upload Documents →</a>
                     </div>
-                    <div class="ml-4">
-                        <h3 class="text-lg font-medium text-gray-900">Upload Documents</h3>
-                        <p class="text-gray-600 text-sm mt-1">Start mapping your evidence to standards</p>
-                        <a href="https://platform.mapmystandards.ai/upload" class="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium mt-3">
-                            Upload 
-                            <svg class="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                            </svg>
-                        </a>
+                </div>
+
+                <!-- Standards Card -->
+                <div class="metric-card empty" id="standardsCard" onclick="navigateToStandards()">
+                    <div class="metric-card-empty-state">
+                        <div class="metric-card-empty-icon">🎯</div>
+                        <h3>No Standards Selected</h3>
+                        <p class="metric-card-empty-text">Choose standards to map against</p>
+                        <a href="/dashboard.html#standards" class="btn-start">Browse Standards →</a>
+                    </div>
+                </div>
+
+                <!-- Compliance Card -->
+                <div class="metric-card empty" id="complianceCard">
+                    <div class="metric-card-empty-state">
+                        <div class="metric-card-empty-icon">⚡</div>
+                        <h3>No Compliance Data</h3>
+                        <p class="metric-card-empty-text">Complete mapping to see your score</p>
+                        <span class="btn-start" style="opacity: 0.5; cursor: not-allowed;">Awaiting Data</span>
+                    </div>
+                </div>
+
+                <!-- Reports Card -->
+                <div class="metric-card empty" id="reportsCard">
+                    <div class="metric-card-empty-state">
+                        <div class="metric-card-empty-icon">📊</div>
+                        <h3>No Reports Generated</h3>
+                        <p class="metric-card-empty-text">Complete mapping to generate reports</p>
+                        <span class="btn-start" style="opacity: 0.5; cursor: not-allowed;">Awaiting Data</span>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white p-6 rounded-lg shadow card-hover">
-                <div class="flex items-start">
-                    <div class="flex-shrink-0">
-                        <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                            <svg class="h-6 w-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                            </svg>
-                        </div>
-                    </div>
-                    <div class="ml-4">
-                        <h3 class="text-lg font-medium text-gray-900">View Reports</h3>
-                        <p class="text-gray-600 text-sm mt-1">Analyze compliance and gaps</p>
-                        <a href="https://platform.mapmystandards.ai/reports" class="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium mt-3">
-                            View 
-                            <svg class="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                            </svg>
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Advanced Features -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-white p-6 rounded-lg shadow card-hover">
-                <div class="flex items-start">
-                    <div class="flex-shrink-0">
-                        <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
-                            <svg class="h-6 w-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                            </svg>
-                        </div>
-                    </div>
-                    <div class="ml-4">
-                        <h3 class="text-lg font-medium text-gray-900">Analytics Dashboard</h3>
-                        <p class="text-gray-600 text-sm mt-1">View compliance insights</p>
-                        <a href="https://platform.mapmystandards.ai/advanced-analytics-dashboard" class="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium mt-3">
-                            Open Analytics 
-                            <svg class="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                            </svg>
-                        </a>
-                    </div>
+            <!-- Empty State Hero (Shows when no data) -->
+            <div class="empty-state-hero" id="emptyStateHero" style="display: none;">
+                <div class="empty-state-icon">🚀</div>
+                <h2 class="empty-state-title">Ready to Transform Your Accreditation Process?</h2>
+                <p class="empty-state-description">
+                    Upload your institutional documents and let our AI do the heavy lifting. 
+                    We'll map your evidence to standards and generate comprehensive reports in minutes.
+                </p>
+                <div class="empty-state-actions">
+                    <a href="/upload.html" class="btn-hero">
+                        <span>📁</span>
+                        Upload Your First Document
+                    </a>
+                    <a href="#" class="btn-hero" onclick="startDemo()" style="background: var(--gray-100); color: var(--gray-700);">
+                        <span>🎮</span>
+                        Try Interactive Demo
+                    </a>
                 </div>
             </div>
 
-            <div class="bg-white p-6 rounded-lg shadow card-hover">
-                <div class="flex items-start">
-                    <div class="flex-shrink-0">
-                        <div class="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center">
-                            <svg class="h-6 w-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                            </svg>
-                        </div>
-                    </div>
-                    <div class="ml-4">
-                        <h3 class="text-lg font-medium text-gray-900">Team Settings</h3>
-                        <p class="text-gray-600 text-sm mt-1">Manage users & permissions</p>
-                        <a href="https://platform.mapmystandards.ai/team-settings" class="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium mt-3">
-                            Manage Team 
-                            <svg class="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                            </svg>
-                        </a>
-                    </div>
+            <!-- Recent Activity -->
+            <div class="activity-section">
+                <div class="section-header">
+                    <h2 class="section-title">Recent Activity</h2>
+                    <a href="#" class="view-all">View All →</a>
+                </div>
+                <div id="activityList">
+                    <p style="color: var(--gray-500); text-align: center; padding: var(--space-8) 0;">
+                        No activity yet. Start by uploading a document!
+                    </p>
                 </div>
             </div>
 
-            <div class="bg-white p-6 rounded-lg shadow card-hover">
-                <div class="flex items-start">
-                    <div class="flex-shrink-0">
-                        <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-                            <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path>
-                            </svg>
-                        </div>
-                    </div>
-                    <div class="ml-4">
-                        <h3 class="text-lg font-medium text-gray-900">Enterprise Analytics</h3>
-                        <p class="text-gray-600 text-sm mt-1">Advanced insights & Power BI</p>
-                        <a href="https://platform.mapmystandards.ai/powerbi-dashboard" class="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium mt-3">
-                            View Analytics 
-                            <svg class="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                            </svg>
-                        </a>
-                    </div>
+            <!-- Quick Actions -->
+            <div class="activity-section">
+                <div class="section-header">
+                    <h2 class="section-title">Quick Actions</h2>
                 </div>
-            </div>
-        </div>
-
-        <!-- Additional Features -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div class="bg-white p-6 rounded-lg shadow card-hover">
-                <div class="flex items-start">
-                    <div class="flex-shrink-0">
-                        <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                            <svg class="h-6 w-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
-                            </svg>
-                        </div>
-                    </div>
-                    <div class="ml-4">
-                        <h3 class="text-lg font-medium text-gray-900">Scenario Modeling</h3>
-                        <p class="text-gray-600 text-sm mt-1">ROI & predictive planning</p>
-                        <a href="https://platform.mapmystandards.ai/scenario-modeling" class="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium mt-3">
-                            Model Scenarios 
-                            <svg class="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                            </svg>
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-white p-6 rounded-lg shadow card-hover">
-                <div class="flex items-start">
-                    <div class="flex-shrink-0">
-                        <div class="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center">
-                            <svg class="h-6 w-6 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                            </svg>
-                        </div>
-                    </div>
-                    <div class="ml-4">
-                        <h3 class="text-lg font-medium text-gray-900">Organization Chart</h3>
-                        <p class="text-gray-600 text-sm mt-1">Map your institutional hierarchy</p>
-                        <a href="https://platform.mapmystandards.ai/org-chart" class="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium mt-3">
-                            View Chart 
-                            <svg class="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                            </svg>
-                        </a>
-                    </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-4);">
+                    <a href="/upload.html" class="metric-card" style="text-align: center; text-decoration: none; color: inherit;">
+                        <div style="font-size: 48px; margin-bottom: var(--space-2);">📁</div>
+                        <h3 style="font-size: var(--font-size-lg); margin-bottom: var(--space-1);">Upload Documents</h3>
+                        <p style="font-size: var(--font-size-sm); color: var(--gray-600);">Add evidence files</p>
+                    </a>
+                    <a href="/standards-modern" class="metric-card" style="text-align: center; text-decoration: none; color: inherit;">
+                        <div style="font-size: 48px; margin-bottom: var(--space-2);">📋</div>
+                        <h3 style="font-size: var(--font-size-lg); margin-bottom: var(--space-1);">Browse Standards</h3>
+                        <p style="font-size: var(--font-size-sm); color: var(--gray-600);">View requirements</p>
+                    </a>
+                    <a href="#" onclick="showAIFeatures()" class="metric-card" style="text-align: center; text-decoration: none; color: inherit;">
+                        <div style="font-size: 48px; margin-bottom: var(--space-2);">🧠</div>
+                        <h3 style="font-size: var(--font-size-lg); margin-bottom: var(--space-1);">AI Analysis</h3>
+                        <p style="font-size: var(--font-size-sm); color: var(--gray-600);">Smart insights</p>
+                    </a>
+                    <a href="/help" class="metric-card" style="text-align: center; text-decoration: none; color: inherit;">
+                        <div style="font-size: 48px; margin-bottom: var(--space-2);">❓</div>
+                        <h3 style="font-size: var(--font-size-lg); margin-bottom: var(--space-1);">Get Help</h3>
+                        <p style="font-size: var(--font-size-sm); color: var(--gray-600);">Tutorials & support</p>
+                    </a>
                 </div>
             </div>
         </div>
     </main>
 
     <script>
-        // Check authentication
-        document.addEventListener('DOMContentLoaded', function() {
-            const token = localStorage.getItem('access_token') || localStorage.getItem('jwt_token') || localStorage.getItem('a3e_api_key');
-            if (!token) {
-                window.location.href = 'https://platform.mapmystandards.ai/login-platform.html';
-            } else {
-                // Stay on this dashboard - no redirect to ai-dashboard
-                // Load user data and display dashboard content
-                loadDashboardData();
+        // Configuration
+        const API_BASE = window.location.hostname.includes('localhost') ? 'http://localhost:8000' : 'https://api.mapmystandards.ai';
+
+        // Initialize Dashboard
+        class EnhancedDashboard {
+            constructor() {
+                this.userData = null;
+                this.metrics = null;
+                this.journeyStep = 1;
+                this.init();
             }
-        });
 
-        async function loadDashboardData() {
-            try {
-                const token = localStorage.getItem('a3e_api_key') || localStorage.getItem('access_token') || localStorage.getItem('jwt_token');
-                const headers = {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                };
+            async init() {
+                // Check authentication
+                const token = this.getAuthToken();
+                if (!token) {
+                    window.location.href = '/login-enhanced-v2.html';
+                    return;
+                }
 
-                // Load user profile
-                const profileRes = await fetch('https://api.mapmystandards.ai/api/user/profile', {
-                    method: 'GET',
-                    headers: headers,
-                    credentials: 'include'
-                });
+                // Load user data
+                await this.loadUserData();
+                
+                // Update UI
+                this.updateJourneyTracker();
+                this.updateProgress();
+                this.checkEmptyStates();
+                
+                // Load metrics if available
+                await this.loadMetrics();
+                
+                // Set up event listeners
+                this.setupEventListeners();
+            }
 
-                if (profileRes.ok) {
-                    const profile = await profileRes.json();
-                    // Update UI with user data
-                    const welcomeEl = document.getElementById('welcomeMessage');
-                    if (welcomeEl && profile.institution_name) {
-                        welcomeEl.textContent = `Welcome back, ${profile.institution_name}`;
+            getAuthToken() {
+                return localStorage.getItem('access_token') || 
+                       localStorage.getItem('access_token') || 
+                       sessionStorage.getItem('access_token');
+            }
+
+            async loadUserData() {
+                try {
+                    // First try to get full user profile from database
+                    const profileResponse = await fetch(`${API_BASE}/api/user/intelligence-simple/user/profile`, {
+                        headers: {
+                            'Authorization': `Bearer ${this.getAuthToken()}`
+                        },
+                        credentials: 'include'
+                    });
+                    
+                    if (profileResponse.status === 401) {
+                        // Token expired
+                        console.log('Authentication failed, showing re-login prompt...');
+                        localStorage.removeItem('access_token');
+                        localStorage.removeItem('refresh_token');
+                        this.showAuthError();
+                        return;
+                    }
+                    
+                    if (profileResponse.ok) {
+                        const profileData = await profileResponse.json();
+                        
+                        // Also try to get settings (may have additional data)
+                        try {
+                            const settingsResponse = await fetch(`${API_BASE}/api/user/intelligence-simple/settings`, {
+                                headers: {
+                                    'Authorization': `Bearer ${this.getAuthToken()}`
+                                },
+                                credentials: 'include'
+                            });
+                            
+                            if (settingsResponse.ok) {
+                                const settingsData = await settingsResponse.json();
+                                // Merge profile and settings data
+                                this.userData = { ...profileData, ...settingsData };
+                            } else {
+                                this.userData = profileData;
+                            }
+                        } catch (e) {
+                            // Settings endpoint failed, use profile data only
+                            this.userData = profileData;
+                        }
+                        
+                        // Store user data in localStorage for other pages
+                        if (profileData.institution_name) {
+                            localStorage.setItem('institution_name', profileData.institution_name);
+                        }
+                        if (profileData.primary_accreditor) {
+                            localStorage.setItem('primary_accreditor', profileData.primary_accreditor);
+                        }
+                        if (profileData.email) {
+                            localStorage.setItem('user_email', profileData.email);
+                        }
+                        
+                        this.personalizeWelcome();
+                        this.applyUserContext();
+                    }
+                } catch (error) {
+                    console.error('Failed to load user data:', error);
+                }
+            }
+
+            personalizeWelcome() {
+                const welcomeTitle = document.getElementById('welcomeTitle');
+                const welcomeSubtitle = document.getElementById('welcomeSubtitle');
+                const userEmail = document.getElementById('userEmail');
+                
+                if (this.userData) {
+                    const org = this.userData.organization || this.userData.institution_name;
+                    const accr = this.userData.primary_accreditor;
+                    
+                    if (org && accr) {
+                        welcomeTitle.textContent = `Welcome back, ${org}! 👋`;
+                        welcomeSubtitle.textContent = `Let's continue your ${accr} accreditation journey.`;
+                    } else if (org) {
+                        welcomeTitle.textContent = `Welcome back, ${org}! 👋`;
+                    }
+                    
+                    if (this.userData.email) {
+                        userEmail.textContent = this.userData.email;
                     }
                 }
-
-                // Load dashboard metrics
-                const metricsRes = await fetch('https://api.mapmystandards.ai/api/dashboard/metrics', {
-                    method: 'GET',
-                    headers: headers,
-                    credentials: 'include'
-                });
-
-                if (metricsRes.ok) {
-                    const metrics = await metricsRes.json();
-                    // Update dashboard with metrics
-                    updateDashboardMetrics(metrics);
+            }
+            
+            applyUserContext() {
+                // Apply user's institutional context to improve AI analysis
+                if (!this.userData) return;
+                
+                // Update standards link to pre-select user's accreditor
+                if (this.userData.primary_accreditor) {
+                    const standardsLink = document.querySelector('a[href="/standards-modern"]');
+                    if (standardsLink) {
+                        standardsLink.href = `/standards-modern.html?accreditor=${this.userData.primary_accreditor}`;
+                    }
                 }
-            } catch (e) {
-                console.error('Error loading dashboard data:', e);
+                
+                // Update journey tracker based on user's progress
+                if (this.userData.documents_analyzed > 0) {
+                    this.journeyStep = 2;
+                }
+                if (this.userData.reports_generated > 0) {
+                    this.journeyStep = 3;
+                }
+                if (this.userData.compliance_checks_run > 0) {
+                    this.journeyStep = 4;
+                }
+                
+                // Update metrics display to reflect actual data
+                if (this.metrics) {
+                    // Add institution context to metrics
+                    this.metrics.institution = this.userData.institution_name;
+                    this.metrics.accreditor = this.userData.primary_accreditor;
+                    this.metrics.role = this.userData.role;
+                }
+            }
+
+            async loadMetrics() {
+                try {
+                    const response = await fetch(`${API_BASE}/api/user/intelligence-simple/dashboard/metrics`, {
+                        headers: {
+                            'Authorization': `Bearer ${this.getAuthToken()}`
+                        },
+                        credentials: 'include'
+                    });
+                    
+                    if (response.status === 401) {
+                        // Token expired
+                        console.log('Authentication failed, showing re-login prompt...');
+                        localStorage.removeItem('access_token');
+                        localStorage.removeItem('refresh_token');
+                        this.showAuthError();
+                        return;
+                    }
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        this.metrics = data.data;
+                        this.updateMetricCards();
+                        this.updateJourneyProgress();
+                    }
+                    
+                    // Also load document data for accurate metrics
+                    await this.loadDocumentData();
+                } catch (error) {
+                    console.error('Failed to load metrics:', error);
+                    // Fallback to document-based metrics
+                    await this.loadDocumentData();
+                }
+            }
+
+            async loadDocumentData() {
+                try {
+                    const response = await fetch(`${API_BASE}/api/user/intelligence-simple/documents/list`, {
+                        headers: {
+                            'Authorization': `Bearer ${this.getAuthToken()}`
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        const documents = data.documents || [];
+                        
+                        // Calculate metrics from documents
+                        const analyzedDocs = documents.filter(d => d.status === 'analyzed');
+                        const totalStandards = documents.reduce((sum, doc) => sum + (doc.standards_mapped || 0), 0);
+                        
+                        // Update metrics object
+                        if (!this.metrics) this.metrics = { core_metrics: {} };
+                        this.metrics.core_metrics.documents_analyzed = analyzedDocs.length;
+                        this.metrics.core_metrics.documents_processing = documents.filter(d => d.status === 'processing').length;
+                        this.metrics.core_metrics.standards_mapped = totalStandards;
+                        this.metrics.core_metrics.total_standards = 100; // Default total
+                        
+                        this.updateMetricCards();
+                        this.updateJourneyProgress();
+                    }
+                } catch (error) {
+                    console.error('Failed to load document data:', error);
+                }
+            }
+
+            updateMetricCards() {
+                if (!this.metrics || !this.metrics.core_metrics) return;
+                
+                const metrics = this.metrics.core_metrics;
+                
+                // Update Documents Card
+                if (metrics.documents_analyzed > 0) {
+                    const card = document.getElementById('documentsCard');
+                    card.classList.remove('empty');
+                    card.innerHTML = `
+                        <div class="metric-header">
+                            <div class="metric-label">Documents Analyzed</div>
+                            <div class="metric-icon success">📄</div>
+                        </div>
+                        <div class="metric-value">${metrics.documents_analyzed}</div>
+                        <div class="metric-description">Successfully processed</div>
+                        ${metrics.documents_processing > 0 ? `
+                            <div class="metric-trend">
+                                <span class="trend-indicator">↗ ${metrics.documents_processing} in progress</span>
+                            </div>
+                        ` : ''}
+                    `;
+                }
+                
+                // Update Standards Card
+                if (metrics.standards_mapped > 0) {
+                    const card = document.getElementById('standardsCard');
+                    card.classList.remove('empty');
+                    card.innerHTML = `
+                        <div class="metric-header">
+                            <div class="metric-label">Standards Mapped</div>
+                            <div class="metric-icon info">🎯</div>
+                        </div>
+                        <div class="metric-value">${metrics.standards_mapped}/${metrics.total_standards}</div>
+                        <div class="metric-description">Coverage achieved</div>
+                        <div class="progress-container" style="margin-top: 12px;">
+                            <div class="progress-bar" style="width: ${(metrics.standards_mapped / metrics.total_standards * 100)}%"></div>
+                        </div>
+                    `;
+                }
+                
+                // Update Compliance Card
+                if (this.metrics.performance_metrics && metrics.standards_mapped > 0) {
+                    const perf = this.metrics.performance_metrics;
+                    const card = document.getElementById('complianceCard');
+                    card.classList.remove('empty');
+                    card.innerHTML = `
+                        <div class="metric-header">
+                            <div class="metric-label">Compliance Score</div>
+                            <div class="metric-icon warning">⚡</div>
+                        </div>
+                        <div class="metric-value">${perf.compliance_score}%</div>
+                        <div class="metric-description">Overall readiness</div>
+                        <a href="/gap-analysis" class="btn-start" style="margin-top: 12px;">View Details →</a>
+                    `;
+                }
+                
+                // Update Reports Card
+                if (metrics.reports_generated > 0) {
+                    const card = document.getElementById('reportsCard');
+                    card.classList.remove('empty');
+                    card.innerHTML = `
+                        <div class="metric-header">
+                            <div class="metric-label">Reports Generated</div>
+                            <div class="metric-icon success">📊</div>
+                        </div>
+                        <div class="metric-value">${metrics.reports_generated}</div>
+                        <div class="metric-description">Ready to download</div>
+                        <a href="/reports-modern" class="btn-start" style="margin-top: 12px;">View Reports →</a>
+                    `;
+                }
+            }
+
+            updateJourneyTracker() {
+                // Determine current step based on data
+                if (!this.metrics || !this.metrics.core_metrics) {
+                    this.journeyStep = 1;
+                } else {
+                    const metrics = this.metrics.core_metrics;
+                    if (metrics.documents_analyzed === 0) {
+                        this.journeyStep = 1;
+                    } else if (metrics.standards_mapped === 0) {
+                        this.journeyStep = 2;
+                    } else if (metrics.reports_generated === 0) {
+                        this.journeyStep = 3;
+                    } else {
+                        this.journeyStep = 4;
+                    }
+                }
+                
+                // Update journey UI
+                const steps = ['upload', 'standards', 'map', 'report'];
+                steps.forEach((step, index) => {
+                    const stepElement = document.getElementById(`step-${step}`);
+                    stepElement.classList.remove('active', 'completed');
+                    
+                    if (index + 1 < this.journeyStep) {
+                        stepElement.classList.add('completed');
+                    } else if (index + 1 === this.journeyStep) {
+                        stepElement.classList.add('active');
+                    }
+                });
+            }
+
+            updateProgress() {
+                const progressBar = document.getElementById('overallProgress');
+                const progressText = document.getElementById('progressText');
+                
+                let progress = 0;
+                let status = 'Getting started';
+                
+                if (this.metrics && this.metrics.core_metrics) {
+                    const metrics = this.metrics.core_metrics;
+                    if (metrics.documents_analyzed > 0) progress += 25;
+                    if (metrics.standards_mapped > 0) progress += 25;
+                    if (metrics.standards_mapped > 3) progress += 25;
+                    if (metrics.reports_generated > 0) progress += 25;
+                    
+                    if (progress >= 100) status = 'Journey complete! 🎉';
+                    else if (progress >= 75) status = 'Almost there';
+                    else if (progress >= 50) status = 'Making good progress';
+                    else if (progress >= 25) status = 'Off to a great start';
+                }
+                
+                progressBar.style.width = `${progress}%`;
+                progressText.textContent = `${status} - ${progress}% complete`;
+            }
+
+            updateJourneyProgress() {
+                this.updateJourneyTracker();
+                this.updateProgress();
+            }
+
+            checkEmptyStates() {
+                const hasData = this.metrics && this.metrics.core_metrics && 
+                               this.metrics.core_metrics.documents_analyzed > 0;
+                
+                const quickStartWizard = document.getElementById('quickStartWizard');
+                const emptyStateHero = document.getElementById('emptyStateHero');
+                
+                if (!hasData) {
+                    quickStartWizard.style.display = 'block';
+                    emptyStateHero.style.display = 'block';
+                } else {
+                    quickStartWizard.style.display = 'none';
+                    emptyStateHero.style.display = 'none';
+                }
+            }
+
+            setupEventListeners() {
+                // Auto-refresh metrics
+                setInterval(() => {
+                    this.loadMetrics();
+                }, 30000);
+                
+                // Listen for updates from other tabs
+                window.addEventListener('storage', (e) => {
+                    if (e.key === 'mms:lastUploadAt' || e.key === 'mms:selectedStandards') {
+                        this.loadMetrics();
+                    }
+                });
+            }
+
+            showAuthError() {
+                // Hide main content
+                const mainContent = document.querySelector('.dashboard-content');
+                if (mainContent) {
+                    mainContent.style.opacity = '0.3';
+                    mainContent.style.pointerEvents = 'none';
+                }
+                
+                // Show auth error modal
+                const modal = document.createElement('div');
+                modal.className = 'auth-error-modal';
+                modal.innerHTML = `
+                    <div style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999;">
+                        <div style="background: white; padding: 32px; border-radius: 12px; max-width: 400px; text-align: center;">
+                            <h2 style="margin: 0 0 16px; color: #111;">Session Expired</h2>
+                            <p style="margin: 0 0 24px; color: #666;">Your session has expired. Please log in again to continue.</p>
+                            <button onclick="window.location.href='/login-enhanced-v2.html'" style="background: #0066cc; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 16px;">
+                                Log In Again
+                            </button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
             }
         }
 
-        function updateDashboardMetrics(metrics) {
-            // Update the dashboard UI with metrics data
-            // This would update the various dashboard elements
-            console.log('Dashboard metrics:', metrics);
+        // Navigation functions
+        function navigateToUpload() {
+            window.location.href = '/upload.html';
         }
+
+        function navigateToStandards() {
+            window.location.href = '/dashboard.html#standards';
+        }
+
+        function toggleJourney() {
+            const tracker = document.getElementById('journeyTracker');
+            tracker.classList.toggle('minimized');
+        }
+
+        function showFeatureTour() {
+            // TODO: Implement feature tour
+            alert('Feature tour coming soon! 🚀');
+        }
+
+        function showAIFeatures() {
+            // TODO: Show AI features modal
+            alert('AI features showcase coming soon! 🧠');
+        }
+
+        function startDemo() {
+            // TODO: Start interactive demo
+            alert('Interactive demo coming soon! 🎮');
+        }
+
+        function logout() {
+            // Only clear auth-related items, preserve onboarding status and email
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('user_data');
+            sessionStorage.removeItem('access_token');
+            sessionStorage.removeItem('user_data');
+            // Don't clear mms:onboarding-complete or user_email
+            window.location.href = '/login-enhanced-v2.html';
+        }
+
+        // Initialize dashboard when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            window.dashboard = new EnhancedDashboard();
+        });
     </script>
-    
-    <!-- Info Banner Component -->
-    <script src="/web/banner-component.js"></script>
 </body>
 </html>

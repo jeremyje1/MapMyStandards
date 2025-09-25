@@ -74,9 +74,9 @@
         });
 
         function checkSavedTrial() {
-            const savedTrialId = localStorage.getItem('a3e_trial_id');
-            const savedEmail = localStorage.getItem('a3e_user_email');
-            const expiresAt = localStorage.getItem('a3e_expires_at');
+            const savedTrialId = localStorage.getItem('mms_trial_id');
+            const savedEmail = localStorage.getItem('user_email');
+            const expiresAt = localStorage.getItem('mms_expires_at');
 
             if (savedTrialId && savedEmail) {
                 const expiryDate = expiresAt ? new Date(expiresAt) : null;
@@ -100,7 +100,7 @@
         }
 
         function accessSavedTrial() {
-            const trialId = localStorage.getItem('a3e_trial_id');
+            const trialId = localStorage.getItem('mms_trial_id');
             if (trialId) accessDashboard(trialId);
         }
 
@@ -126,7 +126,7 @@
                 const response = await fetch(`https://api.mapmystandards.ai/api/v1/trials/${trialId}`);
                 
                 if (response.ok) {
-                    localStorage.setItem('a3e_trial_id', trialId);
+                    localStorage.setItem('mms_trial_id', trialId);
                     accessDashboard(trialId);
                 } else if (response.status === 404) {
                     throw new Error('Trial not found. Please check your trial ID or start a new trial.');
@@ -142,7 +142,7 @@
         }
 
         function accessDashboard(trialId) {
-            const expiresAt = localStorage.getItem('a3e_expires_at');
+            const expiresAt = localStorage.getItem('mms_expires_at');
             if (expiresAt && new Date(expiresAt) < new Date()) {
                 window.location.href = 'subscription-manager.html';
                 return;

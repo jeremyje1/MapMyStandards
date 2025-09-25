@@ -491,12 +491,12 @@
                 if (response.ok && result.success) {
                     // Store the authentication data
                     if (result.data?.api_key) {
-                        localStorage.setItem("a3e_api_key", result.data.api_key);
+                        localStorage.setItem("access_token", result.data.api_key);
                     }
-                    localStorage.setItem("a3e_trial_id", result.trial_id || result.data?.subscription_id || '');
-                    localStorage.setItem("a3e_user_email", formData.email);
-                    localStorage.setItem("a3e_plan_type", selectedPlan);
-                    localStorage.setItem("a3e_trial_end", result.data?.trial_end || '');
+                    localStorage.setItem("mms_trial_id", result.trial_id || result.data?.subscription_id || '');
+                    localStorage.setItem("user_email", formData.email);
+                    localStorage.setItem("mms_plan_type", selectedPlan);
+                    localStorage.setItem("mms_trial_end", result.data?.trial_end || '');
                     
                     // Show success message
                     showSuccess(result.data || {});

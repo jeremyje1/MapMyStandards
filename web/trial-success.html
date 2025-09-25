@@ -324,22 +324,22 @@
             const params = new URLSearchParams(window.location.search);
             const trialIdParam = params.get('trial_id');
             if (trialIdParam) {
-                localStorage.setItem('a3e_trial_id', trialIdParam);
+                localStorage.setItem('mms_trial_id', trialIdParam);
             }
             const planParam = params.get('plan');
-            if (planParam && !localStorage.getItem('a3e_plan_type')) {
-                localStorage.setItem('a3e_plan_type', planParam);
+            if (planParam && !localStorage.getItem('mms_plan_type')) {
+                localStorage.setItem('mms_plan_type', planParam);
             }
             // Promote session-scoped api key (set during signup) into persistent storage
-            const pendingKey = sessionStorage.getItem('a3e_pending_api_key');
-            if (pendingKey && !localStorage.getItem('a3e_api_key')) {
-                localStorage.setItem('a3e_api_key', pendingKey);
-                sessionStorage.removeItem('a3e_pending_api_key');
+            const pendingKey = sessionStorage.getItem('mms_pending_api_key');
+            if (pendingKey && !localStorage.getItem('access_token')) {
+                localStorage.setItem('access_token', pendingKey);
+                sessionStorage.removeItem('mms_pending_api_key');
             }
-            const pendingEmail = sessionStorage.getItem('a3e_pending_email');
-            if (pendingEmail && !localStorage.getItem('a3e_user_email')) {
-                localStorage.setItem('a3e_user_email', pendingEmail);
-                sessionStorage.removeItem('a3e_pending_email');
+            const pendingEmail = sessionStorage.getItem('mms_pending_email');
+            if (pendingEmail && !localStorage.getItem('user_email')) {
+                localStorage.setItem('user_email', pendingEmail);
+                sessionStorage.removeItem('mms_pending_email');
             }
         })();
         // Get parameters from URL
@@ -380,7 +380,7 @@
                         const start = data.trial_start ? new Date(data.trial_start) : new Date();
                         const end = data.trial_end ? new Date(data.trial_end) : new Date(Date.now()+7*86400000);
                         setTrialDates(start, end);
-                        localStorage.setItem('a3e_trial_id', trialId);
+                        localStorage.setItem('mms_trial_id', trialId);
                         document.querySelectorAll('a[href="dashboard.html"]').forEach(a=>a.href=`https://platform.mapmystandards.ai/dashboard?trial_id=${trialId}`);
                     } catch(e){
                         console.warn('Trial fetch failed; fallback', e);
@@ -440,8 +440,8 @@
                     // Store auth token
                     if (accountData.success && accountData.api_key) {
                         localStorage.setItem('token', accountData.api_key);
-                        localStorage.setItem('a3e_api_key', accountData.api_key);
-                        localStorage.setItem('a3e_user_email', signupData.email);
+                        localStorage.setItem('access_token', accountData.api_key);
+                        localStorage.setItem('user_email', signupData.email);
                         localStorage.setItem('user', JSON.stringify({
                             email: signupData.email,
                             name: signupData.name,
@@ -451,9 +451,9 @@
                         }));
                         
                         // Store signup data for onboarding page
-                        sessionStorage.setItem('a3e_signup_data', JSON.stringify(signupData));
-                        sessionStorage.setItem('a3e_pending_email', signupData.email);
-                        sessionStorage.setItem('a3e_pending_api_key', accountData.api_key);
+                        sessionStorage.setItem('mms_signup_data', JSON.stringify(signupData));
+                        sessionStorage.setItem('mms_pending_email', signupData.email);
+                        sessionStorage.setItem('mms_pending_api_key', accountData.api_key);
                     }
 
                     // Clear pending signup data
@@ -503,7 +503,7 @@
 
                 // API Key copy helper if stored
                 (function addCopyKey(){
-                    const key = localStorage.getItem('a3e_api_key');
+                    const key = localStorage.getItem('access_token');
                         if(!key) return;
                         const btn = document.createElement('button');
                         btn.className='mt-4 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg text-sm font-medium';

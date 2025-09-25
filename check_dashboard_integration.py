@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime, timedelta
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from src.a3e.database.connection import db_manager
+from src.a3e.database.connection import db_manager  # noqa: E402
 
 async def check_dashboard_integration():
     """Check documents table and how they should appear on dashboard"""

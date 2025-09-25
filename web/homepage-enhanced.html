@@ -2194,7 +2194,7 @@
         <script>
             (function(){
                 function getToken(){
-                    return localStorage.getItem('a3e_api_key') ||
+                    return localStorage.getItem('access_token') ||
                                  localStorage.getItem('token') ||
                                  localStorage.getItem('access_token') ||
                                  localStorage.getItem('jwt_token') ||
@@ -2209,7 +2209,7 @@
                     var navLogin = document.getElementById('navLoginLink');
                     if (t && navLogin) {
                         navLogin.textContent = 'Open Dashboard';
-                        navLogin.href = 'https://platform.mapmystandards.ai/dashboard-enhanced.html';
+                        navLogin.href = 'https://platform.mapmystandards.ai/dashboard.html';
                     }
                     // Primary hero CTA: if logged in, point to /dashboard
                     var ctas = document.querySelectorAll('a.btn.btn-primary[href*="/trial"]');
@@ -2991,7 +2991,7 @@
                         </div>
                         <h3>Intelligent Dashboard</h3>
                         <p>Real-time compliance metrics, predictive analytics, and actionable insights</p>
-                        <a href="https://platform.mapmystandards.ai/dashboard-enhanced.html" class="platform-link">
+                        <a href="https://platform.mapmystandards.ai/dashboard.html" class="platform-link">
                             Access Dashboard <i class="fas fa-arrow-right"></i>
                         </a>
                     </div>
@@ -3039,7 +3039,7 @@
                         </div>
                         <h3>Advanced Analytics</h3>
                         <p>Deep insights, trends, and predictive compliance intelligence</p>
-                        <a href="https://platform.mapmystandards.ai/dashboard-enhanced.html" class="platform-link">
+                        <a href="https://platform.mapmystandards.ai/dashboard.html" class="platform-link">
                             Explore AI Dashboard <i class="fas fa-arrow-right"></i>
                         </a>
                     </div>
@@ -3920,7 +3920,7 @@
         (function(){
             function getToken(){
                 try {
-                    return localStorage.getItem('a3e_api_key') ||
+                    return localStorage.getItem('access_token') ||
                            localStorage.getItem('token') ||
                            localStorage.getItem('access_token') ||
                            localStorage.getItem('jwt_token') ||
@@ -3997,7 +3997,7 @@
                             </div>
                             <p>${[formatBytes(it.file_size), timeAgo(it.updated_at || it.created_at)].filter(Boolean).join(' • ')}</p>
                             <div style="margin-top: 0.5rem;">
-                                <a href="/upload-working.html" class="platform-link">View in Uploads <i class="fas fa-arrow-right"></i></a>
+                                <a href="/upload.html" class="platform-link">View in Uploads <i class="fas fa-arrow-right"></i></a>
                             </div>`;
                         list.appendChild(card);
                     });

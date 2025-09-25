@@ -218,7 +218,7 @@
                 // Clear old tokens first
                 localStorage.removeItem('access_token');
                 localStorage.removeItem('refresh_token');
-                localStorage.removeItem('a3e_api_key');
+                localStorage.removeItem('access_token');
                 sessionStorage.clear();
                 
                 showDebug('Cleared old tokens');
@@ -280,7 +280,7 @@
                     // Redirect after short delay
                     setTimeout(() => {
                         const redirect = new URLSearchParams(window.location.search).get('redirect') 
-                                      || '/dashboard-enhanced.html';
+                                      || '/dashboard.html';
                         window.location.href = redirect;
                     }, 1500);
                     
@@ -313,7 +313,7 @@
                     if (response.ok) {
                         showMessage('You are already logged in. Redirecting...', 'success');
                         setTimeout(() => {
-                            window.location.href = '/dashboard-enhanced.html';
+                            window.location.href = '/dashboard.html';
                         }, 1000);
                     } else {
                         showDebug('Token invalid, clearing...');

@@ -6,8 +6,11 @@ import asyncio
 from sqlalchemy import text
 from datetime import datetime
 import sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from src.a3e.database.connection import db_manager
+# Add src to Python path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
+
+from a3e.services.database import DatabaseService  # noqa: E402
+from src.a3e.database.connection import db_manager  # noqa: E402
 
 USER_ID = "e144cf90-d8ed-4277-bf12-3d86443e2099"
 

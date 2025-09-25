@@ -596,8 +596,8 @@
                 
                 // Bridge: persist onboarding data into settings once
                 try {
-                    const persistedFlag = sessionStorage.getItem('a3e_onboarding_persisted');
-                    const onboardingRaw = sessionStorage.getItem('a3e_onboarding_data');
+                    const persistedFlag = sessionStorage.getItem('mms_onboarding_persisted');
+                    const onboardingRaw = sessionStorage.getItem('mms_onboarding_data');
                     if (!persistedFlag && onboardingRaw) {
                         const ob = JSON.parse(onboardingRaw);
                         const payload = {};
@@ -614,7 +614,7 @@
                         if (Object.keys(payload).length > 0) {
                             await saveSettings(payload);
                             await fetchSettings();
-                            sessionStorage.setItem('a3e_onboarding_persisted', '1');
+                            sessionStorage.setItem('mms_onboarding_persisted', '1');
                         }
                     }
                 } catch (e) { console.warn('Onboarding-to-settings bridge failed', e); }
@@ -2327,7 +2327,7 @@
             await backoffFetch(`/api/auth/logout`, { method: 'POST', credentials: 'include' }, 2);
         } catch (_) {}
         // Clear local tokens for compatibility paths
-        ['access_token','auth_token','token','a3e_api_key'].forEach(k=>localStorage.removeItem(k));
+        ['access_token','auth_token','token','access_token'].forEach(k=>localStorage.removeItem(k));
         indicator.textContent = 'Session: none';
         indicator.classList.remove('bg-green-100','text-green-700');
         indicator.classList.add('bg-gray-100','text-gray-600');

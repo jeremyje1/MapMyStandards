@@ -585,14 +585,14 @@
 
                 if (response.ok && result.success) {
                     // Store authentication data
-                    localStorage.setItem('a3e_api_key', result.data.api_key);
-                    localStorage.setItem('a3e_user_email', email);
-                    localStorage.setItem('a3e_plan_type', result.data.plan);
-                    localStorage.setItem('a3e_customer_id', result.data.customer_id);
-                    localStorage.setItem('a3e_subscription_id', result.data.subscription_id);
+                    localStorage.setItem('access_token', result.data.api_key);
+                    localStorage.setItem('user_email', email);
+                    localStorage.setItem('mms_plan_type', result.data.plan);
+                    localStorage.setItem('mms_customer_id', result.data.customer_id);
+                    localStorage.setItem('mms_subscription_id', result.data.subscription_id);
                     
                     if (remember) {
-                        localStorage.setItem('a3e_remember_login', 'true');
+                        localStorage.setItem('mms_remember_login', 'true');
                     }
 
                     showMessage('Login successful! Redirecting to dashboard...', 'success');
@@ -672,7 +672,7 @@
 
         // Check if user is already logged in
         document.addEventListener('DOMContentLoaded', function() {
-            const apiKey = localStorage.getItem('a3e_api_key');
+            const apiKey = localStorage.getItem('access_token');
             if (apiKey) {
                 // User is already logged in, redirect to dashboard
                 window.location.href = '/dashboard';

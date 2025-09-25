@@ -184,7 +184,7 @@
                         if (hasCompletedOnboarding) {
                             showSuccess('Login successful! Redirecting to dashboard...');
                             setTimeout(() => {
-                                window.location.href = '/dashboard-enhanced.html';
+                                window.location.href = '/dashboard.html';
                             }, 1500);
                         } else {
                             showSuccess('Login successful! Let\'s set up your account...');
@@ -200,7 +200,7 @@
                 } catch (error) {
                     console.error('Failed to check onboarding status:', error);
                     setTimeout(() => {
-                        window.location.href = '/dashboard-enhanced.html';
+                        window.location.href = '/dashboard.html';
                     }, 1500);
                 }
             }
@@ -293,8 +293,8 @@
                         }
                         
                         // Store user email for onboarding
-                        localStorage.setItem('a3e_user_email', email);
-                        sessionStorage.setItem('a3e_pending_email', email);
+                        localStorage.setItem('user_email', email);
+                        sessionStorage.setItem('mms_pending_email', email);
                         
                         // Check if user has completed onboarding
                         try {
@@ -318,7 +318,7 @@
                                     localStorage.setItem('mms:onboarding-complete', '1');
                                     showSuccess('Login successful! Redirecting to dashboard...');
                                     setTimeout(() => {
-                                        window.location.href = '/dashboard-enhanced.html';
+                                        window.location.href = '/dashboard.html';
                                     }, 1500);
                                 } else {
                                     showSuccess('Login successful! Let\'s set up your account...');
@@ -336,7 +336,7 @@
                             console.error('Failed to check onboarding status:', error);
                             // On error, proceed to dashboard
                             setTimeout(() => {
-                                window.location.href = '/dashboard-enhanced.html';
+                                window.location.href = '/dashboard.html';
                             }, 1500);
                         }
                     }
@@ -372,7 +372,7 @@
                 closeTwoFactorModal();
                 
                 setTimeout(() => {
-                    window.location.href = '/dashboard-enhanced.html';
+                    window.location.href = '/dashboard.html';
                 }, 1500);
                 
             } catch (error) {

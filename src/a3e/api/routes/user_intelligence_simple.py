@@ -669,43 +669,39 @@ async def _analyze_evidence_from_bytes(
                         text("""
                             UPDATE documents 
                             SET status = 'analyzed',
-                                standards_mapped = :standards,
-                                mapping_details = :mapping_details,
-                                trust_score = :trust_score,
-                                fingerprint = :fingerprint
+                                analyzed_at = CURRENT_TIMESTAMP,
+                                updated_at = CURRENT_TIMESTAMP
                             WHERE id = :id
                         """),
                         {
-                            "id": document_id,
-                            "standards": [m.standard_id for m in mappings],
-                            "mapping_details": json.dumps(mapping_details),
-                            "trust_score": json.dumps(trust_dict),
-                            "fingerprint": fingerprint
+                            "id": document_id
                         }
                     )
                     
                     # Also record the mappings in evidence_mappings table
-                    for mapping in mapping_details[:10]:
+                    for i, m in enumerate(mappings[:10]):
                         await session.execute(
                             text("""
                                 INSERT INTO evidence_mappings (
-                                    evidence_id, standard_id, confidence_score, 
-                                    explanation, accreditor, created_at
+                                    id, document_id, standard_id, confidence, 
+                                    excerpts, created_at
                                 ) VALUES (
-                                    :evidence_id, :standard_id, :confidence,
-                                    :explanation, :accreditor, :created_at
-                                ) ON CONFLICT (evidence_id, standard_id) DO UPDATE SET
-                                    confidence_score = EXCLUDED.confidence_score,
-                                    explanation = EXCLUDED.explanation,
+                                    :id, :document_id, :standard_id, :confidence,
+                                    :excerpts, CURRENT_TIMESTAMP
+                                ) ON CONFLICT (document_id, standard_id) DO UPDATE SET
+                                    confidence = EXCLUDED.confidence,
+                                    excerpts = EXCLUDED.excerpts,
                                     updated_at = CURRENT_TIMESTAMP
                             """),
                             {
-                                "evidence_id": document_id,
-                                "standard_id": mapping["standard_id"],
-                                "confidence": mapping["confidence"],
-                                "explanation": json.dumps(mapping.get("page_anchors", [])),
-                                "accreditor": mapping.get("accreditor", ""),
-                                "created_at": datetime.utcnow()
+                                "id": str(uuid.uuid4()),
+                                "document_id": document_id,
+                                "standard_id": m.standard_id,
+                                "confidence": float(m.confidence),
+                                "excerpts": json.dumps([
+                                    {"page": anchor.get("page", 1), "snippet": anchor.get("snippet", "")}
+                                    for anchor in mapping_details[i].get("page_anchors", [])
+                                ] if i < len(mapping_details) else [])
                             }
                         )
                     
@@ -2712,7 +2708,7 @@ async def download_document(
             # Download from storage
             storage: StorageService = get_storage_service()
             try:
-                file_content = await storage.download_file(file_key)
+                file_content = await storage.get_file(file_key)
                 
                 # Return file response
                 return Response(
@@ -2731,6 +2727,16 @@ async def download_document(
     except Exception as e:
         logger.error(f"Document download error: {e}")
         raise HTTPException(status_code=500, detail="Failed to download document")
+
+
+# Also expose download endpoint at the expected URL
+@router.get("/documents/{document_id}/download")
+async def download_document_standard(
+    document_id: str,
+    current_user: Dict[str, Any] = Depends(get_current_user_simple)
+):
+    """Download a specific document by ID (standard route)"""
+    return await download_document(document_id, current_user)
 
 
 @router.post("/documents/{document_id}/analyze")
@@ -2790,7 +2796,7 @@ async def analyze_existing_document(
             
             # Get file content from storage
             storage = get_storage_service()
-            file_content = await storage.download_file(doc.file_key)
+            file_content = await storage.get_file(doc.file_key)
             
             # Analyze the document
             analysis_result = await _analyze_evidence_from_bytes(
@@ -2849,6 +2855,85 @@ async def analyze_existing_document(
     except Exception as e:
         logger.error(f"Document analysis error: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to analyze document: {str(e)}")
+
+
+@router.get("/documents/{document_id}/analysis")
+async def get_document_analysis(
+    document_id: str,
+    current_user: Dict[str, Any] = Depends(get_current_user_simple),
+):
+    """Get analysis results for a document"""
+    try:
+        user_id = get_user_uuid_from_email(current_user)
+        
+        async with db_manager.get_session() as session:
+            # Get document and verify ownership
+            result = await session.execute(
+                text("""
+                    SELECT d.id, d.filename, d.status, d.analyzed_at,
+                           COUNT(DISTINCT em.standard_id) as standards_mapped
+                    FROM documents d
+                    LEFT JOIN evidence_mappings em ON em.document_id = d.id
+                    WHERE d.id = :document_id 
+                    AND d.user_id = :user_id 
+                    AND d.deleted_at IS NULL
+                    GROUP BY d.id, d.filename, d.status, d.analyzed_at
+                """),
+                {"document_id": document_id, "user_id": user_id}
+            )
+            
+            doc = result.first()
+            if not doc:
+                raise HTTPException(status_code=404, detail="Document not found")
+            
+            # Get all mappings for this document
+            mappings_result = await session.execute(
+                text("""
+                    SELECT em.standard_id, em.confidence, em.excerpts,
+                           s.code, s.title, s.description, s.accreditor
+                    FROM evidence_mappings em
+                    JOIN standards s ON s.id = em.standard_id
+                    WHERE em.document_id = :document_id
+                    ORDER BY em.confidence DESC
+                """),
+                {"document_id": document_id}
+            )
+            
+            mappings = []
+            for mapping in mappings_result:
+                excerpts = json.loads(mapping.excerpts) if mapping.excerpts else []
+                mappings.append({
+                    "standard_id": mapping.standard_id,
+                    "confidence": mapping.confidence,
+                    "excerpts": excerpts,
+                    "standard": {
+                        "code": mapping.code,
+                        "title": mapping.title,
+                        "description": mapping.description,
+                        "accreditor": mapping.accreditor
+                    }
+                })
+            
+            return {
+                "document": {
+                    "id": doc.id,
+                    "filename": doc.filename,
+                    "status": doc.status,
+                    "analyzed_at": doc.analyzed_at.isoformat() if doc.analyzed_at else None,
+                    "standards_mapped": doc.standards_mapped
+                },
+                "analysis": {
+                    "mapped_standards": mappings,
+                    "total_mappings": len(mappings),
+                    "accreditors": list(set(m["standard"]["accreditor"] for m in mappings))
+                }
+            }
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error retrieving analysis: {e}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve analysis")
 
 
 @router.delete("/documents/{document_id}")

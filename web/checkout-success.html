@@ -350,10 +350,10 @@
                 console.log('Got email from URL:', userEmail);
                 
                 // Clear any old cached data that might be wrong
-                localStorage.removeItem('a3e_user_email');
+                localStorage.removeItem('user_email');
                 localStorage.removeItem('signup_email');
                 sessionStorage.removeItem('signup_email');
-                sessionStorage.removeItem('a3e_pending_email');
+                sessionStorage.removeItem('mms_pending_email');
             }
             
             // If no email in URL, try backend (for direct links)
@@ -467,14 +467,14 @@
                     if (authToken) {
                         localStorage.setItem('access_token', authToken);
                         localStorage.setItem('token', authToken);
-                        localStorage.setItem('a3e_api_key', authToken);
+                        localStorage.setItem('access_token', authToken);
                         console.log('Auth token stored successfully');
                     } else {
                         console.warn('No auth token in response');
                     }
                     
                     // Store user email and data
-                    localStorage.setItem('a3e_user_email', email);
+                    localStorage.setItem('user_email', email);
                     if (data.data) {
                         localStorage.setItem('user', JSON.stringify({
                             email: data.data.email || email,
@@ -505,7 +505,7 @@
                 } else if (response.status === 400 && data.detail && data.detail.includes('already set')) {
                     // Password already set - this is actually success
                     // Note: We don't have a token here, user needs to login
-                    localStorage.setItem('a3e_user_email', email);
+                    localStorage.setItem('user_email', email);
                     document.getElementById('loadingState').style.display = 'none';
                     document.getElementById('successState').style.display = 'block';
                     // Redirect to login since we don't have a token
