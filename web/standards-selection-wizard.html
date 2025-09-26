@@ -737,10 +737,40 @@
         let currentInstitutionType = null;
 
         // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadUserSettings();
             renderAllStandards();
             updateActionBar();
         });
+
+        async function loadUserSettings() {
+            try {
+                const response = await fetch('/api/user/settings', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                if (response.ok) {
+                    const settings = await response.json();
+                    if (settings.primary_accreditor) {
+                        // Pre-select the user's primary accreditor
+                        selectedStandards.add(settings.primary_accreditor);
+                    }
+                    if (settings.institution_type) {
+                        currentInstitutionType = settings.institution_type;
+                    }
+                }
+
+                // Also load any previously selected standards
+                const savedStandards = localStorage.getItem('selectedStandards');
+                if (savedStandards) {
+                    const parsed = JSON.parse(savedStandards);
+                    parsed.forEach(std => selectedStandards.add(std));
+                }
+            } catch (error) {
+                console.error('Failed to load user settings:', error);
+            }
+        }
 
         function selectInstitutionType(type) {
             // Update UI
@@ -874,13 +904,36 @@
             window.location.href = '/upload';
         }
 
-        function continueToMapping() {
-            // Save selected standards
+        async function continueToMapping() {
+            // Save selected standards locally
             localStorage.setItem('selectedStandards', JSON.stringify([...selectedStandards]));
             localStorage.setItem('mms:lastStandardsSelectionAt', new Date().toISOString());
             
-            // Navigate to mapping page
-            window.location.href = '/evidence-mapping-wizard';
+            // Save to backend
+            if (selectedStandards.size > 0) {
+                try {
+                    // Get the first selected standard as primary accreditor
+                    const primaryAccreditor = [...selectedStandards][0];
+                    
+                    await fetch('/api/user/settings', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${authToken}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            primary_accreditor: primaryAccreditor,
+                            selected_standards: [...selectedStandards],
+                            institution_type: currentInstitutionType
+                        })
+                    });
+                } catch (error) {
+                    console.error('Failed to save settings:', error);
+                }
+            }
+            
+            // Navigate to upload page (since that's the next step in the flow)
+            window.location.href = '/upload-working.html';
         }
     </script>
 </body>

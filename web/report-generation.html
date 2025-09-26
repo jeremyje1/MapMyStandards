@@ -624,17 +624,18 @@
             simulateGeneration();
         });
 
-        function simulateGeneration() {
+        async function simulateGeneration() {
             const steps = [
-                { id: 'step1', duration: 2000 },
-                { id: 'step2', duration: 2500 },
-                { id: 'step3', duration: 3000 },
-                { id: 'step4', duration: 2000 }
+                { id: 'step1', duration: 2000, action: loadUserData },
+                { id: 'step2', duration: 2500, action: fetchAnalysisData },
+                { id: 'step3', duration: 3000, action: generateReport },
+                { id: 'step4', duration: 2000, action: finalizeReport }
             ];
 
             let currentStep = 0;
+            let reportData = {};
 
-            function processStep() {
+            async function processStep() {
                 if (currentStep > 0) {
                     // Mark previous step as completed
                     const prevStep = document.getElementById(steps[currentStep - 1].id);
@@ -648,6 +649,15 @@
                     const currStep = document.getElementById(steps[currentStep].id);
                     currStep.classList.add('active');
 
+                    // Execute the step action
+                    try {
+                        if (steps[currentStep].action) {
+                            await steps[currentStep].action();
+                        }
+                    } catch (error) {
+                        console.error('Step failed:', error);
+                    }
+
                     // Process next step after duration
                     setTimeout(() => {
                         currentStep++;
@@ -656,6 +666,73 @@
                 } else {
                     // All steps completed, show success
                     showSuccess();
+                }
+            }
+
+            async function loadUserData() {
+                try {
+                    const response = await fetch('/api/user/dashboard', {
+                        headers: {
+                            'Authorization': `Bearer ${authToken}`
+                        }
+                    });
+                    const data = await response.json();
+                    reportData.userData = data;
+                } catch (error) {
+                    console.error('Failed to load user data:', error);
+                }
+            }
+
+            async function fetchAnalysisData() {
+                try {
+                    const response = await fetch('/api/documents?analyzed_only=true', {
+                        headers: {
+                            'Authorization': `Bearer ${authToken}`
+                        }
+                    });
+                    const documents = await response.json();
+                    reportData.documents = documents.documents || [];
+                } catch (error) {
+                    console.error('Failed to fetch documents:', error);
+                }
+            }
+
+            async function generateReport() {
+                try {
+                    // Get the first analyzed document for the report
+                    const analyzedDoc = reportData.documents.find(doc => doc.status === 'analyzed');
+                    if (analyzedDoc) {
+                        const analysisResponse = await fetch(`/api/documents/${analyzedDoc.id}/analysis`, {
+                            headers: {
+                                'Authorization': `Bearer ${authToken}`
+                            }
+                        });
+                        const analysis = await analysisResponse.json();
+                        
+                        // Generate the evidence report
+                        const reportResponse = await fetch('/api/evidence/report', {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${authToken}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                filename: analyzedDoc.filename,
+                                analysis: analysis
+                            })
+                        });
+                        
+                        reportData.reportHTML = await reportResponse.text();
+                    }
+                } catch (error) {
+                    console.error('Failed to generate report:', error);
+                }
+            }
+
+            async function finalizeReport() {
+                // Store report data for download
+                if (reportData.reportHTML) {
+                    sessionStorage.setItem('mms:generatedReport', reportData.reportHTML);
                 }
             }
 
@@ -693,8 +770,22 @@
         }
 
         function downloadReport() {
-            // Simulate download
-            alert('Your report is being prepared for download. You will receive it via email shortly.');
+            // Get the generated report from session storage
+            const reportHTML = sessionStorage.getItem('mms:generatedReport');
+            if (reportHTML) {
+                // Create a blob and download
+                const blob = new Blob([reportHTML], { type: 'text/html' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `accreditation-report-${new Date().toISOString().split('T')[0]}.html`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            } else {
+                alert('Report not found. Please generate a new report.');
+            }
         }
 
         function viewOnline() {
