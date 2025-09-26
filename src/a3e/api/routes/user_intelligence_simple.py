@@ -669,7 +669,6 @@ async def _analyze_evidence_from_bytes(
                         text("""
                             UPDATE documents 
                             SET status = 'analyzed',
-                                analyzed_at = CURRENT_TIMESTAMP,
                                 updated_at = CURRENT_TIMESTAMP
                             WHERE id = :id
                         """),
@@ -2890,14 +2889,14 @@ async def get_document_analysis(
             # Get document and verify ownership
             result = await session.execute(
                 text("""
-                    SELECT d.id, d.filename, d.status, d.analyzed_at,
+                    SELECT d.id, d.filename, d.status,
                            COUNT(DISTINCT em.standard_id) as standards_mapped
                     FROM documents d
                     LEFT JOIN evidence_mappings em ON em.document_id = d.id
                     WHERE d.id = :document_id 
                     AND d.user_id = :user_id 
                     AND d.deleted_at IS NULL
-                    GROUP BY d.id, d.filename, d.status, d.analyzed_at
+                    GROUP BY d.id, d.filename, d.status
                 """),
                 {"document_id": document_id, "user_id": user_id}
             )
@@ -2945,7 +2944,7 @@ async def get_document_analysis(
                         "id": doc.id,
                         "filename": doc.filename,
                         "status": doc.status,
-                        "analyzed_at": doc.analyzed_at.isoformat() if hasattr(doc.analyzed_at, 'isoformat') else str(doc.analyzed_at) if doc.analyzed_at else None,
+                        "analyzed_at": None,
                         "standards_mapped": 0
                     },
                     "analysis": {
@@ -2961,7 +2960,7 @@ async def get_document_analysis(
                     "id": doc.id,
                     "filename": doc.filename,
                     "status": doc.status,
-                    "analyzed_at": doc.analyzed_at.isoformat() if hasattr(doc.analyzed_at, 'isoformat') else str(doc.analyzed_at) if doc.analyzed_at else None,
+                    "analyzed_at": None,
                     "standards_mapped": doc.standards_mapped
                 },
                 "analysis": {
