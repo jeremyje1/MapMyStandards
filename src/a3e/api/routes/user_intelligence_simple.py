@@ -2908,10 +2908,8 @@ async def get_document_analysis(
             # Get all mappings for this document
             mappings_result = await session.execute(
                 text("""
-                    SELECT em.standard_id, em.confidence, em.excerpts,
-                           s.code, s.title, s.description, s.accreditor
+                    SELECT em.standard_id, em.confidence, em.excerpts
                     FROM evidence_mappings em
-                    LEFT JOIN standards s ON s.id = em.standard_id
                     WHERE em.document_id = :document_id
                     ORDER BY em.confidence DESC
                 """),
@@ -2922,12 +2920,17 @@ async def get_document_analysis(
             for mapping in mappings_result:
                 excerpts = json.loads(mapping.excerpts) if mapping.excerpts else []
                 
-                # Handle case where standard data might not be found
+                # Since we don't have a standards table, we'll parse the standard_id
+                # to extract accreditor and code information
+                standard_id_parts = mapping.standard_id.split('.')
+                accreditor = standard_id_parts[0] if standard_id_parts else "Unknown"
+                code = '.'.join(standard_id_parts[1:]) if len(standard_id_parts) > 1 else mapping.standard_id
+                
                 standard_data = {
-                    "code": mapping.code or mapping.standard_id,
-                    "title": mapping.title or f"Standard {mapping.standard_id}",
-                    "description": mapping.description or "",
-                    "accreditor": mapping.accreditor or "Unknown"
+                    "code": code,
+                    "title": f"{accreditor} Standard {code}",
+                    "description": "",
+                    "accreditor": accreditor
                 }
                 
                 mappings.append({
