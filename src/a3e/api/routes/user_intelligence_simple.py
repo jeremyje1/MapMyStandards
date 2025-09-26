@@ -815,9 +815,9 @@ async def get_current_user_simple(
     if sub and "@" in sub:
         # This is an old token with email in 'sub'
         logger.info(f"Converting old token format for user: {sub}")
-        user_uuid = await get_user_uuid_from_email(sub)
-        claims["user_id"] = user_uuid
-        claims["sub"] = user_uuid  # Update sub to use UUID
+        # For now, just use the email as the user ID
+        # The individual endpoints will handle conversion when needed
+        claims["user_id"] = sub
         if "email" not in claims:
             claims["email"] = sub  # Preserve the email
     elif not claims.get("user_id"):
