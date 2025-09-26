@@ -216,7 +216,7 @@ const apiService = {
   // Intelligence Simple endpoints
   intelligenceSimple: {
     // List review items
-    listReviews: (params?: ReviewParams) =>
+    listReviews: (params?: Record<string, any>) =>
       api.get('/api/user/intelligence-simple/evidence/reviews', { params }),
     
     // Get readiness scorecard
