@@ -291,7 +291,7 @@
                 <a href="/dashboard.html">Dashboard</a>
                 <a href="/documents.html">Documents</a>
                 <a href="/upload.html">Upload</a>
-                <a href="/reports-modern.html">Reports</a>
+                <a href="/report-generation.html">Reports</a>
                 <a href="/help">Help</a>
             </nav>
         </div>
@@ -485,7 +485,7 @@
         function generateReport() {
             const urlParams = new URLSearchParams(window.location.search);
             const documentId = urlParams.get('document');
-            window.location.href = `/reports-modern.html?document=${documentId}`;
+            window.location.href = `/report-generation.html?document=${documentId}`;
         }
 
         function logout() {
