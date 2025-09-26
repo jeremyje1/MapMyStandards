@@ -611,6 +611,14 @@
     </main>
 
     <script>
+        // Check authentication
+        const authToken = localStorage.getItem('access_token') || 
+                         localStorage.getItem('access_token') || 
+                         sessionStorage.getItem('access_token');
+        if (!authToken) {
+            window.location.href = "/login-enhanced.html";
+        }
+
         // Simulate report generation process
         document.addEventListener('DOMContentLoaded', () => {
             simulateGeneration();
