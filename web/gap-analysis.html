@@ -450,7 +450,7 @@
         async function loadGapAnalysis() {
             try {
                 // Get the gap analysis data from the correct endpoint
-                const gapResponse = await fetch('/api/gaps/analysis', {
+                const gapResponse = await fetch('/api/user/intelligence-simple/gaps/analysis', {
                     headers: {
                         'Authorization': `Bearer ${authToken}`
                     }
@@ -463,7 +463,7 @@
                 const gapData = await gapResponse.json();
                 
                 // Also get evidence mappings to show what standards are covered
-                const evidenceResponse = await fetch('/api/standards/evidence-map', {
+                const evidenceResponse = await fetch('/api/user/intelligence-simple/standards/evidence-map', {
                     headers: {
                         'Authorization': `Bearer ${authToken}`
                     }

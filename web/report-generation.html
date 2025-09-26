@@ -671,7 +671,7 @@
 
             async function loadUserData() {
                 try {
-                    const response = await fetch('/api/user/dashboard', {
+                    const response = await fetch('/api/user/intelligence-simple/dashboard', {
                         headers: {
                             'Authorization': `Bearer ${authToken}`
                         }
@@ -685,7 +685,7 @@
 
             async function fetchAnalysisData() {
                 try {
-                    const response = await fetch('/api/documents?analyzed_only=true', {
+                    const response = await fetch('/api/user/intelligence-simple/documents?analyzed_only=true', {
                         headers: {
                             'Authorization': `Bearer ${authToken}`
                         }
@@ -702,7 +702,7 @@
                     // Get the first analyzed document for the report
                     const analyzedDoc = reportData.documents.find(doc => doc.status === 'analyzed');
                     if (analyzedDoc) {
-                        const analysisResponse = await fetch(`/api/documents/${analyzedDoc.id}/analysis`, {
+                        const analysisResponse = await fetch(`/api/user/intelligence-simple/documents/${analyzedDoc.id}/analysis`, {
                             headers: {
                                 'Authorization': `Bearer ${authToken}`
                             }
@@ -710,7 +710,7 @@
                         const analysis = await analysisResponse.json();
                         
                         // Generate the evidence report
-                        const reportResponse = await fetch('/api/evidence/report', {
+                        const reportResponse = await fetch('/api/user/intelligence-simple/evidence/report', {
                             method: 'POST',
                             headers: {
                                 'Authorization': `Bearer ${authToken}`,

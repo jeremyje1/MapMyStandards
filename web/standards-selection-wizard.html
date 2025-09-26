@@ -745,7 +745,7 @@
 
         async function loadUserSettings() {
             try {
-                const response = await fetch('/api/user/settings', {
+                const response = await fetch('/api/user/intelligence-simple/user/settings', {
                     headers: {
                         'Authorization': `Bearer ${authToken}`
                     }
@@ -915,7 +915,7 @@
                     // Get the first selected standard as primary accreditor
                     const primaryAccreditor = [...selectedStandards][0];
                     
-                    await fetch('/api/user/settings', {
+                    await fetch('/api/user/intelligence-simple/user/settings', {
                         method: 'POST',
                         headers: {
                             'Authorization': `Bearer ${authToken}`,
