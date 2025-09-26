@@ -2864,7 +2864,16 @@ async def get_document_analysis(
 ):
     """Get analysis results for a document"""
     try:
-        user_id = get_user_uuid_from_email(current_user)
+        logger.info(f"Getting analysis for document {document_id}")
+        logger.info(f"Current user: {current_user}")
+        
+        # Extract user ID from the current_user dict
+        email = current_user.get('email') or current_user.get('sub')
+        if email and '@' in email:
+            user_id = await get_user_uuid_from_email(email)
+        else:
+            user_id = current_user.get('user_id') or current_user.get('sub')
+        logger.info(f"User ID: {user_id}")
         
         async with db_manager.get_session() as session:
             # Get document and verify ownership
@@ -2925,7 +2934,7 @@ async def get_document_analysis(
                         "id": doc.id,
                         "filename": doc.filename,
                         "status": doc.status,
-                        "analyzed_at": doc.analyzed_at.isoformat() if doc.analyzed_at else None,
+                        "analyzed_at": doc.analyzed_at.isoformat() if hasattr(doc.analyzed_at, 'isoformat') else str(doc.analyzed_at) if doc.analyzed_at else None,
                         "standards_mapped": 0
                     },
                     "analysis": {
@@ -2941,7 +2950,7 @@ async def get_document_analysis(
                     "id": doc.id,
                     "filename": doc.filename,
                     "status": doc.status,
-                    "analyzed_at": doc.analyzed_at.isoformat() if doc.analyzed_at else None,
+                    "analyzed_at": doc.analyzed_at.isoformat() if hasattr(doc.analyzed_at, 'isoformat') else str(doc.analyzed_at) if doc.analyzed_at else None,
                     "standards_mapped": doc.standards_mapped
                 },
                 "analysis": {
