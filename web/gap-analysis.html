@@ -449,82 +449,45 @@
         // Load gap analysis data
         async function loadGapAnalysis() {
             try {
-                // First check if we have any mapped evidence using the new API
-                const base = window.API_BASE_URL || '';
-                const evidenceResponse = await fetch(base + '/api/intelligence/evidence/list', {
+                // Get the gap analysis data from the correct endpoint
+                const gapResponse = await fetch('/api/gaps/analysis', {
                     headers: {
                         'Authorization': `Bearer ${authToken}`
                     }
                 });
 
-                if (!evidenceResponse.ok) {
-                    // Fall back to legacy endpoints
-                    const legacyResponse = await fetch('/api/v1/evidence/map-database', {
-                        headers: {
-                            'Authorization': `Bearer ${authToken}`
-                        }
-                    });
-                    
-                    if (!legacyResponse.ok) {
-                        const legacyResponse2 = await fetch('/api/v1/evidence/map', {
-                            headers: {
-                                'Authorization': `Bearer ${authToken}`
-                            }
-                        });
-                        
-                        if (legacyResponse2.ok) {
-                            const data = await legacyResponse2.json();
-                            if (!data.evidence || Object.keys(data.evidence).length === 0) {
-                                showEmptyState();
-                                return;
-                            }
-                        } else {
-                            showEmptyState();
-                            return;
-                        }
+                if (!gapResponse.ok) {
+                    throw new Error('Failed to load gap analysis');
+                }
+
+                const gapData = await gapResponse.json();
+                
+                // Also get evidence mappings to show what standards are covered
+                const evidenceResponse = await fetch('/api/standards/evidence-map', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                let mappedStandards = new Set();
+                let hasEvidence = false;
+                
+                if (evidenceResponse.ok) {
+                    const evidenceData = await evidenceResponse.json();
+                    if (evidenceData.mapping && Object.keys(evidenceData.mapping).length > 0) {
+                        mappedStandards = new Set(Object.keys(evidenceData.mapping));
+                        hasEvidence = true;
                     }
                 }
 
-                const evidenceData = evidenceResponse.ok ? await evidenceResponse.json() : null;
-                
-                if (!evidenceData || (!evidenceData.documents && !evidenceData.evidence) || 
-                    (evidenceData.documents && evidenceData.documents.length === 0) ||
-                    (evidenceData.evidence && Object.keys(evidenceData.evidence).length === 0)) {
+                // Check if we have any data to show
+                if (!hasEvidence && (!gapData.gap_analysis || gapData.gap_analysis.total_gaps === 0)) {
                     showEmptyState();
                     return;
                 }
 
-                // Generate gap analysis using the new API
-                const gapResponse = await fetch(base + '/api/intelligence/gaps/analyze', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${authToken}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        accreditor: localStorage.getItem('primary_accreditor') || 'HLC',
-                        include_recommendations: true
-                    })
-                });
-
-                if (!gapResponse.ok) {
-                    // Try legacy endpoint
-                    const legacyGapResponse = await fetch('/api/v1/reports/gap-analysis-database', {
-                        headers: {
-                            'Authorization': `Bearer ${authToken}`
-                        }
-                    });
-                    
-                    if (!legacyGapResponse.ok) {
-                        throw new Error('Failed to generate gap analysis');
-                    }
-                    
-                    const legacyData = await legacyGapResponse.json();
-                    analyzeGaps(legacyData);
-                } else {
-                    const gapData = await gapResponse.json();
-                    displayGapAnalysis(gapData);
-                }
+                // Display the gap analysis
+                displayGapAnalysis(gapData, mappedStandards);
                 
                 document.getElementById('loadingState').style.display = 'none';
                 document.getElementById('mainContent').style.display = 'block';
@@ -609,37 +572,38 @@
             displayActionItems(criticalGaps, mediumGaps, lowGaps);
         }
 
-        function displayGapAnalysis(gapData) {
-            // Handle new API response format
-            if (gapData.gaps) {
-                const criticalGaps = gapData.gaps.filter(g => g.severity === 'critical' || g.priority === 'high');
-                const mediumGaps = gapData.gaps.filter(g => g.severity === 'medium' || g.priority === 'medium');
-                const lowGaps = gapData.gaps.filter(g => g.severity === 'low' || g.priority === 'low');
+        function displayGapAnalysis(gapData, mappedStandards) {
+            // Handle the actual API response format
+            if (gapData.gap_analysis) {
+                const analysis = gapData.gap_analysis;
+                const gaps = analysis.gaps || [];
                 
-                // Update metrics from the response
-                if (gapData.summary) {
-                    updateMetrics(
-                        gapData.summary.total_standards || 0,
-                        gapData.summary.mapped_standards || 0,
-                        gapData.summary.high_confidence_count || 0,
-                        criticalGaps.length
-                    );
-                }
+                // Categorize gaps by risk level
+                const criticalGaps = gaps.filter(g => g.risk_level === 'High' || g.risk_score >= 0.7);
+                const mediumGaps = gaps.filter(g => g.risk_level === 'Medium' || (g.risk_score >= 0.5 && g.risk_score < 0.7));
+                const lowGaps = gaps.filter(g => g.risk_level === 'Low' || g.risk_score < 0.5);
+                
+                // Update metrics
+                const totalStandards = 73; // Default for HLC
+                const mappedCount = mappedStandards ? mappedStandards.size : 0;
+                updateMetrics(
+                    totalStandards,
+                    mappedCount,
+                    mappedCount, // high confidence count (simplified)
+                    analysis.high_risk || criticalGaps.length
+                );
                 
                 // Display gaps
-                displayCriticalGaps([...criticalGaps, ...mediumGaps]);
+                displayCriticalGaps(gaps.slice(0, 5)); // Show top 5 gaps
                 displayActionItems(criticalGaps, mediumGaps, lowGaps);
                 
                 // Display recommendations if available
                 if (gapData.recommendations && gapData.recommendations.length > 0) {
                     displayRecommendations(gapData.recommendations);
                 }
-                
-                document.getElementById('loadingState').style.display = 'none';
-                document.getElementById('mainContent').style.display = 'block';
             } else {
-                // Fallback to legacy format
-                analyzeGaps(gapData);
+                // No gap data - show empty state
+                showEmptyState();
             }
         }
 
@@ -708,18 +672,18 @@
             container.innerHTML = gaps.slice(0, 10).map(gap => `
                 <li class="gap-item">
                     <div class="gap-header">
-                        <div class="gap-standard">${gap.title}</div>
-                        <span class="gap-severity ${gap.severity}">${gap.severity.toUpperCase()}</span>
+                        <div class="gap-standard">${gap.standard.code}: ${gap.standard.title}</div>
+                        <span class="gap-severity ${gap.risk_level.toLowerCase()}">${gap.risk_level.toUpperCase()}</span>
                     </div>
-                    <p class="gap-description">${gap.description}</p>
+                    <p class="gap-description">Risk Score: ${(gap.risk_score * 100).toFixed(0)}%</p>
                     <p style="color: var(--accent-red); font-size: 0.875rem; margin-bottom: 1rem;">
-                        ⚠️ ${gap.reason}
+                        ⚠️ ${gap.recommendation}
                     </p>
                     <div class="gap-actions">
-                        <button class="action-btn" onclick="uploadEvidence('${gap.standardId}')">
+                        <button class="action-btn" onclick="uploadEvidence('${gap.standard.code}')">
                             Upload Evidence
                         </button>
-                        <button class="action-btn secondary" onclick="viewStandard('${gap.standardId}')">
+                        <button class="action-btn secondary" onclick="viewStandard('${gap.standard.code}')">
                             View Requirements
                         </button>
                     </div>
@@ -781,11 +745,11 @@
         // Action handlers
         function uploadEvidence(standardId) {
             localStorage.setItem('targetStandard', standardId);
-            window.location.href = '/evidence-upload';
+            window.location.href = '/upload-working.html';
         }
 
         function viewStandard(standardId) {
-            window.location.href = `/standards#${standardId}`;
+            window.location.href = `/standards-selection-wizard.html#${standardId}`;
         }
 
         function startAction(priority) {
