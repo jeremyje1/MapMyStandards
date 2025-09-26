@@ -748,7 +748,10 @@
             lastStep.querySelector('.gen-step-icon').textContent = '✓';
 
             // Hide generating state, show success state
-            setTimeout(() => {
+            setTimeout(async () => {
+                // Fetch real metrics before showing success state
+                await updateWithRealMetrics();
+                
                 document.getElementById('generatingState').style.display = 'none';
                 document.getElementById('successState').style.display = 'block';
                 
@@ -762,6 +765,65 @@
                 // Trigger celebration animation
                 celebrateCompletion();
             }, 500);
+        }
+
+        async function updateWithRealMetrics() {
+            try {
+                const token = localStorage.getItem('access_token');
+                if (!token) return;
+                
+                // Fetch user's latest upload
+                const uploadsResponse = await fetch('https://api.mapmystandards.ai/api/user/intelligence-simple/uploads', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (uploadsResponse.ok) {
+                    const uploads = await uploadsResponse.json();
+                    if (uploads.length > 0) {
+                        const latestUpload = uploads[0];
+                        
+                        // Update overall coverage
+                        const coverageElement = document.querySelector('.summary-card:nth-child(1) .summary-value');
+                        if (coverageElement && latestUpload.compliance_score !== undefined) {
+                            coverageElement.textContent = Math.round(latestUpload.compliance_score) + '%';
+                        }
+                        
+                        // Fetch dashboard metrics for detailed stats
+                        const metricsResponse = await fetch('https://api.mapmystandards.ai/api/user/intelligence-simple/dashboard-metrics', {
+                            headers: {
+                                'Authorization': `Bearer ${token}`
+                            }
+                        });
+                        
+                        if (metricsResponse.ok) {
+                            const metrics = await metricsResponse.json();
+                            
+                            // Update standards mapped
+                            const standardsElement = document.querySelector('.summary-card:nth-child(2) .summary-value');
+                            if (standardsElement && metrics.total_standards_mapped !== undefined) {
+                                standardsElement.textContent = metrics.total_standards_mapped;
+                            }
+                            
+                            // Update documents analyzed
+                            const documentsElement = document.querySelector('.summary-card:nth-child(3) .summary-value');
+                            if (documentsElement && metrics.documents_analyzed !== undefined) {
+                                documentsElement.textContent = metrics.documents_analyzed;
+                            }
+                            
+                            // Update gaps identified
+                            const gapsElement = document.querySelector('.summary-card:nth-child(4) .summary-value');
+                            if (gapsElement && metrics.total_gaps_identified !== undefined) {
+                                gapsElement.textContent = metrics.total_gaps_identified;
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching real metrics:', error);
+                // Continue with hardcoded values if API fails
+            }
         }
 
         function celebrateCompletion() {
