@@ -215,21 +215,25 @@ const apiService = {
   
   // Intelligence Simple endpoints
   intelligenceSimple: {
-    // Evidence reviews list (review queue)
-    listReviews: (params?: { status?: string; limit?: number }) =>
+    // List review items
+    listReviews: (params?: ReviewParams) =>
       api.get('/api/user/intelligence-simple/evidence/reviews', { params }),
-
-    // Readiness scorecard snapshot
-    readinessScorecard: (params?: { accreditor?: string }) =>
+    
+    // Get readiness scorecard
+    readinessScorecard: (params?: Record<string, any>) =>
       api.get('/api/user/intelligence-simple/readiness/scorecard', { params }),
-
-    // Risk aggregate summary
-    riskAggregate: (params?: { accreditor?: string }) =>
+    
+    // Get aggregated risk metrics
+    riskAggregate: (params?: Record<string, any>) =>
       api.get('/api/user/intelligence-simple/risk/aggregate', { params }),
-
-    // Metrics timeseries (coverage trend)
-    metricsTimeseries: (params?: { accreditor?: string }) =>
+    
+    // Get metrics over time
+    metricsTimeseries: (params?: Record<string, any>) =>
       api.get('/api/user/intelligence-simple/metrics/timeseries', { params }),
+    
+    // Get dashboard metrics
+    dashboardMetrics: () =>
+      api.get('/api/user/intelligence-simple/dashboard/metrics'),
   },
   
   // Standards endpoints

@@ -18,6 +18,8 @@ interface DashboardMetrics {
   documentsCount: number;
   reportsCount: number;
   complianceScore: number;
+  standardsMapped?: number;
+  totalStandards?: number;
   recentActivity: Array<{
     id: string;
     type: string;
@@ -52,6 +54,25 @@ const Dashboard: React.FC = () => {
     try {
       const response = await api.dashboard.getOverview();
       setMetrics(response.data);
+      
+      // Fetch real metrics from intelligence-simple endpoint
+      try {
+        const metricsRes = await api.intelligenceSimple.dashboardMetrics();
+        if (metricsRes?.data) {
+          // Update metrics with real data
+          setMetrics(prev => ({
+            ...prev!,
+            complianceScore: metricsRes.data.compliance_score || 0,
+            documentsCount: metricsRes.data.documents_analyzed || 0,
+            reportsCount: prev?.reportsCount || 0,
+            standardsMapped: metricsRes.data.standards_mapped || 0,
+            totalStandards: metricsRes.data.total_standards || 0,
+          }));
+        }
+      } catch (e) {
+        console.log('Using default metrics');
+      }
+      
       // Fetch settings for last reviewer pack
       try {
         const { data } = await api.raw.get('/api/user/intelligence-simple/settings');
@@ -195,12 +216,15 @@ const Dashboard: React.FC = () => {
           <div className="bg-white p-6 rounded-lg shadow">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500">Reports</p>
+                <p className="text-sm font-medium text-gray-500">Standards Mapped</p>
                 <p className="text-3xl font-bold text-gray-900">
-                  {metrics?.reportsCount || 0}
+                  {metrics?.standardsMapped || 0}
+                  {metrics?.totalStandards ? (
+                    <span className="text-lg font-normal text-gray-600"> / {metrics.totalStandards}</span>
+                  ) : null}
                 </p>
               </div>
-              <ChartBarIcon className="h-12 w-12 text-gray-400" />
+              <AcademicCapIcon className="h-12 w-12 text-gray-400" />
             </div>
           </div>
           

@@ -255,10 +255,8 @@ async def dashboard_overview(
                 },
                 "dashboard_data": {
                     "documents_processed": 5,
-                    "compliance_score": 92,
-                    "recent_analyses": [
-                        {"document": "demo.pdf", "score": 92, "date": "2025-01-09"}
-                    ]
+                    "compliance_score": 0,  # Real metrics loaded by frontend via separate API call
+                    "recent_analyses": []
                 },
                 "subscription": {
                     "tier": "professional",
@@ -322,14 +320,8 @@ async def dashboard_overview(
                 "user": user_data,
                 "dashboard_data": {
                     "documents_processed": 0,
-                    "compliance_score": 85,
-                    "recent_analyses": [
-                        {
-                            "document": "sample.pdf",
-                            "score": 85,
-                            "date": "2025-01-09"
-                        }
-                    ]
+                    "compliance_score": 0,  # Real metrics loaded by frontend via separate API call
+                    "recent_analyses": []
                 },
                 "subscription": {
                     "tier": user_data["subscription_tier"],
@@ -349,14 +341,8 @@ async def dashboard_overview(
                 },
                 "dashboard_data": {
                     "documents_processed": 0,
-                    "compliance_score": 85,
-                    "recent_analyses": [
-                        {
-                            "document": "sample.pdf",
-                            "score": 85,
-                            "date": "2025-01-09"
-                        }
-                    ]
+                    "compliance_score": 0,  # Real metrics loaded by frontend via separate API call
+                    "recent_analyses": []
                 },
                 "subscription": {
                     "tier": "trial",

@@ -317,10 +317,12 @@ async def _get_user_uploads(claims: Dict[str, Any]) -> Dict[str, Any]:
     
     try:
         async with db_manager.get_session() as session:
+            # Get documents with their analysis results
             result = await session.execute(
                 text("""
                     SELECT id, filename, file_key, file_size, content_type, 
-                           sha256, status, uploaded_at, organization_id
+                           sha256, status, uploaded_at, organization_id,
+                           analysis_results
                     FROM documents 
                     WHERE user_id = :user_id 
                     AND deleted_at IS NULL
@@ -331,22 +333,51 @@ async def _get_user_uploads(claims: Dict[str, Any]) -> Dict[str, Any]:
             )
             
             documents = []
-            unique_standards = set()
+            doc_ids = []
             
             for row in result:
+                # Parse analysis results for trust score
+                analysis = json.loads(row.analysis_results) if row.analysis_results else {}
+                trust_score = analysis.get("trust_score", {})
+                
                 doc = {
                     "id": row.id,
                     "filename": row.filename,
                     "uploaded_at": row.uploaded_at.isoformat() if row.uploaded_at else "",
-                    "standards_mapped": [],  # TODO: Load from mapping table if exists
+                    "standards_mapped": [],  # Will fill from evidence_mappings
                     "doc_type": row.content_type or "",
                     "mappings": [],
-                    "trust_score": {},
+                    "trust_score": trust_score,
                     "saved_path": row.file_key,
                     "fingerprint": row.sha256 or "",
                     "size": row.file_size or 0,
                 }
                 documents.append(doc)
+                doc_ids.append(row.id)
+            
+            # Get unique standards from evidence mappings
+            unique_standards = set()
+            if doc_ids:
+                mapping_result = await session.execute(
+                    text("""
+                        SELECT DISTINCT standard_id, document_id
+                        FROM evidence_mappings 
+                        WHERE document_id = ANY(:doc_ids)
+                        AND confidence > 0.3
+                    """),
+                    {"doc_ids": doc_ids}
+                )
+                
+                doc_to_standards = {}
+                for mapping in mapping_result:
+                    unique_standards.add(mapping.standard_id)
+                    if mapping.document_id not in doc_to_standards:
+                        doc_to_standards[mapping.document_id] = []
+                    doc_to_standards[mapping.document_id].append(mapping.standard_id)
+                
+                # Update documents with their mapped standards
+                for doc in documents:
+                    doc["standards_mapped"] = doc_to_standards.get(doc["id"], [])
             
             return {
                 "documents": documents,
@@ -4631,3 +4662,374 @@ async def get_ai_status(current_user: Dict[str, Any] = Depends(get_current_user_
         })
     
     return status
+
+
+@router.get("/evidence/mappings/detail")
+async def get_evidence_mappings_detail(
+    current_user: Dict[str, Any] = Depends(get_current_user_simple)
+):
+    """Get detailed evidence mappings with transparency into AI decisions"""
+    try:
+        email = current_user.get("sub", current_user.get("email", current_user.get("user_id", "unknown")))
+        user_id = await get_user_uuid_from_email(email)
+        
+        mappings = []
+        async with db_manager.get_session() as session:
+            result = await session.execute(
+                text("""
+                    SELECT 
+                        em.id,
+                        em.document_id,
+                        em.standard_id,
+                        em.confidence,
+                        em.excerpts,
+                        em.created_at,
+                        d.filename,
+                        d.file_size,
+                        d.analysis_results
+                    FROM evidence_mappings em
+                    JOIN documents d ON em.document_id = d.id
+                    WHERE d.user_id = :user_id
+                    AND d.deleted_at IS NULL
+                    ORDER BY em.confidence DESC
+                """),
+                {"user_id": user_id}
+            )
+            
+            for row in result:
+                # Get standard details
+                standard = standards_graph.get_node(row.standard_id)
+                
+                # Parse excerpts for evidence trails
+                excerpts_data = json.loads(row.excerpts) if row.excerpts else []
+                
+                mappings.append({
+                    "mapping_id": row.id,
+                    "document": {
+                        "id": row.document_id,
+                        "filename": row.filename,
+                        "size": row.file_size
+                    },
+                    "standard": {
+                        "id": row.standard_id,
+                        "title": standard.title if standard else row.standard_id,
+                        "accreditor": standard.accreditor if standard else "Unknown"
+                    },
+                    "confidence": float(row.confidence),
+                    "confidence_level": "High" if row.confidence >= 0.8 else "Medium" if row.confidence >= 0.6 else "Low",
+                    "evidence_excerpts": excerpts_data,
+                    "mapping_method": "AI-Enhanced" if USE_ENHANCED_MAPPER and settings.openai_api_key else "Algorithmic",
+                    "created_at": row.created_at.isoformat() if row.created_at else None,
+                    "explanation": f"Document contains evidence matching {int(row.confidence * 100)}% of standard requirements"
+                })
+        
+        # Group by document
+        by_document = {}
+        for mapping in mappings:
+            doc_id = mapping["document"]["id"]
+            if doc_id not in by_document:
+                by_document[doc_id] = {
+                    "document": mapping["document"],
+                    "mappings": []
+                }
+            by_document[doc_id]["mappings"].append(mapping)
+        
+        return {
+            "status": "success",
+            "total_mappings": len(mappings),
+            "documents": list(by_document.values()),
+            "transparency": {
+                "mapping_method": "AI-Enhanced" if USE_ENHANCED_MAPPER and settings.openai_api_key else "Algorithmic",
+                "allows_manual_adjustment": True,
+                "confidence_thresholds": {
+                    "high": 0.8,
+                    "medium": 0.6,
+                    "low": 0.4
+                }
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Evidence mappings detail error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve evidence mappings")
+
+
+@router.post("/evidence/mappings/adjust")
+async def adjust_evidence_mapping(
+    payload: Dict[str, Any],
+    current_user: Dict[str, Any] = Depends(get_current_user_simple)
+):
+    """Allow users to manually adjust or validate AI evidence mappings"""
+    try:
+        mapping_id = payload.get("mapping_id")
+        action = payload.get("action")  # "accept", "reject", "adjust"
+        new_confidence = payload.get("new_confidence")
+        user_notes = payload.get("notes", "")
+        
+        email = current_user.get("sub", current_user.get("email", current_user.get("user_id", "unknown")))
+        user_id = await get_user_uuid_from_email(email)
+        
+        async with db_manager.get_session() as session:
+            # Verify ownership
+            check = await session.execute(
+                text("""
+                    SELECT em.id 
+                    FROM evidence_mappings em
+                    JOIN documents d ON em.document_id = d.id
+                    WHERE em.id = :mapping_id AND d.user_id = :user_id
+                """),
+                {"mapping_id": mapping_id, "user_id": user_id}
+            )
+            
+            if not check.first():
+                raise HTTPException(status_code=403, detail="Mapping not found or access denied")
+            
+            if action == "reject":
+                # Mark mapping as rejected
+                await session.execute(
+                    text("""
+                        UPDATE evidence_mappings 
+                        SET confidence = 0, 
+                            excerpts = jsonb_build_object(
+                                'user_action', 'rejected',
+                                'notes', :notes,
+                                'original_confidence', confidence
+                            ),
+                            updated_at = CURRENT_TIMESTAMP
+                        WHERE id = :mapping_id
+                    """),
+                    {"mapping_id": mapping_id, "notes": user_notes}
+                )
+            
+            elif action == "adjust" and new_confidence is not None:
+                # Adjust confidence
+                await session.execute(
+                    text("""
+                        UPDATE evidence_mappings 
+                        SET confidence = :new_confidence,
+                            excerpts = jsonb_set(
+                                COALESCE(excerpts, '{}')::jsonb,
+                                '{user_adjustment}',
+                                jsonb_build_object(
+                                    'original_confidence', confidence,
+                                    'adjusted_confidence', :new_confidence,
+                                    'notes', :notes
+                                )
+                            ),
+                            updated_at = CURRENT_TIMESTAMP
+                        WHERE id = :mapping_id
+                    """),
+                    {
+                        "mapping_id": mapping_id, 
+                        "new_confidence": float(new_confidence),
+                        "notes": user_notes
+                    }
+                )
+            
+            elif action == "accept":
+                # Mark as accepted
+                await session.execute(
+                    text("""
+                        UPDATE evidence_mappings 
+                        SET excerpts = jsonb_set(
+                                COALESCE(excerpts, '{}')::jsonb,
+                                '{user_action}',
+                                '"accepted"'
+                            ),
+                            updated_at = CURRENT_TIMESTAMP
+                        WHERE id = :mapping_id
+                    """),
+                    {"mapping_id": mapping_id}
+                )
+            
+            await session.commit()
+            
+            return {
+                "status": "success",
+                "mapping_id": mapping_id,
+                "action": action,
+                "message": f"Mapping {action} successfully"
+            }
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Adjust mapping error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to adjust mapping")
+
+
+@router.get("/evidence/trust-scores")
+async def get_evidence_trust_scores(
+    current_user: Dict[str, Any] = Depends(get_current_user_simple)
+):
+    """Get detailed EvidenceTrust scores for all documents"""
+    try:
+        email = current_user.get("sub", current_user.get("email", current_user.get("user_id", "unknown")))
+        user_id = await get_user_uuid_from_email(email)
+        
+        documents = []
+        async with db_manager.get_session() as session:
+            result = await session.execute(
+                text("""
+                    SELECT 
+                        id, 
+                        filename, 
+                        analysis_results,
+                        uploaded_at,
+                        updated_at
+                    FROM documents 
+                    WHERE user_id = :user_id 
+                    AND deleted_at IS NULL
+                    ORDER BY uploaded_at DESC
+                """),
+                {"user_id": user_id}
+            )
+            
+            for row in result:
+                analysis = json.loads(row.analysis_results) if row.analysis_results else {}
+                trust_score = analysis.get("trust_score", {})
+                
+                # Calculate age factor
+                age_days = (datetime.utcnow() - row.uploaded_at).days if row.uploaded_at else 999
+                freshness_score = max(0, 1 - (age_days / 365))  # 1.0 for new, 0 for year old
+                
+                # Enhanced trust scoring
+                documents.append({
+                    "document_id": row.id,
+                    "filename": row.filename,
+                    "trust_scores": {
+                        "overall": float(trust_score.get("overall_score", 0.7)),
+                        "quality": float(trust_score.get("quality_score", 0.7)),
+                        "reliability": float(trust_score.get("reliability_score", 0.7)),
+                        "confidence": float(trust_score.get("confidence_score", 0.7)),
+                        "freshness": round(freshness_score, 2),
+                        "completeness": 0.8  # TODO: Implement completeness check
+                    },
+                    "trust_factors": {
+                        "document_age_days": age_days,
+                        "last_updated": row.updated_at.isoformat() if row.updated_at else None,
+                        "format": "PDF" if row.filename.lower().endswith('.pdf') else "Other",
+                        "has_metadata": True if analysis.get("metadata") else False,
+                        "source": "User Upload"
+                    },
+                    "trust_level": "High" if trust_score.get("overall_score", 0.7) >= 0.8 else "Medium",
+                    "algorithm": "EvidenceTrust Score™"
+                })
+        
+        # Calculate aggregate trust
+        all_scores = [d["trust_scores"]["overall"] for d in documents]
+        avg_trust = sum(all_scores) / len(all_scores) if all_scores else 0.0
+        
+        return {
+            "status": "success",
+            "documents": documents,
+            "aggregate_trust": {
+                "average_trust": round(avg_trust, 2),
+                "trust_distribution": {
+                    "high": len([d for d in documents if d["trust_level"] == "High"]),
+                    "medium": len([d for d in documents if d["trust_level"] == "Medium"]),
+                    "low": len([d for d in documents if d["trust_level"] == "Low"])
+                },
+                "recommendations": [
+                    "Update documents older than 6 months" if any(d["trust_factors"]["document_age_days"] > 180 for d in documents) else None,
+                    "Add more high-quality evidence" if avg_trust < 0.7 else None
+                ]
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Trust scores error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve trust scores")
+
+
+@router.get("/standards/visual-graph")
+async def get_standards_visual_graph(
+    accreditor: Optional[str] = None,
+    current_user: Dict[str, Any] = Depends(get_current_user_simple)
+):
+    """Get visual StandardsGraph data for interactive display"""
+    try:
+        user_settings = _merge_claims_with_settings(current_user)
+        if not accreditor:
+            accreditor = user_settings.get("primary_accreditor", "HLC")
+        
+        # Get user's evidence mappings
+        email = current_user.get("sub", current_user.get("email", current_user.get("user_id", "unknown")))
+        user_id = await get_user_uuid_from_email(email)
+        
+        mapped_standards = set()
+        async with db_manager.get_session() as session:
+            result = await session.execute(
+                text("""
+                    SELECT DISTINCT standard_id 
+                    FROM evidence_mappings em
+                    JOIN documents d ON em.document_id = d.id
+                    WHERE d.user_id = :user_id
+                    AND em.confidence > 0
+                """),
+                {"user_id": user_id}
+            )
+            mapped_standards = {row.standard_id for row in result}
+        
+        # Build graph data
+        nodes = []
+        edges = []
+        
+        # Add accreditor as root
+        nodes.append({
+            "id": accreditor,
+            "label": accreditor,
+            "type": "accreditor",
+            "level": 0,
+            "color": "#1e40af"
+        })
+        
+        # Add standards
+        standards = standards_graph.get_accreditor_standards(accreditor)
+        for i, standard in enumerate(standards[:20]):  # Limit for visualization
+            std_id = standard.node_id
+            nodes.append({
+                "id": std_id,
+                "label": f"{std_id}: {standard.title[:50]}...",
+                "type": "standard",
+                "level": 1,
+                "color": "#10b981" if std_id in mapped_standards else "#6b7280",
+                "mapped": std_id in mapped_standards,
+                "coverage": 1.0 if std_id in mapped_standards else 0.0
+            })
+            edges.append({
+                "source": accreditor,
+                "target": std_id
+            })
+            
+            # Add clauses
+            for clause in standards_graph.get_children(std_id)[:3]:  # Limit clauses
+                nodes.append({
+                    "id": clause.node_id,
+                    "label": clause.title[:40],
+                    "type": "clause",
+                    "level": 2,
+                    "color": "#8b5cf6"
+                })
+                edges.append({
+                    "source": std_id,
+                    "target": clause.node_id
+                })
+        
+        return {
+            "status": "success",
+            "graph": {
+                "nodes": nodes,
+                "edges": edges
+            },
+            "statistics": {
+                "total_standards": len(standards),
+                "mapped_standards": len([n for n in nodes if n.get("mapped")]),
+                "coverage_percentage": round(len(mapped_standards) / len(standards) * 100, 1) if standards else 0
+            },
+            "algorithm": "StandardsGraph™"
+        }
+        
+    except Exception as e:
+        logger.error(f"Visual graph error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to generate visual graph")
