@@ -346,9 +346,12 @@
                 }
 
                 const response = await fetch(`${API_BASE}/api/user/intelligence-simple/documents/${documentId}/analysis`, {
+                    method: 'GET',
                     headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include'
                 });
 
                 if (!response.ok) {
