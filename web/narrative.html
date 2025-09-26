@@ -441,9 +441,9 @@
 
     <script>
         // Check authentication
-        const authToken = localStorage.getItem('auth_token');
+        const authToken = localStorage.getItem('access_token') || sessionStorage.getItem('access_token');
         if (!authToken) {
-            window.location.href = "/login-enhanced-v2.html";
+            window.location.href = "/login.html";
         }
 
         let selectedType = 'concise';
@@ -454,7 +454,7 @@
         async function loadData() {
             try {
                 // Load evidence data
-                const evidenceResponse = await fetch('/api/v1/evidence/map-database', {
+                const evidenceResponse = await fetch('/api/user/intelligence-simple/evidence/mappings', {
                     headers: {
                         'Authorization': `Bearer ${authToken}`
                     }
@@ -462,7 +462,7 @@
 
                 if (!evidenceResponse.ok) {
                     // Fall back to legacy endpoint
-                    const legacyResponse = await fetch('/api/v1/evidence/map', {
+                    const legacyResponse = await fetch('/api/user/intelligence-simple/evidence/mappings', {
                         headers: {
                             'Authorization': `Bearer ${authToken}`
                         }
@@ -483,7 +483,7 @@
                 }
 
                 // Load standards
-                const standardsResponse = await fetch('/api/v1/standards', {
+                const standardsResponse = await fetch('/api/user/intelligence-simple/standards/list', {
                     headers: {
                         'Authorization': `Bearer ${authToken}`
                     }
@@ -565,7 +565,7 @@
 
             try {
                 // Call narrative generation API
-                const response = await fetch('/api/v1/narratives/evidence', {
+                const response = await fetch('/api/user/intelligence-simple/narratives/generate', {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${authToken}`,
