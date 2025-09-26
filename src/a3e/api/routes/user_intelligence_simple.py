@@ -2918,7 +2918,13 @@ async def get_document_analysis(
             
             mappings = []
             for mapping in mappings_result:
-                excerpts = json.loads(mapping.excerpts) if mapping.excerpts else []
+                # Handle excerpts - it might be a JSON string or already a list
+                if isinstance(mapping.excerpts, str):
+                    excerpts = json.loads(mapping.excerpts) if mapping.excerpts else []
+                elif isinstance(mapping.excerpts, list):
+                    excerpts = mapping.excerpts
+                else:
+                    excerpts = []
                 
                 # Since we don't have a standards table, we'll parse the standard_id
                 # to extract accreditor and code information
