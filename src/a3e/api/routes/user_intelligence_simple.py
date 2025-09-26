@@ -2892,7 +2892,7 @@ async def get_document_analysis(
                     SELECT em.standard_id, em.confidence, em.excerpts,
                            s.code, s.title, s.description, s.accreditor
                     FROM evidence_mappings em
-                    JOIN standards s ON s.id = em.standard_id
+                    LEFT JOIN standards s ON s.id = em.standard_id
                     WHERE em.document_id = :document_id
                     ORDER BY em.confidence DESC
                 """),
@@ -2902,16 +2902,20 @@ async def get_document_analysis(
             mappings = []
             for mapping in mappings_result:
                 excerpts = json.loads(mapping.excerpts) if mapping.excerpts else []
+                
+                # Handle case where standard data might not be found
+                standard_data = {
+                    "code": mapping.code or mapping.standard_id,
+                    "title": mapping.title or f"Standard {mapping.standard_id}",
+                    "description": mapping.description or "",
+                    "accreditor": mapping.accreditor or "Unknown"
+                }
+                
                 mappings.append({
                     "standard_id": mapping.standard_id,
                     "confidence": mapping.confidence,
                     "excerpts": excerpts,
-                    "standard": {
-                        "code": mapping.code,
-                        "title": mapping.title,
-                        "description": mapping.description,
-                        "accreditor": mapping.accreditor
-                    }
+                    "standard": standard_data
                 })
             
             # Check if document has been analyzed
@@ -2950,8 +2954,12 @@ async def get_document_analysis(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error retrieving analysis: {e}")
-        raise HTTPException(status_code=500, detail="Failed to retrieve analysis")
+        logger.error(f"Error retrieving analysis for document {document_id}: {e}")
+        logger.error(f"Error type: {type(e).__name__}")
+        logger.error(f"Error details: {str(e)}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve analysis: {str(e)}")
 
 
 @router.delete("/documents/{document_id}")
