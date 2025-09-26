@@ -2914,6 +2914,24 @@ async def get_document_analysis(
                     }
                 })
             
+            # Check if document has been analyzed
+            if doc.status != 'analyzed' or not mappings:
+                return {
+                    "document": {
+                        "id": doc.id,
+                        "filename": doc.filename,
+                        "status": doc.status,
+                        "analyzed_at": doc.analyzed_at.isoformat() if doc.analyzed_at else None,
+                        "standards_mapped": 0
+                    },
+                    "analysis": {
+                        "mapped_standards": [],
+                        "total_mappings": 0,
+                        "accreditors": [],
+                        "message": "Document has not been analyzed yet. Please analyze the document first."
+                    }
+                }
+            
             return {
                 "document": {
                     "id": doc.id,
@@ -2925,7 +2943,7 @@ async def get_document_analysis(
                 "analysis": {
                     "mapped_standards": mappings,
                     "total_mappings": len(mappings),
-                    "accreditors": list(set(m["standard"]["accreditor"] for m in mappings))
+                    "accreditors": list(set(m["standard"]["accreditor"] for m in mappings)) if mappings else []
                 }
             }
             

@@ -6,7 +6,27 @@
     <title>Analysis Results - MapMyStandards</title>
     <style>
         * {
-            margin: 0;
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin: 1rem 0;
+        }
+
+        .info-message {
+            background: #d1ecf1;
+            color: #0c5460;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            margin: 1rem 0;
+            text-align: center;
+        }
+
+        .info-message p {
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+        }     margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
@@ -382,14 +402,31 @@
                 document.getElementById('analyzedAt').textContent = date.toLocaleString();
             }
 
+            // Check if document has been analyzed
+            if (analysisData.analysis.message) {
+                // Document not analyzed yet
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'info-message';
+                messageDiv.innerHTML = `
+                    <p>${analysisData.analysis.message}</p>
+                    <button onclick="window.location.href='/documents.html'" class="primary-btn">
+                        Go to Documents
+                    </button>
+                `;
+                document.querySelector('.summary-section').appendChild(messageDiv);
+                return;
+            }
+            
             // Update summary
-            const mappings = analysisData.analysis.mapped_standards;
+            const mappings = analysisData.analysis.mapped_standards || [];
             document.getElementById('totalMappings').textContent = mappings.length;
-            document.getElementById('uniqueAccreditors').textContent = analysisData.analysis.accreditors.length;
+            document.getElementById('uniqueAccreditors').textContent = (analysisData.analysis.accreditors || []).length;
             
             if (mappings.length > 0) {
                 const avgConfidence = mappings.reduce((sum, m) => sum + m.confidence, 0) / mappings.length;
                 document.getElementById('avgConfidence').textContent = Math.round(avgConfidence * 100) + '%';
+            } else {
+                document.getElementById('avgConfidence').textContent = '0%';
             }
 
             // Display mappings
