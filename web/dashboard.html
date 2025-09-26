@@ -1155,6 +1155,7 @@
                                 <span class="trend-indicator">↗ ${metrics.documents_processing} in progress</span>
                             </div>
                         ` : ''}
+                        <a href="/documents.html" class="btn-start" style="margin-top: 12px;">View Documents →</a>
                     `;
                 }
                 
@@ -1172,6 +1173,7 @@
                         <div class="progress-container" style="margin-top: 12px;">
                             <div class="progress-bar" style="width: ${(metrics.standards_mapped / metrics.total_standards * 100)}%"></div>
                         </div>
+                        <a href="/standards.html" class="btn-start" style="margin-top: 12px;">View Standards →</a>
                     `;
                 }
                 
@@ -1187,7 +1189,7 @@
                         </div>
                         <div class="metric-value">${perf.compliance_score}%</div>
                         <div class="metric-description">Overall readiness</div>
-                        <a href="/gap-analysis" class="btn-start" style="margin-top: 12px;">View Details →</a>
+                        <a href="/gap-analysis.html" class="btn-start" style="margin-top: 12px;">View Details →</a>
                     `;
                 }
                 
@@ -1202,7 +1204,7 @@
                         </div>
                         <div class="metric-value">${metrics.reports_generated}</div>
                         <div class="metric-description">Ready to download</div>
-                        <a href="/reports-modern" class="btn-start" style="margin-top: 12px;">View Reports →</a>
+                        <a href="/reports-modern.html" class="btn-start" style="margin-top: 12px;">View Reports →</a>
                     `;
                 }
             }
