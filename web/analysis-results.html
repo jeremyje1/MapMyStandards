@@ -440,7 +440,19 @@
                 const excerptHtml = mapping.excerpts.length > 0 ? `
                     <div class="excerpts-section">
                         <div class="excerpt-title">Supporting Evidence:</div>
-                        ${mapping.excerpts.map(e => `<div class="excerpt">"${e}"</div>`).join('')}
+                        ${mapping.excerpts.map(e => {
+                            // Handle both string and object formats
+                            if (typeof e === 'string') {
+                                return `<div class="excerpt">"${e}"</div>`;
+                            } else if (e.snippet) {
+                                // If it's an object with snippet property
+                                const pageInfo = e.page ? `<span class="excerpt-page" style="color: #666; font-size: 0.9em;">(Page ${e.page})</span> ` : '';
+                                return `<div class="excerpt">${pageInfo}"${e.snippet}"</div>`;
+                            } else {
+                                // Fallback: try to display the object as JSON
+                                return `<div class="excerpt">"${JSON.stringify(e)}"</div>`;
+                            }
+                        }).join('')}
                     </div>
                 ` : '';
 
