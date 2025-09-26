@@ -809,18 +809,17 @@ async def get_current_user_simple(
     if not claims:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
     
-    # Handle backward compatibility: store email info but don't convert here
+    # Handle backward compatibility: convert email to UUID if needed
     # Check if 'sub' contains an email instead of a UUID
     sub = claims.get("sub", "")
     if sub and "@" in sub:
         # This is an old token with email in 'sub'
-        logger.info(f"Old token format detected for user: {sub}")
-        # Don't convert here - just mark it for later conversion
-        claims["needs_uuid_conversion"] = True
+        logger.info(f"Converting old token format for user: {sub}")
+        user_uuid = await get_user_uuid_from_email(sub)
+        claims["user_id"] = user_uuid
+        claims["sub"] = user_uuid  # Update sub to use UUID
         if "email" not in claims:
             claims["email"] = sub  # Preserve the email
-        if not claims.get("user_id"):
-            claims["user_id"] = sub  # Temporarily use email as user_id
     elif not claims.get("user_id"):
         # Ensure user_id is set
         claims["user_id"] = sub
@@ -2864,30 +2863,23 @@ async def get_document_analysis(
     current_user: Dict[str, Any] = Depends(get_current_user_simple),
 ):
     """Get analysis results for a document"""
-    user_id = None
     try:
         logger.info(f"Getting analysis for document {document_id}")
         logger.info(f"Current user: {current_user}")
         
         # Extract user ID from the current_user dict
         email = current_user.get('email') or current_user.get('sub')
+        user_id = None
         
-        # Check if we need to convert email to UUID
-        if current_user.get('needs_uuid_conversion') and email and '@' in email:
-            try:
+        try:
+            if email and '@' in email:
                 user_id = await get_user_uuid_from_email(email)
-                logger.info(f"Converted email {email} to UUID {user_id}")
-            except Exception as e:
-                logger.error(f"Error converting email to UUID: {e}")
-                user_id = email  # Fallback to email
-        else:
-            # Simple approach - just use what we have
-            if current_user.get('user_id'):
-                user_id = current_user.get('user_id')
-            elif current_user.get('sub'):
-                user_id = current_user.get('sub')
             else:
-                user_id = email
+                user_id = current_user.get('user_id') or current_user.get('sub')
+        except Exception as e:
+            logger.error(f"Error getting user ID: {e}")
+            # Fallback to using sub or user_id directly
+            user_id = current_user.get('user_id') or current_user.get('sub') or email
             
         logger.info(f"User ID: {user_id}")
         
