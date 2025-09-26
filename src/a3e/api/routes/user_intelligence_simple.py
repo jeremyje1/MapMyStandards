@@ -2869,11 +2869,22 @@ async def get_document_analysis(
         
         # Extract user ID from the current_user dict
         email = current_user.get('email') or current_user.get('sub')
-        if email and '@' in email:
-            user_id = await get_user_uuid_from_email(email)
-        else:
-            user_id = current_user.get('user_id') or current_user.get('sub')
+        user_id = None
+        
+        try:
+            if email and '@' in email:
+                user_id = await get_user_uuid_from_email(email)
+            else:
+                user_id = current_user.get('user_id') or current_user.get('sub')
+        except Exception as e:
+            logger.error(f"Error getting user ID: {e}")
+            # Fallback to using sub or user_id directly
+            user_id = current_user.get('user_id') or current_user.get('sub') or email
+            
         logger.info(f"User ID: {user_id}")
+        
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Could not determine user ID")
         
         async with db_manager.get_session() as session:
             # Get document and verify ownership
@@ -2969,6 +2980,61 @@ async def get_document_analysis(
         import traceback
         logger.error(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"Failed to retrieve analysis: {str(e)}")
+
+
+@router.get("/debug/analysis/{document_id}")
+async def debug_analysis(
+    document_id: str,
+    current_user: Dict[str, Any] = Depends(get_current_user_simple),
+):
+    """Debug endpoint to check what's happening with analysis"""
+    try:
+        # Get basic info
+        email = current_user.get('email') or current_user.get('sub')
+        user_id = current_user.get('user_id') or current_user.get('sub')
+        
+        debug_info = {
+            "document_id": document_id,
+            "current_user": {
+                "email": email,
+                "user_id": user_id,
+                "sub": current_user.get('sub'),
+                "keys": list(current_user.keys())
+            }
+        }
+        
+        # Try to get document info
+        try:
+            async with db_manager.get_session() as session:
+                result = await session.execute(
+                    text("SELECT id, user_id, status FROM documents WHERE id = :doc_id"),
+                    {"doc_id": document_id}
+                )
+                doc = result.first()
+                if doc:
+                    debug_info["document"] = {
+                        "id": doc[0],
+                        "user_id": doc[1],
+                        "status": doc[2]
+                    }
+                else:
+                    debug_info["document"] = "Not found"
+                    
+                # Check mappings
+                result = await session.execute(
+                    text("SELECT COUNT(*) FROM evidence_mappings WHERE document_id = :doc_id"),
+                    {"doc_id": document_id}
+                )
+                count = result.scalar()
+                debug_info["mappings_count"] = count
+                
+        except Exception as e:
+            debug_info["db_error"] = str(e)
+            
+        return debug_info
+        
+    except Exception as e:
+        return {"error": str(e), "type": type(e).__name__}
 
 
 @router.delete("/documents/{document_id}")
