@@ -688,7 +688,7 @@ Write the narrative paragraph:
         return prompt
     
     def _generate_evidence_citations(self, context: PipelineContext) -> Dict[str, List[str]]:
-        """Generate proper evidence citations for each standard."""
+        """Generate proper evidence citations for each standard with page numbers."""
         
         citations = {}
         
@@ -705,7 +705,25 @@ Write the narrative paragraph:
                             None
                         )
                         if evidence:
-                            citation = f"{evidence.title} ({evidence.evidence_type.value}, {evidence.collection_date.strftime('%Y-%m-%d')})"
+                            # Build citation with page numbers if available
+                            citation_parts = [
+                                evidence.title,
+                                evidence.evidence_type.value,
+                                evidence.collection_date.strftime('%Y-%m-%d')
+                            ]
+                            
+                            # Add page numbers if available in the match
+                            if hasattr(match, 'page_numbers') and match.page_numbers:
+                                if len(match.page_numbers) == 1:
+                                    citation_parts.append(f"p. {match.page_numbers[0]}")
+                                elif len(match.page_numbers) <= 3:
+                                    pages_str = ", ".join(str(p) for p in match.page_numbers)
+                                    citation_parts.append(f"pp. {pages_str}")
+                                else:
+                                    # For many pages, show range
+                                    citation_parts.append(f"pp. {match.page_numbers[0]}-{match.page_numbers[-1]}")
+                            
+                            citation = f"{citation_parts[0]} ({', '.join(citation_parts[1:])})"
                             standard_citations.append(citation)
             
             if standard_citations:
