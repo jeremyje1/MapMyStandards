@@ -266,7 +266,22 @@
 </head>
 <body>
   <div class="shell">
-    <div class="progress-wrap"><div class="bar"><div class="fill" id="progressFill"></div></div><div class="pct" id="progressPct">0%</div></div>
+    <div class="progress-wrap">
+      <div class="bar">
+        <div
+          class="fill"
+          id="progressFill"
+          role="progressbar"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          aria-valuenow="0"
+          aria-valuetext="Onboarding progress 0 percent"
+          aria-label="Onboarding progress"
+        ></div>
+      </div>
+      <div class="pct" id="progressPct">0%</div>
+      <span id="progressAnnounce" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;" aria-live="polite">Onboarding progress 0 percent</span>
+    </div>
     <header style="margin-bottom:14px">
       <h1>Welcome – Let's Get You Productive</h1>
       <p class="sub" id="welcomeCopy">4 guided steps. About 2 minutes total. You can skip and fill later in Settings.</p>
@@ -468,7 +483,8 @@
       }
     } catch(e){ console.warn('Unable to load stored trial context', e); }
     const fillEl = document.getElementById('progressFill');
-    const pctEl = document.getElementById('progressPct');
+  const pctEl = document.getElementById('progressPct');
+  const announceEl = document.getElementById('progressAnnounce');
     const backBtn = document.getElementById('backBtn');
     const nextBtn = document.getElementById('nextBtn');
     const skipBtn = document.getElementById('skipBtn');
@@ -488,6 +504,11 @@
       const pct = Math.round(((state.step-1)/state.total)*100);
       fillEl.style.width = pct + '%';
       pctEl.textContent = pct + '%';
+      fillEl.setAttribute('aria-valuenow', String(pct));
+      fillEl.setAttribute('aria-valuetext', `Onboarding progress ${pct} percent`);
+      if (announceEl) {
+        announceEl.textContent = `Onboarding progress ${pct} percent`;
+      }
     }
 
     function prePopulateFields(){

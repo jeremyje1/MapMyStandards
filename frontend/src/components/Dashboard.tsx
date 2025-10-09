@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Layout from './Layout';
@@ -13,6 +13,7 @@ import {
 } from '@heroicons/react/24/outline';
 import ChecklistCoverageCard from './ChecklistCoverageCard';
 import ReviewerPackAction from './ReviewerPackAction';
+import DashboardTour from './DashboardTour';
 
 interface DashboardMetrics {
   documentsCount: number;
@@ -39,6 +40,9 @@ const Dashboard: React.FC = () => {
   const [readiness, setReadiness] = useState<any | null>(null);
   const [risk, setRisk] = useState<any | null>(null);
   const [trend, setTrend] = useState<Array<{ date: string; coverage: number }>>([]);
+  const [isTourOpen, setIsTourOpen] = useState(false);
+  const autoRunTriggered = useRef(false);
+  const TOUR_STORAGE_KEY = 'mapmystandards.dashboard.tour.dismissed';
   const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://api.mapmystandards.ai';
   const resolveApiUrl = (url?: string) => {
     if (!url) return '';
@@ -46,9 +50,41 @@ const Dashboard: React.FC = () => {
     return `${API_BASE_URL.replace(/\/$/, '')}/${url.replace(/^\//, '')}`;
   };
 
+  const handleStartTour = () => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem(TOUR_STORAGE_KEY);
+    }
+    setIsTourOpen(true);
+  };
+
+  const handleTourClose = () => {
+    setIsTourOpen(false);
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(TOUR_STORAGE_KEY, '1');
+    }
+  };
+
   useEffect(() => {
     fetchDashboardData();
   }, []);
+
+  useEffect(() => {
+    if (loading || autoRunTriggered.current) return;
+    autoRunTriggered.current = true;
+
+    if (typeof window === 'undefined') return;
+
+    const dismissed = window.localStorage.getItem(TOUR_STORAGE_KEY);
+    const shouldRun = !dismissed && (settings?.has_onboarded !== true);
+
+    if (!shouldRun) return;
+
+    const timeout = window.setTimeout(() => {
+      setIsTourOpen(true);
+    }, 400);
+
+    return () => window.clearTimeout(timeout);
+  }, [loading, settings]);
 
   const fetchDashboardData = async () => {
     try {
@@ -113,35 +149,42 @@ const Dashboard: React.FC = () => {
   }
 
   return (
-    <Layout>
-       {/* Header */}
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-500">Welcome, {user?.name}</span>
-              <button
-                onClick={() => {/* Add logout logic */}}
-                className="text-sm text-gray-500 hover:text-gray-700"
-              >
-                Logout
-              </button>
+    <DashboardTour run={isTourOpen} onClose={handleTourClose}>
+      <Layout>
+        {/* Header */}
+        <header className="bg-white shadow">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center py-6">
+              <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+              <div className="flex items-center space-x-3">
+                <span className="text-sm text-gray-500">Welcome, {user?.name}</span>
+                <button
+                  onClick={handleStartTour}
+                  className="px-3 py-1.5 text-sm font-medium text-primary-600 bg-primary-50 border border-primary-100 rounded-md hover:bg-primary-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                >
+                  Start guided tour
+                </button>
+                <button
+                  onClick={() => {/* Add logout logic */}}
+                  className="text-sm text-gray-500 hover:text-gray-700"
+                >
+                  Logout
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {error && (
-          <div className="mb-4 rounded-md bg-red-50 p-4">
-            <p className="text-sm text-red-800">{error}</p>
-          </div>
-        )}
+        {/* Main Content */}
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {error && (
+            <div className="mb-4 rounded-md bg-red-50 p-4">
+              <p className="text-sm text-red-800">{error}</p>
+            </div>
+          )}
 
         {/* Getting Started */}
-        <div className="mb-8 bg-white rounded-lg shadow p-6">
+        <div id="dashboard-welcome-card" className="mb-8 bg-white rounded-lg shadow p-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <div className="text-sm text-gray-500">Getting Started</div>
@@ -155,14 +198,14 @@ const Dashboard: React.FC = () => {
             <div className="flex flex-wrap items-center gap-3">
               <Link to="/documents" className="px-4 py-2 bg-primary-600 text-white rounded hover:bg-primary-700">Upload Evidence</Link>
               <Link to="/standards" className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-50">View Standards</Link>
-              <a href="#reviewer-pack" className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-50">Build Reviewer Pack</a>
+              <a href="#dashboard-reviewer-pack" className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-50">Build Reviewer Pack</a>
               <Link to="/onboarding" className="px-3 py-2 text-sm text-primary-600 hover:text-primary-700">Update profile</Link>
             </div>
           </div>
         </div>
 
         {/* Quick Actions */}
-        <div className="mb-8">
+        <div id="dashboard-quick-actions" className="mb-8">
           <h2 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Link
@@ -172,7 +215,6 @@ const Dashboard: React.FC = () => {
               <CloudArrowUpIcon className="h-10 w-10 text-primary-600 mb-2" />
               <span className="text-sm font-medium text-gray-900">Upload Document</span>
             </Link>
-            
             <Link
               to="/reports"
               className="flex flex-col items-center p-6 bg-white rounded-lg shadow hover:shadow-md transition-shadow"
@@ -180,7 +222,6 @@ const Dashboard: React.FC = () => {
               <ChartBarIcon className="h-10 w-10 text-primary-600 mb-2" />
               <span className="text-sm font-medium text-gray-900">Generate Report</span>
             </Link>
-            
             <Link
               to="/standards"
               className="flex flex-col items-center p-6 bg-white rounded-lg shadow hover:shadow-md transition-shadow"
@@ -188,7 +229,6 @@ const Dashboard: React.FC = () => {
               <AcademicCapIcon className="h-10 w-10 text-primary-600 mb-2" />
               <span className="text-sm font-medium text-gray-900">View Standards</span>
             </Link>
-            
             <Link
               to="/compliance"
               className="flex flex-col items-center p-6 bg-white rounded-lg shadow hover:shadow-md transition-shadow"
@@ -199,8 +239,8 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-  {/* Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        {/* Metrics */}
+        <div id="dashboard-metrics" className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white p-6 rounded-lg shadow">
             <div className="flex items-center justify-between">
               <div>
@@ -212,7 +252,6 @@ const Dashboard: React.FC = () => {
               <DocumentTextIcon className="h-12 w-12 text-gray-400" />
             </div>
           </div>
-          
           <div className="bg-white p-6 rounded-lg shadow">
             <div className="flex items-center justify-between">
               <div>
@@ -227,7 +266,6 @@ const Dashboard: React.FC = () => {
               <AcademicCapIcon className="h-12 w-12 text-gray-400" />
             </div>
           </div>
-          
           <div className="bg-white p-6 rounded-lg shadow">
             <div className="flex items-center justify-between">
               <div>
@@ -243,18 +281,16 @@ const Dashboard: React.FC = () => {
               )}
             </div>
           </div>
-
-          {/* Checklist Coverage Card */}
           <ChecklistCoverageCard />
-         </div>
+        </div>
 
         {/* Reviewer Pack quick action */}
-        <section id="reviewer-pack">
+        <section id="dashboard-reviewer-pack" className="scroll-mt-24">
           <ReviewerPackAction accreditor={settings?.primary_accreditor || undefined} />
         </section>
 
         {/* Role-tailored cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div id="dashboard-insights" className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white p-6 rounded-lg shadow">
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-lg font-medium text-gray-900">Reviewer Queue</h3>
@@ -340,7 +376,7 @@ const Dashboard: React.FC = () => {
         )}
 
         {/* Recent Activity */}
-        <div className="bg-white rounded-lg shadow">
+        <div id="dashboard-activity" className="bg-white rounded-lg shadow">
           <div className="px-6 py-4 border-b border-gray-200">
             <h3 className="text-lg font-medium text-gray-900">Recent Activity</h3>
           </div>
@@ -371,8 +407,9 @@ const Dashboard: React.FC = () => {
             )}
           </div>
         </div>
-      </main>
-    </Layout>
+        </main>
+      </Layout>
+    </DashboardTour>
   );
 };
 

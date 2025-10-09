@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Generate Accreditation Report - MapMyStandards AI</title>
     <script src="/js/ux.js"></script>
+    <script src="/js/metrics-store.js?v=20251009"></script>
     
     <style>
         /* Import base styles */
@@ -17,8 +18,7 @@
         :root {
             --primary-blue: #1e40af;
             --primary-blue-light: #3b82f6;
-                                           Based on our analysis of your uploaded documentation, your institution demonstrates strong 
-                                alignment with SACSCOC accreditation standards. The evidence provided effectively addresses the majority of Core Requirementsprimary-blue-dark: #1e3a8a;
+            --primary-blue-dark: #1e3a8a;
             --accent-green: #10b981;
             --accent-green-light: #34d399;
             --accent-orange: #f59e0b;
@@ -39,7 +39,6 @@
             --gradient-success: linear-gradient(135deg, var(--accent-green) 0%, var(--accent-green-light) 100%);
             --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
             --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
             --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', 'Helvetica Neue', Arial, sans-serif;
             --space-1: 0.25rem;
@@ -313,6 +312,19 @@
             gap: var(--space-2);
         }
 
+        .btn[disabled] {
+            cursor: not-allowed;
+            opacity: 0.6;
+            box-shadow: none;
+        }
+
+        .btn-primary[disabled]:hover,
+        .btn-secondary[disabled]:hover {
+            transform: none;
+            box-shadow: none;
+            background: inherit;
+        }
+
         .btn-primary {
             background: var(--gradient-primary);
             color: white;
@@ -510,19 +522,21 @@
 
                     <!-- Report Actions -->
                     <div class="report-actions">
-                        <button class="btn btn-primary" onclick="downloadReport()">
+                        <button class="btn btn-primary" id="downloadReportBtn" onclick="downloadReport()">
                             <span>📥</span>
                             Download Full Report
                         </button>
-                        <button class="btn btn-secondary" onclick="viewOnline()">
+                        <button class="btn btn-secondary" id="viewReportBtn" onclick="viewOnline()">
                             <span>👁️</span>
                             View Online
                         </button>
-                        <button class="btn btn-secondary" onclick="shareReport()">
+                        <button class="btn btn-secondary" id="shareReportBtn" onclick="shareReport()">
                             <span>📤</span>
                             Share
                         </button>
                     </div>
+
+                    <p id="reportStatusMessage" style="text-align: center; color: var(--gray-600); font-size: 0.95rem; margin-bottom: var(--space-6);"></p>
 
                     <!-- Report Preview -->
                     <div class="report-preview">
@@ -532,7 +546,7 @@
                         <div class="preview-content">
                             <div class="preview-section">
                                 <h3 class="preview-section-title">Executive Summary</h3>
-                                <p>Based on our analysis of your uploaded documentation, your institution demonstrates 
+                                <p id="executiveSummaryText">Based on our analysis of your uploaded documentation, your institution demonstrates 
                                 strong alignment with SACSCOC accreditation standards, achieving an overall coverage 
                                 rate of 87%. The evidence provided effectively addresses the majority of Core Requirements 
                                 and Comprehensive Standards.</p>
@@ -543,7 +557,7 @@
                                 <div style="margin-bottom: 1rem;">
                                     <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
                                         <span>Mission & Governance</span>
-                                        <span style="color: var(--accent-green); font-weight: 600;">95%</span>
+                                        <span id="coverageOverallLabel" style="color: var(--accent-green); font-weight: 600;">95%</span>
                                     </div>
                                     <div class="coverage-bar">
                                         <div class="coverage-fill" style="width: 95%"></div>
@@ -602,287 +616,516 @@
                             </div>
                             <div class="next-step">
                                 <span class="next-step-icon">📅</span>
-                                <span>Schedule a consultation with our experts for personalized guidance</span>
+                                <span>Schedule a follow-up review session with stakeholders and assign next actions</span>
                             </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+                        </div> <!-- next-steps -->
+                    </div> <!-- whats-next -->
+                </div> <!-- success-state -->
+            </div> <!-- generation-container -->
+        </div> <!-- container -->
     </main>
 
     <script>
-        // Check authentication
-        const authToken = localStorage.getItem('access_token') || 
-                         localStorage.getItem('access_token') || 
-                         sessionStorage.getItem('access_token');
-        if (!authToken) {
-            window.location.href = "/login-enhanced.html";
+    (function () {
+        'use strict';
+
+    const STEP_DELAY_MS = 1200;
+    const EXPORT_KEY = 'mms:generatedReport';
+    const EXPORT_META_KEY = 'mms:generatedReportMeta';
+
+    let latestSnapshot = null;
+    let latestSummary = null;
+        let latestExportHtml = null;
+        let reportActionState = {
+            ready: false,
+            reason: 'Loading live metrics…',
+        };
+
+        function byId(id) {
+            return document.getElementById(id);
         }
 
-        // Simulate report generation process
-        document.addEventListener('DOMContentLoaded', () => {
-            simulateGeneration();
-        });
+        function formatNumber(value, fallback = '0') {
+            if (typeof value === 'number' && Number.isFinite(value)) {
+                return value.toLocaleString(undefined, { maximumFractionDigits: 0 });
+            }
+            return fallback;
+        }
 
-        async function simulateGeneration() {
-            const steps = [
-                { id: 'step1', duration: 2000, action: loadUserData },
-                { id: 'step2', duration: 2500, action: fetchAnalysisData },
-                { id: 'step3', duration: 3000, action: generateReport },
-                { id: 'step4', duration: 2000, action: finalizeReport }
+        function clampPercentage(value) {
+            if (typeof value !== 'number' || Number.isNaN(value)) {
+                return 0;
+            }
+            return Math.max(0, Math.min(100, value));
+        }
+
+        function showFallbackNote(message) {
+            const summaryContainer = document.querySelector('.report-summary');
+            if (!summaryContainer) {
+                return;
+            }
+            let note = document.getElementById('exampleNote');
+            if (!note) {
+                note = document.createElement('p');
+                note.id = 'exampleNote';
+                note.style.cssText = 'text-align: center; color: #6b7280; font-size: 0.875rem; margin-top: 1rem;';
+                summaryContainer.appendChild(note);
+            }
+            note.textContent = message;
+        }
+
+        function clearFallbackNote() {
+            const note = document.getElementById('exampleNote');
+            if (note && note.parentNode) {
+                note.parentNode.removeChild(note);
+            }
+        }
+
+        function metricsStoreAvailable() {
+            return typeof window.A3EMetricsStore !== 'undefined' &&
+                window.A3EMetricsStore &&
+                typeof window.A3EMetricsStore.ensure === 'function';
+        }
+
+        function setReportActionState(ready, message) {
+            reportActionState = {
+                ready,
+                reason: message,
+            };
+
+            const statusEl = byId('reportStatusMessage');
+            if (statusEl) {
+                statusEl.textContent = message || '';
+            }
+
+            const buttons = [
+                byId('downloadReportBtn'),
+                byId('viewReportBtn'),
+                byId('shareReportBtn'),
             ];
 
-            let currentStep = 0;
-            let reportData = {};
-
-            async function processStep() {
-                if (currentStep > 0) {
-                    // Mark previous step as completed
-                    const prevStep = document.getElementById(steps[currentStep - 1].id);
-                    prevStep.classList.remove('active');
-                    prevStep.classList.add('completed');
-                    prevStep.querySelector('.gen-step-icon').textContent = '✓';
-                }
-
-                if (currentStep < steps.length) {
-                    // Mark current step as active
-                    const currStep = document.getElementById(steps[currentStep].id);
-                    currStep.classList.add('active');
-
-                    // Execute the step action
-                    try {
-                        if (steps[currentStep].action) {
-                            await steps[currentStep].action();
-                        }
-                    } catch (error) {
-                        console.error('Step failed:', error);
-                    }
-
-                    // Process next step after duration
-                    setTimeout(() => {
-                        currentStep++;
-                        processStep();
-                    }, steps[currentStep].duration);
-                } else {
-                    // All steps completed, show success
-                    showSuccess();
-                }
-            }
-
-            async function loadUserData() {
-                try {
-                    const response = await fetch('/api/user/intelligence-simple/dashboard', {
-                        headers: {
-                            'Authorization': `Bearer ${authToken}`
-                        }
-                    });
-                    const data = await response.json();
-                    reportData.userData = data;
-                } catch (error) {
-                    console.error('Failed to load user data:', error);
-                }
-            }
-
-            async function fetchAnalysisData() {
-                try {
-                    const response = await fetch('/api/user/intelligence-simple/documents?analyzed_only=true', {
-                        headers: {
-                            'Authorization': `Bearer ${authToken}`
-                        }
-                    });
-                    const documents = await response.json();
-                    reportData.documents = documents.documents || [];
-                } catch (error) {
-                    console.error('Failed to fetch documents:', error);
-                }
-            }
-
-            async function generateReport() {
-                try {
-                    // Get the first analyzed document for the report
-                    const analyzedDoc = reportData.documents.find(doc => doc.status === 'analyzed');
-                    if (analyzedDoc) {
-                        const analysisResponse = await fetch(`/api/user/intelligence-simple/documents/${analyzedDoc.id}/analysis`, {
-                            headers: {
-                                'Authorization': `Bearer ${authToken}`
-                            }
-                        });
-                        const analysis = await analysisResponse.json();
-                        
-                        // Generate the evidence report
-                        const reportResponse = await fetch('/api/user/intelligence-simple/evidence/report', {
-                            method: 'POST',
-                            headers: {
-                                'Authorization': `Bearer ${authToken}`,
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                filename: analyzedDoc.filename,
-                                analysis: analysis
-                            })
-                        });
-                        
-                        reportData.reportHTML = await reportResponse.text();
-                    }
-                } catch (error) {
-                    console.error('Failed to generate report:', error);
-                }
-            }
-
-            async function finalizeReport() {
-                // Store report data for download
-                if (reportData.reportHTML) {
-                    sessionStorage.setItem('mms:generatedReport', reportData.reportHTML);
-                }
-            }
-
-            // Start the process
-            processStep();
-        }
-
-        function showSuccess() {
-            // Mark last step as completed
-            const lastStep = document.getElementById('step4');
-            lastStep.classList.remove('active');
-            lastStep.classList.add('completed');
-            lastStep.querySelector('.gen-step-icon').textContent = '✓';
-
-            // Hide generating state, show success state
-            setTimeout(async () => {
-                // Fetch real metrics before showing success state
-                await updateWithRealMetrics();
-                
-                document.getElementById('generatingState').style.display = 'none';
-                document.getElementById('successState').style.display = 'block';
-                
-                // Update progress step
-                document.querySelector('.step.active').classList.add('completed');
-                
-                // Save completion status
-                localStorage.setItem('mms:reportGenerated', 'true');
-                localStorage.setItem('mms:lastReportAt', new Date().toISOString());
-                
-                // Trigger celebration animation
-                celebrateCompletion();
-            }, 500);
-        }
-
-        async function updateWithRealMetrics() {
-            try {
-                const token = localStorage.getItem('access_token') || 
-                           localStorage.getItem('mms:authToken') ||
-                           sessionStorage.getItem('access_token');
-                
-                console.log('Updating metrics, token exists:', !!token);
-                if (!token) {
-                    console.warn('No auth token found, cannot fetch real metrics');
+            buttons.forEach((btn) => {
+                if (!btn) {
                     return;
                 }
-                
-                // Fetch user's latest upload
-                const uploadsResponse = await fetch('https://api.mapmystandards.ai/api/user/intelligence-simple/uploads', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
+                if (ready) {
+                    btn.removeAttribute('disabled');
+                    btn.setAttribute('aria-disabled', 'false');
+                } else {
+                    btn.setAttribute('disabled', 'true');
+                    btn.setAttribute('aria-disabled', 'true');
+                }
+            });
+        }
+
+        function buildExecutiveNarrative(summary) {
+            const coverageText = summary.coverage !== null ? `${summary.coverage}%` : 'your current';
+            const standardsText = summary.standards !== null ? formatNumber(summary.standards) : 'key';
+            const documentsText = summary.documents !== null ? formatNumber(summary.documents) : 'your';
+            const documentSuffix = summary.documents === 1 ? '' : 's';
+            return `Based on the latest evidence snapshot, your institution demonstrates an overall coverage rate of ${coverageText} across ${standardsText} mapped standards supported by ${documentsText} evidence document${documentSuffix}.`;
+        }
+
+        function computeSummary(snapshot) {
+            const core = snapshot?.coreMetrics || {};
+            const performance = snapshot?.performanceMetrics || {};
+            const evidenceStats = snapshot?.evidenceStats || {};
+            const metricsData = snapshot?.metrics || {};
+            const gapSource = snapshot?.gapAnalysis?.gap_analysis || snapshot?.gapAnalysis || {};
+
+            const summary = {
+                coverage: null,
+                coverageDisplay: '0%',
+                standards: null,
+                standardsDisplay: '0',
+                documents: null,
+                documentsDisplay: '0',
+                gaps: null,
+                gapsDisplay: '0',
+                gapBreakdown: {
+                    high: Number(gapSource.high_risk || 0),
+                    medium: Number(gapSource.medium_risk || 0),
+                    low: Number(gapSource.low_risk || 0),
+                },
+                totalStandards: typeof evidenceStats.totalStandards === 'number' ? evidenceStats.totalStandards : null,
+                highConfidenceCount: typeof evidenceStats.highConfidenceCount === 'number' ? evidenceStats.highConfidenceCount : null,
+                recommendationCount: Array.isArray(snapshot?.gapAnalysis?.recommendations)
+                    ? snapshot.gapAnalysis.recommendations.length
+                    : null,
+                missing: [],
+                narrative: '',
+                generatedAt: new Date().toISOString(),
+                lastUpdated: snapshot?.lastUpdated || Date.now(),
+            };
+
+            const coverageCandidates = [
+                typeof performance.coverage_percentage === 'number' ? performance.coverage_percentage : null,
+                typeof evidenceStats.coveragePercentage === 'number' ? evidenceStats.coveragePercentage : null,
+                typeof performance.compliance_score === 'number' ? performance.compliance_score : null,
+            ].filter((value) => typeof value === 'number' && !Number.isNaN(value));
+
+            if (coverageCandidates.length > 0) {
+                summary.coverage = Math.round(coverageCandidates[0]);
+                summary.coverageDisplay = `${summary.coverage}%`;
+            } else {
+                summary.missing.push('coverage');
+            }
+
+            const standardsCandidates = [
+                typeof core.standards_mapped === 'number' ? core.standards_mapped : null,
+                typeof evidenceStats.mappedCount === 'number' ? evidenceStats.mappedCount : null,
+            ].filter((value) => typeof value === 'number' && !Number.isNaN(value));
+
+            if (standardsCandidates.length > 0) {
+                summary.standards = standardsCandidates[0];
+                summary.standardsDisplay = formatNumber(summary.standards);
+            } else {
+                summary.missing.push('mapped standards');
+            }
+
+            const documentsCandidates = [
+                typeof core.documents_analyzed === 'number' ? core.documents_analyzed : null,
+                Array.isArray(metricsData?.documents) ? metricsData.documents.length : null,
+                typeof metricsData?.core_metrics?.documents_analyzed === 'number'
+                    ? metricsData.core_metrics.documents_analyzed
+                    : null,
+            ].filter((value) => typeof value === 'number' && !Number.isNaN(value));
+
+            if (documentsCandidates.length > 0) {
+                summary.documents = documentsCandidates[0];
+                summary.documentsDisplay = formatNumber(summary.documents);
+            } else {
+                summary.missing.push('documents analyzed');
+            }
+
+            let gaps = null;
+            if (typeof gapSource.total_gaps === 'number' && !Number.isNaN(gapSource.total_gaps)) {
+                gaps = gapSource.total_gaps;
+            } else if (Array.isArray(gapSource.gaps)) {
+                gaps = gapSource.gaps.length;
+            } else {
+                const inferred = summary.gapBreakdown.high + summary.gapBreakdown.medium + summary.gapBreakdown.low;
+                if (inferred > 0) {
+                    gaps = inferred;
+                }
+            }
+
+            if (typeof gaps === 'number' && !Number.isNaN(gaps)) {
+                summary.gaps = gaps;
+                summary.gapsDisplay = formatNumber(summary.gaps);
+            } else {
+                summary.gaps = 0;
+                summary.gapsDisplay = '0';
+                summary.missing.push('gap count');
+            }
+
+            summary.hasCompleteData = summary.missing.length === 0;
+            summary.narrative = buildExecutiveNarrative(summary);
+            return summary;
+        }
+
+        function applySummary(summary) {
+            const coverageElement = byId('coverageValue');
+            if (coverageElement) {
+                coverageElement.textContent = summary.coverageDisplay;
+            }
+            const coverageLabel = byId('coverageOverallLabel');
+            if (coverageLabel) {
+                coverageLabel.textContent = summary.coverageDisplay;
+            }
+            const standardsElement = byId('standardsValue');
+            if (standardsElement) {
+                standardsElement.textContent = summary.standardsDisplay;
+            }
+            const documentsElement = byId('documentsValue');
+            if (documentsElement) {
+                documentsElement.textContent = summary.documentsDisplay;
+            }
+            const gapsElement = byId('gapsValue');
+            if (gapsElement) {
+                gapsElement.textContent = summary.gapsDisplay;
+            }
+
+            const summaryText = byId('executiveSummaryText');
+            if (summaryText) {
+                summaryText.textContent = summary.narrative;
+            }
+
+            const coverageFill = document.querySelector('.coverage-fill');
+            if (coverageFill && summary.coverage !== null) {
+                coverageFill.style.width = `${clampPercentage(summary.coverage)}%`;
+            }
+
+            if (summary.hasCompleteData) {
+                clearFallbackNote();
+            } else {
+                showFallbackNote('Some live metrics were unavailable; missing values default to zero.');
+            }
+
+            const hasMappedStandards = typeof summary.standards === 'number' && summary.standards > 0;
+            const hasDocuments = typeof summary.documents === 'number' && summary.documents > 0;
+            const hasCoverage = typeof summary.coverage === 'number' && summary.coverage > 0;
+
+            if (hasMappedStandards && hasDocuments) {
+                setReportActionState(true, 'Report ready based on the latest mapped standards and evidence.');
+            } else {
+                const reason = !hasMappedStandards && !hasDocuments
+                    ? 'Upload evidence and map it to standards to generate your report.'
+                    : !hasMappedStandards
+                        ? 'Map your evidence to standards to generate an accreditation report.'
+                        : 'Upload at least one evidence document to generate your report.';
+                setReportActionState(false, reason);
+            }
+        }
+
+    function buildExportHTML(summary) {
+            const generatedAtDisplay = new Date(summary.generatedAt).toLocaleString(undefined, {
+                dateStyle: 'long',
+                timeStyle: 'short',
+            });
+
+            const totalStandardsDisplay = summary.totalStandards !== null
+                ? formatNumber(summary.totalStandards)
+                : 'Not available';
+            const highConfidenceDisplay = summary.highConfidenceCount !== null
+                ? formatNumber(summary.highConfidenceCount)
+                : 'Not available';
+            const recommendationDisplay = summary.recommendationCount !== null
+                ? formatNumber(summary.recommendationCount)
+                : 'Not available';
+
+            const gapHighDisplay = formatNumber(summary.gapBreakdown.high);
+            const gapMediumDisplay = formatNumber(summary.gapBreakdown.medium);
+            const gapLowDisplay = formatNumber(summary.gapBreakdown.low);
+
+            return `<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="UTF-8" />\n<title>MapMyStandards Accreditation Report</title>\n<style>\n    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif; margin: 0; padding: 2rem; background: #f9fafb; color: #1f2937; }\n    main { max-width: 900px; margin: 0 auto; background: #ffffff; border-radius: 16px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08); overflow: hidden; }\n    header, section { padding: 2.5rem 3rem; border-bottom: 1px solid #e5e7eb; }\n    header { background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); color: #ffffff; text-align: center; }\n    header h1 { margin-bottom: 0.75rem; font-size: 2.5rem; }\n    header p { margin: 0; font-size: 1rem; opacity: 0.9; }\n    h2 { font-size: 1.5rem; margin-bottom: 1.5rem; color: #1f2937; }\n    .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; list-style: none; padding: 0; margin: 0; }\n    .metric-card { background: #f3f4f6; border-radius: 12px; padding: 1.5rem; display: flex; flex-direction: column; gap: 0.5rem; }\n    .metric-card .label { font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.08em; color: #6b7280; }\n    .metric-card .value { font-size: 2rem; font-weight: 700; color: #1e40af; }\n    ul.detail-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.75rem; }\n    ul.detail-list li { padding: 1rem 1.25rem; background: #f9fafb; border-radius: 10px; border: 1px solid #e5e7eb; }\n    .gap-breakdown { display: flex; flex-wrap: wrap; gap: 1rem; }\n    .gap-tile { flex: 1 1 160px; background: #f9fafb; padding: 1.25rem; border-radius: 12px; border: 1px solid #e5e7eb; text-align: center; }\n    .gap-tile span { display: block; }\n    .gap-tile .label { font-size: 0.875rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; }\n    .gap-tile .score { font-size: 1.75rem; font-weight: 700; color: #ef4444; }\n    .gap-tile.gap-medium .score { color: #f59e0b; }\n    .gap-tile.gap-low .score { color: #10b981; }\n    section.notes p { line-height: 1.6; margin: 0; color: #374151; }\n    footer { text-align: center; padding: 1.5rem; font-size: 0.875rem; color: #6b7280; background: #f3f4f6; }\n</style>\n</head>\n<body>\n<main>\n<header>\n<h1>Accreditation Readiness Report</h1>\n<p class="timestamp">Generated on ${generatedAtDisplay}</p>\n</header>\n<section>\n<h2>Summary Metrics</h2>\n<ul class="metric-grid">\n<li class="metric-card"><span class="label">Overall Coverage</span><span class="value">${summary.coverageDisplay}</span></li>\n<li class="metric-card"><span class="label">Standards Mapped</span><span class="value">${summary.standardsDisplay}</span></li>\n<li class="metric-card"><span class="label">Evidence Documents</span><span class="value">${summary.documentsDisplay}</span></li>\n<li class="metric-card"><span class="label">Gap Areas</span><span class="value">${summary.gapsDisplay}</span></li>\n</ul>\n</section>\n<section>\n<h2>Evidence Overview</h2>\n<ul class="detail-list">\n<li>Total Standards Tracked: <strong>${totalStandardsDisplay}</strong></li>\n<li>High-Confidence Standards: <strong>${highConfidenceDisplay}</strong></li>\n<li>Recommendations Generated: <strong>${recommendationDisplay}</strong></li>\n</ul>\n</section>\n<section>\n<h2>Gap Breakdown</h2>\n<div class="gap-breakdown">\n<div class="gap-tile gap-high"><span class="label">High Risk</span><span class="score">${gapHighDisplay}</span></div>\n<div class="gap-tile gap-medium"><span class="label">Medium Risk</span><span class="score">${gapMediumDisplay}</span></div>\n<div class="gap-tile gap-low"><span class="label">Low Risk</span><span class="score">${gapLowDisplay}</span></div>\n</div>\n</section>\n<section class="notes">\n<h2>Executive Summary</h2>\n<p>${summary.narrative}</p>\n</section>\n</main>\n<footer>\n<p>Prepared with MapMyStandards &mdash; ${new Date().getFullYear()}</p>\n</footer>\n</body>\n</html>`;
+        }
+
+        function persistExport(summary) {
+            const exportHtml = buildExportHTML(summary);
+            try {
+                sessionStorage.setItem(EXPORT_KEY, exportHtml);
+                sessionStorage.setItem(EXPORT_META_KEY, JSON.stringify({
+                    generatedAt: summary.generatedAt,
+                    missing: summary.missing,
+                    hasCompleteData: summary.hasCompleteData,
+                    lastUpdated: summary.lastUpdated,
+                }));
+            } catch (error) {
+                console.warn('Unable to persist report export payload', error);
+            }
+            latestExportHtml = exportHtml;
+            return exportHtml;
+        }
+        const ReportExportManager = (() => {
+            function getStoredHtml() {
+                return latestExportHtml || sessionStorage.getItem(EXPORT_KEY) || null;
+            }
+
+            function ensureCache(summary, snapshot, html) {
+                latestSummary = summary;
+                latestSnapshot = snapshot;
+                if (html) {
+                    latestExportHtml = html;
+                }
+            }
+
+            async function ensure(options = {}) {
+                if (!metricsStoreAvailable()) {
+                    showFallbackNote('Connect your account to load live accreditation metrics.');
+                    latestSnapshot = null;
+                    latestSummary = null;
+                    latestExportHtml = null;
+                    return { summary: null, snapshot: null, html: null };
+                }
+
+                const snapshot = await window.A3EMetricsStore.ensure({
+                    includeEvidenceMap: true,
+                    includeGapAnalysis: true,
+                    ...options,
+                });
+
+                const summary = computeSummary(snapshot);
+                const html = persistExport(summary);
+                ensureCache(summary, snapshot, html);
+
+                return { summary, snapshot, html };
+            }
+
+            function getLatestSummary() {
+                return latestSummary;
+            }
+
+            function getLatestSnapshot() {
+                return latestSnapshot;
+            }
+
+            function getExportHtml() {
+                return getStoredHtml();
+            }
+
+            function buildCsvRows(summary = latestSummary) {
+                if (!summary) {
+                    return [];
+                }
+                return [
+                    ['Metric', 'Value'],
+                    ['Generated At', summary.generatedAt],
+                    ['Coverage', summary.coverageDisplay],
+                    ['Standards Mapped', summary.standardsDisplay],
+                    ['Evidence Documents', summary.documentsDisplay],
+                    ['Gap Areas', summary.gapsDisplay],
+                    ['High-Risk Gaps', summary.gapBreakdown.high],
+                    ['Medium-Risk Gaps', summary.gapBreakdown.medium],
+                    ['Low-Risk Gaps', summary.gapBreakdown.low],
+                    ['High Confidence Standards', summary.highConfidenceCount ?? 'n/a'],
+                    ['Recommendations Generated', summary.recommendationCount ?? 'n/a'],
+                ];
+            }
+
+            function buildPdfContext(summary = latestSummary, snapshot = latestSnapshot) {
+                if (!summary) {
+                    return null;
+                }
+                return {
+                    summary,
+                    snapshot,
+                    exportHtml: getStoredHtml(),
+                };
+            }
+
+            return {
+                ensure,
+                getLatestSummary,
+                getLatestSnapshot,
+                getExportHtml,
+                buildCsvRows,
+                buildPdfContext,
+            };
+        })();
+
+        window.A3EReportExports = ReportExportManager;
+
+        async function updateWithRealMetrics(options = {}) {
+            const { summary } = await ReportExportManager.ensure(options);
+            if (summary) {
+                applySummary(summary);
+            } else {
+                showFallbackNote('Live metrics were unavailable; showing zero placeholders.');
+                const defaults = {
+                    coverageValue: '0%',
+                    standardsValue: '0',
+                    documentsValue: '0',
+                    gapsValue: '0',
+                    coverageOverallLabel: '0%',
+                };
+                Object.entries(defaults).forEach(([id, value]) => {
+                    const el = byId(id);
+                    if (el) {
+                        el.textContent = value;
                     }
                 });
-                
-                if (uploadsResponse.ok) {
-                    const uploads = await uploadsResponse.json();
-                    console.log('Uploads fetched:', uploads.length, 'documents');
-                    if (uploads.length > 0) {
-                        const latestUpload = uploads[0];
-                        console.log('Latest upload:', latestUpload);
-                        
-                        // Update overall coverage
-                        const coverageElement = document.getElementById('coverageValue');
-                        if (coverageElement && latestUpload.compliance_score !== undefined) {
-                            coverageElement.textContent = Math.round(latestUpload.compliance_score) + '%';
-                        }
-                        
-                        // Fetch dashboard metrics for detailed stats
-                        const metricsResponse = await fetch('https://api.mapmystandards.ai/api/user/intelligence-simple/dashboard-metrics', {
-                            headers: {
-                                'Authorization': `Bearer ${token}`
-                            }
-                        });
-                        
-                        if (metricsResponse.ok) {
-                            const metrics = await metricsResponse.json();
-                            
-                            // Update standards mapped
-                            const standardsElement = document.getElementById('standardsValue');
-                            if (standardsElement && metrics.total_standards_mapped !== undefined) {
-                                standardsElement.textContent = metrics.total_standards_mapped;
-                            }
-                            
-                            // Update documents analyzed
-                            const documentsElement = document.getElementById('documentsValue');
-                            if (documentsElement && metrics.documents_analyzed !== undefined) {
-                                documentsElement.textContent = metrics.documents_analyzed;
-                            }
-                            
-                            // Update gaps identified
-                            const gapsElement = document.getElementById('gapsValue');
-                            if (gapsElement && metrics.total_gaps_identified !== undefined) {
-                                gapsElement.textContent = metrics.total_gaps_identified;
-                            }
-                        }
-                    }
-                }
-            } catch (error) {
-                console.error('Error fetching real metrics:', error);
-                // Show example values if API fails
-                document.getElementById('coverageValue').textContent = '87%';
-                document.getElementById('standardsValue').textContent = '73';
-                document.getElementById('documentsValue').textContent = '5';
-                document.getElementById('gapsValue').textContent = '12';
-                
-                // Add a note that these are example values
-                const summaryContainer = document.querySelector('.report-summary');
-                if (summaryContainer && !document.getElementById('exampleNote')) {
-                    const note = document.createElement('p');
-                    note.id = 'exampleNote';
-                    note.style.cssText = 'text-align: center; color: #6b7280; font-size: 0.875rem; margin-top: 1rem;';
-                    note.textContent = 'Note: Showing example metrics. View your dashboard for actual results.';
-                    summaryContainer.appendChild(note);
-                }
+                setReportActionState(false, 'We could not load your live metrics. Refresh or revisit after uploading evidence.');
             }
+            return summary;
         }
 
-        function celebrateCompletion() {
-            // Add confetti or other celebration effects here
-            console.log('🎉 Journey completed!');
+        async function ensureExportHtml(options = {}) {
+            const existingHtml = ReportExportManager.getExportHtml();
+            const hasSummary = !!ReportExportManager.getLatestSummary();
+            if (existingHtml && hasSummary && !options.force) {
+                return existingHtml;
+            }
+            const { html } = await ReportExportManager.ensure(options);
+            return html;
         }
 
-        function downloadReport() {
-            // Get the generated report from session storage
-            const reportHTML = sessionStorage.getItem('mms:generatedReport');
-            if (reportHTML) {
-                // Create a blob and download
-                const blob = new Blob([reportHTML], { type: 'text/html' });
+        async function handleDownload() {
+            try {
+                if (!reportActionState.ready) {
+                    alert(reportActionState.reason || 'Your report is not ready yet.');
+                    return;
+                }
+                const html = await ensureExportHtml();
+                if (!html) {
+                    throw new Error('Report export is not available');
+                }
+                const blob = new Blob([html], { type: 'text/html' });
                 const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `accreditation-report-${new Date().toISOString().split('T')[0]}.html`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
+                const anchor = document.createElement('a');
+                anchor.href = url;
+                anchor.download = `accreditation-report-${new Date().toISOString().split('T')[0]}.html`;
+                document.body.appendChild(anchor);
+                anchor.click();
+                document.body.removeChild(anchor);
                 URL.revokeObjectURL(url);
-            } else {
-                alert('Report not found. Please generate a new report.');
+            } catch (error) {
+                console.error('Unable to export report:', error);
+                alert('We were unable to prepare your report download. Please refresh the page and try again.');
             }
         }
 
-        function viewOnline() {
-            // Navigate to full report view
+        function handleViewOnline() {
+            if (!reportActionState.ready) {
+                alert(reportActionState.reason || 'Your report is not ready yet.');
+                return;
+            }
             window.location.href = '/dashboard';
         }
 
-        function shareReport() {
-            // Show share modal
+        function handleShare() {
+            if (!reportActionState.ready) {
+                alert(reportActionState.reason || 'Your report is not ready yet.');
+                return;
+            }
             alert('Share functionality coming soon! You can download the report and share it manually.');
         }
+
+        function celebrateCompletion() {
+            console.log('🎉 Report generation complete!');
+        }
+
+        function startJourney() {
+            const generatingState = byId('generatingState');
+            const successState = byId('successState');
+            const steps = ['step1', 'step2', 'step3', 'step4']
+                .map(byId)
+                .filter(Boolean);
+
+            steps.forEach((step, index) => {
+                setTimeout(() => {
+                    step.classList.add('active');
+                    if (index > 0) {
+                        steps[index - 1].classList.remove('active');
+                        steps[index - 1].classList.add('completed');
+                    }
+                }, STEP_DELAY_MS * index);
+            });
+
+            const totalDuration = STEP_DELAY_MS * steps.length + 600;
+            setTimeout(() => {
+                if (generatingState) {
+                    generatingState.style.display = 'none';
+                }
+                if (successState) {
+                    successState.style.display = 'block';
+                }
+                celebrateCompletion();
+            }, totalDuration);
+
+            setReportActionState(false, 'Loading live metrics…');
+            updateWithRealMetrics().catch((error) => {
+                console.error('Failed to update metrics:', error);
+                setReportActionState(false, 'Unable to load metrics. Please refresh the page once data is available.');
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', startJourney);
+        window.downloadReport = handleDownload;
+        window.viewOnline = handleViewOnline;
+        window.shareReport = handleShare;
+        window.__refreshReportMetrics = () => updateWithRealMetrics({ force: true });
+    })();
     </script>
 </body>
 </html>

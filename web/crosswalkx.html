@@ -5,166 +5,763 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>CrosswalkX</title>
   <style>
-    body { font-family: -apple-system, Inter, sans-serif; margin:0; background:#f8fafc; color:#0f172a; }
-    header { background:#0f172a; color:white; padding:12px 16px; }
-    .container { max-width: 1100px; margin: 20px auto; padding: 0 16px; }
-    .card { background:white; border:1px solid #e2e8f0; border-radius:10px; box-shadow:0 1px 2px rgba(0,0,0,0.05); padding:16px; margin-bottom:16px; }
-    .row { display:flex; gap:8px; align-items:center; }
-    .input { padding:8px; border:1px solid #cbd5e1; border-radius:8px; }
-    .btn { padding:8px 12px; border-radius:8px; border:1px solid #0ea5e9; background:#0ea5e9; color:white; cursor:pointer; }
-    .list { max-height:70vh; overflow:auto; }
-    .pill { background:#f1f5f9; border:1px solid #e2e8f0; padding:4px 8px; border-radius:999px; font-size:12px; }
-    .muted { color:#475569; font-size:13px; }
+    :root {
+      color-scheme: light;
+    }
+    body {
+      font-family: "Inter", "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 0;
+      background: #f5f7fb;
+      color: #0f172a;
+    }
+    header {
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 16px 0;
+      box-shadow: 0 2px 12px rgba(15, 23, 42, 0.25);
+    }
+    header .container {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.75rem;
+      font-weight: 600;
+    }
+    header p {
+      margin: 0;
+      color: rgba(241, 245, 249, 0.85);
+      max-width: 720px;
+      font-size: 0.95rem;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 18px;
+    }
+    .card {
+      background: #ffffff;
+      border-radius: 14px;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.07);
+      padding: 20px;
+      margin: 20px 0;
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .card-header h3 {
+      margin: 0;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #0f172a;
+    }
+    .timestamp {
+      color: #64748b;
+      font-size: 0.85rem;
+    }
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: flex-end;
+    }
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #475569;
+    }
+    .input {
+      padding: 10px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      min-width: 200px;
+      background: #ffffff;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .input:focus {
+      outline: none;
+      border-color: #0ea5e9;
+      box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.2);
+    }
+    .btn {
+      padding: 11px 18px;
+      border-radius: 10px;
+      border: none;
+      background: linear-gradient(135deg, #0284c7, #0ea5e9);
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: 0.01em;
+      transition: transform 0.15s ease, box-shadow 0.2s ease;
+    }
+    .btn:focus-visible {
+      outline: 3px solid rgba(14, 165, 233, 0.5);
+      outline-offset: 2px;
+    }
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 16px rgba(14, 165, 233, 0.25);
+    }
+    .status {
+      margin-top: 14px;
+      font-size: 0.9rem;
+      color: #475569;
+    }
+    .status strong {
+      color: #0f172a;
+    }
+    .error {
+      display: none;
+      padding: 14px 16px;
+      border-radius: 10px;
+      background: #fee2e2;
+      border: 1px solid #fecaca;
+      color: #b91c1c;
+      font-size: 0.95rem;
+    }
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 14px;
+      margin-top: 6px;
+    }
+    .metric {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 16px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .metric-label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #64748b;
+      font-weight: 600;
+    }
+    .metric-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    .metric-sub {
+      font-size: 0.85rem;
+      color: #475569;
+    }
+    .list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .alignment-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 16px 18px;
+      background: #fcfdff;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .alignment-header {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .alignment-source-target {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-width: 70%;
+    }
+    .code-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+    .code-pill span {
+      background: rgba(255, 255, 255, 0.18);
+      padding: 2px 6px;
+      border-radius: 999px;
+    }
+    .alignment-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #0f172a;
+    }
+    .alignment-score {
+      min-width: 110px;
+      text-align: right;
+    }
+    .score-value {
+      font-size: 1.4rem;
+      font-weight: 700;
+    }
+    .score-caption {
+      font-size: 0.8rem;
+      color: #475569;
+    }
+    .progress-bar {
+      position: relative;
+      background: #e2e8f0;
+      border-radius: 999px;
+      height: 8px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      border-radius: inherit;
+      transition: width 0.3s ease;
+    }
+    .keywords {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .keyword-pill {
+      background: #e0f2fe;
+      color: #0369a1;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .context-trail {
+      font-size: 0.85rem;
+      color: #475569;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .context-trail span {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .context-trail small {
+      background: #f1f5f9;
+      border-radius: 6px;
+      padding: 4px 6px;
+      color: #1e293b;
+      font-weight: 500;
+    }
+    .shared-docs {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      border-top: 1px dashed #e2e8f0;
+      padding-top: 10px;
+    }
+    .shared-docs h4 {
+      margin: 0;
+      font-size: 0.9rem;
+      color: #0f172a;
+    }
+    .doc-pill {
+      display: flex;
+      flex-direction: column;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 10px 12px;
+      gap: 4px;
+    }
+    .doc-pill strong {
+      font-size: 0.95rem;
+      color: #0f172a;
+    }
+    .doc-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 0.8rem;
+      color: #475569;
+    }
+    .reuse-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 16px 18px;
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .reuse-card header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .reuse-card header h4 {
+      margin: 0;
+      font-size: 1rem;
+      color: #0f172a;
+    }
+    .reuse-card header span {
+      font-size: 0.85rem;
+      color: #475569;
+    }
+    .reuse-standards {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .reuse-group {
+      min-width: 160px;
+    }
+    .reuse-group h5 {
+      margin: 0 0 6px 0;
+      font-size: 0.85rem;
+      color: #1e3a8a;
+    }
+    .reuse-group ul {
+      margin: 0;
+      padding-left: 18px;
+      color: #0f172a;
+      font-size: 0.85rem;
+    }
+    .muted {
+      color: #64748b;
+      font-size: 0.9rem;
+    }
+    .empty-state {
+      border: 1px dashed #cbd5e1;
+      border-radius: 10px;
+      padding: 16px;
+      background: #f8fafc;
+      color: #475569;
+      text-align: center;
+    }
+    @media (max-width: 720px) {
+      .alignment-source-target {
+        max-width: 100%;
+      }
+      .alignment-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .alignment-score {
+        width: 100%;
+        text-align: left;
+      }
+    }
   </style>
 </head>
 <body>
   <header>
     <div class="container">
-      <h2>CrosswalkX <span class="muted">Find overlap across accreditors</span></h2>
+      <h1>CrosswalkX™ Insight Console</h1>
+      <p>Blend lexical similarity with StandardsGraph™ context to map equivalencies across accreditation frameworks and uncover reusable evidence.</p>
     </div>
   </header>
-  <div class="container">
-    <div class="card">
+  <main class="container">
+    <div class="card" aria-labelledby="crosswalk-controls">
+      <div class="card-header">
+        <h3 id="crosswalk-controls">Select accreditors</h3>
+      </div>
       <div class="row">
-        <input id="a" class="input" placeholder="Accreditor A e.g., SACSCOC"/>
-        <input id="b" class="input" placeholder="Accreditor B e.g., MSCHE"/>
-        <button id="go" class="btn">Compute</button>
+        <div class="input-group">
+          <label for="a">Source accreditor</label>
+          <input id="a" class="input" placeholder="e.g., SACSCOC" autocomplete="off" />
+        </div>
+        <div class="input-group">
+          <label for="b">Target accreditor</label>
+          <input id="b" class="input" placeholder="e.g., MSCHE" autocomplete="off" />
+        </div>
+        <button id="go" class="btn" type="button">Compute CrosswalkX</button>
+      </div>
+      <p id="status" class="status"></p>
+      <div id="errorBanner" class="error" role="alert"></div>
+    </div>
+
+    <div id="summaryCard" class="card" style="display: none;" aria-live="polite">
+      <div class="card-header">
+        <h3>CrosswalkX summary</h3>
+        <span id="summaryTimestamp" class="timestamp"></span>
+      </div>
+      <div class="metrics-grid">
+        <div class="metric">
+          <span class="metric-label">Average alignment</span>
+          <span id="metricAvgAlignment" class="metric-value">--</span>
+          <span id="metricAlignmentsCount" class="metric-sub">0 candidates</span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">High-confidence matches</span>
+          <span id="metricHighConfidence" class="metric-value">0</span>
+          <span class="metric-sub">≥ 60% blended similarity</span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">Source reuse rate</span>
+          <span id="metricSourceReuse" class="metric-value">--</span>
+          <span class="metric-sub">% of source evidence reused with target</span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">Target reuse rate</span>
+          <span id="metricTargetReuse" class="metric-value">--</span>
+          <span class="metric-sub">% of target evidence overlapping source</span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">Shared artifacts</span>
+          <span id="metricSharedDocs" class="metric-value">0</span>
+          <span class="metric-sub">Documents mapped to both frameworks</span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">Documents evaluated</span>
+          <span id="metricDocsEvaluated" class="metric-value">0</span>
+          <span id="metricAccreditorsAvailable" class="metric-sub"></span>
+        </div>
       </div>
     </div>
-    <div class="card">
-      <h3>Matches</h3>
-      <div id="out" class="list"></div>
+
+    <div class="card" aria-live="polite">
+      <div class="card-header">
+        <h3>Alignment candidates</h3>
+        <span class="muted" id="alignmentSummary"></span>
+      </div>
+      <div id="alignments" class="list"></div>
     </div>
-  </div>
+
+    <div class="card" aria-live="polite">
+      <div class="card-header">
+        <h3>Shared evidence reuse</h3>
+        <span class="muted" id="reuseSummary"></span>
+      </div>
+      <div id="reuseList" class="list"></div>
+    </div>
+  </main>
+
   <script>
     const API = '/api/user/intelligence-simple';
 
-    function ensureTokenFromQuery(){
+    function ensureTokenFromQuery() {
       try {
-        const u = new URL(window.location.href);
-        const t = u.searchParams.get('token') || u.searchParams.get('api_key') || u.searchParams.get('access_token');
-        if (t) {
-          try { localStorage.setItem('access_token', t); sessionStorage.setItem('access_token', t); localStorage.setItem('access_token', t); localStorage.setItem('jwt_token', t); } catch(_e) {}
-          u.searchParams.delete('token'); u.searchParams.delete('api_key'); u.searchParams.delete('access_token');
-          history.replaceState(null, '', u.toString());
+        const url = new URL(window.location.href);
+        const token = url.searchParams.get('token') || url.searchParams.get('api_key') || url.searchParams.get('access_token');
+        if (token) {
+          try {
+            localStorage.setItem('access_token', token);
+            sessionStorage.setItem('access_token', token);
+            localStorage.setItem('jwt_token', token);
+          } catch (_) {}
+          url.searchParams.delete('token');
+          url.searchParams.delete('api_key');
+          url.searchParams.delete('access_token');
+          history.replaceState(null, '', url.toString());
         }
-      } catch(_e) {}
+      } catch (_) {}
     }
 
-    function getToken(){
-      return localStorage.getItem('access_token') || sessionStorage.getItem('access_token') || localStorage.getItem('access_token') || localStorage.getItem('jwt_token') || '';
+    function getToken() {
+      return (
+        localStorage.getItem('access_token') ||
+        sessionStorage.getItem('access_token') ||
+        localStorage.getItem('jwt_token') ||
+        ''
+      );
     }
 
-    function authHeaders(extra){
-      const h = Object.assign({}, extra || {});
-      const t = getToken();
-      if (t) h['Authorization'] = `Bearer ${t}`;
-      return h;
+    function authHeaders(extra) {
+      const headers = Object.assign({}, extra || {});
+      const token = getToken();
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      return headers;
     }
 
-    async function compute() {
-      const a = document.getElementById('a').value.trim().toUpperCase();
-      const b = document.getElementById('b').value.trim().toUpperCase();
-      if (!a || !b) return alert('Enter both accreditors');
-      if (a === b) return alert('Please enter different accreditors for comparison');
-      
-      const out = document.getElementById('out');
-      out.innerHTML = '<div class="muted">Computing CrosswalkX™ mappings...</div>';
-      
-      let j;
-      try {
-        const r = await fetch(`${API}/standards/cross-accreditor-matches?source=${encodeURIComponent(a)}&target=${encodeURIComponent(b)}&threshold=0.3&top_k=10`, { 
-          headers: authHeaders(),
-          credentials: 'include' 
-        });
-        if (!r.ok) {
-          const text = await r.text();
-          j = { error: `Request failed (${r.status}) - ${text || 'ensure you\'re logged in and corpus is loaded.'}` };
-        } else {
-          j = await r.json();
-        }
-      } catch(e){ j = { error: String(e) }; }
-      render(j);
+    function formatPercent(value, decimals = 1, alreadyPercent = false) {
+      const number = typeof value === 'number' ? value : 0;
+      const scaled = alreadyPercent ? number : number * 100;
+      return `${scaled.toFixed(decimals)}%`;
     }
-    function render(j) {
-      const out = document.getElementById('out');
-      out.innerHTML = '';
-      
-      if (j.error) {
-        out.innerHTML = `<div style="color:#ef4444; padding: 12px; background-color: #fee; border-radius: 6px;">Error: ${j.error}</div>`;
+
+    function scoreColor(score) {
+      if (score >= 0.7) return '#0f766e';
+      if (score >= 0.55) return '#f97316';
+      return '#dc2626';
+    }
+
+    function clearResults() {
+      document.getElementById('alignments').innerHTML = '';
+      document.getElementById('reuseList').innerHTML = '';
+      document.getElementById('alignmentSummary').textContent = '';
+      document.getElementById('reuseSummary').textContent = '';
+      document.getElementById('summaryCard').style.display = 'none';
+      const status = document.getElementById('status');
+      status.textContent = '';
+      const errorBanner = document.getElementById('errorBanner');
+      errorBanner.style.display = 'none';
+      errorBanner.textContent = '';
+    }
+
+    function renderError(message) {
+      const errorBanner = document.getElementById('errorBanner');
+      errorBanner.textContent = message;
+      errorBanner.style.display = 'block';
+    }
+
+    function renderSummary(payload) {
+      const card = document.getElementById('summaryCard');
+      if (!payload) {
+        card.style.display = 'none';
         return;
       }
-      
-      const matches = j.matches || j.results || [];
-      if (matches.length === 0) {
-        out.innerHTML = '<div class="muted">No overlaps found. Try different accreditors or ensure the standards corpus is loaded.</div>';
+      card.style.display = 'block';
+      document.getElementById('summaryTimestamp').textContent = payload.generated_at ? `Generated ${new Date(payload.generated_at).toLocaleString()}` : '';
+      document.getElementById('metricAvgAlignment').textContent = formatPercent(payload.summary?.average_alignment || 0, 1, false);
+      document.getElementById('metricAlignmentsCount').textContent = `${payload.summary?.alignments_returned || 0} candidates`;
+      document.getElementById('metricHighConfidence').textContent = payload.summary?.high_confidence_alignments || 0;
+      document.getElementById('metricSourceReuse').textContent = formatPercent(payload.summary?.source_reuse_rate || 0, 1, true);
+      document.getElementById('metricTargetReuse').textContent = formatPercent(payload.summary?.target_reuse_rate || 0, 1, true);
+      document.getElementById('metricSharedDocs').textContent = payload.summary?.shared_documents || 0;
+      document.getElementById('metricDocsEvaluated').textContent = payload.summary?.documents_evaluated || 0;
+      const accList = (payload.available_accreditors || []).join(', ');
+      document.getElementById('metricAccreditorsAvailable').textContent = accList ? `Data present for: ${accList}` : '';
+    }
+
+    function renderAlignments(alignments, source, target) {
+      const container = document.getElementById('alignments');
+      if (!alignments || !alignments.length) {
+        container.innerHTML = '<div class="empty-state">No strong equivalencies detected yet. Try lowering the threshold or confirm both accreditors have uploaded evidence.</div>';
+        document.getElementById('alignmentSummary').textContent = '';
         return;
       }
-      
-      // Group results by source standard
-      const grouped = {};
-      matches.forEach(m => {
-        const sourceKey = m.source_code || m.standardA?.id || 'Unknown';
-        if (!grouped[sourceKey]) grouped[sourceKey] = [];
-        grouped[sourceKey].push(m);
-      });
-      
-      out.innerHTML = `<div style="margin-bottom: 15px; color: #64748b;">Found ${matches.length} potential matches across ${Object.keys(grouped).length} source standards</div>`;
-      
-      Object.entries(grouped).forEach(([sourceKey, items]) => {
-        const groupDiv = document.createElement('div');
-        groupDiv.style.cssText = 'border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 16px; overflow: hidden;';
-        
-        // Source header
-        const firstItem = items[0];
-        const sourceTitle = firstItem.source_title || firstItem.standardA?.title || '';
-        groupDiv.innerHTML = `
-          <div style="background-color: #0066cc; color: white; padding: 12px; font-weight: 600;">
-            ${sourceKey}${sourceTitle ? ' - ' + sourceTitle : ''}
-          </div>
-          <div style="padding: 12px;">`;
-        
-        // Target matches
-        items.forEach(m => {
-          const targetCode = m.target_code || m.standardB?.id || 'Unknown';
-          const targetTitle = m.target_title || m.standardB?.title || '';
-          const similarity = m.similarity || 0;
-          const simPercent = (similarity * 100).toFixed(1);
-          const progressColor = simPercent >= 70 ? '#10b981' : simPercent >= 50 ? '#f59e0b' : '#ef4444';
-          
-          const matchDiv = document.createElement('div');
-          matchDiv.style.cssText = 'border-left: 4px solid ' + progressColor + '; padding-left: 12px; margin-bottom: 12px;';
-          
-          let html = `
-            <div style="font-weight: 500; margin-bottom: 4px;">${targetCode}${targetTitle ? ' - ' + targetTitle : ''}</div>
-            <div style="display: flex; align-items: center; gap: 12px; margin-top: 8px;">
-              <span style="min-width: 80px; color: #64748b;">Similarity:</span>
-              <div style="flex: 1; height: 8px; background-color: #e5e7eb; border-radius: 4px; overflow: hidden;">
-                <div style="height: 100%; background-color: ${progressColor}; width: ${simPercent}%; transition: width 0.3s;"></div>
+      document.getElementById('alignmentSummary').textContent = `Showing ${alignments.length} aligned standards between ${source} ➝ ${target}.`;
+      container.innerHTML = '';
+      alignments.forEach((alignment) => {
+        const score = alignment.alignment_score || 0;
+        const scorePct = Math.round(score * 100);
+        const keywords = alignment.keywords_overlap || [];
+        const sharedDocs = alignment.shared_documents || [];
+        const sourceBreadcrumb = (alignment.source?.breadcrumb || []).join(' › ');
+        const targetBreadcrumb = (alignment.target?.breadcrumb || []).join(' › ');
+
+        const card = document.createElement('div');
+        card.className = 'alignment-card';
+        card.innerHTML = `
+          <div class="alignment-header">
+            <div class="alignment-source-target">
+              <span class="code-pill">${alignment.source_code || alignment.source?.code || ''}<span>${source}</span></span>
+              <div class="alignment-title">${alignment.source_title || alignment.source?.title || ''}</div>
+              <span class="code-pill" style="background:#1d4ed8;">${alignment.target_code || alignment.target?.code || ''}<span>${target}</span></span>
+              <div class="alignment-title" style="color:#1d4ed8;">${alignment.target_title || alignment.target?.title || ''}</div>
+            </div>
+            <div class="alignment-score">
+              <div class="score-value" style="color:${scoreColor(score)};">${scorePct}%</div>
+              <div class="score-caption">Blended similarity</div>
+              <div class="progress-bar" aria-hidden="true">
+                <div class="progress-fill" style="background:${scoreColor(score)}; width:${scorePct}%;"></div>
               </div>
-              <span style="min-width: 50px; text-align: right; font-weight: 600; color: ${progressColor};">${simPercent}%</span>
-            </div>`;
-          
-          // Keywords if available
-          const keywords = m.keywords_overlap || m.common_keywords || [];
-          if (keywords.length > 0) {
-            html += '<div style="margin-top: 8px;"><span style="color: #64748b;">Common keywords:</span> ';
-            keywords.forEach(kw => {
-              html += `<span class="pill" style="background-color: #dbeafe; color: #1e40af; margin-right: 4px;">${kw}</span>`;
-            });
-            html += '</div>';
-          }
-          
-          matchDiv.innerHTML = html;
-          groupDiv.querySelector('div:last-child').appendChild(matchDiv);
-        });
-        
-        groupDiv.innerHTML += '</div>';
-        out.appendChild(groupDiv);
+            </div>
+          </div>
+          <div class="context-trail">
+            <span><small>${source}</small> ${sourceBreadcrumb || 'No hierarchy context available'}</span>
+            <span><small>${target}</small> ${targetBreadcrumb || 'No hierarchy context available'}</span>
+          </div>
+        `;
+
+        if (keywords.length) {
+          const keywordsRow = document.createElement('div');
+          keywordsRow.className = 'keywords';
+          keywords.slice(0, 12).forEach((kw) => {
+            const pill = document.createElement('span');
+            pill.className = 'keyword-pill';
+            pill.textContent = kw;
+            keywordsRow.appendChild(pill);
+          });
+          card.appendChild(keywordsRow);
+        }
+
+        const docsSection = document.createElement('div');
+        docsSection.className = 'shared-docs';
+        const header = document.createElement('h4');
+        header.textContent = `Shared evidence (${sharedDocs.length || 0})`;
+        docsSection.appendChild(header);
+        if (sharedDocs.length) {
+          sharedDocs.slice(0, 4).forEach((doc) => {
+            const pill = document.createElement('div');
+            pill.className = 'doc-pill';
+            pill.innerHTML = `
+              <strong>${doc.filename || doc.document_id || 'Evidence artifact'}</strong>
+              <div class="doc-meta">
+                <span>Confidence: ${(doc.alignment_confidence || 0).toFixed(2)}</span>
+                <span>Accreditors: ${(doc.accreditors || []).join(', ') || '—'}</span>
+              </div>
+            `;
+            docsSection.appendChild(pill);
+          });
+        } else {
+          const empty = document.createElement('div');
+          empty.className = 'muted';
+          empty.textContent = 'No shared evidence yet. Map supporting documents to both standards to build reuse.';
+          docsSection.appendChild(empty);
+        }
+        card.appendChild(docsSection);
+
+        container.appendChild(card);
       });
     }
-    document.getElementById('go').addEventListener('click', compute);
+
+    function renderReuse(reuse, source, target) {
+      const container = document.getElementById('reuseList');
+      const summary = document.getElementById('reuseSummary');
+      const documents = (reuse && reuse.documents) || [];
+      if (!documents.length) {
+        container.innerHTML = '<div class="empty-state">Upload evidence mapped to both frameworks to see reusable artifacts highlighted here.</div>';
+        summary.textContent = '';
+        return;
+      }
+      const shared = reuse.shared_document_names || [];
+      const avgStandards = reuse.average_standards_per_shared_document || 0;
+      summary.textContent = shared.length
+        ? `${shared.length} artifacts simultaneously mapped to ${source} and ${target}. Avg standards per shared artifact: ${avgStandards}.`
+        : `Evidence mapped to ${documents.length} artifacts overall. Align additional standards to expose reuse opportunities.`;
+
+      const sortedDocs = documents
+        .slice()
+        .sort((a, b) => (b.total_standards || 0) - (a.total_standards || 0))
+        .slice(0, 12);
+
+      container.innerHTML = '';
+      sortedDocs.forEach((doc) => {
+        const card = document.createElement('div');
+        card.className = 'reuse-card';
+        const accreds = (doc.accreditors || []).join(', ');
+        card.innerHTML = `
+          <header>
+            <h4>${doc.filename || doc.document_id || 'Evidence artifact'}</h4>
+            <span>${doc.total_standards || 0} mapped standards</span>
+          </header>
+          <div class="doc-meta">
+            <span>Accreditors: ${accreds || '—'}</span>
+            <span>Average confidence: ${(doc.average_confidence || 0).toFixed(2)}</span>
+          </div>
+        `;
+        const standardsContainer = document.createElement('div');
+        standardsContainer.className = 'reuse-standards';
+        const standards = doc.standards || {};
+        Object.keys(standards).forEach((acc) => {
+          const group = document.createElement('div');
+          group.className = 'reuse-group';
+          group.innerHTML = `<h5>${acc}</h5>`;
+          const list = document.createElement('ul');
+          standards[acc].forEach((code) => {
+            const li = document.createElement('li');
+            li.textContent = code;
+            list.appendChild(li);
+          });
+          group.appendChild(list);
+          standardsContainer.appendChild(group);
+        });
+        card.appendChild(standardsContainer);
+        container.appendChild(card);
+      });
+    }
+
+    async function compute(force = false) {
+      const sourceInput = document.getElementById('a');
+      const targetInput = document.getElementById('b');
+      const a = sourceInput.value.trim().toUpperCase();
+      const b = targetInput.value.trim().toUpperCase();
+      if (!a || !b) {
+        renderError('Enter both accreditors to compute equivalencies.');
+        return;
+      }
+      if (a === b) {
+        renderError('Provide two different accreditors to compare.');
+        return;
+      }
+
+      clearResults();
+      const status = document.getElementById('status');
+      status.innerHTML = `<strong>Working:</strong> computing CrosswalkX™ mappings for ${a} → ${b}...`;
+
+      let payload;
+      try {
+        const response = await fetch(
+          `${API}/standards/crosswalkx?source=${encodeURIComponent(a)}&target=${encodeURIComponent(b)}&threshold=0.3&top_k=12`,
+          {
+            headers: authHeaders({ 'Content-Type': 'application/json' }),
+            credentials: 'include',
+          }
+        );
+        if (!response.ok) {
+          const body = await response.text();
+          throw new Error(body || `Request failed with status ${response.status}`);
+        }
+        payload = await response.json();
+      } catch (error) {
+        console.error('CrosswalkX error', error);
+        renderError(`Unable to load CrosswalkX insights: ${error.message || error}`);
+        status.textContent = '';
+        return;
+      }
+
+      if (payload.error) {
+        renderError(payload.error);
+        status.textContent = '';
+        return;
+      }
+
+      status.innerHTML = `Showing CrosswalkX™ insights for <strong>${payload.source}</strong> and <strong>${payload.target}</strong>.`;
+      renderSummary(payload);
+      renderAlignments(payload.alignments || [], payload.source, payload.target);
+      renderReuse(payload.reuse || {}, payload.source, payload.target);
+    }
+
+    function hydrateFromQuery() {
+      try {
+        const url = new URL(window.location.href);
+        const sourceParam = url.searchParams.get('source');
+        const targetParam = url.searchParams.get('target');
+        if (sourceParam) {
+          document.getElementById('a').value = sourceParam.toUpperCase();
+        }
+        if (targetParam) {
+          document.getElementById('b').value = targetParam.toUpperCase();
+        }
+        if (sourceParam && targetParam) {
+          compute();
+        }
+      } catch (_) {}
+    }
+
+    document.getElementById('go').addEventListener('click', () => compute(true));
+    document.getElementById('a').addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        compute(true);
+      }
+    });
+    document.getElementById('b').addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        compute(true);
+      }
+    });
+
     ensureTokenFromQuery();
+    hydrateFromQuery();
   </script>
 </body>
 </html>

@@ -1281,6 +1281,133 @@ async def health_check():
             duration_ms = round((perf_counter() - start) * 1000, 2)
             return ok, duration_ms
 
+        async def verify_metrics_consistency(sample_limit: int = 3) -> Dict[str, Any]:
+            """Ensure dashboard metrics and evidence map counts stay aligned for sampled users."""
+            try:
+                from sqlalchemy import text
+                from .api.routes.user_intelligence_simple import (
+                    build_dashboard_metrics_payload,
+                    build_evidence_map_payload,
+                )
+            except Exception as import_err:
+                return {"status": "unavailable", "detail": str(import_err)}
+
+            try:
+                from .database.connection import db_manager
+            except Exception as db_import_err:
+                return {"status": "unavailable", "detail": str(db_import_err)}
+
+            if not db_manager or not getattr(db_manager, "_initialized", False):
+                return {"status": "skipped", "detail": "database not initialized"}
+
+            try:
+                async with db_manager.get_session() as session:
+                    result = await session.execute(
+                        text(
+                            """
+                            SELECT DISTINCT d.user_id AS user_id,
+                                            COALESCE(u.email, '') AS email,
+                                            COALESCE(u.primary_accreditor, '') AS primary_accreditor
+                            FROM documents d
+                            LEFT JOIN users u ON u.id = d.user_id
+                                                        WHERE d.deleted_at IS NULL
+                                                            AND d.user_id IS NOT NULL
+                            LIMIT :limit
+                            """
+                        ),
+                        {"limit": sample_limit},
+                    )
+                    rows = result.fetchall()
+            except Exception as query_err:
+                return {"status": "error", "detail": f"metrics_query_failed: {query_err}"}
+
+            if not rows:
+                return {"status": "skipped", "detail": "no eligible uploads to evaluate"}
+
+            mismatches: List[Dict[str, Any]] = []
+            errors: List[Dict[str, Any]] = []
+            checked = 0
+
+            for row in rows:
+                record = row._mapping
+                user_id = record.get("user_id")
+                if not user_id:
+                    continue
+
+                primary_accreditor = (record.get("primary_accreditor") or "HLC").upper()
+                current_user = {
+                    "sub": str(user_id),
+                    "user_id": str(user_id),
+                    "email": record.get("email") or None,
+                    "primary_accreditor": primary_accreditor,
+                }
+
+                try:
+                    metrics_payload = await build_dashboard_metrics_payload(current_user, snapshot=False)
+                    evidence_payload = await build_evidence_map_payload(current_user, primary_accreditor)
+                except Exception as user_err:
+                    errors.append({
+                        "user_id": str(user_id),
+                        "accreditor": primary_accreditor,
+                        "error": str(user_err),
+                    })
+                    continue
+
+                checked += 1
+
+                metrics_core = metrics_payload.get("core_metrics", {}) or {}
+                evidence_counts = evidence_payload.get("counts", {}) or {}
+
+                mismatch: Dict[str, Any] = {}
+                mapped_metrics = metrics_core.get("standards_mapped")
+                mapped_evidence = evidence_counts.get("standards_mapped")
+                total_metrics = metrics_core.get("total_standards")
+                total_evidence = evidence_counts.get("total_standards")
+
+                if mapped_metrics != mapped_evidence:
+                    mismatch["standards_mapped"] = {
+                        "metrics": mapped_metrics,
+                        "evidence": mapped_evidence,
+                    }
+
+                if total_metrics != total_evidence:
+                    mismatch["total_standards"] = {
+                        "metrics": total_metrics,
+                        "evidence": total_evidence,
+                    }
+
+                if mismatch:
+                    mismatch.update({
+                        "user_id": str(user_id),
+                        "accreditor": primary_accreditor,
+                    })
+                    mismatches.append(mismatch)
+
+            if mismatches:
+                return {
+                    "status": "unhealthy",
+                    "checked_users": checked,
+                    "mismatches": mismatches[: sample_limit],
+                }
+
+            if errors and not mismatches:
+                return {
+                    "status": "error",
+                    "checked_users": checked,
+                    "errors": errors[: sample_limit],
+                }
+
+            if checked == 0:
+                if errors:
+                    return {
+                        "status": "error",
+                        "checked_users": checked,
+                        "errors": errors[: sample_limit],
+                    }
+                return {"status": "skipped", "detail": "no comparable users found"}
+
+            return {"status": "healthy", "checked_users": checked}
+
         # Check if services are initialized (during startup they might be None)
         db_ok, db_latency = (False, None)
         # Try production db_manager first, fallback to legacy db_service
@@ -1343,6 +1470,30 @@ async def health_check():
                     overall = "degraded"
                 status_code = 200
 
+        analytics_check = {"status": "skipped"}
+        analytics_note: Optional[str] = None
+        if db_ok:
+            try:
+                analytics_check = await verify_metrics_consistency()
+            except Exception as analytics_err:
+                analytics_check = {"status": "error", "detail": str(analytics_err)}
+        else:
+            analytics_check = {"status": "skipped", "detail": "database unavailable"}
+
+        analytics_status = analytics_check.get("status")
+        if analytics_status in {"unhealthy", "error"}:
+            analytics_note = analytics_check.get("detail")
+            if not analytics_note:
+                if analytics_check.get("mismatches"):
+                    analytics_note = f"{len(analytics_check['mismatches'])} analytics mismatch(es) detected"
+                elif analytics_check.get("errors"):
+                    analytics_note = f"{len(analytics_check['errors'])} analytics sampling error(s) encountered"
+                else:
+                    analytics_note = "analytics consistency check detected mismatched standard counts"
+            if overall in {"healthy", "starting"}:
+                overall = "degraded"
+                status_code = 200
+
         body: Dict[str, Any] = {
             "status": overall,
             "timestamp": now.isoformat(),
@@ -1353,7 +1504,8 @@ async def health_check():
                 "database": {"status": "healthy" if db_ok else ("unavailable" if not db_service else "unhealthy"), "latency_ms": db_latency},
                 "llm_service": {"status": "healthy" if llm_ok else ("unavailable" if not llm_service else "unhealthy"), "latency_ms": llm_latency},
                 "vector_db": {"status": vector_status, "latency_ms": vector_latency},
-                "agent_orchestrator": {"status": orchestrator_status}
+                "agent_orchestrator": {"status": orchestrator_status},
+                "analytics_consistency": analytics_check,
             },
             "capabilities": {
                 "proprietary_ontology": True,
@@ -1365,8 +1517,16 @@ async def health_check():
 
         if overall == "degraded":
             body["note"] = "Core services healthy. Optional advanced services unavailable or unhealthy."
+        elif overall == "healthy" and analytics_status == "healthy":
+            body.pop("note", None)
         elif overall == "starting":
             body["note"] = "Application starting up. Services initializing."
+
+        if analytics_note:
+            if "note" in body and body["note"]:
+                body["note"] += f" Analytics: {analytics_note}."
+            else:
+                body["note"] = f"Analytics: {analytics_note}."
             
         return JSONResponse(status_code=status_code, content=body)
     except Exception as e:

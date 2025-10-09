@@ -12,13 +12,17 @@
     { "source": "/reports-modern", "destination": "/report-generation", "permanent": false },
     { "source": "/standards-modern", "destination": "/standards-selection-wizard", "permanent": false },
     { "source": "/login.html", "destination": "/login-enhanced.html", "permanent": false },
-    { "source": "/login-platform.html", "destination": "/login-enhanced.html", "permanent": false }
+    { "source": "/login-platform.html", "destination": "/login-enhanced.html", "permanent": false },
+    { "source": "/support", "destination": "/help", "permanent": false }
   ],
   "rewrites": [
     { "source": "/api/(.*)", "destination": "https://api.mapmystandards.ai/api/$1" },
     { "source": "/login", "destination": "/login-enhanced.html" },
     { "source": "/dashboard", "destination": "/dashboard-enhanced.html" },
     { "source": "/upload", "destination": "/upload-working.html" },
+  { "source": "/org-chart", "destination": "/org-chart.html" },
+  { "source": "/scenario-model", "destination": "/scenario-modeling.html" },
+  { "source": "/help", "destination": "/support.html" },
     { "source": "/standards-selection-wizard", "destination": "/standards-selection-wizard.html" },
     { "source": "/evidence-mapping-wizard", "destination": "/evidence-mapping-wizard.html" },
     { "source": "/report-generation", "destination": "/report-generation.html" }

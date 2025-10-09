@@ -632,9 +632,19 @@
         <div class="container">
             <div class="action-content">
                 <div class="progress-info">
-                    <span id="progressText">0 of 0 documents mapped</span>
-                    <div class="progress-bar-container">
-                        <div class="progress-fill" id="progressBar" style="width: 0%"></div>
+                    <span id="progressText" role="status" aria-live="polite">0 of 0 documents mapped</span>
+                    <div class="progress-bar-container" role="presentation">
+                        <div
+                            class="progress-fill"
+                            id="progressBar"
+                            style="width: 0%"
+                            role="progressbar"
+                            aria-valuemin="0"
+                            aria-valuemax="100"
+                            aria-valuenow="0"
+                            aria-valuetext="0% of documents mapped"
+                            aria-label="Document mapping progress"
+                        ></div>
                     </div>
                 </div>
                 <div class="action-buttons">
@@ -1058,10 +1068,19 @@
         function updateProgress() {
             const total = evidenceFiles.length;
             const mapped = mappedDocuments.size;
-            const percentage = (mapped / total) * 100;
-            
-            document.getElementById('progressText').textContent = `${mapped} of ${total} documents mapped`;
-            document.getElementById('progressBar').style.width = percentage + '%';
+            const percentage = total === 0 ? 0 : Math.round((mapped / total) * 100);
+
+            const progressText = document.getElementById('progressText');
+            if (progressText) {
+                progressText.textContent = `${mapped} of ${total} documents mapped`;
+            }
+
+            const progressBar = document.getElementById('progressBar');
+            if (progressBar) {
+                progressBar.style.width = percentage + '%';
+                progressBar.setAttribute('aria-valuenow', String(percentage));
+                progressBar.setAttribute('aria-valuetext', `${mapped} of ${total} documents mapped (${percentage}%)`);
+            }
         }
 
         function skipRemaining() {
@@ -1076,7 +1095,7 @@
             localStorage.setItem('mms:lastMappingAt', new Date().toISOString());
             
             // Navigate to report generation
-            window.location.href = '/report-generation.html';
+            window.location.href = '/report-generation';
         }
     </script>
 </body>

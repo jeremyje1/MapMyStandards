@@ -8,16 +8,16 @@ const NavigationManager = {
         return `
             <header class="header" style="background: white; border-bottom: 1px solid #e1e4e8; padding: 1rem 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 1000;">
                 <div class="header-content" style="max-width: 1200px; margin: 0 auto; padding: 0 2rem; display: flex; justify-content: space-between; align-items: center;">
-                    <a href="/dashboard.html" class="logo" style="display: flex; align-items: center; text-decoration: none; gap: 0.5rem;">
+                    <a href="/dashboard" class="logo" style="display: flex; align-items: center; text-decoration: none; gap: 0.5rem;">
                         <img src="https://mapmystandards.ai/wp-content/uploads/2025/07/Original-Logo.png" alt="MapMyStandards" style="height: 40px;">
                         <span style="font-size: 1.5rem; font-weight: bold; color: #0F3875;">MapMyStandards</span>
                     </a>
                     <nav class="nav-links" style="display: flex; gap: 2rem;">
-                        <a href="/dashboard.html" class="nav-link ${activePage === 'dashboard' ? 'active' : ''}" style="text-decoration: none; color: ${activePage === 'dashboard' ? '#0F3875' : '#586069'}; font-weight: 500;">Dashboard</a>
-                        <a href="/documents.html" class="nav-link ${activePage === 'documents' ? 'active' : ''}" style="text-decoration: none; color: ${activePage === 'documents' ? '#0F3875' : '#586069'}; font-weight: 500;">Documents</a>
-                        <a href="/upload.html" class="nav-link ${activePage === 'upload' ? 'active' : ''}" style="text-decoration: none; color: ${activePage === 'upload' ? '#0F3875' : '#586069'}; font-weight: 500;">Upload</a>
-                        <a href="/reports-modern.html" class="nav-link ${activePage === 'reports' ? 'active' : ''}" style="text-decoration: none; color: ${activePage === 'reports' ? '#0F3875' : '#586069'}; font-weight: 500;">Reports</a>
-                        <a href="/help" class="nav-link ${activePage === 'help' ? 'active' : ''}" style="text-decoration: none; color: ${activePage === 'help' ? '#0F3875' : '#586069'}; font-weight: 500;">Help</a>
+                        <a href="/dashboard" class="nav-link ${activePage === 'dashboard' ? 'active' : ''}" style="text-decoration: none; color: ${activePage === 'dashboard' ? '#0F3875' : '#586069'}; font-weight: 500;">Dashboard</a>
+                        <a href="/documents" class="nav-link ${activePage === 'documents' ? 'active' : ''}" style="text-decoration: none; color: ${activePage === 'documents' ? '#0F3875' : '#586069'}; font-weight: 500;">Documents</a>
+                        <a href="/upload" class="nav-link ${activePage === 'upload' ? 'active' : ''}" style="text-decoration: none; color: ${activePage === 'upload' ? '#0F3875' : '#586069'}; font-weight: 500;">Upload</a>
+                        <a href="/report-generation" class="nav-link ${activePage === 'reports' ? 'active' : ''}" style="text-decoration: none; color: ${activePage === 'reports' ? '#0F3875' : '#586069'}; font-weight: 500;">Reports</a>
+                        <a href="/support" class="nav-link ${activePage === 'help' ? 'active' : ''}" style="text-decoration: none; color: ${activePage === 'help' ? '#0F3875' : '#586069'}; font-weight: 500;">Help</a>
                     </nav>
                     <div class="user-menu" style="display: flex; align-items: center; gap: 1rem;">
                         <span class="user-email" id="userEmail" style="color: #666; font-size: 0.9rem;">Loading...</span>
@@ -104,7 +104,7 @@ const NavigationManager = {
         if (path.includes('documents')) return 'documents';
         if (path.includes('upload')) return 'upload';
         if (path.includes('report')) return 'reports';
-        if (path.includes('help')) return 'help';
+        if (path.includes('support') || path.includes('help')) return 'help';
         return '';
     }
 };

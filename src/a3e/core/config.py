@@ -5,13 +5,11 @@ Environment-aware configuration management for the A3E system.
 Supports development, staging, and production environments.
 """
 
-from typing import List, Optional, Dict, Any, Annotated
+from typing import List, Optional, Dict, Any
 from enum import Enum
-from pathlib import Path
 
-from pydantic import BaseModel, Field, field_validator, ConfigDict
+from pydantic import AliasChoices, BaseModel, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
-import os
 
 
 class Environment(str, Enum):
@@ -22,145 +20,156 @@ class Environment(str, Enum):
 
 class Settings(BaseSettings):
     """A3E Application Settings"""
-    
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
     # Application
     app_name: str = "A3E - Autonomous Accreditation & Audit Engine"
     version: str = "0.1.0"
-    environment: Environment = Field(default=Environment.DEVELOPMENT, env="RAILWAY_ENVIRONMENT")
-    debug: bool = Field(default=False, env="DEBUG")
-    
+    environment: Environment = Field(
+        default=Environment.DEVELOPMENT,
+        validation_alias=AliasChoices("RAILWAY_ENVIRONMENT", "ENVIRONMENT"),
+    )
+    debug: bool = False
+
     # API Configuration
-    api_host: str = Field(default="0.0.0.0", env="API_HOST")
-    api_port: int = Field(default=8000, env="API_PORT")
+    api_host: str = "0.0.0.0"
+    api_port: int = 8000
     api_prefix: str = "/api/v1"
-    
+
     # Database Configuration
-    database_url: str = Field(default="sqlite:///./a3e.db", env="DATABASE_URL")
-    database_pool_size: int = Field(default=20, env="DATABASE_POOL_SIZE")
-    database_max_overflow: int = Field(default=30, env="DATABASE_MAX_OVERFLOW")
-    database_init_retries: int = Field(default=10, env="DATABASE_INIT_RETRIES")
-    database_init_backoff: float = Field(default=3.0, env="DATABASE_INIT_BACKOFF")
-    allow_start_without_db: bool = Field(default=True, env="ALLOW_START_WITHOUT_DB")
-    
+    database_url: str = "sqlite:///./a3e.db"
+    database_pool_size: int = 20
+    database_max_overflow: int = 30
+    database_init_retries: int = 10
+    database_init_backoff: float = 3.0
+    allow_start_without_db: bool = True
+
     # Vector Database (Milvus) Configuration
-    milvus_host: str = Field(default="localhost", env="MILVUS_HOST")
-    milvus_port: int = Field(default=19530, env="MILVUS_PORT")
-    milvus_collection_prefix: str = Field(default="a3e", env="MILVUS_COLLECTION_PREFIX")
-    
+    milvus_host: str = "localhost"
+    milvus_port: int = 19530
+    milvus_collection_prefix: str = "a3e"
+
     # Redis Configuration
-    redis_url: str = Field(default="redis://localhost:6379", env="REDIS_URL")
-    redis_ttl: int = Field(default=3600, env="REDIS_TTL")  # 1 hour default
-    
+    redis_url: str = "redis://localhost:6379"
+    redis_ttl: int = 3600  # 1 hour default
+
     # AWS Configuration
-    aws_region: str = Field(default="us-east-1", env="AWS_REGION")
-    aws_access_key_id: Optional[str] = Field(default=None, env="AWS_ACCESS_KEY_ID")
-    aws_secret_access_key: Optional[str] = Field(default=None, env="AWS_SECRET_ACCESS_KEY")
-    
+    aws_region: str = "us-east-1"
+    aws_access_key_id: Optional[str] = None
+    aws_secret_access_key: Optional[str] = None
+
     # AWS Bedrock Configuration
-    bedrock_region: str = Field(default="us-east-1", env="BEDROCK_REGION")
-    bedrock_model_id: str = Field(default="anthropic.claude-3-5-sonnet-20240620-v1:0", env="BEDROCK_MODEL_ID")
-    bedrock_max_tokens: int = Field(default=4096, env="BEDROCK_MAX_TOKENS")
-    
-    # LLM Configuration  
-    openai_api_key: Optional[str] = Field(default=None, env="OPENAI_API_KEY")
-    anthropic_api_key: Optional[str] = Field(default=None, env="ANTHROPIC_API_KEY")
-    
+    bedrock_region: str = "us-east-1"
+    bedrock_model_id: str = "anthropic.claude-3-5-sonnet-20240620-v1:0"
+    bedrock_max_tokens: int = 4096
+
+    # LLM Configuration
+    openai_api_key: Optional[str] = None
+    anthropic_api_key: Optional[str] = None
+
     # Agent Configuration
-    agent_max_rounds: int = Field(default=3, env="AGENT_MAX_ROUNDS")
-    agent_temperature: float = Field(default=0.1, env="AGENT_TEMPERATURE")
-    citation_threshold: float = Field(default=0.85, env="CITATION_THRESHOLD")
-    
+    agent_max_rounds: int = 3
+    agent_temperature: float = 0.1
+    citation_threshold: float = 0.85
+
     # ETL Configuration
-    airbyte_server_host: str = Field(default="localhost", env="AIRBYTE_SERVER_HOST")
-    airbyte_server_port: int = Field(default=8000, env="AIRBYTE_SERVER_PORT")
-    airbyte_username: str = Field(default="airbyte", env="AIRBYTE_USERNAME")
-    airbyte_password: str = Field(default="password", env="AIRBYTE_PASSWORD")
-    
+    airbyte_server_host: str = "localhost"
+    airbyte_server_port: int = 8000
+    airbyte_username: str = "airbyte"
+    airbyte_password: str = "password"
+
     # Document Processing
-    max_file_size_mb: int = Field(default=100, env="MAX_FILE_SIZE_MB")
-    # Directory for storing uploaded files and generated artifacts
-    data_dir: str = Field(default="/app/data", env="DATA_DIR")
-    supported_file_types: str = Field(
-        default="pdf,docx,xlsx,csv,txt,md",
-        env="SUPPORTED_FILE_TYPES"
-    )
-    
+    max_file_size_mb: int = 100
+    data_dir: str = "/app/data"
+    supported_file_types: str = "pdf,docx,xlsx,csv,txt,md"
+
     # Security
-    secret_key: str = Field(env="SECRET_KEY")  # Required - no default
-    jwt_secret_key: str = Field(env="JWT_SECRET_KEY")  # Required - no default
-    jwt_algorithm: str = Field(default="HS256", env="JWT_ALGORITHM")
-    jwt_expiration_hours: int = Field(default=24, env="JWT_EXPIRATION_HOURS")
-    
+    secret_key: str
+    jwt_secret_key: str
+    jwt_algorithm: str = "HS256"
+    jwt_expiration_hours: int = 24
+
     # Logging
-    log_level: str = Field(default="INFO", env="LOG_LEVEL")
-    log_format: str = Field(
-        default="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        env="LOG_FORMAT"
-    )
-    
+    log_level: str = "INFO"
+    log_format: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
     # CORS
-    cors_origins: str = Field(
-        default="http://localhost:3000,http://localhost:8080",
-        env="CORS_ORIGINS"
-    )
+    cors_origins: str = "http://localhost:3000,http://localhost:8080"
 
     # Public URLs (used in emails/static links)
-    PUBLIC_APP_URL: str = Field(default="https://platform.mapmystandards.ai", env="PUBLIC_APP_URL")
-    PUBLIC_API_URL: str = Field(default="https://api.mapmystandards.ai", env="PUBLIC_API_URL")
-    
+    PUBLIC_APP_URL: str = "https://platform.mapmystandards.ai"
+    PUBLIC_API_URL: str = "https://api.mapmystandards.ai"
+
     # Email Configuration (Postmark)
-    POSTMARK_SERVER_TOKEN: Optional[str] = Field(default=None, env="POSTMARK_SERVER_TOKEN")
-    POSTMARK_API_KEY: Optional[str] = Field(default=None, env="POSTMARK_API_KEY")  # Alternative name
-    EMAIL_FROM: str = Field(default="support@mapmystandards.ai", env="EMAIL_FROM")
-    EMAIL_FROM_NAME: str = Field(default="MapMyStandards A³E", env="EMAIL_FROM_NAME")
-    ADMIN_NOTIFICATION_EMAIL: str = Field(default="info@northpathstrategies.org", env="ADMIN_NOTIFICATION_EMAIL")
-    
+    POSTMARK_SERVER_TOKEN: Optional[str] = None
+    POSTMARK_API_KEY: Optional[str] = None  # Alternative name
+    EMAIL_FROM: str = "support@mapmystandards.ai"
+    EMAIL_FROM_NAME: str = "MapMyStandards A³E"
+    ADMIN_NOTIFICATION_EMAIL: str = "info@northpathstrategies.org"
+
     # Payment Configuration (Stripe)
-    STRIPE_SECRET_KEY: str = Field(default="", env="STRIPE_SECRET_KEY")
-    STRIPE_PUBLISHABLE_KEY: str = Field(default="", env="STRIPE_PUBLISHABLE_KEY")
-    
+    STRIPE_SECRET_KEY: str = ""
+    STRIPE_PUBLISHABLE_KEY: str = ""
+
     # Google Drive Integration
-    GOOGLE_CLIENT_ID: Optional[str] = Field(default=None, env="GOOGLE_CLIENT_ID")
-    GOOGLE_CLIENT_SECRET: Optional[str] = Field(default=None, env="GOOGLE_CLIENT_SECRET")
-    GOOGLE_REDIRECT_URI: str = Field(default="https://platform.mapmystandards.ai/api/v1/integrations/google/callback", env="GOOGLE_REDIRECT_URI")
-    
+    GOOGLE_CLIENT_ID: Optional[str] = None
+    GOOGLE_CLIENT_SECRET: Optional[str] = None
+    GOOGLE_REDIRECT_URI: str = "https://platform.mapmystandards.ai/api/v1/integrations/google/callback"
+
     # Canvas LMS Integration
-    CANVAS_CLIENT_ID: Optional[str] = Field(default=None, env="CANVAS_CLIENT_ID")
-    CANVAS_CLIENT_SECRET: Optional[str] = Field(default=None, env="CANVAS_CLIENT_SECRET")
-    CANVAS_ACCESS_TOKEN: Optional[str] = Field(default=None, env="CANVAS_ACCESS_TOKEN")
-    CANVAS_API_BASE: str = Field(default="https://canvas.instructure.com/api/v1", env="CANVAS_API_BASE")
-    
+    CANVAS_CLIENT_ID: Optional[str] = None
+    CANVAS_CLIENT_SECRET: Optional[str] = None
+    CANVAS_ACCESS_TOKEN: Optional[str] = None
+    CANVAS_API_BASE: str = "https://canvas.instructure.com/api/v1"
+
     # Banner SIS Integration
-    BANNER_ETHOS_TOKEN: Optional[str] = Field(default=None, env="BANNER_ETHOS_TOKEN")
-    BANNER_DB_HOST: Optional[str] = Field(default=None, env="BANNER_DB_HOST")
-    BANNER_DB_USER: Optional[str] = Field(default=None, env="BANNER_DB_USER")
-    BANNER_DB_PASSWORD: Optional[str] = Field(default=None, env="BANNER_DB_PASSWORD")
-    BANNER_DB_URL: Optional[str] = Field(default=None, env="BANNER_DB_URL")
-    
+    BANNER_ETHOS_TOKEN: Optional[str] = None
+    BANNER_DB_HOST: Optional[str] = None
+    BANNER_DB_USER: Optional[str] = None
+    BANNER_DB_PASSWORD: Optional[str] = None
+    BANNER_DB_URL: Optional[str] = None
+
     # SharePoint/Microsoft Integration
-    MS_CLIENT_ID: Optional[str] = Field(default=None, env="MS_CLIENT_ID")
-    MS_CLIENT_SECRET: Optional[str] = Field(default=None, env="MS_CLIENT_SECRET")
-    MS_TENANT_ID: Optional[str] = Field(default=None, env="MS_TENANT_ID")
-    AZURE_CLIENT_ID: Optional[str] = Field(default=None, env="AZURE_CLIENT_ID")  # Alias for MS_CLIENT_ID
-    STRIPE_WEBHOOK_SECRET: str = Field(default="", env="STRIPE_WEBHOOK_SECRET")
-    STRIPE_PRICE_COLLEGE_MONTHLY: str = Field(default="", env="STRIPE_PRICE_ID_PROFESSIONAL_MONTHLY")
-    STRIPE_PRICE_COLLEGE_YEARLY: str = Field(default="", env="STRIPE_PRICE_ID_PROFESSIONAL_ANNUAL")
-    STRIPE_PRICE_MULTI_CAMPUS_MONTHLY: str = Field(default="", env="STRIPE_PRICE_ID_INSTITUTION_MONTHLY")
-    STRIPE_PRICE_MULTI_CAMPUS_YEARLY: str = Field(default="", env="STRIPE_PRICE_ID_INSTITUTION_ANNUAL")
-    
+    MS_CLIENT_ID: Optional[str] = None
+    MS_CLIENT_SECRET: Optional[str] = None
+    MS_TENANT_ID: Optional[str] = None
+    AZURE_CLIENT_ID: Optional[str] = None  # Alias for MS_CLIENT_ID
+    STRIPE_WEBHOOK_SECRET: str = ""
+    STRIPE_PRICE_COLLEGE_MONTHLY: str = Field(
+        default="",
+        validation_alias=AliasChoices("STRIPE_PRICE_ID_PROFESSIONAL_MONTHLY", "STRIPE_PRICE_COLLEGE_MONTHLY"),
+    )
+    STRIPE_PRICE_COLLEGE_YEARLY: str = Field(
+        default="",
+        validation_alias=AliasChoices("STRIPE_PRICE_ID_PROFESSIONAL_ANNUAL", "STRIPE_PRICE_COLLEGE_YEARLY"),
+    )
+    STRIPE_PRICE_MULTI_CAMPUS_MONTHLY: str = Field(
+        default="",
+        validation_alias=AliasChoices("STRIPE_PRICE_ID_INSTITUTION_MONTHLY", "STRIPE_PRICE_MULTI_CAMPUS_MONTHLY"),
+    )
+    STRIPE_PRICE_MULTI_CAMPUS_YEARLY: str = Field(
+        default="",
+        validation_alias=AliasChoices("STRIPE_PRICE_ID_INSTITUTION_ANNUAL", "STRIPE_PRICE_MULTI_CAMPUS_YEARLY"),
+    )
+
     # Rate Limiting
-    rate_limit_requests: int = Field(default=100, env="RATE_LIMIT_REQUESTS")
-    rate_limit_window: int = Field(default=3600, env="RATE_LIMIT_WINDOW")  # 1 hour
-    
+    rate_limit_requests: int = 100
+    rate_limit_window: int = 3600  # 1 hour
+
     # Monitoring
-    sentry_dsn: Optional[str] = Field(default=None, env="SENTRY_DSN")
-    prometheus_enabled: bool = Field(default=False, env="PROMETHEUS_ENABLED")
-    
+    sentry_dsn: Optional[str] = None
+    prometheus_enabled: bool = False
+
     # Feature Flags
-    enable_graphql: bool = Field(default=True, env="ENABLE_GRAPHQL")
-    enable_real_time_processing: bool = Field(default=True, env="ENABLE_REAL_TIME_PROCESSING")
-    enable_batch_processing: bool = Field(default=True, env="ENABLE_BATCH_PROCESSING")
-    enable_auto_evidence_mapping: bool = Field(default=True, env="ENABLE_AUTO_EVIDENCE_MAPPING")
+    enable_graphql: bool = True
+    enable_real_time_processing: bool = True
+    enable_batch_processing: bool = True
+    enable_auto_evidence_mapping: bool = True
     
     @field_validator("environment", mode="before")
     @classmethod
@@ -211,12 +220,6 @@ def database_config(self: Settings) -> Dict[str, Any]:  # type: ignore
         "max_overflow": self.database_max_overflow,
         "echo": is_development.__get__(self, Settings)(),
     }
-    
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        extra="ignore"
-    )
 
 
 # Global settings instance

@@ -39,6 +39,7 @@ class ComprehensiveResponseRequest(BaseModel):
     standard_title: str
     evidence_documents: List[Dict[str, Any]]
     institution_data: Dict[str, Any]
+    citation_style: Optional[str] = None
 
 
 class QEPNarrativeRequest(BaseModel):
@@ -62,6 +63,9 @@ class NarrativeResponse(BaseModel):
     metadata: Dict[str, Any]
     quality_metrics: Optional[Dict[str, Any]] = None
     generated_at: str
+    citations: Optional[List[Dict[str, Any]]] = None
+    citation_report: Optional[Dict[str, Any]] = None
+    executive_summary: Optional[str] = None
 
 
 @router.post("/evidence", response_model=NarrativeResponse)
@@ -153,7 +157,8 @@ async def generate_comprehensive_response(request: ComprehensiveResponseRequest)
             standard_id=request.standard_id,
             standard_title=request.standard_title,
             evidence_documents=request.evidence_documents,
-            institution_data=request.institution_data
+            institution_data=request.institution_data,
+            citation_style=request.citation_style,
         )
         
         if result.get("success"):
@@ -168,7 +173,11 @@ async def generate_comprehensive_response(request: ComprehensiveResponseRequest)
                     "evidence_count": result["evidence_count"],
                     "word_count": result["word_count"]
                 },
-                generated_at=result["generated_at"]
+                generated_at=result["generated_at"],
+                quality_metrics=result.get("quality_metrics"),
+                citations=result.get("citations"),
+                citation_report=result.get("citation_report"),
+                executive_summary=result.get("executive_summary"),
             )
         else:
             raise HTTPException(status_code=500, detail="Failed to generate comprehensive response")

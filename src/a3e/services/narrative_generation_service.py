@@ -241,62 +241,307 @@ class NarrativeGenerationService:
         standard_id: str,
         standard_title: str,
         evidence_documents: List[Dict[str, Any]],
-        institution_data: Dict[str, Any]
+        institution_data: Dict[str, Any],
+        citation_style: Optional[str] = None,
     ) -> Dict[str, Any]:
-        """
-        Generate a complete standard response narrative
-        """
+        """Generate a CiteGuard™ narrative with verified citations."""
+        evidence_count = len(evidence_documents)
+        citations_catalog = self._prepare_citation_catalog(
+            evidence_documents,
+            citation_style=citation_style,
+        )
+
         try:
-            # Prepare evidence list
-            evidence_list = []
-            for doc in evidence_documents[:10]:  # Limit to top 10
-                evidence_list.append(f"- {doc.get('title', 'Document')}: {doc.get('summary', '')[:100]}")
-            
-            prompt = self.narrative_templates["standard_response"].format(
+            if not citations_catalog:
+                logger.info("CiteGuard: no evidence supplied; returning fallback narrative.")
+                return self._generate_fallback_response(
+                    standard_id,
+                    standard_title,
+                    evidence_count=evidence_count,
+                    citations_catalog=citations_catalog,
+                    citation_style=citation_style,
+                    notes=["No evidence documents were provided."],
+                )
+
+            prompt = self._build_citation_prompt(
                 standard_id=standard_id,
                 standard_title=standard_title,
-                evidence_list="\n".join(evidence_list),
-                context=json.dumps({
-                    "institution_name": institution_data.get("name"),
-                    "institution_type": institution_data.get("type"),
-                    "enrollment": institution_data.get("enrollment_size"),
-                    "mission_focus": institution_data.get("mission_focus")
-                })
+                institution_data=institution_data,
+                citations_catalog=citations_catalog,
+                citation_style=citation_style,
             )
-            
+
             response = await self.ai_service.analyze_document(
                 text=prompt,
                 metadata={
                     "task": "narrative_generation",
                     "type": "comprehensive_response",
-                    "standard": standard_id
+                    "standard": standard_id,
+                    "cite_guard": True,
                 },
-                max_tokens=600
+                max_tokens=650,
             )
-            
+
             if response.get("success"):
-                narrative = self._clean_narrative(response.get("analysis", ""))
-                
-                # Structure the response
-                structured_response = self._structure_narrative(narrative)
-                
-                return {
-                    "success": True,
-                    "standard_id": standard_id,
-                    "standard_title": standard_title,
-                    "narrative": narrative,
-                    "structured_sections": structured_response,
-                    "evidence_count": len(evidence_documents),
-                    "compliance_statement": self._extract_compliance_statement(narrative),
-                    "word_count": len(narrative.split()),
-                    "generated_at": datetime.utcnow().isoformat()
-                }
-            
-            return self._generate_fallback_response(standard_id, standard_title)
-            
+                base_narrative = self._clean_narrative(response.get("analysis", ""))
+                structured_sections = self._structure_narrative(base_narrative)
+                validation = self._validate_citations(
+                    base_narrative,
+                    citations_catalog,
+                    structured_sections,
+                )
+
+                if validation["passed"]:
+                    used_citations = self._select_used_citations(
+                        citations_catalog,
+                        validation["used_tags"],
+                    )
+                    final_narrative = self._append_citations(
+                        base_narrative,
+                        used_citations,
+                        citation_style=citation_style,
+                    )
+                    quality_metrics = self._assess_narrative_quality(
+                        base_narrative,
+                        standard_id,
+                    )
+                    executive_summary = (
+                        structured_sections.get("executive_summary")
+                        or structured_sections.get("opening_statement")
+                    )
+
+                    return {
+                        "success": True,
+                        "standard_id": standard_id,
+                        "standard_title": standard_title,
+                        "narrative": final_narrative,
+                        "structured_sections": structured_sections,
+                        "evidence_count": evidence_count,
+                        "compliance_statement": self._extract_compliance_statement(base_narrative),
+                        "word_count": len(base_narrative.split()),
+                        "generated_at": datetime.utcnow().isoformat(),
+                        "quality_metrics": quality_metrics,
+                        "citations": used_citations,
+                        "citation_report": validation,
+                        "executive_summary": executive_summary,
+                    }
+
+                logger.warning("CiteGuard validation failed: %s", validation)
+
+            return self._generate_fallback_response(
+                standard_id,
+                standard_title,
+                evidence_count=evidence_count,
+                citations_catalog=citations_catalog,
+                citation_style=citation_style,
+                notes=["AI output rejected by CiteGuard validation."],
+            )
+
         except Exception as e:
             logger.error(f"Error generating comprehensive response: {e}")
-            return self._generate_fallback_response(standard_id, standard_title)
+            return self._generate_fallback_response(
+                standard_id,
+                standard_title,
+                evidence_count=evidence_count,
+                citations_catalog=citations_catalog,
+                citation_style=citation_style,
+                notes=[f"Service error: {e}"],
+            )
+
+    def _prepare_citation_catalog(
+        self,
+        evidence_documents: List[Dict[str, Any]],
+        citation_style: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
+        catalog: List[Dict[str, Any]] = []
+
+        for idx, doc in enumerate(evidence_documents[:10]):
+            tag = f"CG-{idx + 1:02d}"
+            doc_id = doc.get("id") or doc.get("document_id") or doc.get("doc_id") or f"evidence-{idx + 1}"
+            title = doc.get("title") or doc.get("filename") or f"Evidence {idx + 1}"
+            pages = self._extract_pages(doc)
+            snippet = doc.get("excerpt") or doc.get("summary") or doc.get("snippet")
+            if not snippet and doc.get("page_anchors"):
+                snippet = " ".join(
+                    (anchor.get("snippet") or "").strip()
+                    for anchor in doc["page_anchors"][:2]
+                    if anchor.get("snippet")
+                )
+            if snippet:
+                snippet = snippet.strip()
+                if len(snippet) > 220:
+                    snippet = snippet[:217].rstrip() + "..."
+
+            catalog.append(
+                {
+                    "tag": tag,
+                    "document_id": str(doc_id),
+                    "title": title,
+                    "pages": pages,
+                    "snippet": snippet,
+                    "accreditor": doc.get("accreditor"),
+                    "evidence_type": doc.get("evidence_type"),
+                    "citation_style": citation_style or "default",
+                }
+            )
+
+        return catalog
+
+    def _extract_pages(self, doc: Dict[str, Any]) -> List[str]:
+        pages: List[str] = []
+        pages_raw = doc.get("pages") or doc.get("page_numbers") or doc.get("page_range")
+
+        if isinstance(pages_raw, str):
+            pages = [p.strip() for p in re.split(r"[;,]", pages_raw) if p.strip()]
+        elif isinstance(pages_raw, list):
+            for item in pages_raw:
+                if isinstance(item, dict) and item.get("page") is not None:
+                    pages.append(str(item["page"]))
+                elif item not in (None, ""):
+                    pages.append(str(item))
+
+        if not pages and isinstance(doc.get("page_anchors"), list):
+            for anchor in doc["page_anchors"]:
+                page_num = anchor.get("page")
+                if page_num not in (None, ""):
+                    pages.append(str(page_num))
+
+        ordered: List[str] = []
+        seen: set[str] = set()
+        for page in pages:
+            if page not in seen:
+                seen.add(page)
+                ordered.append(page)
+        return ordered
+
+    def _build_citation_prompt(
+        self,
+        standard_id: str,
+        standard_title: str,
+        institution_data: Dict[str, Any],
+        citations_catalog: List[Dict[str, Any]],
+        citation_style: Optional[str] = None,
+    ) -> str:
+        context_payload = {
+            key: value
+            for key, value in (institution_data or {}).items()
+            if value not in (None, "", [])
+        }
+        context_json = json.dumps(context_payload, default=str)
+        citations_lines = "\n".join(
+            self._render_citation_prompt_line(entry) for entry in citations_catalog
+        ) or "No verified evidence supplied."
+
+        return (
+            "You are CiteGuard™, the MapMyStandards narrative generator tasked with "
+            "producing accreditation-ready responses."
+            f"\nStandard: {standard_id} — {standard_title}"
+            f"\nInstitution context: {context_json}"
+            "\n\nEvidence catalog (use only these citation tags):\n"
+            f"{citations_lines}"
+            "\n\nInstructions:\n"
+            "1. Write four sections using the EXACT headings below:"
+            "\n   Executive Summary:\n   Evidence and Analysis:\n   Compliance Assurance:\n   Continuous Improvement:"
+            "\n2. Limit each section to 2-4 sentences in a confident, professional tone."
+            "\n3. Every factual statement must include at least one inline citation in the format [CG-XX]."
+            "\n4. Do not invent citation tags and do not include a citations list; the platform will add it."
+            "\n5. Reference only information contained in the evidence catalog or institution context."
+        )
+
+    def _render_citation_prompt_line(self, entry: Dict[str, Any]) -> str:
+        pages = ", ".join(entry.get("pages") or []) or "pages n/a"
+        snippet = entry.get("snippet") or "Excerpt provided within platform."
+        return (
+            f"[{entry['tag']}] {entry['title']} (Doc ID: {entry['document_id']}; {pages}) — \"{snippet}\""
+        )
+
+    def _validate_citations(
+        self,
+        narrative: str,
+        catalog: List[Dict[str, Any]],
+        structured_sections: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        tag_pattern = re.compile(r"\[CG-(\d{2})\]")
+        found_numbers = tag_pattern.findall(narrative)
+        used_tags = [f"CG-{num}" for num in dict.fromkeys(found_numbers)]
+        catalog_tags = {entry["tag"] for entry in catalog}
+        unknown = [tag for tag in used_tags if tag not in catalog_tags]
+
+        section_coverage: Dict[str, bool] = {}
+        for key, text in structured_sections.items():
+            if isinstance(text, str):
+                section_coverage[key] = bool(tag_pattern.search(text))
+
+        required_sections = [
+            "executive_summary",
+            "evidence_analysis",
+            "compliance_assurance",
+        ]
+        notes: List[str] = []
+        if not used_tags:
+            notes.append("No inline citations detected.")
+        if unknown:
+            notes.append(f"Unknown citation tags: {', '.join(unknown)}")
+        for section in required_sections:
+            if not section_coverage.get(section, False):
+                notes.append(f"Missing citation in {section.replace('_', ' ')} section.")
+
+        passed = bool(used_tags) and not unknown and all(
+            section_coverage.get(section, False) for section in required_sections
+        )
+
+        return {
+            "passed": passed,
+            "used_tags": used_tags,
+            "unknown_citations": unknown,
+            "section_coverage": section_coverage,
+            "notes": notes,
+            "catalog_size": len(catalog),
+        }
+
+    def _select_used_citations(
+        self,
+        catalog: List[Dict[str, Any]],
+        used_tags: List[str],
+    ) -> List[Dict[str, Any]]:
+        if not used_tags:
+            return []
+
+        catalog_lookup = {entry["tag"]: entry for entry in catalog}
+        ordered: List[Dict[str, Any]] = []
+        for tag in used_tags:
+            entry = catalog_lookup.get(tag)
+            if entry and entry not in ordered:
+                ordered.append(entry)
+        return ordered
+
+    def _append_citations(
+        self,
+        narrative_body: str,
+        used_citations: List[Dict[str, Any]],
+        citation_style: Optional[str] = None,
+    ) -> str:
+        if not used_citations:
+            return narrative_body.strip()
+
+        lines = [
+            self._render_citation_output_line(entry, citation_style=citation_style)
+            for entry in used_citations
+        ]
+
+        return narrative_body.strip() + "\n\nCitations:\n" + "\n".join(lines)
+
+    def _render_citation_output_line(
+        self,
+        entry: Dict[str, Any],
+        citation_style: Optional[str] = None,
+    ) -> str:
+        pages = ", ".join(entry.get("pages") or [])
+        page_fragment = f"p. {pages}" if pages else "page details unavailable"
+        snippet = entry.get("snippet") or "See evidence record for excerpt."
+        return (
+            f"- [{entry['tag']}] {entry['title']} (Doc {entry['document_id']}, {page_fragment}) — {snippet}"
+        )
     
     async def generate_qep_section(
         self,

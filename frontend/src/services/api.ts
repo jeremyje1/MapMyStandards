@@ -234,6 +234,10 @@ const apiService = {
     // Get dashboard metrics
     dashboardMetrics: () =>
       api.get('/api/user/intelligence-simple/dashboard/metrics'),
+
+    // UI help metadata
+    getUiHelp: () =>
+      api.get('/api/user/intelligence-simple/ui/help'),
   },
   
   // Standards endpoints
@@ -250,6 +254,18 @@ const apiService = {
     updateMapping: (standardId: string, documentId: string, confidence: number) =>
       api.post('/standards/mappings', { standardId, documentId, confidence }),
 
+    listExplorer: (params?: { accreditor?: string; levels?: string }) =>
+      api.get('/api/user/intelligence-simple/standards/list', { params }),
+
+    search: (params: { q: string; accreditor?: string; category?: string }) =>
+      api.get('/api/user/intelligence-simple/standards/search', { params }),
+
+    getCorpusMetadata: (params?: { accreditor?: string }) =>
+      api.get('/api/user/intelligence-simple/standards/corpus/metadata', { params }),
+
+    getEvidenceMap: (params?: { accreditor?: string }) =>
+      api.get('/api/user/intelligence-simple/standards/evidence-map', { params }),
+
     // Checklist and stats (live endpoints)
     getChecklist: async (params?: { accreditor?: string; format?: 'json'|'csv'; include_indicators?: boolean }) => {
       return api.get('/api/user/intelligence-simple/standards/checklist', { params });
@@ -262,6 +278,20 @@ const apiService = {
     // Reviewer pack export
     exportReviewerPack: (payload: { standard_ids: string[]; include_files?: boolean; include_checklist?: boolean; include_metrics?: boolean; checklist_format?: 'json'|'csv'; accreditor?: string; body?: string; }) =>
       api.post('/api/user/intelligence-simple/narratives/export/reviewer-pack', payload, { responseType: 'json' }),
+  },
+
+  telemetry: {
+    standardsExplorer: (payload: {
+      event: string;
+      accreditor?: string;
+      result?: string;
+      duration_ms?: number;
+      error?: string;
+      page?: number;
+      page_size?: number;
+      total_items?: number;
+      payload?: Record<string, any>;
+    }) => api.post('/api/user/intelligence-simple/standards/explorer/telemetry', payload),
   },
   
   // Billing endpoints

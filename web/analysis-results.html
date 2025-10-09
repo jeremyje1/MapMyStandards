@@ -150,6 +150,13 @@
             gap: 0.5rem;
         }
 
+        .section-subtitle {
+            color: #556;
+            margin-top: -0.75rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+        }
+
         .mapping-card {
             border: 1px solid #e1e4e8;
             border-radius: 8px;
@@ -279,19 +286,287 @@
         .btn-secondary:hover {
             background: #f0f4f8;
         }
+
+        .btn[disabled] {
+            cursor: not-allowed;
+            opacity: 0.6;
+            box-shadow: none;
+        }
+
+        .crosswalk-highlight-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .crosswalk-highlight-card {
+            background: #eef2ff;
+            color: #1e3a8a;
+            padding: 0.65rem 1.1rem;
+            border-radius: 999px;
+            font-size: 0.9rem;
+            display: inline-flex;
+            gap: 0.5rem;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+        }
+
+        .crosswalk-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .crosswalk-card {
+            background: #f9fbff;
+            border: 1px solid #dbe4ff;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 6px rgba(15,56,117,0.08);
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .crosswalk-header {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .crosswalk-header h3 {
+            font-size: 1.05rem;
+            color: #0F3875;
+            margin: 0;
+        }
+
+        .reuse-badge {
+            background: #e0f2fe;
+            color: #0369a1;
+            border-radius: 999px;
+            padding: 0.35rem 0.85rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .crosswalk-meta {
+            color: #506079;
+            font-size: 0.9rem;
+        }
+
+        .crosswalk-standards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .crosswalk-accreditor {
+            font-weight: 600;
+            color: #0F3875;
+            font-size: 0.95rem;
+        }
+
+        .crosswalk-standards ul {
+            list-style: none;
+            padding: 0.35rem 0 0 0;
+            margin: 0;
+            display: grid;
+            gap: 0.25rem;
+        }
+
+        .crosswalk-standards li {
+            font-size: 0.9rem;
+            color: #374151;
+            padding-left: 0.5rem;
+            border-left: 2px solid #bfdbfe;
+        }
+
+        .crosswalk-empty {
+            background: #f1f5f9;
+            border: 1px dashed #cbd5e1;
+            border-radius: 10px;
+            padding: 1.25rem;
+            text-align: center;
+            color: #64748b;
+            font-size: 0.95rem;
+        }
+
+        .trust-section {
+            margin-top: 2rem;
+            background: white;
+            border-radius: 12px;
+            padding: 1.75rem;
+            box-shadow: 0 6px 20px rgba(15, 56, 117, 0.08);
+            border: 1px solid #e2e8f0;
+        }
+
+        .trust-section h3 {
+            margin: 0;
+            font-size: 1.35rem;
+            color: #0F3875;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .trust-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            align-items: center;
+            margin-top: 0.75rem;
+            font-size: 0.9rem;
+            color: #4b5563;
+        }
+
+        .trust-level {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.35rem 0.75rem;
+            border-radius: 999px;
+            background: #ecfdf5;
+            color: #047857;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .trust-signals {
+            margin-top: 1.5rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem 1.25rem;
+        }
+
+        .trust-signal {
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 1rem;
+            background: linear-gradient(135deg, rgba(15,56,117,0.03), rgba(15,56,117,0.08));
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .trust-signal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.95rem;
+            color: #1f2937;
+            font-weight: 600;
+        }
+
+        .trust-meter {
+            position: relative;
+            height: 8px;
+            border-radius: 999px;
+            background: rgba(15,56,117,0.12);
+            overflow: hidden;
+        }
+
+        .trust-meter-fill {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: linear-gradient(90deg, #0F3875, #2563eb);
+            border-radius: 999px;
+        }
+
+        .trust-tooltip-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            color: #4b5563;
+        }
+
+        .trust-tooltip {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 1.4rem;
+            height: 1.4rem;
+            border-radius: 50%;
+            background: #0F3875;
+            color: white;
+            font-weight: 600;
+            font-size: 0.75rem;
+            cursor: help;
+            outline: none;
+        }
+
+        .trust-tooltip:focus {
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.35);
+        }
+
+        .trust-tooltip::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: calc(100% + 0.75rem);
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 0.6rem 0.8rem;
+            border-radius: 0.6rem;
+            font-size: 0.75rem;
+            line-height: 1.3;
+            width: 230px;
+            max-width: 260px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+            z-index: 20;
+        }
+
+        .trust-tooltip::before {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translate(-50%, 4px);
+            border-width: 6px;
+            border-style: solid;
+            border-color: #1f2937 transparent transparent transparent;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .trust-tooltip:hover::after,
+        .trust-tooltip:focus::after,
+        .trust-tooltip:hover::before,
+        .trust-tooltip:focus::before {
+            opacity: 1;
+        }
+
+        @media (max-width: 640px) {
+            .trust-section {
+                padding: 1.25rem;
+            }
+
+            .trust-signals {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
     <header class="header">
         <div class="header-content">
-            <a href="/dashboard.html" class="logo">
+            <a href="/dashboard" class="logo">
                 MapMyStandards
             </a>
             <nav class="nav-links">
-                <a href="/dashboard.html">Dashboard</a>
-                <a href="/documents.html">Documents</a>
-                <a href="/upload.html">Upload</a>
-                <a href="/report-generation.html">Reports</a>
+                <a href="/dashboard">Dashboard</a>
+                <a href="/documents">Documents</a>
+                <a href="/upload">Upload</a>
+                <a href="/report-generation">Reports</a>
                 <a href="/help">Help</a>
             </nav>
         </div>
@@ -328,7 +603,28 @@
                         <div class="summary-value" id="avgConfidence">0%</div>
                         <div class="summary-label">Average Confidence</div>
                     </div>
+                    <div class="summary-item">
+                        <div class="summary-value" id="reuseRate">--</div>
+                        <div class="summary-label">Evidence Reuse Rate</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-value" id="multiUseArtifacts">0</div>
+                        <div class="summary-label">Multi-Accreditor Artifacts</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-value" id="trustOverall">--</div>
+                        <div class="summary-label">EvidenceTrust Score™</div>
+                    </div>
                 </div>
+            </div>
+
+            <div class="trust-section" id="trustSection" style="display: none;">
+                <h3>EvidenceTrust Signals</h3>
+                <div class="trust-meta">
+                    <span class="trust-level" id="trustLevelBadge">Evaluating…</span>
+                    <span id="trustMetaCopy">Weighted blend of provenance, freshness, completeness, and relevance.</span>
+                </div>
+                <div class="trust-signals" id="trustSignals"></div>
             </div>
 
             <div class="mappings-section">
@@ -338,16 +634,56 @@
                 <div id="mappingsList"></div>
             </div>
 
+            <div class="mappings-section" id="crosswalkSection" style="margin-top: 2rem; display: none;">
+                <h2 class="section-title">🔁 Cross-accreditor Reuse <span style="font-size: 1rem; font-weight: 500; color: #334155;">(CrosswalkX™)</span></h2>
+                <p class="section-subtitle" id="crosswalkSummary"></p>
+                <div id="crosswalkPairs" class="crosswalk-highlight-grid"></div>
+                <div id="crosswalkList" class="crosswalk-grid"></div>
+            </div>
+
             <div class="actions">
                 <a href="/dashboard.html" class="btn btn-secondary">Back to Dashboard</a>
-                <button class="btn btn-primary" onclick="generateReport()">Generate Report</button>
+                <button class="btn btn-primary" id="generateReportBtn" onclick="generateReport()" disabled aria-disabled="true">Generate Report</button>
             </div>
+            <p id="generateReportStatus" class="info-message" style="display: none; text-align: center; margin-top: -1rem;"></p>
         </div>
     </div>
 
     <script>
         const API_BASE = 'https://api.mapmystandards.ai';
         let analysisData = null;
+        let crosswalkData = null;
+        let reportGenerationGate = {
+            canGenerate: false,
+            reason: 'Loading analysis…'
+        };
+
+        function setReportGate(canGenerate, reason) {
+            reportGenerationGate = { canGenerate, reason };
+
+            const button = document.getElementById('generateReportBtn');
+            const statusEl = document.getElementById('generateReportStatus');
+
+            if (button) {
+                if (canGenerate) {
+                    button.removeAttribute('disabled');
+                    button.setAttribute('aria-disabled', 'false');
+                } else {
+                    button.setAttribute('disabled', 'true');
+                    button.setAttribute('aria-disabled', 'true');
+                }
+            }
+
+            if (statusEl) {
+                if (reason) {
+                    statusEl.style.display = 'block';
+                    statusEl.textContent = reason;
+                } else {
+                    statusEl.style.display = 'none';
+                    statusEl.textContent = '';
+                }
+            }
+        }
 
         async function loadAnalysis() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -355,10 +691,12 @@
             
             if (!documentId) {
                 showError('No document specified');
+                setReportGate(false, 'Select a document to unlock report generation.');
                 return;
             }
 
             try {
+                setReportGate(false, 'Loading analysis…');
                 const token = localStorage.getItem('access_token') || localStorage.getItem('access_token');
                 if (!token) {
                     window.location.href = '/login.html';
@@ -377,17 +715,21 @@
                 if (!response.ok) {
                     if (response.status === 404) {
                         showError('Analysis not found. Please analyze the document first.');
+                        setReportGate(false, 'Analyze this document before generating reports.');
                     } else {
                         showError('Failed to load analysis results');
+                        setReportGate(false, 'Report generation is unavailable until analysis data loads successfully.');
                     }
                     return;
                 }
 
                 analysisData = await response.json();
                 displayAnalysis();
+                await loadCrosswalkInsights();
             } catch (error) {
                 console.error('Error loading analysis:', error);
                 showError('Failed to load analysis results');
+                setReportGate(false, 'We could not load your analysis results. Please try again.');
             }
         }
 
@@ -414,6 +756,7 @@
                     </button>
                 `;
                 document.querySelector('.summary-section').appendChild(messageDiv);
+                setReportGate(false, 'Analyze this document to generate a report.');
                 return;
             }
             
@@ -421,6 +764,12 @@
             const mappings = analysisData.analysis.mapped_standards || [];
             document.getElementById('totalMappings').textContent = mappings.length;
             document.getElementById('uniqueAccreditors').textContent = (analysisData.analysis.accreditors || []).length;
+
+            if (mappings.length > 0) {
+                setReportGate(true, '');
+            } else {
+                setReportGate(false, 'Map at least one evidence snippet to a standard to unlock report generation.');
+            }
             
             if (mappings.length > 0) {
                 const avgConfidence = mappings.reduce((sum, m) => sum + m.confidence, 0) / mappings.length;
@@ -428,6 +777,9 @@
             } else {
                 document.getElementById('avgConfidence').textContent = '0%';
             }
+
+            const trustSummary = analysisData.analysis.trust_summary || computeFallbackTrustSummary(mappings, analysisData.document);
+            renderTrustSummary(trustSummary);
 
             // Display mappings
             const mappingsList = document.getElementById('mappingsList');
@@ -476,6 +828,297 @@
             });
         }
 
+        function renderTrustSummary(summary) {
+            const overallEl = document.getElementById('trustOverall');
+            const section = document.getElementById('trustSection');
+            const levelBadge = document.getElementById('trustLevelBadge');
+            const metaCopy = document.getElementById('trustMetaCopy');
+            const signalsEl = document.getElementById('trustSignals');
+
+            if (!overallEl || !section || !levelBadge || !signalsEl) {
+                return;
+            }
+
+            if (!summary || typeof summary.overall_score !== 'number' || !Array.isArray(summary.signals) || summary.signals.length === 0) {
+                overallEl.textContent = '--';
+                section.style.display = 'none';
+                return;
+            }
+
+            const overallPct = Math.round(summary.overall_score * 100);
+            overallEl.textContent = `${overallPct}%`;
+            const trustCopy = formatTrustLevel(summary.level || 'medium');
+            levelBadge.textContent = trustCopy.label;
+            levelBadge.style.background = trustCopy.background;
+            levelBadge.style.color = trustCopy.color;
+            metaCopy.textContent = 'Hover or focus the signal badges to see how EvidenceTrust™ scored this upload.';
+
+            signalsEl.innerHTML = summary.signals.map((signal) => {
+                const score = typeof signal.score === 'number' ? Math.max(0, Math.min(1, signal.score)) : 0;
+                const pct = Math.round(score * 100);
+                const explanation = escapeHtml(signal.explanation || 'Signal details unavailable.');
+                const label = escapeHtml(signal.label || signal.type || 'Signal');
+                return `
+                    <div class="trust-signal">
+                        <div class="trust-signal-header">
+                            <span>${label}</span>
+                            <span>${pct}%</span>
+                        </div>
+                        <div class="trust-meter" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100">
+                            <div class="trust-meter-fill" style="width: ${pct}%;"></div>
+                        </div>
+                        <div class="trust-tooltip-wrapper">
+                            <span>Transparency</span>
+                            <span class="trust-tooltip" tabindex="0" data-tooltip="${explanation}">?</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            section.style.display = 'block';
+        }
+
+        function formatTrustLevel(level) {
+            const normalized = String(level || '').toLowerCase();
+            switch (normalized) {
+                case 'high':
+                    return { label: 'High trust', background: '#ecfdf5', color: '#047857' };
+                case 'low':
+                    return { label: 'Needs review', background: '#fef2f2', color: '#b91c1c' };
+                default:
+                    return { label: 'Moderate trust', background: '#fffbeb', color: '#92400e' };
+            }
+        }
+
+        function computeFallbackTrustSummary(mappings, documentMeta) {
+            const now = new Date();
+            let ageDays = null;
+            if (documentMeta && documentMeta.analyzed_at) {
+                const analyzedDate = new Date(documentMeta.analyzed_at);
+                if (!Number.isNaN(analyzedDate.getTime())) {
+                    ageDays = Math.max(0, Math.round((now - analyzedDate) / (1000 * 60 * 60 * 24)));
+                }
+            }
+
+            const freshnessScore = ageDays === null ? 1 : Math.max(0, Math.min(1, 1 - ageDays / 365));
+            const provenanceScore = 0.7;
+            const completenessRatio = mappings.length ? mappings.filter((m) => (m.excerpts || []).length > 0).length / mappings.length : 0;
+            const completenessScore = Math.max(0.4, Math.min(1, 0.4 + completenessRatio * 0.6));
+            const avgConfidence = mappings.length ? mappings.reduce((sum, m) => sum + (m.confidence || 0), 0) / mappings.length : 0;
+            const relevanceScore = Math.max(0, Math.min(1, avgConfidence));
+            const overall = (provenanceScore + freshnessScore + completenessScore + relevanceScore) / 4;
+
+            return {
+                overall_score: Math.round(overall * 1000) / 1000,
+                level: overall >= 0.8 ? 'high' : overall >= 0.6 ? 'medium' : 'low',
+                signals: [
+                    {
+                        type: 'provenance',
+                        label: 'Provenance',
+                        score: provenanceScore,
+                        explanation: 'Heuristic provenance score applied while detailed metrics load.'
+                    },
+                    {
+                        type: 'freshness',
+                        label: 'Freshness',
+                        score: freshnessScore,
+                        explanation: ageDays === null ? 'Fresh upload with no recorded age yet.' : `Document analyzed ${ageDays} day(s) ago.`
+                    },
+                    {
+                        type: 'completeness',
+                        label: 'Completeness',
+                        score: completenessScore,
+                        explanation: `${mappings.length ? mappings.filter((m) => (m.excerpts || []).length > 0).length : 0} of ${mappings.length} mapped standards include excerpts.`
+                    },
+                    {
+                        type: 'relevance',
+                        label: 'Relevance',
+                        score: relevanceScore,
+                        explanation: `Average confidence across mappings is ${Math.round(relevanceScore * 100)}%.`
+                    }
+                ]
+            };
+        }
+
+        async function loadCrosswalkInsights() {
+            const token = localStorage.getItem('access_token') || localStorage.getItem('access_token');
+            if (!token) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/user/intelligence-simple/evidence/crosswalk`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to load crosswalk data');
+                }
+
+                crosswalkData = await response.json();
+                renderCrosswalkInsights();
+            } catch (error) {
+                console.error('Crosswalk load error:', error);
+                const section = document.getElementById('crosswalkSection');
+                if (section) {
+                    section.style.display = 'block';
+                    const list = document.getElementById('crosswalkList');
+                    if (list) {
+                        list.innerHTML = '<div class="crosswalk-empty">Unable to load CrosswalkX™ insights right now.</div>';
+                    }
+                }
+            }
+        }
+
+        function renderCrosswalkInsights() {
+            const reuseValueEl = document.getElementById('reuseRate');
+            const multiUseEl = document.getElementById('multiUseArtifacts');
+            const section = document.getElementById('crosswalkSection');
+            const summaryEl = document.getElementById('crosswalkSummary');
+            const pairsEl = document.getElementById('crosswalkPairs');
+            const listEl = document.getElementById('crosswalkList');
+
+            if (!crosswalkData || !section) {
+                return;
+            }
+
+            section.style.display = 'block';
+
+            const reusePct = typeof crosswalkData.reuse_percentage === 'number' ? crosswalkData.reuse_percentage : 0;
+            const multiUse = crosswalkData.multi_use_count ?? 0;
+
+            if (reuseValueEl) {
+                reuseValueEl.textContent = `${reusePct}%`;
+            }
+            if (multiUseEl) {
+                multiUseEl.textContent = multiUse;
+            }
+
+            const matrixEntries = Object.entries(crosswalkData.matrix || {});
+            const reusable = matrixEntries.filter(([_, standards]) => standards && Object.keys(standards).length > 1);
+
+            if (!reusable.length) {
+                if (summaryEl) {
+                    summaryEl.textContent = 'No multi-accreditor reuse detected yet. Map evidence to multiple frameworks to unlock CrosswalkX™ insights.';
+                }
+                if (pairsEl) {
+                    pairsEl.innerHTML = '';
+                }
+                if (listEl) {
+                    listEl.innerHTML = '<div class="crosswalk-empty">Map evidence to additional standards to see overlapping coverage across accreditors.</div>';
+                }
+                return;
+            }
+
+            const accreditorSet = new Set();
+            reusable.forEach(([_, standards]) => {
+                Object.keys(standards || {}).forEach(code => accreditorSet.add(getAccreditorLabel(code)));
+            });
+
+            const avgReuse = computeAverageReuse(reusable);
+            if (summaryEl) {
+                summaryEl.textContent = `Detected ${reusable.length} artifacts reused across ${accreditorSet.size} accreditors with an average of ${avgReuse.toFixed(1)} standards per artifact.`;
+            }
+
+            const pairCounts = {};
+            reusable.forEach(([_, standards]) => {
+                const accreds = Array.from(new Set(Object.keys(standards || {}).map(getAccreditorLabel))).filter(Boolean);
+                for (let i = 0; i < accreds.length; i++) {
+                    for (let j = i + 1; j < accreds.length; j++) {
+                        const key = [accreds[i], accreds[j]].sort().join(' ↔ ');
+                        pairCounts[key] = (pairCounts[key] || 0) + 1;
+                    }
+                }
+            });
+
+            if (pairsEl) {
+                const topPairs = Object.entries(pairCounts)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 4);
+                pairsEl.innerHTML = topPairs.length ? topPairs.map(([pair, count]) => `
+                    <div class="crosswalk-highlight-card">
+                        <span>${pair}</span>
+                        <span style="color:#1d4ed8; font-weight:600;">${count} shared artifacts</span>
+                    </div>
+                `).join('') : '<div class="crosswalk-highlight-card" style="background:#f1f5f9; color:#475569; border-color:#e2e8f0;">Cross-accreditor overlaps will appear here once detected.</div>';
+            }
+
+            if (listEl) {
+                listEl.innerHTML = reusable.map(([filename, standards]) => {
+                    const grouped = groupByAccreditor(standards);
+                    const accreditorCount = Object.keys(grouped).length;
+                    const totalStandards = Object.values(grouped).reduce((sum, arr) => sum + arr.length, 0);
+                    return `
+                        <div class="crosswalk-card">
+                            <div class="crosswalk-header">
+                                <h3>${escapeHtml(filename)}</h3>
+                                <span class="reuse-badge">${totalStandards} standards</span>
+                            </div>
+                            <p class="crosswalk-meta">Used by ${accreditorCount} ${accreditorCount === 1 ? 'accreditor' : 'accreditors'}</p>
+                            <div class="crosswalk-standards">
+                                ${Object.entries(grouped).map(([acc, values]) => `
+                                    <div>
+                                        <div class="crosswalk-accreditor">${escapeHtml(acc)}</div>
+                                        <ul>
+                                            ${values.map(code => `<li>${escapeHtml(code)}</li>`).join('')}
+                                        </ul>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        function computeAverageReuse(entries) {
+            if (!entries.length) {
+                return 0;
+            }
+            const total = entries.reduce((sum, [_, standards]) => sum + Object.keys(standards || {}).length, 0);
+            return total / entries.length;
+        }
+
+        function groupByAccreditor(standards) {
+            const grouped = {};
+            Object.keys(standards || {}).forEach(code => {
+                const label = getAccreditorLabel(code);
+                grouped[label] = grouped[label] || [];
+                grouped[label].push(code);
+            });
+            return grouped;
+        }
+
+        function getAccreditorLabel(code) {
+            if (!code) {
+                return 'Unknown';
+            }
+            const cleaned = String(code).replace(/_/g, ' ').trim();
+            if (!cleaned) {
+                return 'Unknown';
+            }
+            const match = cleaned.match(/^[A-Za-z]+/);
+            if (match && match[0]) {
+                return match[0].toUpperCase();
+            }
+            const parts = cleaned.split(/[:\s-]+/);
+            return (parts[0] || 'Unknown').toUpperCase();
+        }
+
+        function escapeHtml(value) {
+            return String(value || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
         function showError(message) {
             document.getElementById('loading').style.display = 'none';
             document.getElementById('error').style.display = 'block';
@@ -483,9 +1126,13 @@
         }
 
         function generateReport() {
+            if (!reportGenerationGate.canGenerate) {
+                alert(reportGenerationGate.reason || 'Report generation is currently disabled.');
+                return;
+            }
             const urlParams = new URLSearchParams(window.location.search);
             const documentId = urlParams.get('document');
-            window.location.href = `/report-generation.html?document=${documentId}`;
+            window.location.href = `/report-generation?document=${documentId}`;
         }
 
         function logout() {

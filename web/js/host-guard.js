@@ -13,10 +13,12 @@
     '/subscribe',
     '/ai-dashboard',
     '/org-chart',
+    '/scenario-model',
     '/reports',
     '/standards',
     '/evidence-mapping',
-  '/upload-modern',
+    '/help',
+    '/upload-modern',
   ]);
 
   const toPlatform = (path) => `https://${PLATFORM_HOST}${path}`;

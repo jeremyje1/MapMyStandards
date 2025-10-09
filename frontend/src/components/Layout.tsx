@@ -4,12 +4,15 @@ import { Link, useLocation } from 'react-router-dom';
 const navItems = [
   { label: 'Dashboard', to: '/dashboard' },
   { label: 'Upload', to: '/documents' },
-  { label: 'Standards', to: '/standards' },
+  { label: 'Standards Explorer', to: '/standards' },
   { label: 'Reports', to: '/reports' },
   // Aliases requested to always show
   { label: 'Reviewer Portal', to: '/reports' },
   { label: 'Admin Standards', to: '/standards' },
   { label: 'CrosswalkX', to: '/crosswalk' },
+  { label: 'Org Chart', to: '/org-chart' },
+  { label: 'Scenario Modeling', to: '/scenario-modeling' },
+  { label: 'Help', to: '/help' },
   { label: 'Advanced Dashboard', to: 'https://api.mapmystandards.ai/customer/dashboard' },
 ];
 

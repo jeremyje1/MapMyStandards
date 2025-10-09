@@ -6,7 +6,7 @@ Handles saving, retrieving, and managing organizational structures
 from datetime import datetime
 from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 
@@ -51,8 +51,7 @@ class OrgChartData(BaseModel):
     edges: List[OrgEdge]
     metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional chart metadata")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class OrgChartCreate(BaseModel):

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gap Analysis - A³E | MapMyStandards.ai</title>
     <script src="/js/config.js"></script>
+    <script src="/js/metrics-store.js?v=20251009"></script>
     <link rel="stylesheet" href="/css/accessibility.css">
     <script src="/js/ux.js"></script>
     
@@ -110,6 +111,13 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
+        }
+
+        .section-subtitle {
+            color: var(--text-medium);
+            margin-top: -0.5rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
         }
 
         .metrics-grid {
@@ -302,6 +310,101 @@
             background: var(--bg-light);
         }
 
+        .crosswalk-highlight-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .crosswalk-highlight-card {
+            background: #eef2ff;
+            border: 1px solid #c7d2fe;
+            color: #1e3a8a;
+            border-radius: 999px;
+            padding: 0.6rem 1rem;
+            font-size: 0.9rem;
+            display: inline-flex;
+            gap: 0.45rem;
+            align-items: center;
+        }
+
+        .crosswalk-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .crosswalk-card {
+            background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+            border: 1px solid #dbe4ff;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .crosswalk-card h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--primary-blue);
+            margin: 0;
+        }
+
+        .reuse-badge {
+            background: #e0f2fe;
+            color: #0369a1;
+            border-radius: 999px;
+            padding: 0.3rem 0.75rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            align-self: flex-start;
+        }
+
+        .crosswalk-meta {
+            color: var(--text-medium);
+            font-size: 0.9rem;
+        }
+
+        .crosswalk-standards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 0.75rem;
+        }
+
+        .crosswalk-standards ul {
+            list-style: none;
+            padding: 0.4rem 0 0 0;
+            margin: 0;
+            display: grid;
+            gap: 0.25rem;
+        }
+
+        .crosswalk-standards li {
+            font-size: 0.85rem;
+            color: var(--text-medium);
+            padding-left: 0.35rem;
+            border-left: 2px solid #bfdbfe;
+        }
+
+        .crosswalk-accreditor {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--primary-blue);
+        }
+
+        .crosswalk-empty {
+            background: #f1f5f9;
+            border: 1px dashed #cbd5e1;
+            border-radius: 0.75rem;
+            padding: 1.25rem;
+            text-align: center;
+            color: #64748b;
+            font-size: 0.95rem;
+        }
+
         .loading-state {
             text-align: center;
             padding: 4rem;
@@ -373,7 +476,7 @@
         <!-- Navigation -->
         <div class="nav-buttons">
             <a href="/dashboard" class="nav-btn">← Back to Dashboard</a>
-            <a href="/report-generation.html" class="nav-btn">Reports & Analytics</a>
+            <a href="/report-generation" class="nav-btn">Reports & Analytics</a>
             <a href="/narrative" class="nav-btn">Narrative Generator</a>
         </div>
 
@@ -391,6 +494,13 @@
                 <div class="metrics-grid" id="metricsGrid">
                     <!-- Metrics will be populated here -->
                 </div>
+            </div>
+
+            <div class="gap-section" id="crosswalkInsights" style="display: none;">
+                <h2>🔁 Cross-accreditor Reuse (CrosswalkX™)</h2>
+                <p class="section-subtitle" id="crosswalkSummary"></p>
+                <div id="crosswalkPairChips" class="crosswalk-highlight-grid"></div>
+                <div id="crosswalkOpportunities" class="crosswalk-grid"></div>
             </div>
 
             <!-- Critical Gaps -->
@@ -431,7 +541,7 @@
             <div class="empty-state-icon">📊</div>
             <h2>No Evidence Mapped Yet</h2>
             <p>Upload and map evidence to standards to see gap analysis</p>
-            <a href="/evidence-upload" class="action-btn" style="margin-top: 1.5rem;">
+            <a href="/upload" class="action-btn" style="margin-top: 1.5rem;">
                 Upload Evidence
             </a>
         </div>
@@ -461,23 +571,65 @@
                 }
 
                 const gapData = await gapResponse.json();
-                
-                // Also get evidence mappings to show what standards are covered
-                const evidenceResponse = await fetch('/api/user/intelligence-simple/standards/evidence-map', {
-                    headers: {
-                        'Authorization': `Bearer ${authToken}`
-                    }
+
+                // Normalize evidence and standards metrics via shared store
+                const metricsSnapshot = await window.A3EMetricsStore.ensure({
+                    includeEvidenceMap: true,
                 });
 
-                let mappedStandards = new Set();
-                let hasEvidence = false;
-                
-                if (evidenceResponse.ok) {
-                    const evidenceData = await evidenceResponse.json();
-                    if (evidenceData.mapping && Object.keys(evidenceData.mapping).length > 0) {
-                        mappedStandards = new Set(Object.keys(evidenceData.mapping));
-                        hasEvidence = true;
+                const snapshotStats = metricsSnapshot.evidenceStats || {};
+                const evidenceMap = metricsSnapshot.evidenceMap || {};
+                const coverageFromPerformance =
+                    typeof metricsSnapshot.performanceMetrics?.coverage_percentage === 'number'
+                        ? metricsSnapshot.performanceMetrics.coverage_percentage
+                        : null;
+
+                const evidenceStats = {
+                    mappedCount: snapshotStats.mappedCount ?? 0,
+                    totalStandards: snapshotStats.totalStandards,
+                    highConfidenceCount: snapshotStats.highConfidenceCount ?? null,
+                    coveragePercentage: snapshotStats.coveragePercentage ?? coverageFromPerformance,
+                };
+
+                if (evidenceStats.highConfidenceCount === null && Array.isArray(evidenceMap?.standards)) {
+                    evidenceStats.highConfidenceCount = evidenceMap.standards.filter((standard) => {
+                        const value = typeof standard?.avg_confidence === 'number' ? standard.avg_confidence : 0;
+                        return value >= 0.75;
+                    }).length;
+                }
+
+                if (evidenceStats.coveragePercentage === null && typeof evidenceMap?.coverage_percentage === 'number') {
+                    evidenceStats.coveragePercentage = evidenceMap.coverage_percentage;
+                }
+
+                if (evidenceStats.totalStandards === null && typeof metricsSnapshot.coreMetrics?.total_standards === 'number') {
+                    evidenceStats.totalStandards = metricsSnapshot.coreMetrics.total_standards;
+                }
+
+                if (typeof evidenceStats.highConfidenceCount !== 'number') {
+                    evidenceStats.highConfidenceCount = Math.round((evidenceStats.mappedCount || 0) * 0.6);
+                }
+
+                if (typeof evidenceStats.coveragePercentage !== 'number' || Number.isNaN(evidenceStats.coveragePercentage)) {
+                    evidenceStats.coveragePercentage = 0;
+                }
+
+                const documentsAnalyzed = metricsSnapshot.coreMetrics?.documents_analyzed ?? 0;
+                const hasEvidence = evidenceStats.mappedCount > 0 || documentsAnalyzed > 0;
+
+                let crosswalkData = null;
+                try {
+                    const crosswalkResponse = await fetch('/api/user/intelligence-simple/evidence/crosswalk', {
+                        headers: {
+                            'Authorization': `Bearer ${authToken}`
+                        }
+                    });
+
+                    if (crosswalkResponse.ok) {
+                        crosswalkData = await crosswalkResponse.json();
                     }
+                } catch (crosswalkError) {
+                    console.error('Crosswalk load error:', crosswalkError);
                 }
 
                 // Check if we have any data to show
@@ -487,7 +639,7 @@
                 }
 
                 // Display the gap analysis
-                displayGapAnalysis(gapData, mappedStandards);
+                displayGapAnalysis(gapData, evidenceStats, crosswalkData);
                 
                 document.getElementById('loadingState').style.display = 'none';
                 document.getElementById('mainContent').style.display = 'block';
@@ -565,14 +717,14 @@
             });
 
             // Update metrics
-            updateMetrics(totalStandards, mappedCount, highConfidenceCount, criticalGaps.length);
+            updateMetrics(totalStandards, mappedCount, highConfidenceCount, criticalGaps.length, null);
 
             // Display gaps
             displayCriticalGaps([...criticalGaps, ...mediumGaps]);
             displayActionItems(criticalGaps, mediumGaps, lowGaps);
         }
 
-        function displayGapAnalysis(gapData, mappedStandards) {
+        function displayGapAnalysis(gapData, evidenceStats, crosswalkData) {
             // Handle the actual API response format
             if (gapData.gap_analysis) {
                 const analysis = gapData.gap_analysis;
@@ -584,13 +736,39 @@
                 const lowGaps = gaps.filter(g => g.risk_level === 'Low' || g.risk_score < 0.5);
                 
                 // Update metrics
-                const totalStandards = 73; // Default for HLC
-                const mappedCount = mappedStandards ? mappedStandards.size : 0;
+                let totalStandards = typeof evidenceStats?.totalStandards === 'number' && evidenceStats.totalStandards > 0
+                    ? evidenceStats.totalStandards
+                    : null;
+
+                const mappedCount = typeof evidenceStats?.mappedCount === 'number'
+                    ? evidenceStats.mappedCount
+                    : 0;
+
+                if (!totalStandards && typeof analysis.total_standards === 'number' && analysis.total_standards > 0) {
+                    totalStandards = analysis.total_standards;
+                }
+
+                if (!totalStandards && mappedCount > 0 && typeof evidenceStats?.coveragePercentage === 'number' && evidenceStats.coveragePercentage > 0) {
+                    const coverageRatio = evidenceStats.coveragePercentage / 100;
+                    if (coverageRatio > 0) {
+                        totalStandards = Math.round(mappedCount / coverageRatio);
+                    }
+                }
+
+                if (!totalStandards) {
+                    totalStandards = 73; // Fallback default for HLC
+                }
+
+                const highConfidenceCount = typeof evidenceStats?.highConfidenceCount === 'number'
+                    ? evidenceStats.highConfidenceCount
+                    : Math.round(mappedCount * 0.6);
+
                 updateMetrics(
                     totalStandards,
                     mappedCount,
-                    mappedCount, // high confidence count (simplified)
-                    analysis.high_risk || criticalGaps.length
+                    highConfidenceCount,
+                    analysis.high_risk || criticalGaps.length,
+                    crosswalkData
                 );
                 
                 // Display gaps
@@ -601,6 +779,8 @@
                 if (gapData.recommendations && gapData.recommendations.length > 0) {
                     displayRecommendations(gapData.recommendations);
                 }
+
+                renderCrosswalkInsights(crosswalkData);
             } else {
                 // No gap data - show empty state
                 showEmptyState();
@@ -609,56 +789,280 @@
 
         function displayRecommendations(recommendations) {
             const container = document.getElementById('actionItems');
-            if (!container) return;
-            
+            if (!container || !Array.isArray(recommendations)) {
+                return;
+            }
+
+            // Remove any existing recommendation sections before rendering a fresh one
+            container.querySelectorAll('.action-section').forEach(section => section.remove());
+
+            const normalized = recommendations
+                .map((rec, index) => {
+                    if (!rec) {
+                        return null;
+                    }
+
+                    if (typeof rec === 'string') {
+                        const priority = index === 0 ? 'high' : index === 1 ? 'medium' : 'low';
+                        return {
+                            priority,
+                            title: `Recommendation ${index + 1}`,
+                            body: rec,
+                            actions: [],
+                        };
+                    }
+
+                    if (typeof rec === 'object') {
+                        const rawPriority = String(rec.priority || 'medium').toLowerCase();
+                        const allowedPriorities = ['critical', 'high', 'medium', 'low'];
+                        const priority = allowedPriorities.includes(rawPriority) ? rawPriority : 'medium';
+                        const title = rec.title || rec.standard_id || `Recommendation ${index + 1}`;
+                        const body = rec.recommendation || rec.description || rec.summary || '';
+                        const actions = Array.isArray(rec.actions) ? rec.actions.filter(Boolean) : [];
+
+                        if (!body) {
+                            return null;
+                        }
+
+                        return {
+                            priority,
+                            title,
+                            body,
+                            actions,
+                        };
+                    }
+
+                    return null;
+                })
+                .filter((rec) => rec && rec.body);
+
+            if (normalized.length === 0) {
+                const emptySection = document.createElement('div');
+                emptySection.className = 'action-section';
+                emptySection.innerHTML = `
+                    <h3>AI Recommendations</h3>
+                    <div class="empty-state" style="margin-top: 1rem;">
+                        <div class="empty-state-icon">🤖</div>
+                        <h3>No AI recommendations yet</h3>
+                        <p style="color: #6b7280; font-size: 0.95rem;">Upload evidence and map it to standards to unlock tailored guidance.</p>
+                    </div>
+                `;
+                container.appendChild(emptySection);
+                return;
+            }
+
             const recSection = document.createElement('div');
             recSection.className = 'action-section';
             recSection.innerHTML = `
                 <h3>AI Recommendations</h3>
                 <div class="recommendations-list">
-                    ${recommendations.map(rec => `
-                        <div class="recommendation-item">
-                            <div class="recommendation-header">
-                                <span class="priority-badge priority-${rec.priority || 'medium'}">${rec.priority || 'Medium'} Priority</span>
-                                <h4>${rec.title || rec.standard_id}</h4>
+                    ${normalized
+                        .map((rec) => `
+                            <div class="recommendation-item">
+                                <div class="recommendation-header">
+                                    <span class="priority-badge priority-${escapeHtml(rec.priority)}">${escapeHtml(rec.priority.charAt(0).toUpperCase() + rec.priority.slice(1))} Priority</span>
+                                    <h4>${escapeHtml(rec.title)}</h4>
+                                </div>
+                                <p>${escapeHtml(rec.body)}</p>
+                                ${rec.actions.length > 0
+                                    ? `
+                                        <ul class="action-steps">
+                                            ${rec.actions
+                                                .map((action) => `<li>${escapeHtml(action)}</li>`)
+                                                .join('')}
+                                        </ul>
+                                    `
+                                    : ''}
                             </div>
-                            <p>${rec.recommendation || rec.description}</p>
-                            ${rec.actions ? `
-                                <ul class="action-steps">
-                                    ${rec.actions.map(action => `<li>${action}</li>`).join('')}
-                                </ul>
-                            ` : ''}
-                        </div>
-                    `).join('')}
+                        `)
+                        .join('')}
                 </div>
             `;
-            
+
             container.appendChild(recSection);
         }
 
-        function updateMetrics(total, mapped, highConfidence, critical) {
+        function updateMetrics(total, mapped, highConfidence, critical, crosswalkData) {
             const metricsGrid = document.getElementById('metricsGrid');
             const compliance = total > 0 ? Math.round((mapped / total) * 100) : 0;
             const readiness = total > 0 ? Math.round((highConfidence / total) * 100) : 0;
+            const reusePercent = typeof crosswalkData?.reuse_percentage === 'number' ? crosswalkData.reuse_percentage : 0;
+            const reuseClass = reusePercent >= 60 ? 'good' : reusePercent >= 30 ? 'warning' : 'critical';
+            const multiUse = crosswalkData?.multi_use_count ?? 0;
 
-            metricsGrid.innerHTML = `
-                <div class="metric-card ${compliance >= 80 ? 'good' : compliance >= 50 ? 'warning' : 'critical'}">
-                    <div class="metric-value">${compliance}%</div>
-                    <div class="metric-label">Overall Compliance</div>
+            const cardData = [
+                {
+                    className: compliance >= 80 ? 'good' : compliance >= 50 ? 'warning' : 'critical',
+                    value: `${compliance}%`,
+                    label: 'Overall Compliance',
+                    description: 'Mapped standards divided by total standards. Higher percentages mean more requirements are covered.',
+                    aria: `Overall compliance ${compliance} percent. ${mapped} of ${total} standards have mapped evidence.`
+                },
+                {
+                    className: readiness >= 70 ? 'good' : readiness >= 40 ? 'warning' : 'critical',
+                    value: `${readiness}%`,
+                    label: 'Accreditation Readiness',
+                    description: 'Share of standards backed by high-confidence evidence. Indicates preparedness for reviews.',
+                    aria: `Accreditation readiness ${readiness} percent. ${highConfidence} high confidence standards out of ${total}.`
+                },
+                {
+                    className: critical === 0 ? 'good' : critical <= 5 ? 'warning' : 'critical',
+                    value: `${critical}`,
+                    label: 'Critical Gaps',
+                    description: 'Number of standards that remain high risk and need remediation before accreditation.',
+                    aria: `${critical} critical gaps remain that require remediation.`
+                },
+                {
+                    className: '',
+                    value: `${mapped}/${total}`,
+                    label: 'Standards Mapped',
+                    description: 'Total standards mapped compared to the total standards in scope.',
+                    aria: `${mapped} of ${total} standards currently mapped.`
+                },
+                {
+                    className: reuseClass,
+                    value: `${reusePercent}%`,
+                    label: 'Evidence Reuse Rate',
+                    description: 'Percent of standards supported by evidence that can be reused across frameworks.',
+                    aria: `Evidence reuse rate ${reusePercent} percent based on cross-accreditor mapping.`
+                },
+                {
+                    className: multiUse === 0 ? 'warning' : 'good',
+                    value: `${multiUse}`,
+                    label: 'Multi-Accreditor Artifacts',
+                    description: 'Count of artifacts supporting more than one accreditor.',
+                    aria: `${multiUse} artifacts currently support multiple accreditors.`
+                }
+            ];
+
+            metricsGrid.innerHTML = cardData.map(card => `
+                <div class="metric-card ${card.className}" role="group" aria-label="${card.aria}" title="${card.description}">
+                    <div class="metric-value" aria-hidden="true">${card.value}</div>
+                    <div class="metric-label">${card.label}</div>
                 </div>
-                <div class="metric-card ${readiness >= 70 ? 'good' : readiness >= 40 ? 'warning' : 'critical'}">
-                    <div class="metric-value">${readiness}%</div>
-                    <div class="metric-label">Accreditation Readiness</div>
-                </div>
-                <div class="metric-card ${critical === 0 ? 'good' : critical <= 5 ? 'warning' : 'critical'}">
-                    <div class="metric-value">${critical}</div>
-                    <div class="metric-label">Critical Gaps</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-value">${mapped}/${total}</div>
-                    <div class="metric-label">Standards Mapped</div>
-                </div>
-            `;
+            `).join('');
+        }
+
+        function renderCrosswalkInsights(crosswalkData) {
+            const section = document.getElementById('crosswalkInsights');
+            const summaryEl = document.getElementById('crosswalkSummary');
+            const chipsEl = document.getElementById('crosswalkPairChips');
+            const listEl = document.getElementById('crosswalkOpportunities');
+
+            if (!section) {
+                return;
+            }
+
+            if (!crosswalkData) {
+                section.style.display = 'none';
+                return;
+            }
+
+            section.style.display = 'block';
+            const entries = Object.entries(crosswalkData.matrix || {});
+            const reusable = entries.filter(([_, standards]) => standards && Object.keys(standards).length > 1);
+
+            if (!reusable.length) {
+                if (summaryEl) {
+                    summaryEl.textContent = 'No overlapping evidence detected yet. Map artifacts to multiple frameworks to trigger CrosswalkX™ insights.';
+                }
+                if (chipsEl) {
+                    chipsEl.innerHTML = '';
+                }
+                if (listEl) {
+                    listEl.innerHTML = '<div class="crosswalk-empty">Once evidence supports multiple accreditors, reuse opportunities will appear here.</div>';
+                }
+                return;
+            }
+
+            const accreditorSet = new Set();
+            reusable.forEach(([_, standards]) => {
+                Object.keys(standards || {}).forEach(code => accreditorSet.add(getAccreditorLabel(code)));
+            });
+
+            const avgReuse = reusable.reduce((sum, [_, standards]) => sum + Object.keys(standards || {}).length, 0) / reusable.length;
+            if (summaryEl) {
+                summaryEl.textContent = `Identified ${reusable.length} reusable artifacts spanning ${accreditorSet.size} accreditors with an average of ${avgReuse.toFixed(1)} standards supported per artifact.`;
+            }
+
+            const pairCounts = {};
+            reusable.forEach(([_, standards]) => {
+                const accreds = Array.from(new Set(Object.keys(standards || {}).map(getAccreditorLabel))).filter(Boolean);
+                for (let i = 0; i < accreds.length; i++) {
+                    for (let j = i + 1; j < accreds.length; j++) {
+                        const key = [accreds[i], accreds[j]].sort().join(' ↔ ');
+                        pairCounts[key] = (pairCounts[key] || 0) + 1;
+                    }
+                }
+            });
+
+            if (chipsEl) {
+                const topPairs = Object.entries(pairCounts)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 5);
+                chipsEl.innerHTML = topPairs.length ? topPairs.map(([pair, count]) => `
+                    <div class="crosswalk-highlight-card">
+                        <span>${pair}</span>
+                        <span style="color:#1d4ed8; font-weight:600;">${count} artifacts</span>
+                    </div>
+                `).join('') : '<div class="crosswalk-highlight-card" style="background:#f8fafc; color:#475569; border-color:#e2e8f0;">Cross-accreditor overlaps will appear here once detected.</div>';
+            }
+
+            if (listEl) {
+                listEl.innerHTML = reusable.map(([filename, standards]) => {
+                    const grouped = groupByAccreditor(standards);
+                    const totalStandards = Object.values(grouped).reduce((sum, arr) => sum + arr.length, 0);
+                    const accreditorCount = Object.keys(grouped).length;
+                    return `
+                        <div class="crosswalk-card">
+                            <h3>${escapeHtml(filename)}</h3>
+                            <span class="reuse-badge">${totalStandards} standards</span>
+                            <p class="crosswalk-meta">Supports ${accreditorCount} ${accreditorCount === 1 ? 'accreditor' : 'accreditors'}</p>
+                            <div class="crosswalk-standards">
+                                ${Object.entries(grouped).map(([acc, values]) => `
+                                    <div>
+                                        <div class="crosswalk-accreditor">${escapeHtml(acc)}</div>
+                                        <ul>
+                                            ${values.map(code => `<li>${escapeHtml(code)}</li>`).join('')}
+                                        </ul>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        function groupByAccreditor(standards) {
+            const grouped = {};
+            Object.keys(standards || {}).forEach(code => {
+                const label = getAccreditorLabel(code);
+                grouped[label] = grouped[label] || [];
+                grouped[label].push(code);
+            });
+            return grouped;
+        }
+
+        function getAccreditorLabel(code) {
+            if (!code) return 'Unknown';
+            const cleaned = String(code).replace(/_/g, ' ').trim();
+            if (!cleaned) return 'Unknown';
+            const match = cleaned.match(/^[A-Za-z]+/);
+            if (match && match[0]) {
+                return match[0].toUpperCase();
+            }
+            const parts = cleaned.split(/[:\s-]+/);
+            return (parts[0] || 'Unknown').toUpperCase();
+        }
+
+        function escapeHtml(value) {
+            return String(value || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
         }
 
         function displayCriticalGaps(gaps) {

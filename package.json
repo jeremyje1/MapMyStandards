@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:unit": "node --test tests/unit/*.test.js",
+    "test:e2e": "cypress run --spec cypress/e2e/cross-page-validation.cy.js --browser electron --headless"
   },
   "dependencies": {
     "@heroicons/react": "^2.0.0",
@@ -23,6 +25,7 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "autoprefixer": "^10.4.14",
+    "cypress": "^15.4.0",
     "eslint": "^8",
     "eslint-config-next": "14.0.0",
     "playwright": "^1.55.0",

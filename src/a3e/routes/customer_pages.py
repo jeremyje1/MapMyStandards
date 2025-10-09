@@ -183,6 +183,26 @@ async def evidence_mapping_page():
     """Evidence mapping visualization page"""
     return serve_html_file("evidence-mapping.html")
 
+@router.get("/org-chart", response_class=HTMLResponse, include_in_schema=False)
+async def org_chart_page():
+    """Organizational chart builder"""
+    return serve_html_file("org-chart.html", fallback="organizational-enhanced.html")
+
+@router.get("/scenario-model", response_class=HTMLResponse, include_in_schema=False)
+async def scenario_model_page():
+    """Scenario modeling and ROI planner"""
+    return serve_html_file("scenario-modeling.html", fallback="roi-calculator.html")
+
+@router.get("/help", response_class=HTMLResponse, include_in_schema=False)
+async def help_center_page():
+    """Help & documentation hub"""
+    return serve_html_file("support.html")
+
+@router.get("/support", response_class=HTMLResponse, include_in_schema=False)
+async def support_legacy_redirect():
+    """Backwards-compatible redirect for legacy /support links"""
+    return RedirectResponse(url="/help", status_code=307)
+
 @router.get("/services", response_class=HTMLResponse, include_in_schema=False) 
 async def services_page():
     """Services page"""

@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import api from '../services/api';
 
 const ACCREDITORS = ['SACSCOC','HLC','MSCHE','WASC','NWCCU','NEASC'];
 
 const ReportsPage: React.FC = () => {
+  const location = useLocation();
   const [accreditor, setAccreditor] = useState<string>(() => {
     if (typeof window !== 'undefined') {
       const cached = window.localStorage.getItem('primary_accreditor');
@@ -21,11 +23,35 @@ const ReportsPage: React.FC = () => {
     return `${API_BASE_URL.replace(/\/$/, '')}/${url.replace(/^\//, '')}`;
   };
   const [error, setError] = useState<string>('');
+  const [selectedStandards, setSelectedStandards] = useState<string[]>([]);
+
+  const deepLinkStandard = useMemo(() => {
+    const params = new URLSearchParams(location.search || '');
+    return params.get('standard_id') || params.get('standard') || '';
+  }, [location.search]);
+
+  useEffect(() => {
+    if (!deepLinkStandard) return;
+    setSelectedStandards((prev) => (prev.length === 1 && prev[0] === deepLinkStandard ? prev : [deepLinkStandard]));
+  }, [deepLinkStandard]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search || '');
+    const queryAccreditor = params.get('accreditor');
+    if (queryAccreditor) {
+      const normalized = queryAccreditor.toUpperCase();
+      if (normalized !== accreditor && ACCREDITORS.includes(normalized)) {
+        setAccreditor(normalized);
+        window.localStorage.setItem('primary_accreditor', normalized);
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.search]);
 
   const generatePack = async () => {
     setGenerating(true); setError(''); setPackPath('');
     try {
-  const payload = { standard_ids: [] as string[], include_files: false, include_checklist: true, include_metrics: true, checklist_format: 'csv' as 'csv', accreditor };
+  const payload = { standard_ids: selectedStandards, include_files: false, include_checklist: true, include_metrics: true, checklist_format: 'csv' as 'csv', accreditor };
       const { data } = await api.standards.exportReviewerPack(payload);
       if (data?.success && data?.pack_path) {
         setPackPath(data.pack_path);
@@ -74,6 +100,24 @@ const ReportsPage: React.FC = () => {
           </select>
         </div>
       </div>
+      {selectedStandards.length > 0 ? (
+        <div className="mb-4 rounded-md border border-primary-100 bg-primary-50 px-3 py-2 text-sm text-primary-800">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              Building reviewer pack for <code className="font-semibold">{selectedStandards[0]}</code>
+              {selectedStandards.length > 1 ? ` and ${selectedStandards.length - 1} more` : ''}.
+            </div>
+            <button
+              type="button"
+              onClick={() => setSelectedStandards([])}
+              className="text-xs font-semibold uppercase tracking-wide text-primary-600 hover:text-primary-700"
+            >
+              Clear selection
+            </button>
+          </div>
+          <p className="mt-1 text-xs text-primary-700">Deep-linked from the Standards Explorer. Add more standards from the explorer before exporting if needed.</p>
+        </div>
+      ) : null}
       <div className="bg-white p-4 rounded shadow">
         <button onClick={generatePack} disabled={generating} className="px-4 py-2 bg-primary-600 text-white rounded hover:bg-primary-700 disabled:opacity-50">
           {generating ? 'Generating…' : 'Generate Reviewer Pack'}

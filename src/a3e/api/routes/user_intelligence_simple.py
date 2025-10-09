@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse, PlainTextResponse, Response
 from fastapi.responses import FileResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import List, Dict, Any, Optional, Tuple, Set
+from collections import defaultdict
 from datetime import datetime
 import os
 import io
@@ -15,6 +16,7 @@ import csv
 import json
 import logging
 import jwt
+from pydantic import BaseModel
 
 from ...services.standards_graph import standards_graph
 from ...services.standards_loader import get_corpus_metadata
@@ -28,6 +30,7 @@ from ...services.evidence_trust import evidence_trust_scorer, EvidenceType, Sour
 from ...services.gap_risk_predictor import gap_risk_predictor
 from ...services.risk_explainer import risk_explainer, StandardEvidenceSnapshot
 from ...services.metrics_timeseries import maybe_snapshot, get_series
+from ...services.telemetry_events import record_event as record_telemetry_event
 from ...database.connection import db_manager
 from sqlalchemy import text
 from ...services.narrative_service import generate_narrative_html
@@ -60,6 +63,139 @@ settings = get_settings()
 logger = logging.getLogger(__name__)
 
 JWT_ALGORITHM = "HS256"
+
+
+def _parse_datetime_like(value: Any) -> Optional[datetime]:
+    if isinstance(value, datetime):
+        return value
+    if isinstance(value, str):
+        try:
+            if value.endswith("Z"):
+                value = value[:-1] + "+00:00"
+            return datetime.fromisoformat(value)
+        except Exception:
+            return None
+    return None
+
+
+def _build_trust_summary(
+    trust_payload: Optional[Dict[str, Any]],
+    *,
+    document_meta: Optional[Dict[str, Any]] = None,
+    mappings: Optional[List[Dict[str, Any]]] = None,
+) -> Dict[str, Any]:
+    document_meta = document_meta or {}
+    mappings = mappings or []
+    trust_payload = trust_payload or {}
+
+    signals_list = trust_payload.get("signals") or []
+    signal_map = {}
+    for item in signals_list:
+        if isinstance(item, dict) and item.get("type"):
+            signal_map[str(item["type"])] = item
+
+    def _signal_value(key: str, fallback: float) -> float:
+        value = signal_map.get(key, {}).get("value")
+        if isinstance(value, (int, float)):
+            return float(value)
+        return fallback
+
+    age_days = None
+    reference_dt = _parse_datetime_like(document_meta.get("updated_at")) or _parse_datetime_like(document_meta.get("uploaded_at"))
+    if reference_dt:
+        try:
+            age_days = max(0, (datetime.utcnow() - reference_dt).days)
+        except Exception:
+            age_days = None
+
+    freshness_fallback = 1.0
+    if age_days is not None:
+        freshness_fallback = max(0.0, min(1.0, 1 - (age_days / 365.0)))
+    freshness_score = _signal_value("freshness", freshness_fallback)
+
+    provenance_base = 0.6
+    content_type = (document_meta.get("content_type") or "").lower()
+    file_size = document_meta.get("file_size") or 0
+    if isinstance(file_size, str) and file_size.isdigit():
+        file_size = int(file_size)
+    provenance_base += 0.1 if any(token in content_type for token in ("pdf", "msword", "officedocument")) else 0.0
+    provenance_base += 0.05 if document_meta.get("status") == "analyzed" else 0.0
+    provenance_base += 0.1 if isinstance(file_size, (int, float)) and file_size and file_size > 100_000 else 0.0
+    provenance_score = _signal_value("provenance", max(0.0, min(1.0, provenance_base)))
+
+    confidences: List[float] = []
+    excerpt_hits = 0
+    total_mappings = len(mappings)
+    for entry in mappings:
+        conf = entry.get("confidence")
+        if isinstance(conf, (int, float)):
+            confidences.append(float(conf))
+        excerpts = entry.get("excerpts")
+        if not excerpts:
+            excerpts = entry.get("page_anchors")
+        if excerpts:
+            excerpt_hits += 1
+    avg_confidence = sum(confidences) / len(confidences) if confidences else 0.0
+    completeness_ratio = (excerpt_hits / total_mappings) if total_mappings else 0.0
+    completeness_fallback = max(0.4, min(1.0, 0.4 + completeness_ratio * 0.6))
+    completeness_score = _signal_value("completeness", completeness_fallback)
+    relevance_score = _signal_value("relevance", avg_confidence)
+
+    overall = trust_payload.get("overall_score")
+    if not isinstance(overall, (int, float)):
+        overall = (provenance_score + freshness_score + completeness_score + relevance_score) / 4.0
+    overall = max(0.0, min(1.0, float(overall)))
+
+    if overall >= 0.8:
+        trust_level = "high"
+    elif overall >= 0.6:
+        trust_level = "medium"
+    else:
+        trust_level = "low"
+
+    def _signal_payload(key: str, label: str, score: float, fallback_detail: str) -> Dict[str, Any]:
+        explanation = signal_map.get(key, {}).get("explanation")
+        if not isinstance(explanation, str) or not explanation.strip():
+            explanation = fallback_detail
+        return {
+            "type": key,
+            "label": label,
+            "score": round(score, 3),
+            "explanation": explanation,
+        }
+
+    signals_output = [
+        _signal_payload(
+            "provenance",
+            "Provenance",
+            provenance_score,
+            "Assessed using upload source, document format, and automated processing signals.",
+        ),
+        _signal_payload(
+            "freshness",
+            "Freshness",
+            freshness_score,
+            "Document age influences freshness weighting ({} days).".format(age_days if age_days is not None else "unknown"),
+        ),
+        _signal_payload(
+            "completeness",
+            "Completeness",
+            completeness_score,
+            "{} of {} mapped standards include supporting excerpts.".format(excerpt_hits, total_mappings if total_mappings else 0),
+        ),
+        _signal_payload(
+            "relevance",
+            "Relevance",
+            relevance_score,
+            "Average mapping confidence is {}%.".format(int(round(avg_confidence * 100))),
+        ),
+    ]
+
+    return {
+        "overall_score": round(overall, 3),
+        "level": trust_level,
+        "signals": signals_output,
+    }
 
 # Ensure standards are loaded on startup
 try:
@@ -336,12 +472,13 @@ async def _get_user_uploads(claims: Dict[str, Any]) -> Dict[str, Any]:
             doc_ids = []
             
             for row in result:
+                doc_id = str(row.id)
                 # Parse analysis results for trust score
                 analysis = json.loads(row.analysis_results) if row.analysis_results else {}
                 trust_score = analysis.get("trust_score", {})
                 
                 doc = {
-                    "id": row.id,
+                    "id": doc_id,
                     "filename": row.filename,
                     "uploaded_at": row.uploaded_at.isoformat() if row.uploaded_at else "",
                     "standards_mapped": [],  # Will fill from evidence_mappings
@@ -360,7 +497,7 @@ async def _get_user_uploads(claims: Dict[str, Any]) -> Dict[str, Any]:
             if doc_ids:
                 mapping_result = await session.execute(
                     text("""
-                        SELECT DISTINCT standard_id, document_id
+                        SELECT standard_id, document_id, confidence
                         FROM evidence_mappings 
                         WHERE document_id = ANY(:doc_ids)
                         AND confidence > 0.3
@@ -368,16 +505,39 @@ async def _get_user_uploads(claims: Dict[str, Any]) -> Dict[str, Any]:
                     {"doc_ids": doc_ids}
                 )
                 
-                doc_to_standards = {}
+                doc_to_standards: Dict[str, List[str]] = {}
+                doc_to_mappings: Dict[str, List[Dict[str, Any]]] = {}
+
                 for mapping in mapping_result:
-                    unique_standards.add(mapping.standard_id)
-                    if mapping.document_id not in doc_to_standards:
-                        doc_to_standards[mapping.document_id] = []
-                    doc_to_standards[mapping.document_id].append(mapping.standard_id)
+                    standard_id = str(mapping.standard_id)
+                    document_id = str(mapping.document_id)
+                    unique_standards.add(standard_id)
+
+                    doc_to_standards.setdefault(document_id, []).append(standard_id)
+
+                    confidence_val = None
+                    try:
+                        if mapping.confidence is not None:
+                            confidence_val = float(mapping.confidence)
+                    except (TypeError, ValueError):
+                        confidence_val = None
+
+                    inferred_acc = None
+                    if standard_id:
+                        token = standard_id.split(":", 1)[0].split("_", 1)[0].split("-", 1)[0]
+                        inferred_acc = token.upper() if token else None
+
+                    doc_to_mappings.setdefault(document_id, []).append({
+                        "standard_id": standard_id,
+                        "accreditor": inferred_acc,
+                        "confidence": confidence_val,
+                    })
                 
                 # Update documents with their mapped standards
                 for doc in documents:
-                    doc["standards_mapped"] = doc_to_standards.get(doc["id"], [])
+                    doc_id = doc["id"]
+                    doc["standards_mapped"] = doc_to_standards.get(doc_id, [])
+                    doc["mappings"] = doc_to_mappings.get(doc_id, [])
             
             return {
                 "documents": documents,
@@ -390,7 +550,16 @@ async def _get_user_uploads(claims: Dict[str, Any]) -> Dict[str, Any]:
 
 
 async def _record_user_upload(
-    claims: Dict[str, Any], filename: str, standard_ids: List[str], doc_type: Optional[str] = None, mapping_details: Optional[List[Dict[str, Any]]] = None, trust_score: Optional[Dict[str, Any]] = None, saved_path: Optional[str] = None, fingerprint: Optional[str] = None, file_size: Optional[int] = None
+    claims: Dict[str, Any],
+    filename: str,
+    standard_ids: List[str],
+    doc_type: Optional[str] = None,
+    mapping_details: Optional[List[Dict[str, Any]]] = None,
+    trust_score: Optional[Dict[str, Any]] = None,
+    saved_path: Optional[str] = None,
+    fingerprint: Optional[str] = None,
+    file_size: Optional[int] = None,
+    analysis_results: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """Record a new upload in the database"""
     email = claims.get("sub", claims.get("email", claims.get("user_id", "unknown")))
@@ -401,17 +570,18 @@ async def _record_user_upload(
         async with db_manager.get_session() as session:
             # Create new document record
             document_id = str(uuid.uuid4())
+            analysis_json = json.dumps(analysis_results) if analysis_results is not None else None
             
             await session.execute(
                 text("""
                     INSERT INTO documents (
                         id, user_id, institution_id, filename, file_key, 
                         file_size, content_type, sha256, status, uploaded_at,
-                        original_filename, file_path, mime_type
+                        original_filename, file_path, mime_type, analysis_results
                     ) VALUES (
                         :id, :user_id, :institution_id, :filename, :file_key,
                         :file_size, :content_type, :sha256, :status, :uploaded_at,
-                        :original_filename, :file_path, :mime_type
+                        :original_filename, :file_path, :mime_type, :analysis_results
                     )
                 """),
                 {
@@ -427,7 +597,8 @@ async def _record_user_upload(
                     "uploaded_at": datetime.utcnow(),
                     "original_filename": filename,  # Required field
                     "file_path": saved_path or "",  # Required field
-                    "mime_type": doc_type or "application/octet-stream"  # Maps to mime_type column
+                    "mime_type": doc_type or "application/octet-stream",  # Maps to mime_type column
+                    "analysis_results": analysis_json,
                 }
             )
             
@@ -444,17 +615,20 @@ async def _record_user_upload(
         logger.error(f"Error recording upload in database: {e}")
         # Fallback to return basic data
         return {
-            "documents": [{
-                "filename": filename,
-                "uploaded_at": datetime.utcnow().isoformat(),
-                "standards_mapped": list(standard_ids or []),
-                "doc_type": doc_type or "",
-                "mappings": mapping_details or [],
-                "trust_score": trust_score or {},
-                "saved_path": saved_path or "",
-                "fingerprint": fingerprint or "",
-                "size": file_size or 0,
-            }],
+            "documents": [
+                {
+                    "filename": filename,
+                    "uploaded_at": datetime.utcnow().isoformat(),
+                    "standards_mapped": list(standard_ids or []),
+                    "doc_type": doc_type or "",
+                    "mappings": mapping_details or [],
+                    "trust_score": trust_score or {},
+                    "saved_path": saved_path or "",
+                    "fingerprint": fingerprint or "",
+                    "size": file_size or 0,
+                    "analysis_results": analysis_results or {},
+                }
+            ],
             "unique_standards": list(standard_ids or [])
         }
 
@@ -700,7 +874,53 @@ async def _analyze_evidence_from_bytes(
                 "page_anchors": anchors,
             })
         fingerprint = EvidenceDocument(doc_id=filename, text=text_content, metadata={}, doc_type="", source_system="manual", upload_date=datetime.utcnow()).get_fingerprint()
-        
+
+        summary_mappings = [
+            {
+                "confidence": md.get("confidence"),
+                "excerpts": md.get("page_anchors", []),
+            }
+            for md in mapping_details
+        ]
+
+        document_meta_summary = {
+            "uploaded_at": datetime.utcnow().isoformat(),
+            "status": "analyzed",
+            "file_size": len(content),
+            "content_type": (doc_type or ("application/pdf" if is_pdf else "text/plain")),
+        }
+
+        trust_summary = _build_trust_summary(
+            trust_dict,
+            document_meta={
+                "uploaded_at": document_meta_summary["uploaded_at"],
+                "status": document_meta_summary["status"],
+                "file_size": document_meta_summary["file_size"],
+                "content_type": document_meta_summary["content_type"],
+            },
+            mappings=summary_mappings,
+        )
+
+        analysis_payload = {
+            "is_pdf": bool(is_pdf),
+            "mappings": mappings_ui,
+            "trust_score": {
+                "overall_score": float(trust_dict.get("overall_score", 0.7) or 0.7),
+                "quality_score": float(round(float(quality_score), 3)),
+                "reliability_score": float(round(float(reliability_score), 3)),
+                "confidence_score": float(round(float(confidence_score), 3)),
+            },
+            "trust_summary": trust_summary,
+            "standards_mapped": len(mappings),
+            "content_length": len(doc.text or ""),
+            "redaction": {"enabled": redaction_enabled, **redaction_report},
+            "fingerprint": fingerprint,
+            "document_preview": (
+                "[PDF detected: preview unavailable]" if (is_pdf and not (doc.text or "").strip()) else (doc.text or "")[:2000]
+            ),
+            "analysis_generated_at": datetime.utcnow().isoformat(),
+        }
+
         # If we have a document_id, update the existing record instead of creating a new one
         if document_id:
             try:
@@ -710,11 +930,13 @@ async def _analyze_evidence_from_bytes(
                         text("""
                             UPDATE documents 
                             SET status = 'analyzed',
-                                updated_at = CURRENT_TIMESTAMP
+                                updated_at = CURRENT_TIMESTAMP,
+                                analysis_results = :analysis_results
                             WHERE id = :id
                         """),
                         {
-                            "id": document_id
+                            "id": document_id,
+                            "analysis_results": json.dumps(analysis_payload),
                         }
                     )
                     
@@ -750,7 +972,17 @@ async def _analyze_evidence_from_bytes(
                 logger.error(f"Error updating document analysis: {e}")
         else:
             # No document_id, create new record (original behavior)
-            await _record_user_upload(current_user, filename, [m.standard_id for m in mappings], doc_type, mapping_details, trust_dict, None, fingerprint)
+            await _record_user_upload(
+                current_user,
+                filename,
+                [m.standard_id for m in mappings],
+                doc_type,
+                mapping_details,
+                trust_dict,
+                None,
+                fingerprint,
+                analysis_results=analysis_payload,
+            )
 
         try:
             overall_trust = float(trust_dict.get("overall_score", 0.7) or 0.7)
@@ -775,23 +1007,7 @@ async def _analyze_evidence_from_bytes(
         return {
             "status": "success",
             "filename": filename,
-            "analysis": {
-                "is_pdf": bool(is_pdf),
-                "mappings": mappings_ui,
-                "trust_score": {
-                    "overall_score": float(trust_dict.get("overall_score", 0.7) or 0.7),
-                    "quality_score": float(round(float(quality_score), 3)),
-                    "reliability_score": float(round(float(reliability_score), 3)),
-                    "confidence_score": float(round(float(confidence_score), 3)),
-                },
-                "standards_mapped": len(mappings),
-                "content_length": len(doc.text or ""),
-                "redaction": {"enabled": redaction_enabled, **redaction_report},
-                "fingerprint": fingerprint,
-                "document_preview": (
-                    "[PDF detected: preview unavailable]" if (is_pdf and not (doc.text or "").strip()) else (doc.text or "")[:2000]
-                ),
-            },
+            "analysis": analysis_payload,
             "algorithms_used": ["EvidenceMapper™", "EvidenceTrust Score™", "StandardsGraph™"],
         }
     except Exception as e:
@@ -1375,163 +1591,152 @@ async def get_dashboard_overview(current_user: Dict[str, Any] = Depends(get_curr
         raise HTTPException(status_code=500, detail="Failed to build overview")
 
 
-@router.get("/dashboard/metrics")
-async def get_dashboard_metrics_simple(current_user: Dict[str, Any] = Depends(get_current_user_simple)):
-    """Return normalized dashboard metrics with coverage, compliance, trust, and risk transparency.
+async def build_dashboard_metrics_payload(
+    current_user: Dict[str, Any], *, snapshot: bool = True
+) -> Dict[str, Any]:
+    """Internal helper that constructs the dashboard metrics payload."""
 
-    compliance_score = (coverage*0.7 + avg_trust*0.3)*100 where:
-      coverage = unique standards with evidence / total standards (for selected accreditor)
-      avg_trust = mean EvidenceTrust overall scores across uploaded documents (fallback 0.7)
-    average_risk and distribution come from RiskExplainer aggregated previously scored standards (process-local cache).
-    """
-    try:
-        settings_ = _merge_claims_with_settings(current_user)
-        acc = (settings_.get("primary_accreditor") or "HLC").upper()
-        # Prefer graph count for total standards to avoid DB coupling
-        total_roots = len(standards_graph.get_accreditor_standards(acc)) or 0
+    settings_ = _merge_claims_with_settings(current_user)
+    acc = (settings_.get("primary_accreditor") or "HLC").upper()
+    total_roots = len(standards_graph.get_accreditor_standards(acc)) or 0
 
-        # Attempt DB-backed metrics using jobs table
-        documents_analyzed = 0
-        documents_processing = 0
-        standards_mapped = 0
-        avg_trust = 0.7  # fallback
+    documents_analyzed = 0
+    documents_processing = 0
+    standards_mapped = 0
+    avg_trust = 0.7
 
-        user_id = current_user.get("user_id") or current_user.get("sub") or current_user.get("email")
-        used_db = False
-        if user_id:
-            try:
-                async with db_manager.get_session() as session:
-                    # First try documents table (new approach)
-                    try:
-                        c1 = await session.execute(
-                            text("SELECT COUNT(*) FROM documents WHERE user_id = :u AND deleted_at IS NULL"),
-                            {"u": user_id},
-                        )
-                        documents_analyzed = int(c1.scalar() or 0)
-                        # Documents are instantly "analyzed" so processing is 0
-                        documents_processing = 0
-                    except Exception:
-                        # Fallback to jobs table (old approach)
-                        c1 = await session.execute(
-                            text("SELECT COUNT(*) FROM jobs WHERE user_id = :u AND status = 'completed'"),
-                            {"u": user_id},
-                        )
-                        documents_analyzed = int(c1.scalar() or 0)
-                        c2 = await session.execute(
-                            text("""
-                                SELECT COUNT(*) FROM jobs
-                                WHERE user_id = :u AND status IN ('queued','extracting','parsing','embedding','matching','analyzing')
-                            """),
-                            {"u": user_id},
-                        )
-                        documents_processing = int(c2.scalar() or 0)
+    user_id = current_user.get("user_id") or current_user.get("sub") or current_user.get("email")
+    used_db = False
+    if user_id:
+        try:
+            async with db_manager.get_session() as session:
+                try:
+                    c1 = await session.execute(
+                        text("SELECT COUNT(*) FROM documents WHERE user_id = :u AND deleted_at IS NULL"),
+                        {"u": user_id},
+                    )
+                    documents_analyzed = int(c1.scalar() or 0)
+                    documents_processing = 0
+                except Exception:
+                    c1 = await session.execute(
+                        text("SELECT COUNT(*) FROM jobs WHERE user_id = :u AND status = 'completed'"),
+                        {"u": user_id},
+                    )
+                    documents_analyzed = int(c1.scalar() or 0)
+                    c2 = await session.execute(
+                        text(
+                            """
+                            SELECT COUNT(*) FROM jobs
+                            WHERE user_id = :u AND status IN ('queued','extracting','parsing','embedding','matching','analyzing')
+                            """
+                        ),
+                        {"u": user_id},
+                    )
+                    documents_processing = int(c2.scalar() or 0)
 
-                    # Determine result column name
-                    col_sql = text(
-                        """
-                        SELECT column_name FROM information_schema.columns
-                        WHERE table_schema = 'public' AND table_name = 'jobs'
+                col_sql = text(
+                    """
+                    SELECT column_name FROM information_schema.columns
+                    WHERE table_schema = 'public' AND table_name = 'jobs'
+                    """
+                )
+                cols = {r[0] for r in (await session.execute(col_sql)).fetchall()}
+                result_col = 'result' if 'result' in cols else ('results' if 'results' in cols else None)
+
+                uniq: Set[str] = set()
+                if result_col:
+                    q = text(
+                        f"""
+                        SELECT {result_col} AS result
+                        FROM jobs
+                        WHERE user_id = :u AND status = 'completed' AND {result_col} IS NOT NULL
+                        ORDER BY COALESCE(completed_at, updated_at, created_at) DESC
+                        LIMIT 200
                         """
                     )
-                    cols = {r[0] for r in (await session.execute(col_sql)).fetchall()}
-                    result_col = 'result' if 'result' in cols else ('results' if 'results' in cols else None)
+                    rows = (await session.execute(q, {"u": user_id})).fetchall()
+                    for r in rows:
+                        raw = r._mapping.get("result")
+                        try:
+                            payload = json.loads(raw) if isinstance(raw, str) else raw
+                        except Exception:
+                            payload = None
+                        if isinstance(payload, dict):
+                            mapped = payload.get("mapped_standards") or payload.get("standards") or []
+                            for item in mapped:
+                                sid = (item.get("standard_id") if isinstance(item, dict) else None) or (str(item) if item else None)
+                                if sid:
+                                    uniq.add(str(sid))
+                standards_mapped = len(uniq)
 
-                    uniq: Set[str] = set()
-                    if result_col:
-                        q = text(
-                            f"""
-                            SELECT {result_col} AS result
-                            FROM jobs
-                            WHERE user_id = :u AND status = 'completed' AND {result_col} IS NOT NULL
-                            ORDER BY COALESCE(completed_at, updated_at, created_at) DESC
-                            LIMIT 200
-                            """
-                        )
-                        rows = (await session.execute(q, {"u": user_id})).fetchall()
-                        for r in rows:
-                            raw = r._mapping.get("result")
-                            try:
-                                payload = json.loads(raw) if isinstance(raw, str) else raw
-                            except Exception:
-                                payload = None
-                            if isinstance(payload, dict):
-                                mapped = payload.get("mapped_standards") or payload.get("standards") or []
-                                for item in mapped:
-                                    sid = (item.get("standard_id") if isinstance(item, dict) else None) or (str(item) if item else None)
-                                    if sid:
-                                        uniq.add(str(sid))
-                    standards_mapped = len(uniq)
-                    
-                    # If we found documents, get unique standards from user uploads
-                    if documents_analyzed > 0:
-                        uploads_data = await _get_user_uploads(current_user)
-                        unique_stds = uploads_data.get("unique_standards", [])
-                        if unique_stds:
-                            standards_mapped = len(unique_stds)
-                    
-                    used_db = True
-            except Exception as db_e:
-                logger.warning(f"DB metrics fallback: {db_e}")
+                if documents_analyzed > 0:
+                    uploads_data = await _get_user_uploads(current_user)
+                    unique_stds = uploads_data.get("unique_standards", [])
+                    if unique_stds:
+                        standards_mapped = len(unique_stds)
 
-        # If DB not used/available, fall back to legacy JSON uploads store
-        if not used_db:
-            uploads = _get_user_uploads(current_user)
-            docs = uploads.get("documents", [])
-            uniq_standards = set(uploads.get("unique_standards", []) or [])
-            documents_analyzed = len(docs)
-            standards_mapped = len(uniq_standards)
-            # Optional trust scores from uploads JSON
-            trust_scores: List[float] = []
-            for d in docs:
-                ts = (d.get("trust_score") or {}).get("overall_score")
-                if isinstance(ts, (int, float)):
-                    trust_scores.append(float(ts))
-            if trust_scores:
-                avg_trust = float(sum(trust_scores) / len(trust_scores))
-                if avg_trust > 1:
-                    avg_trust = avg_trust / 100.0
-                avg_trust = max(0.0, min(1.0, avg_trust))
+                used_db = True
+        except Exception as db_e:
+            logger.warning(f"DB metrics fallback: {db_e}")
 
-        total_standards = total_roots if total_roots > 0 else max(total_roots, standards_mapped)
-        coverage = (standards_mapped / total_standards) if total_standards else 0.0
-        coverage = max(0.0, min(1.0, coverage))
-        compliance_score = 0.0
-        if total_standards > 0 and (standards_mapped > 0 or documents_analyzed > 0):
-            compliance_score = (coverage * 0.7 + avg_trust * 0.3) * 100
-            compliance_score = round(max(0.0, min(100.0, compliance_score)), 1)
+    if not used_db:
+        uploads = await _get_user_uploads(current_user)
+        docs = uploads.get("documents", [])
+        uniq_standards = set(uploads.get("unique_standards", []) or [])
+        documents_analyzed = len(docs)
+        standards_mapped = len(uniq_standards)
+        trust_scores: List[float] = []
+        for d in docs:
+            ts = (d.get("trust_score") or {}).get("overall_score")
+            if isinstance(ts, (int, float)):
+                trust_scores.append(float(ts))
+        if trust_scores:
+            avg_trust = float(sum(trust_scores) / len(trust_scores))
+            if avg_trust > 1:
+                avg_trust = avg_trust / 100.0
+            avg_trust = max(0.0, min(1.0, avg_trust))
 
-        risk_agg = risk_explainer.aggregate()
-        average_risk = risk_agg.get("average_risk", 0.0)
-        risk_distribution = risk_agg.get("risk_distribution", {})
+    total_standards = total_roots if total_roots > 0 else max(total_roots, standards_mapped)
+    coverage = (standards_mapped / total_standards) if total_standards else 0.0
+    coverage = max(0.0, min(1.0, coverage))
+    compliance_score = 0.0
+    if total_standards > 0 and (standards_mapped > 0 or documents_analyzed > 0):
+        compliance_score = (coverage * 0.7 + avg_trust * 0.3) * 100
+        compliance_score = round(max(0.0, min(100.0, compliance_score)), 1)
 
-        data = {
-            "core_metrics": {
-                "documents_analyzed": documents_analyzed,
-                "documents_processing": documents_processing,
-                "standards_mapped": standards_mapped,
-                "total_standards": total_standards,
-                "reports_generated": 0,
-                "reports_pending": 0,
+    risk_agg = risk_explainer.aggregate()
+    average_risk = risk_agg.get("average_risk", 0.0)
+    risk_distribution = risk_agg.get("risk_distribution", {})
+
+    data = {
+        "core_metrics": {
+            "documents_analyzed": documents_analyzed,
+            "documents_processing": documents_processing,
+            "standards_mapped": standards_mapped,
+            "total_standards": total_standards,
+            "reports_generated": 0,
+            "reports_pending": 0,
+        },
+        "performance_metrics": {
+            "coverage_percentage": round(coverage * 100, 1),
+            "compliance_score": compliance_score,
+            "average_trust": round(avg_trust, 3),
+            "average_risk": round(average_risk, 4),
+            "risk_distribution": risk_distribution,
+            "explanations": {
+                "coverage": "coverage = unique standards with any evidence / total standards for selected accreditor",
+                "compliance": "compliance = (coverage*0.7 + avg_trust*0.3) * 100; trust from EvidenceTrust when available",
+                "average_trust": "average_trust = mean of document EvidenceTrust overall scores (fallback 0.7 if none)",
+                "average_risk": "average_risk = mean per-standard calibrated risk score (0-1) from GapRisk Predictor",
             },
-            "performance_metrics": {
-                "coverage_percentage": round(coverage * 100, 1),
-                "compliance_score": compliance_score,
-                "average_trust": round(avg_trust, 3),
-                "average_risk": round(average_risk, 4),
-                "risk_distribution": risk_distribution,
-                "explanations": {
-                    "coverage": "coverage = unique standards with any evidence / total standards for selected accreditor",
-                    "compliance": "compliance = (coverage*0.7 + avg_trust*0.3) * 100; trust from EvidenceTrust when available",
-                    "average_trust": "average_trust = mean of document EvidenceTrust overall scores (fallback 0.7 if none)",
-                    "average_risk": "average_risk = mean per-standard calibrated risk score (0-1) from GapRisk Predictor",
-                },
-            },
-            "account_info": {
-                "primary_accreditor": acc,
-                "trial_days_remaining": settings_.get("trial_days_remaining", 14),
-            },
-        }
+        },
+        "account_info": {
+            "primary_accreditor": acc,
+            "trial_days_remaining": settings_.get("trial_days_remaining", 14),
+        },
+    }
 
+    if snapshot:
         try:
             maybe_snapshot(
                 accreditor=acc,
@@ -1550,13 +1755,22 @@ async def get_dashboard_metrics_simple(current_user: Dict[str, Any] = Depends(ge
         except Exception:
             pass
 
-        return {
-            "success": True,
-            "data": data,
-            "core_metrics": data.get("core_metrics", {}),
-            "performance_metrics": data.get("performance_metrics", {}),
-            "account_info": data.get("account_info", {}),
-        }
+    return {
+        "data": data,
+        "core_metrics": data.get("core_metrics", {}),
+        "performance_metrics": data.get("performance_metrics", {}),
+        "account_info": data.get("account_info", {}),
+    }
+
+
+@router.get("/dashboard/metrics")
+async def get_dashboard_metrics_simple(current_user: Dict[str, Any] = Depends(get_current_user_simple)):
+    """Return normalized dashboard metrics with coverage, compliance, trust, and risk transparency."""
+    try:
+        payload = await build_dashboard_metrics_payload(current_user, snapshot=True)
+        return {"success": True, **payload}
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Dashboard metrics error: {e}")
         raise HTTPException(status_code=500, detail="Failed to compute dashboard metrics")
@@ -2085,7 +2299,6 @@ async def export_narrative_docx(payload: Optional[Dict[str, Any]] = None, curren
 
         # Very light HTML to plain text conversion for paragraphs
         try:
-            import re
             # Split on paragraph-like tags; fallback to splitting by <br>
             parts = re.split(r"</p>|<p[^>]*>", html_in or "", flags=re.IGNORECASE)
             paras = [re.sub(r"<[^>]+>", "", p).strip() for p in parts]
@@ -2484,217 +2697,25 @@ async def get_dashboard_metrics_alias(
 async def analyze_evidence(
     file: UploadFile = File(...),
     doc_type: Optional[str] = Form(None),
+    document_id: Optional[str] = Form(None),
     current_user: Dict[str, Any] = Depends(get_current_user_simple),
 ):
     try:
         content = await file.read()
-        filename_lower = (file.filename or "").lower()
-        is_pdf = (
-            (getattr(file, "content_type", None) == "application/pdf") or filename_lower.endswith(".pdf") or (content[:4] == b"%PDF")
+        if not content:
+            raise HTTPException(status_code=400, detail="Uploaded file is empty")
+
+        filename = file.filename or f"upload-{uuid.uuid4().hex}"
+
+        return await _analyze_evidence_from_bytes(
+            filename=filename,
+            content=content,
+            doc_type=doc_type,
+            current_user=current_user,
+            document_id=document_id,
         )
-        text_content = ""
-        page_texts: List[str] = []
-        if is_pdf:
-            # Try a lightweight extraction so we can map something
-            try:
-                import pypdf  # type: ignore
-                from io import BytesIO
-                reader = pypdf.PdfReader(BytesIO(content))
-                parts = []
-                for i, page in enumerate(reader.pages[:20]):  # cap pages for speed
-                    try:
-                        txt = page.extract_text() or ""
-                        parts.append(txt)
-                        page_texts.append(txt)
-                    except Exception:
-                        continue
-                text_content = "\n".join([p for p in parts if p]).strip()
-            except Exception:
-                text_content = ""  # fallback: no text
-        else:
-            text_content = content.decode("utf-8", errors="ignore")
-
-        # Optional OCR fallback when PDF has no text
-        if is_pdf and not text_content:
-            try:
-                ocr_enabled = os.getenv("OCR_ENABLED", "false").lower() in {"1", "true", "yes"}
-                if ocr_enabled:
-                    from pdf2image import convert_from_bytes  # type: ignore
-                    import pytesseract  # type: ignore
-                    images = convert_from_bytes(content, first_page=1, last_page=5)
-                    ocr_texts: List[str] = []
-                    for img in images:
-                        try:
-                            t = pytesseract.image_to_string(img) or ""
-                            if t.strip():
-                                ocr_texts.append(t)
-                                page_texts.append(t)
-                        except Exception:
-                            continue
-                    text_content = "\n".join(ocr_texts).strip()
-            except Exception:
-                pass
-
-        # Optional PII/FERPA preflight redaction
-        redaction_enabled = os.getenv("PII_REDACTION_ENABLED", "true").lower() in {"1", "true", "yes"}
-        redaction_report = {"emails": 0, "ssn": 0, "phones": 0, "dob": 0}
-
-        def _redact(text: str) -> str:
-            nonlocal redaction_report
-            # email
-            text = re.sub(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}", lambda m: redaction_report.__setitem__("emails", redaction_report["emails"] + 1) or "[REDACTED_EMAIL]", text)
-            # SSN
-            text = re.sub(r"\b\d{3}-\d{2}-\d{4}\b", lambda m: redaction_report.__setitem__("ssn", redaction_report["ssn"] + 1) or "[REDACTED_SSN]", text)
-            # phone
-            text = re.sub(r"(\+?\d{1,2}[\s-])?(\(?\d{3}\)?[\s-]?\d{3}[\s-]?\d{4})", lambda m: redaction_report.__setitem__("phones", redaction_report["phones"] + 1) or "[REDACTED_PHONE]", text)
-            # DOB (simple mm/dd/yyyy)
-            text = re.sub(r"\b(0?[1-9]|1[0-2])/(0?[1-9]|[12]\d|3[01])/(19|20)\d{2}\b", lambda m: redaction_report.__setitem__("dob", redaction_report["dob"] + 1) or "[REDACTED_DOB]", text)
-            return text
-
-        redacted_text = _redact(text_content) if (redaction_enabled and text_content) else text_content
-
-        doc = EvidenceDocument(
-            doc_id=file.filename,
-            text=redacted_text,
-            metadata={"uploaded_by": _user_key(current_user), "doc_type": doc_type or "policy"},
-            doc_type="policy",
-            source_system="manual",
-            upload_date=datetime.utcnow(),
-        )
-
-        # Use enhanced mapper if available and OpenAI key is configured
-        if USE_ENHANCED_MAPPER and settings.openai_api_key:
-            try:
-                # Initialize enhanced mapper if needed
-                if not enhanced_evidence_mapper._initialized:
-                    await enhanced_evidence_mapper.initialize()
-                
-                # Use AI-enhanced mapping
-                mappings = await enhanced_evidence_mapper.map_evidence_with_ai(
-                    doc, 
-                    num_candidates=20, 
-                    final_top_k=10,
-                    use_llm=True
-                )
-            except Exception as e:
-                logger.warning(f"Enhanced mapping failed, falling back to TF-IDF: {e}")
-                mappings = evidence_mapper.map_evidence(doc)
-        else:
-            mappings = evidence_mapper.map_evidence(doc)
-        top_conf = mappings[0].confidence if mappings else 0.6
-
-        trust = evidence_trust_scorer.calculate_trust_score(
-            evidence_id=doc.doc_id,
-            evidence_type=EvidenceType.POLICY,
-            source_system=SourceSystem.MANUAL,
-            upload_date=doc.upload_date,
-            last_modified=datetime.utcnow(),
-            content_length=len(doc.text or ""),
-            metadata=doc.metadata,
-            mapping_confidence=top_conf,
-            reviewer_approved=True,
-            citations_count=0,
-            conflicts_detected=0,
-        )
-
-        trust_dict = trust.to_dict()
-        signals = {s["type"]: s["value"] for s in trust_dict.get("signals", [])}
-        quality_score = signals.get("completeness", trust_dict.get("overall_score", 0.7))
-        reliability_score = (signals.get("provenance", 0.7) + signals.get("alignment", 0.7)) / 2.0
-        confidence_score = signals.get("reviewer_verification", 0.8)
-
-        def _meets(mt: str, conf: float) -> bool:
-            try:
-                return bool(mt in ("exact", "strong") or float(conf) >= 0.7)
-            except Exception:
-                return False
-
-        reviews_map = _get_user_reviews(current_user, file.filename)
-        mappings_ui = []
-        mapping_details: List[Dict[str, Any]] = []
-        for m in mappings[:10]:
-            review = reviews_map.get(m.standard_id, {}) if isinstance(reviews_map, dict) else {}
-            # approximate page anchors: search spans in per-page text
-            anchors: List[Dict[str, Any]] = []
-            try:
-                for idx, page_txt in enumerate(page_texts or []):
-                    for span in m.rationale_spans[:2]:
-                        snip = (span or "").replace("**", "").strip()
-                        if snip and snip[:24] in page_txt:
-                            anchors.append({"page": idx + 1, "snippet": snip[:120]})
-                            break
-            except Exception:
-                anchors = []
-            mappings_ui.append(
-                {
-                    "standard_id": m.standard_id,
-                    "title": m.standard_title,
-                    "confidence": float(m.confidence),
-                    "accreditor": m.accreditor,
-                    "match_type": m.match_type,
-                    "meets_standard": bool(_meets(m.match_type, m.confidence)),
-                    "rationale_spans": m.rationale_spans,
-                    "explanation": m.explanation,
-                    "page_anchors": anchors,
-                    "reviewed": bool(review.get("reviewed", False)),
-                    "note": review.get("note", ""),
-                    "rationale_note": review.get("rationale_note", ""),
-                }
-            )
-            mapping_details.append({
-                "standard_id": m.standard_id,
-                "accreditor": m.accreditor,
-                "confidence": float(m.confidence),
-                "page_anchors": anchors,
-            })
-        # Record upload for metrics/overview
-        fingerprint = EvidenceDocument(doc_id=file.filename, text=text_content, metadata={}, doc_type="", source_system="manual", upload_date=datetime.utcnow()).get_fingerprint()
-        _record_user_upload(current_user, file.filename, [m.standard_id for m in mappings], doc_type, mapping_details, trust_dict, None, fingerprint)
-
-        # Seed risk model with per-standard scores (transparent, lightweight)
-        try:
-            overall_trust = float(trust_dict.get("overall_score", 0.7) or 0.7)
-            # Use a simple coverage heuristic: one document contributes up to 25% coverage for a standard
-            for md in mapping_details[:50]:  # cap to avoid extreme loops
-                sid = str(md.get("standard_id"))
-                conf = float(md.get("confidence") or 0.0)
-                snapshot = StandardEvidenceSnapshot(
-                    standard_id=sid,
-                    coverage_percent=25.0,
-                    trust_scores=[overall_trust, conf],
-                    evidence_ages_days=[365],
-                    overdue_tasks=0,
-                    total_tasks=0,
-                    recent_changes=0,
-                    historical_findings=0,
-                    days_to_review=180,
-                )
-                risk_explainer.compute_standard_risk(snapshot)
-        except Exception:
-            pass
-
-        return {
-            "status": "success",
-            "filename": file.filename,
-            "analysis": {
-                "is_pdf": bool(is_pdf),
-                "mappings": mappings_ui,
-                "trust_score": {
-                    "overall_score": float(trust_dict.get("overall_score", 0.7) or 0.7),
-                    "quality_score": float(round(float(quality_score), 3)),
-                    "reliability_score": float(round(float(reliability_score), 3)),
-                    "confidence_score": float(round(float(confidence_score), 3)),
-                },
-                "standards_mapped": len(mappings),
-                "content_length": len(doc.text or ""),
-                "redaction": {"enabled": redaction_enabled, **redaction_report},
-                "fingerprint": fingerprint,
-                "document_preview": (
-                    "[PDF detected: preview unavailable]" if (is_pdf and not (doc.text or "").strip()) else (doc.text or "")[:2000]
-                ),
-            },
-            "algorithms_used": ["EvidenceMapper™", "EvidenceTrust Score™", "StandardsGraph™"],
-        }
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Evidence analysis error: {e}")
         raise HTTPException(status_code=500, detail=f"Analysis failed: {e}")
@@ -2931,13 +2952,15 @@ async def get_document_analysis(
             result = await session.execute(
                 text("""
                     SELECT d.id, d.filename, d.status,
+                           d.uploaded_at, d.updated_at, d.file_size, d.content_type,
+                           d.analysis_results,
                            COUNT(DISTINCT em.standard_id) as standards_mapped
                     FROM documents d
                     LEFT JOIN evidence_mappings em ON em.document_id = d.id
                     WHERE d.id = :document_id 
                     AND d.user_id = :user_id 
                     AND d.deleted_at IS NULL
-                    GROUP BY d.id, d.filename, d.status
+                    GROUP BY d.id, d.filename, d.status, d.uploaded_at, d.updated_at, d.file_size, d.content_type
                 """),
                 {"document_id": document_id, "user_id": user_id}
             )
@@ -2945,6 +2968,13 @@ async def get_document_analysis(
             doc = result.first()
             if not doc:
                 raise HTTPException(status_code=404, detail="Document not found")
+
+            stored_analysis: Dict[str, Any] = {}
+            if getattr(doc, "analysis_results", None):
+                try:
+                    stored_analysis = json.loads(doc.analysis_results)
+                except Exception as parse_exc:
+                    logger.warning(f"Unable to parse stored analysis_results for document {document_id}: {parse_exc}")
             
             # Get all mappings for this document
             mappings_result = await session.execute(
@@ -2986,38 +3016,65 @@ async def get_document_analysis(
                     "excerpts": excerpts,
                     "standard": standard_data
                 })
-            
-            # Check if document has been analyzed
+
+            document_meta = {
+                "uploaded_at": doc.uploaded_at.isoformat() if getattr(doc, "uploaded_at", None) else None,
+                "updated_at": doc.updated_at.isoformat() if getattr(doc, "updated_at", None) else None,
+                "file_size": getattr(doc, "file_size", None),
+                "content_type": getattr(doc, "content_type", None),
+                "status": doc.status,
+            }
+
+            trust_summary = stored_analysis.get("trust_summary") if isinstance(stored_analysis, dict) else None
+            if not trust_summary:
+                trust_summary = _build_trust_summary(
+                    stored_analysis.get("trust_score") if isinstance(stored_analysis, dict) else None,
+                    document_meta=document_meta,
+                    mappings=[{"confidence": m.get("confidence"), "excerpts": m.get("excerpts")} for m in mappings],
+                )
+
+            trust_score_payload: Dict[str, Any] = {}
+            if isinstance(stored_analysis, dict) and isinstance(stored_analysis.get("trust_score"), dict):
+                trust_score_payload = stored_analysis.get("trust_score", {})
+            if not trust_score_payload and trust_summary:
+                trust_score_payload = {"overall_score": trust_summary.get("overall_score")}
+
+            analyzed_at_iso = doc.updated_at.isoformat() if getattr(doc, "updated_at", None) else None
+
             if doc.status != 'analyzed' or not mappings:
                 return {
                     "document": {
                         "id": doc.id,
                         "filename": doc.filename,
                         "status": doc.status,
-                        "analyzed_at": None,
-                        "standards_mapped": 0
+                        "analyzed_at": analyzed_at_iso,
+                        "standards_mapped": 0,
                     },
                     "analysis": {
                         "mapped_standards": [],
                         "total_mappings": 0,
                         "accreditors": [],
-                        "message": "Document has not been analyzed yet. Please analyze the document first."
-                    }
+                        "message": "Document has not been analyzed yet. Please analyze the document first.",
+                        "trust_summary": trust_summary,
+                        "trust_score": trust_score_payload,
+                    },
                 }
-            
+
             return {
                 "document": {
                     "id": doc.id,
                     "filename": doc.filename,
                     "status": doc.status,
-                    "analyzed_at": None,
-                    "standards_mapped": doc.standards_mapped
+                    "analyzed_at": analyzed_at_iso,
+                    "standards_mapped": doc.standards_mapped,
                 },
                 "analysis": {
                     "mapped_standards": mappings,
                     "total_mappings": len(mappings),
-                    "accreditors": list(set(m["standard"]["accreditor"] for m in mappings)) if mappings else []
-                }
+                    "accreditors": list(set(m["standard"]["accreditor"] for m in mappings)) if mappings else [],
+                    "trust_summary": trust_summary,
+                    "trust_score": trust_score_payload,
+                },
             }
             
     except HTTPException:
@@ -3026,8 +3083,6 @@ async def get_document_analysis(
         logger.error(f"Error retrieving analysis for document {document_id}: {e}")
         logger.error(f"Error type: {type(e).__name__}")
         logger.error(f"Error details: {str(e)}")
-        import traceback
-        logger.error(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"Failed to retrieve analysis: {str(e)}")
 
 
@@ -3760,17 +3815,435 @@ async def publish_last_reviewer_pack(current_user: Dict[str, Any] = Depends(get_
 # ------------------------------
 # Evidence map and crosswalk
 # ------------------------------
-@router.get("/standards/evidence-map")
-async def get_evidence_map(
-    accreditor: Optional[str] = None,
-    current_user: Dict[str, Any] = Depends(get_current_user_simple),
-):
-    """Return evidence-to-standard mappings for the current user.
 
-    - Optionally filter to a specific accreditor via `accreditor`
-    - Returns the original `mapping` shape plus summary fields to power UI stats
-    """
-    uploads = _get_user_uploads(current_user)
+def _normalize_accreditor_from_code(code: Optional[str]) -> str:
+    if not code:
+        return "UNKNOWN"
+    cleaned = str(code).strip()
+    if not cleaned:
+        return "UNKNOWN"
+    cleaned = cleaned.replace(" ", "_")
+    if "_" in cleaned:
+        return cleaned.split("_", 1)[0].upper()
+    match = re.match(r"^[A-Za-z]+", cleaned)
+    if match:
+        return match.group(0).upper()
+    parts = re.split(r"[:-]+", cleaned)
+    if parts and parts[0]:
+        return parts[0].upper()
+    return cleaned.upper()
+
+
+def _extract_keywords_for_alignment(text: Optional[str]) -> Set[str]:
+    if not text:
+        return set()
+    words = re.findall(r"\b[a-z]+\b", str(text).lower())
+    stop = {
+        "the",
+        "a",
+        "an",
+        "and",
+        "or",
+        "but",
+        "in",
+        "on",
+        "at",
+        "to",
+        "for",
+        "of",
+        "with",
+        "by",
+        "is",
+        "are",
+        "was",
+        "were",
+        "has",
+        "have",
+        "had",
+    }
+    return {w for w in words if len(w) > 3 and w not in stop}
+
+
+def _jaccard_score(a: Set[str], b: Set[str]) -> float:
+    if not a or not b:
+        return 0.0
+    inter = len(a & b)
+    union = len(a | b)
+    if not union:
+        return 0.0
+    return float(inter) / float(union)
+
+
+def _build_context_for_node(node: Any) -> Dict[str, Any]:
+    path = standards_graph.get_path_to_root(getattr(node, "node_id", "")) if node else []
+    breadcrumb: List[str] = []
+    terms: Set[str] = set()
+    for segment in path:
+        label = (segment.level or "").capitalize()
+        title = segment.title or ""
+        breadcrumb.append(f"{label}: {title}".strip())
+        terms |= _extract_keywords_for_alignment(segment.title)
+        terms |= _extract_keywords_for_alignment(segment.description)
+    return {
+        "breadcrumb": [b for b in breadcrumb if b],
+        "terms": terms,
+    }
+
+
+async def _resolve_user_id_for_crosswalk(current_user: Dict[str, Any]) -> Optional[str]:
+    identifier = current_user.get("sub") or current_user.get("user_id") or current_user.get("email")
+    if not identifier:
+        return None
+    identifier = str(identifier)
+    if "@" in identifier:
+        return await get_user_uuid_from_email(identifier)
+    return identifier
+
+
+async def _load_crosswalk_documents(current_user: Dict[str, Any]) -> Dict[str, Any]:
+    user_id = await _resolve_user_id_for_crosswalk(current_user)
+    if not user_id:
+        return {"documents": [], "unique_standards": [], "unique_accreditors": []}
+
+    documents: Dict[str, Dict[str, Any]] = {}
+    unique_standards: Set[str] = set()
+    unique_accreditors: Set[str] = set()
+
+    try:
+        async with db_manager.get_session() as session:
+            result = await session.execute(
+                text(
+                    """
+                    SELECT d.id, d.filename, d.uploaded_at, d.content_type,
+                           em.standard_id, em.confidence, em.excerpts
+                    FROM evidence_mappings em
+                    JOIN documents d ON em.document_id = d.id
+                    WHERE d.user_id = :user_id
+                      AND d.deleted_at IS NULL
+                    ORDER BY d.uploaded_at DESC
+                    """
+                ),
+                {"user_id": user_id},
+            )
+
+            for row in result:
+                doc_id = str(row.id)
+                entry = documents.setdefault(
+                    doc_id,
+                    {
+                        "document_id": doc_id,
+                        "filename": row.filename or f"Document {len(documents) + 1}",
+                        "uploaded_at": row.uploaded_at.isoformat() if getattr(row, "uploaded_at", None) else None,
+                        "content_type": row.content_type or "",
+                        "mappings": [],
+                        "accreditors": set(),
+                        "standards_by_accreditor": defaultdict(set),
+                        "standard_ids": set(),
+                    },
+                )
+
+                standard_id = getattr(row, "standard_id", None)
+                if not standard_id:
+                    continue
+
+                accreditor = _normalize_accreditor_from_code(standard_id)
+                entry["accreditors"].add(accreditor)
+                entry["standards_by_accreditor"][accreditor].add(str(standard_id))
+                entry["standard_ids"].add(str(standard_id))
+
+                confidence = getattr(row, "confidence", None)
+                try:
+                    confidence_value = float(confidence) if confidence is not None else 0.0
+                except Exception:
+                    confidence_value = 0.0
+
+                excerpts_payload: List[Any] = []
+                raw_excerpts = getattr(row, "excerpts", None)
+                if raw_excerpts:
+                    try:
+                        parsed = json.loads(raw_excerpts)
+                        if isinstance(parsed, list):
+                            excerpts_payload = parsed
+                        elif parsed:
+                            excerpts_payload = [parsed]
+                    except Exception:
+                        excerpts_payload = []
+
+                entry["mappings"].append(
+                    {
+                        "standard_id": str(standard_id),
+                        "accreditor": accreditor,
+                        "confidence": confidence_value,
+                        "excerpts": excerpts_payload,
+                    }
+                )
+
+                unique_standards.add(str(standard_id))
+                unique_accreditors.add(accreditor)
+
+    except Exception as exc:
+        logger.error(f"Error loading crosswalk documents: {exc}")
+
+    docs_list: List[Dict[str, Any]] = []
+    for entry in documents.values():
+        confidences = [m["confidence"] for m in entry.get("mappings", []) if isinstance(m.get("confidence"), (int, float))]
+        entry["average_confidence"] = (sum(confidences) / len(confidences)) if confidences else 0.0
+        docs_list.append(entry)
+
+    return {
+        "documents": docs_list,
+        "unique_standards": sorted(unique_standards),
+        "unique_accreditors": sorted(unique_accreditors),
+    }
+
+
+def _serialize_doc_for_output(doc: Dict[str, Any]) -> Dict[str, Any]:
+    standards_map = {
+        acc: sorted({*codes}) for acc, codes in (doc.get("standards_by_accreditor") or {}).items()
+    }
+    total_standards = sum(len(codes) for codes in standards_map.values())
+    return {
+        "document_id": doc.get("document_id"),
+        "filename": doc.get("filename"),
+        "uploaded_at": doc.get("uploaded_at"),
+        "content_type": doc.get("content_type"),
+        "accreditors": sorted({*(doc.get("accreditors") or set())}),
+        "standards": standards_map,
+        "total_standards": total_standards,
+        "average_confidence": round(float(doc.get("average_confidence") or 0.0), 3),
+    }
+
+
+def _build_crosswalk_matrix_payload(documents: List[Dict[str, Any]]) -> Dict[str, Any]:
+    matrix: Dict[str, Dict[str, int]] = {}
+    evidence_files: List[str] = []
+    standards: Set[str] = set()
+    accreditors: Set[str] = set()
+
+    for doc in documents:
+        fname = doc.get("filename") or doc.get("document_id") or "Unknown"
+        mappings: Dict[str, int] = {}
+        for acc, codes in (doc.get("standards_by_accreditor") or {}).items():
+            if not codes:
+                continue
+            accreditors.add(acc)
+            for code in codes:
+                standards.add(code)
+                mappings[code] = 1
+        if mappings:
+            matrix[fname] = mappings
+            if fname not in evidence_files:
+                evidence_files.append(fname)
+
+    reuse_count = 0
+    multi_use_files = 0
+    total_links = 0
+    for fname, codes in matrix.items():
+        mapped = list(codes.keys())
+        total_links += len(mapped)
+        if len(mapped) > 1:
+            multi_use_files += 1
+            reuse_count += len(mapped) - 1
+
+    if total_links == 0:
+        total_links = 1
+    reuse_pct = round((reuse_count / total_links) * 100, 1)
+
+    return {
+        "evidence": evidence_files,
+        "standards": sorted(standards),
+        "matrix": matrix,
+        "accreditors": sorted(accreditors),
+        "reuse_percentage": reuse_pct,
+        "multi_use_count": multi_use_files,
+        "documents_detail": [_serialize_doc_for_output(doc) for doc in documents],
+    }
+
+
+def _shared_documents_for_alignment(
+    source_code: str,
+    target_code: str,
+    documents: List[Dict[str, Any]],
+    source_accreditor: str,
+    target_accreditor: str,
+) -> List[Dict[str, Any]]:
+    shared: List[Dict[str, Any]] = []
+    for doc in documents:
+        accreds = doc.get("accreditors") or set()
+        if source_accreditor not in accreds or target_accreditor not in accreds:
+            continue
+        standards_map = doc.get("standards_by_accreditor") or {}
+        source_codes = standards_map.get(source_accreditor, set())
+        target_codes = standards_map.get(target_accreditor, set())
+        if source_code not in source_codes or target_code not in target_codes:
+            continue
+
+        serialized = _serialize_doc_for_output(doc)
+        source_conf = [m["confidence"] for m in doc.get("mappings", []) if m.get("standard_id") == source_code]
+        target_conf = [m["confidence"] for m in doc.get("mappings", []) if m.get("standard_id") == target_code]
+        both_conf = source_conf + target_conf
+        avg_conf = (sum(both_conf) / len(both_conf)) if both_conf else 0.0
+        serialized.update(
+            {
+                "source_confidence": round((sum(source_conf) / len(source_conf)) if source_conf else 0.0, 3),
+                "target_confidence": round((sum(target_conf) / len(target_conf)) if target_conf else 0.0, 3),
+                "alignment_confidence": round(avg_conf, 3),
+            }
+        )
+        shared.append(serialized)
+    return shared
+
+
+def _build_alignment_entry(
+    match: Dict[str, Any],
+    documents: List[Dict[str, Any]],
+    source_accreditor: str,
+    target_accreditor: str,
+) -> Optional[Dict[str, Any]]:
+    source_id = match.get("source_id")
+    target_id = match.get("target_id")
+    if not source_id or not target_id:
+        return None
+
+    source_node = standards_graph.get_node(source_id)
+    target_node = standards_graph.get_node(target_id)
+    if not source_node or not target_node:
+        return None
+
+    source_keywords = set(getattr(source_node, "keywords", set()))
+    source_keywords |= _extract_keywords_for_alignment(source_node.title)
+    source_keywords |= _extract_keywords_for_alignment(source_node.description)
+    target_keywords = set(getattr(target_node, "keywords", set()))
+    target_keywords |= _extract_keywords_for_alignment(target_node.title)
+    target_keywords |= _extract_keywords_for_alignment(target_node.description)
+
+    keyword_overlap = sorted(source_keywords & target_keywords)
+    keyword_score = float(match.get("score") or 0.0)
+
+    source_context = _build_context_for_node(source_node)
+    target_context = _build_context_for_node(target_node)
+    context_score = _jaccard_score(source_context.get("terms", set()), target_context.get("terms", set()))
+    alignment_score = round((keyword_score * 0.6) + (context_score * 0.4), 3)
+
+    shared_documents = _shared_documents_for_alignment(
+        source_node.standard_id,
+        target_node.standard_id,
+        documents,
+        source_accreditor,
+        target_accreditor,
+    )
+
+    return {
+        "source": {
+            "id": source_node.node_id,
+            "code": source_node.standard_id,
+            "title": source_node.title,
+            "description": source_node.description,
+            "level": source_node.level,
+            "breadcrumb": source_context.get("breadcrumb", []),
+            "accreditor": source_accreditor,
+        },
+        "target": {
+            "id": target_node.node_id,
+            "code": target_node.standard_id,
+            "title": target_node.title,
+            "description": target_node.description,
+            "level": target_node.level,
+            "breadcrumb": target_context.get("breadcrumb", []),
+            "accreditor": target_accreditor,
+        },
+        "source_title": source_node.title,
+        "target_title": target_node.title,
+        "source_code": source_node.standard_id,
+        "target_code": target_node.standard_id,
+        "source_accreditor": source_accreditor,
+        "target_accreditor": target_accreditor,
+        "keyword_score": round(keyword_score, 3),
+        "context_score": round(context_score, 3),
+        "alignment_score": alignment_score,
+        "similarity": alignment_score,
+        "keywords_overlap": keyword_overlap[:12],
+        "common_keywords": keyword_overlap[:12],
+        "context_overlap_terms": sorted(
+            (source_context.get("terms", set()) & target_context.get("terms", set()))
+        )[:12],
+        "shared_documents": shared_documents,
+        "shared_document_count": len(shared_documents),
+    }
+
+
+def _compute_crosswalk_alignments(
+    source_accreditor: str,
+    target_accreditor: str,
+    documents: List[Dict[str, Any]],
+    threshold: float,
+    top_k: int,
+) -> Tuple[List[Dict[str, Any]], Set[str]]:
+    try:
+        matches = standards_graph.find_cross_accreditor_matches(
+            source_accreditor, target_accreditor, threshold=threshold, top_k=max(1, top_k)
+        )
+    except Exception as exc:
+        logger.error(f"Crosswalk alignment search failed: {exc}")
+        matches = []
+
+    alignments: List[Dict[str, Any]] = []
+    shared_docs: Set[str] = set()
+    for match in matches:
+        entry = _build_alignment_entry(match, documents, source_accreditor, target_accreditor)
+        if entry:
+            alignments.append(entry)
+            for doc in entry.get("shared_documents", []):
+                name = doc.get("filename") or doc.get("document_id")
+                if name:
+                    shared_docs.add(str(name))
+
+    alignments.sort(key=lambda item: (item.get("alignment_score", 0.0), item.get("keyword_score", 0.0)), reverse=True)
+    return alignments, shared_docs
+
+
+def _build_reuse_summary(
+    documents: List[Dict[str, Any]],
+    source_accreditor: str,
+    target_accreditor: str,
+) -> Dict[str, Any]:
+    source_docs = [doc for doc in documents if source_accreditor in (doc.get("accreditors") or set())]
+    target_docs = [doc for doc in documents if target_accreditor in (doc.get("accreditors") or set())]
+    shared_docs: List[Dict[str, Any]] = []
+    for doc in documents:
+        accreds = doc.get("accreditors") or set()
+        if source_accreditor in accreds and target_accreditor in accreds:
+            shared_docs.append(doc)
+
+    source_reuse_rate = round((len(shared_docs) / len(source_docs)) * 100, 1) if source_docs else 0.0
+    target_reuse_rate = round((len(shared_docs) / len(target_docs)) * 100, 1) if target_docs else 0.0
+
+    shared_names = sorted({doc.get("filename") or doc.get("document_id") for doc in shared_docs if doc})
+    avg_standards = 0.0
+    if shared_docs:
+        total = 0
+        for doc in shared_docs:
+            standards_map = doc.get("standards_by_accreditor") or {}
+            total += sum(len(codes) for codes in standards_map.values())
+        avg_standards = round(total / len(shared_docs), 2) if total else 0.0
+
+    return {
+        "documents": [_serialize_doc_for_output(doc) for doc in documents],
+        "documents_evaluated": len(documents),
+        "source_documents": len(source_docs),
+        "target_documents": len(target_docs),
+        "shared_documents": len(shared_docs),
+        "shared_document_names": shared_names,
+        "source_reuse_rate": source_reuse_rate,
+        "target_reuse_rate": target_reuse_rate,
+        "average_standards_per_shared_document": avg_standards,
+    }
+async def build_evidence_map_payload(
+    current_user: Dict[str, Any], accreditor: Optional[str] = None
+) -> Dict[str, Any]:
+    """Internal helper that builds the evidence-map response for a user."""
+
+    uploads = await _get_user_uploads(current_user)
     acc = (accreditor or _merge_claims_with_settings(current_user).get("primary_accreditor") or "HLC").upper()
 
     mapping: Dict[str, List[Dict[str, Any]]] = {}
@@ -3801,7 +4274,6 @@ async def get_evidence_map(
                 "confidence": md.get("confidence"),
             })
 
-    # Build standards summary with average confidence and evidence counts
     standards_list: List[Dict[str, Any]] = []
     for sid, arr in mapping.items():
         if not arr:
@@ -3814,7 +4286,6 @@ async def get_evidence_map(
             "avg_confidence": round(avg_conf, 4),
         })
 
-    # Total standards for coverage
     try:
         total_roots = len(standards_graph.get_accreditor_standards(acc))
     except Exception:
@@ -3836,45 +4307,132 @@ async def get_evidence_map(
     }
 
 
+@router.get("/standards/evidence-map")
+async def get_evidence_map(
+    accreditor: Optional[str] = None,
+    current_user: Dict[str, Any] = Depends(get_current_user_simple),
+):
+    """Return evidence-to-standard mappings for the current user."""
+
+    return await build_evidence_map_payload(current_user, accreditor)
+
+
+class StandardsExplorerTelemetry(BaseModel):
+    event: str
+    accreditor: Optional[str] = None
+    result: Optional[str] = None
+    duration_ms: Optional[int] = None
+    error: Optional[str] = None
+    page: Optional[int] = None
+    page_size: Optional[int] = None
+    total_items: Optional[int] = None
+    payload: Optional[Dict[str, Any]] = None
+
+
+@router.post("/standards/explorer/telemetry")
+async def standards_explorer_telemetry(
+    body: StandardsExplorerTelemetry,
+    request: Request,
+    current_user: Dict[str, Any] = Depends(get_current_user_simple),
+):
+    try:
+        record_event = {
+            "event": body.event,
+            "accreditor": (body.accreditor or "").upper() or None,
+            "result": body.result,
+            "duration_ms": body.duration_ms,
+            "error": body.error,
+            "page": body.page,
+            "page_size": body.page_size,
+            "total_items": body.total_items,
+            "path": str(request.url.path),
+            "payload": body.payload,
+        }
+        stored = record_telemetry_event(_user_key(current_user), record_event)
+        return {"success": True, "stored": stored}
+    except Exception as exc:
+        logger.warning(f"Failed to persist standards explorer telemetry: {exc}")
+        raise HTTPException(status_code=500, detail="Unable to persist telemetry")
+
+
 @router.get("/evidence/crosswalk")
 async def get_crosswalk(current_user: Dict[str, Any] = Depends(get_current_user_simple)):
-    uploads = _get_user_uploads(current_user)
-    # Collect evidence and standards across accreditors
-    evidence_files: List[str] = []
-    standards: List[str] = []
-    accreditors: List[str] = []
-    matrix: Dict[str, Dict[str, int]] = {}
-    for d in uploads.get("documents", []):
-        fname = d.get("filename")
-        if fname not in evidence_files:
-            evidence_files.append(fname)
-        for md in d.get("mappings", []):
-            sid = md.get("standard_id")
-            acc = md.get("accreditor") or ""
-            if sid and sid not in standards:
-                standards.append(sid)
-            if acc and acc not in accreditors:
-                accreditors.append(acc)
-            if sid:
-                matrix.setdefault(fname, {})
-                matrix[fname][sid] = 1
-    # Compute reuse percentage: standards per evidence >1 across different accreditors
-    reuse_count = 0
-    multi_use_files = 0
-    for fname in evidence_files:
-        mapped = [sid for sid, v in (matrix.get(fname, {}) or {}).items() if v]
-        if len(mapped) > 1:
-            multi_use_files += 1
-            reuse_count += len(mapped) - 1
-    total_links = sum(len(v) for v in matrix.values()) or 1
-    reuse_pct = round((reuse_count / total_links) * 100, 1)
+    documents_payload = await _load_crosswalk_documents(current_user)
+    documents = documents_payload.get("documents", [])
+    matrix_payload = _build_crosswalk_matrix_payload(documents)
+    matrix_payload["available_accreditors"] = documents_payload.get("unique_accreditors", [])
+    matrix_payload["unique_standards"] = documents_payload.get("unique_standards", [])
+    matrix_payload["total_documents"] = len(documents)
+    return matrix_payload
+
+
+@router.get("/standards/crosswalkx")
+async def get_crosswalkx(
+    source: str,
+    target: str,
+    threshold: float = 0.3,
+    top_k: int = 10,
+    current_user: Dict[str, Any] = Depends(get_current_user_simple),
+):
+    if not source or not target:
+        raise HTTPException(status_code=400, detail="source and target query parameters are required")
+
+    source_norm = source.upper()
+    target_norm = target.upper()
+    if source_norm == target_norm:
+        raise HTTPException(status_code=400, detail="source and target accreditors must be different")
+
+    try:
+        threshold_value = float(threshold)
+    except Exception:
+        threshold_value = 0.3
+    threshold_value = max(0.0, min(1.0, threshold_value))
+
+    try:
+        top_k_value = int(top_k)
+    except Exception:
+        top_k_value = 10
+    top_k_value = max(1, min(25, top_k_value))
+
+    documents_payload = await _load_crosswalk_documents(current_user)
+    documents = documents_payload.get("documents", [])
+
+    alignments, alignment_shared_docs = _compute_crosswalk_alignments(
+        source_norm, target_norm, documents, threshold_value, top_k_value
+    )
+    reuse_summary = _build_reuse_summary(documents, source_norm, target_norm)
+
+    avg_alignment = 0.0
+    if alignments:
+        avg_alignment = round(
+            sum(alignment.get("alignment_score", 0.0) for alignment in alignments) / len(alignments),
+            3,
+        )
+
+    summary = {
+        "average_alignment": avg_alignment,
+        "high_confidence_alignments": len(
+            [a for a in alignments if a.get("alignment_score", 0.0) >= 0.6]
+        ),
+        "alignments_returned": len(alignments),
+        "shared_documents": reuse_summary.get("shared_documents", 0),
+        "source_reuse_rate": reuse_summary.get("source_reuse_rate", 0.0),
+        "target_reuse_rate": reuse_summary.get("target_reuse_rate", 0.0),
+        "documents_evaluated": reuse_summary.get("documents_evaluated", 0),
+        "alignment_shared_documents": sorted(alignment_shared_docs),
+    }
+
     return {
-        "evidence": evidence_files,
-        "standards": standards,
-        "matrix": matrix,  # {filename: {standard_id: 1}}
-        "accreditors": accreditors,
-        "reuse_percentage": reuse_pct,
-        "multi_use_count": multi_use_files,
+        "source": source_norm,
+        "target": target_norm,
+        "threshold": threshold_value,
+        "top_k": top_k_value,
+        "generated_at": datetime.utcnow().isoformat() + "Z",
+        "summary": summary,
+        "alignments": alignments,
+        "reuse": reuse_summary,
+        "available_accreditors": documents_payload.get("unique_accreditors", []),
+        "unique_standards": documents_payload.get("unique_standards", []),
     }
 
 
@@ -3908,6 +4466,102 @@ async def set_risk_weights(payload: Dict[str, Any], current_user: Dict[str, Any]
 # ------------------------------
 # Gaps and standards
 # ------------------------------
+def _build_gap_recommendations(
+    gaps: List[Dict[str, Any]],
+    *,
+    accreditor: str,
+    ai_enabled: bool,
+) -> List[Dict[str, str]]:
+    """Convert gap records into structured recommendation objects."""
+
+    accreditor = str(accreditor or "General")
+
+    priority_map = {
+        "critical": "critical",
+        "high": "high",
+        "medium": "medium",
+        "low": "low",
+    }
+
+    recommendations: List[Dict[str, str]] = []
+    seen_titles: Set[str] = set()
+
+    sorted_gaps = sorted(
+        (gap for gap in gaps if isinstance(gap, dict)),
+        key=lambda item: float(item.get("risk_score", 0.0)),
+        reverse=True,
+    )
+
+    for gap in sorted_gaps:
+        standard_ref = gap.get("standard") or {}
+        code = str(standard_ref.get("code") or standard_ref.get("id") or "").strip()
+        title_raw = str(standard_ref.get("title") or "").strip()
+        recommendation_text = (gap.get("recommendation") or gap.get("ai_recommendation") or "").strip()
+
+        if not recommendation_text:
+            ai_insights = gap.get("ai_insights") or []
+            if ai_insights and isinstance(ai_insights, list):
+                for insight in ai_insights:
+                    if isinstance(insight, dict) and insight.get("action"):
+                        recommendation_text = str(insight["action"]).strip()
+                        break
+                    if isinstance(insight, str) and insight.strip():
+                        recommendation_text = insight.strip()
+                        break
+
+        if not recommendation_text:
+            continue
+
+        priority_key = str(gap.get("risk_level", "medium")).lower()
+        priority_value = priority_map.get(priority_key, "medium")
+
+        if code:
+            display_title = f"{code}: {title_raw}" if title_raw else code
+        else:
+            display_title = title_raw or "Accreditation gap recommendation"
+
+        if display_title in seen_titles:
+            continue
+
+        recommendations.append(
+            {
+                "priority": priority_value,
+                "title": display_title,
+                "description": recommendation_text,
+            }
+        )
+        seen_titles.add(display_title)
+
+        if len(recommendations) >= 5:
+            break
+
+    fallback_messages = [
+        {
+            "priority": "high" if ai_enabled else "medium",
+            "title": "Focus on the highest-risk standards first",
+            "description": "Review the critical and high-risk standards highlighted in the gap summary and assign owners for remediation.",
+        },
+        {
+            "priority": "medium",
+            "title": "Upload or refresh evidence",
+            "description": "Provide recent supporting documents for your mapped standards to improve confidence scores and reduce risk.",
+        },
+        {
+            "priority": "low",
+            "title": f"Review {accreditor.upper()} readiness checklist",
+            "description": "Validate that each requirement has at least one verified piece of evidence and note any upcoming review deadlines.",
+        },
+    ]
+
+    for fallback in fallback_messages:
+        if fallback["title"] in seen_titles:
+            continue
+        recommendations.append(fallback)
+        seen_titles.add(fallback["title"])
+
+    return recommendations
+
+
 @router.get("/gaps/analysis")
 async def get_gap_analysis(current_user: Dict[str, Any] = Depends(get_current_user_simple)):
     try:
@@ -4003,6 +4657,12 @@ async def get_gap_analysis(current_user: Dict[str, Any] = Depends(get_current_us
                 # Sort by risk score
                 gaps.sort(key=lambda g: g["risk_score"], reverse=True)
                 
+                recommendations_payload = _build_gap_recommendations(
+                    gaps,
+                    accreditor=accreditor,
+                    ai_enabled=True,
+                )
+
                 return {
                     "status": "success",
                     "timestamp": datetime.utcnow().isoformat(),
@@ -4016,11 +4676,7 @@ async def get_gap_analysis(current_user: Dict[str, Any] = Depends(get_current_us
                     },
                     "algorithm": "GapRisk Predictor™ with AI",
                     "ai_enabled": True,
-                    "recommendations": [
-                        gaps[0]["recommendation"] if gaps else "Upload evidence documents",
-                        "Focus on critical and high-risk gaps first",
-                        "Schedule regular evidence reviews",
-                    ],
+                    "recommendations": recommendations_payload,
                     "analysis_confidence": sum(g.get("confidence", 0.8) for g in gaps) / len(gaps) if gaps else 0.8
                 }
                 
@@ -4068,6 +4724,12 @@ async def get_gap_analysis(current_user: Dict[str, Any] = Depends(get_current_us
                     }
                 )
 
+        recommendations_payload = _build_gap_recommendations(
+            gaps,
+            accreditor=accreditor,
+            ai_enabled=False,
+        )
+
         return {
             "status": "success",
             "timestamp": datetime.utcnow().isoformat(),
@@ -4079,15 +4741,17 @@ async def get_gap_analysis(current_user: Dict[str, Any] = Depends(get_current_us
             },
             "algorithm": "Risk Assessment v1",
             "ai_enabled": False,
-            "recommendations": [
-                "Focus on high-risk gaps first",
-                "Upload recent evidence to improve scores",
-                "Review related standards for comprehensive coverage",
-            ],
+            "recommendations": recommendations_payload,
         }
     except Exception as e:
         logger.error(f"Gap analysis error: {e}", exc_info=True)
         # Return a safe fallback response instead of raising an exception
+        fallback_recommendations = _build_gap_recommendations(
+            [],
+            accreditor="general",
+            ai_enabled=False,
+        )
+
         return {
             "status": "success",
             "timestamp": datetime.utcnow().isoformat(),
@@ -4099,10 +4763,7 @@ async def get_gap_analysis(current_user: Dict[str, Any] = Depends(get_current_us
             },
             "algorithm": "Risk Assessment v1",
             "ai_enabled": False,
-            "recommendations": [
-                "Upload documents to begin gap analysis",
-                "Select your primary accreditor in settings",
-            ],
+            "recommendations": fallback_recommendations,
         }
 
 

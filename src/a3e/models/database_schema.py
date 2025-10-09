@@ -14,8 +14,7 @@ from sqlalchemy import (
     Column, Integer, String, Text, Float, Boolean, DateTime, JSON,
     ForeignKey, Index, UniqueConstraint, CheckConstraint
 )
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.sql import func
 from datetime import datetime
 import uuid

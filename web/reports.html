@@ -1018,7 +1018,8 @@
                                     <div>
                                         <div style="font-weight:600;color:#dc2626">${item.sid}</div>
                                         <div style="font-size:0.8rem;color:#6b7280">
-                                            Priority: ${item.priority} | Confidence: ${Math.round(item.confidence * 100)}%
+                                            Priority: ${item.priority} |
+                                            <span title="Model confidence that the mapped evidence satisfies this standard">Confidence: ${Math.round(item.confidence * 100)}%</span>
                                         </div>
                                     </div>
                                     <div style="display:flex;align-items:center;gap:0.5rem">
@@ -1063,16 +1064,53 @@
                     <h4 style="margin-bottom:0.5rem;color:#0369a1">Aggregate Risk Insights</h4>
                     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem">
                         <div>
-                            <div style="font-size:0.875rem;color:#6b7280">Trust Score</div>
-                            <div style="font-size:1.5rem;font-weight:600;color:#10b981">${trustScore}%</div>
+                            <div style="display:flex;align-items:center;gap:0.5rem">
+                                <span style="font-size:0.875rem;color:#6b7280">Trust Score</span>
+                                <button
+                                    type="button"
+                                    onclick="showTooltipModal('Trust Score', 'Trust is the weighted average of evidence confidence across mapped standards. It penalizes gaps and low-confidence citations so reviewers know how reliable the documentation is.')"
+                                    aria-label="How is the trust score calculated?"
+                                    aria-describedby="trustScoreExplainer"
+                                    style="background:none;border:none;color:#2563eb;cursor:pointer;font-size:0.9rem;line-height:1"
+                                >ⓘ</button>
+                                <span
+                                    id="trustScoreExplainer"
+                                    style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;"
+                                >Trust score represents the weighted average confidence of mapped evidence. Higher values mean auditors can rely on the documentation.</span>
+                            </div>
+                            <div
+                                style="font-size:1.5rem;font-weight:600;color:#10b981"
+                                title="Weighted average of evidence confidence across mapped standards"
+                                aria-live="polite"
+                            >${trustScore}%</div>
                         </div>
                         <div>
-                            <div style="font-size:0.875rem;color:#6b7280">Coverage Rate</div>
-                            <div style="font-size:1.5rem;font-weight:600">${Math.round((gapAggregate.coverage_rate || 0) * 100)}%</div>
+                            <div style="display:flex;align-items:center;gap:0.5rem">
+                                <span style="font-size:0.875rem;color:#6b7280">Coverage Rate</span>
+                                <span
+                                    title="Percentage of total standards backed by mapped evidence"
+                                    style="font-size:0.9rem;color:#2563eb"
+                                    aria-hidden="true"
+                                >ⓘ</span>
+                            </div>
+                            <div
+                                style="font-size:1.5rem;font-weight:600"
+                                title="Share of total standards that currently have mapped evidence"
+                            >${Math.round((gapAggregate.coverage_rate || 0) * 100)}%</div>
                         </div>
                         <div>
-                            <div style="font-size:0.875rem;color:#6b7280">Standards at Risk</div>
-                            <div style="font-size:1.5rem;font-weight:600;color:#dc2626">${gapAggregate.standards_at_risk || 0}</div>
+                            <div style="display:flex;align-items:center;gap:0.5rem">
+                                <span style="font-size:0.875rem;color:#6b7280">Standards at Risk</span>
+                                <span
+                                    title="Count of standards flagged by the risk model as needing remediation"
+                                    style="font-size:0.9rem;color:#2563eb"
+                                    aria-hidden="true"
+                                >ⓘ</span>
+                            </div>
+                            <div
+                                style="font-size:1.5rem;font-weight:600;color:#dc2626"
+                                title="Number of standards flagged as high risk"
+                            >${gapAggregate.standards_at_risk || 0}</div>
                         </div>
                     </div>
                 </div>

@@ -17,6 +17,9 @@ import CrosswalkPage from './components/CrosswalkPage';
 import Onboarding from './components/Onboarding';
 import OnboardingGuard from './components/OnboardingGuard';
 import UploadPage from './components/UploadPage';
+import HelpCenter from './components/HelpCenter';
+import OrgChartPage from './components/OrgChartPage';
+import ScenarioModelingPage from './components/ScenarioModelingPage';
 
 function App() {
   return (
@@ -64,6 +67,24 @@ function App() {
           <Route path="/crosswalk" element={
             <PrivateRoute>
               <Layout><CrosswalkPage /></Layout>
+            </PrivateRoute>
+          } />
+
+          <Route path="/org-chart" element={
+            <PrivateRoute>
+              <Layout><OrgChartPage /></Layout>
+            </PrivateRoute>
+          } />
+
+          <Route path="/scenario-modeling" element={
+            <PrivateRoute>
+              <Layout><ScenarioModelingPage /></Layout>
+            </PrivateRoute>
+          } />
+
+          <Route path="/help" element={
+            <PrivateRoute>
+              <Layout><HelpCenter /></Layout>
             </PrivateRoute>
           } />
 

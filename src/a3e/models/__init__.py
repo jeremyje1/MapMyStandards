@@ -6,8 +6,7 @@ Supports all US accrediting bodies with contextual mapping.
 """
 
 from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean, Float, JSON, ForeignKey, Enum as SQLEnum, Table, UniqueConstraint
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.dialects.postgresql import UUID
 from datetime import datetime
 from enum import Enum
@@ -19,7 +18,7 @@ from ..core.accreditation_registry import InstitutionType, AccreditorType
 Base = declarative_base()
 
 # Import user models after Base is defined
-from .user import User, UserSession, PasswordReset, UsageEvent
+from .user import User, UserSession, PasswordReset, UsageEvent  # noqa: E402
 
 # Association tables for many-to-many relationships
 institution_accreditor_association = Table(
