@@ -5,7 +5,18 @@ Provides REST and GraphQL APIs for the Autonomous Accreditation & Audit Engine.
 Features proprietary ontology, vector-weighted matching, multi-agent pipeline, and audit traceability.
 """
 
-from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, BackgroundTasks, Request, Response
+# flake8: noqa
+
+from fastapi import (
+    FastAPI,
+    HTTPException,
+    Depends,
+    UploadFile,
+    File,
+    BackgroundTasks,
+    Request,
+    Response,
+)
 from fastapi import WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, HTMLResponse, FileResponse, RedirectResponse
@@ -31,15 +42,18 @@ from .api.routes import integrations_router, proprietary_router
 from .services.analytics_service import analytics_service
 from .services.webhook_service import webhook_service, WebhookEvent
 
-# Configure basic logging first before any imports that might use it  
+# Configure basic logging first before any imports that might use it
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Temporarily comment out problematic imports for debugging
 try:
     from .core.config import settings
+
     # Reconfigure logging with proper settings after config is loaded
-    logging.basicConfig(level=getattr(logging, settings.log_level), format=settings.log_format)
+    logging.basicConfig(
+        level=getattr(logging, settings.log_level), format=settings.log_format
+    )
     logger = logging.getLogger(__name__)
     logger.info("✅ Config imported successfully")
 except Exception as e:
@@ -47,7 +61,12 @@ except Exception as e:
     raise
 
 try:
-    from .core.accreditation_registry import ALL_ACCREDITORS, get_accreditors_by_institution_type, get_accreditors_by_state
+    from .core.accreditation_registry import (
+        ALL_ACCREDITORS,
+        get_accreditors_by_institution_type,
+        get_accreditors_by_state,
+    )
+
     logger.info("✅ Accreditation registry imported successfully")
 except Exception as e:
     logger.error(f"❌ Accreditation registry import failed: {e}")
@@ -55,12 +74,14 @@ except Exception as e:
 
 try:
     from .models import Institution, Evidence, Standard, AgentWorkflow, GapAnalysis
+
     logger.info("✅ Models imported successfully")
 except Exception as e:
     logger.error(f"❌ Models import failed: {e}")
 
 try:
     from .services.database_service import DatabaseService
+
     logger.info("✅ Database service imported successfully")
 except Exception as e:
     logger.error(f"❌ Database service import failed: {e}")
@@ -68,6 +89,7 @@ except Exception as e:
 
 try:
     from .api import api_router
+
     logger.info("✅ API router imported successfully")
 except Exception as e:
     logger.error(f"❌ API router import failed: {e}")
@@ -75,6 +97,7 @@ except Exception as e:
 
 try:
     from .api.routes.billing import router as billing_router
+
     logger.info("✅ Billing router imported successfully")
 except Exception as e:
     logger.error(f"❌ Billing router import failed: {e}")
@@ -83,17 +106,28 @@ except Exception as e:
 # Admin vector router
 try:
     from .api.routes.vector_admin import router as vector_admin_router
+
     vector_admin_router_available = True
 except Exception as e:
     vector_admin_router_available = False
     _vector_admin_import_exception = e
+
+try:
+    from scripts.security_validator import SecurityValidator
+
+    SECURITY_VALIDATION_AVAILABLE = True
+except Exception as e:
+    SECURITY_VALIDATION_AVAILABLE = False
+    _security_validator_import_exception = e
 try:
     from .api.routes.onboarding import router as onboarding_router
+
     _onboarding_available = True
 except Exception as _e:
     _onboarding_available = False
 try:
     from .api.routes.billing import legacy_router as billing_legacy_router  # type: ignore
+
     _billing_legacy_available = True
 except Exception:
     _billing_legacy_available = False
@@ -102,10 +136,12 @@ try:
     # Check if we should use Pinecone or Milvus
     if os.environ.get("VECTOR_DB_PROVIDER") == "pinecone":
         from .services.pinecone_service import PineconeVectorService as VectorService
+
         VECTOR_SERVICE_AVAILABLE = True
         USING_PINECONE = True
     else:
         from .services.vector_service import VectorService
+
         VECTOR_SERVICE_AVAILABLE = True
         USING_PINECONE = False
 except ImportError:
@@ -121,15 +157,19 @@ application can still boot for marketing pages and basic data endpoints."""
 try:  # Optional orchestrator (may require missing deps like 'autogen')
     from typing import TYPE_CHECKING
     from .agents import MapMyStandardsAgentOrchestrator  # type: ignore
+
     AGENT_ORCHESTRATOR_AVAILABLE = True
     if TYPE_CHECKING:  # pragma: no cover
-        from .agents import MapMyStandardsAgentOrchestrator as _MapMyStandardsAgentOrchestratorType
+        from .agents import (
+            MapMyStandardsAgentOrchestrator as _MapMyStandardsAgentOrchestratorType,
+        )
 except Exception as e:  # Broad except to catch ImportError + transitive errors
     AGENT_ORCHESTRATOR_AVAILABLE = False
     _agent_orchestrator_import_exception = e
 # Import auth router separately to handle any import issues
 try:
     from .api.routes.auth_db import router as auth_router
+
     auth_router_available = True
 except ImportError as e:
     auth_router_available = False
@@ -138,6 +178,7 @@ except ImportError as e:
 # Import new routers
 try:
     from .api.routes.trial import router as trial_router
+
     trial_router_available = True
 except ImportError as e:
     trial_router_available = False
@@ -145,12 +186,14 @@ except ImportError as e:
 
 try:
     from .api.routes.auth_impl import router as auth_impl_router
+
     auth_impl_router_available = True
 except ImportError as e:
     auth_impl_router_available = False
 
 try:
     from .api.routes.narrative_generation import router as narrative_router
+
     narrative_router_available = True
 except ImportError as e:
     narrative_router_available = False
@@ -159,6 +202,7 @@ except ImportError as e:
 try:
     from .api.routes.documents import router as documents_router
     from .api.routes.documents import upload_document as upload_document_handler
+
     documents_router_available = True
 except ImportError as e:
     documents_router_available = False
@@ -166,6 +210,7 @@ except ImportError as e:
 
 try:
     from .api.routes.dashboard import router as dashboard_router
+
     dashboard_router_available = True
 except ImportError as e:
     dashboard_router_available = False
@@ -173,6 +218,7 @@ except ImportError as e:
 
 try:
     from .api.routes.compliance import router as compliance_router
+
     compliance_router_available = True
 except ImportError as e:
     compliance_router_available = False
@@ -180,6 +226,7 @@ except ImportError as e:
 
 try:
     from .api.routes.auth_complete import router as auth_complete_router
+
     auth_complete_router_available = True
 except ImportError as e:
     auth_complete_router_available = False
@@ -187,6 +234,7 @@ except ImportError as e:
 
 try:
     from .api.routes.auth_simple import router as auth_simple_router
+
     auth_simple_router_available = True
 except ImportError as e:
     auth_simple_router_available = False
@@ -195,6 +243,7 @@ except ImportError as e:
 # Session-based auth (access + refresh cookies)
 try:
     from .api.routes.auth_session import router as auth_session_router
+
     auth_session_router_available = True
 except ImportError as e:
     auth_session_router_available = False
@@ -203,7 +252,10 @@ except ImportError as e:
 # Single plan billing (hosted Stripe Checkout) router
 try:
     from .api.routes.billing_single_plan import router as billing_single_plan_router
-    from .api.routes.billing_single_plan import legacy_single_plan_router as billing_single_plan_legacy_router
+    from .api.routes.billing_single_plan import (
+        legacy_single_plan_router as billing_single_plan_legacy_router,
+    )
+
     billing_single_plan_router_available = True
 except ImportError as e:
     billing_single_plan_router_available = False
@@ -211,6 +263,7 @@ except ImportError as e:
 
 try:
     from .api.routes.upload import router as upload_router
+
     upload_router_available = True
 except ImportError as e:
     upload_router_available = False
@@ -218,6 +271,7 @@ except ImportError as e:
 
 try:
     from .api.routes.evidence_mappings import router as evidence_mappings_router
+
     evidence_mappings_router_available = True
 except ImportError as e:
     evidence_mappings_router_available = False
@@ -225,6 +279,7 @@ except ImportError as e:
 
 try:
     from .api.routes.evidence_map_database import router as evidence_map_database_router
+
     evidence_map_database_router_available = True
 except ImportError as e:
     evidence_map_database_router_available = False
@@ -232,6 +287,7 @@ except ImportError as e:
 
 try:
     from .api.routes.reports_database import router as reports_database_router
+
     reports_database_router_available = True
 except ImportError as e:
     reports_database_router_available = False
@@ -239,12 +295,14 @@ except ImportError as e:
 
 try:
     from .api.routes.evidence_analysis import router as evidence_analysis_router
+
     evidence_analysis_router_available = True
 except ImportError as e:
     evidence_analysis_router_available = False
-    
+
 try:
     from .api.routes.standards_compliance import router as standards_compliance_router
+
     standards_compliance_router_available = True
 except ImportError as e:
     standards_compliance_router_available = False
@@ -252,6 +310,7 @@ except ImportError as e:
 
 try:
     from .api.routes.risk_analysis_dynamic import router as risk_analysis_dynamic_router
+
     risk_analysis_dynamic_router_available = True
 except ImportError as e:
     risk_analysis_dynamic_router_available = False
@@ -259,6 +318,7 @@ except ImportError as e:
 
 try:
     from .api.routes.analytics import router as analytics_router
+
     analytics_router_available = True
 except ImportError as e:
     analytics_router_available = False
@@ -266,6 +326,7 @@ except ImportError as e:
 
 try:
     from .api.routes.email_test import router as email_test_router
+
     email_test_router_available = True
 except ImportError as e:
     email_test_router_available = False
@@ -273,6 +334,7 @@ except ImportError as e:
 
 try:
     from .api.routes.ai_status import router as ai_status_router
+
     ai_status_router_available = True
 except ImportError as e:
     ai_status_router_available = False
@@ -280,6 +342,7 @@ except ImportError as e:
 
 try:
     from .api.routes.db_init import router as db_init_router
+
     db_init_router_available = True
 except ImportError as e:
     db_init_router_available = False
@@ -288,6 +351,7 @@ except ImportError as e:
 # Compliance Intelligence Router
 try:
     from .api.routes.compliance_intelligence import router as intelligence_router
+
     intelligence_router_available = True
 except ImportError as e:
     intelligence_router_available = False
@@ -296,6 +360,7 @@ except ImportError as e:
 # User Intelligence Router (Dashboard Integration)
 try:
     from .api.routes.user_intelligence import router as user_intelligence_router
+
     user_intelligence_router_available = True
 except ImportError as e:
     user_intelligence_router_available = False
@@ -303,7 +368,10 @@ except ImportError as e:
 
 # User Intelligence Simple Router (Fallback)
 try:
-    from .api.routes.user_intelligence_simple import router as user_intelligence_simple_router
+    from .api.routes.user_intelligence_simple import (
+        router as user_intelligence_simple_router,
+    )
+
     user_intelligence_simple_router_available = True
 except ImportError as e:
     user_intelligence_simple_router_available = False
@@ -312,6 +380,7 @@ except ImportError as e:
 # User Profile Router
 try:
     from .api.routes.user_profile import router as user_profile_router
+
     user_profile_router_available = True
 except ImportError as e:
     user_profile_router_available = False
@@ -320,6 +389,7 @@ except ImportError as e:
 # Password Reset Router
 try:
     from .api.routes.password_reset import router as password_reset_router
+
     password_reset_router_available = True
 except ImportError as e:
     password_reset_router_available = False
@@ -328,6 +398,7 @@ except ImportError as e:
 # New Simple API Routers
 try:
     from .api.routes.users import router as users_router
+
     users_router_available = True
 except ImportError as e:
     users_router_available = False
@@ -335,6 +406,7 @@ except ImportError as e:
 
 try:
     from .api.routes.documents_simple import router as documents_simple_router
+
     documents_simple_router_available = True
 except ImportError as e:
     documents_simple_router_available = False
@@ -342,6 +414,7 @@ except ImportError as e:
 
 try:
     from .api.routes.documents_minimal import router as documents_enhanced_router
+
     documents_enhanced_router_available = True
     logger.info("✅ Documents minimal router imported successfully")
 except ImportError as e:
@@ -351,6 +424,7 @@ except ImportError as e:
 
 try:
     from .api.routes.standards_simple import router as standards_simple_router
+
     standards_simple_router_available = True
 except ImportError as e:
     standards_simple_router_available = False
@@ -359,37 +433,50 @@ except ImportError as e:
 # Logging already configured at top of file
 
 # Optional strict asset enforcement (set STRICT_FRONTEND_ASSETS=1 to fail startup if missing)
-STRICT_FRONTEND_ASSETS = os.getenv("STRICT_FRONTEND_ASSETS", "0").lower() in ("1", "true", "yes")
+STRICT_FRONTEND_ASSETS = os.getenv("STRICT_FRONTEND_ASSETS", "0").lower() in (
+    "1",
+    "true",
+    "yes",
+)
 
 # Cross-worker warning deduplication using filesystem
+
 
 def log_warning_once_global(message: str, key: str = None):
     """Log warning once across all workers using filesystem marker"""
     if key is None:
         key = message[:50]  # Use first 50 chars as key
-    marker_file = os.path.join(tempfile.gettempdir(), f"mms_warning_{hash(key) % 10000}.tmp")
+    marker_file = os.path.join(
+        tempfile.gettempdir(), f"mms_warning_{hash(key) % 10000}.tmp"
+    )
     if not os.path.exists(marker_file):
         try:
-            with open(marker_file, 'w') as f:
+            with open(marker_file, "w") as f:
                 f.write(message)
             logger.warning(message)
         except OSError:
             # Fallback to regular logging if filesystem issues
             logger.warning(message)
 
+
 # One-time warning logger to avoid duplicate noise within worker
 _LOGGED_WARNINGS = set()
+
+
 def log_warning_once(message: str):  # pragma: no cover - simple helper
     if message not in _LOGGED_WARNINGS:
         _LOGGED_WARNINGS.add(message)
         log_warning_once_global(message)
 
-if '_vector_import_error' in globals():
+
+if "_vector_import_error" in globals():
     log_warning_once("Vector service not available - AI features disabled")
-if '_auth_import_exception' in globals():
+if "_auth_import_exception" in globals():
     log_warning_once(f"Auth router import failed: {_auth_import_exception}")
-if not globals().get('AGENT_ORCHESTRATOR_AVAILABLE', False):
-    log_warning_once(f"Agent orchestrator unavailable - advanced multi-agent flows disabled: {globals().get('_agent_orchestrator_import_exception')}")
+if not globals().get("AGENT_ORCHESTRATOR_AVAILABLE", False):
+    log_warning_once(
+        f"Agent orchestrator unavailable - advanced multi-agent flows disabled: {globals().get('_agent_orchestrator_import_exception')}"
+    )
 
 # Global service instances
 db_service: Any = None
@@ -398,20 +485,39 @@ llm_service: Any = None
 document_service: Any = None
 agent_orchestrator: Any = None
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan management"""
     global db_service, vector_service, llm_service, document_service, agent_orchestrator
-    
+
     logger.info("🚀 Starting MapMyStandards Application...")
     # Record startup time for uptime calculations
     app.state.start_time = datetime.utcnow()
-    
+
+    if globals().get("SECURITY_VALIDATION_AVAILABLE"):
+        logger.info("🔐 Running security environment validation checks...")
+        try:
+            is_valid, issues = SecurityValidator.validate_environment()
+            if not is_valid:
+                for issue in issues:
+                    logger.error("❌ Security validation issue: %s", issue)
+                raise RuntimeError("Security validation failed; see logs for details.")
+            logger.info("✅ Security environment validation passed")
+        except Exception as exc:
+            logger.exception("❌ Security validation raised an unexpected error")
+            raise
+    else:
+        log_warning_once(
+            "Security validator unavailable - skipping runtime environment checks"
+        )
+
     # Initialize services
     try:
         # Initialize production database
         try:
             from .database.connection import db_manager
+
             await db_manager.initialize()
             logger.info("✅ Production database initialized")
         except Exception as e:
@@ -424,34 +530,37 @@ async def lifespan(app: FastAPI):
             except Exception as e2:
                 logger.error(f"❌ All database initialization failed: {e2}")
                 db_service = None
-        
+
         # Ensure database schema is created (especially for SQLite)
         try:
             from sqlalchemy import create_engine
             from .models import Base
-            
+
             engine = create_engine(settings.database_url)
             Base.metadata.create_all(engine)
             engine.dispose()
             logger.info("✅ Database schema verified/created")
         except Exception as e:
             logger.warning(f"⚠️ Database schema creation failed: {e}")
-        
+
         try:
             if VECTOR_SERVICE_AVAILABLE:
                 if USING_PINECONE:
                     # Initialize Pinecone service
-                    vector_service = VectorService()  # PineconeVectorService takes no args
+                    vector_service = (
+                        VectorService()
+                    )  # PineconeVectorService takes no args
                     if await vector_service.initialize():
                         logger.info("✅ Pinecone vector service initialized")
                     else:
-                        logger.warning("⚠️ Pinecone initialization failed - check API key")
+                        logger.warning(
+                            "⚠️ Pinecone initialization failed - check API key"
+                        )
                         vector_service = None
                 else:
                     # Initialize Milvus service
                     vector_service = VectorService(
-                        host=settings.milvus_host,
-                        port=settings.milvus_port
+                        host=settings.milvus_host, port=settings.milvus_port
                     )
                     await vector_service.initialize()
                     logger.info("✅ Milvus vector service initialized")
@@ -461,26 +570,30 @@ async def lifespan(app: FastAPI):
         except Exception as e:
             log_warning_once(f"⚠️ Vector service unavailable: {str(e)}")
             vector_service = None
-        
+
         llm_service = LLMService(settings)
         await llm_service.initialize()
         logger.info("✅ LLM service initialized")
-        
+
         document_service = DocumentService(settings)
         logger.info("✅ Document service initialized")
-        
+
         if AGENT_ORCHESTRATOR_AVAILABLE:
             try:
                 agent_orchestrator = MapMyStandardsAgentOrchestrator(llm_service, vector_service)  # type: ignore
                 logger.info("✅ Agent orchestrator initialized")
             except Exception as e:
-                log_warning_once(f"⚠️ Agent orchestrator unavailable (development mode): {str(e)}")
+                log_warning_once(
+                    f"⚠️ Agent orchestrator unavailable (development mode): {str(e)}"
+                )
                 agent_orchestrator = None
         else:
-            log_warning_once("⚠️ Agent orchestrator unavailable - missing dependencies (autogen)")
+            log_warning_once(
+                "⚠️ Agent orchestrator unavailable - missing dependencies (autogen)"
+            )
             agent_orchestrator = None
-        
-    # Verify Tailwind build presence (non-fatal unless STRICT_FRONTEND_ASSETS enabled)
+
+        # Verify Tailwind build presence (non-fatal unless STRICT_FRONTEND_ASSETS enabled)
         try:
             css_path = WEB_DIR / "static" / "css" / "tailwind.css"
             css_issue = None
@@ -511,34 +624,39 @@ async def lifespan(app: FastAPI):
         if fast_boot:
             try:
                 asyncio.create_task(_load_accreditation_standards())
-                logger.info("⏩ FAST_BOOT enabled: deferring standards indexing to background task")
+                logger.info(
+                    "⏩ FAST_BOOT enabled: deferring standards indexing to background task"
+                )
             except Exception as e:
-                logger.warning(f"FAST_BOOT scheduling failed, falling back to inline indexing: {e}")
+                logger.warning(
+                    f"FAST_BOOT scheduling failed, falling back to inline indexing: {e}"
+                )
                 await _load_accreditation_standards()
                 logger.info("✅ Accreditation standards loaded")
         else:
             await _load_accreditation_standards()
             logger.info("✅ Accreditation standards loaded")
-        
+
         logger.info("🎉 MapMyStandards Application startup complete!")
-        
+
     except Exception as e:
         logger.error(f"❌ Failed to initialize services: {e}")
         raise
-    
+
     yield  # Application runs here
-    
+
     # Cleanup
     logger.info("🛑 Shutting down MapMyStandards Application...")
-    
+
     # Close production database
     try:
         from .database.connection import db_manager
+
         await db_manager.close()
         logger.info("✅ Production database closed")
     except Exception as e:
         logger.error(f"❌ Production database cleanup error: {e}")
-    
+
     # Close legacy services
     if vector_service:
         await vector_service.close()
@@ -546,34 +664,35 @@ async def lifespan(app: FastAPI):
         await db_service.close()
     logger.info("✅ Cleanup complete")
 
+
 # Create FastAPI application
 app = FastAPI(
     title="A³E - Autonomous Accreditation & Audit Engine",
     version=settings.version,
     description="""
     **Proprietary Accreditation Intelligence Platform**
-    
+
     A³E provides comprehensive accreditation analysis using:
-    
+
     🧠 **Proprietary Accreditation Ontology** - Hierarchical concept framework with 500+ accreditation concepts
-    
+
     🔍 **Vector-Weighted Standards Matching** - Multi-dimensional similarity algorithm with 512-dimensional embeddings
-    
+
     🤖 **Multi-Agent LLM Pipeline** - Four specialized agents (Mapper → GapFinder → Narrator → Verifier)
-    
+
     📋 **Audit-Ready Traceability** - Complete immutable trail from evidence to final output
-    
+
     ## Key Features
-    
+
     - **Multi-Accreditor Support**: SACSCOC, HLC, MSCHE, NEASC, WASC, and more
     - **Institution-Type Contextualization**: Universities, colleges, community colleges, specialized institutions
     - **Evidence Gap Identification**: Automated detection with severity scoring
     - **Narrative Generation**: Professional prose suitable for accreditation reports
     - **Citation Verification**: ≥0.85 cosine similarity validation
     - **Complete Audit Trail**: Forensic-level traceability for regulatory review
-    
+
     ## Proprietary Advantages
-    
+
     - Only system with domain-specific accreditation ontology
     - Multi-dimensional embedding schema optimized for higher education
     - Specialized vector-weighted matching algorithm
@@ -589,7 +708,9 @@ app = FastAPI(
 _cors_origins: list[str] = []
 try:
     if isinstance(settings.cors_origins, str):
-        _cors_origins = [o.strip() for o in settings.cors_origins.split(',') if o.strip()]
+        _cors_origins = [
+            o.strip() for o in settings.cors_origins.split(",") if o.strip()
+        ]
     else:  # type: ignore
         _cors_origins = list(settings.cors_origins)  # type: ignore
 except Exception:
@@ -623,12 +744,15 @@ app.add_middleware(
 )
 logger.info("CORS configured allow_origins=%s", _cors_origins)
 
+
 # Add explicit CORS headers for Railway proxy issues
 @app.middleware("http")
 async def add_cors_headers(request, call_next):
     origin = request.headers.get("origin", "")
-    logger.info(f"CORS middleware: {request.method} {request.url.path} from origin: {origin}")
-    
+    logger.info(
+        f"CORS middleware: {request.method} {request.url.path} from origin: {origin}"
+    )
+
     # Handle preflight OPTIONS requests
     if request.method == "OPTIONS":
         if origin in _cors_origins:
@@ -640,9 +764,9 @@ async def add_cors_headers(request, call_next):
                     "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
                     "Access-Control-Allow-Headers": "Content-Type, Authorization",
                     "Access-Control-Max-Age": "86400",
-                }
+                },
             )
-    
+
     # Process the request
     try:
         response = await call_next(request)
@@ -651,49 +775,61 @@ async def add_cors_headers(request, call_next):
         logger.error(f"Request error: {type(e).__name__}: {e}")
         logger.exception("Full traceback:")
         response = Response(content="Internal Server Error", status_code=500)
-    
+
     # Add CORS headers to all responses (including errors)
     if origin in _cors_origins:
         response.headers["Access-Control-Allow-Origin"] = origin
         response.headers["Access-Control-Allow-Credentials"] = "true"
-        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+        response.headers[
+            "Access-Control-Allow-Methods"
+        ] = "GET, POST, PUT, DELETE, OPTIONS"
         response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
-    
+
     return response
+
 
 # Security
 security = HTTPBearer()
 
 # Templates configuration
-project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+project_root = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+)
 templates = Jinja2Templates(directory=os.path.join(project_root, "templates"))
 
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+):
     """Authentication dependency with basic JWT validation"""
     try:
         token = credentials.credentials
         # For now, accept demo tokens for testing
         if token == "demo-token" or token.startswith("test-"):
             return {"user_id": "demo_user", "email": "demo@example.com"}
-        
+
         # Basic validation - in production, use proper JWT library
         if len(token) < 20:
             raise HTTPException(status_code=401, detail="Invalid token format")
-            
+
         # Extract email from token payload (simplified for demo)
         # In production, properly decode and validate JWT
         return {
             "user_id": token[:8],  # First 8 chars as user ID
-            "email": f"user_{token[:8]}@mapmystandards.ai"
+            "email": f"user_{token[:8]}@mapmystandards.ai",
         }
     except Exception as e:
         logger.error(f"Auth error: {str(e)}")
-        raise HTTPException(status_code=401, detail="Invalid authentication credentials")
+        raise HTTPException(
+            status_code=401, detail="Invalid authentication credentials"
+        )
+
 
 class LoginRequest(BaseModel):  # Temporary inline models
     email: EmailStr
     password: str
     remember: bool = False
+
 
 class UserRegistrationRequest(BaseModel):
     name: str
@@ -705,13 +841,16 @@ class UserRegistrationRequest(BaseModel):
     phone: Optional[str] = ""
     newsletter_opt_in: bool = False
 
+
 class PasswordResetRequest(BaseModel):
     email: EmailStr
+
 
 class AuthResponse(BaseModel):
     success: bool
     message: str
     data: Optional[dict] = None
+
 
 # Include authentication routers
 # Commented out conflicting auth routers - using auth_simple instead
@@ -731,6 +870,7 @@ else:
 # Include customer experience routers
 try:
     from .api.routes.sample_data import router as sample_data_router
+
     app.include_router(sample_data_router)
     logger.info("✅ Sample data router loaded")
 except ImportError as e:
@@ -738,6 +878,7 @@ except ImportError as e:
 
 try:
     from .api.routes.nurturing import router as nurturing_router
+
     app.include_router(nurturing_router)
     logger.info("✅ Email nurturing router loaded")
 except ImportError as e:
@@ -756,10 +897,14 @@ if documents_router_available:
     # Back-compat aliases (frontend uses /documents/*)
     try:
         # Only add if not already registered
-        existing = [r.path for r in app.router.routes if hasattr(r, 'path')]
+        existing = [r.path for r in app.router.routes if hasattr(r, "path")]
         if "/documents/upload" not in existing:
-            app.add_api_route("/documents/upload", upload_document_handler, methods=["POST"])
-            logger.info("🔗 Added alias route: POST /documents/upload -> /api/documents/upload")
+            app.add_api_route(
+                "/documents/upload", upload_document_handler, methods=["POST"]
+            )
+            logger.info(
+                "🔗 Added alias route: POST /documents/upload -> /api/documents/upload"
+            )
         else:
             logger.info("ℹ️ Alias route /documents/upload already present")
 
@@ -768,7 +913,9 @@ if documents_router_available:
             return {"status": "ok", "message": "documents upload endpoint available"}
 
         if "/documents/upload/debug" not in existing:
-            app.add_api_route("/documents/upload/debug", documents_upload_debug, methods=["GET"])
+            app.add_api_route(
+                "/documents/upload/debug", documents_upload_debug, methods=["GET"]
+            )
     except Exception as e:
         logger.warning(f"⚠️ Could not add alias route for documents upload: {e}")
 else:
@@ -806,14 +953,17 @@ if auth_simple_router_available:
 else:
     logger.warning("⚠️ Simple auth router not available")
 
-if 'auth_session_router_available' in globals() and auth_session_router_available:
+if "auth_session_router_available" in globals() and auth_session_router_available:
     app.include_router(auth_session_router)
     logger.info("✅ Session auth router loaded (access + refresh cookies)")
 else:
     logger.warning("⚠️ Session auth router not available")
 
 # Mount single plan billing checkout endpoints (hosted Stripe Checkout flow)
-if 'billing_single_plan_router_available' in globals() and billing_single_plan_router_available:
+if (
+    "billing_single_plan_router_available" in globals()
+    and billing_single_plan_router_available
+):
     app.include_router(billing_single_plan_router)
     logger.info("✅ Single-plan billing router loaded (hosted checkout)")
     try:
@@ -824,7 +974,12 @@ if 'billing_single_plan_router_available' in globals() and billing_single_plan_r
     # Extra diagnostic log to confirm environment price configuration (masked)
     try:
         import os as _os
-        _price_id = _os.getenv("STRIPE_SINGLE_PLAN_PRICE_ID") or _os.getenv("STRIPE_PRICE_MONTHLY") or "<unset>"
+
+        _price_id = (
+            _os.getenv("STRIPE_SINGLE_PLAN_PRICE_ID")
+            or _os.getenv("STRIPE_PRICE_MONTHLY")
+            or "<unset>"
+        )
         if _price_id and _price_id not in ("<unset>"):
             _masked = _price_id[:6] + "..." + _price_id[-4:]
         else:
@@ -836,58 +991,86 @@ else:
     logger.warning("⚠️ Single-plan billing router not available")
 
 # Conditionally register documents_enhanced router
-if 'documents_enhanced_router_available' in globals() and documents_enhanced_router_available:
+if (
+    "documents_enhanced_router_available" in globals()
+    and documents_enhanced_router_available
+):
     app.include_router(documents_enhanced_router)
     logger.info("✅ Documents enhanced router loaded (/api/documents)")
 else:
     logger.warning("⚠️ Documents enhanced router not available")
-    if '_documents_enhanced_import_exception' in globals():
+    if "_documents_enhanced_import_exception" in globals():
         logger.error(f"   Import error: {_documents_enhanced_import_exception}")
+
 
 # Sentinel route very early for deployment verification (confirm this file is active)
 @app.get("/_sentinel_main", include_in_schema=False)
 async def _sentinel_main():  # noqa: D401
     return {
         "entrypoint": "src.a3e.main",
-        "billing_single_plan_router_available": bool(globals().get("billing_single_plan_router_available")),
-        "billing_single_plan_routes_present": any(
-            getattr(r, 'path', '').endswith('/create-single-plan-checkout') for r in app.router.routes
+        "billing_single_plan_router_available": bool(
+            globals().get("billing_single_plan_router_available")
         ),
-        "total_routes": len(app.router.routes)
+        "billing_single_plan_routes_present": any(
+            getattr(r, "path", "").endswith("/create-single-plan-checkout")
+            for r in app.router.routes
+        ),
+        "total_routes": len(app.router.routes),
     }
+
 
 @app.get("/__sentinel", include_in_schema=False)
 async def _sentinel_simple():  # noqa: D401
-    return {"ok": True, "ts": __import__('datetime').datetime.utcnow().isoformat() + 'Z'}
+    return {
+        "ok": True,
+        "ts": __import__("datetime").datetime.utcnow().isoformat() + "Z",
+    }
+
 
 try:
     from prometheus_client import Counter, Gauge, Histogram, generate_latest, CONTENT_TYPE_LATEST  # type: ignore
+
     _prom_enabled = True
-    REQUEST_COUNT = Counter('app_requests_total', 'Total HTTP requests', ['method', 'path', 'status'])
-    CHECKOUT_SESSIONS = Counter('checkout_sessions_created_total', 'Checkout sessions created')
-    FALLBACK_PROVISION = Counter('fallback_provision_created_total', 'Fallback user provisions created')
-    VERIFY_LATENCY = Histogram('verify_session_latency_seconds', 'Latency for verify-session handler')
+    REQUEST_COUNT = Counter(
+        "app_requests_total", "Total HTTP requests", ["method", "path", "status"]
+    )
+    CHECKOUT_SESSIONS = Counter(
+        "checkout_sessions_created_total", "Checkout sessions created"
+    )
+    FALLBACK_PROVISION = Counter(
+        "fallback_provision_created_total", "Fallback user provisions created"
+    )
+    VERIFY_LATENCY = Histogram(
+        "verify_session_latency_seconds", "Latency for verify-session handler"
+    )
 except Exception:
     _prom_enabled = False
+
 
 @app.middleware("http")
 async def _metrics_middleware(request, call_next):  # type: ignore
     if not _prom_enabled:
         return await call_next(request)
     from time import time
+
     start = time()
     response = await call_next(request)
     try:
-        REQUEST_COUNT.labels(method=request.method, path=request.url.path, status=response.status_code).inc()
+        REQUEST_COUNT.labels(
+            method=request.method, path=request.url.path, status=response.status_code
+        ).inc()
     except Exception:
         pass
     # Specialized counters updated inside billing router via logging (optional future wiring)
-    if request.url.path.endswith('/create-single-plan-checkout') and response.status_code < 500:
+    if (
+        request.url.path.endswith("/create-single-plan-checkout")
+        and response.status_code < 500
+    ):
         try:
             CHECKOUT_SESSIONS.inc()
         except Exception:
             pass
-    if request.url.path.endswith('/verify-session') and response.status_code == 200:
+    if request.url.path.endswith("/verify-session") and response.status_code == 200:
         # Histogram only for verify-session
         try:
             VERIFY_LATENCY.observe(time() - start)
@@ -895,17 +1078,20 @@ async def _metrics_middleware(request, call_next):  # type: ignore
             pass
     return response
 
-@app.get('/metrics', include_in_schema=False)
+
+@app.get("/metrics", include_in_schema=False)
 async def metrics():  # noqa: D401
     if not _prom_enabled:
         return Response("prometheus_client not installed", status_code=503)
     data = generate_latest()  # type: ignore
     return Response(content=data, media_type=CONTENT_TYPE_LATEST)
 
+
 @app.get("/robots.txt", include_in_schema=False)
 async def robots():  # noqa: D401
     # Explicitly allow all so external services cannot claim blocking.
     return Response(content="User-agent: *\nDisallow:\n", media_type="text/plain")
+
 
 if narrative_router_available:
     app.include_router(narrative_router)
@@ -929,8 +1115,10 @@ if evidence_map_database_router_available:
     app.include_router(evidence_map_database_router)
     logger.info("✅ Evidence map database router loaded")
 else:
-    if '_evidence_map_database_import_exception' in globals():
-        logger.warning(f"⚠️ Evidence map database router not available: {_evidence_map_database_import_exception}")
+    if "_evidence_map_database_import_exception" in globals():
+        logger.warning(
+            f"⚠️ Evidence map database router not available: {_evidence_map_database_import_exception}"
+        )
     else:
         logger.warning("⚠️ Evidence map database router not available")
 
@@ -938,8 +1126,10 @@ if reports_database_router_available:
     app.include_router(reports_database_router)
     logger.info("✅ Reports database router loaded")
 else:
-    if '_reports_database_import_exception' in globals():
-        logger.warning(f"⚠️ Reports database router not available: {_reports_database_import_exception}")
+    if "_reports_database_import_exception" in globals():
+        logger.warning(
+            f"⚠️ Reports database router not available: {_reports_database_import_exception}"
+        )
     else:
         logger.warning("⚠️ Reports database router not available")
 
@@ -948,7 +1138,7 @@ if evidence_analysis_router_available:
     logger.info("✅ Evidence analysis router loaded")
 else:
     logger.warning("⚠️ Evidence analysis router not available")
-    
+
 if standards_compliance_router_available:
     app.include_router(standards_compliance_router)
     logger.info("✅ Standards compliance router loaded")
@@ -1012,7 +1202,7 @@ else:
     logger.warning("⚠️ Standards simple router not available")
 
 # Mount admin vector router (requires ADMIN_API_TOKEN)
-if 'vector_admin_router_available' in globals() and vector_admin_router_available:
+if "vector_admin_router_available" in globals() and vector_admin_router_available:
     try:
         app.include_router(vector_admin_router)
         logger.info("✅ Admin vector router loaded")
@@ -1022,6 +1212,7 @@ if 'vector_admin_router_available' in globals() and vector_admin_router_availabl
 # Include database-powered routers (production-ready)
 try:
     from .api.routes.uploads_db import router as uploads_db_router
+
     app.include_router(uploads_db_router)
     logger.info("✅ Database uploads router loaded")
 except ImportError as e:
@@ -1029,6 +1220,7 @@ except ImportError as e:
     # Fallback to file-based
     try:
         from .api.routes.uploads_fixed import router as uploads_fixed_router
+
         app.include_router(uploads_fixed_router)
         logger.info("✅ File-based uploads router loaded (fallback)")
     except ImportError as e2:
@@ -1036,6 +1228,7 @@ except ImportError as e:
 
 try:
     from .api.routes.reports_db import router as reports_db_router
+
     app.include_router(reports_db_router)
     logger.info("✅ Database reports router loaded")
 except ImportError as e:
@@ -1043,6 +1236,7 @@ except ImportError as e:
     # Fallback to file-based
     try:
         from .api.routes.reports import router as reports_router
+
         app.include_router(reports_router)
         logger.info("✅ File-based reports router loaded (fallback)")
     except ImportError as e2:
@@ -1050,6 +1244,7 @@ except ImportError as e:
 
 try:
     from .api.routes.metrics_db import router as metrics_db_router
+
     app.include_router(metrics_db_router)
     logger.info("✅ Database metrics router loaded")
 except ImportError as e:
@@ -1057,6 +1252,7 @@ except ImportError as e:
     # Fallback to file-based
     try:
         from .api.routes.metrics import router as metrics_router
+
         app.include_router(metrics_router)
         logger.info("✅ File-based metrics router loaded (fallback)")
     except ImportError as e2:
@@ -1064,6 +1260,7 @@ except ImportError as e:
 
 try:
     from .api.routes.standards_db import router as standards_db_router
+
     app.include_router(standards_db_router)
     logger.info("✅ Database standards router loaded")
 except ImportError as e:
@@ -1071,6 +1268,7 @@ except ImportError as e:
     # Fallback to mock
     try:
         from .api.routes.standards_mock import router as standards_mock_router
+
         app.include_router(standards_mock_router)
         logger.info("✅ Mock standards router loaded (fallback)")
     except ImportError as e2:
@@ -1088,7 +1286,9 @@ if user_intelligence_router_available:
     app.include_router(user_intelligence_router)
     logger.info("✅ User Intelligence router loaded (Dashboard Integration)")
 else:
-    logger.warning(f"⚠️ User Intelligence router not available: {_user_intelligence_import_exception}")
+    logger.warning(
+        f"⚠️ User Intelligence router not available: {_user_intelligence_import_exception}"
+    )
 
 # Include User Intelligence Simple router (Fallback)
 if user_intelligence_simple_router_available:
@@ -1102,7 +1302,9 @@ if user_profile_router_available:
     app.include_router(user_profile_router)
     logger.info("✅ User Profile router loaded (Database updates)")
 else:
-    logger.warning(f"⚠️ User Profile router not available: {_user_profile_import_exception}")
+    logger.warning(
+        f"⚠️ User Profile router not available: {_user_profile_import_exception}"
+    )
 
 # Include Password Reset router
 if password_reset_router_available:
@@ -1114,6 +1316,7 @@ else:
 # Include Enhanced Auth router (with JWT and cookies)
 try:
     from .api.routes.auth_enhanced import router as auth_enhanced_router
+
     app.include_router(auth_enhanced_router)
     logger.info("✅ Enhanced Auth router loaded (JWT + cookies)")
 except ImportError as e:
@@ -1123,14 +1326,18 @@ except ImportError as e:
 try:
     # Primary: secure upload API that supports S3 presigned URLs via StorageService
     from .api.routes.upload_secure import router as upload_secure_router
+
     app.include_router(upload_secure_router)
-    logger.info("✅ Upload router loaded (secure, presigned; S3/local via StorageService)")
+    logger.info(
+        "✅ Upload router loaded (secure, presigned; S3/local via StorageService)"
+    )
 except ImportError as e:
     logger.warning(f"⚠️ Secure upload router not available: {e}")
 
 # Include legacy upload routes for backward compatibility (stores to local disk)
 try:
     from .api.routes.upload import router as legacy_upload_router
+
     app.include_router(legacy_upload_router)
     logger.info("✅ Legacy upload router loaded (local disk, backward-compatible)")
 except ImportError as e:
@@ -1139,6 +1346,7 @@ except ImportError as e:
 # Final fallback to explicit local-only router if present
 try:
     from .api.routes.upload_local import router as local_upload_router
+
     app.include_router(local_upload_router)
     logger.info("✅ Local upload router loaded (explicit fallback)")
 except ImportError as e2:
@@ -1147,6 +1355,7 @@ except ImportError as e2:
 # Include Personalization router
 try:
     from .api.routes.personalization import router as personalization_router
+
     app.include_router(personalization_router)
     logger.info("✅ Personalization router loaded")
 except ImportError as e:
@@ -1160,7 +1369,7 @@ except Exception as e:
     logger.error(f"❌ Integrations router failed: {e}")
 
 try:
-    app.include_router(proprietary_router)  
+    app.include_router(proprietary_router)
     logger.info("✅ Proprietary router included")
 except Exception as e:
     logger.error(f"❌ Proprietary router failed: {e}")
@@ -1196,6 +1405,7 @@ if api_router:
 # Import and include customer pages router
 try:
     from .routes import upload_api as lightweight_upload_api
+
     app.include_router(lightweight_upload_api.router)
     logger.info("✅ Lightweight upload_api router loaded (placeholder)")
 except Exception as e:
@@ -1204,6 +1414,7 @@ except Exception as e:
 # Real document processing with AI
 try:
     from .api.routes.document_processing import router as document_processing_router
+
     app.include_router(document_processing_router)
     logger.info("✅ Document processing router loaded (AI-powered)")
 except Exception as e:
@@ -1212,10 +1423,12 @@ except Exception as e:
 # Real report generation
 try:
     from .api.routes.report_generation import router as report_generation_router
+
     app.include_router(report_generation_router)
     logger.info("✅ Report generation router loaded (real reports)")
 except Exception as e:
     logger.warning(f"⚠️ Could not load report generation router: {e}")
+
 
 # Root-level WebSocket endpoint for frontend clients: wss://api.../ws
 @app.websocket("/ws")
@@ -1230,7 +1443,12 @@ async def websocket_root(ws: WebSocket):
     user_id = params.get("user_id") or "demo"
 
     # Env toggle to allow demo fallback (default OFF in production)
-    demo_mode = os.getenv("DASHBOARD_DEMO_MODE", "0").lower() in ("1", "true", "yes", "y")
+    demo_mode = os.getenv("DASHBOARD_DEMO_MODE", "0").lower() in (
+        "1",
+        "true",
+        "yes",
+        "y",
+    )
 
     if not demo_mode:
         # In non-demo mode, require a plausible token
@@ -1254,6 +1472,7 @@ async def websocket_root(ws: WebSocket):
         except Exception:
             pass
 
+
 # Define health endpoint BEFORE customer_pages router to avoid catch-all interference
 @app.get("/health")
 async def health_check():
@@ -1266,9 +1485,10 @@ async def health_check():
     """
     try:
         from time import perf_counter
+
         now = datetime.utcnow()
         uptime_seconds = None
-        if hasattr(app.state, 'start_time'):
+        if hasattr(app.state, "start_time"):
             uptime_seconds = (now - app.state.start_time).total_seconds()
 
         # Helper to measure latency of async call returning bool
@@ -1319,10 +1539,16 @@ async def health_check():
                     )
                     rows = result.fetchall()
             except Exception as query_err:
-                return {"status": "error", "detail": f"metrics_query_failed: {query_err}"}
+                return {
+                    "status": "error",
+                    "detail": f"metrics_query_failed: {query_err}",
+                }
 
             if not rows:
-                return {"status": "skipped", "detail": "no eligible uploads to evaluate"}
+                return {
+                    "status": "skipped",
+                    "detail": "no eligible uploads to evaluate",
+                }
 
             mismatches: List[Dict[str, Any]] = []
             errors: List[Dict[str, Any]] = []
@@ -1343,14 +1569,20 @@ async def health_check():
                 }
 
                 try:
-                    metrics_payload = await build_dashboard_metrics_payload(current_user, snapshot=False)
-                    evidence_payload = await build_evidence_map_payload(current_user, primary_accreditor)
+                    metrics_payload = await build_dashboard_metrics_payload(
+                        current_user, snapshot=False
+                    )
+                    evidence_payload = await build_evidence_map_payload(
+                        current_user, primary_accreditor
+                    )
                 except Exception as user_err:
-                    errors.append({
-                        "user_id": str(user_id),
-                        "accreditor": primary_accreditor,
-                        "error": str(user_err),
-                    })
+                    errors.append(
+                        {
+                            "user_id": str(user_id),
+                            "accreditor": primary_accreditor,
+                            "error": str(user_err),
+                        }
+                    )
                     continue
 
                 checked += 1
@@ -1377,24 +1609,26 @@ async def health_check():
                     }
 
                 if mismatch:
-                    mismatch.update({
-                        "user_id": str(user_id),
-                        "accreditor": primary_accreditor,
-                    })
+                    mismatch.update(
+                        {
+                            "user_id": str(user_id),
+                            "accreditor": primary_accreditor,
+                        }
+                    )
                     mismatches.append(mismatch)
 
             if mismatches:
                 return {
                     "status": "unhealthy",
                     "checked_users": checked,
-                    "mismatches": mismatches[: sample_limit],
+                    "mismatches": mismatches[:sample_limit],
                 }
 
             if errors and not mismatches:
                 return {
                     "status": "error",
                     "checked_users": checked,
-                    "errors": errors[: sample_limit],
+                    "errors": errors[:sample_limit],
                 }
 
             if checked == 0:
@@ -1402,7 +1636,7 @@ async def health_check():
                     return {
                         "status": "error",
                         "checked_users": checked,
-                        "errors": errors[: sample_limit],
+                        "errors": errors[:sample_limit],
                     }
                 return {"status": "skipped", "detail": "no comparable users found"}
 
@@ -1413,11 +1647,12 @@ async def health_check():
         # Try production db_manager first, fallback to legacy db_service
         try:
             from .database.connection import db_manager
+
             if db_manager and db_manager._initialized:
                 db_ok, db_latency = await timed(db_manager.health_check())
         except:
             pass
-        
+
         if not db_ok and db_service:
             db_ok, db_latency = await timed(db_service.health_check())
 
@@ -1446,12 +1681,13 @@ async def health_check():
         db_available = False
         try:
             from .database.connection import db_manager
+
             db_available = db_manager and db_manager._initialized
         except:
             pass
         if not db_available:
             db_available = db_service is not None
-            
+
         if not db_available:
             # App is starting up; don't fail platform health checks yet
             overall = "starting"
@@ -1463,7 +1699,9 @@ async def health_check():
                 status_code = 503
             else:
                 # DB is healthy; treat other services as optional for readiness
-                optional_ok = llm_ok and vector_ok and (orchestrator_status == "healthy")
+                optional_ok = (
+                    llm_ok and vector_ok and (orchestrator_status == "healthy")
+                )
                 if llm_ok and (vector_ok or orchestrator_status == "healthy"):
                     overall = "healthy"
                 else:
@@ -1501,8 +1739,18 @@ async def health_check():
             "version": settings.version,
             "environment": settings.environment,
             "services": {
-                "database": {"status": "healthy" if db_ok else ("unavailable" if not db_service else "unhealthy"), "latency_ms": db_latency},
-                "llm_service": {"status": "healthy" if llm_ok else ("unavailable" if not llm_service else "unhealthy"), "latency_ms": llm_latency},
+                "database": {
+                    "status": "healthy"
+                    if db_ok
+                    else ("unavailable" if not db_service else "unhealthy"),
+                    "latency_ms": db_latency,
+                },
+                "llm_service": {
+                    "status": "healthy"
+                    if llm_ok
+                    else ("unavailable" if not llm_service else "unhealthy"),
+                    "latency_ms": llm_latency,
+                },
                 "vector_db": {"status": vector_status, "latency_ms": vector_latency},
                 "agent_orchestrator": {"status": orchestrator_status},
                 "analytics_consistency": analytics_check,
@@ -1511,12 +1759,14 @@ async def health_check():
                 "proprietary_ontology": True,
                 "vector_matching": vector_ok,
                 "multi_agent_pipeline": orchestrator_status == "healthy",
-                "audit_traceability": True
-            }
+                "audit_traceability": True,
+            },
         }
 
         if overall == "degraded":
-            body["note"] = "Core services healthy. Optional advanced services unavailable or unhealthy."
+            body[
+                "note"
+            ] = "Core services healthy. Optional advanced services unavailable or unhealthy."
         elif overall == "healthy" and analytics_status == "healthy":
             body.pop("note", None)
         elif overall == "starting":
@@ -1527,7 +1777,7 @@ async def health_check():
                 body["note"] += f" Analytics: {analytics_note}."
             else:
                 body["note"] = f"Analytics: {analytics_note}."
-            
+
         return JSONResponse(status_code=status_code, content=body)
     except Exception as e:
         logger.error(f"Health check failed: {e}")
@@ -1536,12 +1786,14 @@ async def health_check():
             content={
                 "status": "unhealthy",
                 "error": str(e),
-                "timestamp": datetime.utcnow().isoformat()
-            }
+                "timestamp": datetime.utcnow().isoformat(),
+            },
         )
+
 
 try:
     from .routes.customer_pages import router as customer_pages_router
+
     app.include_router(customer_pages_router)
     logger.info("✅ Customer pages router loaded")
 except ImportError as e:
@@ -1550,6 +1802,7 @@ except ImportError as e:
 # Import and include reports implementation router
 try:
     from .api.routes.reports_impl import router as reports_impl_router
+
     app.include_router(reports_impl_router)
     logger.info("✅ Reports implementation router loaded")
 except ImportError as e:
@@ -1558,6 +1811,7 @@ except ImportError as e:
 # Import and include analytics router
 try:
     from .api.routes.analytics import router as analytics_router
+
     app.include_router(analytics_router)
     logger.info("✅ Analytics router loaded")
 except ImportError as e:
@@ -1566,10 +1820,12 @@ except ImportError as e:
 # Import and include tier router
 try:
     from src.a3e.api.routes.tier import router as tier_router
+
     app.include_router(tier_router)
     logger.info("✅ Tier management router loaded")
 except ImportError:
     logger.warning("⚠️ Tier router not available")
+
 
 # Root endpoints
 @app.get("/", response_class=HTMLResponse, include_in_schema=False)
@@ -1584,23 +1840,33 @@ async def root_page(request: Request):
     # Prefer enhanced homepage if present
     enhanced_file = WEB_DIR / "homepage-enhanced.html"
     if enhanced_file.exists():
-        logger.info("[root] Serving homepage-enhanced.html from web directory (%s)", enhanced_file)
+        logger.info(
+            "[root] Serving homepage-enhanced.html from web directory (%s)",
+            enhanced_file,
+        )
         return FileResponse(str(enhanced_file))
 
     index_file = WEB_DIR / "index.html"
     if index_file.exists():
         logger.info("[root] Serving index.html from web directory (%s)", index_file)
         return FileResponse(str(index_file))
-    
+
     # Try homepage.html as fallback
     homepage_file = WEB_DIR / "homepage.html"
     if homepage_file.exists():
-        logger.info("[root] Fallback to homepage.html from web directory (%s)", homepage_file)
+        logger.info(
+            "[root] Fallback to homepage.html from web directory (%s)", homepage_file
+        )
         return FileResponse(str(homepage_file))
-    
+
     # As a last resort, redirect users to the trial signup page
-    logger.warning("[root] Enhanced/index/homepage missing - redirecting to /trial-signup")
-    return HTMLResponse("<html><head><meta http-equiv='refresh' content='0; url=/trial-signup'></head><body>Redirecting...</body></html>")
+    logger.warning(
+        "[root] Enhanced/index/homepage missing - redirecting to /trial-signup"
+    )
+    return HTMLResponse(
+        "<html><head><meta http-equiv='refresh' content='0; url=/trial-signup'></head><body>Redirecting...</body></html>"
+    )
+
 
 # Lightweight debug endpoint to confirm static asset presence (not in schema)
 @app.get("/debug/static", response_class=JSONResponse, include_in_schema=False)
@@ -1610,8 +1876,9 @@ async def debug_static():
         "tailwind_exists": css_path.exists(),
         "tailwind_size": css_path.stat().st_size if css_path.exists() else None,
         "web_dir": str(WEB_DIR),
-        "listed_files_sample": sorted([p.name for p in WEB_DIR.glob("*.html")])[:20]
+        "listed_files_sample": sorted([p.name for p in WEB_DIR.glob("*.html")])[:20],
     }
+
 
 @app.get("/api", include_in_schema=False)
 async def root_api():
@@ -1622,9 +1889,9 @@ async def root_api():
         "environment": settings.environment,
         "proprietary_features": [
             "Accreditation ontology + embeddings schema",
-            "Vector-weighted standards-matching algorithm", 
+            "Vector-weighted standards-matching algorithm",
             "Multi-agent LLM pipeline (Mapper → GapFinder → Narrator → Verifier)",
-            "Audit-ready traceability system from LLM output to evidentiary source"
+            "Audit-ready traceability system from LLM output to evidentiary source",
         ],
         "supported_accreditors": len(ALL_ACCREDITORS),
         "endpoints": {
@@ -1633,26 +1900,34 @@ async def root_api():
             "ontology_insights": "/api/v1/proprietary/ontology/insights",
             "traceability": "/api/v1/proprietary/traceability/{session_id}",
             "capabilities": "/api/v1/proprietary/capabilities",
-            "integrations": "/api/v1/integrations/"
+            "integrations": "/api/v1/integrations/",
         },
-        "docs_url": "/docs" if settings.is_development else "Documentation available upon request",
-        "status": "operational"
+        "docs_url": "/docs"
+        if settings.is_development
+        else "Documentation available upon request",
+        "status": "operational",
     }
+
 
 @app.get("/docs", response_class=HTMLResponse, include_in_schema=False)
 async def custom_swagger_ui_html(request: Request):
     """Custom Swagger UI with enhanced styling."""
     return templates.TemplateResponse("docs.html", {"request": request})
 
+
 @app.get("/health/frontend")
 async def frontend_health():
     """Report presence & size of critical frontend assets (CSS, logo, core JS)."""
     assets = []
-    
+
     def assess(path: Path, name: str, min_bytes: int) -> dict:
         exists = path.exists()
         size = path.stat().st_size if exists else None
-        status = "healthy" if exists and size and size >= min_bytes else ("degraded" if exists else "missing")
+        status = (
+            "healthy"
+            if exists and size and size >= min_bytes
+            else ("degraded" if exists else "missing")
+        )
         return {
             "name": name,
             "path": str(path),
@@ -1661,6 +1936,7 @@ async def frontend_health():
             "min_threshold": min_bytes,
             "status": status,
         }
+
     css_path = WEB_DIR / "static" / "css" / "tailwind.css"
     assets.append(assess(css_path, "tailwind.css", 5000))
     # Common logo filenames (first existing reported)
@@ -1683,51 +1959,63 @@ async def frontend_health():
     return {
         "status": overall,
         "assets": assets,
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.utcnow().isoformat(),
     }
+
 
 @app.get(f"{settings.api_prefix}/accreditors")
 async def list_accreditors(
     state: Optional[str] = None,
     institution_type: Optional[str] = None,
-    accreditor_type: Optional[str] = None
+    accreditor_type: Optional[str] = None,
 ):
     """List all supported accrediting bodies with optional filters"""
     try:
         accreditors = list(ALL_ACCREDITORS.values())
-        
+
         # Apply filters
         if state:
             accreditors = [
-                acc for acc in accreditors
-                if state.upper() in acc.geographic_scope or "National" in acc.geographic_scope
+                acc
+                for acc in accreditors
+                if state.upper() in acc.geographic_scope
+                or "National" in acc.geographic_scope
             ]
-        
+
         if institution_type:
             from .core.accreditation_registry import InstitutionType
+
             try:
                 inst_type = InstitutionType(institution_type.lower())
                 accreditors = [
-                    acc for acc in accreditors
+                    acc
+                    for acc in accreditors
                     if inst_type in acc.applicable_institution_types
                 ]
             except ValueError:
-                raise HTTPException(status_code=400, detail=f"Invalid institution type: {institution_type}")
-        
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Invalid institution type: {institution_type}",
+                )
+
         if accreditor_type:
             from .core.accreditation_registry import AccreditorType
+
             try:
                 acc_type = AccreditorType(accreditor_type.lower())
                 accreditors = [acc for acc in accreditors if acc.type == acc_type]
             except ValueError:
-                raise HTTPException(status_code=400, detail=f"Invalid accreditor type: {accreditor_type}")
-        
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Invalid accreditor type: {accreditor_type}",
+                )
+
         return {
             "total_count": len(accreditors),
             "filters_applied": {
                 "state": state,
                 "institution_type": institution_type,
-                "accreditor_type": accreditor_type
+                "accreditor_type": accreditor_type,
             },
             "accreditors": [
                 {
@@ -1737,34 +2025,45 @@ async def list_accreditors(
                     "type": acc.type.value,
                     "recognition_authority": acc.recognition_authority,
                     "geographic_scope": acc.geographic_scope,
-                    "applicable_institution_types": [t.value for t in acc.applicable_institution_types],
+                    "applicable_institution_types": [
+                        t.value for t in acc.applicable_institution_types
+                    ],
                     "standards_count": len(acc.standards),
-                    "website": acc.website
+                    "website": acc.website,
                 }
                 for acc in accreditors
-            ]
+            ],
         }
     except Exception as e:
         logger.error(f"Error listing accreditors: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
+
 
 # Lightweight router presence debug (avoid large route dumps)
 @app.get("/debug/router-presence", include_in_schema=False)
 async def debug_router_presence():  # noqa: D401
     try:
         flags = {
-            "user_intelligence": bool(globals().get("user_intelligence_router_available")),
-            "user_intelligence_simple": bool(globals().get("user_intelligence_simple_router_available")),
+            "user_intelligence": bool(
+                globals().get("user_intelligence_router_available")
+            ),
+            "user_intelligence_simple": bool(
+                globals().get("user_intelligence_simple_router_available")
+            ),
             "user_profile": bool(globals().get("user_profile_router_available")),
-            "compliance_intelligence": bool(globals().get("intelligence_router_available")),
+            "compliance_intelligence": bool(
+                globals().get("intelligence_router_available")
+            ),
             "documents": bool(globals().get("documents_router_available")),
             "dashboard": bool(globals().get("dashboard_router_available")),
         }
         # Sample key paths to quickly verify deployment without full route list
         sample_paths = []
         for r in app.router.routes:
-            p = getattr(r, 'path', '')
-            if "/api/user/intelligence-simple" in p and any(s in p for s in ("/standards/", "/dashboard/", "/evidence/")):
+            p = getattr(r, "path", "")
+            if "/api/user/intelligence-simple" in p and any(
+                s in p for s in ("/standards/", "/dashboard/", "/evidence/")
+            ):
                 sample_paths.append(p)
                 if len(sample_paths) >= 8:
                     break
@@ -1772,36 +2071,43 @@ async def debug_router_presence():  # noqa: D401
     except Exception as e:
         return {"error": str(e)}
 
+
 @app.get(f"{settings.api_prefix}/accreditors/{{accreditor_id}}/standards")
 async def get_accreditor_standards(
-    accreditor_id: str,
-    institution_type: Optional[str] = None
+    accreditor_id: str, institution_type: Optional[str] = None
 ):
     """Get standards for a specific accreditor, optionally filtered by institution type"""
     try:
         accreditor = ALL_ACCREDITORS.get(accreditor_id)
         if not accreditor:
-            raise HTTPException(status_code=404, detail=f"Accreditor not found: {accreditor_id}")
-        
+            raise HTTPException(
+                status_code=404, detail=f"Accreditor not found: {accreditor_id}"
+            )
+
         standards = accreditor.standards
-        
+
         # Filter by institution type if provided
         if institution_type:
             from .core.accreditation_registry import InstitutionType
+
             try:
                 inst_type = InstitutionType(institution_type.lower())
                 standards = [
-                    std for std in standards
+                    std
+                    for std in standards
                     if inst_type in std.applicable_institution_types
                 ]
             except ValueError:
-                raise HTTPException(status_code=400, detail=f"Invalid institution type: {institution_type}")
-        
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Invalid institution type: {institution_type}",
+                )
+
         return {
             "accreditor": {
                 "id": accreditor.id,
                 "name": accreditor.name,
-                "acronym": accreditor.acronym
+                "acronym": accreditor.acronym,
             },
             "institution_type_filter": institution_type,
             "standards_count": len(standards),
@@ -1811,12 +2117,16 @@ async def get_accreditor_standards(
                     "title": std.title,
                     "description": std.description,
                     "evidence_requirements": std.evidence_requirements,
-                    "applicable_institution_types": [t.value for t in std.applicable_institution_types],
+                    "applicable_institution_types": [
+                        t.value for t in std.applicable_institution_types
+                    ],
                     "weight": std.weight,
-                    "sub_standards_count": len(std.sub_standards) if std.sub_standards else 0
+                    "sub_standards_count": len(std.sub_standards)
+                    if std.sub_standards
+                    else 0,
                 }
                 for std in standards
-            ]
+            ],
         }
     except HTTPException:
         raise
@@ -1824,58 +2134,63 @@ async def get_accreditor_standards(
         logger.error(f"Error getting accreditor standards: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
+
 @app.post(f"{settings.api_prefix}/workflows/execute")
 async def execute_agent_workflow(
     background_tasks: BackgroundTasks,
     request: Dict[str, Any],
-    current_user: Dict = Depends(get_current_user)
+    current_user: Dict = Depends(get_current_user),
 ):
     """Execute the full agent workflow for an institution"""
     try:
         institution_id = request.get("institution_id")
         accreditor_id = request.get("accreditor_id")
-        
+
         if not institution_id or not accreditor_id:
             raise HTTPException(
-                status_code=400,
-                detail="institution_id and accreditor_id are required"
+                status_code=400, detail="institution_id and accreditor_id are required"
             )
-        
+
         # Validate inputs
         accreditor = ALL_ACCREDITORS.get(accreditor_id)
         if not accreditor:
-            raise HTTPException(status_code=404, detail=f"Accreditor not found: {accreditor_id}")
-        
+            raise HTTPException(
+                status_code=404, detail=f"Accreditor not found: {accreditor_id}"
+            )
+
         # Get institution and evidence from database
         institution = await db_service.get_institution(institution_id)
         if not institution:
-            raise HTTPException(status_code=404, detail=f"Institution not found: {institution_id}")
-        
+            raise HTTPException(
+                status_code=404, detail=f"Institution not found: {institution_id}"
+            )
+
         evidence_items = await db_service.get_institution_evidence(institution_id)
-        
+
         # Start workflow in background
         background_tasks.add_task(
             _execute_workflow_background,
             institution,
             accreditor_id,
             evidence_items,
-            current_user["user_id"]
+            current_user["user_id"],
         )
-        
+
         return {
             "message": "Workflow execution started",
             "institution_id": institution_id,
             "accreditor_id": accreditor_id,
             "evidence_count": len(evidence_items),
             "status": "processing",
-            "estimated_completion": "5-10 minutes"
+            "estimated_completion": "5-10 minutes",
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error starting workflow: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
+
 
 @app.post(f"{settings.api_prefix}/evidence/upload")
 async def upload_evidence(
@@ -1883,36 +2198,38 @@ async def upload_evidence(
     institution_id: str = None,
     evidence_type: str = "document",
     description: Optional[str] = None,
-    current_user: Dict = Depends(get_current_user)
+    current_user: Dict = Depends(get_current_user),
 ):
     """Upload and process evidence document"""
     try:
         if not institution_id:
             raise HTTPException(status_code=400, detail="institution_id is required")
-        
+
         # Validate file type and size
         if file.size > settings.max_file_size_mb * 1024 * 1024:
             raise HTTPException(
                 status_code=413,
-                detail=f"File too large. Maximum size: {settings.max_file_size_mb}MB"
+                detail=f"File too large. Maximum size: {settings.max_file_size_mb}MB",
             )
-        
-        file_extension = file.filename.split('.')[-1].lower() if '.' in file.filename else ''
+
+        file_extension = (
+            file.filename.split(".")[-1].lower() if "." in file.filename else ""
+        )
         if file_extension not in settings.supported_file_types:
             raise HTTPException(
                 status_code=400,
-                detail=f"Unsupported file type. Supported: {settings.supported_file_types}"
+                detail=f"Unsupported file type. Supported: {settings.supported_file_types}",
             )
-        
+
         # Process document
         evidence_item = await document_service.process_uploaded_file(
             file=file,
             institution_id=institution_id,
             evidence_type=evidence_type,
             description=description,
-            uploaded_by=current_user["user_id"]
+            uploaded_by=current_user["user_id"],
         )
-        
+
         # Trigger webhook for evidence uploaded
         async with webhook_service:
             await webhook_service.trigger_event(
@@ -1924,62 +2241,70 @@ async def upload_evidence(
                     "description": description,
                     "size": file.size,
                     "uploaded_by": current_user["user_id"],
-                    "institution_id": institution_id
+                    "institution_id": institution_id,
                 },
-                institution_id=institution_id
+                institution_id=institution_id,
             )
-        
+
         return {
             "message": "Evidence uploaded and processing started",
             "evidence_id": str(evidence_item.id),
             "filename": file.filename,
             "status": "processing",
-            "estimated_completion": "2-5 minutes"
+            "estimated_completion": "2-5 minutes",
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error uploading evidence: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
+
 async def _load_accreditation_standards():
     """Load all accreditation standards into the vector database"""
     try:
         if vector_service is None:
-            logger.info("⚠️ Skipping standards indexing - Vector service unavailable in development mode")
+            logger.info(
+                "⚠️ Skipping standards indexing - Vector service unavailable in development mode"
+            )
             return
-            
+
         for accreditor in ALL_ACCREDITORS.values():
             await vector_service.index_standards(accreditor.standards)
-        logger.info(f"Loaded {sum(len(acc.standards) for acc in ALL_ACCREDITORS.values())} standards into vector database")
+        logger.info(
+            f"Loaded {sum(len(acc.standards) for acc in ALL_ACCREDITORS.values())} standards into vector database"
+        )
     except Exception as e:
         logger.error(f"Error loading standards: {e}")
         raise
+
 
 async def _execute_workflow_background(
     institution: Institution,
     accreditor_id: str,
     evidence_items: List[Evidence],
-    user_id: str
+    user_id: str,
 ):
     """Execute agent workflow in background"""
     try:
-        logger.info(f"Starting workflow for institution {institution.id} with accreditor {accreditor_id}")
-        
+        logger.info(
+            f"Starting workflow for institution {institution.id} with accreditor {accreditor_id}"
+        )
+
         # Execute the agent workflow
         results = await agent_orchestrator.execute_workflow(
             institution=institution,
             accreditor_id=accreditor_id,
             evidence_items=evidence_items,
-            max_rounds=settings.agent_max_rounds
+            max_rounds=settings.agent_max_rounds,
         )
-        
+
         # Save results to database
         await db_service.save_workflow_results(results, user_id)
-        
+
         logger.info(f"Workflow completed for institution {institution.id}")
-        
+
         # Trigger webhook for evidence processed
         async with webhook_service:
             await webhook_service.trigger_event(
@@ -1990,14 +2315,15 @@ async def _execute_workflow_background(
                     "evidence_count": len(evidence_items),
                     "standards_mapped": len(results.get("mapped_standards", [])),
                     "gaps_found": len(results.get("gaps", [])),
-                    "user_id": user_id
+                    "user_id": user_id,
                 },
-                institution_id=institution.id
+                institution_id=institution.id,
             )
-        
+
     except Exception as e:
         logger.error(f"Workflow execution failed: {e}")
         # TODO: Update workflow status to failed in database
+
 
 #############################################
 # Web / Marketing Pages
@@ -2023,8 +2349,8 @@ else:
     # Try alternative paths
     alt_paths = [
         Path("/app/web"),
-        Path(__file__).parent.parent / "web", 
-        Path(__file__).parent / "web"
+        Path(__file__).parent.parent / "web",
+        Path(__file__).parent / "web",
     ]
     for alt_path in alt_paths:
         if alt_path.exists():
@@ -2032,14 +2358,17 @@ else:
             WEB_DIR = alt_path
             break
 
+
 def _read_web_file(filename: str) -> Optional[str]:
     """Read HTML file from web directory with debug logging"""
     file_path = WEB_DIR / filename
     logger.info(f"Attempting to read file: {file_path}")
     logger.info(f"File exists: {file_path.exists()}")
     logger.info(f"File is file: {file_path.is_file()}")
-    logger.info(f"WEB_DIR contents: {list(WEB_DIR.iterdir()) if WEB_DIR.exists() else 'WEB_DIR does not exist'}")
-    
+    logger.info(
+        f"WEB_DIR contents: {list(WEB_DIR.iterdir()) if WEB_DIR.exists() else 'WEB_DIR does not exist'}"
+    )
+
     try:
         with file_path.open("r", encoding="utf-8") as f:
             content = f.read()
@@ -2054,18 +2383,20 @@ def _read_web_file(filename: str) -> Optional[str]:
         logger.error(f"Error reading {filename}: {e}")
         return None
 
+
 # Debug route to test backend connectivity
 @app.get("/api/test", include_in_schema=False)
 async def test_api():
     """Simple test endpoint to verify backend is working"""
     return {
-        "status": "ok", 
+        "status": "ok",
         "message": "Backend is accessible",
         "web_dir": str(WEB_DIR),
         "web_dir_exists": WEB_DIR.exists(),
         "cwd": str(Path.cwd()),
-        "file_location": str(Path(__file__).resolve())
+        "file_location": str(Path(__file__).resolve()),
     }
+
 
 @app.get("/landing", response_class=HTMLResponse, include_in_schema=False)
 async def landing_page(request: Request):  # noqa: D401
@@ -2075,6 +2406,7 @@ async def landing_page(request: Request):  # noqa: D401
         return HTMLResponse(content="<h1>Landing page not found</h1>", status_code=404)
     return HTMLResponse(content=content)
 
+
 @app.get("/checkout", response_class=HTMLResponse, include_in_schema=False)
 async def checkout_page(request: Request):  # noqa: D401
     """Serve checkout page."""
@@ -2082,6 +2414,7 @@ async def checkout_page(request: Request):  # noqa: D401
     if content is None:
         return HTMLResponse(content="<h1>Checkout page not found</h1>", status_code=404)
     return HTMLResponse(content=content)
+
 
 @app.get("/subscribe", response_class=HTMLResponse, include_in_schema=False)
 async def subscribe_page(request: Request):  # noqa: D401
@@ -2095,21 +2428,25 @@ async def subscribe_page(request: Request):  # noqa: D401
                 "<p>The file subscribe.html was not found in the web directory.</p>"
                 "<p>Ensure web/subscribe.html exists in the deployment artifact.</p>"
             ),
-            status_code=404
+            status_code=404,
         )
     return HTMLResponse(content=content)
+
 
 @app.get("/pricing", include_in_schema=False)
 async def pricing_redirect():  # noqa: D401
     return Response(status_code=307, headers={"Location": "/subscribe"})
 
+
 @app.get("/trial-signup", include_in_schema=False)
 async def trial_signup_redirect():  # noqa: D401
     return Response(status_code=307, headers={"Location": "/subscribe"})
 
+
 @app.get("/trial-signup-stripe", include_in_schema=False)
 async def trial_signup_stripe_redirect():  # noqa: D401
     return Response(status_code=307, headers={"Location": "/subscribe"})
+
 
 @app.get("/debug/routes", include_in_schema=False)
 async def debug_routes():  # noqa: D401
@@ -2117,14 +2454,15 @@ async def debug_routes():  # noqa: D401
     try:
         route_info = []
         for r in app.router.routes:
-            path = getattr(r, 'path', None)
-            methods = list(getattr(r, 'methods', [])) if hasattr(r, 'methods') else []
+            path = getattr(r, "path", None)
+            methods = list(getattr(r, "methods", [])) if hasattr(r, "methods") else []
             if path:
                 route_info.append({"path": path, "methods": methods})
         route_info.sort(key=lambda x: x["path"])  # stable ordering
         return {"count": len(route_info), "routes": route_info}
     except Exception as e:
         return {"error": str(e)}
+
 
 @app.get("/favicon.ico", include_in_schema=False)
 async def favicon():  # noqa: D401
@@ -2144,6 +2482,7 @@ async def favicon():  # noqa: D401
     )
     return Response(content=transparent_png, media_type="image/png", status_code=200)
 
+
 # Mount static files for web assets and add direct routes for key pages
 
 # Mount /web for static assets (js, images, etc.)
@@ -2151,9 +2490,14 @@ if WEB_DIR.exists():
     app.mount("/web", StaticFiles(directory=str(WEB_DIR)), name="web")
     try:
         from .api.routes.user_intelligence_simple import SNAPSHOTS_DIR
+
         public_path = SNAPSHOTS_DIR / "public"
         public_path.mkdir(parents=True, exist_ok=True)
-        app.mount("/snapshots/public", StaticFiles(directory=str(public_path)), name="snapshots-public")
+        app.mount(
+            "/snapshots/public",
+            StaticFiles(directory=str(public_path)),
+            name="snapshots-public",
+        )
         logger.info("✅ Mounted /snapshots/public for reviewer packs")
     except Exception as _e:
         logger.warning(f"⚠️ Could not mount snapshots public dir: {_e}")
@@ -2165,7 +2509,7 @@ if WEB_DIR.exists():
     # Also mount /assets if repository has compiled assets (Tailwind build output)
     assets_dir_candidates = [
         Path(project_root) / "assets",
-        Path(project_root) / "public" / "assets"
+        Path(project_root) / "public" / "assets",
     ]
     for assets_dir in assets_dir_candidates:
         if assets_dir.exists():
@@ -2173,7 +2517,9 @@ if WEB_DIR.exists():
             logger.info(f"✅ Mounted assets directory at /assets from {assets_dir}")
             break
     else:
-        logger.warning("⚠️ No assets directory found to mount at /assets (styles.css 404 risk)")
+        logger.warning(
+            "⚠️ No assets directory found to mount at /assets (styles.css 404 risk)"
+        )
     logger.info(f"Web directory mounted from: {WEB_DIR}")
 
     # Explicit route for Tailwind CSS (some platforms mis-handle nested static dirs)
@@ -2184,10 +2530,12 @@ if WEB_DIR.exists():
         if css_file.exists():
             headers = {
                 "Cache-Control": "public, max-age=300",  # 5 minutes
-                "ETag": str(css_file.stat().st_mtime_ns)
+                "ETag": str(css_file.stat().st_mtime_ns),
             }
             return FileResponse(str(css_file), media_type="text/css", headers=headers)
-        return Response(status_code=404, content="/* tailwind.css missing */", media_type="text/css")
+        return Response(
+            status_code=404, content="/* tailwind.css missing */", media_type="text/css"
+        )
 
     # Provide legacy/alternate path commonly expected (/static/css/tailwind.css)
     @app.get("/static/css/tailwind.css", include_in_schema=False)
@@ -2196,10 +2544,14 @@ if WEB_DIR.exists():
         if css_file.exists():
             headers = {
                 "Cache-Control": "public, max-age=300",
-                "ETag": str(css_file.stat().st_mtime_ns)
+                "ETag": str(css_file.stat().st_mtime_ns),
             }
             return FileResponse(str(css_file), media_type="text/css", headers=headers)
-        return Response(status_code=404, content="/* tailwind.css missing (alias) */", media_type="text/css")
+        return Response(
+            status_code=404,
+            content="/* tailwind.css missing (alias) */",
+            media_type="text/css",
+        )
 
     # Provide root-level convenience path (/tailwind.css) for environments rewriting paths
     @app.get("/tailwind.css", include_in_schema=False)
@@ -2208,10 +2560,14 @@ if WEB_DIR.exists():
         if css_file.exists():
             headers = {
                 "Cache-Control": "public, max-age=300",
-                "ETag": str(css_file.stat().st_mtime_ns)
+                "ETag": str(css_file.stat().st_mtime_ns),
             }
             return FileResponse(str(css_file), media_type="text/css", headers=headers)
-        return Response(status_code=404, content="/* tailwind.css missing (root) */", media_type="text/css")
+        return Response(
+            status_code=404,
+            content="/* tailwind.css missing (root) */",
+            media_type="text/css",
+        )
 
     @app.get("/login", response_class=FileResponse, include_in_schema=False)
     async def login_page():  # noqa: D401
@@ -2220,14 +2576,15 @@ if WEB_DIR.exists():
     @app.get("/dashboard", response_class=HTMLResponse, include_in_schema=False)
     async def dashboard_page(request: Request):  # noqa: D401
         """Smart dashboard route - checks authentication and redirects appropriately."""
-        
+
         # Check for successful checkout parameters
         plan = request.query_params.get("plan")
         success = request.query_params.get("success")
-        
+
         # If coming from successful checkout, show welcome page and guide to login/signup
         if success == "true" and plan:
-            return HTMLResponse(f"""
+            return HTMLResponse(
+                f"""
             <!DOCTYPE html>
             <html><head><title>Payment Successful - Welcome to A³E Platform</title>
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -2264,10 +2621,10 @@ if WEB_DIR.exists():
                 }}
                 h1 {{ margin-bottom: 1rem; font-size: 2rem; }}
                 p {{ margin-bottom: 1.5rem; font-size: 1.1rem; opacity: 0.9; }}
-                .plan-info {{ 
-                    background: rgba(255, 255, 255, 0.1); 
-                    padding: 1rem; 
-                    border-radius: 10px; 
+                .plan-info {{
+                    background: rgba(255, 255, 255, 0.1);
+                    padding: 1rem;
+                    border-radius: 10px;
                     margin: 2rem 0;
                     border: 1px solid rgba(255, 255, 255, 0.2);
                 }}
@@ -2306,24 +2663,24 @@ if WEB_DIR.exists():
                     <div class="success-icon">🎉</div>
                     <h1>Payment Successful!</h1>
                     <p>Welcome to A³E MapMyStandards Platform</p>
-                    
+
                     <div class="plan-info">
                         <strong>Your {plan.title()} Plan is Active</strong>
                         <br>You now have full access to our platform features
                     </div>
-                    
+
                     <p>To access your personalized dashboard and start using the platform:</p>
-                    
+
                     <div class="cta-buttons">
                         <a href="/trial-signup" class="btn btn-primary">Create Your Account →</a>
                         <a href="/login" class="btn btn-secondary">Sign In</a>
                     </div>
-                    
+
                     <p style="font-size: 0.9rem; margin-top: 2rem; opacity: 0.7;">
                         Need help? <a href="/contact" style="color: #10b981;">Contact Support</a>
                     </p>
                 </div>
-                
+
                 <script>
                     // Store plan info for account creation
                     localStorage.setItem('mms_subscription_plan', '{plan}');
@@ -2331,24 +2688,29 @@ if WEB_DIR.exists():
                     localStorage.setItem('mms_payment_success', Date.now().toString());
                 </script>
             </body></html>
-            """)
-        
+            """
+            )
+
         # Check if user is authenticated (check for session token/cookie)
-        auth_token = request.cookies.get("auth_token") or request.headers.get("Authorization")
-        trial_id = request.cookies.get("mms_trial_id") or request.headers.get("X-Trial-ID")
-        
+        auth_token = request.cookies.get("auth_token") or request.headers.get(
+            "Authorization"
+        )
+        trial_id = request.cookies.get("mms_trial_id") or request.headers.get(
+            "X-Trial-ID"
+        )
+
         # If user has authentication, serve the actual dashboard
         if auth_token or trial_id:
             # Try to serve dashboard.html (the enhanced dashboard) first
             dashboard_enhanced_file = WEB_DIR / "dashboard.html"
             if dashboard_enhanced_file.exists():
                 return FileResponse(str(dashboard_enhanced_file))
-            
+
             # Try to serve dashboard-fixed.html (the actual dashboard) as fallback
             dashboard_fixed_file = WEB_DIR / "dashboard-fixed.html"
             if dashboard_fixed_file.exists():
                 return FileResponse(str(dashboard_fixed_file))
-            
+
             # Final fallback to regular dashboard
             dashboard_file = WEB_DIR / "dashboard-page.html"
             if dashboard_file.exists():
@@ -2376,7 +2738,9 @@ if WEB_DIR.exists():
     @app.get("/web/integrations", response_class=FileResponse, include_in_schema=False)
     async def integrations_page():  # noqa: D401
         """Integrations management interface."""
-        return FileResponse(str(Path(__file__).parent.parent.parent / "static" / "integrations.html"))
+        return FileResponse(
+            str(Path(__file__).parent.parent.parent / "static" / "integrations.html")
+        )
 
     @app.get("/upload-ai.html", response_class=FileResponse, include_in_schema=False)
     async def upload_ai_html():  # noqa: D401
@@ -2388,7 +2752,7 @@ if WEB_DIR.exists():
         """Debug API endpoints tool."""
         return FileResponse(str(WEB_DIR / "debug-api.html"))
 
-    @app.get("/debug-api.html", response_class=FileResponse, include_in_schema=False) 
+    @app.get("/debug-api.html", response_class=FileResponse, include_in_schema=False)
     async def debug_api_html():  # noqa: D401
         """Debug API endpoints tool."""
         return FileResponse(str(WEB_DIR / "debug-api.html"))
@@ -2406,7 +2770,11 @@ if WEB_DIR.exists():
         # Redirect to non-.html version
         return RedirectResponse(url="/trial-signup", status_code=302)
 
-    @app.get("/stripe-checkout-redirect.html", response_class=HTMLResponse, include_in_schema=False)
+    @app.get(
+        "/stripe-checkout-redirect.html",
+        response_class=HTMLResponse,
+        include_in_schema=False,
+    )
     async def stripe_checkout_redirect_html():  # noqa: D401
         """Serve stripe-checkout-redirect.html - required for professional checkout flow."""
         checkout_file = WEB_DIR / "stripe-checkout-redirect.html"
@@ -2414,15 +2782,18 @@ if WEB_DIR.exists():
             return FileResponse(str(checkout_file))
         # Fallback redirect to homepage
         return RedirectResponse(url="/", status_code=302)
-    
-    @app.get("/trial-success.html", response_class=HTMLResponse, include_in_schema=False)
+
+    @app.get(
+        "/trial-success.html", response_class=HTMLResponse, include_in_schema=False
+    )
     async def trial_success_html():  # noqa: D401
         """Serve trial-success.html - required for redirect compatibility."""
         success_file = WEB_DIR / "trial-success.html"
         if success_file.exists():
             return FileResponse(str(success_file))
         # Fallback success page
-        return HTMLResponse("""
+        return HTMLResponse(
+            """
         <!DOCTYPE html>
         <html><head><title>Welcome to A³E Platform!</title></head>
         <body style="font-family: -apple-system, sans-serif; text-align: center; padding: 3rem; background: #f8fafc;">
@@ -2445,13 +2816,16 @@ if WEB_DIR.exists():
                 <a href="/dashboard" style="display: inline-block; background: #64748b; color: white; text-decoration: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600;">🏠 Go to Dashboard</a>
             </div>
         </body></html>
-        """)
-    
-    @app.get("/quick-wins-dashboard", response_class=FileResponse, include_in_schema=False)
+        """
+        )
+
+    @app.get(
+        "/quick-wins-dashboard", response_class=FileResponse, include_in_schema=False
+    )
     async def quick_wins_dashboard():  # noqa: D401
         """Serve quick wins dashboard for trial users."""
         return FileResponse(str(WEB_DIR / "quick-wins-dashboard.html"))
-    
+
     @app.get("/roi-calculator", response_class=FileResponse, include_in_schema=False)
     async def roi_calculator():  # noqa: D401
         """Serve ROI calculator tool."""
@@ -2465,21 +2839,21 @@ if WEB_DIR.exists():
         if target.exists():
             return FileResponse(str(target))
         return HTMLResponse("<h1>Onboarding page not found</h1>", status_code=404)
-    
+
     @app.get("/standards", response_class=FileResponse, include_in_schema=False)
     async def standards_page():  # noqa: D401
         """Serve standards page (modern)."""
         modern = WEB_DIR / "standards-modern.html"
         legacy = WEB_DIR / "standards.html"
         return FileResponse(str(modern if modern.exists() else legacy))
-    
+
     @app.get("/reports", response_class=FileResponse, include_in_schema=False)
     async def reports_page():  # noqa: D401
         """Serve reports page (modern)."""
         modern = WEB_DIR / "reports-modern.html"
         legacy = WEB_DIR / "reports.html"
         return FileResponse(str(modern if modern.exists() else legacy))
-    
+
     @app.get("/gap-analysis", response_class=FileResponse, include_in_schema=False)
     async def gap_analysis_page():  # noqa: D401
         """Serve gap analysis page."""
@@ -2489,7 +2863,7 @@ if WEB_DIR.exists():
         else:
             # Fallback to reports page with gap section
             return FileResponse(str(WEB_DIR / "reports-modern.html"))
-    
+
     @app.get("/narrative", response_class=FileResponse, include_in_schema=False)
     async def narrative_page():  # noqa: D401
         """Serve narrative generator page."""
@@ -2499,7 +2873,7 @@ if WEB_DIR.exists():
         else:
             # Fallback to reports page with narrative section
             return FileResponse(str(WEB_DIR / "reports-modern.html"))
-    
+
     @app.get("/upload", response_class=FileResponse, include_in_schema=False)
     async def upload_page():  # noqa: D401
         """Serve upload page (enhanced)."""
@@ -2512,13 +2886,17 @@ if WEB_DIR.exists():
             return FileResponse(str(modern))
         else:
             return FileResponse(str(legacy))
-    
+
     @app.get("/upload-modern", response_class=RedirectResponse, include_in_schema=False)
     async def upload_modern_redirect():  # noqa: D401
         """Redirect upload-modern to enhanced upload page."""
         return RedirectResponse(url="/upload", status_code=302)
-    
-    @app.get("/standards-selection-wizard", response_class=FileResponse, include_in_schema=False)
+
+    @app.get(
+        "/standards-selection-wizard",
+        response_class=FileResponse,
+        include_in_schema=False,
+    )
     async def standards_wizard_page():  # noqa: D401
         """Serve standards selection wizard page."""
         wizard_file = WEB_DIR / "standards-selection-wizard.html"
@@ -2526,8 +2904,10 @@ if WEB_DIR.exists():
             return FileResponse(str(wizard_file))
         else:
             return RedirectResponse(url="/standards", status_code=302)
-    
-    @app.get("/evidence-mapping-wizard", response_class=FileResponse, include_in_schema=False)
+
+    @app.get(
+        "/evidence-mapping-wizard", response_class=FileResponse, include_in_schema=False
+    )
     async def evidence_mapping_page():  # noqa: D401
         """Serve evidence mapping wizard page."""
         mapping_file = WEB_DIR / "evidence-mapping-wizard.html"
@@ -2535,7 +2915,7 @@ if WEB_DIR.exists():
             return FileResponse(str(mapping_file))
         else:
             return RedirectResponse(url="/standards", status_code=302)
-    
+
     @app.get("/report-generation", response_class=FileResponse, include_in_schema=False)
     async def report_generation_page():  # noqa: D401
         """Serve report generation page."""
@@ -2544,15 +2924,17 @@ if WEB_DIR.exists():
             return FileResponse(str(report_gen_file))
         else:
             return RedirectResponse(url="/reports", status_code=302)
-    
+
     @app.get("/documentation", response_class=FileResponse, include_in_schema=False)
     async def documentation_page():  # noqa: D401
         """Serve documentation page."""
         doc_file = WEB_DIR / "documentation.html"
         if not doc_file.exists():
-            return HTMLResponse("<h1>Documentation page not found</h1>", status_code=404)
+            return HTMLResponse(
+                "<h1>Documentation page not found</h1>", status_code=404
+            )
         return FileResponse(str(doc_file))
-    
+
     @app.get("/support", response_class=FileResponse, include_in_schema=False)
     async def support_page():  # noqa: D401
         """Serve support page."""
@@ -2560,7 +2942,7 @@ if WEB_DIR.exists():
         if not support_file.exists():
             return HTMLResponse("<h1>Support page not found</h1>", status_code=404)
         return FileResponse(str(support_file))
-    
+
     @app.get("/faq", response_class=FileResponse, include_in_schema=False)
     async def faq_page():  # noqa: D401
         """Serve FAQ page."""
@@ -2568,7 +2950,7 @@ if WEB_DIR.exists():
         if not faq_file.exists():
             return HTMLResponse("<h1>FAQ page not found</h1>", status_code=404)
         return FileResponse(str(faq_file))
-    
+
     @app.get("/tutorial", response_class=FileResponse, include_in_schema=False)
     async def tutorial_page():  # noqa: D401
         """Serve tutorial page."""
@@ -2579,12 +2961,16 @@ if WEB_DIR.exists():
 
     # New pages: Reviewer Portal, Admin Standards, CrosswalkX (extensionless + .html)
     @app.get("/reviewer-portal", response_class=FileResponse, include_in_schema=False)
-    @app.get("/reviewer-portal.html", response_class=FileResponse, include_in_schema=False)
+    @app.get(
+        "/reviewer-portal.html", response_class=FileResponse, include_in_schema=False
+    )
     async def reviewer_portal_page():  # noqa: D401
         return FileResponse(str(WEB_DIR / "reviewer-portal.html"))
 
     @app.get("/admin-standards", response_class=FileResponse, include_in_schema=False)
-    @app.get("/admin-standards.html", response_class=FileResponse, include_in_schema=False)
+    @app.get(
+        "/admin-standards.html", response_class=FileResponse, include_in_schema=False
+    )
     async def admin_standards_page():  # noqa: D401
         return FileResponse(str(WEB_DIR / "admin-standards.html"))
 
@@ -2592,7 +2978,7 @@ if WEB_DIR.exists():
     @app.get("/crosswalkx.html", response_class=FileResponse, include_in_schema=False)
     async def crosswalkx_page():  # noqa: D401
         return FileResponse(str(WEB_DIR / "crosswalkx.html"))
-        
+
 else:
     logger.warning(f"Web directory not found at: {WEB_DIR}")
     # Try alternative path for Railway deployment
@@ -2615,12 +3001,15 @@ else:
             return FileResponse(os.path.join(alt_web_directory, "homepage.html"))
 
         @app.get("/onboarding", response_class=FileResponse, include_in_schema=False)
-        @app.get("/onboarding.html", response_class=FileResponse, include_in_schema=False)
+        @app.get(
+            "/onboarding.html", response_class=FileResponse, include_in_schema=False
+        )
         async def onboarding_page():  # noqa: D401
             target = os.path.join(alt_web_directory, "onboarding.html")
             if os.path.exists(target):
                 return FileResponse(target)
             return HTMLResponse("<h1>Onboarding page not found</h1>", status_code=404)
+
     else:
         logger.error("Web directory not found - static files will not be served")
 
@@ -2630,5 +3019,5 @@ if __name__ == "__main__":
         host=settings.api_host,
         port=settings.api_port,
         reload=settings.is_development,
-        log_level=settings.log_level.lower()
+        log_level=settings.log_level.lower(),
     )
