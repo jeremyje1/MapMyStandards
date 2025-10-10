@@ -16,3 +16,12 @@ Deploy (from root):
 ```bash
 vercel deploy --prod --yes
 ```
+
+## Testing
+
+Install dependencies and run Cypress smoke tests against a local preview server:
+
+```bash
+npm install
+npm run test:e2e
+```

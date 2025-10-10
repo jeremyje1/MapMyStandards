@@ -9,6 +9,31 @@ set -e
 echo "🚀 A³E Production Deployment"
 echo "============================"
 
+wait_for() {
+    local description="$1"
+    local max_attempts="$2"
+    local sleep_seconds="$3"
+    shift 3
+
+    echo "Waiting for ${description}..."
+    local attempt=1
+    while [ "${attempt}" -le "${max_attempts}" ]; do
+        set +e
+        "$@"
+        local status=$?
+        set -e
+        if [ ${status} -eq 0 ]; then
+            echo "✅ ${description} is ready"
+            return 0
+        fi
+        attempt=$((attempt + 1))
+        sleep "${sleep_seconds}"
+    done
+
+    echo "❌ ${description} did not become ready after ${max_attempts} attempts."
+    return 1
+}
+
 # Check if required environment file exists
 if [[ ! -f ".env.production" ]]; then
     echo "❌ Error: .env.production file not found!"
@@ -80,13 +105,8 @@ docker-compose -f docker-compose.production.yml up -d --build
 
 echo "⏳ Waiting for services to be ready..."
 
-# Wait for database to be ready
-echo "Waiting for PostgreSQL..."
-timeout 60 bash -c 'until docker-compose -f docker-compose.production.yml exec -T postgres pg_isready -U ${POSTGRES_USER:-a3e}; do sleep 2; done'
-
-# Wait for API to be ready
-echo "Waiting for A³E API..."
-timeout 120 bash -c 'until curl -f http://localhost:8000/health > /dev/null 2>&1; do sleep 5; done'
+wait_for "PostgreSQL" 30 2 docker-compose -f docker-compose.production.yml exec -T postgres pg_isready -U "${POSTGRES_USER:-a3e}"
+wait_for "A³E API" 24 5 bash -c 'docker-compose -f docker-compose.production.yml exec -T api python -c "import urllib.request; urllib.request.urlopen(\"http://localhost:8000/health\")"'
 
 echo "🎉 Deployment complete!"
 echo ""

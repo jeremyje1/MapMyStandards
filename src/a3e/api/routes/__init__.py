@@ -19,10 +19,12 @@ from .org_chart import router as org_chart_router
 from .scenarios import router as scenarios_router
 from .enterprise_metrics import router as enterprise_metrics_router
 from .powerbi import router as powerbi_router
+from .evidence_mapper_ai import router as evidence_mapper_ai_router
 from .teams import router as teams_router
 from .audit_logs import router as audit_logs_router
 from .sso import router as sso_router
 from .webhooks import router as webhooks_router
+from .intelligence_showcase import router as intelligence_showcase_router
 
 # Create main API router
 api_router = APIRouter()
@@ -47,9 +49,18 @@ api_router.include_router(
 )
 
 api_router.include_router(
+    evidence_mapper_ai_router
+)
+
+api_router.include_router(
     workflows_router,
     prefix="/workflows",
     tags=["workflows"]
+)
+
+api_router.include_router(
+    intelligence_showcase_router,
+    tags=["intelligence"]
 )
 
 api_router.include_router(

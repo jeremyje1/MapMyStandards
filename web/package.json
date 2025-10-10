@@ -6,9 +6,13 @@
     "build-css": "tailwindcss -i ./src/input.css -o ./static/css/tailwind.css --minify",
     "watch-css": "tailwindcss -i ./src/input.css -o ./static/css/tailwind.css --watch",
     "build": "npm run build-css",
-    "dev": "npm run watch-css"
+    "dev": "npm run watch-css",
+    "test:e2e": "start-server-and-test \"http-server . -p 4173 --silent\" http://localhost:4173 \"cypress run --config-file cypress.config.js\""
   },
   "devDependencies": {
+    "cypress": "^13.7.0",
+    "http-server": "^14.1.1",
+    "start-server-and-test": "^2.0.3",
     "tailwindcss": "^3.4.0"
   }
 }

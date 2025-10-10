@@ -2,6 +2,31 @@
 from ..models.database_schema import Base
 from ..models.user import User
 from .enterprise_models import OrgChart, Scenario, PowerBIConfig, Team, TeamInvitation, UserRole, AuditLog, ApiKey, SessionSecurity, user_teams
+from .ai_models import (
+    AIModuleBase,
+    Org,
+    AppUser,
+    Artifact,
+    ArtifactChunk,
+    StandardClause,
+    StandardsGraphEdge,
+    EvidenceLink,
+    CrosswalkEdge,
+    TrustSignal,
+    Citation,
+    RiskSnapshot,
+)
+from .ai_repositories import (
+    OrgRepository,
+    AppUserRepository,
+    ArtifactRepository,
+    EvidenceLinkRepository,
+    TrustSignalRepository,
+    CitationRepository,
+    CrosswalkRepository,
+    StandardsRepository,
+    RiskRepository,
+)
 from .connection import DatabaseManager
 
 __all__ = [
@@ -17,5 +42,26 @@ __all__ = [
     "ApiKey",
     "SessionSecurity",
     "user_teams",
-    "DatabaseManager"
+    "DatabaseManager",
+    "AIModuleBase",
+    "Org",
+    "AppUser",
+    "Artifact",
+    "ArtifactChunk",
+    "StandardClause",
+    "StandardsGraphEdge",
+    "EvidenceLink",
+    "CrosswalkEdge",
+    "TrustSignal",
+    "Citation",
+    "RiskSnapshot",
+    "OrgRepository",
+    "AppUserRepository",
+    "ArtifactRepository",
+    "EvidenceLinkRepository",
+    "TrustSignalRepository",
+    "CitationRepository",
+    "CrosswalkRepository",
+    "StandardsRepository",
+    "RiskRepository",
 ]

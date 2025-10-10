@@ -108,7 +108,7 @@ class DatabaseManager:
             if os.getenv('DEBUG') == 'true' or not hasattr(self, '_tables_created'):
                 logger.info("Creating database tables...")
             
-            # Use sync engine for DDL operations
+            # Use sync engine for DDL operations (legacy tables only; AI tables managed via migrations)
             Base.metadata.create_all(bind=self.engine)
             
             if os.getenv('DEBUG') == 'true' or not hasattr(self, '_tables_created'):

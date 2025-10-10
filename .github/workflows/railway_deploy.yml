@@ -1,0 +1,36 @@
+name: Deploy Backend to Railway
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Backend deploy
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Ensure deploy script is executable
+        run: chmod +x railway_deploy.sh
+
+      - name: Deploy to Railway
+        run: |
+          export RAILWAY_TOKEN='${{ secrets.RAILWAY_TOKEN }}'
+          export RAILWAY_PROJECT_ID='${{ secrets.RAILWAY_PROJECT_ID }}'
+          export RAILWAY_ENVIRONMENT='${{ secrets.RAILWAY_ENVIRONMENT }}'
+          export RAILWAY_SERVICE_NAME='${{ secrets.RAILWAY_SERVICE_NAME }}'
+          ./railway_deploy.sh

@@ -7,9 +7,11 @@ Supports development, staging, and production environments.
 
 from typing import List, Optional, Dict, Any
 from enum import Enum
+import json
 
-from pydantic import AliasChoices, BaseModel, Field, field_validator
+from pydantic import AliasChoices, BaseModel, Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+import os
 
 
 class Environment(str, Enum):
@@ -65,11 +67,17 @@ class Settings(BaseSettings):
 
     # AWS Bedrock Configuration
     bedrock_region: str = "us-east-1"
-    bedrock_model_id: str = "anthropic.claude-3-5-sonnet-20240620-v1:0"
+    bedrock_model_id: str = Field(
+        default="anthropic.claude-3-5-sonnet-20240620-v1:0",
+        validation_alias=AliasChoices("BEDROCK_MODEL_ID", "BEDROCK_MODEL_CLAUDE"),
+    )
+    bedrock_model_embed: str = "text-embed-1"
     bedrock_max_tokens: int = 4096
 
     # LLM Configuration
     openai_api_key: Optional[str] = None
+    openai_embed_model: str = "text-embedding-3-large"
+    openai_json_model: str = "gpt-4.1-mini"
     anthropic_api_key: Optional[str] = None
 
     # Agent Configuration
@@ -170,6 +178,45 @@ class Settings(BaseSettings):
     enable_real_time_processing: bool = True
     enable_batch_processing: bool = True
     enable_auto_evidence_mapping: bool = True
+    feature_flags: Dict[str, bool] = Field(default_factory=dict, validation_alias="FEATURE_FLAGS")
+
+    @field_validator("feature_flags", mode="before")
+    @classmethod
+    def parse_feature_flags(cls, value):
+        default_flags = {
+            "standards_graph": True,
+            "evidence_mapper": True,
+            "evidence_trust_score": True,
+            "gap_risk_predictor": True,
+            "crosswalkx": True,
+            "citeguard": True,
+        }
+        if value is None or value == "":
+            return default_flags
+        if isinstance(value, dict):
+            merged = default_flags.copy()
+            merged.update({k: bool(v) for k, v in value.items()})
+            return merged
+        if isinstance(value, str):
+            try:
+                parsed = json.loads(value)
+                if isinstance(parsed, dict):
+                    merged = default_flags.copy()
+                    merged.update({k: bool(v) for k, v in parsed.items()})
+                    return merged
+            except json.JSONDecodeError:
+                pass
+        # Fallback to defaults if parsing fails
+        return default_flags
+
+    @model_validator(mode="after")
+    def apply_environment_feature_defaults(cls, values: "Settings") -> "Settings":
+        if values.environment == Environment.PRODUCTION and os.getenv("FEATURE_FLAGS") in (None, ""):
+            values.feature_flags = {key: False for key in values.feature_flags.keys()}
+        return values
+
+    def is_feature_enabled(self, flag: str) -> bool:
+        return bool(self.feature_flags.get(flag, False))
     
     @field_validator("environment", mode="before")
     @classmethod

@@ -1,5 +1,5 @@
 ruff==0.5.7
 mypy==1.10.0
-types-requests==2.32.0.20240622
+# types-requests==2.31.0.20240406  # TODO: requires urllib3>=2 which conflicts with botocore on Python 3.9
 types-PyYAML==6.0.12.20240917
 # pyright is typically installed via npm; included here only if using pip variant

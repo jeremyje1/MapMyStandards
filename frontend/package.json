@@ -5,6 +5,7 @@
   "dependencies": {
     "@headlessui/react": "^2.2.7",
     "@heroicons/react": "^2.2.0",
+  "@reactour/tour": "^3.7.0",
     "@stripe/stripe-js": "^7.9.0",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.8.0",

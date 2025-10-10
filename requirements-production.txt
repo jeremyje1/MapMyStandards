@@ -71,7 +71,8 @@ pinecone-client==3.0.0
 scikit-learn==1.3.2
 
 # Production essentials
-redis==5.0.1
+redis==4.6.0
+celery[redis]==5.3.4
 
 # CORS Support
 flask-cors==6.0.1

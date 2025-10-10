@@ -32,6 +32,7 @@ from ...services.risk_explainer import risk_explainer, StandardEvidenceSnapshot
 from ...services.metrics_timeseries import maybe_snapshot, get_series
 from ...services.telemetry_events import record_event as record_telemetry_event
 from ...database.connection import db_manager
+from ...database.services import UserService
 from sqlalchemy import text
 from ...services.narrative_service import generate_narrative_html
 try:
@@ -1128,29 +1129,59 @@ async def get_current_user_simple(
 # ------------------------------
 # Helper function to get user UUID from email
 # ------------------------------
-async def get_user_uuid_from_email(email: str) -> str:
-    """Get the actual UUID for a user from their email address"""
+async def get_user_uuid_from_email(identifier: str) -> str:
+    """Resolve a stable UUID for the given user identifier or email.
+
+    This helper guarantees that uploads always persist against a valid
+    user row by creating a lightweight trial profile when needed.
+    """
+    if not identifier:
+        return identifier
+
+    candidate = str(identifier).strip()
+
+    # If the identifier is already a UUID, ensure the row exists and return it.
+    try:
+        parsed = uuid.UUID(candidate)
+        canonical_id = str(parsed)
+        user = await UserService.get_or_create_user(canonical_id)
+        return str(user.id)
+    except (ValueError, AttributeError):
+        canonical_id = None
+
+    email = candidate if "@" in candidate else None
+
     try:
         async with db_manager.get_session() as session:
+            # Try to find an existing user row by email first
+            if email:
+                result = await session.execute(
+                    text("SELECT id FROM users WHERE email = :email"),
+                    {"email": email}
+                )
+                row = result.fetchone()
+                if row and getattr(row, "id", None):
+                    return str(row.id)
+
+            # Fall back to checking if the identifier already matches the primary key
             result = await session.execute(
-                text("SELECT id FROM users WHERE email = :email"),
-                {"email": email}
+                text("SELECT id FROM users WHERE id::text = :candidate"),
+                {"candidate": candidate}
             )
-            user = result.first()
-            if user:
-                return user.id
-            # If no user found, check if the provided value is already a UUID
-            import uuid
-            try:
-                uuid.UUID(email)
-                return email  # It's already a UUID
-            except:
-                # Return the email as fallback (for backward compatibility)
-                logger.warning(f"No user found for email: {email}, using email as ID")
-                return email
-    except Exception as e:
-        logger.error(f"Error getting user UUID: {e}")
-        return email
+            row = result.fetchone()
+            if row and getattr(row, "id", None):
+                return str(row.id)
+    except Exception as db_error:
+        logger.warning(f"User lookup failed for {candidate}: {db_error}")
+
+    # Create a deterministic UUID so repeated calls map to the same user row
+    if not canonical_id:
+        canonical_id = str(uuid.uuid5(uuid.NAMESPACE_URL, f"mapmystandards:{candidate.lower()}"))
+
+    generated_email = email or f"{candidate.replace('|', '_').replace(' ', '').lower()}@autogen.mapmystandards.ai"
+
+    user = await UserService.get_or_create_user(canonical_id, email=generated_email)
+    return str(user.id)
 
 
 # ------------------------------
