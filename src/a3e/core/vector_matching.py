@@ -93,6 +93,7 @@ class StandardMatch:
     matched_concepts: List[str] = field(default_factory=list)
     evidence_gaps: List[str] = field(default_factory=list)
     supporting_evidence: List[str] = field(default_factory=list)
+    page_numbers: List[int] = field(default_factory=list)  # Page numbers where evidence is found
     
     # Audit trail
     match_timestamp: datetime = field(default_factory=datetime.utcnow)
@@ -119,6 +120,7 @@ class EvidenceDocument:
     collection_date: datetime
     domain_tags: List[AccreditationDomain] = field(default_factory=list)
     quality_score: float = 0.0
+    page_count: int = 0  # Total number of pages in the document
     
     # Ontology mappings
     mapped_concepts: List[str] = field(default_factory=list)
@@ -137,6 +139,29 @@ class VectorWeightedMatcher:
         self.semantic_similarity_threshold = 0.75
         self.hierarchy_boost_factor = 0.1
         self.domain_penalty_factor = 0.2
+    
+    @staticmethod
+    def extract_page_numbers_from_content(content: str) -> List[int]:
+        """
+        Extract page numbers from content that contains page markers.
+        Looks for patterns like '--- Page X ---' in the text.
+        
+        Args:
+            content: Text content that may contain page markers
+            
+        Returns:
+            List of page numbers found in the content
+        """
+        import re
+        page_numbers = []
+        # Match patterns like "--- Page 15 ---" or "--- Page 3 ---"
+        page_pattern = r'---\s*Page\s+(\d+)\s*---'
+        matches = re.finditer(page_pattern, content, re.IGNORECASE)
+        for match in matches:
+            page_num = int(match.group(1))
+            if page_num not in page_numbers:
+                page_numbers.append(page_num)
+        return sorted(page_numbers)
         
     def match_evidence_to_standards(self, 
                                    evidence: EvidenceDocument,
@@ -235,6 +260,9 @@ class VectorWeightedMatcher:
             evidence, standard_node, semantic_score
         )
         
+        # Extract page numbers from evidence content
+        page_numbers = self.extract_page_numbers_from_content(evidence.content)
+        
         return StandardMatch(
             standard_id=standard_id,
             evidence_id=evidence.id,
@@ -249,6 +277,7 @@ class VectorWeightedMatcher:
             matched_concepts=matched_concepts,
             evidence_gaps=evidence_gaps,
             supporting_evidence=supporting_evidence,
+            page_numbers=page_numbers,
             reliability_score=reliability_score
         )
     
