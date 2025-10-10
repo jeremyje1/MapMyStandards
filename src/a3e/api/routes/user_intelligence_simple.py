@@ -449,7 +449,13 @@ def _merge_claims_with_settings(claims: Dict[str, Any]) -> Dict[str, Any]:
 
 async def _get_user_uploads(claims: Dict[str, Any]) -> Dict[str, Any]:
     """Get user uploads from database"""
-    user_id = claims.get("sub", claims.get("user_id", "unknown"))
+    raw_user_id = claims.get("user_id") or claims.get("sub") or claims.get("email") or "unknown"
+
+    # Normalize to the UUID stored in the database (older tokens may carry an email)
+    user_id = await get_user_uuid_from_email(raw_user_id)
+
+    # Cache normalized id back onto the claims so downstream callers stay consistent
+    claims.setdefault("user_id", user_id)
     
     try:
         async with db_manager.get_session() as session:
@@ -560,11 +566,15 @@ async def _record_user_upload(
     fingerprint: Optional[str] = None,
     file_size: Optional[int] = None,
     analysis_results: Optional[Dict[str, Any]] = None,
+    content_type: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Record a new upload in the database"""
-    email = claims.get("sub", claims.get("email", claims.get("user_id", "unknown")))
-    user_id = await get_user_uuid_from_email(email)
-    org_id = claims.get("org_id", "default")
+    identifier = claims.get("user_id") or claims.get("sub") or claims.get("email") or "unknown"
+    user_id = await get_user_uuid_from_email(identifier)
+    claims.setdefault("user_id", user_id)
+
+    # Persist an organization identifier when available (not required by schema)
+    org_id = claims.get("org_id") or claims.get("organization_id")
     
     try:
         async with db_manager.get_session() as session:
@@ -572,41 +582,73 @@ async def _record_user_upload(
             document_id = str(uuid.uuid4())
             analysis_json = json.dumps(analysis_results) if analysis_results is not None else None
             
-            await session.execute(
-                text("""
-                    INSERT INTO documents (
-                        id, user_id, institution_id, filename, file_key, 
-                        file_size, content_type, sha256, status, uploaded_at,
-                        original_filename, file_path, mime_type, analysis_results
-                    ) VALUES (
-                        :id, :user_id, :institution_id, :filename, :file_key,
-                        :file_size, :content_type, :sha256, :status, :uploaded_at,
-                        :original_filename, :file_path, :mime_type, :analysis_results
-                    )
-                """),
-                {
-                    "id": document_id,
-                    "user_id": user_id,
-                    "institution_id": org_id,  # Maps to institution_id column
-                    "filename": filename,
-                    "file_key": saved_path or "",
-                    "file_size": file_size or 0,
-                    "content_type": doc_type or "application/octet-stream",
-                    "sha256": fingerprint or "",
-                    "status": "analyzed" if standard_ids else "uploaded",
-                    "uploaded_at": datetime.utcnow(),
-                    "original_filename": filename,  # Required field
-                    "file_path": saved_path or "",  # Required field
-                    "mime_type": doc_type or "application/octet-stream",  # Maps to mime_type column
-                    "analysis_results": analysis_json,
-                }
+            params = {
+                "id": document_id,
+                "user_id": user_id,
+                "organization_id": org_id,
+                "filename": filename,
+                "file_key": saved_path or "",
+                "file_size": file_size or 0,
+                "content_type": content_type or doc_type or "application/octet-stream",
+                "sha256": fingerprint or "",
+                "status": "analyzed" if standard_ids else "uploaded",
+                "uploaded_at": datetime.utcnow(),
+                "original_filename": filename,
+                "file_path": saved_path or "",
+                "mime_type": content_type or doc_type or "application/octet-stream",
+                "analysis_results": analysis_json,
+            }
+
+            used_legacy_schema = False
+
+            insert_stmt = text(
+                """
+                INSERT INTO documents (
+                    id, user_id, organization_id, filename, file_key,
+                    file_size, content_type, sha256, status, uploaded_at,
+                    original_filename, file_path, mime_type, analysis_results
+                ) VALUES (
+                    :id, :user_id, :organization_id, :filename, :file_key,
+                    :file_size, :content_type, :sha256, :status, :uploaded_at,
+                    :original_filename, :file_path, :mime_type, :analysis_results
+                )
+                """
             )
-            
+
+            try:
+                await session.execute(insert_stmt, params)
+            except Exception as insert_error:
+                await session.rollback()
+                error_text = str(insert_error).lower()
+                # Retry against legacy schema that still uses institution_id
+                if "organization_id" in error_text:
+                    legacy_params = params.copy()
+                    legacy_params.pop("organization_id", None)
+                    legacy_params["institution_id"] = org_id
+                    legacy_stmt = text(
+                        """
+                        INSERT INTO documents (
+                            id, user_id, institution_id, filename, file_key,
+                            file_size, content_type, sha256, status, uploaded_at,
+                            original_filename, file_path, mime_type, analysis_results
+                        ) VALUES (
+                            :id, :user_id, :institution_id, :filename, :file_key,
+                            :file_size, :content_type, :sha256, :status, :uploaded_at,
+                            :original_filename, :file_path, :mime_type, :analysis_results
+                        )
+                        """
+                    )
+                    await session.execute(legacy_stmt, legacy_params)
+                    used_legacy_schema = True
+                else:
+                    raise insert_error
+
             await session.commit()
             
             # TODO: If standard_ids provided, insert into mapping table
             
-            logger.info(f"Recorded upload {filename} for user {user_id} in database")
+            schema_note = " using legacy schema" if used_legacy_schema else ""
+            logger.info(f"Recorded upload {filename} for user {user_id} in database{schema_note}")
             
             # Return document_id for further processing
             return {"document_id": document_id, "uploads": await _get_user_uploads(claims)}
@@ -1605,7 +1647,19 @@ async def build_dashboard_metrics_payload(
     standards_mapped = 0
     avg_trust = 0.7
 
-    user_id = current_user.get("user_id") or current_user.get("sub") or current_user.get("email")
+    raw_user_id = current_user.get("user_id") or current_user.get("sub") or current_user.get("email")
+
+    user_id: Optional[str] = None
+    if raw_user_id:
+        try:
+            # Ensure we always query using the canonical UUID stored in the database
+            user_id = await get_user_uuid_from_email(str(raw_user_id))
+        except Exception:
+            # Fall back to whatever identifier we have, logging handled downstream
+            user_id = str(raw_user_id)
+    if user_id:
+        current_user.setdefault("user_id", user_id)
+
     used_db = False
     if user_id:
         try:
@@ -2496,16 +2550,17 @@ async def evidence_upload_simple(
             if result.get("success"):
                 # Record upload for metrics
                 upload_result = await _record_user_upload(
-                    current_user, 
-                    name, 
-                    standard_ids=[], 
-                    doc_type=doc_type, 
-                    trust_score=None, 
+                    current_user,
+                    name,
+                    standard_ids=[],
+                    doc_type=doc_type,
+                    trust_score=None,
                     saved_path=file_key,  # Use storage key instead of local path
                     fingerprint=result.get("hash", "")[:16],
-                    file_size=len(content)
+                    file_size=len(content),
+                    content_type=content_type,
                 )
-                
+
                 document_id = upload_result.get("document_id")
                 
                 # Automatically trigger analysis for supported file types
