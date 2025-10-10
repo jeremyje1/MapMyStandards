@@ -15,6 +15,40 @@
             padding: 0;
         }
 
+        .empty-report-state {
+            background: white;
+            border-radius: var(--border-radius-xl);
+            padding: var(--space-8);
+            text-align: center;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .empty-report-state .empty-icon {
+            font-size: 3.5rem;
+            margin-bottom: var(--space-4);
+        }
+
+        .empty-report-state .empty-title {
+            font-size: 1.875rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: var(--space-3);
+        }
+
+        .empty-report-state .empty-description {
+            color: var(--gray-600);
+            font-size: 1.05rem;
+            max-width: 520px;
+            margin: 0 auto var(--space-6);
+        }
+
+        .empty-report-state .empty-actions {
+            display: flex;
+            justify-content: center;
+            gap: var(--space-4);
+            flex-wrap: wrap;
+        }
+
         :root {
             --primary-blue: #1e40af;
             --primary-blue-light: #3b82f6;
@@ -496,8 +530,8 @@
                 <div class="success-state" id="successState" style="display: none;">
                     <div class="success-header">
                         <div class="success-icon">✓</div>
-                        <h1 class="success-title">Report Generated Successfully!</h1>
-                        <p class="success-subtitle">Your accreditation readiness report is ready</p>
+                        <h1 class="success-title" id="successTitle">Report Generated Successfully!</h1>
+                        <p class="success-subtitle" id="successSubtitle">Your accreditation readiness report is ready</p>
                     </div>
 
                     <!-- Report Summary -->
@@ -621,6 +655,28 @@
                         </div> <!-- next-steps -->
                     </div> <!-- whats-next -->
                 </div> <!-- success-state -->
+
+                <div class="empty-report-state" id="emptyReportState" style="display: none;">
+                    <div class="empty-icon">📂</div>
+                    <h2 class="empty-title">Upload evidence to generate your accreditation report</h2>
+                    <p class="empty-description" id="emptyReportMessage">
+                        We couldn't find any mapped standards or evidence documents. Add evidence and complete mapping to unlock your personalized report.
+                    </p>
+                    <div class="empty-actions">
+                        <a href="/upload.html" class="btn btn-primary" style="text-decoration: none;">
+                            <span>📁</span>
+                            Upload Evidence
+                        </a>
+                        <a href="/documents.html" class="btn btn-secondary" style="text-decoration: none;">
+                            <span>🗂️</span>
+                            Review Documents
+                        </a>
+                        <a href="/standards-selection-wizard.html" class="btn btn-secondary" style="text-decoration: none;">
+                            <span>🎯</span>
+                            Map Standards
+                        </a>
+                    </div>
+                </div>
             </div> <!-- generation-container -->
         </div> <!-- container -->
     </main>
@@ -635,8 +691,8 @@
 
     let latestSnapshot = null;
     let latestSummary = null;
-        let latestExportHtml = null;
-        let reportActionState = {
+    let latestExportHtml = null;
+    let reportActionState = {
             ready: false,
             reason: 'Loading live metrics…',
         };
@@ -761,7 +817,6 @@
             const coverageCandidates = [
                 typeof performance.coverage_percentage === 'number' ? performance.coverage_percentage : null,
                 typeof evidenceStats.coveragePercentage === 'number' ? evidenceStats.coveragePercentage : null,
-                typeof performance.compliance_score === 'number' ? performance.compliance_score : null,
             ].filter((value) => typeof value === 'number' && !Number.isNaN(value));
 
             if (coverageCandidates.length > 0) {
@@ -876,9 +931,88 @@
                         : 'Upload at least one evidence document to generate your report.';
                 setReportActionState(false, reason);
             }
+
+            const successTitleEl = byId('successTitle');
+            const successSubtitleEl = byId('successSubtitle');
+            if (hasMappedStandards && hasDocuments) {
+                if (successTitleEl) {
+                    successTitleEl.textContent = 'Report Generated Successfully!';
+                }
+                if (successSubtitleEl) {
+                    successSubtitleEl.textContent = 'Your accreditation readiness report is ready.';
+                }
+            } else {
+                if (successTitleEl) {
+                    successTitleEl.textContent = 'Report not ready yet';
+                }
+                if (successSubtitleEl) {
+                    successSubtitleEl.textContent = 'Add evidence and complete mapping to unlock your personalized report.';
+                }
+            }
         }
 
-    function buildExportHTML(summary) {
+        function hasSufficientEvidence(summary) {
+            return Boolean(
+                summary &&
+                typeof summary.documents === 'number' && summary.documents > 0 &&
+                typeof summary.standards === 'number' && summary.standards > 0
+            );
+        }
+
+        function showInsufficientDataState(reason) {
+            const successState = byId('successState');
+            if (successState) {
+                successState.style.display = 'none';
+            }
+            const emptyState = byId('emptyReportState');
+            if (emptyState) {
+                emptyState.style.display = 'block';
+            }
+            const messageEl = byId('emptyReportMessage');
+            if (messageEl) {
+                messageEl.textContent = reason || 'Upload evidence and map it to standards to generate your report.';
+            }
+        }
+
+        function hideInsufficientDataState() {
+            const emptyState = byId('emptyReportState');
+            if (emptyState) {
+                emptyState.style.display = 'none';
+            }
+        }
+
+        function wait(ms) {
+            return new Promise((resolve) => {
+                window.setTimeout(resolve, ms);
+            });
+        }
+
+        async function animateSteps(steps) {
+            if (!steps.length) {
+                await wait(STEP_DELAY_MS);
+                return;
+            }
+
+            steps[0].classList.add('active');
+            for (let index = 1; index < steps.length; index += 1) {
+                await wait(STEP_DELAY_MS);
+                const previous = steps[index - 1];
+                if (previous) {
+                    previous.classList.remove('active');
+                    previous.classList.add('completed');
+                }
+                steps[index].classList.add('active');
+            }
+
+            await wait(600);
+            const lastStep = steps[steps.length - 1];
+            if (lastStep) {
+                lastStep.classList.remove('active');
+                lastStep.classList.add('completed');
+            }
+        }
+
+        function buildExportHTML(summary) {
             const generatedAtDisplay = new Date(summary.generatedAt).toLocaleString(undefined, {
                 dateStyle: 'long',
                 timeStyle: 'short',
@@ -1085,39 +1219,52 @@
             console.log('🎉 Report generation complete!');
         }
 
-        function startJourney() {
+        async function startJourney() {
             const generatingState = byId('generatingState');
             const successState = byId('successState');
             const steps = ['step1', 'step2', 'step3', 'step4']
                 .map(byId)
                 .filter(Boolean);
 
-            steps.forEach((step, index) => {
-                setTimeout(() => {
-                    step.classList.add('active');
-                    if (index > 0) {
-                        steps[index - 1].classList.remove('active');
-                        steps[index - 1].classList.add('completed');
-                    }
-                }, STEP_DELAY_MS * index);
+            if (successState) {
+                successState.style.display = 'none';
+            }
+            hideInsufficientDataState();
+            if (generatingState) {
+                generatingState.style.display = 'block';
+            }
+
+            setReportActionState(false, 'Loading live metrics…');
+
+            const metricsPromise = updateWithRealMetrics().catch((error) => {
+                console.error('Failed to update metrics:', error);
+                setReportActionState(false, 'Unable to load metrics. Please refresh the page once data is available.');
+                return null;
             });
 
-            const totalDuration = STEP_DELAY_MS * steps.length + 600;
-            setTimeout(() => {
-                if (generatingState) {
-                    generatingState.style.display = 'none';
-                }
+            await animateSteps(steps);
+
+            let summary = null;
+            try {
+                summary = await metricsPromise;
+            } catch (error) {
+                summary = null;
+            }
+
+            if (generatingState) {
+                generatingState.style.display = 'none';
+            }
+
+            if (hasSufficientEvidence(summary)) {
+                hideInsufficientDataState();
                 if (successState) {
                     successState.style.display = 'block';
                 }
                 celebrateCompletion();
-            }, totalDuration);
-
-            setReportActionState(false, 'Loading live metrics…');
-            updateWithRealMetrics().catch((error) => {
-                console.error('Failed to update metrics:', error);
-                setReportActionState(false, 'Unable to load metrics. Please refresh the page once data is available.');
-            });
+            } else {
+                const reason = reportActionState.reason || 'Upload evidence and map it to standards to generate your report.';
+                showInsufficientDataState(reason);
+            }
         }
 
         document.addEventListener('DOMContentLoaded', startJourney);
