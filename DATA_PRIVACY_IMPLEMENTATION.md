@@ -148,10 +148,28 @@ Added as dedicated section on `web/marketing.html` before the final CTA section
 
 ## Deployment Status
 
+### Marketing Page (marketing.html)
 ✅ **Committed to GitHub**: commit `6f7681f`  
 ✅ **Pushed to main branch**  
 ✅ **Automated deployment triggered**  
-⏳ **Live on production**: https://platform.mapmystandards.ai/marketing.html
+✅ **Live on production**: https://platform.mapmystandards.ai/marketing.html
+
+### Homepage (homepage-enhanced.html)
+✅ **Committed to GitHub**: commit `8d21f12`  
+✅ **Pushed to main branch**  
+✅ **Automated deployment triggered**  
+✅ **Live on production**: https://platform.mapmystandards.ai/homepage-enhanced.html
+
+## Pages with Privacy Statement
+
+1. **homepage-enhanced.html** - Main marketing homepage (✅ Complete)
+2. **marketing.html** - Secondary marketing page (✅ Complete)
+
+Both pages now feature the comprehensive Data Privacy & Confidentiality Statement with:
+- 6 key principle cards
+- Detailed institutional commitments
+- Contact information for privacy inquiries
+- Professional visual design
 
 ---
 
