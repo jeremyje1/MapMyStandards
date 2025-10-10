@@ -1,0 +1,75 @@
+# Pre-commit hooks for MapMyStandards
+# Install: pip install pre-commit && pre-commit install
+# Run manually: pre-commit run --all-files
+
+repos:
+  # Prevent committing to main branch directly
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: check-added-large-files
+        args: ['--maxkb=500']
+      - id: check-json
+      - id: check-yaml
+        args: ['--unsafe']  # Allow custom YAML tags
+      - id: check-toml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: mixed-line-ending
+      - id: check-merge-conflict
+      - id: detect-private-key
+        exclude: '(^SECURITY_.*\.md$|^SECRET_.*\.md$|^\.github/workflows/security_scan\.yml$)'
+      - id: no-commit-to-branch
+        args: ['--branch', 'production']
+
+  # Detect AWS credentials
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: detect-aws-credentials
+        args: ['--allow-missing-credentials']
+
+  # Python-specific checks
+  - repo: https://github.com/psf/black
+    rev: 23.12.1
+    hooks:
+      - id: black
+        language_version: python3
+        exclude: '^(migrations/|alembic/versions/)'
+
+  - repo: https://github.com/PyCQA/flake8
+    rev: 7.0.0
+    hooks:
+      - id: flake8
+        args: ['--max-line-length=120', '--ignore=E203,W503']
+        exclude: '^(migrations/|alembic/versions/)'
+
+  # Check for .env files
+  - repo: local
+    hooks:
+      - id: block-env-files
+        name: Block .env files (except examples)
+        entry: scripts/precommit/block_env_files.sh
+        language: system
+        pass_filenames: false
+        always_run: true
+
+  # Check for common secret patterns in code
+  - repo: local
+    hooks:
+      - id: check-secret-patterns
+        name: Check for hardcoded secrets in staged changes
+        entry: scripts/precommit/check_secret_patterns.py
+        language: system
+        pass_filenames: false
+        always_run: true
+
+  # Validate environment variable usage
+  - repo: local
+    hooks:
+      - id: validate-env-usage
+        name: Ensure secrets use os.environ or getenv
+        entry: scripts/precommit/validate_env_usage.py
+        language: system
+        pass_filenames: false
+        always_run: true

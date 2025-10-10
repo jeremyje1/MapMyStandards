@@ -1,0 +1,132 @@
+# GitLeaks Configuration for MapMyStandards
+# Prevents accidental commits of secrets and credentials
+
+title = "MapMyStandards Secret Detection"
+
+# AWS Access Keys
+[[rules]]
+id = "aws-access-key"
+description = "AWS Access Key ID"
+regex = '''(?i)(AKIA|ASIA|AIDA|AROA|AIPA|ANPA|ANVA|AGPA)[0-9A-Z]{16}'''
+tags = ["aws", "credentials"]
+
+[[rules]]
+id = "aws-secret-key"
+description = "AWS Secret Access Key"
+regex = '''(?i)aws(.{0,20})?['\"][0-9a-zA-Z/+]{40}['\"]'''
+tags = ["aws", "credentials"]
+
+# OpenAI API Keys
+[[rules]]
+id = "openai-api-key"
+description = "OpenAI API Key"
+regex = '''sk-[a-zA-Z0-9]{20,}T3BlbkFJ[a-zA-Z0-9]{20,}'''
+tags = ["openai", "api-key"]
+
+# Stripe Keys
+[[rules]]
+id = "stripe-api-key"
+description = "Stripe API Key"
+regex = '''(sk|pk)_(test|live)_[0-9a-zA-Z]{24,}'''
+tags = ["stripe", "api-key"]
+
+# Generic API Keys
+[[rules]]
+id = "generic-api-key"
+description = "Generic API Key"
+regex = '''(?i)(api[_-]?key|apikey)['"]?\s*[:=]\s*['"]?[0-9a-zA-Z\-_]{20,}'''
+tags = ["api-key"]
+
+# Database Connection Strings
+[[rules]]
+id = "postgres-connection"
+description = "PostgreSQL Connection String"
+regex = '''postgres(ql)?://[a-zA-Z0-9\-_.]+:[^@\s]+@[a-zA-Z0-9\-_.]+'''
+tags = ["database", "postgres"]
+
+[[rules]]
+id = "redis-connection"
+description = "Redis Connection String"
+regex = '''redis://:[^@\s]+@[a-zA-Z0-9\-_.]+'''
+tags = ["database", "redis"]
+
+# Private Keys
+[[rules]]
+id = "private-key"
+description = "Private Key"
+regex = '''-----BEGIN (RSA |EC |DSA )?PRIVATE KEY-----'''
+tags = ["private-key"]
+
+# Generic Passwords
+[[rules]]
+id = "generic-password"
+description = "Generic Password in Config"
+regex = '''(?i)(password|passwd|pwd)['"]?\s*[:=]\s*['"][^'"\s]{8,}['"]'''
+tags = ["password"]
+
+# SECRET_KEY for Flask/FastAPI
+[[rules]]
+id = "secret-key"
+description = "Application SECRET_KEY"
+regex = '''(?i)secret[_-]?key['"]?\s*[:=]\s*['"][^'"\s]{20,}['"]'''
+tags = ["secret-key"]
+
+# MailerSend / SendGrid
+[[rules]]
+id = "mailersend-api-key"
+description = "MailerSend API Key"
+regex = '''mlsn\.[a-zA-Z0-9]{20,}'''
+tags = ["email", "api-key"]
+
+[[rules]]
+id = "sendgrid-api-key"
+description = "SendGrid API Key"
+regex = '''SG\.[a-zA-Z0-9_\-]{22}\.[a-zA-Z0-9_\-]{43}'''
+tags = ["email", "api-key"]
+
+# GitHub Tokens
+[[rules]]
+id = "github-token"
+description = "GitHub Personal Access Token"
+regex = '''ghp_[a-zA-Z0-9]{36}'''
+tags = ["github", "token"]
+
+# Vercel Tokens
+[[rules]]
+id = "vercel-token"
+description = "Vercel Access Token"
+regex = '''(?i)vercel(.{0,20})?['\"][a-zA-Z0-9]{24}['\"]'''
+tags = ["vercel", "token"]
+
+# Railway Tokens
+[[rules]]
+id = "railway-token"
+description = "Railway Access Token"
+regex = '''(?i)railway(.{0,20})?['\"][a-zA-Z0-9\-_]{20,}['\"]'''
+tags = ["railway", "token"]
+
+# Allowlist - Files that should never contain secrets
+[allowlist]
+description = "Allowlisted files"
+paths = [
+    '''.env.example''',
+    '''.env.complete.example''',
+    '''.env.template''',
+    '''**/*_example.env''',
+    '''**/*.md''',  # Documentation files
+    '''**/test_*.py''',  # Test files with mock data
+]
+
+# Allowlist specific strings that look like secrets but aren't
+regexes = [
+    '''your-.*-here''',
+    '''your_.*_here''',
+    '''YOUR_.*_HERE''',
+    '''example.*key''',
+    '''test.*password''',
+    '''dummy.*secret''',
+    '''placeholder''',
+    '''xxxxxx''',
+    '''sk-.*example''',
+    '''AKIA.*EXAMPLE''',
+]

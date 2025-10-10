@@ -1,0 +1,92 @@
+# GitHub Actions Workflow - Secret Scanning
+# Runs on every push and pull request to detect secrets
+
+name: Secret Scanning
+
+on:
+  push:
+    branches: [ main, develop, staging ]
+  pull_request:
+    branches: [ main, develop, staging ]
+
+jobs:
+  gitleaks:
+    name: GitLeaks Secret Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run GitLeaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  secret-patterns:
+    name: Custom Secret Pattern Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for .env files
+        run: |
+          if find . -name ".env" -not -path "./node_modules/*" -not -name "*.example" | grep -q .; then
+            echo "❌ ERROR: .env files found!"
+            find . -name ".env" -not -path "./node_modules/*" -not -name "*.example"
+            exit 1
+          fi
+          echo "✅ No .env files found"
+
+      - name: Check for hardcoded secrets in Python
+        run: |
+          if grep -r -E "(api_key|password|secret_key|access_token)\s*=\s*[\"'][^\"']{20,}" --include="*.py" --exclude-dir=venv --exclude-dir=node_modules .; then
+            echo "❌ ERROR: Potential hardcoded secrets found!"
+            exit 1
+          fi
+          echo "✅ No hardcoded secrets in Python files"
+
+      - name: Check for AWS credentials
+        run: |
+          if grep -r -E "AKIA[0-9A-Z]{16}" --exclude-dir=.git --exclude-dir=node_modules .; then
+            echo "❌ ERROR: AWS credentials found!"
+            exit 1
+          fi
+          echo "✅ No AWS credentials found"
+
+      - name: Check for private keys
+        run: |
+          if grep -r "BEGIN PRIVATE KEY" --exclude-dir=.git --exclude-dir=node_modules .; then
+            echo "❌ ERROR: Private keys found!"
+            exit 1
+          fi
+          echo "✅ No private keys found"
+
+  dependency-security:
+    name: Dependency Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install safety
+        run: pip install safety
+
+      - name: Run Python dependency audit
+        run: safety check --json || true
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Run npm audit
+        run: npm audit --audit-level=moderate || true
+        if: hashFiles('package.json') != ''

@@ -1,4 +1,4 @@
-# Environment variables
+# Environment variables - CRITICAL: Never commit these files!
 .env
 .env.local
 .env.*.local
@@ -9,6 +9,27 @@
 # Disallow all other env variant files (prevent accidental secret commits)
 .env.*
 *.env.*
+
+# Specific env files that should NEVER be committed
+.env.production
+.env.development
+.env.staging
+.env.test
+.env.vercel
+.env.vercel.*
+.env.railway
+.env.stripe
+
+# Any file with credentials, keys, secrets, or passwords in the name
+*credentials*
+*secrets*.txt
+*secrets*.json
+*password*.txt
+*apikey*.txt
+*api-key*.txt
+!scripts/precommit/check_secret_patterns.py
+!scripts/precommit/validate_env_usage.py
+!scripts/precommit/block_env_files.sh
 
 # Python
 __pycache__/
